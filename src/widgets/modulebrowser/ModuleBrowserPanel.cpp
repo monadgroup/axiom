@@ -3,17 +3,15 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QTabBar>
 #include <QtWidgets/QLineEdit>
-#include <QtCore/QFile>
 
+#include "src/util.h"
 #include "ModulePreviewList.h"
 
 using namespace AxiomGui;
 
 ModuleBrowserPanel::ModuleBrowserPanel(QWidget *parent) : QDockWidget("Modules", parent)
 {
-    auto stylesheet = new QFile(":/ModuleBrowserPanel.qss");
-    stylesheet->open(QIODevice::ReadOnly | QIODevice::Text);
-    setStyleSheet(QLatin1String(stylesheet->readAll()));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/ModuleBrowserPanel.qss"));
 
     auto mainLayout = new QGridLayout();
     auto mainWidget = new QWidget();

@@ -1,13 +1,11 @@
 #include <QApplication>
-#include <QtCore/QFile>
+#include "util.h"
 #include "widgets/windows/MainWindow.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
-    auto stylesheet = new QFile(":/MainStyles.qss");
-    stylesheet->open(QIODevice::ReadOnly | QIODevice::Text);
-    app.setStyleSheet(QLatin1String(stylesheet->readAll()));
+    app.setStyleSheet(AxiomUtil::loadStylesheet(":/MainStyles.qss"));
 
     AxiomGui::MainWindow win;
     win.show();
