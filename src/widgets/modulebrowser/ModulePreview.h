@@ -7,10 +7,6 @@ namespace AxiomGui {
 
     public:
         ModulePreview(QWidget *parent = nullptr);
-        ~ModulePreview();
-
-    protected:
-        void paintEvent(QPaintEvent *event) override;
     };
 
 }

@@ -3,5 +3,7 @@
     <qresource>
         <file>MainStyles.qss</file>
         <file>ModuleBrowserPanel.qss</file>
+        <file>ModulePreviewList.qss</file>
+        <file>ModulePreview.qss</file>
     </qresource>
 </RCC>

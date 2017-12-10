@@ -3,11 +3,6 @@
     margin: 0;
 }
 
-QTabBar {
-    margin: 0;
-    padding: 0;
-}
-
 QTabBar::tab {
     background: transparent;
     border: none;
@@ -21,15 +16,4 @@ QTabBar::tab:hover, QTabBar::tab:selected {
 
 QTabBar::tab:selected {
     border-bottom-color: #3498DB;
-}
-
-#searchBox {
-    background: #222;
-    border: 2px solid #222;
-    border-radius: 5px;
-    padding: 5px 10px;
-}
-
-#searchBox:focus {
-    border-color: #444;
 }

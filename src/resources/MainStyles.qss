@@ -2,3 +2,68 @@
     color: #EEEEEE;
     background-color: #0A0A0A;
 }
+
+QLineEdit {
+    background: #222;
+    border: 2px solid #222;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+QLineEdit:focus {
+    border-color: #444;
+}
+
+QScrollBar {
+    background: #111;
+}
+
+QScrollBar:horizontal {
+    margin: 0 15px 0 15px;
+    height: 15px;
+}
+
+QScrollBar:vertical {
+    margin: 15px 0 15px 0;
+    width: 15px;
+}
+
+QScrollBar::add-page, QScrollBar::sub-page {
+    background: transparent;
+}
+
+QScrollBar::sub-line, QScrollBar::add-line {
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal {
+    width: 15px;
+    subcontrol-position: left;
+}
+
+QScrollBar::add-line:horizontal {
+    width: 15px;
+    subcontrol-position: right;
+}
+
+QScrollBar::sub-line:vertical {
+    height: 15px;
+    subcontrol-position: top;
+}
+
+QScrollBar::add-line:vertical {
+    height: 15px;
+    subcontrol-position: bottom;
+}
+
+QScrollBar::handle {
+    background: #222;
+}
+
+QScrollBar::handle:horizontal {
+    border-bottom: 2px solid #3498DB;
+}
+
+QScrollBar::handle:vertical {
+    border-right: 2px solid #3498DB;
+}

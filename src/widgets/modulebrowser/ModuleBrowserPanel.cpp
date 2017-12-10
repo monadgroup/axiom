@@ -17,6 +17,8 @@ ModuleBrowserPanel::ModuleBrowserPanel(QWidget *parent) : QDockWidget("Modules",
     auto mainWidget = new QWidget();
     mainWidget->setObjectName("mainWidget");
 
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+
     mainLayout->setColumnStretch(0, 10);
     mainLayout->setColumnStretch(1, 3);
     mainLayout->setColumnMinimumWidth(1, 200);

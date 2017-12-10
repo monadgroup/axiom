@@ -4,13 +4,14 @@
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QMenuBar>
 
-#include "src/widgets/modulebrowser/ModuleBrowserPanel.h"
+#include "src/resources/resource.h"
+#include "../modulebrowser/ModuleBrowserPanel.h"
 
 using namespace AxiomGui;
 
 MainWindow::MainWindow() {
     setCentralWidget(nullptr);
-    setWindowTitle(tr("Hello, World!"));
+    setWindowTitle(tr(VER_PRODUCTNAME_STR));
 
     resize(1440, 810);
 
