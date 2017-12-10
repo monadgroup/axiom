@@ -1,10 +1,10 @@
 #pragma once
 
-#define VER_FILEVERSION			0,1,0,0
-#define VER_FILEVERSION_STR		"0.1.0.0\0"
+#define VER_FILEVERSION         0,1,0,0
+#define VER_FILEVERSION_STR     "0.1.0.0\0"
 
-#define VER_PRODUCTVERSION		0,1,0,0
-#define VER_PRODUCTVERSION_STR	"0.1.0.0\0"
+#define VER_PRODUCTVERSION      0,1,0,0
+#define VER_PRODUCTVERSION_STR  "0.1.0.0\0"
 
 #define VER_COMPANYNAME_STR         "MONAD Demogroup"
 #define VER_FILEDESCRIPTION_STR     "Axiom: node-based VSTi"

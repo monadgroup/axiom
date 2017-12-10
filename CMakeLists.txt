@@ -24,7 +24,7 @@ set(SOURCE_FILES src/main.cpp
         src/widgets/modulebrowser/ModuleBrowserPanel.cpp src/widgets/modulebrowser/ModulePreviewList.cpp src/widgets/modulebrowser/ModulePreview.cpp
         src/layouts/FlowLayout.cpp)
 
-set(RES_FILES src/axiom.rc src/resources/res.qrc)
+set(RES_FILES src/resources/axiom.rc src/resources/res.qrc)
 
 add_executable(axiom WIN32 ${SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom Qt5::Widgets)
