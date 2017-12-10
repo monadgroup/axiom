@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <file>MainStyles.qss</file>
+        <file>ModuleBrowserPanel.qss</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,35 @@
+#mainWidget {
+    padding: 0;
+    margin: 0;
+}
+
+QTabBar {
+    margin: 0;
+    padding: 0;
+}
+
+QTabBar::tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid #222;
+    padding: 10px 15px;
+}
+
+QTabBar::tab:hover, QTabBar::tab:selected {
+    background: #222;
+}
+
+QTabBar::tab:selected {
+    border-bottom-color: #3498DB;
+}
+
+#searchBox {
+    background: #222;
+    border: 2px solid #222;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+#searchBox:focus {
+    border-color: #444;
+}
