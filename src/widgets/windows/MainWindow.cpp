@@ -6,6 +6,7 @@
 
 #include "src/resources/resource.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
+#include "../nodeview/NodeViewPanel.h"
 
 using namespace AxiomGui;
 
@@ -48,17 +49,12 @@ MainWindow::MainWindow() {
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(new QAction(tr("About")));
 
-    // do some docking
-    auto *firstDock = new QDockWidget(tr("Customers"), this);
-    firstDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-    addDockWidget(Qt::RightDockWidgetArea, firstDock);
-
-    auto *secondDock = new QDockWidget(tr("Lol"), this);
-    secondDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-    addDockWidget(Qt::LeftDockWidgetArea, secondDock);
+    // docking for testing
+    auto *canvasDock = new NodeViewPanel();
+    canvasDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    addDockWidget(Qt::TopDockWidgetArea, canvasDock);
 
     auto *moduleBrowser = new ModuleBrowserPanel(this);
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
-
 }

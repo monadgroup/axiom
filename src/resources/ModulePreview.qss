@@ -1,6 +1,6 @@
 * {
-    width: 200px;
-    height: 200px;
+    width: 100px;
+    height: 100px;
 
     border: 2px solid #222;
     border-radius: 5px;

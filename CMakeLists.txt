@@ -22,6 +22,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 set(SOURCE_FILES src/main.cpp src/util.cpp
         src/widgets/windows/MainWindow.cpp
         src/widgets/modulebrowser/ModuleBrowserPanel.cpp src/widgets/modulebrowser/ModulePreviewList.cpp src/widgets/modulebrowser/ModulePreview.cpp
+        src/widgets/nodeview/NodeViewPanel.cpp src/widgets/nodeview/NodeViewCanvas.cpp
         src/layouts/FlowLayout.cpp)
 
 set(RES_FILES src/resources/axiom.rc src/resources/res.qrc)

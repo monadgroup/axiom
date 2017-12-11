@@ -5,5 +5,6 @@
         <file>ModuleBrowserPanel.qss</file>
         <file>ModulePreviewList.qss</file>
         <file>ModulePreview.qss</file>
+        <file>NodeViewPanel.qss</file>
     </qresource>
 </RCC>

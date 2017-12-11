@@ -19,11 +19,11 @@ QScrollBar {
 }
 
 QScrollBar:horizontal {
-    height: 18px;
+    height: 10px;
 }
 
 QScrollBar:vertical {
-    width: 18px;
+    width: 10px;
 }
 
 QScrollBar::add-line, QScrollBar::sub-line {
