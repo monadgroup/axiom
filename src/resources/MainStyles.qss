@@ -15,55 +15,52 @@ QLineEdit:focus {
 }
 
 QScrollBar {
-    background: #111;
+
 }
 
 QScrollBar:horizontal {
-    margin: 0 15px 0 15px;
-    height: 15px;
+    height: 18px;
 }
 
 QScrollBar:vertical {
-    margin: 15px 0 15px 0;
-    width: 15px;
+    width: 18px;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line {
+    border: none;
+    background: none;
+}
+
+QScrollBar::left-arrow, QScrollBar::right-arrow, QScrollBar::add-page, QScrollBar::sub-page {
+    border: none;
+    background: none;
+    color: none;
 }
 
 QScrollBar::add-page, QScrollBar::sub-page {
     background: transparent;
 }
 
-QScrollBar::sub-line, QScrollBar::add-line {
-    subcontrol-origin: margin;
-}
-
-QScrollBar::sub-line:horizontal {
-    width: 15px;
-    subcontrol-position: left;
-}
-
-QScrollBar::add-line:horizontal {
-    width: 15px;
-    subcontrol-position: right;
-}
-
-QScrollBar::sub-line:vertical {
-    height: 15px;
-    subcontrol-position: top;
-}
-
-QScrollBar::add-line:vertical {
-    height: 15px;
-    subcontrol-position: bottom;
-}
-
 QScrollBar::handle {
     background: #222;
 }
 
+QScrollBar::handle:pressed {
+    background: #333;
+}
+
 QScrollBar::handle:horizontal {
-    border-bottom: 2px solid #3498DB;
+    border-bottom: 2px solid #444;
 }
 
 QScrollBar::handle:vertical {
+    border-right: 2px solid #444;
+}
+
+QScrollBar::handle:horizontal:hover, QScrollBar::handle:horizontal:pressed {
+    border-bottom: 2px solid #3498DB;
+}
+
+QScrollBar::handle:vertical:hover, QScrollBar::handle:vertical:pressed {
     border-right: 2px solid #3498DB;
 }
