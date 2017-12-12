@@ -1,13 +1,9 @@
 #include <QApplication>
-#include "util.h"
-#include "widgets/windows/MainWindow.h"
+
+#include "AxiomApplication.h"
 
 int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
-
-    app.setStyleSheet(AxiomUtil::loadStylesheet(":/MainStyles.qss"));
-
-    AxiomGui::MainWindow win;
-    win.show();
-    return app.exec();
+    AxiomApplication::main = new AxiomApplication(argc, argv);
+    AxiomApplication::main->win.show();
+    return AxiomApplication::main->exec();
 }

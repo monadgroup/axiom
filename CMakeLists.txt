@@ -19,7 +19,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-set(SOURCE_FILES src/main.cpp src/util.cpp
+set(SOURCE_FILES src/main.cpp src/util.cpp src/AxiomApplication.cpp
         src/widgets/windows/MainWindow.cpp
         src/widgets/modulebrowser/ModuleBrowserPanel.cpp src/widgets/modulebrowser/ModulePreviewList.cpp src/widgets/modulebrowser/ModulePreview.cpp
         src/widgets/nodeview/NodeViewPanel.cpp src/widgets/nodeview/NodeViewCanvas.cpp
