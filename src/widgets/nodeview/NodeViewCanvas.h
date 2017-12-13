@@ -18,16 +18,16 @@ namespace AxiomGui {
         void mousePressEvent(QMouseEvent *event) override;
         void mouseReleaseEvent(QMouseEvent *event) override;
         void mouseMoveEvent(QMouseEvent *event) override;
-        void wheelEvent(QWheelEvent *event) override;
 
     private:
-        bool isDragging = false;
-        QPoint centerPoint;
+        bool isSelecting = false;
+        QVector<QPointF> selectionPoints;
+        QGraphicsPathItem *selectionPath;
 
-        float zoom = 0;
-        QPointF offset = QPointF(0, 0);
-
-        void updateMatrix();
+        void leftMousePressEvent(QMouseEvent *event);
+        void leftMouseReleaseEvent(QMouseEvent *event);
+        void middleMousePressEvent(QMouseEvent *event);
+        void middleMouseReleaseEvent(QMouseEvent *event);
 
         static void drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize);
     };

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <QtGui/QResizeEvent>
+#include <QtWidgets/QGraphicsPathItem>
 
 #include "src/AxiomApplication.h"
 
@@ -11,11 +12,25 @@ using namespace AxiomGui;
 QSize NodeViewCanvas::gridSize = QSize(50, 50);
 
 NodeViewCanvas::NodeViewCanvas(QWidget *parent) : QGraphicsView(new QGraphicsScene(), parent) {
-    scene()->setSceneRect(0, 0, width(), height());
+    scene()->setSceneRect(0, 0, width()*2, height()*2);
+
+    setDragMode(QGraphicsView::RubberBandDrag);
+    setRenderHint(QPainter::Antialiasing);
+
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+
+    auto selectionPen = QPen(QColor::fromRgb(52, 152, 219));
+    auto selectionBrush = QBrush(QColor::fromRgb(52, 152, 219, 50));
+
+    selectionPath = scene()->addPath(QPainterPath(), selectionPen, selectionBrush);
+    selectionPath->setVisible(false);
 }
 
 void NodeViewCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
-    drawGrid(painter, rect, gridSize, QColor::fromRgb(34, 34, 34), 2/std::pow(2, this->zoom));
+    drawGrid(painter, rect, gridSize, QColor::fromRgb(34, 34, 34), 2);
 }
 
 void NodeViewCanvas::resizeEvent(QResizeEvent *event) {
@@ -23,39 +38,57 @@ void NodeViewCanvas::resizeEvent(QResizeEvent *event) {
 }
 
 void NodeViewCanvas::mousePressEvent(QMouseEvent *event) {
-    //AxiomApplication::main->setOverrideCursor(Qt::BlankCursor);
-    isDragging = true;
-    centerPoint = mapToGlobal(QPoint(width() / 2, height() / 2));
-    cursor().setPos(centerPoint);
+    switch (event->button()) {
+        case Qt::LeftButton: leftMousePressEvent(event); break;
+        case Qt::MiddleButton: middleMousePressEvent(event); break;
+    }
 }
 
 void NodeViewCanvas::mouseReleaseEvent(QMouseEvent *event) {
-    //AxiomApplication::main->restoreOverrideCursor();
-    isDragging = false;
+    switch (event->button()) {
+        case Qt::LeftButton: leftMouseReleaseEvent(event); break;
+        case Qt::MiddleButton: middleMouseReleaseEvent(event); break;
+    }
 }
 
 void NodeViewCanvas::mouseMoveEvent(QMouseEvent *event) {
-    if (!isDragging) return;
+    if (isSelecting) {
+        selectionPoints.append(event->localPos());
 
-    auto deltaPos = cursor().pos() - centerPoint;
-    cursor().setPos(centerPoint);
+        auto path = QPainterPath();
+        path.moveTo(selectionPoints.first());
+        for (auto i = 1; i < selectionPoints.size(); i++) {
+            path.lineTo(selectionPoints[i]);
+        }
+        path.closeSubpath();
 
-    offset += QPointF(deltaPos.x(), deltaPos.y()) / 10.f;
-    std::cout << offset.x() << "x" << offset.y() << std::endl;
-    updateMatrix();
+        scene()->setSelectionArea(path);
+        selectionPath->setPath(path);
+        selectionPath->setVisible(true);
+    }
 }
 
-void NodeViewCanvas::wheelEvent(QWheelEvent *event) {
-    this->zoom += event->delta() / 2000.0f;
-    updateMatrix();
+void NodeViewCanvas::leftMousePressEvent(QMouseEvent *event) {
+    if (event->button() != Qt::LeftButton) return;
+
+    isSelecting = true;
+    selectionPoints.append(event->localPos());
 }
 
-void NodeViewCanvas::updateMatrix() {
-    auto visualZoom = std::pow(2, this->zoom);
-    setMatrix(
-        QMatrix().scale(visualZoom, visualZoom)
-                .translate(offset.x(), offset.y())
-    );
+void NodeViewCanvas::leftMouseReleaseEvent(QMouseEvent *event) {
+    if (!isSelecting || event->button() != Qt::LeftButton) return;
+
+    isSelecting = false;
+    selectionPoints.clear();
+    selectionPath->setVisible(false);
+}
+
+void NodeViewCanvas::middleMousePressEvent(QMouseEvent *event) {
+
+}
+
+void NodeViewCanvas::middleMouseReleaseEvent(QMouseEvent *event) {
+
 }
 
 void NodeViewCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize) {
