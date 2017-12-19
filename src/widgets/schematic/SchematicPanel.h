@@ -4,11 +4,11 @@
 
 namespace AxiomGui {
 
-    class NodeViewPanel : public QDockWidget {
+    class SchematicPanel : public QDockWidget {
         Q_OBJECT
 
     public:
-        explicit NodeViewPanel(QWidget *parent = nullptr);
+        explicit SchematicPanel(QWidget *parent = nullptr);
 
     private:
         QGraphicsScene *scene;

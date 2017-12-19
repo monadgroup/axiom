@@ -1,4 +1,4 @@
-#include "NodeViewCanvas.h"
+#include "SchematicCanvas.h"
 
 #include <cmath>
 #include <iostream>
@@ -9,9 +9,9 @@
 
 using namespace AxiomGui;
 
-QSize NodeViewCanvas::gridSize = QSize(50, 50);
+QSize SchematicCanvas::gridSize = QSize(50, 50);
 
-NodeViewCanvas::NodeViewCanvas(QWidget *parent) : QGraphicsView(new QGraphicsScene(), parent) {
+SchematicCanvas::SchematicCanvas(QWidget *parent) : QGraphicsView(new QGraphicsScene(), parent) {
     scene()->setSceneRect(0, 0, width()*2, height()*2);
 
     setDragMode(QGraphicsView::RubberBandDrag);
@@ -29,29 +29,29 @@ NodeViewCanvas::NodeViewCanvas(QWidget *parent) : QGraphicsView(new QGraphicsSce
     selectionPath->setVisible(false);
 }
 
-void NodeViewCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
+void SchematicCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
     drawGrid(painter, rect, gridSize, QColor::fromRgb(34, 34, 34), 2);
 }
 
-void NodeViewCanvas::resizeEvent(QResizeEvent *event) {
+void SchematicCanvas::resizeEvent(QResizeEvent *event) {
     scene()->setSceneRect(0, 0, event->size().width(), event->size().height());
 }
 
-void NodeViewCanvas::mousePressEvent(QMouseEvent *event) {
+void SchematicCanvas::mousePressEvent(QMouseEvent *event) {
     switch (event->button()) {
         case Qt::LeftButton: leftMousePressEvent(event); break;
         case Qt::MiddleButton: middleMousePressEvent(event); break;
     }
 }
 
-void NodeViewCanvas::mouseReleaseEvent(QMouseEvent *event) {
+void SchematicCanvas::mouseReleaseEvent(QMouseEvent *event) {
     switch (event->button()) {
         case Qt::LeftButton: leftMouseReleaseEvent(event); break;
         case Qt::MiddleButton: middleMouseReleaseEvent(event); break;
     }
 }
 
-void NodeViewCanvas::mouseMoveEvent(QMouseEvent *event) {
+void SchematicCanvas::mouseMoveEvent(QMouseEvent *event) {
     if (isSelecting) {
         selectionPoints.append(event->localPos());
 
@@ -66,32 +66,37 @@ void NodeViewCanvas::mouseMoveEvent(QMouseEvent *event) {
         selectionPath->setPath(path);
         selectionPath->setVisible(true);
     }
+
+    if (isDragging) {
+        // todo
+    }
 }
 
-void NodeViewCanvas::leftMousePressEvent(QMouseEvent *event) {
-    if (event->button() != Qt::LeftButton) return;
-
+void SchematicCanvas::leftMousePressEvent(QMouseEvent *event) {
     isSelecting = true;
     selectionPoints.append(event->localPos());
 }
 
-void NodeViewCanvas::leftMouseReleaseEvent(QMouseEvent *event) {
-    if (!isSelecting || event->button() != Qt::LeftButton) return;
+void SchematicCanvas::leftMouseReleaseEvent(QMouseEvent *event) {
+    if (!isSelecting) return;
 
     isSelecting = false;
     selectionPoints.clear();
     selectionPath->setVisible(false);
 }
 
-void NodeViewCanvas::middleMousePressEvent(QMouseEvent *event) {
+void SchematicCanvas::middleMousePressEvent(QMouseEvent *event) {
+    isDragging = true;
 
+    dragStart = event->localPos();
+    dragOffset = QPointF(0, 0);
 }
 
-void NodeViewCanvas::middleMouseReleaseEvent(QMouseEvent *event) {
-
+void SchematicCanvas::middleMouseReleaseEvent(QMouseEvent *event) {
+    isDragging = false;
 }
 
-void NodeViewCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize) {
+void SchematicCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize) {
     QPointF topLeft = rect.topLeft();
     topLeft.setX(std::floor(topLeft.x() / size.width()) * size.width());
     topLeft.setY(std::floor(topLeft.y() / size.height()) * size.height());

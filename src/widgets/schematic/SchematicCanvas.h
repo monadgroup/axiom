@@ -3,13 +3,13 @@
 
 namespace AxiomGui {
 
-    class NodeViewCanvas : public QGraphicsView {
+    class SchematicCanvas : public QGraphicsView {
         Q_OBJECT
 
     public:
         static QSize gridSize;
 
-        explicit NodeViewCanvas(QWidget *parent = nullptr);
+        explicit SchematicCanvas(QWidget *parent = nullptr);
 
     protected:
         void drawBackground(QPainter *painter, const QRectF &rect) override;
@@ -21,8 +21,13 @@ namespace AxiomGui {
 
     private:
         bool isSelecting = false;
+        bool isDragging = false;
+
         QVector<QPointF> selectionPoints;
         QGraphicsPathItem *selectionPath;
+
+        QPointF dragStart;
+        QPointF dragOffset;
 
         void leftMousePressEvent(QMouseEvent *event);
         void leftMouseReleaseEvent(QMouseEvent *event);

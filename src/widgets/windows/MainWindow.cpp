@@ -6,7 +6,7 @@
 
 #include "src/resources/resource.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
-#include "../nodeview/NodeViewPanel.h"
+#include "src/widgets/schematic/SchematicPanel.h"
 
 using namespace AxiomGui;
 
@@ -50,7 +50,7 @@ MainWindow::MainWindow() {
     helpMenu->addAction(new QAction(tr("About")));
 
     // docking for testing
-    auto *canvasDock = new NodeViewPanel();
+    auto *canvasDock = new SchematicPanel();
     canvasDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::TopDockWidgetArea, canvasDock);
 
