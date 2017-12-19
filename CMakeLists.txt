@@ -20,9 +20,10 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(SOURCE_FILES src/main.cpp src/util.cpp src/AxiomApplication.cpp
+        src/model/CustomNode.cpp src/model/Library.cpp src/model/LibraryEntry.cpp src/model/ModuleNode.cpp src/model/ModuleSchematic.cpp src/model/Node.cpp src/model/Project.cpp src/model/RootSchematic.cpp src/model/Schematic.cpp
         src/widgets/windows/MainWindow.cpp
         src/widgets/modulebrowser/ModuleBrowserPanel.cpp src/widgets/modulebrowser/ModulePreviewList.cpp src/widgets/modulebrowser/ModulePreview.cpp
-        src/widgets/nodeview/NodeViewPanel.cpp src/widgets/nodeview/NodeViewCanvas.cpp
+        src/widgets/schematic/SchematicPanel.cpp src/widgets/schematic/SchematicCanvas.cpp
         src/layouts/FlowLayout.cpp)
 
 set(RES_FILES src/resources/axiom.rc src/resources/res.qrc)
