@@ -9,8 +9,6 @@ namespace AxiomModel {
     class Node;
 
     class Schematic {
-        Q_OBJECT
-
     public:
         QVector<std::unique_ptr<Node>> nodes;
 

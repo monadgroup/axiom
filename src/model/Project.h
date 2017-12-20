@@ -8,8 +8,6 @@
 namespace AxiomModel {
 
     class Project {
-        Q_OBJECT
-
     public:
         QString path;
 

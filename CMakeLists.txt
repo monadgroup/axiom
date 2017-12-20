@@ -24,6 +24,7 @@ set(SOURCE_FILES src/main.cpp src/util.cpp src/AxiomApplication.cpp
         src/widgets/windows/MainWindow.cpp
         src/widgets/modulebrowser/ModuleBrowserPanel.cpp src/widgets/modulebrowser/ModulePreviewList.cpp src/widgets/modulebrowser/ModulePreview.cpp
         src/widgets/schematic/SchematicPanel.cpp src/widgets/schematic/SchematicCanvas.cpp
+        src/widgets/node/NodeItem.cpp
         src/layouts/FlowLayout.cpp)
 
 set(RES_FILES src/resources/axiom.rc src/resources/res.qrc)

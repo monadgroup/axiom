@@ -10,8 +10,6 @@ namespace AxiomModel {
     class LibraryEntry;
 
     class Library {
-        Q_OBJECT
-
     public:
         QVector<std::unique_ptr<LibraryEntry>> entries;
         QMap<QString, QVector<LibraryEntry*>> index;

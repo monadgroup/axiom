@@ -6,6 +6,7 @@
 #include <QtWidgets/QGraphicsPathItem>
 
 #include "src/AxiomApplication.h"
+#include "../node/NodeItem.h"
 
 using namespace AxiomGui;
 
@@ -27,6 +28,9 @@ SchematicCanvas::SchematicCanvas(QWidget *parent) : QGraphicsView(new QGraphicsS
 
     selectionPath = scene()->addPath(QPainterPath(), selectionPen, selectionBrush);
     selectionPath->setVisible(false);
+    selectionPath->setZValue(100);
+
+    scene()->addItem(new NodeItem());
 }
 
 void SchematicCanvas::drawBackground(QPainter *painter, const QRectF &rect) {

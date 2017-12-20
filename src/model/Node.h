@@ -7,8 +7,6 @@ namespace AxiomModel {
     class ISchematic;
 
     class Node {
-        Q_OBJECT
-
     public:
         ISchematic *parent;
 

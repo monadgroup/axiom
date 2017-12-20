@@ -8,8 +8,6 @@ namespace AxiomModel {
     class Library;
 
     class LibraryEntry {
-        Q_OBJECT
-
     public:
         Library *library;
 

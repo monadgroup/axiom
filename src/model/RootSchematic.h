@@ -7,8 +7,6 @@
 namespace AxiomModel {
 
     class RootSchematic : public Schematic {
-        Q_OBJECT
-
     public:
         QString getName() override;
     };
