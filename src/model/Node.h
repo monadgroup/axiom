@@ -1,15 +1,18 @@
 #pragma once
-#include <string>
+#include <QtCore/QObject>
+#include <QtCore/QString>
 
 namespace AxiomModel {
 
     class ISchematic;
 
     class Node {
+        Q_OBJECT
+
     public:
         ISchematic *parent;
 
-        std::string name;
+        QString name;
 
         int x;
         int y;

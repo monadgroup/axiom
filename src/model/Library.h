@@ -1,16 +1,20 @@
 #pragma once
-#include <map>
-#include <vector>
 #include <memory>
+#include <QtCore/QObject>
+#include <QtCore/QVector>
+#include <QtCore/QMap>
+#include <QtCore/QString>
 
 namespace AxiomModel {
 
     class LibraryEntry;
 
     class Library {
+        Q_OBJECT
+
     public:
-        std::vector<std::unique_ptr<LibraryEntry>> entries;
-        std::map<std::string, std::vector<LibraryEntry*>> index;
+        QVector<std::unique_ptr<LibraryEntry>> entries;
+        QMap<QString, QVector<LibraryEntry*>> index;
     };
 
 }

@@ -1,5 +1,6 @@
 #pragma once
-#include <string>
+#include <QtCore/QString>
+#include <QtCore/QObject>
 
 #include "Library.h"
 #include "RootSchematic.h"
@@ -7,8 +8,10 @@
 namespace AxiomModel {
 
     class Project {
+        Q_OBJECT
+
     public:
-        std::string path;
+        QString path;
 
         Library library;
         RootSchematic root;

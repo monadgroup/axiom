@@ -1,17 +1,20 @@
 #pragma once
-#include <string>
-#include <set>
+#include <QtCore/QObject>
+#include <QtCore/QString>
+#include <QtCore/QSet>
 
 namespace AxiomModel {
 
     class Library;
 
     class LibraryEntry {
+        Q_OBJECT
+
     public:
         Library *library;
 
-        std::string author;
-        std::set<std::string> tags;
+        QString author;
+        QSet<QString> tags;
     };
 
 }

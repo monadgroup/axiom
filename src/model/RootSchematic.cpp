@@ -2,6 +2,6 @@
 
 using namespace AxiomModel;
 
-std::string RootSchematic::getName() {
+QString RootSchematic::getName() {
     return "Root";
 }
