@@ -22,6 +22,7 @@ namespace AxiomGui {
 
     public slots:
         void triggerUpdate();
+        void setPos(QPoint newPos);
 
         void remove();
 
