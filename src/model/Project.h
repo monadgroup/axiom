@@ -13,6 +13,9 @@ namespace AxiomModel {
 
         Library library;
         RootSchematic root;
+
+        void serialize(QDataStream &stream) const;
+        void deserialize(QDataStream &stream);
     };
 
 }

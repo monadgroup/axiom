@@ -1,21 +1,40 @@
 #pragma once
 #include <memory>
+#include <vector>
 #include <QtCore/QObject>
-#include <QtCore/QVector>
 #include <QtCore/QString>
+#include <QtCore/QPointF>
+
+#include "Node.h"
 
 namespace AxiomModel {
 
-    class Node;
+    class Schematic : public QObject {
+    Q_OBJECT
 
-    class Schematic {
     public:
-        QVector<std::unique_ptr<Node>> nodes;
+        virtual QString name() = 0;
 
-        virtual QString getName() = 0;
+        QPointF pan() const { return m_pan; }
+        std::vector<std::unique_ptr<Node>> &nodes() { return m_nodes; }
 
-        int panX;
-        int panY;
+        virtual void serialize(QDataStream &stream) const;
+        virtual void deserialize(QDataStream &stream);
+
+        void addNode(std::unique_ptr<Node> node);
+
+    public slots:
+        void setPan(QPointF pan);
+        void removeNode(Node *node);
+
+    signals:
+        void panChanged(QPointF newPan);
+        void nodeAdded(Node *node);
+        void nodeRemoved(Node *node);
+
+    private:
+        QPointF m_pan;
+        std::vector<std::unique_ptr<Node>> m_nodes;
     };
 
 }

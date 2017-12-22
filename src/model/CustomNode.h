@@ -6,8 +6,10 @@
 namespace AxiomModel {
 
     class CustomNode : public Node {
-    public:
+        Q_OBJECT
 
+    public:
+        explicit CustomNode(Schematic *parent);
     };
 
 }

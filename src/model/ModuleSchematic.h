@@ -9,12 +9,14 @@ namespace AxiomModel {
     class ModuleNode;
 
     class ModuleSchematic : public Schematic {
+        Q_OBJECT
+
     public:
         ModuleNode *node;
 
         ModuleSchematic(ModuleNode *node);
 
-        QString getName() override;
+        QString name() override;
     };
 
 }

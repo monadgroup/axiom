@@ -5,15 +5,19 @@
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsPathItem>
 #include <QtWidgets/QMenu>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QWidgetAction>
 
 #include "src/AxiomApplication.h"
 #include "../node/NodeItem.h"
 
 using namespace AxiomGui;
+using namespace AxiomModel;
 
 QSize SchematicCanvas::gridSize = QSize(50, 50);
 
-SchematicCanvas::SchematicCanvas(QWidget *parent) : QGraphicsView(new QGraphicsScene(), parent) {
+SchematicCanvas::SchematicCanvas(Schematic *schematic, QWidget *parent)
+        : QGraphicsView(new QGraphicsScene(), parent), schematic(schematic) {
     scene()->setSceneRect(0, 0, width()*2, height()*2);
 
     // set properties
@@ -25,13 +29,6 @@ SchematicCanvas::SchematicCanvas(QWidget *parent) : QGraphicsView(new QGraphicsS
 
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
-    setContextMenuPolicy(Qt::ActionsContextMenu);
-
-    // build context menu
-    addAction(new QAction(tr("Test 1")));
-    addAction(new QAction(tr("Test 2")));
-    addAction(new QAction(tr("Test 3")));
-
     // build selection
     auto selectionPen = QPen(QColor::fromRgb(52, 152, 219));
     auto selectionBrush = QBrush(QColor::fromRgb(52, 152, 219, 50));
@@ -40,8 +37,26 @@ SchematicCanvas::SchematicCanvas(QWidget *parent) : QGraphicsView(new QGraphicsS
     selectionPath->setVisible(false);
     selectionPath->setZValue(100);
 
-    // add debug items
-    scene()->addItem(new NodeItem());
+    std::cout << "Schematic is " << schematic << std::endl;
+
+    // create items for all nodes that already exist
+    for (const auto &item : schematic->nodes()) {
+        addNode(item.get());
+    }
+
+    // connect to model
+    connect(schematic, &Schematic::panChanged,
+            this, &SchematicCanvas::setPan);
+    connect(schematic, &Schematic::nodeAdded,
+            this, &SchematicCanvas::addNode);
+}
+
+void SchematicCanvas::setPan(QPointF pan) {
+    // todo
+}
+
+void SchematicCanvas::addNode(AxiomModel::Node *node) {
+    scene()->addItem(new NodeItem(node, this));
 }
 
 void SchematicCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
@@ -111,6 +126,22 @@ void SchematicCanvas::middleMousePressEvent(QMouseEvent *event) {
 
 void SchematicCanvas::middleMouseReleaseEvent(QMouseEvent *event) {
     isDragging = false;
+}
+
+void SchematicCanvas::contextMenuEvent(QContextMenuEvent *event) {
+    QMenu contextMenu(this);
+    auto contextSearch = new QLineEdit();
+    contextSearch->setPlaceholderText("Search modules...");
+    auto widgetAction = new QWidgetAction(this);
+    widgetAction->setDefaultWidget(contextSearch);
+    contextMenu.addAction(widgetAction);
+    contextMenu.addSeparator();
+    contextMenu.addAction(new QAction(tr("New Node")));
+    contextMenu.addSeparator();
+    contextMenu.addAction(new QAction(tr("LFO")));
+    contextMenu.addAction(new QAction(tr("Something else")));
+
+    contextMenu.exec(event->globalPos());
 }
 
 void SchematicCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize) {

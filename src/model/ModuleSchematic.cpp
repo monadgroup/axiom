@@ -7,6 +7,6 @@ using namespace AxiomModel;
 ModuleSchematic::ModuleSchematic(ModuleNode *node) : node(node) {
 }
 
-QString ModuleSchematic::getName() {
-    return node->name;
+QString ModuleSchematic::name() {
+    return node->name();
 }

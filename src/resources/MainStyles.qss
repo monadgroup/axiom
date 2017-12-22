@@ -96,3 +96,14 @@ QMenu::separator {
     height: 1px;
     background: #333;
 }
+
+QMenu QLineEdit {
+    background: #222;
+    border: none;
+    border-radius: 0;
+    padding: 8px 15px;
+}
+
+QMenu QLineEdit:focus {
+    background: #333;
+}

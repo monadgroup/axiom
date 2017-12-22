@@ -1,5 +1,11 @@
 #pragma once
 #include <QtWidgets/QGraphicsView>
+#include <QtWidgets/QMenu>
+
+namespace AxiomModel {
+    class Schematic;
+    class Node;
+}
 
 namespace AxiomGui {
 
@@ -9,7 +15,13 @@ namespace AxiomGui {
     public:
         static QSize gridSize;
 
-        explicit SchematicCanvas(QWidget *parent = nullptr);
+        AxiomModel::Schematic *schematic;
+
+        explicit SchematicCanvas(AxiomModel::Schematic *schematic, QWidget *parent = nullptr);
+
+    public slots:
+        void setPan(QPointF pan);
+        void addNode(AxiomModel::Node *node);
 
     protected:
         void drawBackground(QPainter *painter, const QRectF &rect) override;
@@ -33,6 +45,8 @@ namespace AxiomGui {
         void leftMouseReleaseEvent(QMouseEvent *event);
         void middleMousePressEvent(QMouseEvent *event);
         void middleMouseReleaseEvent(QMouseEvent *event);
+
+        void contextMenuEvent(QContextMenuEvent *event) override;
 
         static void drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize);
     };

@@ -1,7 +1,7 @@
 #pragma once
 #include <QtCore/QObject>
 #include <QtCore/QString>
-#include <QtCore/QSet>
+#include <set>
 
 namespace AxiomModel {
 
@@ -12,7 +12,7 @@ namespace AxiomModel {
         Library *library;
 
         QString author;
-        QSet<QString> tags;
+        std::set<QString> tags;
     };
 
 }
