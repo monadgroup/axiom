@@ -51,6 +51,20 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic, QWidget *parent)
             this, &SchematicCanvas::addNode);
 }
 
+QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
+    return {
+        p.x() * SchematicCanvas::gridSize.width(),
+        p.y() * SchematicCanvas::gridSize.height()
+    };
+}
+
+QSize SchematicCanvas::nodeRealSize(const QSize &s) {
+    return {
+        s.width() * SchematicCanvas::gridSize.width(),
+        s.height() * SchematicCanvas::gridSize.height()
+    };
+}
+
 void SchematicCanvas::setPan(QPointF pan) {
     // todo
 }

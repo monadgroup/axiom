@@ -1,5 +1,5 @@
 #pragma once
-#include <QtWidgets/QGraphicsItem>
+#include <QtWidgets/QGraphicsObject>
 
 namespace AxiomModel {
     class Node;
@@ -9,7 +9,7 @@ namespace AxiomGui {
 
     class SchematicCanvas;
 
-    class NodeItem : public QGraphicsObject {
+    class NodeItem : public QObject, public QGraphicsItemGroup {
         Q_OBJECT
 
     public:
@@ -17,24 +17,19 @@ namespace AxiomGui {
 
         explicit NodeItem(AxiomModel::Node *node, SchematicCanvas *parent);
 
-        QRectF boundingRect() const override;
-        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-
     public slots:
-        void triggerUpdate();
         void setPos(QPoint newPos);
+        void setSize(QSize newSize);
 
         void remove();
 
-    protected:
-        void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
-        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    private slots:
+        void resizerSetPos(QPointF newPos);
+        void resizerSetSize(QSizeF newSize);
 
-    private:
-        bool isDragging;
-        QPoint mouseStartPoint;
-        QPoint nodeStartPoint;
+    signals:
+        void resizerPosChanged(QPointF newPos);
+        void resizerSizeChanged(QSizeF newSize);
     };
 
 }

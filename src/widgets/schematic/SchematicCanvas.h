@@ -19,6 +19,9 @@ namespace AxiomGui {
 
         explicit SchematicCanvas(AxiomModel::Schematic *schematic, QWidget *parent = nullptr);
 
+        static QPoint nodeRealPos(const QPoint &p);
+        static QSize nodeRealSize(const QSize &s);
+
     public slots:
         void setPan(QPointF pan);
         void addNode(AxiomModel::Node *node);

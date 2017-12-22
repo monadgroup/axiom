@@ -3,9 +3,10 @@
 #include <QtGui/QPen>
 #include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <iostream>
 #include <QtWidgets/QStyleOptionGraphicsItem>
 
+#include "noderesizer.h"
+#include "nodeitemcontent.h"
 #include "../schematic/SchematicCanvas.h"
 #include "src/model/Node.h"
 
@@ -13,57 +14,57 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
-    setFlag(QGraphicsItem::ItemIsFocusable, true);
-    setFlag(QGraphicsItem::ItemIsSelectable, true);
-    setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
+    setHandlesChildEvents(false);
 
+    setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
     setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 
-    // set initial state
-    setPos(node->pos());
-
-    // connect to model
-    connect(node, &Node::nameChanged,
-            this, &NodeItem::triggerUpdate);
     connect(node, &Node::posChanged,
             this, &NodeItem::setPos);
     connect(node, &Node::sizeChanged,
-            this, &NodeItem::triggerUpdate);
-    connect(node, &Node::selectedChanged,
-            this, &NodeItem::triggerUpdate);
-
+            this, &NodeItem::setSize);
     connect(node, &Node::removed,
             this, &NodeItem::remove);
-}
 
-QRectF NodeItem::boundingRect() const {
-    return {
-        QPointF(0, 0),
-        QSizeF(node->size().height() * SchematicCanvas::gridSize.width(), node->size().height() * SchematicCanvas::gridSize.height())
+    // create main item
+    auto content = new NodeItemContent(node);
+    content->setZValue(0);
+    addToGroup(content);
+
+    // create resize items
+    NodeResizer::Direction directions[] = {
+        NodeResizer::TOP, NodeResizer::RIGHT, NodeResizer::BOTTOM, NodeResizer::LEFT,
+        NodeResizer::TOP_RIGHT, NodeResizer::TOP_LEFT, NodeResizer::BOTTOM_RIGHT, NodeResizer::BOTTOM_LEFT
     };
-}
+    for (const auto dir : directions) {
+        auto resizer = new NodeResizer(dir);
+        resizer->setZValue(1);
+        connect(this, &NodeItem::resizerPosChanged,
+                resizer, &NodeResizer::setPos);
+        connect(this, &NodeItem::resizerSizeChanged,
+                resizer, &NodeResizer::setSize);
 
-void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    painter->setClipRect(option->exposedRect);
+        connect(resizer, &NodeResizer::moved,
+                this, &NodeItem::resizerSetPos);
+        connect(resizer, &NodeResizer::resized,
+                this, &NodeItem::resizerSetSize);
 
-    painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
-    painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17)));
-    painter->drawRect(boundingRect());
+        addToGroup(resizer);
+    }
 
-    painter->setPen(Qt::transparent);
-    painter->setBrush(QBrush(Qt::white));
-    painter->drawText(boundingRect(), node->name());
-}
-
-void NodeItem::triggerUpdate() {
-    update();
+    // set initial state
+    setPos(node->pos());
+    setSize(node->size());
 }
 
 void NodeItem::setPos(QPoint newPos) {
-    QGraphicsObject::setPos(
-        newPos.x() * SchematicCanvas::gridSize.width(),
-        newPos.y() * SchematicCanvas::gridSize.height()
-    );
+    auto realPos = SchematicCanvas::nodeRealPos(newPos);
+    QGraphicsItem::setPos(realPos.x(), realPos.y());
+    emit resizerPosChanged(realPos);
+}
+
+void NodeItem::setSize(QSize newSize) {
+    emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
     update();
 }
 
@@ -71,35 +72,16 @@ void NodeItem::remove() {
     parentItem()->scene()->removeItem(this);
 }
 
-void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (event->button() == Qt::LeftButton) {
-        isDragging = true;
-        mouseStartPoint = event->screenPos();
-        nodeStartPoint = QPoint(
-            node->pos().x() * SchematicCanvas::gridSize.width(),
-            node->pos().y() * SchematicCanvas::gridSize.height()
-        );
-    }
-
-    event->accept();
-}
-
-void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    if (!isDragging) return;
-
-    auto mouseDelta = event->screenPos() - mouseStartPoint;
-
-    auto newNodePos = nodeStartPoint + mouseDelta;
+void NodeItem::resizerSetPos(QPointF newPos) {
     node->setPos(QPoint(
-        qRound((float)newNodePos.x() / SchematicCanvas::gridSize.width()),
-        qRound((float)newNodePos.y() / SchematicCanvas::gridSize.height())
+        qRound(newPos.x() / SchematicCanvas::gridSize.width()),
+        qRound(newPos.y() / SchematicCanvas::gridSize.height())
     ));
-
-    event->accept();
 }
 
-void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    isDragging = false;
-
-    event->accept();
+void NodeItem::resizerSetSize(QSizeF newSize) {
+    node->setSize(QSize(
+        qRound(newSize.width() / SchematicCanvas::gridSize.width()),
+        qRound(newSize.height() / SchematicCanvas::gridSize.height())
+    ));
 }
