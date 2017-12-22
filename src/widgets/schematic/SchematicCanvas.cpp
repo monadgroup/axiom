@@ -4,6 +4,7 @@
 #include <iostream>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsPathItem>
+#include <QtWidgets/QMenu>
 
 #include "src/AxiomApplication.h"
 #include "../node/NodeItem.h"
@@ -15,6 +16,7 @@ QSize SchematicCanvas::gridSize = QSize(50, 50);
 SchematicCanvas::SchematicCanvas(QWidget *parent) : QGraphicsView(new QGraphicsScene(), parent) {
     scene()->setSceneRect(0, 0, width()*2, height()*2);
 
+    // set properties
     setDragMode(QGraphicsView::RubberBandDrag);
     setRenderHint(QPainter::Antialiasing);
 
@@ -23,6 +25,14 @@ SchematicCanvas::SchematicCanvas(QWidget *parent) : QGraphicsView(new QGraphicsS
 
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    // build context menu
+    addAction(new QAction(tr("Test 1")));
+    addAction(new QAction(tr("Test 2")));
+    addAction(new QAction(tr("Test 3")));
+
+    // build selection
     auto selectionPen = QPen(QColor::fromRgb(52, 152, 219));
     auto selectionBrush = QBrush(QColor::fromRgb(52, 152, 219, 50));
 
@@ -30,6 +40,7 @@ SchematicCanvas::SchematicCanvas(QWidget *parent) : QGraphicsView(new QGraphicsS
     selectionPath->setVisible(false);
     selectionPath->setZValue(100);
 
+    // add debug items
     scene()->addItem(new NodeItem());
 }
 
@@ -45,6 +56,7 @@ void SchematicCanvas::mousePressEvent(QMouseEvent *event) {
     switch (event->button()) {
         case Qt::LeftButton: leftMousePressEvent(event); break;
         case Qt::MiddleButton: middleMousePressEvent(event); break;
+        default: QGraphicsView::mousePressEvent(event); break;
     }
 }
 
@@ -52,6 +64,7 @@ void SchematicCanvas::mouseReleaseEvent(QMouseEvent *event) {
     switch (event->button()) {
         case Qt::LeftButton: leftMouseReleaseEvent(event); break;
         case Qt::MiddleButton: middleMouseReleaseEvent(event); break;
+        default: QGraphicsView::mouseReleaseEvent(event); break;
     }
 }
 

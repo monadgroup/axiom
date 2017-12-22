@@ -64,3 +64,35 @@ QScrollBar::handle:horizontal:hover, QScrollBar::handle:horizontal:pressed {
 QScrollBar::handle:vertical:hover, QScrollBar::handle:vertical:pressed {
     border-right: 2px solid #3498DB;
 }
+
+QMenuBar {
+    background: #111;
+}
+
+QMenu {
+    background: #111;
+    border: 1px solid #333;
+    color: #EEE;
+}
+
+QMenu::item, QMenuBar::item {
+    margin: 0;
+    padding: 5px 15px;
+}
+
+QMenu::item:selected, QMenuBar::item:selected {
+    background: #333;
+}
+
+QMenu::item:pressed {
+    background: #444;
+}
+
+QMenuBar::item:pressed {
+    background: #3498DB;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #333;
+}
