@@ -24,6 +24,16 @@ namespace AxiomGui {
         void triggerUpdate();
 
         void remove();
+
+    protected:
+        void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+    private:
+        bool isDragging;
+        QPoint mouseStartPoint;
+        QPoint nodeStartPoint;
     };
 
 }

@@ -12,5 +12,8 @@ AxiomApplication::AxiomApplication(int argc, char **argv) : QApplication(argc, a
     setStyleSheet(AxiomUtil::loadStylesheet(":/MainStyles.qss"));
 
     // make a debug project
-    project->root.addNode(std::make_unique<AxiomModel::CustomNode>(&project->root));
+    auto node = std::make_unique<AxiomModel::CustomNode>(&project->root);
+    node->setPos(QPoint(2, 2));
+    node->setSize(QSize(1, 1));
+    project->root.addNode(std::move(node));
 }

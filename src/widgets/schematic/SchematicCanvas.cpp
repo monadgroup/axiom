@@ -21,7 +21,7 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic, QWidget *parent)
     scene()->setSceneRect(0, 0, width()*2, height()*2);
 
     // set properties
-    setDragMode(QGraphicsView::RubberBandDrag);
+    setDragMode(QGraphicsView::NoDrag);
     setRenderHint(QPainter::Antialiasing);
 
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -84,6 +84,8 @@ void SchematicCanvas::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void SchematicCanvas::mouseMoveEvent(QMouseEvent *event) {
+    QGraphicsView::mouseMoveEvent(event);
+
     if (isSelecting) {
         selectionPoints.append(event->localPos());
 
@@ -105,16 +107,23 @@ void SchematicCanvas::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void SchematicCanvas::leftMousePressEvent(QMouseEvent *event) {
+    QGraphicsView::mousePressEvent(event);
+    return;
+
     isSelecting = true;
     selectionPoints.append(event->localPos());
+    event->accept();
 }
 
 void SchematicCanvas::leftMouseReleaseEvent(QMouseEvent *event) {
+    QGraphicsView::mouseReleaseEvent(event);
+
     if (!isSelecting) return;
 
     isSelecting = false;
     selectionPoints.clear();
     selectionPath->setVisible(false);
+    event->accept();
 }
 
 void SchematicCanvas::middleMousePressEvent(QMouseEvent *event) {
@@ -122,10 +131,12 @@ void SchematicCanvas::middleMousePressEvent(QMouseEvent *event) {
 
     dragStart = event->localPos();
     dragOffset = QPointF(0, 0);
+    event->accept();
 }
 
 void SchematicCanvas::middleMouseReleaseEvent(QMouseEvent *event) {
     isDragging = false;
+    event->accept();
 }
 
 void SchematicCanvas::contextMenuEvent(QContextMenuEvent *event) {
@@ -142,6 +153,7 @@ void SchematicCanvas::contextMenuEvent(QContextMenuEvent *event) {
     contextMenu.addAction(new QAction(tr("Something else")));
 
     contextMenu.exec(event->globalPos());
+    event->accept();
 }
 
 void SchematicCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize) {
