@@ -4,7 +4,6 @@
 #include "src/AxiomApplication.h"
 #include "SchematicCanvas.h"
 
-
 using namespace AxiomGui;
 
 SchematicPanel::SchematicPanel(QWidget *parent) : QDockWidget("todo", parent) {

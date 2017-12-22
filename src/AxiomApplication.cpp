@@ -1,10 +1,16 @@
 #include "AxiomApplication.h"
 
+#include <memory>
+
 #include "util.h"
+#include "src/model/CustomNode.h"
 
 AxiomApplication *AxiomApplication::main = nullptr;
 AxiomModel::Project *AxiomApplication::project = new AxiomModel::Project();
 
 AxiomApplication::AxiomApplication(int argc, char **argv) : QApplication(argc, argv) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/MainStyles.qss"));
+
+    // make a debug project
+    project->root.addNode(std::make_unique<AxiomModel::CustomNode>(&project->root));
 }
