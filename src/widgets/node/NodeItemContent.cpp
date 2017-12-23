@@ -12,8 +12,8 @@ using namespace AxiomModel;
 NodeItemContent::NodeItemContent(Node *node) : node(node) {
     connect(node, &Node::nameChanged,
             this, &NodeItemContent::triggerUpdate);
-    connect(node, &Node::sizeChanged,
-            this, &NodeItemContent::triggerUpdate);
+    connect(node, &Node::beforeSizeChanged,
+            this, &NodeItemContent::triggerGeometryChange);
     connect(node, &Node::selectedChanged,
             this, &NodeItemContent::triggerUpdate);
 }
@@ -39,6 +39,10 @@ void NodeItemContent::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 void NodeItemContent::triggerUpdate() {
     update();
+}
+
+void NodeItemContent::triggerGeometryChange() {
+    prepareGeometryChange();
 }
 
 void NodeItemContent::mousePressEvent(QGraphicsSceneMouseEvent *event) {

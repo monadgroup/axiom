@@ -30,7 +30,9 @@ namespace AxiomModel {
 
     signals:
         void nameChanged(const QString &newName);
+        void beforePosChanged(QPoint newPos);
         void posChanged(QPoint newPos);
+        void beforeSizeChanged(QSize newSize);
         void sizeChanged(QSize newSize);
         void selectedChanged(bool newSelected);
         void removed();

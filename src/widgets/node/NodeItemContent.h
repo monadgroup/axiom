@@ -21,6 +21,7 @@ namespace AxiomGui {
 
     public slots:
         void triggerUpdate();
+        void triggerGeometryChange();
 
     protected:
         void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;

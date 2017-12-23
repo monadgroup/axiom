@@ -36,9 +36,12 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
         NodeResizer::TOP, NodeResizer::RIGHT, NodeResizer::BOTTOM, NodeResizer::LEFT,
         NodeResizer::TOP_RIGHT, NodeResizer::TOP_LEFT, NodeResizer::BOTTOM_RIGHT, NodeResizer::BOTTOM_LEFT
     };
-    for (const auto dir : directions) {
-        auto resizer = new NodeResizer(dir);
-        resizer->setZValue(1);
+    for (auto i = 0; i < 8; i++) {
+        auto resizer = new NodeResizer(directions[i], SchematicCanvas::gridSize);
+
+        // ensure corners are on top of edges
+        resizer->setZValue(i > 3 ? 2 : 1);
+
         connect(this, &NodeItem::resizerPosChanged,
                 resizer, &NodeResizer::setPos);
         connect(this, &NodeItem::resizerSizeChanged,

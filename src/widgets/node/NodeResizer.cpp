@@ -6,7 +6,8 @@
 
 using namespace AxiomGui;
 
-NodeResizer::NodeResizer(Direction dir, float marginSize) : dir(dir), marginSize(marginSize) {
+NodeResizer::NodeResizer(Direction dir, QSizeF minSize, float marginSize)
+        : dir(dir), minSize(minSize), marginSize(marginSize) {
     setAcceptedMouseButtons(Qt::LeftButton);
 
     switch (dir) {
@@ -18,35 +19,35 @@ NodeResizer::NodeResizer(Direction dir, float marginSize) : dir(dir), marginSize
 }
 
 QRectF NodeResizer::boundingRect() const {
-    QPointF p = QPointF(-marginSize, -marginSize);
-    QSizeF s = QSizeF(m_size.width() + marginSize*2, m_size.height() + marginSize*2);
+    QPointF p = QPointF(-marginSize/2, -marginSize/2);
+    QSizeF s = QSizeF(m_size.width() + marginSize, m_size.height() + marginSize);
 
-    if (dir & (TOP | BOTTOM)) {
-        s.setHeight(marginSize);
+    auto hasV = dir & (TOP | BOTTOM);
+    auto hasH = dir & (LEFT | RIGHT);
+
+    if (hasV) {
+        s.setHeight(marginSize * (hasH ? 2 : 1));
     }
-    if (dir & (LEFT | RIGHT)) {
-        s.setWidth(marginSize);
+    if (hasH) {
+        s.setWidth(marginSize * (hasV ? 2 : 1));
     }
     if (dir & BOTTOM) {
-        p.setY(m_size.height());
+        p.setY(m_size.height() - marginSize * (hasH ? 1.5f : 0.5f));
     }
     if (dir & RIGHT) {
-        p.setX(m_size.width());
+        p.setX(m_size.width() - marginSize * (hasV ? 1.5f : 0.5f));
     }
 
     return {p, s};
 }
 
 void NodeResizer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    painter->setBrush(QBrush(Qt::red));
-    painter->setPen(Qt::transparent);
-    painter->drawRect(boundingRect());
 }
 
 void NodeResizer::setSize(QSizeF newSize) {
     if (newSize != m_size) {
+        prepareGeometryChange();
         m_size = newSize;
-        update();
     }
 }
 
@@ -73,18 +74,20 @@ void NodeResizer::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     auto mouseDelta = event->screenPos() - startMousePos;
 
     if (dir & BOTTOM) {
-        newSize.setHeight(startSize.height() + mouseDelta.y());
+        newSize.setHeight(qMax(startSize.height() + mouseDelta.y(), minSize.height()));
     }
     if (dir & RIGHT) {
-        newSize.setWidth(startSize.width() + mouseDelta.x());
+        newSize.setWidth(qMax(startSize.width() + mouseDelta.x(), minSize.width()));
     }
     if (dir & TOP) {
-        newPos.setY(startPos.y() + mouseDelta.y());
-        newSize.setHeight(startSize.height() - mouseDelta.y());
+        auto newHeight = qMax(startSize.height() - mouseDelta.y(), minSize.height());
+        newPos.setY(startPos.y() + startSize.height() - newHeight);
+        newSize.setHeight(newHeight);
     }
     if (dir & LEFT) {
-        newPos.setX(startPos.x() + mouseDelta.x());
-        newSize.setWidth(startSize.width() - mouseDelta.x());
+        auto newWidth = qMax(startSize.width() - mouseDelta.x(), minSize.width());
+        newPos.setX(startPos.x() + startSize.width() - newWidth);
+        newSize.setWidth(newWidth);
     }
 
     if (newPos != m_pos) emit moved(newPos);

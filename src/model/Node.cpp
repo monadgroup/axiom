@@ -16,6 +16,7 @@ void Node::setName(const QString &name) {
 
 void Node::setPos(QPoint pos) {
     if (pos != m_pos) {
+        emit beforePosChanged(pos);
         m_pos = pos;
         emit posChanged(pos);
     }
@@ -23,6 +24,7 @@ void Node::setPos(QPoint pos) {
 
 void Node::setSize(QSize size) {
     if (size != m_size) {
+        emit beforeSizeChanged(size);
         m_size = size;
         emit sizeChanged(size);
     }

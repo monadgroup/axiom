@@ -19,7 +19,7 @@ namespace AxiomGui {
             BOTTOM_LEFT  = BOTTOM | LEFT
         };
 
-        explicit NodeResizer(Direction dir, float marginSize = 5);
+        explicit NodeResizer(Direction dir, QSizeF minSize, float marginSize = 5);
 
         QRectF boundingRect() const override;
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -46,6 +46,7 @@ namespace AxiomGui {
         QPointF startMousePos;
         QPointF startPos;
         QSizeF startSize;
+        QSizeF minSize;
 
         QPointF m_pos;
         QSizeF m_size;
