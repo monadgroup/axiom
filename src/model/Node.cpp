@@ -16,13 +16,21 @@ void Node::setName(const QString &name) {
 
 void Node::setPos(QPoint pos) {
     if (pos != m_pos) {
-        if (!parent->positionAvailable(pos, m_size, this)) return;
+        auto newPos = m_pos;
+        if (parent->positionAvailable(QPoint(pos.x(), newPos.y()), m_size, this)) {
+            newPos.setX(pos.x());
+        }
+        if (parent->positionAvailable(QPoint(newPos.x(), pos.y()), m_size, this)) {
+            newPos.setY(pos.y());
+        }
+        if (newPos == m_pos) return;
+
         parent->freeGridRect(m_pos, m_size);
 
-        emit beforePosChanged(pos);
-        parent->setGridRect(pos, m_size, this);
-        m_pos = pos;
-        emit posChanged(pos);
+        emit beforePosChanged(newPos);
+        parent->setGridRect(newPos, m_size, this);
+        m_pos = newPos;
+        emit posChanged(newPos);
     }
 }
 
@@ -37,6 +45,7 @@ void Node::setSize(QSize size) {
         m_size = size;
         emit sizeChanged(size);
     }
+}
 }
 
 void Node::setSelected(bool selected) {
