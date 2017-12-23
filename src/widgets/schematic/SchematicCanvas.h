@@ -25,6 +25,7 @@ namespace AxiomGui {
     public slots:
         void setPan(QPointF pan);
         void addNode(AxiomModel::Node *node);
+        void newNode();
 
     protected:
         void drawBackground(QPainter *painter, const QRectF &rect) override;
@@ -43,6 +44,8 @@ namespace AxiomGui {
 
         QPointF dragStart;
         QPointF dragOffset;
+
+        QMenu *contextMenu;
 
         void leftMousePressEvent(QMouseEvent *event);
         void leftMouseReleaseEvent(QMouseEvent *event);

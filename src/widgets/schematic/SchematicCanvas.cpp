@@ -4,9 +4,9 @@
 #include <iostream>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsPathItem>
-#include <QtWidgets/QMenu>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QWidgetAction>
+#include <src/model/CustomNode.h>
 
 #include "src/AxiomApplication.h"
 #include "../node/NodeItem.h"
@@ -29,6 +29,26 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic, QWidget *parent)
 
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
+    // build menu
+    contextMenu = new QMenu(this);
+
+    auto contextSearch = new QLineEdit();
+    contextSearch->setPlaceholderText("Search modules...");
+    auto widgetAction = new QWidgetAction(this);
+    widgetAction->setDefaultWidget(contextSearch);
+
+    contextMenu->addAction(widgetAction);
+    contextMenu->addSeparator();
+
+    auto newNodeAction = new QAction(tr("New Node"));
+    connect(newNodeAction, &QAction::triggered,
+            this, &SchematicCanvas::newNode);
+    contextMenu->addAction(newNodeAction);
+
+    contextMenu->addSeparator();
+    contextMenu->addAction(new QAction(tr("LFO")));
+    contextMenu->addAction(new QAction(tr("Something else")));
+
     // build selection
     auto selectionPen = QPen(QColor::fromRgb(52, 152, 219));
     auto selectionBrush = QBrush(QColor::fromRgb(52, 152, 219, 50));
@@ -36,8 +56,6 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic, QWidget *parent)
     selectionPath = scene()->addPath(QPainterPath(), selectionPen, selectionBrush);
     selectionPath->setVisible(false);
     selectionPath->setZValue(100);
-
-    std::cout << "Schematic is " << schematic << std::endl;
 
     // create items for all nodes that already exist
     for (const auto &item : schematic->nodes()) {
@@ -60,8 +78,8 @@ QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
 
 QSize SchematicCanvas::nodeRealSize(const QSize &s) {
     return {
-        s.width() * SchematicCanvas::gridSize.width(),
-        s.height() * SchematicCanvas::gridSize.height()
+        s.width() * SchematicCanvas::gridSize.width() + 1,
+        s.height() * SchematicCanvas::gridSize.height() + 1
     };
 }
 
@@ -71,6 +89,17 @@ void SchematicCanvas::setPan(QPointF pan) {
 
 void SchematicCanvas::addNode(AxiomModel::Node *node) {
     scene()->addItem(new NodeItem(node, this));
+}
+
+void SchematicCanvas::newNode() {
+    auto newNode = std::make_unique<AxiomModel::CustomNode>(schematic);
+    auto contextPos = mapFromGlobal(contextMenu->pos());
+    newNode->setSize(QSize(2, 1));
+    newNode->setPos(QPoint(
+        qRound((float)contextPos.x() / gridSize.width()) - newNode->size().width()/2,
+        qRound((float)contextPos.y() / gridSize.height()) - newNode->size().height()/2
+    ));
+    schematic->addNode(std::move(newNode));
 }
 
 void SchematicCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
@@ -154,19 +183,7 @@ void SchematicCanvas::middleMouseReleaseEvent(QMouseEvent *event) {
 }
 
 void SchematicCanvas::contextMenuEvent(QContextMenuEvent *event) {
-    QMenu contextMenu(this);
-    auto contextSearch = new QLineEdit();
-    contextSearch->setPlaceholderText("Search modules...");
-    auto widgetAction = new QWidgetAction(this);
-    widgetAction->setDefaultWidget(contextSearch);
-    contextMenu.addAction(widgetAction);
-    contextMenu.addSeparator();
-    contextMenu.addAction(new QAction(tr("New Node")));
-    contextMenu.addSeparator();
-    contextMenu.addAction(new QAction(tr("LFO")));
-    contextMenu.addAction(new QAction(tr("Something else")));
-
-    contextMenu.exec(event->globalPos());
+    contextMenu->exec(event->globalPos());
     event->accept();
 }
 
@@ -186,7 +203,7 @@ void SchematicCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSiz
 
     for (auto x = topLeft.x(); x < bottomRight.x(); x += size.width()) {
         for (auto y = topLeft.y(); y < bottomRight.y(); y += size.height()) {
-            painter->drawPoint((int)x, (int)y);
+            painter->drawPoint((int)x+1, (int)y+1);
         }
     }
 }
