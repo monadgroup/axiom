@@ -5,8 +5,8 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QStyleOptionGraphicsItem>
 
-#include "noderesizer.h"
-#include "nodeitemcontent.h"
+#include "NodeResizer.h"
+#include "NodeItemContent.h"
 #include "../schematic/SchematicCanvas.h"
 #include "src/model/Node.h"
 

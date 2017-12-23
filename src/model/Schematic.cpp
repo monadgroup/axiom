@@ -11,7 +11,7 @@ void Schematic::setPan(QPointF pan) {
 }
 
 void Schematic::serialize(QDataStream &stream) const {
-    stream << pan() << m_nodes.size();
+    stream << pan() << static_cast<quint32>(m_nodes.size());
     for (const auto &node : m_nodes) {
         //node.serialize(stream);
     }
@@ -19,7 +19,7 @@ void Schematic::serialize(QDataStream &stream) const {
 
 void Schematic::deserialize(QDataStream &stream) {
     QPointF pan;
-    qint32 nodeCount;
+    quint32 nodeCount;
 
     stream >> pan >> nodeCount;
     setPan(pan);
