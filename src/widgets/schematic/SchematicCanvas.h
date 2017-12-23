@@ -32,6 +32,7 @@ namespace AxiomGui {
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
         void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
         void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+        void keyPressEvent(QKeyEvent *event) override;
 
     private:
         bool isSelecting = false;

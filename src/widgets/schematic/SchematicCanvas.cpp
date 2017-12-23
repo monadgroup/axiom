@@ -121,6 +121,12 @@ void SchematicCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     }
 }
 
+void SchematicCanvas::keyPressEvent(QKeyEvent *event) {
+    if (event->matches(QKeySequence::Delete)) {
+        schematic->deleteSelectedNodes();
+    }
+}
+
 void SchematicCanvas::leftMousePressEvent(QGraphicsSceneMouseEvent *event) {
     isSelecting = true;
     if (!(event->modifiers() & Qt::ShiftModifier)) {

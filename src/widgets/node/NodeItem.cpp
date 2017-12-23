@@ -4,6 +4,7 @@
 #include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QStyleOptionGraphicsItem>
+#include <iostream>
 
 #include "NodeResizer.h"
 #include "NodeItemContent.h"
@@ -72,7 +73,8 @@ void NodeItem::setSize(QSize newSize) {
 }
 
 void NodeItem::remove() {
-    parentItem()->scene()->removeItem(this);
+    std::cout << "Removing node!" << std::endl;
+    scene()->removeItem(this);
 }
 
 void NodeItem::resizerSetPos(QPointF newPos) {

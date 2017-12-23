@@ -47,6 +47,12 @@ void Schematic::addNode(std::unique_ptr<Node> node) {
     emit nodeAdded(ptr);
 }
 
+void Schematic::deleteSelectedNodes() {
+    while (!selectedNodes.empty()) {
+        selectedNodes[0]->remove();
+    }
+}
+
 bool Schematic::positionAvailable(QPoint pos, QSize *size, const Node *ignore) const {
     for (auto dx = 0; dx < size->width(); dx++) {
         for (auto dy = 0; dy < size->height(); dy++) {
@@ -150,14 +156,14 @@ void Schematic::deselectAll() {
 }
 
 void Schematic::removeNode(Node *node) {
+    selectedNodes.erase(std::find(selectedNodes.begin(), selectedNodes.end(), node));
+
     for (auto i = m_nodes.begin(); i < m_nodes.end(); i++) {
         if (i->get() == node) {
             m_nodes.erase(i);
             break;
         }
     }
-
-    selectedNodes.erase(std::find(selectedNodes.begin(), selectedNodes.end(), node));
 }
 
 void Schematic::selectNode(Node *node, bool exclusive) {
