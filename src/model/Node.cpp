@@ -46,16 +46,20 @@ void Node::setSize(QSize size) {
         emit sizeChanged(size);
     }
 }
-}
 
-void Node::setSelected(bool selected) {
-    if (selected != m_selected) {
-        m_selected = selected;
-        emit selectedChanged(selected);
+void Node::select(bool exclusive) {
+    if (exclusive || !m_selected) {
+        m_selected = true;
+        emit selected(exclusive);
     }
 }
 
+void Node::deselect() {
+    if (!m_selected) return;
+    m_selected = false;
+    emit deselected();
+}
+
 void Node::remove() {
-    parent->removeNode(this);
     emit removed();
 }

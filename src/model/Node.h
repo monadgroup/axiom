@@ -19,13 +19,14 @@ namespace AxiomModel {
         QString name() const { return m_name; }
         QPoint pos() const { return m_pos; }
         QSize size() const { return m_size; }
-        bool selected() const { return m_selected; }
+        bool isSelected() const { return m_selected; }
 
     public slots:
         void setName(const QString &name);
         void setPos(QPoint pos);
         void setSize(QSize size);
-        void setSelected(bool selected);
+        void select(bool exclusive);
+        void deselect();
         void remove();
 
     signals:
@@ -34,7 +35,8 @@ namespace AxiomModel {
         void posChanged(QPoint newPos);
         void beforeSizeChanged(QSize newSize);
         void sizeChanged(QSize newSize);
-        void selectedChanged(bool newSelected);
+        void selected(bool exclusive);
+        void deselected();
         void removed();
 
     private:

@@ -14,7 +14,9 @@ NodeItemContent::NodeItemContent(Node *node) : node(node) {
             this, &NodeItemContent::triggerUpdate);
     connect(node, &Node::beforeSizeChanged,
             this, &NodeItemContent::triggerGeometryChange);
-    connect(node, &Node::selectedChanged,
+    connect(node, &Node::selected,
+            this, &NodeItemContent::triggerUpdate);
+    connect(node, &Node::deselected,
             this, &NodeItemContent::triggerUpdate);
 }
 
@@ -29,7 +31,11 @@ void NodeItemContent::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
     painter->setClipRect(option->exposedRect);
 
     painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
-    painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17)));
+    if (node->isSelected()) {
+        painter->setBrush(QBrush(QColor::fromRgb(25, 25, 25)));
+    } else {
+        painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17)));
+    }
     painter->drawRect(boundingRect());
 
     painter->setPen(Qt::transparent);
@@ -46,6 +52,8 @@ void NodeItemContent::triggerGeometryChange() {
 }
 
 void NodeItemContent::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    node->select(!(event->modifiers() & Qt::ShiftModifier));
+
     if (event->button() == Qt::LeftButton) {
         isDragging = true;
         mouseStartPoint = event->screenPos();

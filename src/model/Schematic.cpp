@@ -6,12 +6,6 @@
 #include <unordered_set>
 
 using namespace AxiomModel;
-void Schematic::setPan(QPointF pan) {
-    if (pan != m_pan) {
-        m_pan = pan;
-        emit panChanged(pan);
-    }
-}
 
 void Schematic::serialize(QDataStream &stream) const {
     stream << pan() << static_cast<quint32>(m_nodes.size());
@@ -34,14 +28,15 @@ void Schematic::deserialize(QDataStream &stream) {
 
 void Schematic::addNode(std::unique_ptr<Node> node) {
     auto ptr = node.get();
-    //node->setPos(findNearestPos(node->pos(), node->size()));
     m_nodes.push_back(std::move(node));
-    /*for (auto dx = 0; dx < node->size().width(); dx++) {
-        for (auto dy = 0; dy < node->size().height(); dy++) {
-            auto insertP = node->pos() + QPoint(dx, dy);
-            grid.
-        }
-    }*/
+
+    connect(ptr, &Node::removed,
+            this, [this, ptr]() { removeNode(ptr); });
+    connect(ptr, &Node::selected,
+            this, [this, ptr](bool exclusive) { selectNode(ptr, exclusive); });
+    connect(ptr, &Node::deselected,
+            this, [this, ptr]() { deselectNode(ptr); });
+
     emit nodeAdded(ptr);
 }
 
@@ -128,12 +123,45 @@ void Schematic::setGridRect(QPoint pos, QSize size, const Node *node) {
     }
 }
 
-void Schematic::removeNode(Node *node) {
-    for (auto it = m_nodes.begin(); it != m_nodes.end(); it++) {
-        if (it->get() != node) continue;
-
-        m_nodes.erase(it);
-        emit nodeRemoved(node);
-        return;
+void Schematic::setPan(QPointF pan) {
+    if (pan != m_pan) {
+        m_pan = pan;
+        emit panChanged(pan);
     }
+}
+
+void Schematic::selectAll() {
+    for (const auto &node : m_nodes) {
+        node->select(false);
+    }
+}
+
+void Schematic::deselectAll() {
+    for (const auto &node : m_nodes) {
+        node->deselect();
+    }
+}
+
+void Schematic::removeNode(Node *node) {
+    for (auto i = m_nodes.begin(); i < m_nodes.end(); i++) {
+        if (i->get() == node) {
+            m_nodes.erase(i);
+            break;
+        }
+    }
+
+    selectedNodes.erase(std::find(selectedNodes.begin(), selectedNodes.end(), node));
+}
+
+void Schematic::selectNode(Node *node, bool exclusive) {
+    if (exclusive) {
+        for (const auto &iNode : m_nodes) {
+            if (iNode.get() != node) iNode->deselect();
+        }
+    }
+    selectedNodes.push_back(node);
+}
+
+void Schematic::deselectNode(Node *node) {
+    selectedNodes.erase(std::find(selectedNodes.begin(), selectedNodes.end(), node));
 }

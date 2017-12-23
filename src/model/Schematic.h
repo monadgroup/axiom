@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QPointF>
@@ -40,16 +41,22 @@ namespace AxiomModel {
 
     public slots:
         void setPan(QPointF pan);
+        void selectAll();
+        void deselectAll();
+
+    private slots:
         void removeNode(Node *node);
+        void selectNode(Node *node, bool exclusive);
+        void deselectNode(Node *node);
 
     signals:
         void panChanged(QPointF newPan);
         void nodeAdded(Node *node);
-        void nodeRemoved(Node *node);
 
     private:
         QPointF m_pan;
         std::vector<std::unique_ptr<Node>> m_nodes;
+        std::vector<Node*> selectedNodes;
         std::unordered_map<QPoint, const Node*> grid;
     };
 

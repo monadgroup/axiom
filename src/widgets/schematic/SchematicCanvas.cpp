@@ -5,55 +5,23 @@
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsPathItem>
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QWidgetAction>
-#include <src/model/CustomNode.h>
+#include <QtWidgets/QGraphicsSceneMouseEvent>
 
 #include "src/AxiomApplication.h"
 #include "../node/NodeItem.h"
+#include "src/model/CustomNode.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
 QSize SchematicCanvas::gridSize = QSize(50, 50);
 
-SchematicCanvas::SchematicCanvas(Schematic *schematic, QWidget *parent)
-        : QGraphicsView(new QGraphicsScene(), parent), schematic(schematic) {
-    scene()->setSceneRect(0, 0, width()*2, height()*2);
-
-    // set properties
-    setDragMode(QGraphicsView::NoDrag);
-    setRenderHint(QPainter::Antialiasing);
-
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-
-    // build menu
-    contextMenu = new QMenu(this);
-
-    auto contextSearch = new QLineEdit();
-    contextSearch->setPlaceholderText("Search modules...");
-    auto widgetAction = new QWidgetAction(this);
-    widgetAction->setDefaultWidget(contextSearch);
-
-    contextMenu->addAction(widgetAction);
-    contextMenu->addSeparator();
-
-    auto newNodeAction = new QAction(tr("New Node"));
-    connect(newNodeAction, &QAction::triggered,
-            this, &SchematicCanvas::newNode);
-    contextMenu->addAction(newNodeAction);
-
-    contextMenu->addSeparator();
-    contextMenu->addAction(new QAction(tr("LFO")));
-    contextMenu->addAction(new QAction(tr("Something else")));
-
+SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
     // build selection
     auto selectionPen = QPen(QColor::fromRgb(52, 152, 219));
     auto selectionBrush = QBrush(QColor::fromRgb(52, 152, 219, 50));
 
-    selectionPath = scene()->addPath(QPainterPath(), selectionPen, selectionBrush);
+    selectionPath = addPath(QPainterPath(), selectionPen, selectionBrush);
     selectionPath->setVisible(false);
     selectionPath->setZValue(100);
 
@@ -88,49 +56,43 @@ void SchematicCanvas::setPan(QPointF pan) {
 }
 
 void SchematicCanvas::addNode(AxiomModel::Node *node) {
-    scene()->addItem(new NodeItem(node, this));
-}
-
-void SchematicCanvas::newNode() {
-    auto newNode = std::make_unique<AxiomModel::CustomNode>(schematic);
-    auto contextPos = mapFromGlobal(contextMenu->pos());
-    newNode->setSize(QSize(2, 1));
-    newNode->setPos(QPoint(
-        qRound((float)contextPos.x() / gridSize.width()) - newNode->size().width()/2,
-        qRound((float)contextPos.y() / gridSize.height()) - newNode->size().height()/2
-    ));
-    schematic->addNode(std::move(newNode));
+    addItem(new NodeItem(node, this));
 }
 
 void SchematicCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
     drawGrid(painter, rect, gridSize, QColor::fromRgb(34, 34, 34), 2);
 }
 
-void SchematicCanvas::resizeEvent(QResizeEvent *event) {
-    scene()->setSceneRect(0, 0, event->size().width(), event->size().height());
-}
+void SchematicCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    QGraphicsScene::mousePressEvent(event);
+    if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
 
-void SchematicCanvas::mousePressEvent(QMouseEvent *event) {
     switch (event->button()) {
         case Qt::LeftButton: leftMousePressEvent(event); break;
         case Qt::MiddleButton: middleMousePressEvent(event); break;
-        default: QGraphicsView::mousePressEvent(event); break;
+        default: QGraphicsScene::mousePressEvent(event); break;
     }
 }
 
-void SchematicCanvas::mouseReleaseEvent(QMouseEvent *event) {
+void SchematicCanvas::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    QGraphicsScene::mouseReleaseEvent(event);
+    if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
+
     switch (event->button()) {
         case Qt::LeftButton: leftMouseReleaseEvent(event); break;
         case Qt::MiddleButton: middleMouseReleaseEvent(event); break;
-        default: QGraphicsView::mouseReleaseEvent(event); break;
+        default: QGraphicsScene::mouseReleaseEvent(event); break;
     }
 }
 
-void SchematicCanvas::mouseMoveEvent(QMouseEvent *event) {
-    QGraphicsView::mouseMoveEvent(event);
+void SchematicCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    QGraphicsScene::mouseMoveEvent(event);
+    if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
+
+    event->ignore();
 
     if (isSelecting) {
-        selectionPoints.append(event->localPos());
+        selectionPoints.append(event->scenePos());
 
         auto path = QPainterPath();
         path.moveTo(selectionPoints.first());
@@ -139,29 +101,40 @@ void SchematicCanvas::mouseMoveEvent(QMouseEvent *event) {
         }
         path.closeSubpath();
 
-        scene()->setSelectionArea(path);
         selectionPath->setPath(path);
         selectionPath->setVisible(true);
+
+        auto selectItems = items(path);
+        for (auto &item : selectItems) {
+            auto nodeItem = dynamic_cast<NodeItem*>(item);
+            if (nodeItem) {
+                nodeItem->node->select(false);
+            }
+        }
+
+        event->accept();
     }
 
     if (isDragging) {
         // todo
+        event->accept();
     }
 }
 
-void SchematicCanvas::leftMousePressEvent(QMouseEvent *event) {
-    QGraphicsView::mousePressEvent(event);
-    return;
-
+void SchematicCanvas::leftMousePressEvent(QGraphicsSceneMouseEvent *event) {
     isSelecting = true;
-    selectionPoints.append(event->localPos());
+    if (!(event->modifiers() & Qt::ShiftModifier)) {
+        schematic->deselectAll();
+    }
+    selectionPoints.append(event->scenePos());
     event->accept();
 }
 
-void SchematicCanvas::leftMouseReleaseEvent(QMouseEvent *event) {
-    QGraphicsView::mouseReleaseEvent(event);
-
-    if (!isSelecting) return;
+void SchematicCanvas::leftMouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isSelecting) {
+        event->ignore();
+        return;
+    }
 
     isSelecting = false;
     selectionPoints.clear();
@@ -169,21 +142,16 @@ void SchematicCanvas::leftMouseReleaseEvent(QMouseEvent *event) {
     event->accept();
 }
 
-void SchematicCanvas::middleMousePressEvent(QMouseEvent *event) {
+void SchematicCanvas::middleMousePressEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = true;
 
-    dragStart = event->localPos();
+    dragStart = event->pos();
     dragOffset = QPointF(0, 0);
     event->accept();
 }
 
-void SchematicCanvas::middleMouseReleaseEvent(QMouseEvent *event) {
+void SchematicCanvas::middleMouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
-    event->accept();
-}
-
-void SchematicCanvas::contextMenuEvent(QContextMenuEvent *event) {
-    contextMenu->exec(event->globalPos());
     event->accept();
 }
 

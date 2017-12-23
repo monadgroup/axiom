@@ -2,13 +2,13 @@
 
 #include "src/util.h"
 #include "src/AxiomApplication.h"
-#include "SchematicCanvas.h"
+#include "SchematicView.h"
 
 using namespace AxiomGui;
 
 SchematicPanel::SchematicPanel(QWidget *parent) : QDockWidget("todo", parent) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/SchematicPanel.qss"));
 
-    auto canvas = new SchematicCanvas(&AxiomApplication::project->root);
-    setWidget(canvas);
+    auto view = new SchematicView(&AxiomApplication::project->root);
+    setWidget(view);
 }
