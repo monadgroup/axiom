@@ -29,6 +29,10 @@ namespace AxiomModel {
         void deselect();
         void remove();
 
+        void startDragging();
+        void dragTo(QPoint delta);
+        void finishDragging();
+
     signals:
         void nameChanged(const QString &newName);
         void beforePosChanged(QPoint newPos);
@@ -37,6 +41,9 @@ namespace AxiomModel {
         void sizeChanged(QSize newSize);
         void selected(bool exclusive);
         void deselected();
+        void startedDragging();
+        void draggedTo(QPoint delta);
+        void finishedDragging();
         void removed();
 
     private:
@@ -44,6 +51,8 @@ namespace AxiomModel {
         QPoint m_pos;
         QSize m_size;
         bool m_selected;
+
+        QPoint dragStartPos;
     };
 
 }

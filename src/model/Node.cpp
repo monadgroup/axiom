@@ -5,6 +5,7 @@
 using namespace AxiomModel;
 
 Node::Node(Schematic *parent) : parent(parent) {
+
 }
 
 void Node::setName(const QString &name) {
@@ -62,4 +63,16 @@ void Node::deselect() {
 
 void Node::remove() {
     emit removed();
+}
+
+void Node::startDragging() {
+    dragStartPos = m_pos;
+}
+
+void Node::dragTo(QPoint delta) {
+    setPos(dragStartPos + delta);
+}
+
+void Node::finishDragging() {
+
 }

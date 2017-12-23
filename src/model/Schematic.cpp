@@ -37,6 +37,13 @@ void Schematic::addNode(std::unique_ptr<Node> node) {
     connect(ptr, &Node::deselected,
             this, [this, ptr]() { deselectNode(ptr); });
 
+    connect(ptr, &Node::startedDragging,
+            this, &Schematic::startDragging);
+    connect(ptr, &Node::draggedTo,
+            this, &Schematic::dragTo);
+    connect(ptr, &Node::finishedDragging,
+            this, &Schematic::finishDragging);
+
     emit nodeAdded(ptr);
 }
 
@@ -164,4 +171,22 @@ void Schematic::selectNode(Node *node, bool exclusive) {
 
 void Schematic::deselectNode(Node *node) {
     selectedNodes.erase(std::find(selectedNodes.begin(), selectedNodes.end(), node));
+}
+
+void Schematic::startDragging() {
+    for (auto &node : selectedNodes) {
+        node->startDragging();
+    }
+}
+
+void Schematic::dragTo(QPoint delta) {
+    for (auto &node : selectedNodes) {
+        node->dragTo(delta);
+    }
+}
+
+void Schematic::finishDragging() {
+    for (auto &node : selectedNodes) {
+        node->finishDragging();
+    }
 }

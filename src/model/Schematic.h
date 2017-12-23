@@ -28,6 +28,7 @@ namespace AxiomModel {
 
         QPointF pan() const { return m_pan; }
         std::vector<std::unique_ptr<Node>> &nodes() { return m_nodes; }
+        bool hasSelection() { return !selectedNodes.empty(); }
 
         virtual void serialize(QDataStream &stream) const;
         virtual void deserialize(QDataStream &stream);
@@ -48,6 +49,9 @@ namespace AxiomModel {
         void removeNode(Node *node);
         void selectNode(Node *node, bool exclusive);
         void deselectNode(Node *node);
+        void startDragging();
+        void dragTo(QPoint delta);
+        void finishDragging();
 
     signals:
         void panChanged(QPointF newPan);

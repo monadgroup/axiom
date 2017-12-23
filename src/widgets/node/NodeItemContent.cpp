@@ -5,6 +5,7 @@
 
 #include "../schematic/SchematicCanvas.h"
 #include "src/model/Node.h"
+#include "src/model/Schematic.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -52,12 +53,12 @@ void NodeItemContent::triggerGeometryChange() {
 }
 
 void NodeItemContent::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    node->select(!(event->modifiers() & Qt::ShiftModifier));
-
     if (event->button() == Qt::LeftButton) {
+        if (!node->isSelected()) node->select(true);
+
         isDragging = true;
         mouseStartPoint = event->screenPos();
-        nodeStartPoint = SchematicCanvas::nodeRealPos(node->pos());
+        emit node->startedDragging();
     }
 
     event->accept();
@@ -67,11 +68,9 @@ void NodeItemContent::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
-
-    auto newNodePos = nodeStartPoint + mouseDelta;
-    node->setPos(QPoint(
-            qRound((float)newNodePos.x() / SchematicCanvas::gridSize.width()),
-            qRound((float)newNodePos.y() / SchematicCanvas::gridSize.height())
+    emit node->draggedTo(QPoint(
+            qRound((float) mouseDelta.x() / SchematicCanvas::gridSize.width()),
+            qRound((float) mouseDelta.y() / SchematicCanvas::gridSize.height())
     ));
 
     event->accept();
@@ -79,6 +78,7 @@ void NodeItemContent::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 void NodeItemContent::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
+    emit node->finishedDragging();
 
     event->accept();
 }
