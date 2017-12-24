@@ -54,7 +54,7 @@ void NodeItemContent::triggerGeometryChange() {
 
 void NodeItemContent::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
-        if (!node->isSelected()) node->select(true);
+        if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
 
         isDragging = true;
         mouseStartPoint = event->screenPos();

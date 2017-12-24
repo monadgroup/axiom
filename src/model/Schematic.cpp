@@ -180,6 +180,7 @@ void Schematic::deselectNode(Node *node) {
 }
 
 void Schematic::startDragging() {
+    lastDragDelta = QPoint(0, 0);
     for (auto &node : selectedNodes) {
         node->startDragging();
     }
@@ -187,7 +188,17 @@ void Schematic::startDragging() {
 
 void Schematic::dragTo(QPoint delta) {
     for (auto &node : selectedNodes) {
-        node->dragTo(delta);
+        freeGridRect(node->pos(), node->size());
+    }
+
+    auto availableDelta = findAvailableDelta(delta);
+    lastDragDelta = availableDelta;
+    for (auto &node : selectedNodes) {
+        node->dragTo(availableDelta);
+    }
+
+    for (auto &node : selectedNodes) {
+        setGridRect(node->pos(), node->size(), node);
     }
 }
 
@@ -195,4 +206,20 @@ void Schematic::finishDragging() {
     for (auto &node : selectedNodes) {
         node->finishDragging();
     }
+}
+
+bool Schematic::isAllDragAvailable(QPoint delta) {
+    for (auto &node : selectedNodes) {
+        if (!node->isDragAvailable(delta)) return false;
+    }
+    return true;
+}
+
+QPoint Schematic::findAvailableDelta(QPoint delta) {
+    if (isAllDragAvailable(delta)) return delta;
+    auto xDelta = QPoint(delta.x(), lastDragDelta.y());
+    if (isAllDragAvailable(xDelta)) return xDelta;
+    auto yDelta = QPoint(lastDragDelta.x(), delta.y());
+    if (isAllDragAvailable(yDelta)) return yDelta;
+    return {0, 0};
 }

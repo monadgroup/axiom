@@ -63,6 +63,11 @@ namespace AxiomModel {
         std::vector<std::unique_ptr<Node>> m_nodes;
         std::vector<Node*> selectedNodes;
         std::unordered_map<QPoint, const Node*> grid;
+
+        QPoint lastDragDelta;
+
+        bool isAllDragAvailable(QPoint delta);
+        QPoint findAvailableDelta(QPoint delta);
     };
 
 }

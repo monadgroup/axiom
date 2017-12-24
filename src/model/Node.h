@@ -21,6 +21,8 @@ namespace AxiomModel {
         QSize size() const { return m_size; }
         bool isSelected() const { return m_selected; }
 
+        bool isDragAvailable(QPoint delta);
+
     public slots:
         void setName(const QString &name);
         void setPos(QPoint pos);
@@ -47,12 +49,13 @@ namespace AxiomModel {
         void removed();
 
     private:
-        QString m_name;
-        QPoint m_pos;
-        QSize m_size;
-        bool m_selected;
+        QString m_name = "";
+        QPoint m_pos = QPoint(0, 0);
+        QSize m_size = QSize(0, 0);
+        bool m_selected = false;
 
         QPoint dragStartPos;
+        void setPos(QPoint pos, bool updateGrid, bool checkPositions);
     };
 
 }
