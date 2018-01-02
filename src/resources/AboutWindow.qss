@@ -1,0 +1,17 @@
+#about-logo {
+    qproperty-alignment: AlignCenter;
+}
+
+#about-descript {
+    qproperty-alignment: AlignCenter;
+    margin-bottom: 20px;
+}
+
+#about-label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+#about-none {
+    color: #666;
+}

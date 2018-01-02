@@ -21,7 +21,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(SOURCE_FILES src/main.cpp src/util.cpp src/AxiomApplication.cpp
         src/model/CustomNode.cpp src/model/Library.cpp src/model/LibraryEntry.cpp src/model/ModuleNode.cpp src/model/ModuleSchematic.cpp src/model/Node.cpp src/model/Project.cpp src/model/RootSchematic.cpp src/model/Schematic.cpp
-        src/widgets/windows/MainWindow.cpp
+        src/widgets/windows/MainWindow.cpp src/widgets/windows/AboutWindow.cpp
         src/widgets/modulebrowser/ModuleBrowserPanel.cpp src/widgets/modulebrowser/ModulePreviewList.cpp src/widgets/modulebrowser/ModulePreview.cpp
         src/widgets/schematic/SchematicPanel.cpp src/widgets/schematic/SchematicView.cpp src/widgets/schematic/SchematicCanvas.cpp
         src/widgets/node/NodeItem.cpp src/widgets/node/NodeResizer.cpp src/widgets/node/NodeItemContent.cpp
