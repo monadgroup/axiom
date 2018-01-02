@@ -32,6 +32,8 @@ namespace AxiomGui {
 
         void resizerStartDrag();
 
+        void triggerGeometryChange();
+
     signals:
 
         void resizerPosChanged(QPointF newPos);

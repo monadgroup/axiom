@@ -18,6 +18,8 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
 
     connect(node, &Node::posChanged,
             this, &NodeItem::setPos);
+    connect(node, &Node::beforeSizeChanged,
+            this, &NodeItem::triggerGeometryChange);
     connect(node, &Node::sizeChanged,
             this, &NodeItem::setSize);
     connect(node, &Node::removed,
@@ -65,7 +67,6 @@ void NodeItem::setPos(QPoint newPos) {
 
 void NodeItem::setSize(QSize newSize) {
     emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
-    prepareGeometryChange();
 }
 
 void NodeItem::remove() {
@@ -84,4 +85,8 @@ void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
 
 void NodeItem::resizerStartDrag() {
     node->select(true);
+}
+
+void NodeItem::triggerGeometryChange() {
+    prepareGeometryChange();
 }
