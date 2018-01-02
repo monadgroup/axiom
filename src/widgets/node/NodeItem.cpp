@@ -44,6 +44,8 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
         connect(this, &NodeItem::resizerSizeChanged,
                 resizer, &NodeResizer::setSize);
 
+        connect(resizer, &NodeResizer::startDrag,
+                this, &NodeItem::resizerStartDrag);
         connect(resizer, &NodeResizer::changed,
                 this, &NodeItem::resizerChanged);
 
@@ -78,4 +80,8 @@ void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
             qRound(bottomRight.x() / SchematicCanvas::gridSize.width()),
             qRound(bottomRight.y() / SchematicCanvas::gridSize.height())
     ));
+}
+
+void NodeItem::resizerStartDrag() {
+    node->select(true);
 }
