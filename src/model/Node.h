@@ -27,6 +27,7 @@ namespace AxiomModel {
         void setName(const QString &name);
         void setPos(QPoint pos);
         void setSize(QSize size);
+        void setCorners(QPoint topLeft, QPoint bottomRight);
         void select(bool exclusive);
         void deselect();
         void remove();

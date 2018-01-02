@@ -53,17 +53,12 @@ void Schematic::deleteSelectedNodes() {
     }
 }
 
-bool Schematic::positionAvailable(QPoint pos, QSize *size, const Node *ignore) const {
-    for (auto dx = 0; dx < size->width(); dx++) {
-        for (auto dy = 0; dy < size->height(); dy++) {
+bool Schematic::positionAvailable(QPoint pos, QSize size, const Node *ignore) const {
+    for (auto dx = 0; dx < size.width(); dx++) {
+        for (auto dy = 0; dy < size.height(); dy++) {
             auto checkP = pos + QPoint(dx, dy);
             auto found = grid.find(checkP);
             if (found != grid.end() && found->second != ignore) {
-                // figure out two potential rectangles that fit
-                auto rectA = QSize(size->width(), dy);
-                auto rectB = QSize(dx, size->height());
-
-                *size = (rectA.width() * rectA.height() > rectB.width() * rectB.height()) ? rectA : rectB;
                 return false;
             }
         }
@@ -71,19 +66,15 @@ bool Schematic::positionAvailable(QPoint pos, QSize *size, const Node *ignore) c
     return true;
 }
 
-bool Schematic::positionAvailable(QPoint pos, QSize size, const Node *ignore) const {
-    return positionAvailable(pos, &size, ignore);
-}
-
 class SortedPos {
 public:
     QPoint checkPos;
     QPoint basePos;
 
-    SortedPos(QPoint checkPos, QPoint basePos) : checkPos(checkPos), basePos(basePos) { }
+    SortedPos(QPoint checkPos, QPoint basePos) : checkPos(checkPos), basePos(basePos) {}
 
     float dist() const {
-        return std::sqrt((float)checkPos.x() * checkPos.x() + checkPos.y() * checkPos.y());
+        return std::sqrt((float) checkPos.x() * checkPos.x() + checkPos.y() * checkPos.y());
     }
 
     bool operator<(const SortedPos &other) const {
@@ -105,7 +96,7 @@ QPoint Schematic::findNearestPos(QPoint pos, QSize size, const Node *ignore) con
         for (const auto &p : oldQueue) {
             if (positionAvailable(p.checkPos, size, ignore)) return p.checkPos;
 
-            QPoint offsets[] = { QPoint(1, 0), QPoint(-1, 0), QPoint(0, -1), QPoint(0, 1) };
+            QPoint offsets[] = {QPoint(1, 0), QPoint(-1, 0), QPoint(0, -1), QPoint(0, 1)};
             for (const auto &offset : offsets) {
                 auto newP = p.checkPos + offset;
                 if (visitedQueue.find(newP) == visitedQueue.end()) {
@@ -131,7 +122,7 @@ void Schematic::freeGridRect(QPoint pos, QSize size) {
 void Schematic::setGridRect(QPoint pos, QSize size, const Node *node) {
     for (auto dx = 0; dx < size.width(); dx++) {
         for (auto dy = 0; dy < size.height(); dy++) {
-            grid.insert(std::pair<QPoint, const Node*>(pos + QPoint(dx, dy), node));
+            grid.emplace(pos + QPoint(dx, dy), node);
         }
     }
 }
@@ -187,6 +178,8 @@ void Schematic::startDragging() {
 }
 
 void Schematic::dragTo(QPoint delta) {
+    if (delta == lastDragDelta) return;
+
     for (auto &node : selectedNodes) {
         freeGridRect(node->pos(), node->size());
     }

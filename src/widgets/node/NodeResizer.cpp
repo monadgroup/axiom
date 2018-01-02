@@ -60,43 +60,41 @@ void NodeResizer::setPos(QPointF newPos) {
 void NodeResizer::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = true;
     startMousePos = event->screenPos();
-    startPos = m_pos;
-    startSize = m_size;
+    startTopLeft = m_pos;
+    startBottomRight = QPointF(m_pos.x() + m_size.width(), m_pos.y() + m_size.height());
     emit startDrag(m_pos, m_size);
 }
 
 void NodeResizer::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
-    auto newSize = m_size;
-    auto newPos = m_pos;
+    auto topLeft = m_pos;
+    auto bottomRight = QPointF(m_pos.x() + m_size.width(), m_pos.y() + m_size.height());
+    auto startSize = startBottomRight - startTopLeft;
 
     auto mouseDelta = event->screenPos() - startMousePos;
 
     if (dir & BOTTOM) {
-        newSize.setHeight(qMax(startSize.height() + mouseDelta.y(), minSize.height()));
+        auto newHeight = qMax(startSize.y() + mouseDelta.y(), minSize.height());
+        bottomRight.setY(startTopLeft.y() + newHeight);
     }
     if (dir & RIGHT) {
-        newSize.setWidth(qMax(startSize.width() + mouseDelta.x(), minSize.width()));
+        auto newWidth = qMax(startSize.x() + mouseDelta.x(), minSize.width());
+        bottomRight.setX(startTopLeft.x() + newWidth);
     }
     if (dir & TOP) {
-        auto newHeight = qMax(startSize.height() - mouseDelta.y(), minSize.height());
-        newPos.setY(startPos.y() + startSize.height() - newHeight);
-        newSize.setHeight(newHeight);
+        auto newHeight = qMax(startSize.y() - mouseDelta.y(), minSize.height());
+        topLeft.setY(startBottomRight.y() - newHeight);
     }
     if (dir & LEFT) {
-        auto newWidth = qMax(startSize.width() - mouseDelta.x(), minSize.width());
-        newPos.setX(startPos.x() + startSize.width() - newWidth);
-        newSize.setWidth(newWidth);
+        auto newWidth = qMax(startSize.x() - mouseDelta.x(), minSize.height());
+        topLeft.setX(startBottomRight.x() - newWidth);
     }
 
-    if (newPos != m_pos) emit moved(newPos);
-    if (newSize != m_size) emit resized(newSize);
+    if (topLeft != startTopLeft || bottomRight != startBottomRight) emit changed(topLeft, bottomRight);
 }
 
 void NodeResizer::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
-    setPos(m_pos);
-    setSize(m_size);
     emit endDrag(m_pos, m_size);
 }

@@ -35,7 +35,6 @@ namespace AxiomModel {
 
         void addNode(std::unique_ptr<Node> node);
         void deleteSelectedNodes();
-        bool positionAvailable(QPoint pos, QSize *size, const Node *ignore = nullptr) const;
         bool positionAvailable(QPoint pos, QSize size, const Node *ignore = nullptr) const;
         QPoint findNearestPos(QPoint pos, QSize size, const Node *ignore = nullptr) const;
         void freeGridRect(QPoint pos, QSize size);

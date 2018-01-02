@@ -25,8 +25,7 @@ void Node::setPos(QPoint pos) {
 
 void Node::setSize(QSize size) {
     if (size != m_size) {
-        parent->positionAvailable(m_pos, &size, this);
-        if (size.width() < 1 || size.height() < 1) return;
+        if (size.width() < 1 || size.height() < 1 || !parent->positionAvailable(m_pos, size, this)) return;
 
         parent->freeGridRect(m_pos, m_size);
         emit beforeSizeChanged(size);
@@ -34,6 +33,38 @@ void Node::setSize(QSize size) {
         m_size = size;
         emit sizeChanged(size);
     }
+}
+
+void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
+    auto newSize = QSize(bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y());
+    if (newSize.width() < 1 || newSize.height() < 1) return;
+    if (topLeft == m_pos && newSize == m_size) return;
+
+    if (!parent->positionAvailable(topLeft, newSize, this)) {
+        // try resizing just horizontally or just vertically
+        auto hTopLeft = QPoint(topLeft.x(), m_pos.y());
+        auto hSize = QSize(newSize.width(), m_size.height());
+        auto vTopLeft = QPoint(m_pos.x(), topLeft.y());
+        auto vSize = QSize(m_size.width(), newSize.height());
+        if (parent->positionAvailable(hTopLeft, hSize, this)) {
+            topLeft = hTopLeft;
+            newSize = hSize;
+        } else if (parent->positionAvailable(vTopLeft, vSize, this)) {
+            topLeft = vTopLeft;
+            newSize = vSize;
+        }
+    }
+
+    if (topLeft == m_pos && newSize == m_size) return;
+    parent->freeGridRect(m_pos, m_size);
+
+    parent->setGridRect(topLeft, newSize, this);
+    emit beforePosChanged(topLeft);
+    m_pos = topLeft;
+    emit posChanged(m_pos);
+    emit beforeSizeChanged(newSize);
+    m_size = newSize;
+    emit sizeChanged(m_size);
 }
 
 void Node::select(bool exclusive) {
@@ -66,23 +97,14 @@ void Node::remove() {
 
 void Node::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
     if (pos != m_pos) {
-        auto newPos = pos;
-        if (checkPositions) {
-            newPos = m_pos;
-            if (parent->positionAvailable(QPoint(pos.x(), newPos.y()), m_size, this)) {
-                newPos.setX(pos.x());
-            }
-            if (parent->positionAvailable(QPoint(newPos.x(), pos.y()), m_size, this)) {
-                newPos.setY(pos.y());
-            }
-        }
+        if (checkPositions && !parent->positionAvailable(pos, m_size, this)) return;
 
-        if (newPos == m_pos) return;
+        if (pos == m_pos) return;
         if (updateGrid) parent->freeGridRect(m_pos, m_size);
 
-        emit beforePosChanged(newPos);
-        if (updateGrid) parent->setGridRect(newPos, m_size, this);
-        m_pos = newPos;
-        emit posChanged(newPos);
+        emit beforePosChanged(pos);
+        if (updateGrid) parent->setGridRect(pos, m_size, this);
+        m_pos = pos;
+        emit posChanged(pos);
     }
 }

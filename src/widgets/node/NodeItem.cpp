@@ -4,7 +4,6 @@
 #include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QStyleOptionGraphicsItem>
-#include <iostream>
 
 #include "NodeResizer.h"
 #include "NodeItemContent.h"
@@ -48,10 +47,8 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
         connect(this, &NodeItem::resizerSizeChanged,
                 resizer, &NodeResizer::setSize);
 
-        connect(resizer, &NodeResizer::moved,
-                this, &NodeItem::resizerSetPos);
-        connect(resizer, &NodeResizer::resized,
-                this, &NodeItem::resizerSetSize);
+        connect(resizer, &NodeResizer::changed,
+                this, &NodeItem::resizerChanged);
 
         addToGroup(resizer);
     }
@@ -69,24 +66,19 @@ void NodeItem::setPos(QPoint newPos) {
 
 void NodeItem::setSize(QSize newSize) {
     emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
-    update();
+    prepareGeometryChange();
 }
 
 void NodeItem::remove() {
-    std::cout << "Removing node!" << std::endl;
     scene()->removeItem(this);
 }
 
-void NodeItem::resizerSetPos(QPointF newPos) {
-    node->setPos(QPoint(
-        qRound(newPos.x() / SchematicCanvas::gridSize.width()),
-        qRound(newPos.y() / SchematicCanvas::gridSize.height())
-    ));
-}
-
-void NodeItem::resizerSetSize(QSizeF newSize) {
-    node->setSize(QSize(
-        qRound(newSize.width() / SchematicCanvas::gridSize.width()),
-        qRound(newSize.height() / SchematicCanvas::gridSize.height())
+void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
+    node->setCorners(QPoint(
+        qRound(topLeft.x() / SchematicCanvas::gridSize.width()),
+        qRound(topLeft.y() / SchematicCanvas::gridSize.height())
+    ), QPoint(
+        qRound(bottomRight.x() / SchematicCanvas::gridSize.width()),
+        qRound(bottomRight.y() / SchematicCanvas::gridSize.height())
     ));
 }

@@ -31,8 +31,7 @@ namespace AxiomGui {
     signals:
         void startDrag(QPointF pos, QSizeF size);
         void endDrag(QPointF pos, QSizeF size);
-        void moved(QPointF pos);
-        void resized(QSizeF size);
+        void changed(QPointF topLeft, QPointF bottomRight);
 
     protected:
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -44,8 +43,8 @@ namespace AxiomGui {
         Direction dir;
         bool isDragging;
         QPointF startMousePos;
-        QPointF startPos;
-        QSizeF startSize;
+        QPointF startTopLeft;
+        QPointF startBottomRight;
         QSizeF minSize;
 
         QPointF m_pos;

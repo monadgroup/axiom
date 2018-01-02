@@ -1,7 +1,6 @@
 #include "SchematicCanvas.h"
 
 #include <cmath>
-#include <iostream>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsPathItem>
 #include <QtWidgets/QLineEdit>

@@ -24,8 +24,7 @@ namespace AxiomGui {
         void remove();
 
     private slots:
-        void resizerSetPos(QPointF newPos);
-        void resizerSetSize(QSizeF newSize);
+        void resizerChanged(QPointF topLeft, QPointF bottomRight);
 
     signals:
         void resizerPosChanged(QPointF newPos);
