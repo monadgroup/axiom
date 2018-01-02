@@ -20,6 +20,8 @@ MainWindow::MainWindow() {
     setDockNestingEnabled(true);
     setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
+    setWindowIcon(QIcon(":/application.ico"));
+
     // create menu bars
     auto fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(new QAction(tr("&Import Library...")));

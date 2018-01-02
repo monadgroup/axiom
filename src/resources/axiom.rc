@@ -1,6 +1,8 @@
 #include <windows.h>
 #include "resource.h"
 
+IDI_APPICON     ICON    DISCARDABLE    "application.ico"
+
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION     VER_FILEVERSION
 PRODUCTVERSION  VER_PRODUCTVERSION
