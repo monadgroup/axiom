@@ -162,11 +162,17 @@ void Schematic::selectNode(Node *node, bool exclusive) {
             if (iNode.get() != node) iNode->deselect();
         }
     }
-    selectedNodes.push_back(node);
+
+    if (std::find(selectedNodes.begin(), selectedNodes.end(), node) == selectedNodes.end()) {
+        selectedNodes.push_back(node);
+    }
 }
 
 void Schematic::deselectNode(Node *node) {
-    selectedNodes.erase(std::find(selectedNodes.begin(), selectedNodes.end(), node));
+    auto loc = std::find(selectedNodes.begin(), selectedNodes.end(), node);
+    if (loc != selectedNodes.end()) {
+        selectedNodes.erase(loc);
+    }
 }
 
 void Schematic::startDragging() {
