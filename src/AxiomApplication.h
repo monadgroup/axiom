@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QApplication>
 #include "widgets/windows/MainWindow.h"
 #include "src/model/Project.h"

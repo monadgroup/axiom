@@ -1,9 +1,6 @@
 #include "NodeItem.h"
 
-#include <QtGui/QPen>
-#include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtWidgets/QStyleOptionGraphicsItem>
 
 #include "NodeResizer.h"
 #include "NodeItemContent.h"
@@ -33,8 +30,8 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
 
     // create resize items
     NodeResizer::Direction directions[] = {
-        NodeResizer::TOP, NodeResizer::RIGHT, NodeResizer::BOTTOM, NodeResizer::LEFT,
-        NodeResizer::TOP_RIGHT, NodeResizer::TOP_LEFT, NodeResizer::BOTTOM_RIGHT, NodeResizer::BOTTOM_LEFT
+            NodeResizer::TOP, NodeResizer::RIGHT, NodeResizer::BOTTOM, NodeResizer::LEFT,
+            NodeResizer::TOP_RIGHT, NodeResizer::TOP_LEFT, NodeResizer::BOTTOM_RIGHT, NodeResizer::BOTTOM_LEFT
     };
     for (auto i = 0; i < 8; i++) {
         auto resizer = new NodeResizer(directions[i], SchematicCanvas::gridSize);
@@ -75,10 +72,10 @@ void NodeItem::remove() {
 
 void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     node->setCorners(QPoint(
-        qRound(topLeft.x() / SchematicCanvas::gridSize.width()),
-        qRound(topLeft.y() / SchematicCanvas::gridSize.height())
+            qRound(topLeft.x() / SchematicCanvas::gridSize.width()),
+            qRound(topLeft.y() / SchematicCanvas::gridSize.height())
     ), QPoint(
-        qRound(bottomRight.x() / SchematicCanvas::gridSize.width()),
-        qRound(bottomRight.y() / SchematicCanvas::gridSize.height())
+            qRound(bottomRight.x() / SchematicCanvas::gridSize.width()),
+            qRound(bottomRight.y() / SchematicCanvas::gridSize.height())
     ));
 }

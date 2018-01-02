@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QtCore/QObject>
 #include <QtCore/QString>
 
@@ -9,7 +10,7 @@ namespace AxiomModel {
     class ModuleNode;
 
     class ModuleSchematic : public Schematic {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         ModuleNode *node;

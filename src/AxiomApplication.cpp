@@ -1,7 +1,5 @@
 #include "AxiomApplication.h"
 
-#include <memory>
-
 #include "util.h"
 #include "src/model/CustomNode.h"
 

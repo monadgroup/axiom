@@ -1,7 +1,6 @@
 #include "util.h"
 
 #include <QtCore/QFile>
-#include <cmath>
 
 using namespace AxiomUtil;
 

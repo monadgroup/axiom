@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QtCore/QString>
 #include <QtCore/QObject>
 
@@ -15,6 +16,7 @@ namespace AxiomModel {
         RootSchematic root;
 
         void serialize(QDataStream &stream) const;
+
         void deserialize(QDataStream &stream);
     };
 

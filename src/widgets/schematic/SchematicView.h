@@ -10,16 +10,18 @@ namespace AxiomModel {
 namespace AxiomGui {
 
     class SchematicView : public QGraphicsView {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         explicit SchematicView(AxiomModel::Schematic *schematic, QWidget *parent = nullptr);
 
     private slots:
+
         void newNode();
 
     protected:
         void resizeEvent(QResizeEvent *event) override;
+
         void contextMenuEvent(QContextMenuEvent *event) override;
 
     private:

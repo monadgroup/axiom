@@ -38,15 +38,15 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
     return {
-        p.x() * SchematicCanvas::gridSize.width(),
-        p.y() * SchematicCanvas::gridSize.height()
+            p.x() * SchematicCanvas::gridSize.width(),
+            p.y() * SchematicCanvas::gridSize.height()
     };
 }
 
 QSize SchematicCanvas::nodeRealSize(const QSize &s) {
     return {
-        s.width() * SchematicCanvas::gridSize.width() + 1,
-        s.height() * SchematicCanvas::gridSize.height() + 1
+            s.width() * SchematicCanvas::gridSize.width() + 1,
+            s.height() * SchematicCanvas::gridSize.height() + 1
     };
 }
 
@@ -67,9 +67,15 @@ void SchematicCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
 
     switch (event->button()) {
-        case Qt::LeftButton: leftMousePressEvent(event); break;
-        case Qt::MiddleButton: middleMousePressEvent(event); break;
-        default: QGraphicsScene::mousePressEvent(event); break;
+        case Qt::LeftButton:
+            leftMousePressEvent(event);
+            break;
+        case Qt::MiddleButton:
+            middleMousePressEvent(event);
+            break;
+        default:
+            QGraphicsScene::mousePressEvent(event);
+            break;
     }
 }
 
@@ -78,9 +84,15 @@ void SchematicCanvas::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
 
     switch (event->button()) {
-        case Qt::LeftButton: leftMouseReleaseEvent(event); break;
-        case Qt::MiddleButton: middleMouseReleaseEvent(event); break;
-        default: QGraphicsScene::mouseReleaseEvent(event); break;
+        case Qt::LeftButton:
+            leftMouseReleaseEvent(event);
+            break;
+        case Qt::MiddleButton:
+            middleMouseReleaseEvent(event);
+            break;
+        default:
+            QGraphicsScene::mouseReleaseEvent(event);
+            break;
     }
 }
 
@@ -105,7 +117,7 @@ void SchematicCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
         auto selectItems = items(path);
         for (auto &item : selectItems) {
-            auto nodeItem = dynamic_cast<NodeItem*>(item);
+            auto nodeItem = dynamic_cast<NodeItem *>(item);
             if (nodeItem) {
                 nodeItem->node->select(false);
             }
@@ -160,7 +172,8 @@ void SchematicCanvas::middleMouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     event->accept();
 }
 
-void SchematicCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize) {
+void SchematicCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color,
+                               qreal pointSize) {
     QPointF topLeft = rect.topLeft();
     topLeft.setX(std::floor(topLeft.x() / size.width()) * size.width());
     topLeft.setY(std::floor(topLeft.y() / size.height()) * size.height());
@@ -176,7 +189,7 @@ void SchematicCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSiz
 
     for (auto x = topLeft.x(); x < bottomRight.x(); x += size.width()) {
         for (auto y = topLeft.y(); y < bottomRight.y(); y += size.height()) {
-            painter->drawPoint((int)x+1, (int)y+1);
+            painter->drawPoint((int) x + 1, (int) y + 1);
         }
     }
 }

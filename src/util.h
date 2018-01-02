@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QtCore/QString>
 
 namespace AxiomUtil {

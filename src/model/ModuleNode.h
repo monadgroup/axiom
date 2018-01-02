@@ -1,4 +1,5 @@
 #pragma once
+
 #include <memory>
 #include <QtCore/QObject>
 
@@ -8,7 +9,7 @@
 namespace AxiomModel {
 
     class ModuleNode : public Node {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         std::unique_ptr<ModuleSchematic> schematic;

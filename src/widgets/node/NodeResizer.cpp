@@ -11,15 +11,27 @@ NodeResizer::NodeResizer(Direction dir, QSizeF minSize, float marginSize)
     setAcceptedMouseButtons(Qt::LeftButton);
 
     switch (dir) {
-        case TOP: case BOTTOM: setCursor(Qt::SizeVerCursor); break;
-        case LEFT: case RIGHT: setCursor(Qt::SizeHorCursor); break;
-        case TOP_RIGHT: case BOTTOM_LEFT: setCursor(Qt::SizeBDiagCursor); break;
-        case TOP_LEFT: case BOTTOM_RIGHT: setCursor(Qt::SizeFDiagCursor); break;
+        case TOP:
+        case BOTTOM:
+            setCursor(Qt::SizeVerCursor);
+            break;
+        case LEFT:
+        case RIGHT:
+            setCursor(Qt::SizeHorCursor);
+            break;
+        case TOP_RIGHT:
+        case BOTTOM_LEFT:
+            setCursor(Qt::SizeBDiagCursor);
+            break;
+        case TOP_LEFT:
+        case BOTTOM_RIGHT:
+            setCursor(Qt::SizeFDiagCursor);
+            break;
     }
 }
 
 QRectF NodeResizer::boundingRect() const {
-    QPointF p = QPointF(-marginSize/2, -marginSize/2);
+    QPointF p = QPointF(-marginSize / 2, -marginSize / 2);
     QSizeF s = QSizeF(m_size.width() + marginSize, m_size.height() + marginSize);
 
     auto hasV = dir & (TOP | BOTTOM);

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QtCore/QObject>
 #include <QtCore/QString>
 
@@ -7,7 +8,7 @@
 namespace AxiomModel {
 
     class RootSchematic : public Schematic {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         QString name() override;

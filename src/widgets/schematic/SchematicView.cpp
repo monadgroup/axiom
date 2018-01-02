@@ -14,7 +14,7 @@ using namespace AxiomModel;
 
 SchematicView::SchematicView(Schematic *schematic, QWidget *parent)
         : QGraphicsView(new SchematicCanvas(schematic), parent), schematic(schematic) {
-    scene()->setSceneRect(0, 0, width()*2, height()*2);
+    scene()->setSceneRect(0, 0, width() * 2, height() * 2);
 
     // set properties
     setDragMode(QGraphicsView::NoDrag);
@@ -51,8 +51,8 @@ void SchematicView::newNode() {
     auto contextPos = mapFromGlobal(contextMenu->pos());
     newNode->setSize(QSize(2, 1));
     newNode->setPos(QPoint(
-            qRound((float)contextPos.x() / SchematicCanvas::gridSize.width()) - newNode->size().width()/2,
-            qRound((float)contextPos.y() / SchematicCanvas::gridSize.height()) - newNode->size().height()/2
+            qRound((float) contextPos.x() / SchematicCanvas::gridSize.width()) - newNode->size().width() / 2,
+            qRound((float) contextPos.y() / SchematicCanvas::gridSize.height()) - newNode->size().height() / 2
     ));
     schematic->addNode(std::move(newNode));
 }

@@ -5,7 +5,6 @@
 
 #include "../schematic/SchematicCanvas.h"
 #include "src/model/Node.h"
-#include "src/model/Schematic.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -23,8 +22,8 @@ NodeItemContent::NodeItemContent(Node *node) : node(node) {
 
 QRectF NodeItemContent::boundingRect() const {
     return {
-        QPointF(0, 0),
-        SchematicCanvas::nodeRealSize(node->size())
+            QPointF(0, 0),
+            SchematicCanvas::nodeRealSize(node->size())
     };
 }
 
