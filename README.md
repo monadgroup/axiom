@@ -5,9 +5,9 @@ Axiom is a node-based realtime synthesizer, designed for size-constrained enviro
 Features:
 
  - Musician-friendly (ie knobs and sliders) interface
- - Highly customizable and flexible through a node editor and custom scripting language
+ - Highly customizable and flexible through a node editor and custom scripting language, named Maxim
  - Export to replayer with no dependencies (not even the standard library)
- - Use any DAW with VSTi support for note editing
+ - Use any DAW with VSTi support for note editing and automation
 
 **Axiom is currently in very early development, and so no prepackaged versions are available.** Feel free to contribute issues, features, and pull requests though!
 
@@ -21,7 +21,13 @@ Features:
 
 ## Development
 
-Axiom is written in C++ compiled with gcc. The editor uses Qt and is cross-platform, the VSTi uses VSTGUI, and the replayer is compiled with mingw-w64. The node editor uses tinycc to compile node expressions.
+Axiom is comprised of several components:
+
+ - The VST Editor, written with Qt and the VST SDK. This is the only part the user directly interacts with, and must be
+   OS-independent.
+ - The Maxim language compiler and runtime, written with LLVM and statically linked into the editor.
+ - The replayer, written in size-optimised C++. Due to it's reliance on Maxim snippets, this must be compiled with
+   Clang. This is the only part of the project that is OS-independent, as it (currently) relies on DirectSound.
 
 ## License
 
