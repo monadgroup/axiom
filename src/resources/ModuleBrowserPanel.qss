@@ -1,17 +1,5 @@
-#mainWidget {
-    padding: 0;
-    margin: 0;
-}
-
 QTabBar::tab {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid #222;
     padding: 10px 15px;
-}
-
-QTabBar::tab:hover, QTabBar::tab:selected {
-    background: #222;
 }
 
 QTabBar::tab:selected {
