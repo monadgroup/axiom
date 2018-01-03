@@ -1,8 +1,6 @@
 #include "Schematic.h"
 
 #include <QDataStream>
-#include <cmath>
-#include <set>
 
 using namespace AxiomModel;
 

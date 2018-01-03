@@ -20,9 +20,11 @@ namespace AxiomModel {
         QString name() const { return m_name; }
 
     public slots:
+
         void setName(const QString &name);
 
     signals:
+
         void nameChanged(const QString &newName);
 
     private:

@@ -20,7 +20,8 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(SOURCE_FILES src/main.cpp src/util.cpp src/AxiomApplication.cpp
-        src/model/Library.cpp src/model/LibraryEntry.cpp src/model/Project.cpp src/model/GridSurface.cpp src/model/GridItem.cpp
+        src/model/Library.cpp src/model/LibraryEntry.cpp src/model/Project.cpp src/model/GridSurface.cpp src/model/GridItem.cpp src/model/Control.cpp
+        src/model/connection/ConnectionSink.cpp src/model/connection/ConnectionSource.cpp src/model/connection/ConnectionWire.cpp src/model/connection/NodePlug.cpp src/model/connection/WireJunction.cpp
         src/model/node/CustomNode.cpp src/model/node/ModuleNode.cpp src/model/node/Node.cpp
         src/model/schematic/ModuleSchematic.cpp  src/model/schematic/RootSchematic.cpp src/model/schematic/Schematic.cpp
         src/widgets/dock/DockPanel.cpp

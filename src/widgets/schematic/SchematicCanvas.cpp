@@ -26,14 +26,14 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
 
     // create items for all nodes that already exist
     for (const auto &item : schematic->items()) {
-        addNode(dynamic_cast<Node*>(item.get()));
+        addNode(dynamic_cast<Node *>(item.get()));
     }
 
     // connect to model
     connect(schematic, &Schematic::panChanged,
             this, &SchematicCanvas::setPan);
     connect(schematic, &Schematic::itemAdded,
-            this, [this](AxiomModel::GridItem *item) { addNode(dynamic_cast<Node*>(item)); });
+            this, [this](AxiomModel::GridItem *item) { addNode(dynamic_cast<Node *>(item)); });
 }
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {

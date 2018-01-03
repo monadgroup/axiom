@@ -10,7 +10,7 @@ namespace AxiomModel {
     class GridSurface;
 
     class GridItem : public QObject {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         GridSurface *parent;
@@ -26,6 +26,7 @@ namespace AxiomModel {
         bool isDragAvailable(QPoint delta);
 
     public slots:
+
         void setPos(QPoint pos);
 
         void setSize(QSize size);
@@ -45,15 +46,25 @@ namespace AxiomModel {
         void finishDragging();
 
     signals:
+
         void beforePosChanged(QPoint newPos);
+
         void posChanged(QPoint newPos);
+
         void beforeSizeChanged(QSize newSize);
+
         void sizeChanged(QSize newSize);
+
         void selected(bool exclusive);
+
         void deselected();
+
         void startedDragging();
+
         void draggedTo(QPoint delta);
+
         void finishedDragging();
+
         void removed();
 
     private:

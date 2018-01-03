@@ -9,7 +9,8 @@
 
 using namespace AxiomGui;
 
-AboutWindow::AboutWindow() : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
+AboutWindow::AboutWindow() : QDialog(nullptr,
+                                     Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("About " VER_PRODUCTNAME_STR));
     setStyleSheet(AxiomUtil::loadStylesheet(":/AboutWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));

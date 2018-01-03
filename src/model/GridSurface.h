@@ -22,7 +22,7 @@ namespace std {
 namespace AxiomModel {
 
     class GridSurface : public QObject {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         std::vector<std::unique_ptr<GridItem>> const &items() const { return m_items; }
@@ -36,29 +36,39 @@ namespace AxiomModel {
         QPoint findNearestPos(QPoint pos, QSize size, const GridItem *ignore = nullptr) const;
 
         void freeGridRect(QPoint pos, QSize size);
+
         void setGridRect(QPoint pos, QSize size, const GridItem *item);
 
     public slots:
+
         void deleteSelectedItems();
+
         void selectAll();
+
         void deselectAll();
 
     private slots:
+
         void removeItem(GridItem *item);
+
         void selectItem(GridItem *item, bool exclusive);
+
         void deselectItem(GridItem *item);
 
         void startDragging();
+
         void dragTo(QPoint delta);
+
         void finishDragging();
 
     signals:
+
         void itemAdded(GridItem *item);
 
     private:
         std::vector<std::unique_ptr<GridItem>> m_items;
-        std::vector<GridItem*> selectedItems;
-        std::unordered_map<QPoint, const GridItem*> grid;
+        std::vector<GridItem *> selectedItems;
+        std::unordered_map<QPoint, const GridItem *> grid;
 
         QPoint lastDragDelta;
 

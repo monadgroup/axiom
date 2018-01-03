@@ -5,7 +5,7 @@
 namespace AxiomGui {
 
     class DockPanel : public QDockWidget {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         DockPanel(const QString &title);

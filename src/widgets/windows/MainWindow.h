@@ -11,6 +11,7 @@ namespace AxiomGui {
         MainWindow();
 
     public slots:
+
         void showAbout();
     };
 
