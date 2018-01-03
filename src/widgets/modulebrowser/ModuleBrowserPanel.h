@@ -1,14 +1,14 @@
 #pragma once
 
-#include <QtWidgets/QDockWidget>
+#include "../dock/DockPanel.h"
 
 namespace AxiomGui {
 
-    class ModuleBrowserPanel : public QDockWidget {
+    class ModuleBrowserPanel : public DockPanel {
     Q_OBJECT
 
     public:
-        explicit ModuleBrowserPanel(QWidget *parent = nullptr);
+        explicit ModuleBrowserPanel();
     };
 
 }

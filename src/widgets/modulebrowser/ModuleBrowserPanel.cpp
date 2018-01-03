@@ -9,7 +9,7 @@
 
 using namespace AxiomGui;
 
-ModuleBrowserPanel::ModuleBrowserPanel(QWidget *parent) : QDockWidget("Modules", parent) {
+ModuleBrowserPanel::ModuleBrowserPanel() : DockPanel("Modules") {
     setStyleSheet(AxiomUtil::loadStylesheet(":/ModuleBrowserPanel.qss"));
 
     auto mainLayout = new QGridLayout();
@@ -40,5 +40,4 @@ ModuleBrowserPanel::ModuleBrowserPanel(QWidget *parent) : QDockWidget("Modules",
 
     mainWidget->setLayout(mainLayout);
     setWidget(mainWidget);
-    setTitleBarWidget(new QWidget());
 }

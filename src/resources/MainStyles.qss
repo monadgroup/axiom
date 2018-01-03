@@ -80,7 +80,14 @@ QMenu {
 
 QMenu::item, QMenuBar::item {
     margin: 0;
+}
+
+QMenu::item {
     padding: 5px 15px;
+}
+
+QMenuBar::item {
+    padding: 5px 10px;
 }
 
 QMenu::item:selected, QMenuBar::item:selected {
@@ -133,7 +140,7 @@ QTabBar::tab:selected {
 
 /* dock panel styling */
 QMainWindow::separator {
-    background: #222;
+    background: #111;
 }
 
 QMainWindow::separator:horizontal {
@@ -142,4 +149,26 @@ QMainWindow::separator:horizontal {
 
 QMainWindow::separator:vertical {
     height: 2px;
+}
+
+QDockWidget {
+    border: none;
+}
+
+QDockWidget::title {
+    padding: 8px 10px;
+    background: #111;
+}
+
+QDockWidget::close-button, QDockWidget::float-button {
+    background: #111;
+    border: none;
+}
+
+QDockWidget::close-button:hover, QDockWidget::float-button:hover {
+    background: #333;
+}
+
+QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
+    background: #3498DB;
 }

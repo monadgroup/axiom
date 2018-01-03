@@ -1,7 +1,8 @@
 #pragma once
 
-#include <QtWidgets/QDockWidget>
 #include <QtWidgets/QGraphicsScene>
+
+#include "../dock/DockPanel.h"
 
 namespace AxiomModel {
     class Schematic;
@@ -9,7 +10,7 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class SchematicPanel : public QDockWidget {
+    class SchematicPanel : public DockPanel {
     Q_OBJECT
 
     public:

@@ -59,7 +59,7 @@ MainWindow::MainWindow() {
     canvasDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::TopDockWidgetArea, canvasDock);
 
-    auto *moduleBrowser = new ModuleBrowserPanel(this);
+    auto *moduleBrowser = new ModuleBrowserPanel();
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
 }
