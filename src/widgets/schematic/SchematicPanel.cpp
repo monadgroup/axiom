@@ -3,7 +3,7 @@
 #include "src/util.h"
 #include "src/AxiomApplication.h"
 #include "SchematicView.h"
-#include "src/model/schematic.h"
+#include "src/model/Schematic.h"
 
 using namespace AxiomGui;
 
