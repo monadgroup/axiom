@@ -1,29 +1,22 @@
-#include "Node.h"
+#include "GridItem.h"
 
-#include "Schematic.h"
+#include "GridSurface.h"
 
 using namespace AxiomModel;
 
-Node::Node(Schematic *parent) : parent(parent) {
+GridItem::GridItem(GridSurface *parent) : parent(parent) {
 
 }
 
-bool Node::isDragAvailable(QPoint delta) {
+bool GridItem::isDragAvailable(QPoint delta) {
     return parent->positionAvailable(dragStartPos + delta, m_size, this);
 }
 
-void Node::setName(const QString &name) {
-    if (name != m_name) {
-        m_name = name;
-        emit nameChanged(name);
-    }
-}
-
-void Node::setPos(QPoint pos) {
+void GridItem::setPos(QPoint pos) {
     setPos(pos, true, true);
 }
 
-void Node::setSize(QSize size) {
+void GridItem::setSize(QSize size) {
     if (size != m_size) {
         if (size.width() < 1 || size.height() < 1 || !parent->positionAvailable(m_pos, size, this)) return;
 
@@ -35,7 +28,7 @@ void Node::setSize(QSize size) {
     }
 }
 
-void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
+void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
     auto newSize = QSize(bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y());
     if (newSize.width() < 1 || newSize.height() < 1) return;
     if (topLeft == m_pos && newSize == m_size) return;
@@ -67,35 +60,35 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     emit sizeChanged(m_size);
 }
 
-void Node::select(bool exclusive) {
+void GridItem::select(bool exclusive) {
     if (exclusive || !m_selected) {
         m_selected = true;
         emit selected(exclusive);
     }
 }
 
-void Node::deselect() {
+void GridItem::deselect() {
     if (!m_selected) return;
     m_selected = false;
     emit deselected();
 }
 
-void Node::startDragging() {
+void GridItem::startDragging() {
     dragStartPos = m_pos;
 }
 
-void Node::dragTo(QPoint delta) {
+void GridItem::dragTo(QPoint delta) {
     setPos(dragStartPos + delta, false, false);
 }
 
-void Node::finishDragging() {
+void GridItem::finishDragging() {
 }
 
-void Node::remove() {
+void GridItem::remove() {
     emit removed();
 }
 
-void Node::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
+void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
     if (pos != m_pos) {
         if (checkPositions && !parent->positionAvailable(pos, m_size, this)) return;
 

@@ -5,7 +5,7 @@
 #include "NodeResizer.h"
 #include "NodeItemContent.h"
 #include "../schematic/SchematicCanvas.h"
-#include "src/model/Node.h"
+#include "src/model/node/Node.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;

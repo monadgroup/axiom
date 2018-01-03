@@ -5,8 +5,8 @@
 #include <QtGui/QResizeEvent>
 #include <memory>
 
-#include "src/model/CustomNode.h"
-#include "src/model/Schematic.h"
+#include "src/model/node/CustomNode.h"
+#include "src/model/schematic/Schematic.h"
 #include "SchematicCanvas.h"
 
 using namespace AxiomGui;
@@ -50,11 +50,13 @@ void SchematicView::newNode() {
     auto newNode = std::make_unique<AxiomModel::CustomNode>(schematic);
     auto contextPos = mapFromGlobal(contextMenu->pos());
     newNode->setSize(QSize(2, 1));
-    newNode->setPos(QPoint(
+
+    auto targetPos = QPoint(
             qRound((float) contextPos.x() / SchematicCanvas::gridSize.width()) - newNode->size().width() / 2,
             qRound((float) contextPos.y() / SchematicCanvas::gridSize.height()) - newNode->size().height() / 2
-    ));
-    schematic->addNode(std::move(newNode));
+    );
+    newNode->setPos(schematic->findNearestPos(targetPos, newNode->size()));
+    schematic->addItem(std::move(newNode));
 }
 
 void SchematicView::resizeEvent(QResizeEvent *event) {

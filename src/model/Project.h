@@ -4,7 +4,7 @@
 #include <QtCore/QObject>
 
 #include "Library.h"
-#include "RootSchematic.h"
+#include "src/model/schematic/RootSchematic.h"
 
 namespace AxiomModel {
 

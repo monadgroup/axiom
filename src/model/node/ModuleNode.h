@@ -3,7 +3,7 @@
 #include <memory>
 #include <QtCore/QObject>
 
-#include "ModuleSchematic.h"
+#include "src/model/schematic/ModuleSchematic.h"
 #include "Node.h"
 
 namespace AxiomModel {

@@ -7,17 +7,15 @@
 
 namespace AxiomModel {
 
-    class Schematic;
+    class GridSurface;
 
-    class Node : public QObject {
-    Q_OBJECT
+    class GridItem : public QObject {
+        Q_OBJECT
 
     public:
-        Schematic *parent;
+        GridSurface *parent;
 
-        explicit Node(Schematic *parent);
-
-        QString name() const { return m_name; }
+        explicit GridItem(GridSurface *parent);
 
         QPoint pos() const { return m_pos; }
 
@@ -28,9 +26,6 @@ namespace AxiomModel {
         bool isDragAvailable(QPoint delta);
 
     public slots:
-
-        void setName(const QString &name);
-
         void setPos(QPoint pos);
 
         void setSize(QSize size);
@@ -50,31 +45,18 @@ namespace AxiomModel {
         void finishDragging();
 
     signals:
-
-        void nameChanged(const QString &newName);
-
         void beforePosChanged(QPoint newPos);
-
         void posChanged(QPoint newPos);
-
         void beforeSizeChanged(QSize newSize);
-
         void sizeChanged(QSize newSize);
-
         void selected(bool exclusive);
-
         void deselected();
-
         void startedDragging();
-
         void draggedTo(QPoint delta);
-
         void finishedDragging();
-
         void removed();
 
     private:
-        QString m_name = "";
         QPoint m_pos = QPoint(0, 0);
         QSize m_size = QSize(0, 0);
         bool m_selected = false;
