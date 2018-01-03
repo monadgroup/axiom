@@ -27,7 +27,7 @@ Axiom is comprised of several components:
    OS-independent.
  - The Maxim language compiler and runtime, written with LLVM and statically linked into the editor.
  - The replayer, written in size-optimised C++. Due to it's reliance on Maxim snippets, this must be compiled with
-   Clang. This is the only part of the project that is OS-independent, as it (currently) relies on DirectSound.
+   Clang. This is the only part of the project that is OS-dependent, as it (currently) relies on DirectSound.
 
 ## License
 
