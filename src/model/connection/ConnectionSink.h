@@ -2,6 +2,7 @@
 
 #include <QtCore/QObject>
 #include <vector>
+#include <QtCore/QPoint>
 
 namespace AxiomModel {
 
@@ -13,17 +14,21 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        Schematic *schematic;
-
-        ConnectionSink(Schematic *schematic);
-
         std::vector<ConnectionWire *> const &inputs() const { return m_inputs; }
 
+        QPoint pos() const { return m_pos; }
+
         void addWire(ConnectionWire *wire);
+
+    public slots:
+
+        void setPos(QPoint pos);
 
     signals:
 
         void inputAdded(ConnectionWire *wire);
+
+        void posChanged(QPoint newPos);
 
     private slots:
 
@@ -31,6 +36,7 @@ namespace AxiomModel {
 
     private:
         std::vector<ConnectionWire *> m_inputs;
+        QPoint m_pos;
     };
 
 }

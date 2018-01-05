@@ -6,6 +6,7 @@
 #include <QtCore/QSize>
 
 #include "../GridItem.h"
+#include "NodeSurface.h"
 
 namespace AxiomModel {
 
@@ -15,6 +16,8 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
+        NodeSurface surface;
+
         explicit Node(Schematic *parent);
 
         QString name() const { return m_name; }

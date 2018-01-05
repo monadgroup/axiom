@@ -4,6 +4,8 @@
 #include <vector>
 #include <memory>
 
+#include "../Grid.h"
+
 namespace AxiomModel {
 
     class ConnectionWire;
@@ -16,19 +18,21 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        Schematic *schematic;
-
-        ConnectionSource(Schematic *schematic);
-
         std::vector<std::unique_ptr<ConnectionWire>> const &outputs() const { return m_outputs; }
+
+        QPoint pos() const { return m_pos; }
 
     public slots:
 
         void connectTo(ConnectionSink *sink);
 
+        void setPos(QPoint pos);
+
     signals:
 
         void outputAdded(ConnectionWire *wire);
+
+        void posChanged(QPoint newPos);
 
     private slots:
 
@@ -36,6 +40,8 @@ namespace AxiomModel {
 
     private:
         std::vector<std::unique_ptr<ConnectionWire>> m_outputs;
+
+        QPoint m_pos;
     };
 
 }
