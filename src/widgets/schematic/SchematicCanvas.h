@@ -29,8 +29,6 @@ namespace AxiomGui {
 
         void setPan(QPointF pan);
 
-        void addNode(AxiomModel::Node *node);
-
     protected:
         void drawBackground(QPainter *painter, const QRectF &rect) override;
 
@@ -41,6 +39,10 @@ namespace AxiomGui {
         void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 
         void keyPressEvent(QKeyEvent *event) override;
+
+    private slots:
+
+        void addNode(AxiomModel::Node *node);
 
     private:
         bool isSelecting = false;

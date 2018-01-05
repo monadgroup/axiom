@@ -10,7 +10,7 @@ void GridSurface::addItem(std::unique_ptr<GridItem> item) {
     auto ptr = item.get();
     m_items.push_back(std::move(item));
 
-    connect(ptr, &GridItem::removed,
+    connect(ptr, &GridItem::cleanup,
             this, [this, ptr]() { removeItem(ptr); });
     connect(ptr, &GridItem::selected,
             this, [this, ptr](bool exclusive) { selectItem(ptr, exclusive); });
@@ -62,6 +62,10 @@ void GridSurface::deselectAll() {
 }
 
 void GridSurface::removeItem(GridItem *item) {
+    std::cout << "Removing item from GridSurface" << std::endl;
+
+    grid.setRect(item->pos(), item->size(), nullptr);
+    
     auto loc = std::find(selectedItems.begin(), selectedItems.end(), item);
     if (loc != selectedItems.end()) {
         selectedItems.erase(loc);

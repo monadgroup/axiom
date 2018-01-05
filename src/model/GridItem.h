@@ -67,6 +67,8 @@ namespace AxiomModel {
 
         void removed();
 
+        void cleanup();
+
     private:
         QPoint m_pos = QPoint(0, 0);
         QSize m_size = QSize(0, 0);

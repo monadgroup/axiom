@@ -70,6 +70,7 @@ void NodeItem::setSize(QSize newSize) {
 }
 
 void NodeItem::remove() {
+    std::cout << "Removing me from scene" << std::endl;
     scene()->removeItem(this);
 }
 

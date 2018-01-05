@@ -18,15 +18,13 @@ namespace AxiomGui {
 
         explicit NodeItem(AxiomModel::Node *node, SchematicCanvas *parent);
 
-    public slots:
+    private slots:
 
         void setPos(QPoint newPos);
 
         void setSize(QSize newSize);
 
         void remove();
-
-    private slots:
 
         void resizerChanged(QPointF topLeft, QPointF bottomRight);
 

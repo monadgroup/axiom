@@ -84,6 +84,7 @@ void GridItem::finishDragging() {
 
 void GridItem::remove() {
     emit removed();
+    emit cleanup();
 }
 
 void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
