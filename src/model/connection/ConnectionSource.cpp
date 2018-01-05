@@ -1,7 +1,6 @@
 #include "ConnectionSource.h"
 
 #include "ConnectionSink.h"
-#include "ConnectionWire.h"
 
 using namespace AxiomModel;
 

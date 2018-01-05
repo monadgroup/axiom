@@ -6,7 +6,7 @@
 namespace AxiomModel {
 
     class NodeInputControl : public NodeControl {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         ConnectionSink sink;

@@ -28,7 +28,7 @@ namespace AxiomModel {
         QPoint maxRect;
 
         Grid(QPoint minRect = QPoint(INT_MIN, INT_MIN), QPoint maxRect = QPoint(INT_MAX, INT_MAX))
-            : minRect(minRect), maxRect(maxRect) { }
+                : minRect(minRect), maxRect(maxRect) {}
 
         bool isInsideRect(QPoint pos) const {
             return pos.x() >= minRect.x() && pos.y() >= minRect.y() && pos.x() < maxRect.x() && pos.y() < maxRect.y();
@@ -82,7 +82,8 @@ namespace AxiomModel {
             return pos;
         }
 
-        std::deque<QPoint> findPath(QPoint start, QPoint end, float emptyCost, float filledCost, float dirChangeCost) const {
+        std::deque<QPoint>
+        findPath(QPoint start, QPoint end, float emptyCost, float filledCost, float dirChangeCost) const {
             // A* search to find shortest path
             std::priority_queue<CostPos> visitQueue;
             std::unordered_map<QPoint, VisitedCell> visited;
@@ -194,7 +195,7 @@ namespace AxiomModel {
             VisitedCell(QPoint from, float cost) : from(from), cost(cost) {}
         };
 
-        std::unordered_map<QPoint, T*> cells;
+        std::unordered_map<QPoint, T *> cells;
     };
 
 }

@@ -11,9 +11,9 @@ namespace AxiomModel {
 
     public:
         enum class Channel {
-            LEFT  = 1 << 0,
+            LEFT = 1 << 0,
             RIGHT = 1 << 1,
-            BOTH  = LEFT | RIGHT
+            BOTH = LEFT | RIGHT
         };
 
         const Channel channel;
@@ -42,6 +42,7 @@ namespace AxiomModel {
         QPoint m_worldPos;
 
     private slots:
+
         void recalcWorldPos();
     };
 

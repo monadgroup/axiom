@@ -12,7 +12,7 @@ QString AxiomUtil::loadStylesheet(const char *path) {
 
 QPoint AxiomUtil::clampP(QPoint p, QPoint min, QPoint max) {
     return QPoint(
-        qMax(min.x(), qMin(p.x(), max.x())),
-        qMax(min.y(), qMin(p.y(), max.y()))
+            qMax(min.x(), qMin(p.x(), max.x())),
+            qMax(min.y(), qMin(p.y(), max.y()))
     );
 }

@@ -5,7 +5,7 @@
 namespace AxiomGui {
 
     class KnobControl : public QDial {
-        Q_OBJECT
+    Q_OBJECT
     public:
 
 

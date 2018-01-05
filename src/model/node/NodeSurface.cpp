@@ -4,7 +4,8 @@
 
 using namespace AxiomModel;
 
-NodeSurface::NodeSurface(Node *node) : GridSurface(QPoint(0, 0), QPoint(node->size().width(), node->size().height())), node(node) {
+NodeSurface::NodeSurface(Node *node) : GridSurface(QPoint(0, 0), QPoint(node->size().width(), node->size().height())),
+                                       node(node) {
     connect(node, &Node::sizeChanged,
             this, &NodeSurface::setSize);
 }

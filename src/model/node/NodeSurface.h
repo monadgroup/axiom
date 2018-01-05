@@ -15,6 +15,7 @@ namespace AxiomModel {
         explicit NodeSurface(Node *node);
 
     private slots:
+
         void setSize(QSize size);
     };
 

@@ -62,10 +62,8 @@ void GridSurface::deselectAll() {
 }
 
 void GridSurface::removeItem(GridItem *item) {
-    std::cout << "Removing item from GridSurface" << std::endl;
-
     grid.setRect(item->pos(), item->size(), nullptr);
-    
+
     auto loc = std::find(selectedItems.begin(), selectedItems.end(), item);
     if (loc != selectedItems.end()) {
         selectedItems.erase(loc);

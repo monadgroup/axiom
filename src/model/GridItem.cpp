@@ -1,7 +1,6 @@
 #include "GridItem.h"
 
 #include "GridSurface.h"
-#include "src/util.h"
 
 using namespace AxiomModel;
 

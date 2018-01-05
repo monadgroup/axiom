@@ -7,7 +7,7 @@ namespace AxiomModel {
     class Node;
 
     class NodeValueControl : public NodeControl {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         enum class Type {
