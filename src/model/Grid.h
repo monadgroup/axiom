@@ -8,6 +8,7 @@
 #include <set>
 #include <unordered_set>
 #include <iostream>
+#include <queue>
 
 namespace std {
     template<>
@@ -45,25 +46,24 @@ namespace AxiomModel {
 
         QPoint findNearestAvailable(QPoint pos, QSize size, const T *ignore = nullptr) const {
             // breadth-first search to find nearest free area
-            std::set<SortedPos> positionQueue;
+            std::priority_queue<SortedPos> positionQueue;
             std::unordered_set<QPoint> visitedQueue;
 
-            positionQueue.insert(SortedPos(pos, pos));
+            positionQueue.push(SortedPos(pos, pos));
             visitedQueue.insert(pos);
+
             while (!positionQueue.empty()) {
-                auto oldQueue = std::move(positionQueue);
-                positionQueue = std::set<SortedPos>();
+                auto p = positionQueue.top();
+                positionQueue.pop();
 
-                for (const auto &p : oldQueue) {
-                    if (isRectAvailable(p.checkPos, size, ignore)) return p.checkPos;
+                if (isRectAvailable(p.checkPos, size, ignore)) return p.checkPos;
 
-                    QPoint offsets[] = {QPoint(1, 0), QPoint(-1, 0), QPoint(0, 1), QPoint(0, -1)};
-                    for (const auto &offset : offsets) {
-                        auto newP = p.checkPos + offset;
-                        if (visitedQueue.find(newP) == visitedQueue.end()) {
-                            positionQueue.insert(SortedPos(newP, pos));
-                            visitedQueue.insert(newP);
-                        }
+                QPoint offsets[] = {QPoint(1, 0), QPoint(-1, 0), QPoint(0, 1), QPoint(0, -1)};
+                for (const auto &offset : offsets) {
+                    auto newP = p.checkPos + offset;
+                    if (visitedQueue.find(newP) == visitedQueue.end()) {
+                        positionQueue.push(SortedPos(newP, pos));
+                        visitedQueue.insert(newP);
                     }
                 }
             }
@@ -106,11 +106,12 @@ namespace AxiomModel {
             SortedPos(QPoint checkPos, QPoint basePos) : checkPos(checkPos), basePos(basePos) {}
 
             float dist() const {
-                return std::sqrt((float) checkPos.x() * checkPos.x() + checkPos.y() * checkPos.y());
+                auto distP = checkPos - basePos;
+                return std::sqrt((float) distP.x() * distP.x() + distP.y() * distP.y());
             }
 
             bool operator<(const SortedPos &other) const {
-                return dist() < other.dist();
+                return dist() > other.dist();
             }
         };
 
