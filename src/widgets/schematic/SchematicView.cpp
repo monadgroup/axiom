@@ -55,7 +55,7 @@ void SchematicView::newNode() {
             qRound((float) contextPos.x() / SchematicCanvas::gridSize.width()) - newNode->size().width() / 2,
             qRound((float) contextPos.y() / SchematicCanvas::gridSize.height()) - newNode->size().height() / 2
     );
-    newNode->setPos(schematic->findNearestPos(targetPos, newNode->size()));
+    newNode->setPos(schematic->grid.findNearestAvailable(targetPos, newNode->size()));
     schematic->addItem(std::move(newNode));
 }
 

@@ -4,6 +4,10 @@
 
 using namespace AxiomModel;
 
+ConnectionSink::ConnectionSink(Schematic *schematic) : schematic(schematic) {
+
+}
+
 void ConnectionSink::addWire(ConnectionWire *wire) {
     m_inputs.push_back(wire);
 

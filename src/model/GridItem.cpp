@@ -9,7 +9,7 @@ GridItem::GridItem(GridSurface *parent) : parent(parent) {
 }
 
 bool GridItem::isDragAvailable(QPoint delta) {
-    return parent->positionAvailable(dragStartPos + delta, m_size, this);
+    return parent->grid.isRectAvailable(dragStartPos + delta, m_size, this);
 }
 
 void GridItem::setPos(QPoint pos) {
@@ -18,11 +18,10 @@ void GridItem::setPos(QPoint pos) {
 
 void GridItem::setSize(QSize size) {
     if (size != m_size) {
-        if (size.width() < 1 || size.height() < 1 || !parent->positionAvailable(m_pos, size, this)) return;
+        if (size.width() < 1 || size.height() < 1 || !parent->grid.isRectAvailable(m_pos, size, this)) return;
 
-        parent->freeGridRect(m_pos, m_size);
         emit beforeSizeChanged(size);
-        parent->setGridRect(m_pos, size, this);
+        parent->grid.moveRect(m_pos, m_size, m_pos, size, this);
         m_size = size;
         emit sizeChanged(size);
     }
@@ -33,25 +32,23 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (newSize.width() < 1 || newSize.height() < 1) return;
     if (topLeft == m_pos && newSize == m_size) return;
 
-    if (!parent->positionAvailable(topLeft, newSize, this)) {
+    if (!parent->grid.isRectAvailable(topLeft, newSize, this)) {
         // try resizing just horizontally or just vertically
         auto hTopLeft = QPoint(topLeft.x(), m_pos.y());
         auto hSize = QSize(newSize.width(), m_size.height());
         auto vTopLeft = QPoint(m_pos.x(), topLeft.y());
         auto vSize = QSize(m_size.width(), newSize.height());
-        if (parent->positionAvailable(hTopLeft, hSize, this)) {
+        if (parent->grid.isRectAvailable(hTopLeft, hSize, this)) {
             topLeft = hTopLeft;
             newSize = hSize;
-        } else if (parent->positionAvailable(vTopLeft, vSize, this)) {
+        } else if (parent->grid.isRectAvailable(vTopLeft, vSize, this)) {
             topLeft = vTopLeft;
             newSize = vSize;
         }
     }
 
     if (topLeft == m_pos && newSize == m_size) return;
-    parent->freeGridRect(m_pos, m_size);
-
-    parent->setGridRect(topLeft, newSize, this);
+    parent->grid.moveRect(m_pos, m_size, topLeft, newSize, this);
     emit beforePosChanged(topLeft);
     m_pos = topLeft;
     emit posChanged(m_pos);
@@ -90,13 +87,12 @@ void GridItem::remove() {
 
 void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
     if (pos != m_pos) {
-        if (checkPositions && !parent->positionAvailable(pos, m_size, this)) return;
+        if (checkPositions && !parent->grid.isRectAvailable(pos, m_size, this)) return;
 
         if (pos == m_pos) return;
-        if (updateGrid) parent->freeGridRect(m_pos, m_size);
 
         emit beforePosChanged(pos);
-        if (updateGrid) parent->setGridRect(pos, m_size, this);
+        if (updateGrid) parent->grid.moveRect(m_pos, m_size, pos, m_size, this);
         m_pos = pos;
         emit posChanged(pos);
     }

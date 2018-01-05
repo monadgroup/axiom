@@ -1,8 +1,5 @@
 #include "GridSurface.h"
 
-#include <set>
-#include <cmath>
-
 using namespace AxiomModel;
 
 void GridSurface::addItem(std::unique_ptr<GridItem> item) {
@@ -26,19 +23,6 @@ void GridSurface::addItem(std::unique_ptr<GridItem> item) {
     emit itemAdded(ptr);
 }
 
-bool GridSurface::positionAvailable(QPoint pos, QSize size, const GridItem *ignore) const {
-    for (auto dx = 0; dx < size.width(); dx++) {
-        for (auto dy = 0; dy < size.height(); dy++) {
-            auto checkP = pos + QPoint(dx, dy);
-            auto found = grid.find(checkP);
-            if (found != grid.end() && found->second != ignore) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
 class SortedPos {
 public:
     QPoint checkPos;
@@ -54,51 +38,6 @@ public:
         return dist() < other.dist();
     }
 };
-
-QPoint GridSurface::findNearestPos(QPoint pos, QSize size, const GridItem *ignore) const {
-    // breadth-first search to find nearest free area
-    std::set<SortedPos> positionQueue;
-    std::unordered_set<QPoint> visitedQueue;
-
-    positionQueue.insert(SortedPos(pos, pos));
-    visitedQueue.insert(pos);
-    while (!positionQueue.empty()) {
-        auto oldQueue = std::move(positionQueue);
-        positionQueue = std::set<SortedPos>();
-
-        for (const auto &p : oldQueue) {
-            if (positionAvailable(p.checkPos, size, ignore)) return p.checkPos;
-
-            QPoint offsets[] = {QPoint(1, 0), QPoint(-1, 0), QPoint(0, 1), QPoint(0, -1)};
-            for (const auto &offset : offsets) {
-                auto newP = p.checkPos + offset;
-                if (visitedQueue.find(newP) == visitedQueue.end()) {
-                    positionQueue.insert(SortedPos(newP, pos));
-                    visitedQueue.insert(newP);
-                }
-            }
-        }
-    }
-
-    // oh no! this should never happen :'(
-    return pos;
-}
-
-void GridSurface::freeGridRect(QPoint pos, QSize size) {
-    for (auto dx = 0; dx < size.width(); dx++) {
-        for (auto dy = 0; dy < size.height(); dy++) {
-            grid.erase(pos + QPoint(dx, dy));
-        }
-    }
-}
-
-void GridSurface::setGridRect(QPoint pos, QSize size, const GridItem *item) {
-    for (auto dx = 0; dx < size.width(); dx++) {
-        for (auto dy = 0; dy < size.height(); dy++) {
-            grid.emplace(pos + QPoint(dx, dy), item);
-        }
-    }
-}
 
 void GridSurface::deleteSelectedItems() {
     while (!selectedItems.empty()) {
@@ -162,7 +101,7 @@ void GridSurface::dragTo(QPoint delta) {
     if (delta == lastDragDelta) return;
 
     for (auto &item : selectedItems) {
-        freeGridRect(item->pos(), item->size());
+        grid.setRect(item->pos(), item->size(), nullptr);
     }
 
     auto availableDelta = findAvailableDelta(delta);
@@ -172,7 +111,7 @@ void GridSurface::dragTo(QPoint delta) {
     }
 
     for (auto &item : selectedItems) {
-        setGridRect(item->pos(), item->size(), item);
+        grid.setRect(item->pos(), item->size(), item);
     }
 }
 

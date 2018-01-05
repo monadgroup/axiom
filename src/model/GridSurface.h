@@ -8,16 +8,8 @@
 #include <QtCore/QString>
 #include <QtCore/QPointF>
 
+#include "Grid.h"
 #include "GridItem.h"
-
-namespace std {
-    template<>
-    struct hash<QPoint> {
-        std::size_t operator()(const QPoint &p) const {
-            return std::hash<int>()(p.x()) ^ (std::hash<int>()(p.y()) >> 1);
-        }
-    };
-}
 
 namespace AxiomModel {
 
@@ -25,19 +17,13 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
+        Grid<GridItem> grid = Grid<GridItem>(10, 10);
+
         std::vector<std::unique_ptr<GridItem>> const &items() const { return m_items; }
 
         bool hasSelection() const { return !selectedItems.empty(); }
 
         void addItem(std::unique_ptr<GridItem> item);
-
-        bool positionAvailable(QPoint pos, QSize size, const GridItem *ignore = nullptr) const;
-
-        QPoint findNearestPos(QPoint pos, QSize size, const GridItem *ignore = nullptr) const;
-
-        void freeGridRect(QPoint pos, QSize size);
-
-        void setGridRect(QPoint pos, QSize size, const GridItem *item);
 
     public slots:
 
@@ -68,7 +54,6 @@ namespace AxiomModel {
     private:
         std::vector<std::unique_ptr<GridItem>> m_items;
         std::vector<GridItem *> selectedItems;
-        std::unordered_map<QPoint, const GridItem *> grid;
 
         QPoint lastDragDelta;
 

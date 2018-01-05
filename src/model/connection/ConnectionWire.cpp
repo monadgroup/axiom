@@ -2,7 +2,8 @@
 
 using namespace AxiomModel;
 
-ConnectionWire::ConnectionWire(ConnectionSource *source, ConnectionSink *sink) : source(source), sink(sink) {
+ConnectionWire::ConnectionWire(Schematic *schematic, ConnectionSource *source, ConnectionSink *sink)
+        : schematic(schematic), source(source), sink(sink) {
     updateRoute();
 }
 

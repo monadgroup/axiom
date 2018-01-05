@@ -8,14 +8,17 @@ namespace AxiomModel {
 
     class ConnectionSink;
 
+    class Schematic;
+
     class ConnectionWire : public QObject {
     Q_OBJECT
 
     public:
         ConnectionSource *source;
         ConnectionSink *sink;
+        Schematic *schematic;
 
-        ConnectionWire(ConnectionSource *source, ConnectionSink *sink);
+        ConnectionWire(Schematic *schematic, ConnectionSource *source, ConnectionSink *sink);
 
     public slots:
 

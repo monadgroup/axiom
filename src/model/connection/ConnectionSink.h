@@ -7,10 +7,16 @@ namespace AxiomModel {
 
     class ConnectionWire;
 
+    class Schematic;
+
     class ConnectionSink : public QObject {
     Q_OBJECT
 
     public:
+        Schematic *schematic;
+
+        ConnectionSink(Schematic *schematic);
+
         std::vector<ConnectionWire *> const &inputs() const { return m_inputs; }
 
         void addWire(ConnectionWire *wire);

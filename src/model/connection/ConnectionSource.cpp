@@ -5,8 +5,12 @@
 
 using namespace AxiomModel;
 
+ConnectionSource::ConnectionSource(Schematic *schematic) : schematic(schematic) {
+
+}
+
 void ConnectionSource::connectTo(ConnectionSink *sink) {
-    auto connection = std::make_unique<ConnectionWire>(this, sink);
+    auto connection = std::make_unique<ConnectionWire>(schematic, this, sink);
     auto ptr = connection.get();
     m_outputs.push_back(std::move(connection));
 

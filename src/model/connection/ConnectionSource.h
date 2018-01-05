@@ -10,10 +10,16 @@ namespace AxiomModel {
 
     class ConnectionSink;
 
+    class Schematic;
+
     class ConnectionSource : public QObject {
     Q_OBJECT
 
     public:
+        Schematic *schematic;
+
+        ConnectionSource(Schematic *schematic);
+
         std::vector<std::unique_ptr<ConnectionWire>> const &outputs() const { return m_outputs; }
 
     public slots:
