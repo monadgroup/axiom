@@ -10,3 +10,9 @@ QString AxiomUtil::loadStylesheet(const char *path) {
     return QLatin1String(file->readAll());
 }
 
+QPoint AxiomUtil::clampP(QPoint p, QPoint min, QPoint max) {
+    return QPoint(
+        qMax(min.x(), qMin(p.x(), max.x())),
+        qMax(min.y(), qMin(p.y(), max.y()))
+    );
+}

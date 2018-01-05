@@ -2,8 +2,8 @@
 
 using namespace AxiomModel;
 
-NodeValueControl::NodeValueControl(NodeSurface *parent, Type type, Channel channel)
-        : NodeControl(parent, channel), type(type) {
+NodeValueControl::NodeValueControl(Node *node, Type type, Channel channel)
+        : NodeControl(node, channel), type(type) {
 
 }
 

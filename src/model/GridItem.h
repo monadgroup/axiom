@@ -13,7 +13,7 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        GridSurface *parent;
+        GridSurface *parentSurface;
 
         explicit GridItem(GridSurface *parent);
 

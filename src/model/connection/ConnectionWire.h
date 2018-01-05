@@ -1,8 +1,7 @@
 #pragma once
 
 #include <QtCore/QObject>
-
-#include "../Grid.h"
+#include <deque>
 
 namespace AxiomModel {
 
@@ -10,17 +9,17 @@ namespace AxiomModel {
 
     class ConnectionSink;
 
-    class Schematic;
+    class GridSurface;
 
     class ConnectionWire : public QObject {
     Q_OBJECT
 
     public:
-        Grid *grid;
+        GridSurface *surface;
         ConnectionSource *source;
         ConnectionSink *sink;
 
-        ConnectionWire(Grid *grid, ConnectionSource *source, ConnectionSink *sink);
+        ConnectionWire(GridSurface *surface, ConnectionSource *source, ConnectionSink *sink);
 
         const std::deque<QPoint> &route() const { return m_route; }
 

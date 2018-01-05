@@ -4,6 +4,8 @@
 
 namespace AxiomModel {
 
+    class Node;
+
     class NodeValueControl : public NodeControl {
         Q_OBJECT
 
@@ -16,7 +18,7 @@ namespace AxiomModel {
 
         const Type type;
 
-        NodeValueControl(NodeSurface *parent, Type type, Channel channel);
+        NodeValueControl(Node *node, Type type, Channel channel);
 
         float value() const { return m_value; }
 

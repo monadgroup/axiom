@@ -17,7 +17,9 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        Grid<GridItem> grid = Grid<GridItem>(10, 10);
+        Grid<GridItem> grid;
+
+        explicit GridSurface(QPoint minRect = QPoint(INT_MIN, INT_MIN), QPoint maxRect = QPoint(INT_MAX, INT_MAX));
 
         std::vector<std::unique_ptr<GridItem>> const &items() const { return m_items; }
 

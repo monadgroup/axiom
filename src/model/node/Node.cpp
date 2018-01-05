@@ -4,7 +4,7 @@
 
 using namespace AxiomModel;
 
-Node::Node(Schematic *parent) : GridItem(parent) {
+Node::Node(Schematic *parent) : GridItem(parent), surface(this) {
 
 }
 

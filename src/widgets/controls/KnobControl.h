@@ -6,6 +6,11 @@ namespace AxiomGui {
 
     class KnobControl : public QDial {
         Q_OBJECT
+    public:
+
+
+    protected:
+        void paintEvent(QPaintEvent *p) override;
     };
 
 }

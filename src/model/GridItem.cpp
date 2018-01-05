@@ -1,15 +1,16 @@
 #include "GridItem.h"
 
 #include "GridSurface.h"
+#include "src/util.h"
 
 using namespace AxiomModel;
 
-GridItem::GridItem(GridSurface *parent) : parent(parent) {
+GridItem::GridItem(GridSurface *parent) : parentSurface(parent) {
 
 }
 
 bool GridItem::isDragAvailable(QPoint delta) {
-    return parent->grid.isRectAvailable(dragStartPos + delta, m_size, this);
+    return parentSurface->grid.isRectAvailable(dragStartPos + delta, m_size, this);
 }
 
 void GridItem::setPos(QPoint pos) {
@@ -18,10 +19,10 @@ void GridItem::setPos(QPoint pos) {
 
 void GridItem::setSize(QSize size) {
     if (size != m_size) {
-        if (size.width() < 1 || size.height() < 1 || !parent->grid.isRectAvailable(m_pos, size, this)) return;
+        if (size.width() < 1 || size.height() < 1 || !parentSurface->grid.isRectAvailable(m_pos, size, this)) return;
 
         emit beforeSizeChanged(size);
-        parent->grid.moveRect(m_pos, m_size, m_pos, size, this);
+        parentSurface->grid.moveRect(m_pos, m_size, m_pos, size, this);
         m_size = size;
         emit sizeChanged(size);
     }
@@ -32,23 +33,23 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (newSize.width() < 1 || newSize.height() < 1) return;
     if (topLeft == m_pos && newSize == m_size) return;
 
-    if (!parent->grid.isRectAvailable(topLeft, newSize, this)) {
+    if (!parentSurface->grid.isRectAvailable(topLeft, newSize, this)) {
         // try resizing just horizontally or just vertically
         auto hTopLeft = QPoint(topLeft.x(), m_pos.y());
         auto hSize = QSize(newSize.width(), m_size.height());
         auto vTopLeft = QPoint(m_pos.x(), topLeft.y());
         auto vSize = QSize(m_size.width(), newSize.height());
-        if (parent->grid.isRectAvailable(hTopLeft, hSize, this)) {
+        if (parentSurface->grid.isRectAvailable(hTopLeft, hSize, this)) {
             topLeft = hTopLeft;
             newSize = hSize;
-        } else if (parent->grid.isRectAvailable(vTopLeft, vSize, this)) {
+        } else if (parentSurface->grid.isRectAvailable(vTopLeft, vSize, this)) {
             topLeft = vTopLeft;
             newSize = vSize;
         }
     }
 
     if (topLeft == m_pos && newSize == m_size) return;
-    parent->grid.moveRect(m_pos, m_size, topLeft, newSize, this);
+    parentSurface->grid.moveRect(m_pos, m_size, topLeft, newSize, this);
     emit beforePosChanged(topLeft);
     m_pos = topLeft;
     emit posChanged(m_pos);
@@ -87,12 +88,12 @@ void GridItem::remove() {
 
 void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
     if (pos != m_pos) {
-        if (checkPositions && !parent->grid.isRectAvailable(pos, m_size, this)) return;
+        if (checkPositions && !parentSurface->grid.isRectAvailable(pos, m_size, this)) return;
 
         if (pos == m_pos) return;
 
         emit beforePosChanged(pos);
-        if (updateGrid) parent->grid.moveRect(m_pos, m_size, pos, m_size, this);
+        if (updateGrid) parentSurface->grid.moveRect(m_pos, m_size, pos, m_size, this);
         m_pos = pos;
         emit posChanged(pos);
     }

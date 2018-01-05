@@ -3,21 +3,24 @@
 #include <QtCore/QObject>
 #include <vector>
 #include <memory>
+#include <QtCore/QPoint>
 
-#include "../Grid.h"
+#include "ConnectionWire.h"
 
 namespace AxiomModel {
 
-    class ConnectionWire;
-
     class ConnectionSink;
 
-    class Schematic;
+    class GridSurface;
 
     class ConnectionSource : public QObject {
     Q_OBJECT
 
     public:
+        GridSurface *surface;
+
+        explicit ConnectionSource(GridSurface *surface);
+
         std::vector<std::unique_ptr<ConnectionWire>> const &outputs() const { return m_outputs; }
 
         QPoint pos() const { return m_pos; }

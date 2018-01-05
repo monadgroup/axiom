@@ -24,14 +24,23 @@ namespace AxiomModel {
     template<class T>
     class Grid {
     public:
-        const size_t quadWidth;
-        const size_t quadHeight;
+        QPoint minRect;
+        QPoint maxRect;
 
-        Grid(size_t quadWidth, size_t quadHeight) : quadWidth(quadWidth), quadHeight(quadHeight) {
+        Grid(QPoint minRect = QPoint(INT_MIN, INT_MIN), QPoint maxRect = QPoint(INT_MAX, INT_MAX))
+            : minRect(minRect), maxRect(maxRect) { }
 
+        bool isInsideRect(QPoint pos) const {
+            return pos.x() >= minRect.x() && pos.y() >= minRect.y() && pos.x() < maxRect.x() && pos.y() < maxRect.y();
         }
 
         bool isRectAvailable(QPoint pos, QSize size, const T *ignore = nullptr) const {
+            // hot path for rect being partially outside region
+            auto bp = pos + QPoint(size.width(), size.height());
+            if (pos.x() < minRect.x() || pos.y() < minRect.y() || bp.x() >= maxRect.x() || bp.y() >= maxRect.y()) {
+                return false;
+            }
+
             for (auto dx = 0; dx < size.width(); dx++) {
                 for (auto dy = 0; dy < size.height(); dy++) {
                     auto checkP = pos + QPoint(dx, dy);
@@ -61,6 +70,7 @@ namespace AxiomModel {
                 QPoint offsets[] = {QPoint(1, 0), QPoint(-1, 0), QPoint(0, 1), QPoint(0, -1)};
                 for (const auto &offset : offsets) {
                     auto newP = p.checkPos + offset;
+                    if (!isInsideRect(newP)) continue;
                     if (visitedQueue.find(newP) == visitedQueue.end()) {
                         positionQueue.push(NearestAvailablePos(newP, pos));
                         visitedQueue.insert(newP);
@@ -68,7 +78,7 @@ namespace AxiomModel {
                 }
             }
 
-            // oh no! this should never happen :'(
+            // no available position
             return pos;
         }
 
@@ -100,6 +110,7 @@ namespace AxiomModel {
                 QPoint dirs[] = {QPoint(1, 0), QPoint(-1, 0), QPoint(0, 1), QPoint(0, -1)};
                 for (const auto &dir : dirs) {
                     auto newP = cur.pos + dir;
+                    if (!isInsideRect(newP)) continue;
                     auto newCost = (getCell(newP) ? filledCost : emptyCost) + (dir == cur.dir ? 0 : dirChangeCost);
                     auto find = visited.find(newP);
                     if (find == visited.end() || newCost < find->second.cost) {
@@ -116,12 +127,16 @@ namespace AxiomModel {
         }
 
         T *getCell(QPoint pos) const {
+            if (!isInsideRect(pos)) return nullptr;
+
             auto cell = cells.find(pos);
             if (cell == cells.end()) return nullptr;
             return cell->second;
         }
 
         void setCell(QPoint pos, T *item) {
+            if (!isInsideRect(pos)) return;
+
             if (item == nullptr) cells.erase(pos);
             else cells.emplace(pos, item);
         }

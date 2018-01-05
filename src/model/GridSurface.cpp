@@ -2,6 +2,10 @@
 
 using namespace AxiomModel;
 
+GridSurface::GridSurface(QPoint minRect, QPoint maxRect) : grid(Grid<GridItem>(minRect, maxRect)) {
+
+}
+
 void GridSurface::addItem(std::unique_ptr<GridItem> item) {
     auto ptr = item.get();
     m_items.push_back(std::move(item));

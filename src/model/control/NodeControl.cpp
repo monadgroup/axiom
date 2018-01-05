@@ -4,7 +4,7 @@
 
 using namespace AxiomModel;
 
-NodeControl::NodeControl(Node *node, Channel channel) : GridItem(&parent->surface), node(node), channel(channel) {
+NodeControl::NodeControl(Node *node, Channel channel) : GridItem(&node->surface), node(node), channel(channel) {
     connect(this, &NodeControl::posChanged,
             this, &NodeControl::recalcWorldPos);
     connect(node, &Node::posChanged,
