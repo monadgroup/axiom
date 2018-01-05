@@ -12,6 +12,8 @@ namespace AxiomModel {
         ConnectionSink sink;
 
         NodeInputControl(Node *node, Channel channel);
+
+        bool isResizable() const override { return false; }
     };
 
 }

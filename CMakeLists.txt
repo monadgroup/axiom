@@ -29,7 +29,7 @@ set(SOURCE_FILES src/main.cpp src/util.cpp src/AxiomApplication.cpp
         src/widgets/windows/MainWindow.cpp src/widgets/windows/AboutWindow.cpp
         src/widgets/modulebrowser/ModuleBrowserPanel.cpp src/widgets/modulebrowser/ModulePreviewList.cpp src/widgets/modulebrowser/ModulePreview.cpp
         src/widgets/schematic/SchematicPanel.cpp src/widgets/schematic/SchematicView.cpp src/widgets/schematic/SchematicCanvas.cpp
-        src/widgets/node/NodeItem.cpp src/widgets/node/NodeResizer.cpp src/widgets/node/NodeItemContent.cpp
+        src/widgets/node/NodeItem.cpp src/widgets/node/NodeResizer.cpp src/widgets/node/NodeItemBackground.cpp
         src/widgets/controls/KnobControl.cpp
         src/layouts/FlowLayout.cpp)
 

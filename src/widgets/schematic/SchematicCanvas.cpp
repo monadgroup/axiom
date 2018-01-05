@@ -13,7 +13,9 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-QSize SchematicCanvas::gridSize = QSize(50, 50);
+QSize SchematicCanvas::nodeGridSize = QSize(50, 50);
+
+QSize SchematicCanvas::controlGridSize = QSize(25, 25);
 
 SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
     // build selection
@@ -26,27 +28,47 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
 
     // create items for all nodes that already exist
     for (const auto &item : schematic->items()) {
-        addNode(dynamic_cast<Node *>(item.get()));
+        if (auto node = dynamic_cast<Node *>(item.get())) {
+            addNode(node);
+        }
     }
 
     // connect to model
     connect(schematic, &Schematic::panChanged,
             this, &SchematicCanvas::setPan);
     connect(schematic, &Schematic::itemAdded,
-            this, [this](AxiomModel::GridItem *item) { addNode(dynamic_cast<Node *>(item)); });
+            [this](AxiomModel::GridItem *item) {
+                if (auto node = dynamic_cast<Node *>(item)) {
+                    addNode(node);
+                }
+            });
 }
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
     return {
-            p.x() * SchematicCanvas::gridSize.width(),
-            p.y() * SchematicCanvas::gridSize.height()
+            p.x() * SchematicCanvas::nodeGridSize.width(),
+            p.y() * SchematicCanvas::nodeGridSize.height()
     };
 }
 
 QSize SchematicCanvas::nodeRealSize(const QSize &s) {
     return {
-            s.width() * SchematicCanvas::gridSize.width() + 1,
-            s.height() * SchematicCanvas::gridSize.height() + 1
+            s.width() * SchematicCanvas::nodeGridSize.width() + 1,
+            s.height() * SchematicCanvas::nodeGridSize.height() + 1
+    };
+}
+
+QPoint SchematicCanvas::controlRealPos(const QPoint &p) {
+    return {
+            p.x() * SchematicCanvas::controlGridSize.width(),
+            p.y() * SchematicCanvas::controlGridSize.height()
+    };
+}
+
+QSize SchematicCanvas::controlRealSize(const QSize &s) {
+    return {
+            s.width() * SchematicCanvas::controlGridSize.width(),
+            s.height() * SchematicCanvas::controlGridSize.height()
     };
 }
 
@@ -59,7 +81,7 @@ void SchematicCanvas::addNode(AxiomModel::Node *node) {
 }
 
 void SchematicCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
-    drawGrid(painter, rect, gridSize, QColor::fromRgb(34, 34, 34), 2);
+    drawGrid(painter, rect, nodeGridSize, QColor::fromRgb(34, 34, 34), 2);
 }
 
 void SchematicCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {

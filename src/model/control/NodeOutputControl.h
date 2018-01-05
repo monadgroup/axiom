@@ -12,6 +12,8 @@ namespace AxiomModel {
         ConnectionSource source;
 
         NodeOutputControl(Node *node, Channel channel);
+
+        bool isResizable() const override { return false; }
     };
 
 }

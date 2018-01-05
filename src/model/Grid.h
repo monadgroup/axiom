@@ -31,13 +31,13 @@ namespace AxiomModel {
                 : minRect(minRect), maxRect(maxRect) {}
 
         bool isInsideRect(QPoint pos) const {
-            return pos.x() >= minRect.x() && pos.y() >= minRect.y() && pos.x() < maxRect.x() && pos.y() < maxRect.y();
+            return pos.x() >= minRect.x() && pos.y() >= minRect.y() && pos.x() <= maxRect.x() && pos.y() <= maxRect.y();
         }
 
         bool isRectAvailable(QPoint pos, QSize size, const T *ignore = nullptr) const {
             // hot path for rect being partially outside region
             auto bp = pos + QPoint(size.width(), size.height());
-            if (pos.x() < minRect.x() || pos.y() < minRect.y() || bp.x() >= maxRect.x() || bp.y() >= maxRect.y()) {
+            if (pos.x() < minRect.x() || pos.y() < minRect.y() || bp.x() > maxRect.x() || bp.y() > maxRect.y()) {
                 return false;
             }
 

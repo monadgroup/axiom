@@ -22,6 +22,8 @@ namespace AxiomModel {
 
         float value() const { return m_value; }
 
+        bool isResizable() const override { return true; }
+
     public slots:
 
         void setValue(float value);

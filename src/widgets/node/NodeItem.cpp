@@ -3,9 +3,12 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 
 #include "NodeResizer.h"
-#include "NodeItemContent.h"
+#include "NodeItemBackground.h"
 #include "../schematic/SchematicCanvas.h"
 #include "src/model/node/Node.h"
+#include "src/model/control/NodeControl.h"
+#include "src/model/control/NodeValueControl.h"
+#include "../controls/KnobControl.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -16,6 +19,18 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
     setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
     setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 
+    // create main item
+    auto background = new NodeItemBackground(node);
+    background->setZValue(0);
+    addToGroup(background);
+
+    // create items for all controls that already exist
+    for (const auto &item : node->surface.items()) {
+        if (auto control = dynamic_cast<NodeControl *>(item.get())) {
+            addControl(control);
+        }
+    }
+
     connect(node, &Node::posChanged,
             this, &NodeItem::setPos);
     connect(node, &Node::beforeSizeChanged,
@@ -25,10 +40,12 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
     connect(node, &Node::removed,
             this, &NodeItem::remove);
 
-    // create main item
-    auto content = new NodeItemContent(node);
-    content->setZValue(0);
-    addToGroup(content);
+    connect(&node->surface, &NodeSurface::itemAdded,
+            [this](AxiomModel::GridItem *item) {
+                if (auto control = dynamic_cast<NodeControl *>(item)) {
+                    addControl(control);
+                }
+            });
 
     // create resize items
     NodeResizer::Direction directions[] = {
@@ -36,10 +53,10 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
             NodeResizer::TOP_RIGHT, NodeResizer::TOP_LEFT, NodeResizer::BOTTOM_RIGHT, NodeResizer::BOTTOM_LEFT
     };
     for (auto i = 0; i < 8; i++) {
-        auto resizer = new NodeResizer(directions[i], SchematicCanvas::gridSize);
+        auto resizer = new NodeResizer(directions[i], SchematicCanvas::nodeGridSize);
 
         // ensure corners are on top of edges
-        resizer->setZValue(i > 3 ? 2 : 1);
+        resizer->setZValue(i > 3 ? 3 : 2);
 
         connect(this, &NodeItem::resizerPosChanged,
                 resizer, &NodeResizer::setPos);
@@ -69,17 +86,25 @@ void NodeItem::setSize(QSize newSize) {
     emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
 }
 
+void NodeItem::addControl(NodeControl *control) {
+    if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
+        auto c = new KnobControl(valueControl, this);
+        c->setZValue(1);
+        addToGroup(c);
+    }
+}
+
 void NodeItem::remove() {
     scene()->removeItem(this);
 }
 
 void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     node->setCorners(QPoint(
-            qRound(topLeft.x() / SchematicCanvas::gridSize.width()),
-            qRound(topLeft.y() / SchematicCanvas::gridSize.height())
+            qRound(topLeft.x() / SchematicCanvas::nodeGridSize.width()),
+            qRound(topLeft.y() / SchematicCanvas::nodeGridSize.height())
     ), QPoint(
-            qRound(bottomRight.x() / SchematicCanvas::gridSize.width()),
-            qRound(bottomRight.y() / SchematicCanvas::gridSize.height())
+            qRound(bottomRight.x() / SchematicCanvas::nodeGridSize.width()),
+            qRound(bottomRight.y() / SchematicCanvas::nodeGridSize.height())
     ));
 }
 

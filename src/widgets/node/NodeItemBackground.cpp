@@ -1,4 +1,4 @@
-#include "NodeItemContent.h"
+#include "NodeItemBackground.h"
 
 #include <QtWidgets/QStyleOptionGraphicsItem>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
@@ -9,25 +9,25 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-NodeItemContent::NodeItemContent(Node *node) : node(node) {
+NodeItemBackground::NodeItemBackground(Node *node) : node(node) {
     connect(node, &Node::nameChanged,
-            this, &NodeItemContent::triggerUpdate);
+            this, &NodeItemBackground::triggerUpdate);
     connect(node, &Node::beforeSizeChanged,
-            this, &NodeItemContent::triggerGeometryChange);
+            this, &NodeItemBackground::triggerGeometryChange);
     connect(node, &Node::selected,
-            this, &NodeItemContent::triggerUpdate);
+            this, &NodeItemBackground::triggerUpdate);
     connect(node, &Node::deselected,
-            this, &NodeItemContent::triggerUpdate);
+            this, &NodeItemBackground::triggerUpdate);
 }
 
-QRectF NodeItemContent::boundingRect() const {
+QRectF NodeItemBackground::boundingRect() const {
     return {
             QPointF(0, 0),
             SchematicCanvas::nodeRealSize(node->size())
     };
 }
 
-void NodeItemContent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+void NodeItemBackground::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     painter->setClipRect(option->exposedRect);
 
     painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
@@ -43,15 +43,15 @@ void NodeItemContent::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
     painter->drawText(boundingRect(), node->name());
 }
 
-void NodeItemContent::triggerUpdate() {
+void NodeItemBackground::triggerUpdate() {
     update();
 }
 
-void NodeItemContent::triggerGeometryChange() {
+void NodeItemBackground::triggerGeometryChange() {
     prepareGeometryChange();
 }
 
-void NodeItemContent::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+void NodeItemBackground::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
 
@@ -63,19 +63,19 @@ void NodeItemContent::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     event->accept();
 }
 
-void NodeItemContent::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+void NodeItemBackground::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
     emit node->draggedTo(QPoint(
-            qRound((float) mouseDelta.x() / SchematicCanvas::gridSize.width()),
-            qRound((float) mouseDelta.y() / SchematicCanvas::gridSize.height())
+            qRound((float) mouseDelta.x() / SchematicCanvas::nodeGridSize.width()),
+            qRound((float) mouseDelta.y() / SchematicCanvas::nodeGridSize.height())
     ));
 
     event->accept();
 }
 
-void NodeItemContent::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+void NodeItemBackground::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
     emit node->finishedDragging();
 

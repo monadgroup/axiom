@@ -15,7 +15,8 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        static QSize gridSize;
+        static QSize nodeGridSize;
+        static QSize controlGridSize;
 
         AxiomModel::Schematic *schematic;
 
@@ -24,6 +25,10 @@ namespace AxiomGui {
         static QPoint nodeRealPos(const QPoint &p);
 
         static QSize nodeRealSize(const QSize &s);
+
+        static QPoint controlRealPos(const QPoint &p);
+
+        static QSize controlRealSize(const QSize &s);
 
     public slots:
 

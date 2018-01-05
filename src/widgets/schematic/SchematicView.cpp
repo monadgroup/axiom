@@ -53,8 +53,8 @@ void SchematicView::newNode() {
     newNode->setSize(QSize(2, 1));
 
     auto targetPos = QPoint(
-            qRound((float) contextPos.x() / SchematicCanvas::gridSize.width()) - newNode->size().width() / 2,
-            qRound((float) contextPos.y() / SchematicCanvas::gridSize.height()) - newNode->size().height() / 2
+            qRound((float) contextPos.x() / SchematicCanvas::nodeGridSize.width()) - newNode->size().width() / 2,
+            qRound((float) contextPos.y() / SchematicCanvas::nodeGridSize.height()) - newNode->size().height() / 2
     );
     newNode->setPos(schematic->grid.findNearestAvailable(targetPos, newNode->size()));
 
@@ -63,8 +63,7 @@ void SchematicView::newNode() {
             NodeValueControl::Type::KNOB,
             NodeValueControl::Channel::BOTH
     );
-    newControl->setSize(QSize(1, 1));
-    newControl->setPos(QPoint(0, 0));
+    newControl->setCorners(QPoint(0, 0), QPoint(1, 1));
     newNode->surface.addItem(std::move(newControl));
 
     schematic->addItem(std::move(newNode));

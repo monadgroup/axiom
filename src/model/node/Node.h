@@ -22,6 +22,10 @@ namespace AxiomModel {
 
         QString name() const { return m_name; }
 
+        bool isMovable() const override { return true; }
+
+        bool isResizable() const override { return true; }
+
     public slots:
 
         void setName(const QString &name);

@@ -4,6 +4,8 @@
 
 namespace AxiomModel {
     class Node;
+
+    class NodeControl;
 }
 
 namespace AxiomGui {
@@ -23,6 +25,8 @@ namespace AxiomGui {
         void setPos(QPoint newPos);
 
         void setSize(QSize newSize);
+
+        void addControl(AxiomModel::NodeControl *control);
 
         void remove();
 

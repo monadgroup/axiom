@@ -26,6 +26,8 @@ namespace AxiomModel {
 
         QPoint worldPos() const { return m_worldPos; }
 
+        bool isMovable() const override { return true; }
+
     public slots:
 
         void setName(const QString &name);

@@ -8,13 +8,13 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class NodeItemContent : public QGraphicsObject {
+    class NodeItemBackground : public QGraphicsObject {
     Q_OBJECT
 
     public:
         AxiomModel::Node *node;
 
-        explicit NodeItemContent(AxiomModel::Node *node);
+        explicit NodeItemBackground(AxiomModel::Node *node);
 
         QRectF boundingRect() const override;
 

@@ -25,6 +25,10 @@ namespace AxiomModel {
 
         bool isDragAvailable(QPoint delta);
 
+        virtual bool isMovable() const = 0;
+
+        virtual bool isResizable() const = 0;
+
     public slots:
 
         void setPos(QPoint pos);
