@@ -7,6 +7,7 @@
 
 #include "src/model/node/CustomNode.h"
 #include "src/model/schematic/Schematic.h"
+#include "src/model/control/NodeValueControl.h"
 #include "SchematicCanvas.h"
 
 using namespace AxiomGui;
@@ -56,6 +57,16 @@ void SchematicView::newNode() {
             qRound((float) contextPos.y() / SchematicCanvas::gridSize.height()) - newNode->size().height() / 2
     );
     newNode->setPos(schematic->grid.findNearestAvailable(targetPos, newNode->size()));
+
+    auto newControl = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::KNOB,
+            NodeValueControl::Channel::BOTH
+    );
+    newControl->setSize(QSize(1, 1));
+    newControl->setPos(QPoint(0, 0));
+    newNode->surface.addItem(std::move(newControl));
+
     schematic->addItem(std::move(newNode));
 }
 
