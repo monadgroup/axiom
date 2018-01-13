@@ -12,10 +12,6 @@ bool GridItem::isDragAvailable(QPoint delta) {
     return parentSurface->grid.isRectAvailable(dragStartPos + delta, m_size, this);
 }
 
-void GridItem::setPos(QPoint pos) {
-    setPos(pos, true, true);
-}
-
 void GridItem::setSize(QSize size) {
     if (size != m_size) {
         if (size.width() < 1 || size.height() < 1 || !parentSurface->grid.isRectAvailable(m_pos, size, this)) return;

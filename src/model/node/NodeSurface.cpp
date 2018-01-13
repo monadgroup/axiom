@@ -11,5 +11,5 @@ NodeSurface::NodeSurface(Node *node) : GridSurface(QPoint(0, 0), QPoint(node->si
 }
 
 void NodeSurface::setSize(QSize size) {
-    grid.maxRect = QPoint(size.width(), size.height());
+    grid.maxRect = schematicToNodeSurface(QPoint(size.width(), size.height()));
 }

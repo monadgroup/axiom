@@ -35,6 +35,12 @@ namespace AxiomModel {
 
         void deselectAll();
 
+        void startDragging();
+
+        void dragTo(QPoint delta);
+
+        void finishDragging();
+
     private slots:
 
         void removeItem(GridItem *item);
@@ -42,12 +48,6 @@ namespace AxiomModel {
         void selectItem(GridItem *item, bool exclusive);
 
         void deselectItem(GridItem *item);
-
-        void startDragging();
-
-        void dragTo(QPoint delta);
-
-        void finishDragging();
 
     signals:
 

@@ -31,11 +31,11 @@ namespace AxiomModel {
 
     public slots:
 
-        void setPos(QPoint pos);
+        void setPos(QPoint pos, bool updateGrid = true, bool checkPositions = true);
 
         void setSize(QSize size);
 
-        void setCorners(QPoint topLeft, QPoint bottomRight);
+        virtual void setCorners(QPoint topLeft, QPoint bottomRight);
 
         void select(bool exclusive);
 
@@ -79,8 +79,6 @@ namespace AxiomModel {
         bool m_selected = false;
 
         QPoint dragStartPos;
-
-        void setPos(QPoint pos, bool updateGrid, bool checkPositions);
     };
 
 }

@@ -30,6 +30,8 @@ namespace AxiomModel {
 
         void setName(const QString &name);
 
+        void setCorners(QPoint topLeft, QPoint bottomRight) override;
+
     signals:
 
         void nameChanged(const QString &newName);
