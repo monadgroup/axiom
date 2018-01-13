@@ -204,7 +204,6 @@ void SchematicCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSiz
     bottomRight.setX(std::ceil(bottomRight.x() / size.width()) * size.width());
     bottomRight.setY(std::ceil(bottomRight.y() / size.height()) * size.height());
 
-    //QPen drawPen(QColor::fromRgb(34, 34, 34)); // #222
     auto drawPen = QPen(color);
     drawPen.setWidthF(pointSize);
     painter->setPen(drawPen);

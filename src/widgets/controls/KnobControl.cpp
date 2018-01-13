@@ -1,6 +1,9 @@
 #include "KnobControl.h"
 
 #include <QtGui/QPainter>
+#include <QtWidgets/QGraphicsSceneMouseEvent>
+#include <math.h>
+
 #include "src/model/control/NodeValueControl.h"
 #include "../node/NodeItem.h"
 #include "../schematic/SchematicCanvas.h"
@@ -17,6 +20,9 @@ KnobControl::KnobControl(NodeValueControl *control, NodeItem *parent) : control(
             this, &KnobControl::setSize);
     connect(control, &NodeValueControl::removed,
             this, &KnobControl::remove);
+
+    connect(control, &NodeValueControl::valueChanged,
+            this, &KnobControl::valueChanged);
 
     setPos(control->pos());
     setSize(control->size());
@@ -58,10 +64,45 @@ QRectF KnobControl::aspectBoundingRect() const {
 
 void KnobControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     auto br = aspectBoundingRect();
+    auto scaledMargin = 0.1f * br.width();
+    auto scaledM = QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin);
+    auto outerBr = br.marginsRemoved(scaledM);
+    auto ringBr = outerBr.marginsRemoved(scaledM);
 
-    painter->setPen(QPen(Qt::red));
-    painter->setBrush(QBrush(Qt::blue));
-    painter->drawRect(br);
+    auto startAngle = 240 * 16;
+    auto completeAngle = -300 * 16;
+
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(QBrush(QColor(15, 15, 15)));
+    painter->drawEllipse(outerBr);
+
+    painter->setPen(QPen(QColor(0, 0, 0), 0.06f * br.width()));
+    painter->setBrush(Qt::NoBrush);
+
+    painter->drawArc(ringBr, startAngle + completeAngle * control->value(), completeAngle - completeAngle * control->value());
+
+    painter->setPen(QPen(QColor(52, 152, 219), 0.06f * br.width()));
+    painter->drawArc(ringBr, startAngle, completeAngle * control->value());
+}
+
+void KnobControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    if (event->button() != Qt::LeftButton) return;
+
+    isDragging = true;
+    beforeDragVal = control->value();
+    dragMouseStart = event->pos();
+}
+
+void KnobControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) return;
+
+    auto mouseDelta = event->pos() - dragMouseStart;
+    auto accuracy = 100 + (float)mouseDelta.x() * 2;
+    control->setValue(beforeDragVal - (float)mouseDelta.y() / accuracy);
+}
+
+void KnobControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    isDragging = false;
 }
 
 void KnobControl::setPos(QPoint newPos) {
@@ -78,4 +119,8 @@ void KnobControl::remove() {
 
 void KnobControl::triggerGeometryChange() {
     prepareGeometryChange();
+}
+
+void KnobControl::valueChanged(float newVal) {
+    update();
 }

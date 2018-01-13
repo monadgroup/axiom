@@ -63,7 +63,8 @@ void SchematicView::newNode() {
             NodeValueControl::Type::KNOB,
             NodeValueControl::Channel::BOTH
     );
-    newControl->setCorners(QPoint(1, 1), QPoint(3, 3));
+    newControl->setCorners(QPoint(0, 0), QPoint(2, 2));
+    newControl->setValue(0.2);
     newNode->surface.addItem(std::move(newControl));
 
     schematic->addItem(std::move(newNode));
