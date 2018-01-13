@@ -20,8 +20,8 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
 
     // prevent resizing to be smaller than controls
     for (auto &item : surface.items()) {
-        auto itemTopLeft = pos() + NodeSurface::nodeSurfaceToSchematic(item->pos());
-        auto itemBottomRight = itemTopLeft + NodeSurface::nodeSurfaceToSchematic(QPoint(item->size().width(), item->size().height()));
+        auto itemTopLeft = pos() + NodeSurface::nodeSurfaceToSchematicFloor(item->pos());
+        auto itemBottomRight = pos() + NodeSurface::nodeSurfaceToSchematicCeil(item->pos() + QPoint(item->size().width(), item->size().height()));
 
         topLeft.setX(qMin(topLeft.x(), itemTopLeft.x()));
         topLeft.setY(qMin(topLeft.y(), itemTopLeft.y()));

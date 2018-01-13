@@ -29,8 +29,35 @@ QRectF KnobControl::boundingRect() const {
     };
 }
 
+QRectF KnobControl::aspectBoundingRect() const {
+    auto bound = boundingRect();
+    if (bound.size().width() > bound.size().height()) {
+        return {
+                QPointF(
+                        bound.topLeft().x() + bound.size().width() / 2 - bound.size().height() / 2,
+                        bound.topLeft().y()
+                ),
+                QSizeF(
+                        bound.size().height(),
+                        bound.size().height()
+                )
+        };
+    } else {
+        return {
+                QPointF(
+                        bound.topLeft().x(),
+                        bound.topLeft().y() + bound.size().height() / 2 - bound.size().width() / 2
+                ),
+                QSizeF(
+                        bound.size().width(),
+                        bound.size().width()
+                )
+        };
+    }
+}
+
 void KnobControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    auto br = boundingRect();
+    auto br = aspectBoundingRect();
 
     painter->setPen(QPen(Qt::red));
     painter->setBrush(QBrush(Qt::blue));

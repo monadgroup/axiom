@@ -20,6 +20,8 @@ namespace AxiomGui {
 
         QRectF boundingRect() const override;
 
+        QRectF aspectBoundingRect() const;
+
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
     private slots:

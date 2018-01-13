@@ -50,7 +50,7 @@ SchematicView::SchematicView(Schematic *schematic, QWidget *parent)
 void SchematicView::newNode() {
     auto newNode = std::make_unique<AxiomModel::CustomNode>(schematic);
     auto contextPos = mapFromGlobal(contextMenu->pos());
-    newNode->setSize(QSize(2, 1));
+    newNode->setSize(QSize(5, 5));
 
     auto targetPos = QPoint(
             qRound((float) contextPos.x() / SchematicCanvas::nodeGridSize.width()) - newNode->size().width() / 2,
@@ -63,7 +63,7 @@ void SchematicView::newNode() {
             NodeValueControl::Type::KNOB,
             NodeValueControl::Channel::BOTH
     );
-    newControl->setCorners(QPoint(0, 0), QPoint(1, 1));
+    newControl->setCorners(QPoint(1, 1), QPoint(3, 3));
     newNode->surface.addItem(std::move(newControl));
 
     schematic->addItem(std::move(newNode));
