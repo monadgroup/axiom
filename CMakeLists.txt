@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(axiom_editor)
+project(axiom)
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -37,3 +37,6 @@ set(RES_FILES editor/resources/axiom.rc editor/resources/res.qrc)
 
 add_executable(axiom WIN32 ${SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom Qt5::Widgets)
+
+add_subdirectory(compiler)
+target_link_libraries(axiom axiom_compiler)
