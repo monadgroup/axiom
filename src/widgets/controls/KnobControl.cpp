@@ -2,7 +2,7 @@
 
 #include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <math.h>
+#include <cmath>
 
 #include "src/model/control/NodeValueControl.h"
 #include "../node/NodeItem.h"
@@ -65,23 +65,52 @@ QRectF KnobControl::aspectBoundingRect() const {
 void KnobControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     auto br = aspectBoundingRect();
     auto scaledMargin = 0.1f * br.width();
-    auto scaledM = QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin);
-    auto outerBr = br.marginsRemoved(scaledM);
-    auto ringBr = outerBr.marginsRemoved(scaledM);
+    auto scaledThickness = 0.06f * br.width();
+    auto outerBr = br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
+    auto ringBr = outerBr.marginsRemoved(QMarginsF(scaledThickness/2, scaledThickness/2, scaledThickness/2, scaledThickness/2));
 
     auto startAngle = 240 * 16;
     auto completeAngle = -300 * 16;
 
+    auto currentColor = QColor(52, 152, 219);
+
+    // draw background
     painter->setPen(Qt::NoPen);
-    painter->setBrush(QBrush(QColor(15, 15, 15)));
+    painter->setBrush(QBrush(QColor(30, 30, 30)));
     painter->drawEllipse(outerBr);
 
-    painter->setPen(QPen(QColor(0, 0, 0), 0.06f * br.width()));
+    // draw markers
+    auto scaledMarkerThickness = 0.02f * br.width();
+    auto centerP = outerBr.center();
+
+    const auto markerCount = 8;
+    for (auto i = 0; i <= markerCount; i++) {
+        auto markerVal = (float)i / markerCount;
+        if (markerVal < control->value() || (markerVal == 1 && control->value() == 1)) {
+            painter->setPen(QPen(currentColor, scaledMarkerThickness));
+        } else {
+            painter->setPen(QPen(QColor(0, 0, 0), scaledMarkerThickness));
+        }
+
+        auto markerAngle = startAngle / 2880. * M_PI + markerVal * completeAngle / 2880. * M_PI;
+        auto markerP = centerP + QPointF(
+                ringBr.width() / 2 * std::cos(markerAngle),
+                -ringBr.height() / 2 * std::sin(markerAngle)
+        );
+        painter->drawLine((centerP + 2*markerP) / 3, markerP);
+    }
+
+    // draw background ring
+    auto pen = QPen(QColor(0, 0, 0), scaledThickness);
+    pen.setCapStyle(Qt::FlatCap);
+    painter->setPen(pen);
     painter->setBrush(Qt::NoBrush);
 
     painter->drawArc(ringBr, startAngle + completeAngle * control->value(), completeAngle - completeAngle * control->value());
 
-    painter->setPen(QPen(QColor(52, 152, 219), 0.06f * br.width()));
+    // draw filled ring
+    pen.setColor(currentColor);
+    painter->setPen(pen);
     painter->drawArc(ringBr, startAngle, completeAngle * control->value());
 }
 
@@ -97,7 +126,7 @@ void KnobControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     auto mouseDelta = event->pos() - dragMouseStart;
-    auto accuracy = 100 + (float)mouseDelta.x() * 2;
+    auto accuracy = 100 + (float)std::abs(mouseDelta.x()) * 2;
     control->setValue(beforeDragVal - (float)mouseDelta.y() / accuracy);
 }
 
