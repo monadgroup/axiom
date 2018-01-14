@@ -16,3 +16,11 @@ QPoint AxiomUtil::clampP(QPoint p, QPoint min, QPoint max) {
             qMax(min.y(), qMin(p.y(), max.y()))
     );
 }
+
+QColor AxiomUtil::mixColor(QColor a, QColor b, float mix) {
+    return QColor(
+            a.red() + static_cast<int>((b.red() - a.red()) * mix),
+            a.green() + static_cast<int>((b.green() - a.green()) * mix),
+            a.blue() + static_cast<int>((b.blue() - a.blue()) * mix)
+    );
+}

@@ -8,7 +8,7 @@
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeValueControl.h"
-#include "../controls/KnobControl.h"
+#include "editor/widgets/controls/BasicControl.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -88,7 +88,7 @@ void NodeItem::setSize(QSize newSize) {
 
 void NodeItem::addControl(NodeControl *control) {
     if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
-        auto c = new KnobControl(valueControl, this);
+        auto c = new BasicControl(valueControl, this);
         c->setZValue(1);
         addToGroup(c);
     }

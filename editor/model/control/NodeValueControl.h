@@ -11,9 +11,8 @@ namespace AxiomModel {
 
     public:
         enum class Type {
-            KNOB,
-            SLIDER,
-            SWITCH
+            BASIC,
+            TOGGLE
         };
 
         const Type type;
