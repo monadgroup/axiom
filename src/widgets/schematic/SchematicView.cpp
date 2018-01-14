@@ -67,6 +67,23 @@ void SchematicView::newNode() {
     newControl->setValue(0.2);
     newNode->surface.addItem(std::move(newControl));
 
+    auto newControl2 = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::KNOB,
+            NodeValueControl::Channel::BOTH
+    );
+    newControl2->setCorners(QPoint(2, 0), QPoint(4, 2));
+    newControl2->setValue(0.4);
+    newNode->surface.addItem(std::move(newControl2));
+
+    auto newControl3 = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::KNOB,
+            NodeValueControl::Channel::BOTH
+    );
+    newControl3->setCorners(QPoint(0, 2), QPoint(2, 4));
+    newNode->surface.addItem(std::move(newControl3));
+
     schematic->addItem(std::move(newNode));
 }
 

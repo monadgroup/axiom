@@ -32,7 +32,7 @@ void NodeItemBackground::paint(QPainter *painter, const QStyleOptionGraphicsItem
 
     painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
     if (node->isSelected()) {
-        painter->setBrush(QBrush(QColor::fromRgb(20, 20, 20)));
+        painter->setBrush(QBrush(QColor::fromRgb(27, 27, 27)));
     } else {
         painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17)));
     }
