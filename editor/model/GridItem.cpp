@@ -40,7 +40,7 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
         } else if (parentSurface->grid.isRectAvailable(vTopLeft, vSize, this)) {
             topLeft = vTopLeft;
             newSize = vSize;
-        }
+        } else return;
     }
 
     if (topLeft == m_pos && newSize == m_size) return;
