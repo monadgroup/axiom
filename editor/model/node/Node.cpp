@@ -34,13 +34,17 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     // find max top left where we can still fit the controls
     auto controlsSize = controlsBottomRight - controlsTopLeft;
 
-    auto fitTopLeft = bottomRight - controlsSize;
-    topLeft.setX(qMin(topLeft.x(), fitTopLeft.x()));
-    topLeft.setY(qMin(topLeft.y(), fitTopLeft.y()));
+    if (topLeft != pos()) {
+        auto fitTopLeft = bottomRight - controlsSize;
+        topLeft.setX(qMin(topLeft.x(), fitTopLeft.x()));
+        topLeft.setY(qMin(topLeft.y(), fitTopLeft.y()));
+    }
 
-    auto fitBottomRight = topLeft + controlsSize;
-    bottomRight.setX(qMax(bottomRight.x(), fitBottomRight.x()));
-    bottomRight.setY(qMax(bottomRight.y(), fitBottomRight.y()));
+    if (bottomRight != pos() + QPoint(size().width(), size().height())) {
+        auto fitBottomRight = topLeft + controlsSize;
+        bottomRight.setX(qMax(bottomRight.x(), fitBottomRight.x()));
+        bottomRight.setY(qMax(bottomRight.y(), fitBottomRight.y()));
+    }
 
     GridItem::setCorners(topLeft, bottomRight);
 
