@@ -92,9 +92,6 @@ void SchematicCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         case Qt::LeftButton:
             leftMousePressEvent(event);
             break;
-        case Qt::MiddleButton:
-            middleMousePressEvent(event);
-            break;
         default:
             QGraphicsScene::mousePressEvent(event);
             break;
@@ -108,9 +105,6 @@ void SchematicCanvas::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     switch (event->button()) {
         case Qt::LeftButton:
             leftMouseReleaseEvent(event);
-            break;
-        case Qt::MiddleButton:
-            middleMouseReleaseEvent(event);
             break;
         default:
             QGraphicsScene::mouseReleaseEvent(event);
@@ -147,11 +141,6 @@ void SchematicCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
         event->accept();
     }
-
-    if (isDragging) {
-        // todo
-        event->accept();
-    }
 }
 
 void SchematicCanvas::keyPressEvent(QKeyEvent *event) {
@@ -178,19 +167,6 @@ void SchematicCanvas::leftMouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isSelecting = false;
     selectionPoints.clear();
     selectionPath->setVisible(false);
-    event->accept();
-}
-
-void SchematicCanvas::middleMousePressEvent(QGraphicsSceneMouseEvent *event) {
-    isDragging = true;
-
-    dragStart = event->pos();
-    dragOffset = QPointF(0, 0);
-    event->accept();
-}
-
-void SchematicCanvas::middleMouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    isDragging = false;
     event->accept();
 }
 

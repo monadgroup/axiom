@@ -51,7 +51,6 @@ namespace AxiomGui {
 
     private:
         bool isSelecting = false;
-        bool isDragging = false;
 
         QVector<QPointF> selectionPoints;
         QGraphicsPathItem *selectionPath;
@@ -62,10 +61,6 @@ namespace AxiomGui {
         void leftMousePressEvent(QGraphicsSceneMouseEvent *event);
 
         void leftMouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-
-        void middleMousePressEvent(QGraphicsSceneMouseEvent *event);
-
-        void middleMouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
         static void
         drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize);

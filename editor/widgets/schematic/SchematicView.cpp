@@ -21,10 +21,11 @@ SchematicView::SchematicView(Schematic *schematic, QWidget *parent)
     setDragMode(QGraphicsView::NoDrag);
     setRenderHint(QPainter::Antialiasing);
 
+    setSceneRect(INT_MIN/2, INT_MIN/2, INT_MAX, INT_MAX);
+    centerOn(0, 0);
+
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
     // build menu
     contextMenu = new QMenu(this);
@@ -47,9 +48,16 @@ SchematicView::SchematicView(Schematic *schematic, QWidget *parent)
     contextMenu->addAction(new QAction(tr("Something else")));
 }
 
+void SchematicView::pan(QPointF delta) {
+    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    auto newCenter = QPoint(viewport()->rect().width() / 2 - delta.x(), viewport()->rect().height() / 2 - delta.y());
+    centerOn(mapToScene(newCenter));
+    setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+}
+
 void SchematicView::newNode() {
     auto newNode = std::make_unique<AxiomModel::CustomNode>(schematic);
-    auto contextPos = mapFromGlobal(contextMenu->pos());
+    auto contextPos = mapToScene(mapFromGlobal(contextMenu->pos()));
     newNode->setSize(QSize(5, 5));
 
     auto targetPos = QPoint(
@@ -95,11 +103,33 @@ void SchematicView::newNode() {
     schematic->addItem(std::move(newNode));
 }
 
-void SchematicView::resizeEvent(QResizeEvent *event) {
-    scene()->setSceneRect(0, 0, event->size().width(), event->size().height());
-}
-
 void SchematicView::contextMenuEvent(QContextMenuEvent *event) {
     contextMenu->exec(event->globalPos());
     event->accept();
+}
+
+void SchematicView::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::MiddleButton) {
+        isPanning = true;
+        lastMousePos = event->pos();
+    }
+
+    QGraphicsView::mousePressEvent(event);
+}
+
+void SchematicView::mouseMoveEvent(QMouseEvent *event) {
+    if (isPanning) {
+        pan(mapToScene(event->pos()) - mapToScene(lastMousePos));
+        lastMousePos = event->pos();
+    }
+
+    QGraphicsView::mouseMoveEvent(event);
+}
+
+void SchematicView::mouseReleaseEvent(QMouseEvent *event) {
+    if (event->button() == Qt::MiddleButton) {
+        isPanning = false;
+    }
+
+    QGraphicsView::mouseReleaseEvent(event);
 }
