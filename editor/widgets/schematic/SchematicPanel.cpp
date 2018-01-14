@@ -1,7 +1,7 @@
 #include "SchematicPanel.h"
 
-#include "src/util.h"
-#include "src/AxiomApplication.h"
+#include "editor/util.h"
+#include "editor/AxiomApplication.h"
 #include "SchematicView.h"
 
 using namespace AxiomGui;

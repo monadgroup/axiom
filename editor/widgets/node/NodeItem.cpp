@@ -5,9 +5,9 @@
 #include "NodeResizer.h"
 #include "NodeItemBackground.h"
 #include "../schematic/SchematicCanvas.h"
-#include "src/model/node/Node.h"
-#include "src/model/control/NodeControl.h"
-#include "src/model/control/NodeValueControl.h"
+#include "editor/model/node/Node.h"
+#include "editor/model/control/NodeControl.h"
+#include "editor/model/control/NodeValueControl.h"
 #include "../controls/KnobControl.h"
 
 using namespace AxiomGui;

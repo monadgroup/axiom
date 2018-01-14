@@ -4,8 +4,8 @@
 #include <QtWidgets/QLabel>
 #include <QtGui/QIcon>
 
-#include "src/util.h"
-#include "src/resources/resource.h"
+#include "editor/util.h"
+#include "editor/resources/resource.h"
 
 using namespace AxiomGui;
 

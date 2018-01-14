@@ -2,7 +2,7 @@
 
 #include <QApplication>
 #include "widgets/windows/MainWindow.h"
-#include "src/model/Project.h"
+#include "editor/model/Project.h"
 
 class AxiomApplication : public QApplication {
 Q_OBJECT

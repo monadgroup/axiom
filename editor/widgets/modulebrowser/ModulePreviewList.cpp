@@ -1,7 +1,7 @@
-#include <src/util.h>
 #include "ModulePreviewList.h"
 
-#include "src/layouts/FlowLayout.h"
+#include "editor/layouts/FlowLayout.h"
+#include "editor/util.h"
 #include "ModulePreview.h"
 
 using namespace AxiomGui;

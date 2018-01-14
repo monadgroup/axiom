@@ -2,7 +2,7 @@
 
 #include <QtGui/QPainter>
 
-#include "src/util.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 

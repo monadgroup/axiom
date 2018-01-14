@@ -4,11 +4,11 @@
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QMenuBar>
 
-#include "src/resources/resource.h"
+#include "editor/resources/resource.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
-#include "src/widgets/schematic/SchematicPanel.h"
+#include "editor/widgets/schematic/SchematicPanel.h"
 #include "AboutWindow.h"
-#include "src/AxiomApplication.h"
+#include "editor/AxiomApplication.h"
 
 using namespace AxiomGui;
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(axiom)
+project(axiom_editor)
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -19,21 +19,21 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-set(SOURCE_FILES src/main.cpp src/util.cpp src/AxiomApplication.cpp
-        src/model/Library.cpp src/model/LibraryEntry.cpp src/model/Project.cpp src/model/GridSurface.cpp src/model/GridItem.cpp
-        src/model/connection/ConnectionSink.cpp src/model/connection/ConnectionSource.cpp src/model/connection/ConnectionWire.cpp
-        src/model/node/CustomNode.cpp src/model/node/ModuleNode.cpp src/model/node/Node.cpp src/model/node/NodeSurface.cpp
-        src/model/schematic/ModuleSchematic.cpp  src/model/schematic/RootSchematic.cpp src/model/schematic/Schematic.cpp
-        src/model/control/NodeControl.cpp src/model/control/NodeValueControl.cpp src/model/control/NodeInputControl.cpp src/model/control/NodeOutputControl.cpp
-        src/widgets/dock/DockPanel.cpp
-        src/widgets/windows/MainWindow.cpp src/widgets/windows/AboutWindow.cpp
-        src/widgets/modulebrowser/ModuleBrowserPanel.cpp src/widgets/modulebrowser/ModulePreviewList.cpp src/widgets/modulebrowser/ModulePreview.cpp
-        src/widgets/schematic/SchematicPanel.cpp src/widgets/schematic/SchematicView.cpp src/widgets/schematic/SchematicCanvas.cpp
-        src/widgets/node/NodeItem.cpp src/widgets/node/NodeResizer.cpp src/widgets/node/NodeItemBackground.cpp
-        src/widgets/controls/KnobControl.cpp
-        src/layouts/FlowLayout.cpp)
+set(SOURCE_FILES editor/main.cpp editor/util.cpp editor/AxiomApplication.cpp
+        editor/model/Library.cpp editor/model/LibraryEntry.cpp editor/model/Project.cpp editor/model/GridSurface.cpp editor/model/GridItem.cpp
+        editor/model/connection/ConnectionSink.cpp editor/model/connection/ConnectionSource.cpp editor/model/connection/ConnectionWire.cpp
+        editor/model/node/CustomNode.cpp editor/model/node/ModuleNode.cpp editor/model/node/Node.cpp editor/model/node/NodeSurface.cpp
+        editor/model/schematic/ModuleSchematic.cpp  editor/model/schematic/RootSchematic.cpp editor/model/schematic/Schematic.cpp
+        editor/model/control/NodeControl.cpp editor/model/control/NodeValueControl.cpp editor/model/control/NodeInputControl.cpp editor/model/control/NodeOutputControl.cpp
+        editor/widgets/dock/DockPanel.cpp
+        editor/widgets/windows/MainWindow.cpp editor/widgets/windows/AboutWindow.cpp
+        editor/widgets/modulebrowser/ModuleBrowserPanel.cpp editor/widgets/modulebrowser/ModulePreviewList.cpp editor/widgets/modulebrowser/ModulePreview.cpp
+        editor/widgets/schematic/SchematicPanel.cpp editor/widgets/schematic/SchematicView.cpp editor/widgets/schematic/SchematicCanvas.cpp
+        editor/widgets/node/NodeItem.cpp editor/widgets/node/NodeResizer.cpp editor/widgets/node/NodeItemBackground.cpp
+        editor/widgets/controls/KnobControl.cpp
+        editor/layouts/FlowLayout.cpp)
 
-set(RES_FILES src/resources/axiom.rc src/resources/res.qrc)
+set(RES_FILES editor/resources/axiom.rc editor/resources/res.qrc)
 
 add_executable(axiom WIN32 ${SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom Qt5::Widgets)

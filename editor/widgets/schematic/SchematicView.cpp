@@ -5,9 +5,9 @@
 #include <QtGui/QResizeEvent>
 #include <memory>
 
-#include "src/model/node/CustomNode.h"
-#include "src/model/schematic/Schematic.h"
-#include "src/model/control/NodeValueControl.h"
+#include "editor/model/node/CustomNode.h"
+#include "editor/model/schematic/Schematic.h"
+#include "editor/model/control/NodeValueControl.h"
 #include "SchematicCanvas.h"
 
 using namespace AxiomGui;

@@ -1,6 +1,6 @@
 #include "ModuleSchematic.h"
 
-#include "src/model/node/ModuleNode.h"
+#include "editor/model/node/ModuleNode.h"
 
 using namespace AxiomModel;
 

@@ -4,7 +4,7 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <cmath>
 
-#include "src/model/control/NodeValueControl.h"
+#include "editor/model/control/NodeValueControl.h"
 #include "../node/NodeItem.h"
 #include "../schematic/SchematicCanvas.h"
 

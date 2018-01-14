@@ -4,7 +4,7 @@
 #include <QtWidgets/QTabBar>
 #include <QtWidgets/QLineEdit>
 
-#include "src/util.h"
+#include "editor/util.h"
 #include "ModulePreviewList.h"
 
 using namespace AxiomGui;

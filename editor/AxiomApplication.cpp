@@ -1,7 +1,7 @@
 #include "AxiomApplication.h"
 
 #include "util.h"
-#include "src/model/node/CustomNode.h"
+#include "editor/model/node/CustomNode.h"
 
 AxiomApplication *AxiomApplication::main = nullptr;
 AxiomModel::Project *AxiomApplication::project = new AxiomModel::Project();

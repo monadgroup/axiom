@@ -4,7 +4,7 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 
 #include "../schematic/SchematicCanvas.h"
-#include "src/model/node/Node.h"
+#include "editor/model/node/Node.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
