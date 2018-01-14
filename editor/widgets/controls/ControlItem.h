@@ -1,32 +1,29 @@
 #pragma once
 
-#include <QtWidgets/QGraphicsObject>
+#include <QtWidgets/QGraphicsItemGroup>
 
 namespace AxiomModel {
-    class Node;
-
     class NodeControl;
 }
 
 namespace AxiomGui {
 
-    class SchematicCanvas;
+    class NodeItem;
 
-    class NodeItem : public QObject, public QGraphicsItemGroup {
-    Q_OBJECT
+    class ControlItem : public QObject, public QGraphicsItemGroup {
+        Q_OBJECT
 
     public:
-        AxiomModel::Node *node;
+        AxiomModel::NodeControl *control;
+        NodeItem *parent;
 
-        NodeItem(AxiomModel::Node *node, SchematicCanvas *parent);
+        ControlItem(AxiomModel::NodeControl *control, NodeItem *parent);
 
     private slots:
 
         void setPos(QPoint newPos);
 
         void setSize(QSize newSize);
-
-        void addControl(AxiomModel::NodeControl *control);
 
         void remove();
 

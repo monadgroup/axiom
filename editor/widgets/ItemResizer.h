@@ -4,7 +4,7 @@
 
 namespace AxiomGui {
 
-    class NodeResizer : public QGraphicsObject {
+    class ItemResizer : public QGraphicsObject {
     Q_OBJECT
 
     public:
@@ -20,17 +20,25 @@ namespace AxiomGui {
             BOTTOM_LEFT = BOTTOM | LEFT
         };
 
-        explicit NodeResizer(Direction dir, QSizeF minSize, float marginSize = 5);
+        explicit ItemResizer(Direction dir, QSizeF minSize, float marginSize = 5);
 
         QRectF boundingRect() const override;
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+
+        bool doPaint() const { return m_doPaint; }
 
     public slots:
 
         void setSize(QSizeF newSize);
 
         void setPos(QPointF newPos);
+
+        void setDoPaint(bool newDoPaint);
+
+        void enablePainting() { setDoPaint(true); }
+
+        void disablePainting() { setDoPaint(false); }
 
     signals:
 
@@ -56,6 +64,7 @@ namespace AxiomGui {
         QPointF startBottomRight;
         QSizeF minSize;
 
+        bool m_doPaint;
         QPointF m_pos;
         QSizeF m_size;
     };

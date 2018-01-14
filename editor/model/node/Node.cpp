@@ -17,6 +17,7 @@ void Node::setName(const QString &name) {
 
 void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     auto initialPos = pos();
+    auto initialBottomRight = initialPos + QPoint(size().width(), size().height());
 
     // calculate controls bounding region
     auto controlsTopLeft = pos() + QPoint(size().width(), size().height());
@@ -34,17 +35,15 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     // find max top left where we can still fit the controls
     auto controlsSize = controlsBottomRight - controlsTopLeft;
 
-    if (topLeft != pos()) {
-        auto fitTopLeft = bottomRight - controlsSize;
-        topLeft.setX(qMin(topLeft.x(), fitTopLeft.x()));
-        topLeft.setY(qMin(topLeft.y(), fitTopLeft.y()));
-    }
+    auto fitTopLeft = bottomRight - controlsSize;
 
-    if (bottomRight != pos() + QPoint(size().width(), size().height())) {
-        auto fitBottomRight = topLeft + controlsSize;
-        bottomRight.setX(qMax(bottomRight.x(), fitBottomRight.x()));
-        bottomRight.setY(qMax(bottomRight.y(), fitBottomRight.y()));
-    }
+    if (topLeft.x() != initialPos.x()) topLeft.setX(qMin(topLeft.x(), fitTopLeft.x()));
+    if (topLeft.y() != initialPos.y()) topLeft.setY(qMin(topLeft.y(), fitTopLeft.y()));
+
+    auto fitBottomRight = topLeft + controlsSize;
+
+    if (bottomRight.x() != initialBottomRight.x()) bottomRight.setX(qMax(bottomRight.x(), fitBottomRight.x()));
+    if (bottomRight.y() != initialBottomRight.y()) bottomRight.setY(qMax(bottomRight.y(), fitBottomRight.y()));
 
     GridItem::setCorners(topLeft, bottomRight);
 

@@ -2,13 +2,13 @@
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 
-#include "NodeResizer.h"
+#include "editor/widgets/ItemResizer.h"
 #include "NodeItemBackground.h"
 #include "../schematic/SchematicCanvas.h"
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeValueControl.h"
-#include "editor/widgets/controls/BasicControl.h"
+#include "../controls/ControlItem.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -48,24 +48,24 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
             });
 
     // create resize items
-    NodeResizer::Direction directions[] = {
-            NodeResizer::TOP, NodeResizer::RIGHT, NodeResizer::BOTTOM, NodeResizer::LEFT,
-            NodeResizer::TOP_RIGHT, NodeResizer::TOP_LEFT, NodeResizer::BOTTOM_RIGHT, NodeResizer::BOTTOM_LEFT
+    ItemResizer::Direction directions[] = {
+            ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
+            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
     };
     for (auto i = 0; i < 8; i++) {
-        auto resizer = new NodeResizer(directions[i], SchematicCanvas::nodeGridSize);
+        auto resizer = new ItemResizer(directions[i], SchematicCanvas::nodeGridSize);
 
         // ensure corners are on top of edges
-        resizer->setZValue(i > 3 ? 3 : 2);
+        resizer->setZValue(i > 3 ? 2 : 1);
 
         connect(this, &NodeItem::resizerPosChanged,
-                resizer, &NodeResizer::setPos);
+                resizer, &ItemResizer::setPos);
         connect(this, &NodeItem::resizerSizeChanged,
-                resizer, &NodeResizer::setSize);
+                resizer, &ItemResizer::setSize);
 
-        connect(resizer, &NodeResizer::startDrag,
+        connect(resizer, &ItemResizer::startDrag,
                 this, &NodeItem::resizerStartDrag);
-        connect(resizer, &NodeResizer::changed,
+        connect(resizer, &ItemResizer::changed,
                 this, &NodeItem::resizerChanged);
 
         addToGroup(resizer);
@@ -87,11 +87,9 @@ void NodeItem::setSize(QSize newSize) {
 }
 
 void NodeItem::addControl(NodeControl *control) {
-    if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
-        auto c = new BasicControl(valueControl, this);
-        c->setZValue(1);
-        addToGroup(c);
-    }
+    auto c = new ControlItem(control, this);
+    c->setZValue(2);
+    addToGroup(c);
 }
 
 void NodeItem::remove() {

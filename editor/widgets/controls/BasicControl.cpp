@@ -19,20 +19,16 @@ using namespace AxiomModel;
 BasicControl::BasicControl(NodeValueControl *control, NodeItem *parent) : control(control), parent(parent) {
     setAcceptHoverEvents(true);
 
-    connect(control, &NodeValueControl::posChanged,
-            this, &BasicControl::setPos);
     connect(control, &NodeValueControl::beforeSizeChanged,
             this, &BasicControl::triggerGeometryChange);
-    connect(control, &NodeValueControl::sizeChanged,
-            this, &BasicControl::setSize);
-    connect(control, &NodeValueControl::removed,
-            this, &BasicControl::remove);
 
     connect(control, &NodeValueControl::valueChanged,
-            this, &BasicControl::valueChanged);
+            this, &BasicControl::triggerUpdate);
 
-    setPos(control->pos());
-    setSize(control->size());
+    connect(control, &NodeValueControl::selected,
+            this, &BasicControl::triggerUpdate);
+    connect(control, &NodeValueControl::deselected,
+            this, &BasicControl::triggerUpdate);
 
     auto machine = new QStateMachine();
     auto unhoveredState = new QState(machine);
@@ -117,6 +113,8 @@ void BasicControl::setHoverState(float newHoverState) {
 void BasicControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() != Qt::LeftButton) return;
 
+    if (!control->isSelected()) control->select(!(event->modifiers() & Qt::ShiftModifier));
+
     isDragging = true;
     beforeDragVal = control->value();
     dragMouseStart = event->pos();
@@ -129,13 +127,15 @@ void BasicControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto accuracyDelta = mouseDelta.x();
     auto motionDelta = mouseDelta.y();
+    auto scaleFactor = boundingRect().height();
 
     if (mode() == BasicMode::SLIDER_H) {
         accuracyDelta = mouseDelta.y();
         motionDelta = -mouseDelta.x();
+        scaleFactor = boundingRect().width();
     }
 
-    auto accuracy = 100 + (float)std::abs(accuracyDelta) * 2;
+    auto accuracy = scaleFactor * 2 + (float)std::abs(accuracyDelta) * 100 / scaleFactor;
     control->setValue(beforeDragVal - (float)motionDelta / accuracy);
 }
 
@@ -151,23 +151,11 @@ void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     emit mouseLeave();
 }
 
-void BasicControl::setPos(QPoint newPos) {
-    auto realPos = SchematicCanvas::controlRealPos(newPos);
-    QGraphicsItem::setPos(realPos.x(), realPos.y());
-}
-
-void BasicControl::setSize(QSize newSize) {
-}
-
-void BasicControl::remove() {
-    parent->removeFromGroup(this);
-}
-
 void BasicControl::triggerGeometryChange() {
     prepareGeometryChange();
 }
 
-void BasicControl::valueChanged(float newVal) {
+void BasicControl::triggerUpdate() {
     update();
 }
 

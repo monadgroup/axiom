@@ -60,15 +60,9 @@ namespace AxiomGui {
 
     private slots:
 
-        void setPos(QPoint newPos);
-
-        void setSize(QSize newSize);
-
-        void remove();
-
         void triggerGeometryChange();
 
-        void valueChanged(float newVal);
+        void triggerUpdate();
 
     private:
         float m_hoverState = 0;
