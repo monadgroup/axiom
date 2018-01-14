@@ -1,15 +1,19 @@
 #include "ControlItem.h"
 
+#include <QtWidgets/QGraphicsSceneMouseEvent>
+
 #include "editor/model/control/NodeValueControl.h"
 #include "BasicControl.h"
 #include "../ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
+#include "../node/NodeItem.h"
+#include "editor/model/node/Node.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
 ControlItem::ControlItem(NodeControl *control, NodeItem *parent) : control(control) {
-    setHandlesChildEvents(false);
+    setHandlesChildEvents(!control->node->surface.locked());
 
     setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
     setCacheMode(QGraphicsItem::DeviceCoordinateCache);
@@ -29,6 +33,9 @@ ControlItem::ControlItem(NodeControl *control, NodeItem *parent) : control(contr
             this, &ControlItem::setSize);
     connect(control, &NodeControl::removed,
             this, &ControlItem::remove);
+
+    connect(&control->node->surface, &NodeSurface::lockedChanged,
+            [this](bool locked) { setHandlesChildEvents(!locked); });
 
     // create resize items
     ItemResizer::Direction directions[] = {
@@ -64,6 +71,39 @@ ControlItem::ControlItem(NodeControl *control, NodeItem *parent) : control(contr
     // set initial state
     setPos(control->pos());
     setSize(control->size());
+}
+
+void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        if (!control->isSelected()) control->select(!(event->modifiers() & Qt::ShiftModifier));
+
+        isDragging = true;
+        mouseStartPoint = event->screenPos();
+        emit control->startedDragging();
+    }
+
+    event->accept();
+}
+
+void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) return;
+
+    auto mouseDelta = event->screenPos() - mouseStartPoint;
+    emit control->draggedTo(QPoint(
+            qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
+            qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
+    ));
+
+    event->accept();
+}
+
+void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) return;
+
+    isDragging = false;
+    emit control->finishedDragging();
+
+    event->accept();
 }
 
 void ControlItem::setPos(QPoint newPos) {

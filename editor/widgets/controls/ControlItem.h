@@ -19,6 +19,13 @@ namespace AxiomGui {
 
         ControlItem(AxiomModel::NodeControl *control, NodeItem *parent);
 
+    protected:
+        void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
     private slots:
 
         void setPos(QPoint newPos);
@@ -38,6 +45,10 @@ namespace AxiomGui {
         void resizerPosChanged(QPointF newPos);
 
         void resizerSizeChanged(QSizeF newSize);
+
+    private:
+        bool isDragging;
+        QPoint mouseStartPoint;
     };
 
 }

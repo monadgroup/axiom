@@ -10,6 +10,13 @@ NodeSurface::NodeSurface(Node *node) : GridSurface(QPoint(0, 0), QPoint(node->si
             this, &NodeSurface::setSize);
 }
 
+void NodeSurface::setLocked(bool newLocked) {
+    if (newLocked != m_locked) {
+        m_locked = newLocked;
+        emit lockedChanged(newLocked);
+    }
+}
+
 void NodeSurface::setSize(QSize size) {
     grid.maxRect = schematicToNodeSurface(QPoint(size.width(), size.height()));
 }

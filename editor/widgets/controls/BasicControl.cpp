@@ -97,9 +97,9 @@ void BasicControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 BasicControl::BasicMode BasicControl::mode() const {
     auto rect = boundingRect();
 
+    if (rect.width() < 50 || rect.height() < 50) return BasicMode::PLUG;
     if (rect.width() >= rect.height() * 2) return BasicMode::SLIDER_H;
     if (rect.height() >= rect.width() * 2) return BasicMode::SLIDER_V;
-    if (rect.width() < 50 || rect.height() < 50) return BasicMode::PLUG;
     return BasicMode::KNOB;
 }
 
@@ -112,8 +112,6 @@ void BasicControl::setHoverState(float newHoverState) {
 
 void BasicControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() != Qt::LeftButton) return;
-
-    if (!control->isSelected()) control->select(!(event->modifiers() & Qt::ShiftModifier));
 
     isDragging = true;
     beforeDragVal = control->value();

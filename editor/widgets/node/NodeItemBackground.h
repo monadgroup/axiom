@@ -36,7 +36,6 @@ namespace AxiomGui {
     private:
         bool isDragging;
         QPoint mouseStartPoint;
-        QPoint nodeStartPoint;
     };
 
 }
