@@ -10,5 +10,6 @@
         <file>ModulePreview.qss</file>
         <file>SchematicPanel.qss</file>
         <file>AboutWindow.qss</file>
+        <file>NodePanel.qss</file>
     </qresource>
 </RCC>

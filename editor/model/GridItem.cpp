@@ -56,6 +56,7 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
 void GridItem::select(bool exclusive) {
     if (exclusive || !m_selected) {
         m_selected = true;
+        emit selectedChanged(m_selected);
         emit selected(exclusive);
     }
 }
@@ -63,6 +64,7 @@ void GridItem::select(bool exclusive) {
 void GridItem::deselect() {
     if (!m_selected) return;
     m_selected = false;
+    emit selectedChanged(m_selected);
     emit deselected();
 }
 

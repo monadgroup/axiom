@@ -59,6 +59,8 @@ namespace AxiomModel {
 
         void sizeChanged(QSize newSize);
 
+        void selectedChanged(bool selected);
+
         void selected(bool exclusive);
 
         void deselected();

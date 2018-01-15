@@ -5,7 +5,8 @@
 using namespace AxiomModel;
 
 Node::Node(Schematic *parent) : GridItem(parent), surface(this) {
-
+    connect(this, &Node::deselected,
+            [this]() { surface.setLocked(true); });
 }
 
 void Node::setName(const QString &name) {

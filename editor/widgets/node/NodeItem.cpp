@@ -1,6 +1,7 @@
 #include "NodeItem.h"
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
+#include <QtWidgets/QGraphicsProxyWidget>
 
 #include "editor/widgets/ItemResizer.h"
 #include "NodeItemBackground.h"
@@ -9,6 +10,7 @@
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeValueControl.h"
 #include "../controls/ControlItem.h"
+#include "NodePanel.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -71,6 +73,11 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
         addToGroup(resizer);
     }
 
+    // create panel
+    nodePanel = new QGraphicsProxyWidget();
+    nodePanel->setWidget(new NodePanel(node));
+    addToGroup(nodePanel);
+
     // set initial state
     setPos(node->pos());
     setSize(node->size());
@@ -83,6 +90,9 @@ void NodeItem::setPos(QPoint newPos) {
 }
 
 void NodeItem::setSize(QSize newSize) {
+    nodePanel->setPos(0, node->size().height() * SchematicCanvas::nodeGridSize.height() + 2);
+    nodePanel->widget()->setFixedWidth(node->size().width() * SchematicCanvas::nodeGridSize.width());
+
     emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
 }
 

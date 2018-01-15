@@ -12,6 +12,8 @@ NodeSurface::NodeSurface(Node *node) : GridSurface(QPoint(0, 0), QPoint(node->si
 
 void NodeSurface::setLocked(bool newLocked) {
     if (newLocked != m_locked) {
+        if (newLocked) deselectAll();
+
         m_locked = newLocked;
         emit lockedChanged(newLocked);
     }

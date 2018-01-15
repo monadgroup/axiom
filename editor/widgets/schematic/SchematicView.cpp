@@ -1,5 +1,6 @@
 #include "SchematicView.h"
 
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QWidgetAction>
 #include <QtGui/QResizeEvent>
@@ -112,6 +113,7 @@ void SchematicView::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::MiddleButton) {
         isPanning = true;
         lastMousePos = event->pos();
+        QApplication::setOverrideCursor(Qt::ClosedHandCursor);
     }
 
     QGraphicsView::mousePressEvent(event);
@@ -129,6 +131,7 @@ void SchematicView::mouseMoveEvent(QMouseEvent *event) {
 void SchematicView::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::MiddleButton) {
         isPanning = false;
+        QApplication::restoreOverrideCursor();
     }
 
     QGraphicsView::mouseReleaseEvent(event);

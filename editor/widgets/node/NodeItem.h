@@ -2,6 +2,8 @@
 
 #include <QtWidgets/QGraphicsObject>
 
+class QGraphicsProxyWidget;
+
 namespace AxiomModel {
     class Node;
 
@@ -41,6 +43,9 @@ namespace AxiomGui {
         void resizerPosChanged(QPointF newPos);
 
         void resizerSizeChanged(QSizeF newSize);
+
+    private:
+        QGraphicsProxyWidget *nodePanel;
     };
 
 }

@@ -1,0 +1,11 @@
+#container {
+    background: #555;
+}
+
+#container[active="true"] {
+    background: #F55;
+}
+
+QLabel {
+    background: transparent;
+}
