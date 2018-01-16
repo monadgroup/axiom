@@ -27,22 +27,6 @@ void GridSurface::addItem(std::unique_ptr<GridItem> item) {
     emit itemAdded(ptr);
 }
 
-class SortedPos {
-public:
-    QPoint checkPos;
-    QPoint basePos;
-
-    SortedPos(QPoint checkPos, QPoint basePos) : checkPos(checkPos), basePos(basePos) {}
-
-    float dist() const {
-        return std::sqrt((float) checkPos.x() * checkPos.x() + checkPos.y() * checkPos.y());
-    }
-
-    bool operator<(const SortedPos &other) const {
-        return dist() < other.dist();
-    }
-};
-
 void GridSurface::deleteSelectedItems() {
     while (!selectedItems.empty()) {
         selectedItems[0]->remove();
