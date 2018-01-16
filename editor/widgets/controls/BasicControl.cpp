@@ -300,10 +300,20 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
 
     auto barLeft = marginBr.left() + scaledControlSize.width() / 2;
     auto barRight = marginBr.right() - scaledControlSize.width() / 2;
-    auto barY = marginBr.center().y();
+    auto barHeight = marginBr.height() / 2;
+    auto barY = marginBr.center().y() - barHeight / 2;
+
+    // draw background
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(QBrush(QColor(30, 30, 30)));
+    auto bgBr = QRectF(
+        QPointF(barLeft, barY),
+        QSizeF(barRight - barLeft, barHeight)
+    );
+    painter->drawRect(flip(bgBr, vertical));
 
     // draw markers
-    const auto markerCount = 10;
+    const auto markerCount = 12;
     auto activeMarkerPen = QPen(QColor(0, 0, 0), 1);
     for (auto i = 0; i <= markerCount; i++) {
         auto markerVal = (float) i / markerCount;
@@ -318,19 +328,22 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
         auto markerX = barLeft + (barRight - barLeft) * markerVal;
         if (vertical) markerX = br.width() - markerX;
 
-        auto isImportantMarker = i == 0 || i == markerCount || i == markerCount / 2;
-        auto shiftAmt = br.height() / (isImportantMarker ? 6 : 8);
+        //auto isImportantMarker = i == 0 || i == markerCount || i == markerCount / 2;
+        //auto shiftAmt = barHeight / (isImportantMarker ? 1.5 : 2.5);
+        auto shiftAmt = barHeight / 2.5;
+        if (i % 2 == 0) shiftAmt = barHeight / 2;
+        if (i == 0 || i == markerCount || i == markerCount / 2) shiftAmt = barHeight / 1.5;
         painter->drawLine(
-                flip(QPointF(markerX, barY), vertical),
+                flip(QPointF(markerX, barY + 1), vertical),
                 flip(QPointF(markerX, barY + shiftAmt), vertical)
         );
     }
 
     auto currentX = barLeft + (barRight - barLeft) * control->value();
 
-    auto leftPos = QPointF(barLeft, barY);
-    auto rightPos = QPointF(barRight, barY);
-    auto currentPos = QPointF(currentX, barY);
+    auto leftPos = QPointF(barLeft, barY + scaledThickness / 2);
+    auto rightPos = QPointF(barRight, barY + scaledThickness / 2);
+    auto currentPos = QPointF(currentX, barY + scaledThickness / 2);
 
     if (vertical) {
         leftPos.setX(barRight);
