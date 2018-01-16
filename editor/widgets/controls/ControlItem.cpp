@@ -13,10 +13,9 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 ControlItem::ControlItem(NodeControl *control, NodeItem *parent) : control(control) {
-    setHandlesChildEvents(!control->node->surface.locked());
-
     setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
     setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+    setHandlesChildEvents(false);
 
     // create main item
     if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
@@ -33,9 +32,6 @@ ControlItem::ControlItem(NodeControl *control, NodeItem *parent) : control(contr
             this, &ControlItem::setSize);
     connect(control, &NodeControl::removed,
             this, &ControlItem::remove);
-
-    connect(&control->node->surface, &NodeSurface::lockedChanged,
-            [this](bool locked) { setHandlesChildEvents(!locked); });
 
     // create resize items
     ItemResizer::Direction directions[] = {
@@ -74,36 +70,38 @@ ControlItem::ControlItem(NodeControl *control, NodeItem *parent) : control(contr
 }
 
 void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (event->button() == Qt::LeftButton) {
+    if (!control->node->surface.locked() && event->button() == Qt::LeftButton) {
         if (!control->isSelected()) control->select(!(event->modifiers() & Qt::ShiftModifier));
 
         isDragging = true;
         mouseStartPoint = event->screenPos();
         emit control->startedDragging();
+    } else {
+        event->ignore();
     }
-
-    event->accept();
 }
 
 void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    if (!isDragging) return;
+    if (!isDragging) {
+        event->ignore();
+        return;
+    }
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
     emit control->draggedTo(QPoint(
             qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
             qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
     ));
-
-    event->accept();
 }
 
 void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    if (!isDragging) return;
+    if (!isDragging) {
+        event->ignore();
+        return;
+    }
 
     isDragging = false;
     emit control->finishedDragging();
-
-    event->accept();
 }
 
 void ControlItem::setPos(QPoint newPos) {

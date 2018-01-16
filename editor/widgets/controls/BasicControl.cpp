@@ -8,6 +8,7 @@
 #include <QtCore/QPropertyAnimation>
 #include <iostream>
 
+#include "editor/model/node/Node.h"
 #include "editor/model/control/NodeValueControl.h"
 #include "../node/NodeItem.h"
 #include "../schematic/SchematicCanvas.h"
@@ -119,7 +120,10 @@ void BasicControl::setHoverState(float newHoverState) {
 }
 
 void BasicControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (event->button() != Qt::LeftButton) return;
+    if (!control->node->surface.locked() || event->button() != Qt::LeftButton) {
+        event->ignore();
+        return;
+    }
 
     isDragging = true;
     beforeDragVal = control->value();
@@ -127,7 +131,10 @@ void BasicControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void BasicControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    if (!isDragging) return;
+    if (!isDragging) {
+        event->ignore();
+        return;
+    }
 
     auto mouseDelta = event->pos() - dragMouseStart;
 
@@ -146,14 +153,23 @@ void BasicControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void BasicControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) {
+        event->ignore();
+        return;
+    }
+
     isDragging = false;
 }
 
 void BasicControl::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    if (!control->node->surface.locked()) return;
+
     emit mouseEnter();
 }
 
 void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    if (!control->node->surface.locked()) return;
+
     emit mouseLeave();
 }
 

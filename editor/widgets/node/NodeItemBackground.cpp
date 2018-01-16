@@ -52,6 +52,8 @@ void NodeItemBackground::triggerGeometryChange() {
 }
 
 void NodeItemBackground::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    node->surface.deselectAll();
+
     if (event->button() == Qt::LeftButton) {
         if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
 

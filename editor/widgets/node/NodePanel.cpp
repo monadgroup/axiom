@@ -42,6 +42,7 @@ NodePanel::NodePanel(Node *node) : node(node) {
     connect(openToggle, &QCheckBox::stateChanged,
             this, &NodePanel::openToggleChanged);
 
+    setVisible(node->isSelected());
     lockToggle->setChecked(node->surface.locked());
 }
 
