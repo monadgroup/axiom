@@ -25,29 +25,16 @@ NodePanel::NodePanel(Node *node) : node(node) {
 
     layout->setColumnStretch(0, 1);
 
-    auto lockToggle = new QCheckBox("Lock");
-    layout->addWidget(lockToggle, 0, 1);
-
     auto openToggle = new QCheckBox("Open");
     layout->addWidget(openToggle, 0, 2);
 
     connect(node, &Node::selectedChanged,
             this, &NodePanel::setVisible);
 
-    connect(&node->surface, &NodeSurface::lockedChanged,
-            [this, lockToggle](bool locked) { lockToggle->setChecked(locked); });
-    connect(lockToggle, &QCheckBox::stateChanged,
-            this, &NodePanel::lockToggleChanged);
-
     connect(openToggle, &QCheckBox::stateChanged,
             this, &NodePanel::openToggleChanged);
 
     setVisible(node->isSelected());
-    lockToggle->setChecked(node->surface.locked());
-}
-
-void NodePanel::lockToggleChanged(int state) {
-    node->surface.setLocked(state == Qt::Checked);
 }
 
 void NodePanel::openToggleChanged(int state) {

@@ -14,8 +14,6 @@ namespace AxiomModel {
 
         explicit NodeSurface(Node *node);
 
-        bool locked() const { return m_locked; }
-
         static QPoint schematicToNodeSurface(QPoint p) { return p * 2; }
 
         static QSize schematicToNodeSurface(QSize s) { return s * 2; }
@@ -36,20 +34,9 @@ namespace AxiomModel {
             return {(int) ceilf(s.width() / 2.f), (int) ceilf(s.height() / 2.f)};
         }
 
-    public slots:
-
-        void setLocked(bool newLocked);
-
-    signals:
-
-        void lockedChanged(bool locked);
-
     private slots:
 
         void setSize(QSize size);
-
-    private:
-        bool m_locked = true;
     };
 
 }

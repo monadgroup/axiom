@@ -53,6 +53,8 @@ namespace AxiomModel {
 
         void itemAdded(GridItem *item);
 
+        void hasSelectionChanged(bool hasSelection);
+
     private:
         std::vector<std::unique_ptr<GridItem>> m_items;
         std::vector<GridItem *> selectedItems;

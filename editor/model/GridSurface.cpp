@@ -47,6 +47,7 @@ void GridSurface::deleteSelectedItems() {
     while (!selectedItems.empty()) {
         selectedItems[0]->remove();
     }
+    emit hasSelectionChanged(false);
 }
 
 void GridSurface::selectAll() {
@@ -75,6 +76,8 @@ void GridSurface::removeItem(GridItem *item) {
             break;
         }
     }
+
+    if (!hasSelection()) emit hasSelectionChanged(false);
 }
 
 void GridSurface::selectItem(GridItem *item, bool exclusive) {
@@ -84,9 +87,11 @@ void GridSurface::selectItem(GridItem *item, bool exclusive) {
         }
     }
 
+    auto hadSelection = hasSelection();
     if (std::find(selectedItems.begin(), selectedItems.end(), item) == selectedItems.end()) {
         selectedItems.push_back(item);
     }
+    if (!hadSelection) emit hasSelectionChanged(true);
 }
 
 void GridSurface::deselectItem(GridItem *item) {
@@ -94,6 +99,7 @@ void GridSurface::deselectItem(GridItem *item) {
     if (loc != selectedItems.end()) {
         selectedItems.erase(loc);
     }
+    if (!hasSelection()) emit hasSelectionChanged(false);
 }
 
 void GridSurface::startDragging() {
@@ -140,5 +146,5 @@ QPoint GridSurface::findAvailableDelta(QPoint delta) {
     if (isAllDragAvailable(xDelta)) return xDelta;
     auto yDelta = QPoint(lastDragDelta.x(), delta.y());
     if (isAllDragAvailable(yDelta)) return yDelta;
-    return {0, 0};
+    return lastDragDelta;
 }

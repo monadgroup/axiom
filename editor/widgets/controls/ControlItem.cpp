@@ -70,9 +70,7 @@ ControlItem::ControlItem(NodeControl *control, NodeItem *parent) : control(contr
 }
 
 void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (!control->node->surface.locked() && event->button() == Qt::LeftButton) {
-        if (!control->isSelected()) control->select(!(event->modifiers() & Qt::ShiftModifier));
-
+    if (control->isSelected() && event->button() == Qt::LeftButton) {
         isDragging = true;
         mouseStartPoint = event->screenPos();
         emit control->startedDragging();

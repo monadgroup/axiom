@@ -58,6 +58,8 @@ namespace AxiomGui {
 
         void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
+        void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
@@ -73,6 +75,8 @@ namespace AxiomGui {
         bool isDragging;
         float beforeDragVal;
         QPointF dragMouseStart;
+
+        void startDragging(QPointF mousePos);
 
         void paintPlug(QPainter *painter);
 

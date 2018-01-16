@@ -120,14 +120,13 @@ void BasicControl::setHoverState(float newHoverState) {
 }
 
 void BasicControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (!control->node->surface.locked() || event->button() != Qt::LeftButton) {
+    if (control->isSelected() || event->button() != Qt::LeftButton) {
         event->ignore();
         return;
     }
 
-    isDragging = true;
-    beforeDragVal = control->value();
-    dragMouseStart = event->pos();
+    control->node->surface.deselectAll();
+    startDragging(event->pos());
 }
 
 void BasicControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
@@ -161,14 +160,18 @@ void BasicControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
 }
 
+void BasicControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    control->select(!(event->modifiers() & Qt::ShiftModifier));
+}
+
 void BasicControl::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
-    if (!control->node->surface.locked()) return;
+    if (control->isSelected()) return;
 
     emit mouseEnter();
 }
 
 void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
-    if (!control->node->surface.locked()) return;
+    if (control->isSelected()) return;
 
     emit mouseLeave();
 }
@@ -179,6 +182,12 @@ void BasicControl::triggerGeometryChange() {
 
 void BasicControl::triggerUpdate() {
     update();
+}
+
+void BasicControl::startDragging(QPointF mousePos) {
+    isDragging = true;
+    beforeDragVal = control->value();
+    dragMouseStart = mousePos;
 }
 
 void BasicControl::paintPlug(QPainter *painter) {

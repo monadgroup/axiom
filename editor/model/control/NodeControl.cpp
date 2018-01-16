@@ -9,6 +9,8 @@ NodeControl::NodeControl(Node *node, Channel channel) : GridItem(&node->surface)
             this, &NodeControl::recalcWorldPos);
     connect(node, &Node::posChanged,
             this, &NodeControl::recalcWorldPos);
+    connect(this, &NodeControl::selected,
+            [this, node]() { node->select(true); });
 }
 
 void NodeControl::setName(const QString &name) {

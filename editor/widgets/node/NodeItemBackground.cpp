@@ -18,6 +18,8 @@ NodeItemBackground::NodeItemBackground(Node *node) : node(node) {
             this, &NodeItemBackground::triggerUpdate);
     connect(node, &Node::deselected,
             this, &NodeItemBackground::triggerUpdate);
+    connect(&node->surface, &NodeSurface::hasSelectionChanged,
+            this, &NodeItemBackground::triggerUpdate);
 }
 
 QRectF NodeItemBackground::boundingRect() const {
@@ -38,9 +40,16 @@ void NodeItemBackground::paint(QPainter *painter, const QStyleOptionGraphicsItem
     }
     painter->drawRect(boundingRect());
 
-    painter->setPen(Qt::transparent);
-    painter->setBrush(QBrush(Qt::white));
-    painter->drawText(boundingRect(), node->name());
+    auto gridPen = QPen(QColor(51, 51, 51), 1);
+
+    if (node->surface.hasSelection()) {
+        auto nodeSurfaceSize = NodeSurface::schematicToNodeSurface(node->size());
+        for (auto x = 0; x < nodeSurfaceSize.width(); x++) {
+            for (auto y = 0; y < nodeSurfaceSize.height(); y++) {
+                painter->drawPoint(SchematicCanvas::controlRealPos(QPoint(x, y)));
+            }
+        }
+    }
 }
 
 void NodeItemBackground::triggerUpdate() {

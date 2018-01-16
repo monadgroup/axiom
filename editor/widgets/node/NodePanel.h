@@ -18,8 +18,6 @@ namespace AxiomGui {
 
     private slots:
 
-        void lockToggleChanged(int state);
-
         void openToggleChanged(int state);
 
     private:
