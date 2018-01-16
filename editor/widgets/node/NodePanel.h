@@ -9,7 +9,7 @@ namespace AxiomModel {
 namespace AxiomGui {
 
     class NodePanel : public QWidget {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         AxiomModel::Node *node;

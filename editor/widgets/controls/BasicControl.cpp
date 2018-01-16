@@ -87,10 +87,18 @@ QRectF BasicControl::aspectBoundingRect() const {
 
 void BasicControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     switch (mode()) {
-        case BasicMode::PLUG: paintPlug(painter); break;
-        case BasicMode::KNOB: paintKnob(painter); break;
-        case BasicMode::SLIDER_H: paintSlider(painter, false); break;
-        case BasicMode::SLIDER_V: paintSlider(painter, true); break;
+        case BasicMode::PLUG:
+            paintPlug(painter);
+            break;
+        case BasicMode::KNOB:
+            paintKnob(painter);
+            break;
+        case BasicMode::SLIDER_H:
+            paintSlider(painter, false);
+            break;
+        case BasicMode::SLIDER_V:
+            paintSlider(painter, true);
+            break;
     }
 }
 
@@ -133,8 +141,8 @@ void BasicControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         scaleFactor = boundingRect().width();
     }
 
-    auto accuracy = scaleFactor * 2 + (float)std::abs(accuracyDelta) * 100 / scaleFactor;
-    control->setValue(beforeDragVal - (float)motionDelta / accuracy);
+    auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
+    control->setValue(beforeDragVal - (float) motionDelta / accuracy);
 }
 
 void BasicControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
@@ -177,7 +185,8 @@ void BasicControl::paintKnob(QPainter *painter) {
     auto scaledMargin = 0.1f * br.width();
     auto scaledThickness = (0.06f + 0.04f * m_hoverState) * br.width();
     auto outerBr = br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
-    auto ringBr = outerBr.marginsRemoved(QMarginsF(scaledThickness/2, scaledThickness/2, scaledThickness/2, scaledThickness/2));
+    auto ringBr = outerBr.marginsRemoved(
+            QMarginsF(scaledThickness / 2, scaledThickness / 2, scaledThickness / 2, scaledThickness / 2));
 
     auto startAngle = 240 * 16;
     auto completeAngle = -300 * 16;
@@ -198,7 +207,7 @@ void BasicControl::paintKnob(QPainter *painter) {
     const auto markerCount = 8;
     auto activeMarkerPen = QPen(QColor(0, 0, 0), scaledMarkerThickness);
     for (auto i = 0; i <= markerCount; i++) {
-        auto markerVal = (float)i / markerCount;
+        auto markerVal = (float) i / markerCount;
         if (markerVal < control->value() || (markerVal == 1 && control->value() == 1)) {
             activeMarkerPen.setColor(currentColor);
             painter->setPen(activeMarkerPen);
@@ -212,7 +221,7 @@ void BasicControl::paintKnob(QPainter *painter) {
                 outerBr.width() / 2 * std::cos(markerAngle),
                 -outerBr.height() / 2 * std::sin(markerAngle)
         );
-        painter->drawLine((centerP + 2*markerP) / 3, (centerP + 10*markerP) / 11);
+        painter->drawLine((centerP + 2 * markerP) / 3, (centerP + 10 * markerP) / 11);
     }
 
     // draw background ring
@@ -221,7 +230,8 @@ void BasicControl::paintKnob(QPainter *painter) {
     painter->setPen(pen);
     painter->setBrush(Qt::NoBrush);
 
-    painter->drawArc(ringBr, startAngle + completeAngle * control->value(), completeAngle - completeAngle * control->value());
+    painter->drawArc(ringBr, startAngle + completeAngle * control->value(),
+                     completeAngle - completeAngle * control->value());
 
     // draw filled ring
     pen.setColor(currentColor);
@@ -270,7 +280,7 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
     const auto markerCount = 10;
     auto activeMarkerPen = QPen(QColor(0, 0, 0), 1);
     for (auto i = 0; i <= markerCount; i++) {
-        auto markerVal = (float)i / markerCount;
+        auto markerVal = (float) i / markerCount;
         if (markerVal < control->value() || (markerVal == 1 && control->value() == 1)) {
             activeMarkerPen.setColor(currentColor);
             painter->setPen(activeMarkerPen);

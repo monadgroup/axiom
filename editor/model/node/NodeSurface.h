@@ -17,11 +17,24 @@ namespace AxiomModel {
         bool locked() const { return m_locked; }
 
         static QPoint schematicToNodeSurface(QPoint p) { return p * 2; }
+
         static QSize schematicToNodeSurface(QSize s) { return s * 2; }
-        static QPoint nodeSurfaceToSchematicFloor(QPoint p) { return {(int)floorf(p.x() / 2.f), (int)floorf(p.y() / 2.f)}; }
-        static QPoint nodeSurfaceToSchematicCeil(QPoint p) { return {(int)ceilf(p.x() / 2.f), (int)ceilf(p.y() / 2.f)}; }
-        static QSize nodeSurfaceToSchematicFloor(QSize s) { return {(int)floorf(s.width() / 2.f), (int)floorf(s.height() / 2.f)}; }
-        static QSize nodeSurfaceToSchematicCeil(QSize s) { return {(int)ceilf(s.width() / 2.f), (int)ceilf(s.height() / 2.f)}; }
+
+        static QPoint nodeSurfaceToSchematicFloor(QPoint p) {
+            return {(int) floorf(p.x() / 2.f), (int) floorf(p.y() / 2.f)};
+        }
+
+        static QPoint nodeSurfaceToSchematicCeil(QPoint p) {
+            return {(int) ceilf(p.x() / 2.f), (int) ceilf(p.y() / 2.f)};
+        }
+
+        static QSize nodeSurfaceToSchematicFloor(QSize s) {
+            return {(int) floorf(s.width() / 2.f), (int) floorf(s.height() / 2.f)};
+        }
+
+        static QSize nodeSurfaceToSchematicCeil(QSize s) {
+            return {(int) ceilf(s.width() / 2.f), (int) ceilf(s.height() / 2.f)};
+        }
 
     public slots:
 

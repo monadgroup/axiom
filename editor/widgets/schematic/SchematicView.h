@@ -27,7 +27,9 @@ namespace AxiomGui {
         void contextMenuEvent(QContextMenuEvent *event) override;
 
         void mousePressEvent(QMouseEvent *event) override;
+
         void mouseMoveEvent(QMouseEvent *event) override;
+
         void mouseReleaseEvent(QMouseEvent *event) override;
 
     private:

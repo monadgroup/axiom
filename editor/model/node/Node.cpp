@@ -25,7 +25,8 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     auto controlsBottomRight = pos();
     for (auto &item : surface.items()) {
         auto itemTopLeft = pos() + NodeSurface::nodeSurfaceToSchematicFloor(item->pos());
-        auto itemBottomRight = pos() + NodeSurface::nodeSurfaceToSchematicCeil(item->pos() + QPoint(item->size().width(), item->size().height()));
+        auto itemBottomRight = pos() + NodeSurface::nodeSurfaceToSchematicCeil(
+                item->pos() + QPoint(item->size().width(), item->size().height()));
 
         controlsTopLeft.setX(qMin(controlsTopLeft.x(), itemTopLeft.x()));
         controlsTopLeft.setY(qMin(controlsTopLeft.y(), itemTopLeft.y()));
@@ -41,6 +42,7 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (topLeft.x() != initialPos.x()) topLeft.setX(qMin(topLeft.x(), fitTopLeft.x()));
     if (topLeft.y() != initialPos.y()) topLeft.setY(qMin(topLeft.y(), fitTopLeft.y()));
 
+    // find min bottom right where we can still fit the controls
     auto fitBottomRight = topLeft + controlsSize;
 
     if (bottomRight.x() != initialBottomRight.x()) bottomRight.setX(qMax(bottomRight.x(), fitBottomRight.x()));

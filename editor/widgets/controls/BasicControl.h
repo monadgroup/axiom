@@ -12,7 +12,11 @@ namespace AxiomGui {
 
     class BasicControl : public QGraphicsObject {
     Q_OBJECT
-    Q_PROPERTY(float hoverState READ hoverState WRITE setHoverState)
+        Q_PROPERTY(float hoverState
+                           READ
+                           hoverState
+                           WRITE
+                           setHoverState)
 
     public:
         enum class BasicMode {

@@ -59,7 +59,8 @@ void ItemResizer::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     painter->setPen(QPen(QColor(0, 0, 0), 1));
     painter->setBrush(QBrush(QColor(255, 255, 255)));
 
-    if (dir == Direction::TOP_LEFT || dir == Direction::TOP_RIGHT || dir == Direction::BOTTOM_LEFT || dir == Direction::BOTTOM_RIGHT) {
+    if (dir == Direction::TOP_LEFT || dir == Direction::TOP_RIGHT || dir == Direction::BOTTOM_LEFT ||
+        dir == Direction::BOTTOM_RIGHT) {
         QPointF p = QPointF(-marginSize / 2, -marginSize / 2);
         QSizeF s = QSizeF(m_size.width() + marginSize, m_size.height() + marginSize);
 

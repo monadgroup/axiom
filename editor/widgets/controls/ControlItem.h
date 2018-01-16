@@ -11,7 +11,7 @@ namespace AxiomGui {
     class NodeItem;
 
     class ControlItem : public QObject, public QGraphicsItemGroup {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         AxiomModel::NodeControl *control;

@@ -22,7 +22,7 @@ SchematicView::SchematicView(Schematic *schematic, QWidget *parent)
     setDragMode(QGraphicsView::NoDrag);
     setRenderHint(QPainter::Antialiasing);
 
-    setSceneRect(INT_MIN/2, INT_MIN/2, INT_MAX, INT_MAX);
+    setSceneRect(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
     centerOn(0, 0);
 
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

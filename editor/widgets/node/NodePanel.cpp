@@ -1,8 +1,6 @@
 #include "NodePanel.h"
 
 #include <QtWidgets/QGridLayout>
-#include <QtCore/QVariant>
-#include <QtWidgets/QStyle>
 #include <QtWidgets/QCheckBox>
 
 #include "editor/model/node/Node.h"
