@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QGraphicsProxyWidget>
+#include <QtCore/QTimer>
 
 #include "editor/widgets/ItemResizer.h"
 #include "NodeItemBackground.h"
@@ -16,6 +17,7 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
+    setAcceptHoverEvents(true);
     setHandlesChildEvents(false);
 
     setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
@@ -74,24 +76,35 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
     }
 
     // create panel
-    nodePanel = new QGraphicsProxyWidget();
-    nodePanel->setWidget(new NodePanel(node));
-    addToGroup(nodePanel);
+    nodePanel = new NodePanel(node);
+    nodePanelProxy = parent->addWidget(nodePanel);
+    nodePanelProxy->setZValue(2);
 
     // set initial state
     setPos(node->pos());
     setSize(node->size());
 }
 
+void NodeItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    nodePanel->setNodeHover(true);
+}
+
+void NodeItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    QTimer::singleShot(10, [this]() {
+        nodePanel->setNodeHover(false);
+    });
+}
+
 void NodeItem::setPos(QPoint newPos) {
     auto realPos = SchematicCanvas::nodeRealPos(newPos);
+    updateNodePanelPos(realPos);
     QGraphicsItem::setPos(realPos.x(), realPos.y());
     emit resizerPosChanged(realPos);
 }
 
 void NodeItem::setSize(QSize newSize) {
-    nodePanel->setPos(0, node->size().height() * SchematicCanvas::nodeGridSize.height() + 2);
-    nodePanel->widget()->setFixedWidth(node->size().width() * SchematicCanvas::nodeGridSize.width());
+    updateNodePanelPos(SchematicCanvas::nodeRealPos(node->pos()));
+    nodePanelProxy->widget()->setFixedWidth(node->size().width() * SchematicCanvas::nodeGridSize.width());
 
     emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
 }
@@ -103,6 +116,7 @@ void NodeItem::addControl(NodeControl *control) {
 }
 
 void NodeItem::remove() {
+    scene()->removeItem(nodePanelProxy);
     scene()->removeItem(this);
 }
 
@@ -122,4 +136,8 @@ void NodeItem::resizerStartDrag() {
 
 void NodeItem::triggerGeometryChange() {
     prepareGeometryChange();
+}
+
+void NodeItem::updateNodePanelPos(QPointF realNodePos) {
+    nodePanelProxy->setPos(realNodePos.x(), realNodePos.y() + node->size().height() * SchematicCanvas::nodeGridSize.height() + 1);
 }

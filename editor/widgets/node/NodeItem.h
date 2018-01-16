@@ -12,6 +12,7 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class NodePanel;
     class SchematicCanvas;
 
     class NodeItem : public QObject, public QGraphicsItemGroup {
@@ -21,6 +22,12 @@ namespace AxiomGui {
         AxiomModel::Node *node;
 
         NodeItem(AxiomModel::Node *node, SchematicCanvas *parent);
+
+    protected:
+
+        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
     private slots:
 
@@ -45,7 +52,10 @@ namespace AxiomGui {
         void resizerSizeChanged(QSizeF newSize);
 
     private:
-        QGraphicsProxyWidget *nodePanel;
+        NodePanel *nodePanel;
+        QGraphicsProxyWidget *nodePanelProxy;
+
+        void updateNodePanelPos(QPointF realNodePos);
     };
 
 }

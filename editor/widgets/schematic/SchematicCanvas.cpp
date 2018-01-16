@@ -24,7 +24,7 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
 
     selectionPath = addPath(QPainterPath(), selectionPen, selectionBrush);
     selectionPath->setVisible(false);
-    selectionPath->setZValue(100);
+    selectionPath->setZValue(1);
 
     // create items for all nodes that already exist
     for (const auto &item : schematic->items()) {
@@ -77,7 +77,9 @@ void SchematicCanvas::setPan(QPointF pan) {
 }
 
 void SchematicCanvas::addNode(AxiomModel::Node *node) {
-    addItem(new NodeItem(node, this));
+    auto item = new NodeItem(node, this);
+    item->setZValue(0);
+    addItem(item);
 }
 
 void SchematicCanvas::drawBackground(QPainter *painter, const QRectF &rect) {

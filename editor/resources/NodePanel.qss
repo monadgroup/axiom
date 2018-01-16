@@ -1,11 +1,32 @@
 #container {
-    background: #555;
-}
-
-#container[active="true"] {
-    background: #F55;
-}
-
-QLabel {
     background: transparent;
+}
+
+#openCheck {
+    background: transparent;
+}
+
+#openCheck::indicator {
+    background: #111;
+    padding: 4px 6px;
+}
+
+#openCheck::indicator:pressed {
+    background: #222;
+}
+
+#openCheck::indicator:unchecked {
+    image: url(:/icons/expand_12.png);
+}
+
+#openCheck::indicator:checked {
+    image: url(:/icons/collapse_12.png);
+}
+
+#openCheck::indicator:unchecked:hover {
+    image: url(:/icons/expand_active_12.png);
+}
+
+#openCheck::indicator:checked:hover {
+    image: url(:/icons/collapse_active_12.png);
 }

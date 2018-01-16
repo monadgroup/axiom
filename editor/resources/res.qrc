@@ -11,5 +11,10 @@
         <file>SchematicPanel.qss</file>
         <file>AboutWindow.qss</file>
         <file>NodePanel.qss</file>
+
+        <file>icons/expand_12.png</file>
+        <file>icons/expand_active_12.png</file>
+        <file>icons/collapse_12.png</file>
+        <file>icons/collapse_active_12.png</file>
     </qresource>
 </RCC>

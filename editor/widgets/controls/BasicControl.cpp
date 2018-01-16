@@ -161,6 +161,7 @@ void BasicControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void BasicControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    emit mouseLeave();
     control->select(!(event->modifiers() & Qt::ShiftModifier));
 }
 
