@@ -17,6 +17,27 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
+static QPointF flip(QPointF a, bool yes) {
+    if (yes) {
+        return {a.y(), a.x()};
+    }
+    return a;
+}
+
+static QSizeF flip(QSizeF a, bool yes) {
+    if (yes) {
+        return {a.height(), a.width()};
+    }
+    return a;
+}
+
+static QRectF flip(QRectF a, bool yes) {
+    if (yes) {
+        return {flip(a.topLeft(), yes), flip(a.size(), yes)};
+    }
+    return a;
+}
+
 BasicControl::BasicControl(NodeValueControl *control, NodeItem *parent) : control(control), parent(parent) {
     setAcceptHoverEvents(true);
 
@@ -103,6 +124,25 @@ void BasicControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     }
 }
 
+QPainterPath BasicControl::shape() const {
+    QPainterPath path;
+    switch (mode()) {
+        case BasicMode::PLUG:
+            path.addEllipse(getPlugBounds());
+            break;
+        case BasicMode::KNOB:
+            path.addEllipse(getKnobBounds());
+            break;
+        case BasicMode::SLIDER_H:
+            path.addRect(getSliderBounds(false));
+            break;
+        case BasicMode::SLIDER_V:
+            path.addRect(getSliderBounds(true));
+            break;
+    }
+    return path;
+}
+
 BasicControl::BasicMode BasicControl::mode() const {
     auto rect = boundingRect();
 
@@ -185,6 +225,29 @@ void BasicControl::triggerUpdate() {
     update();
 }
 
+QRectF BasicControl::getPlugBounds() const {
+    auto br = aspectBoundingRect();
+    auto scaledMargin = 0.1f * br.width();
+    return br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
+}
+
+QRectF BasicControl::getKnobBounds() const {
+    auto br = aspectBoundingRect();
+    auto scaledMargin = 0.1f * br.width();
+    return br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
+}
+
+QRectF BasicControl::getSliderBounds(bool vertical) const {
+    auto br = flip(boundingRect(), vertical);
+    auto scaledMargin = 0.1f * br.height();
+    auto barHeight = br.height() / 2;
+    auto barY = br.center().y() - barHeight / 2;
+    return flip(QRectF(QPointF(br.x() + scaledMargin,
+                               barY),
+                       QSizeF(br.width() - scaledMargin * 2,
+                              barHeight)), vertical);
+}
+
 void BasicControl::startDragging(QPointF mousePos) {
     isDragging = true;
     beforeDragVal = control->value();
@@ -192,10 +255,11 @@ void BasicControl::startDragging(QPointF mousePos) {
 }
 
 void BasicControl::paintPlug(QPainter *painter) {
-    auto br = aspectBoundingRect();
-    auto scaledBorder = 0.06f * br.width();
-    auto scaledMargin = 0.1f * br.width() + scaledBorder / 2;
-    auto marginBr = br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
+    auto scaledBorder = 0.06f * aspectBoundingRect().width();
+    auto externBr = getPlugBounds();
+
+    auto scaledBorderMargin = scaledBorder / 2;
+    auto ellipseBr = externBr.marginsRemoved(QMarginsF(scaledBorderMargin, scaledBorderMargin, scaledBorderMargin, scaledBorderMargin));
 
     auto baseColor = QColor(10, 10, 10);
     auto activeColor = QColor(20, 20, 20);
@@ -203,14 +267,13 @@ void BasicControl::paintPlug(QPainter *painter) {
 
     painter->setPen(QPen(QColor(30, 30, 30), scaledBorder));
     painter->setBrush(QBrush(currentColor));
-    painter->drawEllipse(marginBr);
+    painter->drawEllipse(ellipseBr);
 }
 
 void BasicControl::paintKnob(QPainter *painter) {
-    auto br = aspectBoundingRect();
-    auto scaledMargin = 0.1f * br.width();
-    auto scaledThickness = (0.06f + 0.04f * m_hoverState) * br.width();
-    auto outerBr = br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
+    auto aspectWidth = aspectBoundingRect().width();
+    auto scaledThickness = (0.06f + 0.04f * m_hoverState) * aspectWidth;
+    auto outerBr = getKnobBounds();
     auto ringBr = outerBr.marginsRemoved(
             QMarginsF(scaledThickness / 2, scaledThickness / 2, scaledThickness / 2, scaledThickness / 2));
 
@@ -227,7 +290,7 @@ void BasicControl::paintKnob(QPainter *painter) {
     painter->drawEllipse(outerBr);
 
     // draw markers
-    auto scaledMarkerThickness = 0.02f * br.width();
+    auto scaledMarkerThickness = 0.02f * aspectWidth;
     auto centerP = outerBr.center();
 
     const auto markerCount = 8;
@@ -265,52 +328,18 @@ void BasicControl::paintKnob(QPainter *painter) {
     painter->drawArc(ringBr, startAngle, completeAngle * control->value());
 }
 
-static QPointF flip(QPointF a, bool yes) {
-    if (yes) {
-        return {a.y(), a.x()};
-    }
-    return a;
-}
-
-static QSizeF flip(QSizeF a, bool yes) {
-    if (yes) {
-        return {a.height(), a.width()};
-    }
-    return a;
-}
-
-static QRectF flip(QRectF a, bool yes) {
-    if (yes) {
-        return {flip(a.topLeft(), yes), flip(a.size(), yes)};
-    }
-    return a;
-}
-
 void BasicControl::paintSlider(QPainter *painter, bool vertical) {
-    auto br = flip(boundingRect(), vertical);
-
-    auto scaledMargin = 0.1f * br.height();
-    auto scaledThickness = (0.06f + 0.04f * m_hoverState) * br.height();
-    auto scaledControlSize = QSizeF(0.15f * br.height(), 0.15f * br.height());
-    auto marginBr = br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
+    auto br = flip(getSliderBounds(vertical), vertical);
+    auto scaledThickness = (0.12f + 0.08f * m_hoverState) * br.height();
 
     auto baseColor = QColor(141, 141, 141);
     auto activeColor = QColor(52, 152, 219);
     auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, m_hoverState);
 
-    auto barLeft = marginBr.left() + scaledControlSize.width() / 2;
-    auto barRight = marginBr.right() - scaledControlSize.width() / 2;
-    auto barHeight = marginBr.height() / 2;
-    auto barY = marginBr.center().y() - barHeight / 2;
-
     // draw background
     painter->setPen(Qt::NoPen);
     painter->setBrush(QBrush(QColor(30, 30, 30)));
-    auto bgBr = QRectF(
-        QPointF(barLeft, barY),
-        QSizeF(barRight - barLeft, barHeight)
-    );
-    painter->drawRect(flip(bgBr, vertical));
+    painter->drawRect(flip(br, vertical));
 
     // draw markers
     const auto markerCount = 12;
@@ -325,32 +354,23 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
             painter->setPen(activeMarkerPen);
         }
 
-        auto markerX = barLeft + (barRight - barLeft) * markerVal;
-        if (vertical) markerX = br.width() - markerX;
+        auto markerX = br.left() + br.width() * (vertical ? 1 - markerVal : markerVal);
 
-        //auto isImportantMarker = i == 0 || i == markerCount || i == markerCount / 2;
-        //auto shiftAmt = barHeight / (isImportantMarker ? 1.5 : 2.5);
-        auto shiftAmt = barHeight / 2.5;
-        if (i % 2 == 0) shiftAmt = barHeight / 2;
-        if (i == 0 || i == markerCount || i == markerCount / 2) shiftAmt = barHeight / 1.5;
+        auto shiftAmt = 2.5;
+        if (i % 2 == 0) shiftAmt = 2;
+        if (i == 0 || i == markerCount || i == markerCount / 2) shiftAmt = 1.5;
         painter->drawLine(
-                flip(QPointF(markerX, barY + 1), vertical),
-                flip(QPointF(markerX, barY + shiftAmt), vertical)
+            flip(QPointF(markerX, br.y() + 1), vertical),
+            flip(QPointF(markerX, br.y() + br.height() / shiftAmt), vertical)
         );
     }
 
-    auto currentX = barLeft + (barRight - barLeft) * control->value();
+    auto currentX = br.left() + br.width() * (vertical ? 1 - control->value() : control->value());
 
-    auto leftPos = QPointF(barLeft, barY + scaledThickness / 2);
-    auto rightPos = QPointF(barRight, barY + scaledThickness / 2);
-    auto currentPos = QPointF(currentX, barY + scaledThickness / 2);
-
-    if (vertical) {
-        leftPos.setX(barRight);
-        rightPos.setX(barLeft);
-        currentPos.setX(br.width() - currentX);
-    }
-
+    auto posY = br.y() + scaledThickness / 2;
+    auto leftPos = QPointF(vertical ? br.right() : br.left(), posY);
+    auto rightPos = QPointF(vertical ? br.left() : br.right(), posY);
+    auto currentPos = QPointF(currentX, posY);
 
     // draw background bar
     auto pen = QPen(QColor(0, 0, 0), scaledThickness);

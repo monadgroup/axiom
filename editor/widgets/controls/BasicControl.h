@@ -37,6 +37,8 @@ namespace AxiomGui {
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
+        QPainterPath shape() const;
+
         BasicMode mode() const;
 
         float hoverState() const { return m_hoverState; }
@@ -75,6 +77,12 @@ namespace AxiomGui {
         bool isDragging;
         float beforeDragVal;
         QPointF dragMouseStart;
+
+        QRectF getPlugBounds() const;
+
+        QRectF getKnobBounds() const;
+
+        QRectF getSliderBounds(bool vertical) const;
 
         void startDragging(QPointF mousePos);
 
