@@ -18,8 +18,15 @@ namespace AxiomGui {
 
     public slots:
 
-        void setNodeHover(bool hover) { visibleFromNodeHover = hover; updateVisible(); }
-        void setSelfHover(bool hover) { visibleFromSelfHover = hover; updateVisible(); }
+        void setNodeHover(bool hover) {
+            visibleFromNodeHover = hover;
+            updateVisible();
+        }
+
+        void setSelfHover(bool hover) {
+            visibleFromSelfHover = hover;
+            updateVisible();
+        }
 
     protected:
 

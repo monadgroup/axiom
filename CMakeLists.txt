@@ -29,8 +29,8 @@ set(SOURCE_FILES editor/main.cpp editor/util.cpp editor/AxiomApplication.cpp
         editor/widgets/windows/MainWindow.cpp editor/widgets/windows/AboutWindow.cpp
         editor/widgets/modulebrowser/ModuleBrowserPanel.cpp editor/widgets/modulebrowser/ModulePreviewList.cpp editor/widgets/modulebrowser/ModulePreview.cpp
         editor/widgets/schematic/SchematicPanel.cpp editor/widgets/schematic/SchematicView.cpp editor/widgets/schematic/SchematicCanvas.cpp
-        editor/widgets/node/NodeItem.cpp editor/widgets/ItemResizer.cpp editor/widgets/node/NodeItemBackground.cpp editor/widgets/node/NodePanel.cpp
-        editor/widgets/controls/ControlItem.cpp editor/widgets/controls/BasicControl.cpp
+        editor/widgets/node/NodeItem.cpp editor/widgets/ItemResizer.cpp editor/widgets/node/NodePanel.cpp
+        editor/widgets/controls/BasicControl.cpp
         editor/layouts/FlowLayout.cpp)
 
 set(RES_FILES editor/resources/axiom.rc editor/resources/res.qrc)

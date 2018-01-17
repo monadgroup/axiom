@@ -5,12 +5,11 @@
 #include <QtCore/QTimer>
 
 #include "editor/widgets/ItemResizer.h"
-#include "NodeItemBackground.h"
 #include "../schematic/SchematicCanvas.h"
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeValueControl.h"
-#include "../controls/ControlItem.h"
+#include "../controls/BasicControl.h"
 #include "NodePanel.h"
 
 using namespace AxiomGui;
@@ -20,14 +19,6 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
     setAcceptHoverEvents(true);
     setHandlesChildEvents(false);
 
-    setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
-    setCacheMode(QGraphicsItem::DeviceCoordinateCache);
-
-    // create main item
-    auto background = new NodeItemBackground(node);
-    background->setZValue(0);
-    addToGroup(background);
-
     // create items for all controls that already exist
     for (const auto &item : node->surface.items()) {
         if (auto control = dynamic_cast<NodeControl *>(item.get())) {
@@ -35,14 +26,23 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
         }
     }
 
+    connect(node, &Node::nameChanged,
+            this, &NodeItem::triggerUpdate);
     connect(node, &Node::posChanged,
             this, &NodeItem::setPos);
     connect(node, &Node::beforeSizeChanged,
             this, &NodeItem::triggerGeometryChange);
     connect(node, &Node::sizeChanged,
             this, &NodeItem::setSize);
+    connect(node, &Node::selected,
+            this, &NodeItem::triggerUpdate);
+    connect(node, &Node::deselected,
+            this, &NodeItem::triggerUpdate);
     connect(node, &Node::removed,
             this, &NodeItem::remove);
+
+    connect(&node->surface, &NodeSurface::hasSelectionChanged,
+            this, &NodeItem::triggerUpdate);
 
     connect(&node->surface, &NodeSurface::itemAdded,
             [this](AxiomModel::GridItem *item) {
@@ -72,7 +72,7 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
         connect(resizer, &ItemResizer::changed,
                 this, &NodeItem::resizerChanged);
 
-        addToGroup(resizer);
+        resizer->setParentItem(this);
     }
 
     // create panel
@@ -83,6 +83,67 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
     // set initial state
     setPos(node->pos());
     setSize(node->size());
+}
+
+QRectF NodeItem::boundingRect() const {
+    return {
+            QPointF(0, 0),
+            SchematicCanvas::nodeRealSize(node->size())
+    };
+}
+
+void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
+    if (node->isSelected()) {
+        painter->setBrush(QBrush(QColor::fromRgb(27, 27, 27)));
+    } else {
+        painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17)));
+    }
+    painter->drawRect(boundingRect());
+
+    auto gridPen = QPen(QColor(51, 51, 51), 1);
+
+    if (node->surface.hasSelection()) {
+        auto nodeSurfaceSize = NodeSurface::schematicToNodeSurface(node->size());
+        for (auto x = 0; x < nodeSurfaceSize.width(); x++) {
+            for (auto y = 0; y < nodeSurfaceSize.height(); y++) {
+                painter->drawPoint(SchematicCanvas::controlRealPos(QPoint(x, y)));
+            }
+        }
+    }
+}
+
+void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    node->surface.deselectAll();
+
+    if (event->button() == Qt::LeftButton) {
+        if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
+
+        isDragging = true;
+        mouseStartPoint = event->screenPos();
+        emit node->startedDragging();
+    }
+
+    event->accept();
+}
+
+void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) return;
+
+    auto mouseDelta = event->screenPos() - mouseStartPoint;
+    emit node->draggedTo(QPoint(
+            qRound((float) mouseDelta.x() / SchematicCanvas::nodeGridSize.width()),
+            qRound((float) mouseDelta.y() / SchematicCanvas::nodeGridSize.height())
+    ));
+
+    event->accept();
+}
+
+void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    isDragging = false;
+    emit node->finishedDragging();
+
+    event->accept();
 }
 
 void NodeItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
@@ -110,9 +171,11 @@ void NodeItem::setSize(QSize newSize) {
 }
 
 void NodeItem::addControl(NodeControl *control) {
-    auto c = new ControlItem(control, this);
-    c->setZValue(2);
-    addToGroup(c);
+    if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
+        auto c = new BasicControl(valueControl, this);
+        c->setZValue(2);
+        c->setParentItem(this);
+    }
 }
 
 void NodeItem::remove() {
@@ -134,10 +197,15 @@ void NodeItem::resizerStartDrag() {
     node->select(true);
 }
 
+void NodeItem::triggerUpdate() {
+    update();
+}
+
 void NodeItem::triggerGeometryChange() {
     prepareGeometryChange();
 }
 
 void NodeItem::updateNodePanelPos(QPointF realNodePos) {
-    nodePanelProxy->setPos(realNodePos.x(), realNodePos.y() + node->size().height() * SchematicCanvas::nodeGridSize.height() + 1);
+    nodePanelProxy->setPos(realNodePos.x(),
+                           realNodePos.y() + node->size().height() * SchematicCanvas::nodeGridSize.height() + 1);
 }

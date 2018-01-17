@@ -13,9 +13,10 @@ namespace AxiomModel {
 namespace AxiomGui {
 
     class NodePanel;
+
     class SchematicCanvas;
 
-    class NodeItem : public QObject, public QGraphicsItemGroup {
+    class NodeItem : public QGraphicsObject {
     Q_OBJECT
 
     public:
@@ -23,7 +24,19 @@ namespace AxiomGui {
 
         NodeItem(AxiomModel::Node *node, SchematicCanvas *parent);
 
+        QRectF boundingRect() const override;
+
+        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+
+    public slots:
+
     protected:
+
+        void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 
@@ -43,6 +56,8 @@ namespace AxiomGui {
 
         void resizerStartDrag();
 
+        void triggerUpdate();
+
         void triggerGeometryChange();
 
     signals:
@@ -54,6 +69,8 @@ namespace AxiomGui {
     private:
         NodePanel *nodePanel;
         QGraphicsProxyWidget *nodePanelProxy;
+        bool isDragging;
+        QPoint mouseStartPoint;
 
         void updateNodePanelPos(QPointF realNodePos);
     };

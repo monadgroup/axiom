@@ -14,7 +14,7 @@ namespace AxiomGui {
     Q_OBJECT
         Q_PROPERTY(float hoverState
                            READ
-                           hoverState
+                                   hoverState
                            WRITE
                            setHoverState)
 
@@ -37,7 +37,7 @@ namespace AxiomGui {
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-        QPainterPath shape() const;
+        QPainterPath shape() const override;
 
         BasicMode mode() const;
 
@@ -68,23 +68,38 @@ namespace AxiomGui {
 
     private slots:
 
+        void setPos(QPoint newPos);
+
+        void setSize(QSize newSize);
+
+        void remove();
+
+        void resizerChanged(QPointF topLeft, QPointF bottomRight);
+
+        void resizerStartDrag();
+
         void triggerGeometryChange();
 
         void triggerUpdate();
 
+    signals:
+
+        void resizerPosChanged(QPointF newPos);
+
+        void resizerSizeChanged(QSizeF newSize);
+
     private:
         float m_hoverState = 0;
+        bool isMoving;
         bool isDragging;
         float beforeDragVal;
-        QPointF dragMouseStart;
+        QPointF mouseStartPoint;
 
         QRectF getPlugBounds() const;
 
         QRectF getKnobBounds() const;
 
         QRectF getSliderBounds(bool vertical) const;
-
-        void startDragging(QPointF mousePos);
 
         void paintPlug(QPainter *painter);
 

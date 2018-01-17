@@ -12,6 +12,7 @@
 #include "editor/model/control/NodeValueControl.h"
 #include "../node/NodeItem.h"
 #include "../schematic/SchematicCanvas.h"
+#include "../ItemResizer.h"
 #include "editor/util.h"
 
 using namespace AxiomGui;
@@ -41,16 +42,48 @@ static QRectF flip(QRectF a, bool yes) {
 BasicControl::BasicControl(NodeValueControl *control, NodeItem *parent) : control(control), parent(parent) {
     setAcceptHoverEvents(true);
 
-    connect(control, &NodeValueControl::beforeSizeChanged,
+    connect(control, &NodeControl::posChanged,
+            this, &BasicControl::setPos);
+    connect(control, &NodeControl::beforeSizeChanged,
             this, &BasicControl::triggerGeometryChange);
+    connect(control, &NodeControl::sizeChanged,
+            this, &BasicControl::setSize);
+    connect(control, &NodeControl::removed,
+            this, &BasicControl::remove);
 
     connect(control, &NodeValueControl::valueChanged,
             this, &BasicControl::triggerUpdate);
 
-    connect(control, &NodeValueControl::selected,
-            this, &BasicControl::triggerUpdate);
-    connect(control, &NodeValueControl::deselected,
-            this, &BasicControl::triggerUpdate);
+    // create resize items
+    ItemResizer::Direction directions[] = {
+            ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
+            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
+    };
+    for (auto i = 0; i < 8; i++) {
+        auto resizer = new ItemResizer(directions[i], SchematicCanvas::controlGridSize);
+        resizer->enablePainting();
+        resizer->setVisible(false);
+
+        // ensure corners are on top of edges
+        resizer->setZValue(i > 3 ? 3 : 2);
+
+        connect(this, &BasicControl::resizerPosChanged,
+                resizer, &ItemResizer::setPos);
+        connect(this, &BasicControl::resizerSizeChanged,
+                resizer, &ItemResizer::setSize);
+
+        connect(resizer, &ItemResizer::startDrag,
+                this, &BasicControl::resizerStartDrag);
+        connect(resizer, &ItemResizer::changed,
+                this, &BasicControl::resizerChanged);
+
+        connect(control, &NodeControl::selected,
+                resizer, [this, resizer]() { resizer->setVisible(true); });
+        connect(control, &NodeControl::deselected,
+                resizer, [this, resizer]() { resizer->setVisible(false); });
+
+        resizer->setParentItem(this);
+    }
 
     auto machine = new QStateMachine();
     auto unhoveredState = new QState(machine);
@@ -71,6 +104,10 @@ BasicControl::BasicControl(NodeValueControl *control, NodeItem *parent) : contro
     mouseLeaveTransition->addAnimation(leaveAnim);
 
     machine->start();
+
+    // set initial state
+    setPos(control->pos());
+    setSize(control->size());
 }
 
 QRectF BasicControl::boundingRect() const {
@@ -125,6 +162,8 @@ void BasicControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 }
 
 QPainterPath BasicControl::shape() const {
+    if (control->isSelected()) return QGraphicsItem::shape();
+
     QPainterPath path;
     switch (mode()) {
         case BasicMode::PLUG:
@@ -160,44 +199,52 @@ void BasicControl::setHoverState(float newHoverState) {
 }
 
 void BasicControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (control->isSelected() || event->button() != Qt::LeftButton) {
-        event->ignore();
-        return;
-    }
+    if (event->button() != Qt::LeftButton) return;
 
-    control->node->surface.deselectAll();
-    startDragging(event->pos());
+    if (control->isSelected()) {
+        isMoving = true;
+        mouseStartPoint = event->screenPos();
+        emit control->startedDragging();
+    } else {
+        control->node->surface.deselectAll();
+        isDragging = true;
+        beforeDragVal = control->value();
+        mouseStartPoint = event->pos();
+    }
 }
 
 void BasicControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    if (!isDragging) {
-        event->ignore();
-        return;
+    if (isDragging) {
+        auto mouseDelta = event->pos() - mouseStartPoint;
+
+        auto accuracyDelta = mouseDelta.x();
+        auto motionDelta = mouseDelta.y();
+        auto scaleFactor = boundingRect().height();
+
+        if (mode() == BasicMode::SLIDER_H) {
+            accuracyDelta = mouseDelta.y();
+            motionDelta = -mouseDelta.x();
+            scaleFactor = boundingRect().width();
+        }
+
+        auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
+        control->setValue(beforeDragVal - (float) motionDelta / accuracy);
+    } else if (isMoving) {
+        auto mouseDelta = event->screenPos() - mouseStartPoint;
+        emit control->draggedTo(QPoint(
+                qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
+                qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
+        ));
     }
-
-    auto mouseDelta = event->pos() - dragMouseStart;
-
-    auto accuracyDelta = mouseDelta.x();
-    auto motionDelta = mouseDelta.y();
-    auto scaleFactor = boundingRect().height();
-
-    if (mode() == BasicMode::SLIDER_H) {
-        accuracyDelta = mouseDelta.y();
-        motionDelta = -mouseDelta.x();
-        scaleFactor = boundingRect().width();
-    }
-
-    auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
-    control->setValue(beforeDragVal - (float) motionDelta / accuracy);
 }
 
 void BasicControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    if (!isDragging) {
-        event->ignore();
-        return;
-    }
-
     isDragging = false;
+
+    if (isMoving) {
+        isMoving = false;
+        emit control->finishedDragging();
+    }
 }
 
 void BasicControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
@@ -215,6 +262,34 @@ void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     if (control->isSelected()) return;
 
     emit mouseLeave();
+}
+
+void BasicControl::setPos(QPoint newPos) {
+    auto realPos = SchematicCanvas::controlRealPos(newPos);
+    QGraphicsItem::setPos(realPos.x(), realPos.y());
+    emit resizerPosChanged(realPos);
+}
+
+void BasicControl::setSize(QSize newSize) {
+    emit resizerSizeChanged(SchematicCanvas::controlRealSize(newSize));
+}
+
+void BasicControl::remove() {
+    scene()->removeItem(this);
+}
+
+void BasicControl::resizerChanged(QPointF topLeft, QPointF bottomRight) {
+    control->setCorners(QPoint(
+            qRound(topLeft.x() / SchematicCanvas::controlGridSize.width()),
+            qRound(topLeft.y() / SchematicCanvas::controlGridSize.height())
+    ), QPoint(
+            qRound(bottomRight.x() / SchematicCanvas::controlGridSize.width()),
+            qRound(bottomRight.y() / SchematicCanvas::controlGridSize.height())
+    ));
+}
+
+void BasicControl::resizerStartDrag() {
+    control->select(true);
 }
 
 void BasicControl::triggerGeometryChange() {
@@ -248,18 +323,13 @@ QRectF BasicControl::getSliderBounds(bool vertical) const {
                               barHeight)), vertical);
 }
 
-void BasicControl::startDragging(QPointF mousePos) {
-    isDragging = true;
-    beforeDragVal = control->value();
-    dragMouseStart = mousePos;
-}
-
 void BasicControl::paintPlug(QPainter *painter) {
     auto scaledBorder = 0.06f * aspectBoundingRect().width();
     auto externBr = getPlugBounds();
 
     auto scaledBorderMargin = scaledBorder / 2;
-    auto ellipseBr = externBr.marginsRemoved(QMarginsF(scaledBorderMargin, scaledBorderMargin, scaledBorderMargin, scaledBorderMargin));
+    auto ellipseBr = externBr.marginsRemoved(
+            QMarginsF(scaledBorderMargin, scaledBorderMargin, scaledBorderMargin, scaledBorderMargin));
 
     auto baseColor = QColor(10, 10, 10);
     auto activeColor = QColor(20, 20, 20);
@@ -360,8 +430,8 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
         if (i % 2 == 0) shiftAmt = 2;
         if (i == 0 || i == markerCount || i == markerCount / 2) shiftAmt = 1.5;
         painter->drawLine(
-            flip(QPointF(markerX, br.y() + 1), vertical),
-            flip(QPointF(markerX, br.y() + br.height() / shiftAmt), vertical)
+                flip(QPointF(markerX, br.y() + 1), vertical),
+                flip(QPointF(markerX, br.y() + br.height() / shiftAmt), vertical)
         );
     }
 
