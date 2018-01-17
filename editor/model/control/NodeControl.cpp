@@ -1,6 +1,7 @@
 #include "NodeControl.h"
 
 #include "../node/Node.h"
+#include "../connection/ConnectionWire.h"
 
 using namespace AxiomModel;
 
@@ -11,6 +12,14 @@ NodeControl::NodeControl(Node *node, Channel channel) : GridItem(&node->surface)
             this, &NodeControl::recalcWorldPos);
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });
+    connect(this, &NodeControl::worldPosChanged,
+            &sink, &ConnectionSink::setPos);
+
+    connect(&sink, &ConnectionSink::connectionAdded,
+            [this](ConnectionWire *wire) {
+                connect(this, &NodeControl::removed,
+                        wire, &ConnectionWire::remove);
+            });
 }
 
 void NodeControl::setName(const QString &name) {

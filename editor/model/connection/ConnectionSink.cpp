@@ -5,12 +5,12 @@
 using namespace AxiomModel;
 
 void ConnectionSink::addWire(ConnectionWire *wire) {
-    m_inputs.push_back(wire);
+    m_connections.push_back(wire);
 
     connect(wire, &ConnectionWire::removed,
             this, [this, wire]() { removeWire(wire); });
 
-    emit inputAdded(wire);
+    emit connectionAdded(wire);
 }
 
 void ConnectionSink::setPos(QPoint pos) {
@@ -21,8 +21,8 @@ void ConnectionSink::setPos(QPoint pos) {
 }
 
 void ConnectionSink::removeWire(ConnectionWire *wire) {
-    auto loc = std::find(m_inputs.begin(), m_inputs.end(), wire);
-    if (loc != m_inputs.end()) {
-        m_inputs.erase(loc);
+    auto loc = std::find(m_connections.begin(), m_connections.end(), wire);
+    if (loc != m_connections.end()) {
+        m_connections.erase(loc);
     }
 }

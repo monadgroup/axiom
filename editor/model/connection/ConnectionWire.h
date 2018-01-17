@@ -5,21 +5,19 @@
 
 namespace AxiomModel {
 
-    class ConnectionSource;
-
     class ConnectionSink;
 
     class GridSurface;
 
     class ConnectionWire : public QObject {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
         GridSurface *surface;
-        ConnectionSource *source;
-        ConnectionSink *sink;
+        ConnectionSink *sinkA;
+        ConnectionSink *sinkB;
 
-        ConnectionWire(GridSurface *surface, ConnectionSource *source, ConnectionSink *sink);
+        ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, ConnectionSink *sinkB);
 
         const std::deque<QPoint> &route() const { return m_route; }
 
@@ -31,9 +29,11 @@ namespace AxiomModel {
 
     signals:
 
+        void routeChanged(const std::deque<QPoint> &route);
+
         void removed();
 
-        void routeChanged(const std::deque<QPoint> &route);
+        void cleanup();
 
     private:
         std::deque<QPoint> m_route;

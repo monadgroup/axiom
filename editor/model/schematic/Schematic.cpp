@@ -29,3 +29,26 @@ void Schematic::setPan(QPointF pan) {
         emit panChanged(pan);
     }
 }
+
+void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
+    auto ptr = wire.get();
+    m_wires.push_back(std::move(wire));
+
+    connect(ptr, &ConnectionWire::cleanup,
+            this, [this, ptr]() { removeWire(ptr); });
+
+    emit wireAdded(ptr);
+}
+
+void Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB) {
+    addWire(std::move(std::make_unique<ConnectionWire>(this, sinkA, sinkB)));
+}
+
+void Schematic::removeWire(ConnectionWire *wire) {
+    for (auto i = m_wires.begin(); i < m_wires.end(); i++) {
+        if (i->get() == wire) {
+            m_wires.erase(i);
+            break;
+        }
+    }
+}

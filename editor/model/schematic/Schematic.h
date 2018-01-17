@@ -2,14 +2,12 @@
 
 #include <memory>
 #include <vector>
-#include <unordered_map>
-#include <unordered_set>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QPointF>
 
+#include "../connection/ConnectionWire.h"
 #include "../GridSurface.h"
-#include "../node/Node.h"
 
 namespace AxiomModel {
 
@@ -21,19 +19,32 @@ namespace AxiomModel {
 
         QPointF pan() const { return m_pan; }
 
+        const std::vector<std::unique_ptr<ConnectionWire>> &wires() const { return m_wires; }
+
         virtual void serialize(QDataStream &stream) const;
 
         virtual void deserialize(QDataStream &stream);
+
+        void addWire(std::unique_ptr<ConnectionWire> wire);
 
     public slots:
 
         void setPan(QPointF pan);
 
+        void connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB);
+
     signals:
 
         void panChanged(QPointF newPan);
 
+        void wireAdded(ConnectionWire *connection);
+
+    private slots:
+
+        void removeWire(ConnectionWire *wire);
+
     private:
+        std::vector<std::unique_ptr<ConnectionWire>> m_wires;
         QPointF m_pan;
     };
 

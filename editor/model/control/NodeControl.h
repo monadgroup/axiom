@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../GridItem.h"
+#include "../connection/ConnectionSink.h"
 
 namespace AxiomModel {
 
@@ -17,6 +18,8 @@ namespace AxiomModel {
         };
 
         const Channel channel;
+
+        ConnectionSink sink;
 
         Node *node;
 
