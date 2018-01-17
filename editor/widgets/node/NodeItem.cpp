@@ -92,6 +92,8 @@ QRectF NodeItem::boundingRect() const {
 }
 
 void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    painter->setRenderHint(QPainter::Antialiasing, false);
+
     painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
     if (node->isSelected()) {
         painter->setBrush(QBrush(QColor::fromRgb(27, 27, 27)));
