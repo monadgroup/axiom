@@ -17,7 +17,6 @@ using namespace AxiomModel;
 
 NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
     setAcceptHoverEvents(true);
-    setHandlesChildEvents(false);
 
     // create items for all controls that already exist
     for (const auto &item : node->surface.items()) {
@@ -172,7 +171,7 @@ void NodeItem::setSize(QSize newSize) {
 
 void NodeItem::addControl(NodeControl *control) {
     if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
-        auto c = new BasicControl(valueControl, this);
+        auto c = new BasicControl(valueControl);
         c->setZValue(2);
         c->setParentItem(this);
     }

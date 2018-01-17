@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QtWidgets/QGraphicsObject>
+#include "ControlItem.h"
 
 namespace AxiomModel {
     class NodeValueControl;
@@ -10,7 +10,7 @@ namespace AxiomGui {
 
     class NodeItem;
 
-    class BasicControl : public QGraphicsObject {
+    class BasicControl : public ControlItem {
     Q_OBJECT
         Q_PROPERTY(float hoverState
                            READ
@@ -27,11 +27,8 @@ namespace AxiomGui {
         };
 
         AxiomModel::NodeValueControl *control;
-        NodeItem *parent;
 
-        BasicControl(AxiomModel::NodeValueControl *control, NodeItem *parent);
-
-        QRectF boundingRect() const override;
+        explicit BasicControl(AxiomModel::NodeValueControl *control);
 
         QRectF aspectBoundingRect() const;
 
@@ -66,31 +63,8 @@ namespace AxiomGui {
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
-    private slots:
-
-        void setPos(QPoint newPos);
-
-        void setSize(QSize newSize);
-
-        void remove();
-
-        void resizerChanged(QPointF topLeft, QPointF bottomRight);
-
-        void resizerStartDrag();
-
-        void triggerGeometryChange();
-
-        void triggerUpdate();
-
-    signals:
-
-        void resizerPosChanged(QPointF newPos);
-
-        void resizerSizeChanged(QSizeF newSize);
-
     private:
         float m_hoverState = 0;
-        bool isMoving;
         bool isDragging;
         float beforeDragVal;
         QPointF mouseStartPoint;

@@ -12,7 +12,6 @@
 #include "editor/model/control/NodeValueControl.h"
 #include "../node/NodeItem.h"
 #include "../schematic/SchematicCanvas.h"
-#include "../ItemResizer.h"
 #include "editor/util.h"
 
 using namespace AxiomGui;
@@ -39,51 +38,11 @@ static QRectF flip(QRectF a, bool yes) {
     return a;
 }
 
-BasicControl::BasicControl(NodeValueControl *control, NodeItem *parent) : control(control), parent(parent) {
+BasicControl::BasicControl(NodeValueControl *control) : ControlItem(control), control(control) {
     setAcceptHoverEvents(true);
-
-    connect(control, &NodeControl::posChanged,
-            this, &BasicControl::setPos);
-    connect(control, &NodeControl::beforeSizeChanged,
-            this, &BasicControl::triggerGeometryChange);
-    connect(control, &NodeControl::sizeChanged,
-            this, &BasicControl::setSize);
-    connect(control, &NodeControl::removed,
-            this, &BasicControl::remove);
 
     connect(control, &NodeValueControl::valueChanged,
             this, &BasicControl::triggerUpdate);
-
-    // create resize items
-    ItemResizer::Direction directions[] = {
-            ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
-            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
-    };
-    for (auto i = 0; i < 8; i++) {
-        auto resizer = new ItemResizer(directions[i], SchematicCanvas::controlGridSize);
-        resizer->enablePainting();
-        resizer->setVisible(false);
-
-        // ensure corners are on top of edges
-        resizer->setZValue(i > 3 ? 3 : 2);
-
-        connect(this, &BasicControl::resizerPosChanged,
-                resizer, &ItemResizer::setPos);
-        connect(this, &BasicControl::resizerSizeChanged,
-                resizer, &ItemResizer::setSize);
-
-        connect(resizer, &ItemResizer::startDrag,
-                this, &BasicControl::resizerStartDrag);
-        connect(resizer, &ItemResizer::changed,
-                this, &BasicControl::resizerChanged);
-
-        connect(control, &NodeControl::selected,
-                resizer, [this, resizer]() { resizer->setVisible(true); });
-        connect(control, &NodeControl::deselected,
-                resizer, [this, resizer]() { resizer->setVisible(false); });
-
-        resizer->setParentItem(this);
-    }
 
     auto machine = new QStateMachine();
     auto unhoveredState = new QState(machine);
@@ -104,17 +63,6 @@ BasicControl::BasicControl(NodeValueControl *control, NodeItem *parent) : contro
     mouseLeaveTransition->addAnimation(leaveAnim);
 
     machine->start();
-
-    // set initial state
-    setPos(control->pos());
-    setSize(control->size());
-}
-
-QRectF BasicControl::boundingRect() const {
-    return {
-            QPoint(0, 0),
-            SchematicCanvas::controlRealSize(control->size())
-    };
 }
 
 QRectF BasicControl::aspectBoundingRect() const {
@@ -199,105 +147,63 @@ void BasicControl::setHoverState(float newHoverState) {
 }
 
 void BasicControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (event->button() != Qt::LeftButton) return;
+    ControlItem::mousePressEvent(event);
+    if (event->isAccepted() || event->button() != Qt::LeftButton) return;
 
-    if (control->isSelected()) {
-        isMoving = true;
-        mouseStartPoint = event->screenPos();
-        emit control->startedDragging();
-    } else {
-        control->node->surface.deselectAll();
-        isDragging = true;
-        beforeDragVal = control->value();
-        mouseStartPoint = event->pos();
-    }
+    event->accept();
+
+    control->node->surface.deselectAll();
+    isDragging = true;
+    beforeDragVal = control->value();
+    mouseStartPoint = event->pos();
 }
 
 void BasicControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    if (isDragging) {
-        auto mouseDelta = event->pos() - mouseStartPoint;
+    ControlItem::mouseMoveEvent(event);
+    if (event->isAccepted() || !isDragging) return;
 
-        auto accuracyDelta = mouseDelta.x();
-        auto motionDelta = mouseDelta.y();
-        auto scaleFactor = boundingRect().height();
+    event->accept();
 
-        if (mode() == BasicMode::SLIDER_H) {
-            accuracyDelta = mouseDelta.y();
-            motionDelta = -mouseDelta.x();
-            scaleFactor = boundingRect().width();
-        }
+    auto mouseDelta = event->pos() - mouseStartPoint;
 
-        auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
-        control->setValue(beforeDragVal - (float) motionDelta / accuracy);
-    } else if (isMoving) {
-        auto mouseDelta = event->screenPos() - mouseStartPoint;
-        emit control->draggedTo(QPoint(
-                qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
-                qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
-        ));
+    auto accuracyDelta = mouseDelta.x();
+    auto motionDelta = mouseDelta.y();
+    auto scaleFactor = boundingRect().height();
+
+    if (mode() == BasicMode::SLIDER_H) {
+        accuracyDelta = mouseDelta.y();
+        motionDelta = -mouseDelta.x();
+        scaleFactor = boundingRect().width();
     }
+
+    auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
+    control->setValue(beforeDragVal - (float) motionDelta / accuracy);
 }
 
 void BasicControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    isDragging = false;
+    ControlItem::mouseReleaseEvent(event);
+    if (event->isAccepted()) return;
 
-    if (isMoving) {
-        isMoving = false;
-        emit control->finishedDragging();
-    }
+    event->accept();
+
+    isDragging = false;
 }
 
 void BasicControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    ControlItem::mouseDoubleClickEvent(event);
     emit mouseLeave();
-    control->select(!(event->modifiers() & Qt::ShiftModifier));
 }
 
 void BasicControl::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
-    if (control->isSelected()) return;
+    if (!isEditable()) return;
 
     emit mouseEnter();
 }
 
 void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
-    if (control->isSelected()) return;
+    if (!isEditable()) return;
 
     emit mouseLeave();
-}
-
-void BasicControl::setPos(QPoint newPos) {
-    auto realPos = SchematicCanvas::controlRealPos(newPos);
-    QGraphicsItem::setPos(realPos.x(), realPos.y());
-    emit resizerPosChanged(realPos);
-}
-
-void BasicControl::setSize(QSize newSize) {
-    emit resizerSizeChanged(SchematicCanvas::controlRealSize(newSize));
-}
-
-void BasicControl::remove() {
-    scene()->removeItem(this);
-}
-
-void BasicControl::resizerChanged(QPointF topLeft, QPointF bottomRight) {
-    control->setCorners(QPoint(
-            qRound(topLeft.x() / SchematicCanvas::controlGridSize.width()),
-            qRound(topLeft.y() / SchematicCanvas::controlGridSize.height())
-    ), QPoint(
-            qRound(bottomRight.x() / SchematicCanvas::controlGridSize.width()),
-            qRound(bottomRight.y() / SchematicCanvas::controlGridSize.height())
-    ));
-}
-
-void BasicControl::resizerStartDrag() {
-    control->select(true);
-}
-
-void BasicControl::triggerGeometryChange() {
-    prepareGeometryChange();
-}
-
-void BasicControl::triggerUpdate() {
-    update();
 }
 
 QRectF BasicControl::getPlugBounds() const {
