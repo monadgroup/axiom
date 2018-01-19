@@ -108,8 +108,8 @@ void SchematicCanvas::updateConnecting(QPointF mousePos) {
     } else {
         connectionSink.setPos(
                 QPoint(
-                        (int) std::round(mousePos.x() / SchematicCanvas::nodeGridSize.width()),
-                        (int) std::round(mousePos.y() / SchematicCanvas::nodeGridSize.height())
+                        (int) (mousePos.x() / SchematicCanvas::nodeGridSize.width()),
+                        (int) (mousePos.y() / SchematicCanvas::nodeGridSize.height())
                 ),
                 QPointF(
                         mousePos.x() / SchematicCanvas::controlGridSize.width(),
