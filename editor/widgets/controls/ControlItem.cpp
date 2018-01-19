@@ -71,7 +71,7 @@ AxiomModel::ConnectionSink &ControlItem::sink() {
 }
 
 void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (event->button() == Qt::RightButton) {
+    if (event->button() == Qt::LeftButton && event->modifiers() & Qt::ControlModifier) {
         event->accept();
 
         isConnecting = true;
