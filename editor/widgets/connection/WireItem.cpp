@@ -25,12 +25,16 @@ WireItem::WireItem(AxiomModel::ConnectionWire *wire) : wire(wire) {
 void WireItem::updateRoute(const std::deque<QPoint> &route) {
     QPainterPath path;
 
-    if (route.size() >= 2) {
+    auto firstPos = SchematicCanvas::controlRealPos(wire->sinkA->subPos());
+    auto lastPos = SchematicCanvas::controlRealPos(wire->sinkB->subPos());
+
+    if (route.size() == 2 && firstPos.x() != lastPos.x() && firstPos.y() != lastPos.y()) {
+        path.moveTo(firstPos);
+        path.lineTo(QPointF(lastPos.x(), firstPos.y()));
+        path.lineTo(lastPos);
+    } else if (route.size() >= 2) {
         auto halfNodeSize = QPointF(SchematicCanvas::nodeGridSize.width() / 2,
                                     SchematicCanvas::nodeGridSize.height() / 2);
-
-        auto firstPos = SchematicCanvas::controlRealPos(wire->sinkA->subPos());
-        auto lastPos = SchematicCanvas::controlRealPos(wire->sinkB->subPos());
 
         for (auto i = 0; i < route.size(); i++) {
             QPointF routePos = SchematicCanvas::nodeRealPos(route[i]) + halfNodeSize;
