@@ -48,6 +48,7 @@ void GridSurface::deselectAll() {
 
 void GridSurface::removeItem(GridItem *item) {
     grid.setRect(item->pos(), item->size(), nullptr);
+    flushGrid();
 
     auto loc = std::find(selectedItems.begin(), selectedItems.end(), item);
     if (loc != selectedItems.end()) {
@@ -109,12 +110,17 @@ void GridSurface::dragTo(QPoint delta) {
     for (auto &item : selectedItems) {
         grid.setRect(item->pos(), item->size(), item);
     }
+    flushGrid();
 }
 
 void GridSurface::finishDragging() {
     for (auto &item : selectedItems) {
         item->finishDragging();
     }
+}
+
+void GridSurface::flushGrid() {
+    emit gridChanged();
 }
 
 bool GridSurface::isAllDragAvailable(QPoint delta) {

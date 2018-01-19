@@ -1,7 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QMenu>
+
+#include "editor/model/connection/ConnectionSink.h"
+#include "editor/model/connection/ConnectionWire.h"
 
 namespace AxiomModel {
     class Schematic;
@@ -11,12 +15,18 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class IConnectable;
+
     class SchematicCanvas : public QGraphicsScene {
     Q_OBJECT
 
     public:
         static QSize nodeGridSize;
         static QSize controlGridSize;
+        static int wireZVal;
+        static int nodeZVal;
+        static int panelZVal;
+        static int selectionZVal;
 
         AxiomModel::Schematic *schematic;
 
@@ -32,7 +42,13 @@ namespace AxiomGui {
 
     public slots:
 
-        void setPan(QPointF pan);
+        void startConnecting(IConnectable *control);
+
+        void updateConnecting(QPointF mousePos);
+
+        void endConnecting(QPointF mousePos);
+
+        void cancelConnecting();
 
     protected:
         void drawBackground(QPainter *painter, const QRectF &rect) override;
@@ -49,14 +65,17 @@ namespace AxiomGui {
 
         void addNode(AxiomModel::Node *node);
 
+        void addWire(AxiomModel::ConnectionWire *wire);
+
     private:
         bool isSelecting = false;
 
         QVector<QPointF> selectionPoints;
         QGraphicsPathItem *selectionPath;
 
-        QPointF dragStart;
-        QPointF dragOffset;
+        bool isConnecting = false;
+        AxiomModel::ConnectionSink connectionSink;
+        AxiomModel::ConnectionWire *connectionWire;
 
         void leftMousePressEvent(QGraphicsSceneMouseEvent *event);
 

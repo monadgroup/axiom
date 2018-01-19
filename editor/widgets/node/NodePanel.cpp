@@ -38,12 +38,10 @@ NodePanel::NodePanel(Node *node) : node(node) {
 }
 
 void NodePanel::enterEvent(QEvent *event) {
-    std::cout << "Enter event" << std::endl;
     setSelfHover(true);
 }
 
 void NodePanel::leaveEvent(QEvent *event) {
-    std::cout << "Leave event" << std::endl;
     QTimer::singleShot(100, [this]() {
         setSelfHover(false);
     });

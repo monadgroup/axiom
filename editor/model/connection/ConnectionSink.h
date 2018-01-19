@@ -18,17 +18,25 @@ namespace AxiomModel {
 
         QPoint pos() const { return m_pos; }
 
+        bool active() const { return m_active; }
+
     public slots:
 
         void addWire(ConnectionWire *wire);
 
         void setPos(QPoint pos);
 
+        void setActive(bool active);
+
     signals:
 
         void connectionAdded(ConnectionWire *wire);
 
         void posChanged(QPoint newPos);
+
+        void activeChanged(bool newActive);
+
+        void removed();
 
     private slots:
 
@@ -37,6 +45,7 @@ namespace AxiomModel {
     private:
         std::vector<ConnectionWire *> m_connections;
         QPoint m_pos;
+        bool m_active = false;
     };
 
 }

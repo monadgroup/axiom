@@ -89,7 +89,7 @@ namespace AxiomModel {
             std::unordered_map<QPoint, VisitedCell> visited;
             std::deque<QPoint> path;
 
-            visitQueue.push(CostPos(start, QPoint(1, 0), 0));
+            visitQueue.push(CostPos(start, QPoint(0, 0), 0));
             visited.emplace(start, VisitedCell(start, 0));
 
             while (!visitQueue.empty()) {
@@ -97,9 +97,16 @@ namespace AxiomModel {
 
                 if (cur.pos == end) {
                     auto lastVisited = end;
+                    auto lastDir = QPoint(0, 0);
                     while (lastVisited != start) {
-                        path.push_front(lastVisited);
-                        lastVisited = visited.find(lastVisited)->second.from;
+                        auto nextVisit = visited.find(lastVisited)->second.from;
+                        auto visitDir = nextVisit - lastVisited;
+                        if (visitDir != lastDir) {
+                            path.push_front(lastVisited);
+                        }
+
+                        lastVisited = nextVisit;
+                        lastDir = visitDir;
                     }
                     path.push_front(start);
 
@@ -157,6 +164,7 @@ namespace AxiomModel {
         }
 
     private:
+
         class NearestAvailablePos {
         public:
             QPoint checkPos;

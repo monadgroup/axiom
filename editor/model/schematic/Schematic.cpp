@@ -40,8 +40,11 @@ void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
     emit wireAdded(ptr);
 }
 
-void Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB) {
-    addWire(std::move(std::make_unique<ConnectionWire>(this, sinkA, sinkB)));
+ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB) {
+    auto wire = std::make_unique<ConnectionWire>(this, sinkA, sinkB);
+    auto ptr = wire.get();
+    addWire(std::move(wire));
+    return ptr;
 }
 
 void Schematic::removeWire(ConnectionWire *wire) {

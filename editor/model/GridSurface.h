@@ -41,6 +41,8 @@ namespace AxiomModel {
 
         void finishDragging();
 
+        void flushGrid();
+
     private slots:
 
         void removeItem(GridItem *item);
@@ -54,6 +56,8 @@ namespace AxiomModel {
         void itemAdded(GridItem *item);
 
         void hasSelectionChanged(bool hasSelection);
+
+        void gridChanged();
 
     private:
         std::vector<std::unique_ptr<GridItem>> m_items;

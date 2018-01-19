@@ -7,8 +7,10 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 
 #include "editor/AxiomApplication.h"
-#include "../node/NodeItem.h"
 #include "editor/model/node/CustomNode.h"
+#include "../node/NodeItem.h"
+#include "../connection/WireItem.h"
+#include "../IConnectable.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -17,6 +19,11 @@ QSize SchematicCanvas::nodeGridSize = QSize(50, 50);
 
 QSize SchematicCanvas::controlGridSize = QSize(25, 25);
 
+int SchematicCanvas::wireZVal = 0;
+int SchematicCanvas::nodeZVal = 1;
+int SchematicCanvas::panelZVal = 2;
+int SchematicCanvas::selectionZVal = 3;
+
 SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
     // build selection
     auto selectionPen = QPen(QColor::fromRgb(52, 152, 219));
@@ -24,7 +31,7 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
 
     selectionPath = addPath(QPainterPath(), selectionPen, selectionBrush);
     selectionPath->setVisible(false);
-    selectionPath->setZValue(1);
+    selectionPath->setZValue(selectionZVal);
 
     // create items for all nodes that already exist
     for (const auto &item : schematic->items()) {
@@ -34,14 +41,14 @@ SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
     }
 
     // connect to model
-    connect(schematic, &Schematic::panChanged,
-            this, &SchematicCanvas::setPan);
     connect(schematic, &Schematic::itemAdded,
             [this](AxiomModel::GridItem *item) {
                 if (auto node = dynamic_cast<Node *>(item)) {
                     addNode(node);
                 }
             });
+    connect(schematic, &Schematic::wireAdded,
+            this, &SchematicCanvas::addWire);
 }
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
@@ -72,13 +79,57 @@ QSize SchematicCanvas::controlRealSize(const QSize &s) {
     };
 }
 
-void SchematicCanvas::setPan(QPointF pan) {
-    // todo
+void SchematicCanvas::startConnecting(IConnectable *control) {
+    if (isConnecting) return;
+
+    isConnecting = true;
+    connectionSink.setPos(control->sink().pos());
+    connectionWire = schematic->connectSinks(&control->sink(), &connectionSink);
+
+    // todo: cancel connecting of connectionWire is removed
+    connect(connectionWire, &ConnectionWire::removed,
+            [this]() { isConnecting = false; });
+}
+
+void SchematicCanvas::updateConnecting(QPointF mousePos) {
+    if (!isConnecting) return;
+
+    connectionSink.setPos(QPoint(
+            (int) std::round(mousePos.x() / SchematicCanvas::nodeGridSize.width()),
+            (int) std::round(mousePos.y() / SchematicCanvas::nodeGridSize.height())
+    ));
+}
+
+void SchematicCanvas::endConnecting(QPointF mousePos) {
+    if (!isConnecting) return;
+
+    auto currentItem = itemAt(mousePos, QTransform());
+
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
+        isConnecting = false;
+        schematic->connectSinks(connectionWire->sinkA, &connectable->sink());
+    } else {
+        // todo: create JunctionNode if not currentItem is null
+    }
+
+    connectionWire->remove();
+}
+
+void SchematicCanvas::cancelConnecting() {
+    if (!isConnecting) return;
+
+    connectionWire->remove();
 }
 
 void SchematicCanvas::addNode(AxiomModel::Node *node) {
     auto item = new NodeItem(node, this);
-    item->setZValue(0);
+    item->setZValue(nodeZVal);
+    addItem(item);
+}
+
+void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {
+    auto item = new WireItem(wire);
+    item->setZValue(wireZVal);
     addItem(item);
 }
 
@@ -94,9 +145,6 @@ void SchematicCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         case Qt::LeftButton:
             leftMousePressEvent(event);
             break;
-        default:
-            QGraphicsScene::mousePressEvent(event);
-            break;
     }
 }
 
@@ -107,9 +155,6 @@ void SchematicCanvas::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     switch (event->button()) {
         case Qt::LeftButton:
             leftMouseReleaseEvent(event);
-            break;
-        default:
-            QGraphicsScene::mouseReleaseEvent(event);
             break;
     }
 }

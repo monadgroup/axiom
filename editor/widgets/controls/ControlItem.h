@@ -2,23 +2,31 @@
 
 #include <QtWidgets/QGraphicsObject>
 
+#include "../IConnectable.h"
+
 namespace AxiomModel {
     class NodeControl;
 }
 
 namespace AxiomGui {
 
-    class ControlItem : public QGraphicsObject {
+    class SchematicCanvas;
+
+    class ControlItem : public QGraphicsObject, public IConnectable {
         Q_OBJECT
 
     public:
         AxiomModel::NodeControl *control;
 
-        explicit ControlItem(AxiomModel::NodeControl *control);
+        SchematicCanvas *canvas;
+
+        explicit ControlItem(AxiomModel::NodeControl *control, SchematicCanvas *canvas);
 
         QRectF boundingRect() const override;
 
         bool isEditable() const;
+
+        AxiomModel::ConnectionSink &sink() override;
 
     protected:
 
@@ -55,7 +63,8 @@ namespace AxiomGui {
         void resizerSizeChanged(QSizeF newSize);
 
     private:
-        bool isMoving;
+        bool isMoving = false;
+        bool isConnecting = false;
         QPointF mouseStartPoint;
     };
 

@@ -21,15 +21,21 @@ namespace AxiomModel {
 
         const std::deque<QPoint> &route() const { return m_route; }
 
+        bool active() const { return m_active; }
+
     public slots:
 
         void remove();
 
         void updateRoute();
 
+        void setActive(bool active);
+
     signals:
 
         void routeChanged(const std::deque<QPoint> &route);
+
+        void activeChanged(bool newActive);
 
         void removed();
 
@@ -37,6 +43,9 @@ namespace AxiomModel {
 
     private:
         std::deque<QPoint> m_route;
+
+        int activeCount = 0;
+        bool m_active = false;
     };
 
 }

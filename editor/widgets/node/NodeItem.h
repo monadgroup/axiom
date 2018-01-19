@@ -22,7 +22,9 @@ namespace AxiomGui {
     public:
         AxiomModel::Node *node;
 
-        NodeItem(AxiomModel::Node *node, SchematicCanvas *parent);
+        SchematicCanvas *canvas;
+
+        NodeItem(AxiomModel::Node *node, SchematicCanvas *canvas);
 
         QRectF boundingRect() const override;
 
@@ -69,7 +71,7 @@ namespace AxiomGui {
     private:
         NodePanel *nodePanel;
         QGraphicsProxyWidget *nodePanelProxy;
-        bool isDragging;
+        bool isDragging = false;
         QPoint mouseStartPoint;
 
         void updateNodePanelPos(QPointF realNodePos);

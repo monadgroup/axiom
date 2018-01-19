@@ -15,7 +15,7 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
+NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(canvas) {
     setAcceptHoverEvents(true);
 
     // create items for all controls that already exist
@@ -76,8 +76,8 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *parent) : node(node) {
 
     // create panel
     nodePanel = new NodePanel(node);
-    nodePanelProxy = parent->addWidget(nodePanel);
-    nodePanelProxy->setZValue(2);
+    nodePanelProxy = canvas->addWidget(nodePanel);
+    nodePanelProxy->setZValue(SchematicCanvas::panelZVal);
 
     // set initial state
     setPos(node->pos());
@@ -96,13 +96,13 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
     if (node->isSelected()) {
-        painter->setBrush(QBrush(QColor::fromRgb(27, 27, 27)));
+        painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17, 200)));
     } else {
-        painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17)));
+        painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17, 100)));
     }
     painter->drawRect(boundingRect());
 
-    auto gridPen = QPen(QColor(51, 51, 51), 1);
+    auto gridPen = QPen(QColor(27, 27, 27), 1);
 
     if (node->surface.hasSelection()) {
         auto nodeSurfaceSize = NodeSurface::schematicToNodeSurface(node->size());
@@ -173,7 +173,7 @@ void NodeItem::setSize(QSize newSize) {
 
 void NodeItem::addControl(NodeControl *control) {
     if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
-        auto c = new BasicControl(valueControl);
+        auto c = new BasicControl(valueControl, canvas);
         c->setZValue(2);
         c->setParentItem(this);
     }

@@ -39,7 +39,8 @@ static QRectF flip(QRectF a, bool yes) {
     return a;
 }
 
-BasicControl::BasicControl(NodeValueControl *control) : ControlItem(control), control(control) {
+BasicControl::BasicControl(NodeValueControl *control, SchematicCanvas *canvas)
+        : ControlItem(control, canvas), control(control) {
     setAcceptHoverEvents(true);
 
     connect(control, &NodeValueControl::valueChanged,
@@ -198,12 +199,14 @@ void BasicControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
 void BasicControl::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     if (!isEditable()) return;
 
+    control->sink.setActive(true);
     emit mouseEnter();
 }
 
 void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     if (!isEditable()) return;
 
+    control->sink.setActive(false);
     emit mouseLeave();
 }
 

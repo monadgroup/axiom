@@ -28,7 +28,7 @@ namespace AxiomGui {
 
         AxiomModel::NodeValueControl *control;
 
-        explicit BasicControl(AxiomModel::NodeValueControl *control);
+        explicit BasicControl(AxiomModel::NodeValueControl *control, SchematicCanvas *canvas);
 
         QRectF aspectBoundingRect() const;
 
@@ -67,8 +67,8 @@ namespace AxiomGui {
 
     private:
         float m_hoverState = 0;
-        bool isDragging;
-        float beforeDragVal;
+        bool isDragging = false;
+        float beforeDragVal = 0;
         QPointF mouseStartPoint;
 
         QRectF getPlugBounds() const;

@@ -15,12 +15,16 @@ NodeControl::NodeControl(Node *node, Channel channel, QPoint pos, QSize size)
             [this, node]() { node->select(true); });
     connect(this, &NodeControl::worldPosChanged,
             &sink, &ConnectionSink::setPos);
+    connect(this, &NodeControl::removed,
+            &sink, &ConnectionSink::removed);
 
     connect(&sink, &ConnectionSink::connectionAdded,
             [this](ConnectionWire *wire) {
                 connect(this, &NodeControl::removed,
                         wire, &ConnectionWire::remove);
             });
+
+    recalcWorldPos();
 }
 
 void NodeControl::setName(const QString &name) {
@@ -31,7 +35,7 @@ void NodeControl::setName(const QString &name) {
 }
 
 void NodeControl::recalcWorldPos() {
-    auto newWorldPos = pos() + node->pos();
+    auto newWorldPos = NodeSurface::nodeSurfaceToSchematicFloor(pos()) + node->pos();
     if (newWorldPos != m_worldPos) {
         m_worldPos = newWorldPos;
         emit worldPosChanged(newWorldPos);

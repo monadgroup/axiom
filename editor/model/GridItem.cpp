@@ -7,6 +7,7 @@ using namespace AxiomModel;
 GridItem::GridItem(GridSurface *parent, QPoint pos, QSize size)
         : parentSurface(parent), m_pos(parent->grid.findNearestAvailable(pos, size)), m_size(size) {
     parentSurface->grid.setRect(m_pos, m_size, this);
+    parentSurface->flushGrid();
 }
 
 bool GridItem::isDragAvailable(QPoint delta) {
@@ -19,6 +20,7 @@ void GridItem::setSize(QSize size) {
 
         emit beforeSizeChanged(size);
         parentSurface->grid.moveRect(m_pos, m_size, m_pos, size, this);
+        parentSurface->flushGrid();
         m_size = size;
         emit sizeChanged(size);
     }
@@ -46,6 +48,7 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
 
     if (topLeft == m_pos && newSize == m_size) return;
     parentSurface->grid.moveRect(m_pos, m_size, topLeft, newSize, this);
+    parentSurface->flushGrid();
     emit beforePosChanged(topLeft);
     m_pos = topLeft;
     emit posChanged(m_pos);
@@ -92,7 +95,10 @@ void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
         if (pos == m_pos) return;
 
         emit beforePosChanged(pos);
-        if (updateGrid) parentSurface->grid.moveRect(m_pos, m_size, pos, m_size, this);
+        if (updateGrid) {
+            parentSurface->grid.moveRect(m_pos, m_size, pos, m_size, this);
+            parentSurface->flushGrid();
+        }
         m_pos = pos;
         emit posChanged(pos);
     }

@@ -58,13 +58,13 @@ namespace AxiomGui {
     private:
         float marginSize;
         Direction dir;
-        bool isDragging;
+        bool isDragging = false;
         QPointF startMousePos;
         QPointF startTopLeft;
         QPointF startBottomRight;
         QSizeF minSize;
 
-        bool m_doPaint;
+        bool m_doPaint = false;
         QPointF m_pos;
         QSizeF m_size;
     };

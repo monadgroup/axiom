@@ -31,7 +31,7 @@ namespace AxiomModel {
 
         void setPan(QPointF pan);
 
-        void connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB);
+        ConnectionWire *connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB);
 
     signals:
 

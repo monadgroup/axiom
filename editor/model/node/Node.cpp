@@ -1,6 +1,6 @@
 #include "Node.h"
 
-#include "editor/model/schematic/Schematic.h"
+#include "../schematic/Schematic.h"
 
 using namespace AxiomModel;
 
@@ -66,4 +66,5 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     for (auto &item : surface.items()) {
         surface.grid.setRect(item->pos(), item->size(), item.get());
     }
+    surface.flushGrid();
 }

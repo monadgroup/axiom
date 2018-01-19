@@ -1,6 +1,7 @@
 #include "ControlItem.h"
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
+#include <iostream>
 
 #include "editor/model/control/NodeControl.h"
 #include "../ItemResizer.h"
@@ -9,7 +10,7 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-ControlItem::ControlItem(NodeControl *control) : control(control) {
+ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : control(control), canvas(canvas) {
     connect(control, &NodeControl::posChanged,
             this, &ControlItem::setPos);
     connect(control, &NodeControl::beforeSizeChanged,
@@ -66,45 +67,64 @@ bool ControlItem::isEditable() const {
     return !control->isSelected();
 }
 
-void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (event->button() != Qt::LeftButton || isEditable()) {
-        event->ignore();
-        return;
-    }
-    event->accept();
+AxiomModel::ConnectionSink& ControlItem::sink() {
+    return control->sink;
+}
 
-    isMoving = true;
-    mouseStartPoint = event->screenPos();
-    emit control->startedDragging();
+void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    if (event->button() == Qt::RightButton) {
+        event->accept();
+
+        isConnecting = true;
+        canvas->startConnecting(this);
+    } else if (!isEditable() && event->button() == Qt::LeftButton) {
+        event->accept();
+
+        isMoving = true;
+        mouseStartPoint = event->screenPos();
+        emit control->startedDragging();
+    } else {
+        event->ignore();
+    }
 }
 
 void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    if (!isMoving) {
-        event->ignore();
-        return;
-    }
-    event->accept();
+    if (isConnecting) {
+        event->accept();
 
-    auto mouseDelta = event->screenPos() - mouseStartPoint;
-    emit control->draggedTo(QPoint(
-            qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
-            qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
-    ));
+        canvas->updateConnecting(event->scenePos());
+    } else if (isMoving) {
+        event->accept();
+
+        auto mouseDelta = event->screenPos() - mouseStartPoint;
+        emit control->draggedTo(QPoint(
+                qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
+                qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
+        ));
+    } else {
+        event->ignore();
+    }
 }
 
 void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    if (!isMoving) {
-        event->ignore();
-        return;
-    }
-    event->accept();
+    if (isConnecting) {
+        event->accept();
 
-    isMoving = false;
-    emit control->finishedDragging();
+        isConnecting = false;
+        canvas->endConnecting(event->scenePos());
+    } else if (isMoving) {
+        event->accept();
+
+        isMoving = false;
+        emit control->finishedDragging();
+    } else {
+        event->ignore();
+    }
 }
 
 void ControlItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-    control->select(!(event->modifiers() & Qt::ShiftModifier));
+    control->select(true);
+    mousePressEvent(event);
 }
 
 void ControlItem::setPos(QPoint newPos) {
