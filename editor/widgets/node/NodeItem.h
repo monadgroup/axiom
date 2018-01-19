@@ -52,6 +52,8 @@ namespace AxiomGui {
 
         void addControl(AxiomModel::NodeControl *control);
 
+        void setIsSelected(bool selected);
+
         void remove();
 
         void resizerChanged(QPointF topLeft, QPointF bottomRight);

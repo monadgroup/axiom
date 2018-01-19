@@ -24,3 +24,10 @@ QColor AxiomUtil::mixColor(QColor a, QColor b, float mix) {
             a.blue() + static_cast<int>((b.blue() - a.blue()) * mix)
     );
 }
+
+QPoint AxiomUtil::floorP(QPointF f) {
+    return QPoint(
+            (int) f.x(),
+            (int) f.y()
+    );
+}

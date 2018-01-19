@@ -20,9 +20,11 @@ QSize SchematicCanvas::nodeGridSize = QSize(50, 50);
 QSize SchematicCanvas::controlGridSize = QSize(25, 25);
 
 int SchematicCanvas::wireZVal = 0;
-int SchematicCanvas::nodeZVal = 1;
-int SchematicCanvas::panelZVal = 2;
-int SchematicCanvas::selectionZVal = 3;
+int SchematicCanvas::activeWireZVal = 1;
+int SchematicCanvas::nodeZVal = 2;
+int SchematicCanvas::activeNodeZVal = 3;
+int SchematicCanvas::panelZVal = 4;
+int SchematicCanvas::selectionZVal = 5;
 
 SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
     // build selection
@@ -72,6 +74,13 @@ QPoint SchematicCanvas::controlRealPos(const QPoint &p) {
     };
 }
 
+QPointF SchematicCanvas::controlRealPos(const QPointF &p) {
+    return {
+            p.x() * SchematicCanvas::controlGridSize.width(),
+            p.y() * SchematicCanvas::controlGridSize.height()
+    };
+}
+
 QSize SchematicCanvas::controlRealSize(const QSize &s) {
     return {
             s.width() * SchematicCanvas::controlGridSize.width(),
@@ -83,10 +92,9 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
     if (isConnecting) return;
 
     isConnecting = true;
-    connectionSink.setPos(control->sink().pos());
+    connectionSink.setPos(control->sink().pos(), control->sink().subPos());
     connectionWire = schematic->connectSinks(&control->sink(), &connectionSink);
 
-    // todo: cancel connecting of connectionWire is removed
     connect(connectionWire, &ConnectionWire::removed,
             [this]() { isConnecting = false; });
 }
@@ -94,19 +102,21 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
 void SchematicCanvas::updateConnecting(QPointF mousePos) {
     if (!isConnecting) return;
 
-    QPoint gridPos;
-
     auto currentItem = itemAt(mousePos, QTransform());
     if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
-        gridPos = connectable->sink().pos();
+        connectionSink.setPos(connectable->sink().pos(), connectable->sink().subPos());
     } else {
-        gridPos = QPoint(
-                (int) std::round(mousePos.x() / SchematicCanvas::nodeGridSize.width()),
-                (int) std::round(mousePos.y() / SchematicCanvas::nodeGridSize.height())
+        connectionSink.setPos(
+                QPoint(
+                        (int) std::round(mousePos.x() / SchematicCanvas::nodeGridSize.width()),
+                        (int) std::round(mousePos.y() / SchematicCanvas::nodeGridSize.height())
+                ),
+                QPointF(
+                        mousePos.x() / SchematicCanvas::controlGridSize.width(),
+                        mousePos.y() / SchematicCanvas::controlGridSize.height()
+                )
         );
     }
-
-    connectionSink.setPos(gridPos);
 }
 
 void SchematicCanvas::endConnecting(QPointF mousePos) {

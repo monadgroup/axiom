@@ -2,7 +2,6 @@
 
 #include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtWidgets/QGraphicsSceneWheelEvent>
 #include <QtCore/QStateMachine>
 #include <QtCore/QSignalTransition>
 #include <QtCore/QPropertyAnimation>
@@ -285,7 +284,8 @@ void BasicControl::paintKnob(QPainter *painter) {
     if (!control->sink.connections().empty()) {
         auto activeBorderThickness = 0.02 * aspectWidth;
         painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink.active())));
-        painter->drawEllipse(outerBr.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
+        painter->drawEllipse(outerBr.marginsAdded(
+                QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
     }
 
     painter->setBrush(QBrush(QColor(30, 30, 30)));
@@ -344,7 +344,8 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
         auto activeBorderThickness = 0.04 * br.height();
         painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink.active())));
         painter->drawRect(flip(
-                br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)),
+                br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness,
+                                          activeBorderThickness)),
                 vertical
         ));
     }

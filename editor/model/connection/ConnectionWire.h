@@ -10,7 +10,7 @@ namespace AxiomModel {
     class GridSurface;
 
     class ConnectionWire : public QObject {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         GridSurface *surface;

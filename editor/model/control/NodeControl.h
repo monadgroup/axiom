@@ -27,8 +27,6 @@ namespace AxiomModel {
 
         QString name() const { return m_name; }
 
-        QPoint worldPos() const { return m_worldPos; }
-
         bool isMovable() const override { return true; }
 
     public slots:
@@ -39,16 +37,13 @@ namespace AxiomModel {
 
         void nameChanged(const QString &newName);
 
-        void worldPosChanged(QPoint newPos);
-
     private:
-        QString m_name = "";
 
-        QPoint m_worldPos;
+        QString m_name = "";
 
     private slots:
 
-        void recalcWorldPos();
+        void recalcSinkPos();
     };
 
 }

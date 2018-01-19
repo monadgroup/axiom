@@ -24,7 +24,9 @@ namespace AxiomGui {
         static QSize nodeGridSize;
         static QSize controlGridSize;
         static int wireZVal;
+        static int activeWireZVal;
         static int nodeZVal;
+        static int activeNodeZVal;
         static int panelZVal;
         static int selectionZVal;
 
@@ -37,6 +39,8 @@ namespace AxiomGui {
         static QSize nodeRealSize(const QSize &s);
 
         static QPoint controlRealPos(const QPoint &p);
+
+        static QPointF controlRealPos(const QPointF &p);
 
         static QSize controlRealSize(const QSize &s);
 

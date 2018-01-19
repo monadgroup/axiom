@@ -1,7 +1,6 @@
 #include "ControlItem.h"
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <iostream>
 
 #include "editor/model/control/NodeControl.h"
 #include "../ItemResizer.h"
@@ -67,7 +66,7 @@ bool ControlItem::isEditable() const {
     return !control->isSelected();
 }
 
-AxiomModel::ConnectionSink& ControlItem::sink() {
+AxiomModel::ConnectionSink &ControlItem::sink() {
     return control->sink;
 }
 

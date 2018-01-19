@@ -2,19 +2,18 @@
 
 #include "../node/Node.h"
 #include "../connection/ConnectionWire.h"
+#include "editor/util.h"
 
 using namespace AxiomModel;
 
 NodeControl::NodeControl(Node *node, Channel channel, QPoint pos, QSize size)
         : GridItem(&node->surface, pos, size), node(node), channel(channel) {
     connect(this, &NodeControl::posChanged,
-            this, &NodeControl::recalcWorldPos);
+            this, &NodeControl::recalcSinkPos);
     connect(node, &Node::posChanged,
-            this, &NodeControl::recalcWorldPos);
+            this, &NodeControl::recalcSinkPos);
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });
-    connect(this, &NodeControl::worldPosChanged,
-            &sink, &ConnectionSink::setPos);
     connect(this, &NodeControl::removed,
             &sink, &ConnectionSink::removed);
 
@@ -24,7 +23,7 @@ NodeControl::NodeControl(Node *node, Channel channel, QPoint pos, QSize size)
                         wire, &ConnectionWire::remove);
             });
 
-    recalcWorldPos();
+    recalcSinkPos();
 }
 
 void NodeControl::setName(const QString &name) {
@@ -34,10 +33,8 @@ void NodeControl::setName(const QString &name) {
     }
 }
 
-void NodeControl::recalcWorldPos() {
-    auto newWorldPos = NodeSurface::nodeSurfaceToSchematicFloor(pos()) + node->pos();
-    if (newWorldPos != m_worldPos) {
-        m_worldPos = newWorldPos;
-        emit worldPosChanged(newWorldPos);
-    }
+void NodeControl::recalcSinkPos() {
+    auto worldPos = pos() + NodeSurface::schematicToNodeSurface(node->pos());
+    auto centerPos = worldPos + QPointF(size().width() / 2., size().height() / 2.);
+    sink.setPos(NodeSurface::nodeSurfaceToSchematicFloor(AxiomUtil::floorP(centerPos)), centerPos);
 }

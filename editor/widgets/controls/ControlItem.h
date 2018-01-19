@@ -13,7 +13,7 @@ namespace AxiomGui {
     class SchematicCanvas;
 
     class ControlItem : public QGraphicsObject, public IConnectable {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         AxiomModel::NodeControl *control;

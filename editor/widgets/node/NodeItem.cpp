@@ -33,8 +33,8 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
             this, &NodeItem::triggerGeometryChange);
     connect(node, &Node::sizeChanged,
             this, &NodeItem::setSize);
-    connect(node, &Node::selected,
-            this, &NodeItem::triggerUpdate);
+    connect(node, &Node::selectedChanged,
+            this, &NodeItem::setIsSelected);
     connect(node, &Node::deselected,
             this, &NodeItem::triggerUpdate);
     connect(node, &Node::removed,
@@ -82,6 +82,7 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
     // set initial state
     setPos(node->pos());
     setSize(node->size());
+    setIsSelected(node->isSelected());
 }
 
 QRectF NodeItem::boundingRect() const {
@@ -177,6 +178,10 @@ void NodeItem::addControl(NodeControl *control) {
         c->setZValue(2);
         c->setParentItem(this);
     }
+}
+
+void NodeItem::setIsSelected(bool selected) {
+    setZValue(selected ? SchematicCanvas::activeNodeZVal : SchematicCanvas::nodeZVal);
 }
 
 void NodeItem::remove() {

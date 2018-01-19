@@ -51,8 +51,12 @@ void ConnectionWire::updateActive() {
 
     auto newActive = false;
     switch (activeState) {
-        case ActiveState::SINK_A: newActive = sinkA->active(); break;
-        case ActiveState::SINK_B: newActive = sinkB->active(); break;
+        case ActiveState::SINK_A:
+            newActive = sinkA->active();
+            break;
+        case ActiveState::SINK_B:
+            newActive = sinkB->active();
+            break;
     }
 
     if (newActive != m_active) {

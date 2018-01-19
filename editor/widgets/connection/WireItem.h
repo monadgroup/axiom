@@ -11,7 +11,7 @@ namespace AxiomModel {
 namespace AxiomGui {
 
     class WireItem : public QObject, public QGraphicsPathItem {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         AxiomModel::ConnectionWire *wire;

@@ -10,7 +10,7 @@ namespace AxiomModel {
     class Schematic;
 
     class JunctionNode : public GridItem {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         ConnectionSink sink;
