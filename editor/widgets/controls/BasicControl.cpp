@@ -2,10 +2,11 @@
 
 #include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <cmath>
+#include <QtWidgets/QGraphicsSceneWheelEvent>
 #include <QtCore/QStateMachine>
 #include <QtCore/QSignalTransition>
 #include <QtCore/QPropertyAnimation>
+#include <cmath>
 #include <iostream>
 
 #include "editor/model/node/Node.h"
@@ -204,6 +205,10 @@ void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     if (!isEditable()) return;
 
     emit mouseLeave();
+}
+
+void BasicControl::wheelEvent(QGraphicsSceneWheelEvent *event) {
+    control->setValue(control->value() + event->delta() / 1200.f);
 }
 
 QRectF BasicControl::getPlugBounds() const {

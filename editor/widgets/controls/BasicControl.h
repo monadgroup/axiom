@@ -63,6 +63,8 @@ namespace AxiomGui {
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
+        void wheelEvent(QGraphicsSceneWheelEvent *event) override;
+
     private:
         float m_hoverState = 0;
         bool isDragging;
