@@ -10,7 +10,7 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        explicit CustomNode(Schematic *parent);
+        CustomNode(Schematic *parent, QPoint pos, QSize);
     };
 
 }

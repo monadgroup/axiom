@@ -15,7 +15,7 @@ namespace AxiomModel {
     public:
         GridSurface *parentSurface;
 
-        explicit GridItem(GridSurface *parent);
+        GridItem(GridSurface *parent, QPoint pos, QSize size);
 
         QPoint pos() const { return m_pos; }
 

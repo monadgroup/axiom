@@ -5,7 +5,8 @@
 
 using namespace AxiomModel;
 
-NodeControl::NodeControl(Node *node, Channel channel) : GridItem(&node->surface), node(node), channel(channel) {
+NodeControl::NodeControl(Node *node, Channel channel, QPoint pos, QSize size)
+        : GridItem(&node->surface, pos, size), node(node), channel(channel) {
     connect(this, &NodeControl::posChanged,
             this, &NodeControl::recalcWorldPos);
     connect(node, &Node::posChanged,

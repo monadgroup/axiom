@@ -53,8 +53,8 @@ QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
 
 QSize SchematicCanvas::nodeRealSize(const QSize &s) {
     return {
-            s.width() * SchematicCanvas::nodeGridSize.width() + 1,
-            s.height() * SchematicCanvas::nodeGridSize.height() + 1
+            s.width() * SchematicCanvas::nodeGridSize.width(),
+            s.height() * SchematicCanvas::nodeGridSize.height()
     };
 }
 

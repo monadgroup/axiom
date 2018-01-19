@@ -4,8 +4,9 @@
 
 using namespace AxiomModel;
 
-GridItem::GridItem(GridSurface *parent) : parentSurface(parent) {
-
+GridItem::GridItem(GridSurface *parent, QPoint pos, QSize size)
+        : parentSurface(parent), m_pos(parent->grid.findNearestAvailable(pos, size)), m_size(size) {
+    parentSurface->grid.setRect(m_pos, m_size, this);
 }
 
 bool GridItem::isDragAvailable(QPoint delta) {

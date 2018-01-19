@@ -17,7 +17,7 @@ namespace AxiomModel {
 
         const Type type;
 
-        NodeValueControl(Node *node, Type type, Channel channel);
+        NodeValueControl(Node *node, Type type, Channel channel, QPoint pos, QSize size);
 
         float value() const { return m_value; }
 

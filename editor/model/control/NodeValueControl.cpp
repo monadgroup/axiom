@@ -2,8 +2,8 @@
 
 using namespace AxiomModel;
 
-NodeValueControl::NodeValueControl(Node *node, Type type, Channel channel)
-        : NodeControl(node, channel), type(type) {
+NodeValueControl::NodeValueControl(Node *node, Type type, Channel channel, QPoint pos, QSize size)
+        : NodeControl(node, channel, pos, size), type(type) {
 
 }
 

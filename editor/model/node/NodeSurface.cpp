@@ -14,6 +14,8 @@ NodeSurface::NodeSurface(Node *node) : GridSurface(QPoint(0, 0), QPoint(node->si
                     items()[0]->remove();
                 }
             });
+
+    setSize(node->size());
 }
 
 void NodeSurface::setSize(QSize size) {

@@ -2,6 +2,6 @@
 
 using namespace AxiomModel;
 
-ModuleNode::ModuleNode(Schematic *parent) : Node(parent) {
+ModuleNode::ModuleNode(Schematic *parent, QPoint pos, QSize size) : Node(parent, pos, size) {
 
 }

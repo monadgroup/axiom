@@ -14,7 +14,7 @@ namespace AxiomModel {
     public:
         std::unique_ptr<ModuleSchematic> schematic;
 
-        explicit ModuleNode(Schematic *parent);
+        ModuleNode(Schematic *parent, QPoint pos, QSize size);
     };
 
 }

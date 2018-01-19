@@ -4,7 +4,7 @@
 
 using namespace AxiomModel;
 
-Node::Node(Schematic *parent) : GridItem(parent), surface(this) {
+Node::Node(Schematic *parent, QPoint pos, QSize size) : GridItem(parent, pos, size), surface(this) {
     connect(this, &Node::deselected,
             &surface, &NodeSurface::deselectAll);
 }

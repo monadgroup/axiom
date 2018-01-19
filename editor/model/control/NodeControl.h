@@ -23,7 +23,7 @@ namespace AxiomModel {
 
         Node *node;
 
-        NodeControl(Node *node, Channel channel);
+        NodeControl(Node *node, Channel channel, QPoint pos, QSize size);
 
         QString name() const { return m_name; }
 
