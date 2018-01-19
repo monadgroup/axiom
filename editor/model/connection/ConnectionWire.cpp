@@ -14,13 +14,20 @@ ConnectionWire::ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, Conn
     connect(sinkB, &ConnectionSink::posChanged,
             this, &ConnectionWire::updateRoute);
     connect(sinkA, &ConnectionSink::activeChanged,
-            this, &ConnectionWire::setActive);
+            this, &ConnectionWire::updateActive);
     connect(sinkB, &ConnectionSink::activeChanged,
-            this, &ConnectionWire::setActive);
+            this, &ConnectionWire::updateActive);
+    connect(this, &ConnectionWire::activeChanged,
+            sinkA, &ConnectionSink::setActive);
+    connect(this, &ConnectionWire::activeChanged,
+            sinkB, &ConnectionSink::setActive);
     connect(sinkA, &ConnectionSink::removed,
             this, &ConnectionWire::remove);
     connect(sinkB, &ConnectionSink::removed,
             this, &ConnectionWire::remove);
+
+    sinkA->addWire(this);
+    sinkB->addWire(this);
 
     updateRoute();
 }
@@ -35,20 +42,25 @@ void ConnectionWire::updateRoute() {
     emit routeChanged(m_route);
 }
 
-void ConnectionWire::setActive(bool active) {
-    if (active) {
-        activeCount++;
-    } else {
-        activeCount--;
+void ConnectionWire::updateActive() {
+    if (activeState == ActiveState::NOTHING) {
+        activeState = sinkA->active() ? ActiveState::SINK_A :
+                      sinkB->active() ? ActiveState::SINK_B :
+                      ActiveState::NOTHING;
     }
 
-    if (activeCount < 0) activeCount = 0;
+    auto newActive = false;
+    switch (activeState) {
+        case ActiveState::SINK_A: newActive = sinkA->active(); break;
+        case ActiveState::SINK_B: newActive = sinkB->active(); break;
+    }
 
-    if (activeCount > 0 && !m_active) {
-        m_active = true;
+    if (newActive != m_active) {
+        m_active = newActive;
         emit activeChanged(m_active);
-    } else if (activeCount == 0 && m_active) {
-        m_active = false;
-        emit activeChanged(m_active);
+    }
+
+    if (!sinkA->active() && !sinkB->active()) {
+        activeState = ActiveState::NOTHING;
     }
 }

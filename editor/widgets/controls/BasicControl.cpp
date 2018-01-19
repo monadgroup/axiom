@@ -45,6 +45,12 @@ BasicControl::BasicControl(NodeValueControl *control, SchematicCanvas *canvas)
 
     connect(control, &NodeValueControl::valueChanged,
             this, &BasicControl::triggerUpdate);
+    connect(&control->sink, &ConnectionSink::connectionAdded,
+            this, &BasicControl::triggerUpdate);
+    connect(&control->sink, &ConnectionSink::connectionRemoved,
+            this, &BasicControl::triggerUpdate);
+    connect(&control->sink, &ConnectionSink::activeChanged,
+            this, &BasicControl::triggerUpdate);
 
     auto machine = new QStateMachine();
     auto unhoveredState = new QState(machine);
@@ -193,6 +199,7 @@ void BasicControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
 void BasicControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mouseDoubleClickEvent(event);
+    control->sink.setActive(false);
     emit mouseLeave();
 }
 
@@ -246,10 +253,15 @@ void BasicControl::paintPlug(QPainter *painter) {
             QMarginsF(scaledBorderMargin, scaledBorderMargin, scaledBorderMargin, scaledBorderMargin));
 
     auto baseColor = QColor(10, 10, 10);
+    auto connectedColor = QColor(141, 141, 141);
     auto activeColor = QColor(20, 20, 20);
     auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, m_hoverState);
 
-    painter->setPen(QPen(QColor(30, 30, 30), scaledBorder));
+    if (control->sink.connections().empty()) {
+        painter->setPen(QPen(QColor(30, 30, 30), scaledBorder));
+    } else {
+        painter->setPen(QPen(AxiomUtil::mixColor(connectedColor, activeColor, m_hoverState), 1));
+    }
     painter->setBrush(QBrush(currentColor));
     painter->drawEllipse(ellipseBr);
 }
@@ -270,6 +282,12 @@ void BasicControl::paintKnob(QPainter *painter) {
 
     // draw background
     painter->setPen(Qt::NoPen);
+    if (!control->sink.connections().empty()) {
+        auto activeBorderThickness = 0.02 * aspectWidth;
+        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink.active())));
+        painter->drawEllipse(outerBr.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
+    }
+
     painter->setBrush(QBrush(QColor(30, 30, 30)));
     painter->drawEllipse(outerBr);
 
@@ -322,6 +340,15 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
 
     // draw background
     painter->setPen(Qt::NoPen);
+    if (!control->sink.connections().empty()) {
+        auto activeBorderThickness = 0.04 * br.height();
+        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink.active())));
+        painter->drawRect(flip(
+                br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)),
+                vertical
+        ));
+    }
+
     painter->setBrush(QBrush(QColor(30, 30, 30)));
     painter->drawRect(flip(br, vertical));
 

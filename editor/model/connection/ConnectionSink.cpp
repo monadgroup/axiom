@@ -31,5 +31,6 @@ void ConnectionSink::removeWire(ConnectionWire *wire) {
     auto loc = std::find(m_connections.begin(), m_connections.end(), wire);
     if (loc != m_connections.end()) {
         m_connections.erase(loc);
+        emit connectionRemoved(wire);
     }
 }

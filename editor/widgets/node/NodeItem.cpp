@@ -96,7 +96,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
     if (node->isSelected()) {
-        painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17, 200)));
+        painter->setBrush(QBrush(QColor::fromRgb(27, 27, 27, 100)));
     } else {
         painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17, 100)));
     }

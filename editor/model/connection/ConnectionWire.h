@@ -29,8 +29,6 @@ namespace AxiomModel {
 
         void updateRoute();
 
-        void setActive(bool active);
-
     signals:
 
         void routeChanged(const std::deque<QPoint> &route);
@@ -41,10 +39,19 @@ namespace AxiomModel {
 
         void cleanup();
 
+    private slots:
+
+        void updateActive();
+
     private:
         std::deque<QPoint> m_route;
 
-        int activeCount = 0;
+        enum class ActiveState {
+            NOTHING,
+            SINK_A,
+            SINK_B
+        };
+        ActiveState activeState = ActiveState::NOTHING;
         bool m_active = false;
     };
 

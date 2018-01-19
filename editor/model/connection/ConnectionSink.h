@@ -32,6 +32,8 @@ namespace AxiomModel {
 
         void connectionAdded(ConnectionWire *wire);
 
+        void connectionRemoved(ConnectionWire *wire);
+
         void posChanged(QPoint newPos);
 
         void activeChanged(bool newActive);

@@ -94,10 +94,19 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
 void SchematicCanvas::updateConnecting(QPointF mousePos) {
     if (!isConnecting) return;
 
-    connectionSink.setPos(QPoint(
-            (int) std::round(mousePos.x() / SchematicCanvas::nodeGridSize.width()),
-            (int) std::round(mousePos.y() / SchematicCanvas::nodeGridSize.height())
-    ));
+    QPoint gridPos;
+
+    auto currentItem = itemAt(mousePos, QTransform());
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
+        gridPos = connectable->sink().pos();
+    } else {
+        gridPos = QPoint(
+                (int) std::round(mousePos.x() / SchematicCanvas::nodeGridSize.width()),
+                (int) std::round(mousePos.y() / SchematicCanvas::nodeGridSize.height())
+        );
+    }
+
+    connectionSink.setPos(gridPos);
 }
 
 void SchematicCanvas::endConnecting(QPointF mousePos) {
