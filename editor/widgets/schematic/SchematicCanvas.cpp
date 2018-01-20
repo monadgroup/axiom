@@ -37,11 +37,15 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
     selectionPath->setVisible(false);
     selectionPath->setZValue(selectionZVal);
 
-    // create items for all nodes that already exist
+    // create items for all nodes & wires that already exist
     for (const auto &item : schematic->items()) {
         if (auto node = dynamic_cast<Node *>(item.get())) {
             addNode(node);
         }
+    }
+
+    for (const auto &wire : schematic->wires()) {
+        addWire(wire.get());
     }
 
     // connect to model
