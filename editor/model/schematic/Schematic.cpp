@@ -38,14 +38,17 @@ ModuleNode *Schematic::groupSelection() {
 
     QPoint summedPoints;
     for (const auto &gridItem : selectedItems()) {
-        summedPoints = summedPoints + gridItem->pos() + QPoint(gridItem->size().width() / 2, gridItem->size().height() / 2);
+        summedPoints =
+                summedPoints + gridItem->pos() + QPoint(gridItem->size().width() / 2, gridItem->size().height() / 2);
     }
     QPoint centerPoint = summedPoints / selectedItems().size();
 
     // todo: calculate required size for all controls we need to make shared to keep connections working
     QSize surfaceSize(2, 2);
 
-    auto moduleNode = std::make_unique<ModuleNode>(this, tr("New Group"), centerPoint - QPoint(surfaceSize.width() / 2, surfaceSize.height() / 2), surfaceSize);
+    auto moduleNode = std::make_unique<ModuleNode>(this, tr("New Group"), centerPoint - QPoint(surfaceSize.width() / 2,
+                                                                                               surfaceSize.height() /
+                                                                                               2), surfaceSize);
 
     for (const auto &gridItem : selectedItems()) {
         auto newPos = gridItem->pos() - centerPoint;

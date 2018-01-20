@@ -10,7 +10,6 @@
 #include "editor/model/node/ModuleNode.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeValueControl.h"
-#include "editor/model/schematic/Schematic.h"
 #include "../controls/BasicControl.h"
 #include "../controls/ToggleControl.h"
 #include "NodePanel.h"
