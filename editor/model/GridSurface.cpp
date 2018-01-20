@@ -27,7 +27,7 @@ void GridSurface::addItem(std::unique_ptr<GridItem> item) {
     emit itemAdded(ptr);
 }
 
-void GridSurface::cloneTo(GridSurface *surface) {
+void GridSurface::cloneTo(GridSurface *surface) const {
     for (const auto &item : m_items) {
         surface->addItem(std::move(item->clone(surface, item->pos(), item->size())));
     }

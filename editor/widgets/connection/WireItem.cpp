@@ -31,7 +31,12 @@ void WireItem::updateRoute() {
     auto firstPos = SchematicCanvas::controlRealPos(wire->sinkA->subPos());
     auto lastPos = SchematicCanvas::controlRealPos(wire->sinkB->subPos());
 
-    if (route.size() == 2 && firstPos.x() != lastPos.x() && firstPos.y() != lastPos.y()) {
+    // todo: find spaces where several wires are, and make them look nice
+    // e.g. - if they're going in the same direction, separate them out a bit
+    //      - if they're crossing, ensure the z-index of the one crossing is either in front of
+    //        or behind all the others
+
+    if (route.size() <= 2 && firstPos.x() != lastPos.x() && firstPos.y() != lastPos.y()) {
         path.moveTo(firstPos);
         path.lineTo(QPointF(lastPos.x(), firstPos.y()));
         path.lineTo(lastPos);

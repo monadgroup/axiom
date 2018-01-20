@@ -29,9 +29,9 @@ namespace AxiomModel {
 
         void addItem(std::unique_ptr<GridItem> item);
 
-    public slots:
+        void cloneTo(GridSurface *surface) const;
 
-        void cloneTo(GridSurface *surface);
+    public slots:
 
         void deleteSelectedItems();
 

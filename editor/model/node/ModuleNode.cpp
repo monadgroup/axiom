@@ -15,6 +15,7 @@ std::unique_ptr<GridItem> ModuleNode::clone(GridSurface *newParent, QPoint newPo
     assert(schematicParent != nullptr);
 
     auto moduleNode = std::make_unique<ModuleNode>(schematicParent, name(), pos(), size());
+    surface.cloneTo(&moduleNode->surface);
     schematic->cloneTo(moduleNode->schematic.get());
     return std::move(moduleNode);
 }
