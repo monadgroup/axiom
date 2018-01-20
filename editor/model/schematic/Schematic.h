@@ -11,6 +11,8 @@
 
 namespace AxiomModel {
 
+    class ModuleNode;
+
     class Schematic : public GridSurface {
     Q_OBJECT
 
@@ -31,6 +33,8 @@ namespace AxiomModel {
 
         void setPan(QPointF pan);
 
+        ModuleNode *groupSelection();
+
         ConnectionWire *connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB);
 
     signals:
@@ -38,6 +42,8 @@ namespace AxiomModel {
         void panChanged(QPointF newPan);
 
         void wireAdded(ConnectionWire *connection);
+
+        void removed();
 
     private slots:
 

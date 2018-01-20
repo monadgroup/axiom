@@ -28,7 +28,7 @@ int SchematicCanvas::activeNodeZVal = 3;
 int SchematicCanvas::panelZVal = 4;
 int SchematicCanvas::selectionZVal = 5;
 
-SchematicCanvas::SchematicCanvas(Schematic *schematic) : schematic(schematic) {
+SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : panel(panel), schematic(schematic) {
     // build selection
     auto selectionPen = QPen(QColor::fromRgb(52, 152, 219));
     auto selectionBrush = QBrush(QColor::fromRgb(52, 152, 219, 50));
@@ -155,9 +155,9 @@ void SchematicCanvas::newNode(QPointF scenePos) {
             qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height()) - defaultSize.height() / 2
     );
 
-    auto newNode = std::make_unique<AxiomModel::CustomNode>(schematic, targetPos, defaultSize);
+    auto newNode = std::make_unique<CustomNode>(schematic, tr("New Node"), targetPos, defaultSize);
 
-    auto newControl = std::make_unique<AxiomModel::NodeValueControl>(
+    auto newControl = std::make_unique<NodeValueControl>(
             newNode.get(),
             NodeValueControl::Type::BASIC,
             NodeValueControl::Channel::BOTH,
@@ -166,7 +166,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     newControl->setValue(0.2);
     newNode->surface.addItem(std::move(newControl));
 
-    auto newControl2 = std::make_unique<AxiomModel::NodeValueControl>(
+    auto newControl2 = std::make_unique<NodeValueControl>(
             newNode.get(),
             NodeValueControl::Type::BASIC,
             NodeValueControl::Channel::BOTH,
@@ -175,7 +175,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     newControl2->setValue(0.4);
     newNode->surface.addItem(std::move(newControl2));
 
-    auto newControl3 = std::make_unique<AxiomModel::NodeValueControl>(
+    auto newControl3 = std::make_unique<NodeValueControl>(
             newNode.get(),
             NodeValueControl::Type::BASIC,
             NodeValueControl::Channel::BOTH,
@@ -183,7 +183,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     );
     newNode->surface.addItem(std::move(newControl3));
 
-    auto newControl4 = std::make_unique<AxiomModel::NodeValueControl>(
+    auto newControl4 = std::make_unique<NodeValueControl>(
             newNode.get(),
             NodeValueControl::Type::BASIC,
             NodeValueControl::Channel::BOTH,
@@ -191,7 +191,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     );
     newNode->surface.addItem(std::move(newControl4));
 
-    auto newControl5 = std::make_unique<AxiomModel::NodeValueControl>(
+    auto newControl5 = std::make_unique<NodeValueControl>(
             newNode.get(),
             NodeValueControl::Type::TOGGLE,
             NodeValueControl::Channel::BOTH,

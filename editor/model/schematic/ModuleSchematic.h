@@ -15,7 +15,7 @@ namespace AxiomModel {
     public:
         ModuleNode *node;
 
-        ModuleSchematic(ModuleNode *node);
+        explicit ModuleSchematic(ModuleNode *node);
 
         QString name() override;
     };

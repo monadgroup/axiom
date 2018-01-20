@@ -17,8 +17,9 @@ namespace AxiomModel {
 
     public:
         NodeSurface surface;
+        Schematic *parentSchematic;
 
-        Node(Schematic *parent, QPoint pos, QSize size);
+        Node(Schematic *parent, QString name, QPoint pos, QSize size);
 
         QString name() const { return m_name; }
 

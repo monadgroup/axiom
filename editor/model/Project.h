@@ -18,6 +18,7 @@ namespace AxiomModel {
         void serialize(QDataStream &stream) const;
 
         void deserialize(QDataStream &stream);
+
     };
 
 }

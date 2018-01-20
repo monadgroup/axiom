@@ -11,8 +11,8 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-SchematicView::SchematicView(Schematic *schematic, QWidget *parent)
-        : QGraphicsView(new SchematicCanvas(schematic), parent), schematic(schematic) {
+SchematicView::SchematicView(SchematicPanel *panel, Schematic *schematic)
+        : QGraphicsView(new SchematicCanvas(panel, schematic)), schematic(schematic) {
     scene()->setSceneRect(0, 0, width() * 2, height() * 2);
 
     // set properties

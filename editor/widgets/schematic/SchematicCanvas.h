@@ -17,6 +17,8 @@ namespace AxiomGui {
 
     class IConnectable;
 
+    class SchematicPanel;
+
     class SchematicCanvas : public QGraphicsScene {
     Q_OBJECT
 
@@ -30,9 +32,11 @@ namespace AxiomGui {
         static int panelZVal;
         static int selectionZVal;
 
+        SchematicPanel *panel;
+
         AxiomModel::Schematic *schematic;
 
-        explicit SchematicCanvas(AxiomModel::Schematic *schematic);
+        explicit SchematicCanvas(SchematicPanel *panel, AxiomModel::Schematic *schematic);
 
         static QPoint nodeRealPos(const QPoint &p);
 

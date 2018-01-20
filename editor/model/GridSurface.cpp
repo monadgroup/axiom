@@ -27,9 +27,15 @@ void GridSurface::addItem(std::unique_ptr<GridItem> item) {
     emit itemAdded(ptr);
 }
 
+void GridSurface::cloneTo(GridSurface *surface) {
+    for (const auto &item : m_items) {
+        surface->addItem(std::move(item->clone(surface, item->pos(), item->size())));
+    }
+}
+
 void GridSurface::deleteSelectedItems() {
-    while (!selectedItems.empty()) {
-        selectedItems[0]->remove();
+    while (!m_selectedItems.empty()) {
+        m_selectedItems[0]->remove();
     }
     emit hasSelectionChanged(false);
 }
@@ -50,9 +56,9 @@ void GridSurface::removeItem(GridItem *item) {
     grid.setRect(item->pos(), item->size(), nullptr);
     flushGrid();
 
-    auto loc = std::find(selectedItems.begin(), selectedItems.end(), item);
-    if (loc != selectedItems.end()) {
-        selectedItems.erase(loc);
+    auto loc = std::find(m_selectedItems.begin(), m_selectedItems.end(), item);
+    if (loc != m_selectedItems.end()) {
+        m_selectedItems.erase(loc);
     }
 
     for (auto i = m_items.begin(); i < m_items.end(); i++) {
@@ -73,23 +79,23 @@ void GridSurface::selectItem(GridItem *item, bool exclusive) {
     }
 
     auto hadSelection = hasSelection();
-    if (std::find(selectedItems.begin(), selectedItems.end(), item) == selectedItems.end()) {
-        selectedItems.push_back(item);
+    if (std::find(m_selectedItems.begin(), m_selectedItems.end(), item) == m_selectedItems.end()) {
+        m_selectedItems.push_back(item);
     }
     if (!hadSelection) emit hasSelectionChanged(true);
 }
 
 void GridSurface::deselectItem(GridItem *item) {
-    auto loc = std::find(selectedItems.begin(), selectedItems.end(), item);
-    if (loc != selectedItems.end()) {
-        selectedItems.erase(loc);
+    auto loc = std::find(m_selectedItems.begin(), m_selectedItems.end(), item);
+    if (loc != m_selectedItems.end()) {
+        m_selectedItems.erase(loc);
     }
     if (!hasSelection()) emit hasSelectionChanged(false);
 }
 
 void GridSurface::startDragging() {
     lastDragDelta = QPoint(0, 0);
-    for (auto &item : selectedItems) {
+    for (auto &item : m_selectedItems) {
         item->startDragging();
     }
 }
@@ -97,24 +103,24 @@ void GridSurface::startDragging() {
 void GridSurface::dragTo(QPoint delta) {
     if (delta == lastDragDelta) return;
 
-    for (auto &item : selectedItems) {
+    for (auto &item : m_selectedItems) {
         grid.setRect(item->pos(), item->size(), nullptr);
     }
 
     auto availableDelta = findAvailableDelta(delta);
     lastDragDelta = availableDelta;
-    for (auto &item : selectedItems) {
+    for (auto &item : m_selectedItems) {
         item->dragTo(availableDelta);
     }
 
-    for (auto &item : selectedItems) {
+    for (auto &item : m_selectedItems) {
         grid.setRect(item->pos(), item->size(), item);
     }
     flushGrid();
 }
 
 void GridSurface::finishDragging() {
-    for (auto &item : selectedItems) {
+    for (auto &item : m_selectedItems) {
         item->finishDragging();
     }
 }
@@ -124,7 +130,7 @@ void GridSurface::flushGrid() {
 }
 
 bool GridSurface::isAllDragAvailable(QPoint delta) {
-    for (auto &item : selectedItems) {
+    for (auto &item : m_selectedItems) {
         if (!item->isDragAvailable(delta)) return false;
     }
     return true;

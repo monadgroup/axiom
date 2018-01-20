@@ -7,11 +7,15 @@
 #include "editor/widgets/ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
 #include "editor/model/node/Node.h"
+#include "editor/model/node/ModuleNode.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeValueControl.h"
+#include "editor/model/schematic/Schematic.h"
 #include "../controls/BasicControl.h"
 #include "../controls/ToggleControl.h"
 #include "NodePanel.h"
+#include "../schematic/SchematicPanel.h"
+#include "../windows/MainWindow.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -149,6 +153,20 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     event->accept();
 }
 
+void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    if (auto moduleNode = dynamic_cast<ModuleNode *>(node)) {
+        event->accept();
+
+        canvas->panel->window->showSchematic(
+                canvas->panel,
+                moduleNode->schematic.get(),
+                false
+        );
+    } else {
+        event->ignore();
+    }
+}
+
 void NodeItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     //nodePanel->setNodeHover(true);
 }
@@ -172,7 +190,12 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == groupAction) {
-        // todo: move to group
+        auto groupedNode = node->parentSchematic->groupSelection();
+        canvas->panel->window->showSchematic(
+                canvas->panel,
+                groupedNode->schematic.get(),
+                true
+        );
     } else if (selectedAction == savePresetAction) {
         // todo: save as preset
     } else if (selectedAction == deleteAction) {

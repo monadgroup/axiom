@@ -55,13 +55,24 @@ MainWindow::MainWindow() {
     helpMenu->addAction(aboutAction);
 
     // docking for testing
-    auto *canvasDock = new SchematicPanel(&AxiomApplication::project->root);
+    auto canvasDock = new SchematicPanel(this, &AxiomApplication::project->root);
     canvasDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::TopDockWidgetArea, canvasDock);
 
-    auto *moduleBrowser = new ModuleBrowserPanel();
+    auto moduleBrowser = new ModuleBrowserPanel();
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
+}
+
+void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic *schematic, bool split) {
+    auto canvasDock = new SchematicPanel(this, schematic);
+    canvasDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    if (split) {
+        splitDockWidget(fromPanel, canvasDock, Qt::Horizontal);
+    } else {
+        tabifyDockWidget(fromPanel, canvasDock);
+        canvasDock->setFocus();
+    }
 }
 
 void MainWindow::showAbout() {

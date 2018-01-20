@@ -6,9 +6,17 @@
 
 using namespace AxiomGui;
 
-SchematicPanel::SchematicPanel(AxiomModel::Schematic *schematic) : DockPanel(schematic->name()) {
+SchematicPanel::SchematicPanel(MainWindow *window, AxiomModel::Schematic *schematic)
+        : DockPanel(schematic->name()), window(window) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/SchematicPanel.qss"));
 
-    auto view = new SchematicView(schematic);
+    connect(schematic, &AxiomModel::Schematic::removed,
+            this, &SchematicPanel::remove);
+
+    auto view = new SchematicView(this, schematic);
     setWidget(view);
+}
+
+void SchematicPanel::remove() {
+    window->removeDockWidget(this);
 }

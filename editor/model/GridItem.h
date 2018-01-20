@@ -4,6 +4,7 @@
 #include <QtCore/QString>
 #include <QtCore/QPoint>
 #include <QtCore/QSize>
+#include <memory>
 
 namespace AxiomModel {
 
@@ -28,6 +29,8 @@ namespace AxiomModel {
         virtual bool isMovable() const = 0;
 
         virtual bool isResizable() const = 0;
+
+        virtual std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const = 0;
 
     public slots:
 

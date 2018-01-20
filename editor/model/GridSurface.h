@@ -23,11 +23,15 @@ namespace AxiomModel {
 
         std::vector<std::unique_ptr<GridItem>> const &items() const { return m_items; }
 
-        bool hasSelection() const { return !selectedItems.empty(); }
+        bool hasSelection() const { return !m_selectedItems.empty(); }
+
+        std::vector<GridItem *> const &selectedItems() const { return m_selectedItems; }
 
         void addItem(std::unique_ptr<GridItem> item);
 
     public slots:
+
+        void cloneTo(GridSurface *surface);
 
         void deleteSelectedItems();
 
@@ -61,7 +65,7 @@ namespace AxiomModel {
 
     private:
         std::vector<std::unique_ptr<GridItem>> m_items;
-        std::vector<GridItem *> selectedItems;
+        std::vector<GridItem *> m_selectedItems;
 
         QPoint lastDragDelta;
 

@@ -10,11 +10,19 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class MainWindow;
+
     class SchematicPanel : public DockPanel {
     Q_OBJECT
 
     public:
-        explicit SchematicPanel(AxiomModel::Schematic *schematic);
+        MainWindow *window;
+
+        explicit SchematicPanel(MainWindow *window, AxiomModel::Schematic *schematic);
+
+    private slots:
+
+        void remove();
 
     private:
         QGraphicsScene *scene;

@@ -20,9 +20,9 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        AxiomModel::Node *node;
-
         SchematicCanvas *canvas;
+
+        AxiomModel::Node *node;
 
         NodeItem(AxiomModel::Node *node, SchematicCanvas *canvas);
 
@@ -39,6 +39,8 @@ namespace AxiomGui {
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 

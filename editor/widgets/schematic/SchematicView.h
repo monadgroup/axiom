@@ -9,11 +9,13 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class SchematicPanel;
+
     class SchematicView : public QGraphicsView {
     Q_OBJECT
 
     public:
-        explicit SchematicView(AxiomModel::Schematic *schematic, QWidget *parent = nullptr);
+        explicit SchematicView(SchematicPanel *panel, AxiomModel::Schematic *schematic);
 
     public slots:
 

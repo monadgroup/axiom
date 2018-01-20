@@ -2,7 +2,13 @@
 
 #include <QtWidgets/QMainWindow>
 
+namespace AxiomModel {
+    class Schematic;
+}
+
 namespace AxiomGui {
+
+    class SchematicPanel;
 
     class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -11,6 +17,8 @@ namespace AxiomGui {
         MainWindow();
 
     public slots:
+
+        void showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic *schematic, bool split);
 
         void showAbout();
     };

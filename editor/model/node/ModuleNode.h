@@ -14,7 +14,9 @@ namespace AxiomModel {
     public:
         std::unique_ptr<ModuleSchematic> schematic;
 
-        ModuleNode(Schematic *parent, QPoint pos, QSize size);
+        ModuleNode(Schematic *parent, QString name, QPoint pos, QSize size);
+
+        std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
     };
 
 }
