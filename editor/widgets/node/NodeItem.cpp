@@ -76,7 +76,11 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
         connect(resizer, &ItemResizer::changed,
                 this, &NodeItem::resizerChanged);
 
+        connect(&node->surface, &NodeSurface::hasSelectionChanged,
+                [this, resizer](auto hasSelection) { resizer->setVisible(!hasSelection); });
+
         resizer->setParentItem(this);
+        resizer->setVisible(!node->surface.hasSelection());
     }
 
     // create panel
