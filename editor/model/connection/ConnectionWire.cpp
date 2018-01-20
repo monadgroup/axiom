@@ -13,6 +13,10 @@ ConnectionWire::ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, Conn
             this, &ConnectionWire::updateRoute);
     connect(sinkB, &ConnectionSink::posChanged,
             this, &ConnectionWire::updateRoute);
+    connect(sinkA, &ConnectionSink::subPosChanged,
+            this, &ConnectionWire::subPosChanged);
+    connect(sinkB, &ConnectionSink::subPosChanged,
+            this, &ConnectionWire::subPosChanged);
     connect(sinkA, &ConnectionSink::activeChanged,
             this, &ConnectionWire::updateActive);
     connect(sinkB, &ConnectionSink::activeChanged,

@@ -6,7 +6,6 @@
 #include <QtCore/QSignalTransition>
 #include <QtCore/QPropertyAnimation>
 #include <cmath>
-#include <iostream>
 
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeValueControl.h"

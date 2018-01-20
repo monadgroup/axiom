@@ -20,7 +20,7 @@ namespace AxiomGui {
 
     private slots:
 
-        void updateRoute(const std::deque<QPoint> &route);
+        void updateRoute();
 
         void setActive(bool active);
 

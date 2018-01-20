@@ -33,6 +33,8 @@ namespace AxiomModel {
 
         void routeChanged(const std::deque<QPoint> &route);
 
+        void subPosChanged();
+
         void activeChanged(bool newActive);
 
         void removed();

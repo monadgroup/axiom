@@ -75,9 +75,9 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
     }
 
     // create panel
-    nodePanel = new NodePanel(node);
+    /*nodePanel = new NodePanel(node);
     nodePanelProxy = canvas->addWidget(nodePanel);
-    nodePanelProxy->setZValue(SchematicCanvas::panelZVal);
+    nodePanelProxy->setZValue(SchematicCanvas::panelZVal);*/
 
     // set initial state
     setPos(node->pos());
@@ -149,12 +149,12 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void NodeItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
-    nodePanel->setNodeHover(true);
+    //nodePanel->setNodeHover(true);
 }
 
 void NodeItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     QTimer::singleShot(10, [this]() {
-        nodePanel->setNodeHover(false);
+        //nodePanel->setNodeHover(false);
     });
 }
 
@@ -167,7 +167,7 @@ void NodeItem::setPos(QPoint newPos) {
 
 void NodeItem::setSize(QSize newSize) {
     updateNodePanelPos(SchematicCanvas::nodeRealPos(node->pos()));
-    nodePanelProxy->widget()->setFixedWidth(node->size().width() * SchematicCanvas::nodeGridSize.width());
+    //nodePanelProxy->widget()->setFixedWidth(node->size().width() * SchematicCanvas::nodeGridSize.width());
 
     emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
 }
@@ -185,7 +185,7 @@ void NodeItem::setIsSelected(bool selected) {
 }
 
 void NodeItem::remove() {
-    scene()->removeItem(nodePanelProxy);
+    //scene()->removeItem(nodePanelProxy);
     scene()->removeItem(this);
 }
 
@@ -212,6 +212,6 @@ void NodeItem::triggerGeometryChange() {
 }
 
 void NodeItem::updateNodePanelPos(QPointF realNodePos) {
-    nodePanelProxy->setPos(realNodePos.x(),
-                           realNodePos.y() + node->size().height() * SchematicCanvas::nodeGridSize.height() + 1);
+    //nodePanelProxy->setPos(realNodePos.x(),
+    //                       realNodePos.y() + node->size().height() * SchematicCanvas::nodeGridSize.height() + 1);
 }

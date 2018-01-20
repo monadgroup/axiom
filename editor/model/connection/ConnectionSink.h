@@ -38,6 +38,8 @@ namespace AxiomModel {
 
         void posChanged(QPoint newPos);
 
+        void subPosChanged(QPointF newSubPos);
+
         void activeChanged(bool newActive);
 
         void removed();

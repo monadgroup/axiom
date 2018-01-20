@@ -71,8 +71,8 @@ namespace AxiomGui {
         void resizerSizeChanged(QSizeF newSize);
 
     private:
-        NodePanel *nodePanel;
-        QGraphicsProxyWidget *nodePanelProxy;
+        //NodePanel *nodePanel;
+        //QGraphicsProxyWidget *nodePanelProxy;
         bool isDragging = false;
         QPoint mouseStartPoint;
 

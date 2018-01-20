@@ -11,6 +11,8 @@ using namespace AxiomModel;
 WireItem::WireItem(AxiomModel::ConnectionWire *wire) : wire(wire) {
     connect(wire, &ConnectionWire::routeChanged,
             this, &WireItem::updateRoute);
+    connect(wire, &ConnectionWire::subPosChanged,
+            this, &WireItem::updateRoute);
     connect(wire, &ConnectionWire::activeChanged,
             this, &WireItem::setActive);
     connect(wire, &ConnectionWire::removed,
@@ -18,12 +20,13 @@ WireItem::WireItem(AxiomModel::ConnectionWire *wire) : wire(wire) {
 
     setBrush(Qt::NoBrush);
 
-    updateRoute(wire->route());
+    updateRoute();
     setActive(wire->active());
 }
 
-void WireItem::updateRoute(const std::deque<QPoint> &route) {
+void WireItem::updateRoute() {
     QPainterPath path;
+    auto route = wire->route();
 
     auto firstPos = SchematicCanvas::controlRealPos(wire->sinkA->subPos());
     auto lastPos = SchematicCanvas::controlRealPos(wire->sinkB->subPos());

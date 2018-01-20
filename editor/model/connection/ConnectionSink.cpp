@@ -14,10 +14,13 @@ void ConnectionSink::addWire(ConnectionWire *wire) {
 }
 
 void ConnectionSink::setPos(QPoint pos, QPointF subPos) {
-    if (pos != m_pos || subPos != m_subPos) {
+    if (pos != m_pos) {
         m_pos = pos;
-        m_subPos = subPos;
         emit posChanged(pos);
+    }
+    if (subPos != m_subPos) {
+        m_subPos = subPos;
+        emit subPosChanged(subPos);
     }
 }
 
