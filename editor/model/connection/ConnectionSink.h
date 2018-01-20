@@ -30,6 +30,8 @@ namespace AxiomModel {
 
         void setActive(bool active);
 
+        void clearConnections();
+
     signals:
 
         void connectionAdded(ConnectionWire *wire);

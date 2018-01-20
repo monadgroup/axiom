@@ -145,6 +145,7 @@ void ToggleControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto toggleAction = menu.addAction(tr(control->value() ? "Turn O&ff" : "Turn O&n"));
     menu.addSeparator();
     auto moveAction = menu.addAction(tr("&Move"));
+    auto clearAction = menu.addAction(tr("C&lear Connections"));
 
     auto selectedAction = menu.exec(event->screenPos());
 
@@ -152,6 +153,8 @@ void ToggleControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         control->setValue(control->value() ? 0 : 1);
     } else if (selectedAction == moveAction) {
         control->select(true);
+    } else if (selectedAction == clearAction) {
+        control->sink.clearConnections();
     }
 }
 

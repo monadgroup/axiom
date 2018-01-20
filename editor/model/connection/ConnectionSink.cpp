@@ -31,6 +31,12 @@ void ConnectionSink::setActive(bool active) {
     }
 }
 
+void ConnectionSink::clearConnections() {
+    while (!m_connections.empty()) {
+        m_connections[0]->remove();
+    }
+}
+
 void ConnectionSink::removeWire(ConnectionWire *wire) {
     auto loc = std::find(m_connections.begin(), m_connections.end(), wire);
     if (loc != m_connections.end()) {

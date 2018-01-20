@@ -239,6 +239,7 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto oneAction = menu.addAction(tr("Set to &1"));
     menu.addSeparator();
     auto moveAction = menu.addAction(tr("&Move"));
+    auto clearAction = menu.addAction(tr("C&lear Connections"));
 
     auto selectedAction = menu.exec(event->screenPos());
 
@@ -255,6 +256,8 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         control->setValue(1);
     } else if (selectedAction == moveAction) {
         control->select(true);
+    } else if (selectedAction == clearAction) {
+        control->sink.clearConnections();
     }
 }
 
