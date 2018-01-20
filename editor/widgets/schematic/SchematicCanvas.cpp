@@ -57,6 +57,8 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
             });
     connect(schematic, &Schematic::wireAdded,
             this, &SchematicCanvas::addWire);
+
+    newNode(QPointF(0, 0));
 }
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
@@ -270,7 +272,9 @@ void SchematicCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void SchematicCanvas::keyPressEvent(QKeyEvent *event) {
-    if (event->matches(QKeySequence::Delete)) {
+    if (focusItem()) {
+        QGraphicsScene::keyPressEvent(event);
+    } else if (event->matches(QKeySequence::Delete)) {
         schematic->deleteSelectedItems();
     }
 }

@@ -67,6 +67,10 @@ namespace AxiomGui {
 
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
+    private slots:
+
+        void setValue(QString value);
+
     private:
         float m_hoverState = 0;
         bool isDragging = false;

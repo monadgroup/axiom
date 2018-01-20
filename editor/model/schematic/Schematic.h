@@ -39,6 +39,8 @@ namespace AxiomModel {
 
     signals:
 
+        void nameChanged(QString newName);
+
         void panChanged(QPointF newPan);
 
         void wireAdded(ConnectionWire *connection);

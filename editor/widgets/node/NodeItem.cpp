@@ -15,6 +15,7 @@
 #include "NodePanel.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
+#include "../FloatingValueEditor.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -121,6 +122,10 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
             }
         }
     }
+
+    painter->setPen(QPen(QColor(100, 100, 100)));
+    auto textBound = boundingRect().marginsRemoved(QMarginsF(8, 5, 8, 5));
+    painter->drawText(textBound, Qt::AlignLeft | Qt::AlignTop, node->name());
 }
 
 void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
@@ -186,13 +191,23 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 
     QMenu menu;
+
+    auto renameAction = menu.addAction(tr("&Rename..."));
+    renameAction->setVisible(node->parentSchematic->selectedItems().size() == 1);
+    menu.addSeparator();
     auto groupAction = menu.addAction(tr("&Group..."));
     auto savePresetAction = menu.addAction(tr("&Save as Preset..."));
     menu.addSeparator();
     auto deleteAction = menu.addAction(tr("&Delete"));
     auto selectedAction = menu.exec(event->screenPos());
 
-    if (selectedAction == groupAction) {
+    if (selectedAction == renameAction) {
+        auto editor = new FloatingValueEditor(node->name(), event->scenePos());
+        scene()->addItem(editor);
+
+        connect(editor, &FloatingValueEditor::valueSubmitted,
+                node, &Node::setName);
+    } else if (selectedAction == groupAction) {
         auto groupedNode = node->parentSchematic->groupSelection();
         canvas->panel->window->showSchematic(
                 canvas->panel,

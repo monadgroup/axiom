@@ -16,6 +16,7 @@
 #include "../node/NodeItem.h"
 #include "../schematic/SchematicCanvas.h"
 #include "editor/util.h"
+#include "../FloatingValueEditor.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -244,7 +245,10 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == setValAction) {
-        // todo: show window to set value
+        auto editor = new FloatingValueEditor(QString::number(control->value()), event->scenePos());
+        scene()->addItem(editor);
+        connect(editor, &FloatingValueEditor::valueSubmitted,
+                this, &BasicControl::setValue);
     } else if (selectedAction == copyValAction) {
         clipboard->setText(QString::number(control->value()));
     } else if (selectedAction == pasteValAction) {
@@ -258,6 +262,13 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         control->select(true);
     } else if (selectedAction == clearAction) {
         control->sink.clearConnections();
+    }
+}
+
+void BasicControl::setValue(QString value) {
+    float setVal = 0;
+    if (AxiomUtil::strToFloat(value, setVal)) {
+        control->setValue(setVal);
     }
 }
 
