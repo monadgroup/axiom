@@ -3,13 +3,11 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
-#include <QtCore/QMimeData>
 
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeControl.h"
 #include "../ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
-#include "editor/util.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -21,6 +19,8 @@ ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : contro
             this, &ControlItem::triggerGeometryChange);
     connect(control, &NodeControl::sizeChanged,
             this, &ControlItem::setSize);
+    connect(control, &NodeControl::selectedChanged,
+            this, &ControlItem::updateSelected);
     connect(control, &NodeControl::removed,
             this, &ControlItem::remove);
 
@@ -140,6 +140,14 @@ void ControlItem::setPos(QPoint newPos) {
 
 void ControlItem::setSize(QSize newSize) {
     emit resizerSizeChanged(SchematicCanvas::controlRealSize(newSize));
+}
+
+void ControlItem::updateSelected(bool selected) {
+    if (selected) {
+        setCursor(Qt::SizeAllCursor);
+    } else {
+        unsetCursor();
+    }
 }
 
 void ControlItem::remove() {

@@ -50,6 +50,8 @@ namespace AxiomGui {
 
         void setSize(QSize newSize);
 
+        void updateSelected(bool selected);
+
         void remove();
 
         void resizerChanged(QPointF topLeft, QPointF bottomRight);
