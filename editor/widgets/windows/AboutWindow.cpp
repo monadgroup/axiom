@@ -40,16 +40,19 @@ AboutWindow::AboutWindow() : QDialog(nullptr,
     auto authLabel = new QLabel(tr("Author:"));
     authLabel->setObjectName("about-label");
     mainLayout->addWidget(authLabel, 3, 0);
-    mainLayout->addWidget(new QLabel(tr("cpdt (mrfishie.com)")), 3, 1);
+    mainLayout->addWidget(new QLabel(tr("cpdt (github.com/cpdt)")), 3, 1);
 
     auto contribLabel = new QLabel(tr("Contributors:"));
     contribLabel->setObjectName("about-label");
     mainLayout->addWidget(contribLabel, 4, 0);
-    auto noneLabel = new QLabel(tr("(None yet)"));
-    noneLabel->setObjectName("about-none");
-    mainLayout->addWidget(noneLabel, 4, 1);
+    mainLayout->addWidget(new QLabel(tr("PoroCYon")), 4, 1);
+    auto couldBeYouLabel = new QLabel(
+            tr("You could be here too! Help out by contributing to the project on Github: github.com/monadgroup/axiom"));
+    couldBeYouLabel->setWordWrap(true);
+    couldBeYouLabel->setObjectName("about-none");
+    mainLayout->addWidget(couldBeYouLabel, 5, 1);
 
-    mainLayout->setRowStretch(5, 1);
+    mainLayout->setRowStretch(6, 1);
     mainLayout->setColumnStretch(1, 1);
 
     setLayout(mainLayout);
