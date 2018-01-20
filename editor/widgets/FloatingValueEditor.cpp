@@ -11,6 +11,7 @@ FloatingValueEditor::FloatingValueEditor(QString initialValue, QPointF scenePos)
     editor = new QLineEdit(initialValue);
     setWidget(editor);
 
+    // todo: handle ESC to stop editing
     connect(editor, &QLineEdit::editingFinished,
             this, &FloatingValueEditor::editingFinished);
 

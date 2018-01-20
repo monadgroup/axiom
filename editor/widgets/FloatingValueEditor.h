@@ -7,7 +7,7 @@ class QLineEdit;
 namespace AxiomGui {
 
     class FloatingValueEditor : public QGraphicsProxyWidget {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
 

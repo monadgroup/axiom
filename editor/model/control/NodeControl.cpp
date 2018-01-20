@@ -9,6 +9,8 @@ NodeControl::NodeControl(Node *node, Channel channel, QPoint pos, QSize size)
         : GridItem(&node->surface, pos, size), node(node), channel(channel) {
     connect(this, &NodeControl::posChanged,
             this, &NodeControl::recalcSinkPos);
+    connect(this, &NodeControl::sizeChanged,
+            this, &NodeControl::recalcSinkPos);
     connect(node, &Node::posChanged,
             this, &NodeControl::recalcSinkPos);
     connect(this, &NodeControl::selected,

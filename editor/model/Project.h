@@ -10,8 +10,6 @@ namespace AxiomModel {
 
     class Project {
     public:
-        QString path;
-
         Library library;
         RootSchematic root;
 

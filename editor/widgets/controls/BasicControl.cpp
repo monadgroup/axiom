@@ -267,7 +267,7 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
 void BasicControl::setValue(QString value) {
     float setVal = 0;
-    if (AxiomUtil::strToFloat(value, setVal)) {
+    if (AxiomUtil::strToFloat(std::move(value), setVal)) {
         control->setValue(setVal);
     }
 }
