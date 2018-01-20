@@ -12,7 +12,8 @@ namespace AxiomModel {
     public:
         enum class Type {
             BASIC,
-            TOGGLE
+            TOGGLE,
+            LABEL
         };
 
         const Type type;

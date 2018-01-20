@@ -100,6 +100,14 @@ void SchematicView::newNode() {
     );
     newNode->surface.addItem(std::move(newControl4));
 
+    auto newControl5 = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::TOGGLE,
+            NodeValueControl::Channel::BOTH,
+            QPoint(4, 4), QSize(2, 2)
+    );
+    newNode->surface.addItem(std::move(newControl5));
+
     schematic->addItem(std::move(newNode));
 }
 

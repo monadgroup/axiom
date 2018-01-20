@@ -158,7 +158,6 @@ void BasicControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 
     event->accept();
 
-    control->node->surface.deselectAll();
     isDragging = true;
     beforeDragVal = control->value();
     mouseStartPoint = event->pos();
@@ -251,14 +250,15 @@ void BasicControl::paintPlug(QPainter *painter) {
             QMarginsF(scaledBorderMargin, scaledBorderMargin, scaledBorderMargin, scaledBorderMargin));
 
     auto baseColor = QColor(10, 10, 10);
-    auto connectedColor = QColor(141, 141, 141);
     auto activeColor = QColor(20, 20, 20);
+    auto connectedActiveColor = QColor(52, 152, 219);
+    auto connectedColor = QColor(141, 141, 141);
     auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, m_hoverState);
 
     if (control->sink.connections().empty()) {
         painter->setPen(QPen(QColor(30, 30, 30), scaledBorder));
     } else {
-        painter->setPen(QPen(AxiomUtil::mixColor(connectedColor, activeColor, m_hoverState), 1));
+        painter->setPen(QPen(AxiomUtil::mixColor(connectedColor, connectedActiveColor, m_hoverState), 1));
     }
     painter->setBrush(QBrush(currentColor));
     painter->drawEllipse(ellipseBr);

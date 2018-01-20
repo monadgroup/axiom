@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 
+#include "editor/model/node/Node.h"
 #include "editor/model/control/NodeControl.h"
 #include "../ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
@@ -83,6 +84,7 @@ void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         mouseStartPoint = event->screenPos();
         emit control->startedDragging();
     } else {
+        control->node->surface.deselectAll();
         event->ignore();
     }
 }

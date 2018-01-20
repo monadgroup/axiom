@@ -10,6 +10,7 @@
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeValueControl.h"
 #include "../controls/BasicControl.h"
+#include "../controls/ToggleControl.h"
 #include "NodePanel.h"
 
 using namespace AxiomGui;
@@ -174,9 +175,22 @@ void NodeItem::setSize(QSize newSize) {
 
 void NodeItem::addControl(NodeControl *control) {
     if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
-        auto c = new BasicControl(valueControl, canvas);
-        c->setZValue(2);
-        c->setParentItem(this);
+        QGraphicsItem *c = nullptr;
+
+        switch (valueControl->type) {
+            case NodeValueControl::Type::BASIC:
+                c = new BasicControl(valueControl, canvas);
+                break;
+            case NodeValueControl::Type::TOGGLE:
+                c = new ToggleControl(valueControl, canvas);
+                break;
+            case NodeValueControl::Type::LABEL:break;
+        }
+
+        if (c) {
+            c->setZValue(2);
+            c->setParentItem(this);
+        }
     }
 }
 
