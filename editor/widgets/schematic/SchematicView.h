@@ -19,12 +19,7 @@ namespace AxiomGui {
 
         void pan(QPointF delta);
 
-    private slots:
-
-        void newNode();
-
     protected:
-        void contextMenuEvent(QContextMenuEvent *event) override;
 
         void mousePressEvent(QMouseEvent *event) override;
 
@@ -34,7 +29,6 @@ namespace AxiomGui {
 
     private:
         AxiomModel::Schematic *schematic;
-        QMenu *contextMenu;
 
         bool isPanning = false;
         QPoint lastMousePos;

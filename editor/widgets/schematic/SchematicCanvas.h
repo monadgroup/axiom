@@ -65,9 +65,13 @@ namespace AxiomGui {
 
         void keyPressEvent(QKeyEvent *event) override;
 
+        void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+
     private slots:
 
         void addNode(AxiomModel::Node *node);
+
+        void newNode(QPointF scenePos);
 
         void addWire(AxiomModel::ConnectionWire *wire);
 

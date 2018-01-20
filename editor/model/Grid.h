@@ -118,7 +118,8 @@ namespace AxiomModel {
                 for (const auto &dir : dirs) {
                     auto newP = cur.pos + dir;
                     if (!isInsideRect(newP)) continue;
-                    auto newCost = (getCell(newP) ? filledCost : emptyCost) + (dir == cur.dir ? 0 : dirChangeCost);
+                    auto newCost = (getCell(newP) ? filledCost : emptyCost) +
+                                   (dir.x() == cur.dir.x() && dir.y() == cur.dir.y() ? 0 : dirChangeCost);
                     auto find = visited.find(newP);
                     if (find == visited.end() || newCost < find->second.cost) {
                         visited.emplace(newP, VisitedCell(cur.pos, newCost));

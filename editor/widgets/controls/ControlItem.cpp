@@ -1,11 +1,15 @@
 #include "ControlItem.h"
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QClipboard>
+#include <QtCore/QMimeData>
 
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeControl.h"
 #include "../ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;

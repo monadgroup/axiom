@@ -44,6 +44,8 @@ namespace AxiomGui {
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
+        void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+
     private slots:
 
         void setPos(QPoint newPos);

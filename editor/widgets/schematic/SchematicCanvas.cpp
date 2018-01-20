@@ -5,9 +5,11 @@
 #include <QtWidgets/QGraphicsPathItem>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
+#include <QtWidgets/QWidgetAction>
 
 #include "editor/AxiomApplication.h"
 #include "editor/model/node/CustomNode.h"
+#include "editor/model/control/NodeValueControl.h"
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
 #include "../IConnectable.h"
@@ -146,6 +148,60 @@ void SchematicCanvas::addNode(AxiomModel::Node *node) {
     addItem(item);
 }
 
+void SchematicCanvas::newNode(QPointF scenePos) {
+    auto defaultSize = QSize(5, 5);
+    auto targetPos = QPoint(
+            qRound((float) scenePos.x() / SchematicCanvas::nodeGridSize.width()) - defaultSize.width() / 2,
+            qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height()) - defaultSize.height() / 2
+    );
+
+    auto newNode = std::make_unique<AxiomModel::CustomNode>(schematic, targetPos, defaultSize);
+
+    auto newControl = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::BASIC,
+            NodeValueControl::Channel::BOTH,
+            QPoint(0, 0), QSize(2, 2)
+    );
+    newControl->setValue(0.2);
+    newNode->surface.addItem(std::move(newControl));
+
+    auto newControl2 = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::BASIC,
+            NodeValueControl::Channel::BOTH,
+            QPoint(2, 0), QSize(2, 2)
+    );
+    newControl2->setValue(0.4);
+    newNode->surface.addItem(std::move(newControl2));
+
+    auto newControl3 = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::BASIC,
+            NodeValueControl::Channel::BOTH,
+            QPoint(0, 2), QSize(2, 6)
+    );
+    newNode->surface.addItem(std::move(newControl3));
+
+    auto newControl4 = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::BASIC,
+            NodeValueControl::Channel::BOTH,
+            QPoint(2, 2), QSize(6, 2)
+    );
+    newNode->surface.addItem(std::move(newControl4));
+
+    auto newControl5 = std::make_unique<AxiomModel::NodeValueControl>(
+            newNode.get(),
+            NodeValueControl::Type::TOGGLE,
+            NodeValueControl::Channel::BOTH,
+            QPoint(4, 4), QSize(2, 2)
+    );
+    newNode->surface.addItem(std::move(newControl5));
+
+    schematic->addItem(std::move(newNode));
+}
+
 void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {
     auto item = new WireItem(wire);
     item->setZValue(wireZVal);
@@ -213,6 +269,31 @@ void SchematicCanvas::keyPressEvent(QKeyEvent *event) {
     if (event->matches(QKeySequence::Delete)) {
         schematic->deleteSelectedItems();
     }
+}
+
+void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    QGraphicsScene::contextMenuEvent(event);
+    if (event->isAccepted()) return;
+
+    auto scenePos = event->scenePos();
+
+    QMenu menu;
+    auto contextSearch = new QLineEdit();
+    contextSearch->setPlaceholderText("Search modules...");
+    auto widgetAction = new QWidgetAction(this);
+    widgetAction->setDefaultWidget(contextSearch);
+    menu.addAction(widgetAction);
+    menu.addSeparator();
+
+    auto newNodeAction = menu.addAction(tr("New Node"));
+    connect(newNodeAction, &QAction::triggered,
+            [this, scenePos]() { newNode(scenePos); });
+
+    menu.addSeparator();
+    menu.addAction(new QAction(tr("LFO")));
+    menu.addAction(new QAction(tr("Something else")));
+
+    menu.exec(event->screenPos());
 }
 
 void SchematicCanvas::leftMousePressEvent(QGraphicsSceneMouseEvent *event) {

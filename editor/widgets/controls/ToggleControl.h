@@ -49,6 +49,8 @@ namespace AxiomGui {
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
+        void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+
     private:
         float m_hoverState = 0;
 

@@ -159,6 +159,27 @@ void NodeItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     });
 }
 
+void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    if (!node->isSelected()) node->select(true);
+
+    event->accept();
+
+    QMenu menu;
+    auto groupAction = menu.addAction(tr("&Group..."));
+    auto savePresetAction = menu.addAction(tr("&Save as Preset..."));
+    menu.addSeparator();
+    auto deleteAction = menu.addAction(tr("&Delete"));
+    auto selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == groupAction) {
+        // todo: move to group
+    } else if (selectedAction == savePresetAction) {
+        // todo: save as preset
+    } else if (selectedAction == deleteAction) {
+        node->parentSurface->deleteSelectedItems();
+    }
+}
+
 void NodeItem::setPos(QPoint newPos) {
     auto realPos = SchematicCanvas::nodeRealPos(newPos);
     updateNodePanelPos(realPos);
@@ -184,7 +205,8 @@ void NodeItem::addControl(NodeControl *control) {
             case NodeValueControl::Type::TOGGLE:
                 c = new ToggleControl(valueControl, canvas);
                 break;
-            case NodeValueControl::Type::LABEL:break;
+            case NodeValueControl::Type::LABEL:
+                break;
         }
 
         if (c) {

@@ -5,7 +5,11 @@
 #include <QtCore/QStateMachine>
 #include <QtCore/QSignalTransition>
 #include <QtCore/QPropertyAnimation>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QClipboard>
 #include <cmath>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QWidgetAction>
 
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeValueControl.h"
@@ -216,6 +220,42 @@ void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 
 void BasicControl::wheelEvent(QGraphicsSceneWheelEvent *event) {
     control->setValue(control->value() + event->delta() / 1200.f);
+}
+
+void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    event->accept();
+
+    auto clipboard = QGuiApplication::clipboard();
+    float pasteVal = 0;
+    auto canPaste = AxiomUtil::strToFloat(clipboard->text(), pasteVal);
+
+    QMenu menu;
+    auto setValAction = menu.addAction(tr("&Set Value..."));
+    auto copyValAction = menu.addAction(tr("&Copy Value"));
+    auto pasteValAction = menu.addAction(tr("&Paste Value"));
+    pasteValAction->setEnabled(canPaste);
+    menu.addSeparator();
+    auto zeroAction = menu.addAction(tr("Set to &0"));
+    auto oneAction = menu.addAction(tr("Set to &1"));
+    menu.addSeparator();
+    auto moveAction = menu.addAction(tr("&Move"));
+
+    auto selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == setValAction) {
+        // todo: show window to set value
+    } else if (selectedAction == copyValAction) {
+        clipboard->setText(QString::number(control->value()));
+    } else if (selectedAction == pasteValAction) {
+        // note: use the value from before showing menu, since we know it's valid
+        control->setValue(pasteVal);
+    } else if (selectedAction == zeroAction) {
+        control->setValue(0);
+    } else if (selectedAction == oneAction) {
+        control->setValue(1);
+    } else if (selectedAction == moveAction) {
+        control->select(true);
+    }
 }
 
 QRectF BasicControl::getPlugBounds() const {

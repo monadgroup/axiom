@@ -1,6 +1,7 @@
 #include "util.h"
 
 #include <QtCore/QFile>
+#include <sstream>
 
 using namespace AxiomUtil;
 
@@ -25,9 +26,8 @@ QColor AxiomUtil::mixColor(QColor a, QColor b, float mix) {
     );
 }
 
-QPoint AxiomUtil::floorP(QPointF f) {
-    return QPoint(
-            (int) f.x(),
-            (int) f.y()
-    );
+bool AxiomUtil::strToFloat(QString str, float &result) {
+    std::istringstream iss(str.toStdString());
+    iss >> std::noskipws >> result;
+    return iss.eof() && !iss.fail();
 }

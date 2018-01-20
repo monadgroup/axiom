@@ -90,12 +90,16 @@ QMenuBar::item {
     padding: 5px 10px;
 }
 
-QMenu::item:selected, QMenuBar::item:selected {
+QMenu::item:enabled:selected, QMenuBar::item:enabled:selected {
     background: #333;
 }
 
-QMenu::item:pressed {
+QMenu::item:enabled:pressed {
     background: #444;
+}
+
+QMenu::item:disabled {
+    color: #666;
 }
 
 QMenuBar::item:pressed {

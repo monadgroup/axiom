@@ -2,7 +2,6 @@
 
 #include "../node/Node.h"
 #include "../connection/ConnectionWire.h"
-#include "editor/util.h"
 
 using namespace AxiomModel;
 
@@ -36,5 +35,5 @@ void NodeControl::setName(const QString &name) {
 void NodeControl::recalcSinkPos() {
     auto worldPos = pos() + NodeSurface::schematicToNodeSurface(node->pos());
     auto centerPos = worldPos + QPointF(size().width() / 2., size().height() / 2.);
-    sink.setPos(NodeSurface::nodeSurfaceToSchematicFloor(AxiomUtil::floorP(centerPos)), centerPos);
+    sink.setPos(NodeSurface::nodeSurfaceToSchematicFloor(centerPos.toPoint()), centerPos);
 }

@@ -12,6 +12,6 @@ namespace AxiomUtil {
 
     QColor mixColor(QColor a, QColor b, float mix);
 
-    QPoint floorP(QPointF f);
+    bool strToFloat(QString str, float &result);
 
 }

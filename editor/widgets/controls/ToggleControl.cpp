@@ -6,6 +6,7 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtGui/QPainter>
 #include <cmath>
+#include <QtWidgets/QMenu>
 
 #include "editor/model/control/NodeValueControl.h"
 #include "editor/model/connection/ConnectionWire.h"
@@ -79,7 +80,8 @@ void ToggleControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         auto glowRadius = lightRadius * 2;
         QRadialGradient gradient(lightPos, glowRadius);
         gradient.setColorAt(0, connectedActiveColor);
-        gradient.setColorAt(1, QColor(connectedActiveColor.red(), connectedActiveColor.green(), connectedActiveColor.blue(), 0));
+        gradient.setColorAt(1, QColor(connectedActiveColor.red(), connectedActiveColor.green(),
+                                      connectedActiveColor.blue(), 0));
         painter->setBrush(gradient);
         painter->drawEllipse(lightPos, glowRadius, glowRadius);
     }
@@ -109,7 +111,7 @@ void ToggleControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 
 void ToggleControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mouseReleaseEvent(event);
-    if (event->isAccepted() || !isEditable()) return;
+    if (event->button() != Qt::LeftButton || event->isAccepted() || !isEditable()) return;
 
     event->accept();
     control->setValue(control->value() ? 0 : 1);
@@ -134,6 +136,23 @@ void ToggleControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 
     control->sink.setActive(false);
     emit mouseLeave();
+}
+
+void ToggleControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    event->accept();
+
+    QMenu menu;
+    auto toggleAction = menu.addAction(tr(control->value() ? "Turn O&ff" : "Turn O&n"));
+    menu.addSeparator();
+    auto moveAction = menu.addAction(tr("&Move"));
+
+    auto selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == toggleAction) {
+        control->setValue(control->value() ? 0 : 1);
+    } else if (selectedAction == moveAction) {
+        control->select(true);
+    }
 }
 
 QRectF ToggleControl::getBounds() const {
