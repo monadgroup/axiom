@@ -61,8 +61,8 @@ void ToggleControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     auto connectedActiveColor = QColor(52, 152, 219);
 
     // draw background
-    painter->setPen(Qt::NoPen);
     if (!control->sink.connections().empty()) {
+        painter->setPen(Qt::NoPen);
         painter->setBrush(QBrush(AxiomUtil::mixColor(connectedColor, connectedActiveColor, control->sink.active())));
         painter->drawRect(br.marginsAdded(borderMargin));
     }

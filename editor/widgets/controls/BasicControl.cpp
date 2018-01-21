@@ -299,23 +299,22 @@ void BasicControl::paintPlug(QPainter *painter) {
     auto scaledBorder = 0.06f * aspectBoundingRect().width();
     auto externBr = getPlugBounds();
 
-    auto scaledBorderMargin = scaledBorder / 2;
-    auto ellipseBr = externBr.marginsRemoved(
-            QMarginsF(scaledBorderMargin, scaledBorderMargin, scaledBorderMargin, scaledBorderMargin));
+    auto marginF = QMarginsF(scaledBorder / 2, scaledBorder / 2, scaledBorder / 2, scaledBorder / 2);
 
-    auto baseColor = QColor(10, 10, 10);
-    auto activeColor = QColor(20, 20, 20);
+    auto baseColor = QColor(45, 45, 45);
+    auto activeColor = QColor(60, 60, 60);
     auto connectedActiveColor = QColor(52, 152, 219);
     auto connectedColor = QColor(141, 141, 141);
-    auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, m_hoverState);
 
-    if (control->sink.connections().empty()) {
-        painter->setPen(QPen(QColor(30, 30, 30), scaledBorder));
-    } else {
-        painter->setPen(QPen(AxiomUtil::mixColor(connectedColor, connectedActiveColor, m_hoverState), 1));
+    if (!control->sink.connections().empty()) {
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QBrush(AxiomUtil::mixColor(connectedColor, connectedActiveColor, control->sink.active())));
+        painter->drawEllipse(externBr.marginsAdded(marginF));
     }
-    painter->setBrush(QBrush(currentColor));
-    painter->drawEllipse(ellipseBr);
+
+    painter->setPen(QPen(QColor(0, 0, 0), scaledBorder));
+    painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, m_hoverState)));
+    painter->drawEllipse(externBr.marginsRemoved(marginF));
 }
 
 void BasicControl::paintKnob(QPainter *painter) {
