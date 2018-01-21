@@ -30,6 +30,10 @@ namespace AxiomGui {
 
     protected:
 
+        QRectF drawBoundingRect() const;
+
+        virtual QRectF useBoundingRect() const = 0;
+
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
@@ -37,6 +41,8 @@ namespace AxiomGui {
         void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
     protected slots:
 

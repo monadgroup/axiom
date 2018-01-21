@@ -39,6 +39,8 @@ namespace AxiomGui {
 
     protected:
 
+        QRectF useBoundingRect() const override;
+
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
@@ -53,8 +55,6 @@ namespace AxiomGui {
 
     private:
         float m_hoverState = 0;
-
-        QRectF getBounds() const;
 
     };
 

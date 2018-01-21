@@ -5,8 +5,8 @@
 
 using namespace AxiomModel;
 
-NodeControl::NodeControl(Node *node, QPoint pos, QSize size)
-        : GridItem(&node->surface, pos, size), node(node) {
+NodeControl::NodeControl(Node *node, QString name, QPoint pos, QSize size)
+        : GridItem(&node->surface, pos, size), node(node), m_name(std::move(name)) {
 
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });

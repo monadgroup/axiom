@@ -27,7 +27,7 @@ namespace AxiomModel {
 
         const Channel channel;
 
-        NodeValueControl(Node *node, Type type, Channel channel, QPoint pos, QSize size);
+        NodeValueControl(Node *node, QString name, Type type, Channel channel, QPoint pos, QSize size);
 
         NumConnectionSink *sink() const override { return m_sink.get(); }
 

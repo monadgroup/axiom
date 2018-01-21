@@ -51,6 +51,8 @@ namespace AxiomGui {
         void mouseLeave();
 
     protected:
+        QRectF useBoundingRect() const override;
+
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;

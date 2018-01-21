@@ -13,6 +13,8 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : control(control), canvas(canvas) {
+    connect(control, &NodeControl::nameChanged,
+            this, &ControlItem::triggerUpdate);
     connect(control, &NodeControl::posChanged,
             this, &ControlItem::setPos);
     connect(control, &NodeControl::beforeSizeChanged,
@@ -61,10 +63,19 @@ ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : contro
 }
 
 QRectF ControlItem::boundingRect() const {
-    return {
-            QPoint(0, 0),
-            SchematicCanvas::controlRealSize(control->size())
-    };
+    auto br = drawBoundingRect();
+    br.setHeight(br.height() + 20);
+    return br;
+}
+
+void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    auto br = boundingRect();
+    auto pathBr = useBoundingRect();
+    auto nameBr = QRectF(br.left(), pathBr.bottom() + 5, br.width(), 20);
+
+    painter->setPen(QPen(QColor(200, 200, 200)));
+    painter->setBrush(Qt::NoBrush);
+    painter->drawText(nameBr, Qt::AlignHCenter | Qt::AlignTop, control->name());
 }
 
 bool ControlItem::isEditable() const {
@@ -73,6 +84,13 @@ bool ControlItem::isEditable() const {
 
 AxiomModel::ConnectionSink *ControlItem::sink() {
     return control->sink();
+}
+
+QRectF ControlItem::drawBoundingRect() const {
+    return {
+            QPoint(0, 0),
+            SchematicCanvas::controlRealSize(control->size())
+    };
 }
 
 void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {

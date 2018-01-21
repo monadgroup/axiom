@@ -6,8 +6,8 @@
 
 using namespace AxiomModel;
 
-NodeValueControl::NodeValueControl(Node *node, Type type, Channel channel, QPoint pos, QSize size)
-        : NodeControl(node, pos, size), type(type), channel(channel) {
+NodeValueControl::NodeValueControl(Node *node, QString name, Type type, Channel channel, QPoint pos, QSize size)
+        : NodeControl(node, std::move(name), pos, size), type(type), channel(channel) {
     initSink();
 
     switch (channel) {
@@ -27,7 +27,7 @@ std::unique_ptr<GridItem> NodeValueControl::clone(GridSurface *newParent, QPoint
     auto nodeSurface = dynamic_cast<NodeSurface *>(newParent);
     assert(nodeSurface != nullptr);
 
-    auto control = std::make_unique<NodeValueControl>(nodeSurface->node, type, channel, pos(), size());
+    auto control = std::make_unique<NodeValueControl>(nodeSurface->node, name(), type, channel, pos(), size());
     control->setValue(value());
     return std::move(control);
 }

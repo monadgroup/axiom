@@ -77,7 +77,7 @@ BasicControl::BasicControl(NodeValueControl *control, SchematicCanvas *canvas)
 }
 
 QRectF BasicControl::aspectBoundingRect() const {
-    auto bound = boundingRect();
+    auto bound = drawBoundingRect();
     if (bound.size().width() > bound.size().height()) {
         return {
                 QPointF(
@@ -118,6 +118,8 @@ void BasicControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
             paintSlider(painter, true);
             break;
     }
+
+    ControlItem::paint(painter, option, widget);
 }
 
 QPainterPath BasicControl::shape() const {
@@ -142,7 +144,7 @@ QPainterPath BasicControl::shape() const {
 }
 
 BasicControl::BasicMode BasicControl::mode() const {
-    auto rect = boundingRect();
+    auto rect = drawBoundingRect();
 
     if (rect.width() < 50 || rect.height() < 50) return BasicMode::PLUG;
     if (rect.width() >= rect.height() * 2) return BasicMode::SLIDER_H;
@@ -154,6 +156,15 @@ void BasicControl::setHoverState(float newHoverState) {
     if (newHoverState != m_hoverState) {
         m_hoverState = newHoverState;
         update();
+    }
+}
+
+QRectF BasicControl::useBoundingRect() const {
+    switch (mode()) {
+        case BasicMode::PLUG: return getPlugBounds();
+        case BasicMode::KNOB: return getKnobBounds();
+        case BasicMode::SLIDER_H: return getSliderBounds(false);
+        case BasicMode::SLIDER_V: return getSliderBounds(true);
     }
 }
 
@@ -178,12 +189,12 @@ void BasicControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto accuracyDelta = mouseDelta.x();
     auto motionDelta = mouseDelta.y();
-    auto scaleFactor = boundingRect().height();
+    auto scaleFactor = drawBoundingRect().height();
 
     if (mode() == BasicMode::SLIDER_H) {
         accuracyDelta = mouseDelta.y();
         motionDelta = -mouseDelta.x();
-        scaleFactor = boundingRect().width();
+        scaleFactor = drawBoundingRect().width();
     }
 
     auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
@@ -285,7 +296,7 @@ QRectF BasicControl::getKnobBounds() const {
 }
 
 QRectF BasicControl::getSliderBounds(bool vertical) const {
-    auto br = flip(boundingRect(), vertical);
+    auto br = flip(drawBoundingRect(), vertical);
     auto scaledMargin = 0.1f * br.height();
     auto barHeight = br.height() / 2;
     auto barY = br.center().y() - barHeight / 2;

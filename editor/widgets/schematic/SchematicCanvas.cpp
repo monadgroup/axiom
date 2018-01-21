@@ -168,7 +168,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     auto newNode = std::make_unique<CustomNode>(schematic, tr("New Node"), targetPos, defaultSize);
 
     auto newControl = std::make_unique<NodeValueControl>(
-            newNode.get(),
+            newNode.get(), tr("Frequency"),
             NodeValueControl::Type::BASIC,
             NodeValueControl::Channel::BOTH,
             QPoint(0, 0), QSize(2, 2)
@@ -177,7 +177,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     newNode->surface.addItem(std::move(newControl));
 
     auto newControl2 = std::make_unique<NodeValueControl>(
-            newNode.get(),
+            newNode.get(), tr("Detune"),
             NodeValueControl::Type::BASIC,
             NodeValueControl::Channel::BOTH,
             QPoint(2, 0), QSize(2, 2)
@@ -186,7 +186,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     newNode->surface.addItem(std::move(newControl2));
 
     auto newControl3 = std::make_unique<NodeValueControl>(
-            newNode.get(),
+            newNode.get(), tr("LFO Freq"),
             NodeValueControl::Type::BASIC,
             NodeValueControl::Channel::BOTH,
             QPoint(0, 2), QSize(2, 6)
@@ -194,7 +194,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     newNode->surface.addItem(std::move(newControl3));
 
     auto newControl4 = std::make_unique<NodeValueControl>(
-            newNode.get(),
+            newNode.get(), tr("LFO Amt"),
             NodeValueControl::Type::BASIC,
             NodeValueControl::Channel::BOTH,
             QPoint(2, 2), QSize(6, 2)
@@ -202,7 +202,7 @@ void SchematicCanvas::newNode(QPointF scenePos) {
     newNode->surface.addItem(std::move(newControl4));
 
     auto newControl5 = std::make_unique<NodeValueControl>(
-            newNode.get(),
+            newNode.get(), tr("Pulse"),
             NodeValueControl::Type::TOGGLE,
             NodeValueControl::Channel::BOTH,
             QPoint(4, 4), QSize(2, 2)

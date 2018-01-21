@@ -51,7 +51,7 @@ ToggleControl::ToggleControl(NodeValueControl *control, SchematicCanvas *canvas)
 }
 
 void ToggleControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    auto br = getBounds();
+    auto br = useBoundingRect();
     auto scaleFactor = std::hypot(br.right() - br.left(), br.bottom() - br.top());
     auto borderMargin = QMarginsF(0.02 * br.width(), 0.02 * br.height(), 0.02 * br.width(), 0.02 * br.height());
 
@@ -89,11 +89,13 @@ void ToggleControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     auto valColor = control->value() ? connectedActiveColor : QColor(0, 0, 0);
     painter->setBrush(QBrush(valColor));
     painter->drawEllipse(lightPos, lightRadius, lightRadius);
+
+    ControlItem::paint(painter, option, widget);
 }
 
 QPainterPath ToggleControl::shape() const {
     QPainterPath path;
-    path.addRect(getBounds());
+    path.addRect(useBoundingRect());
     return path;
 }
 
@@ -102,6 +104,12 @@ void ToggleControl::setHoverState(float newHoverState) {
         m_hoverState = newHoverState;
         update();
     }
+}
+
+QRectF ToggleControl::useBoundingRect() const {
+    auto br = drawBoundingRect();
+    auto scaledMargin = 0.1f * br.width();
+    return br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
 }
 
 void ToggleControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
@@ -156,10 +164,4 @@ void ToggleControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == clearAction) {
         control->sink()->clearConnections();
     }
-}
-
-QRectF ToggleControl::getBounds() const {
-    auto br = boundingRect();
-    auto scaledMargin = 0.1f * br.width();
-    return br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
 }

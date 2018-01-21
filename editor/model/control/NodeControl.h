@@ -13,7 +13,7 @@ namespace AxiomModel {
     public:
         Node *node;
 
-        NodeControl(Node *node, QPoint pos, QSize size);
+        NodeControl(Node *node, QString name, QPoint pos, QSize size);
 
         virtual ConnectionSink *sink() const = 0;
 
