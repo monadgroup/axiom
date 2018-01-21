@@ -42,7 +42,7 @@ void ConnectionWire::remove() {
 }
 
 void ConnectionWire::updateRoute() {
-    m_route = surface->grid.findPath(sinkA->pos(), sinkB->pos(), 1, 8, 4);
+    m_route = surface->grid.findPath(sinkA->pos(), sinkB->pos(), 1, 10, 4);
     emit routeChanged(m_route);
 }
 

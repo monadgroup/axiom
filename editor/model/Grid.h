@@ -114,12 +114,15 @@ namespace AxiomModel {
 
                 visitQueue.pop();
 
+                auto currentPos = visited.find(cur.pos);
+
                 QPoint dirs[] = {QPoint(1, 0), QPoint(-1, 0), QPoint(0, 1), QPoint(0, -1)};
                 for (const auto &dir : dirs) {
                     auto newP = cur.pos + dir;
                     if (!isInsideRect(newP)) continue;
                     auto newCost = (getCell(newP) ? filledCost : emptyCost) +
-                                   (dir.x() == cur.dir.x() && dir.y() == cur.dir.y() ? 0 : dirChangeCost);
+                                   (dir == cur.dir ? 0 : dirChangeCost) +
+                                    currentPos->second.cost;
                     auto find = visited.find(newP);
                     if (find == visited.end() || newCost < find->second.cost) {
                         visited.emplace(newP, VisitedCell(cur.pos, newCost));
@@ -165,6 +168,7 @@ namespace AxiomModel {
 
     private:
 
+        // for breadth-first search, sorting in the list of potential jumps
         class NearestAvailablePos {
         public:
             QPoint checkPos;
@@ -182,19 +186,25 @@ namespace AxiomModel {
             }
         };
 
+        // for A* search, sorting in the list of potential jumps
         class CostPos {
         public:
             QPoint pos;
             QPoint dir;
             float priority;
 
-            CostPos(QPoint pos, QPoint dir, float cost) : pos(pos), dir(dir), priority(cost) {}
+            CostPos(QPoint pos, QPoint dir, float priority) : pos(pos), dir(dir), priority(priority) {}
 
             bool operator<(const CostPos &other) const {
                 return priority > other.priority;
             }
+
+            bool operator==(const CostPos &other) const {
+                return pos == other.pos;
+            }
         };
 
+        // for A* search, recording visited places
         class VisitedCell {
         public:
             QPoint from;
