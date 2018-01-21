@@ -15,14 +15,13 @@ namespace AxiomModel {
 
     public:
         enum class Type {
-            NONE,
             NUMBER,
             MIDI
         };
 
         const Type type;
 
-        ConnectionSink(Type type = Type::NONE);
+        explicit ConnectionSink(Type type);
 
         std::vector<ConnectionWire *> const &connections() const { return m_connections; }
 

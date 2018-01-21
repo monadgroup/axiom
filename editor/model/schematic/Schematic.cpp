@@ -132,6 +132,10 @@ void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
 }
 
 ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB) {
+    if (sinkA->type != sinkB->type) {
+        return nullptr;
+    }
+
     auto wire = std::make_unique<ConnectionWire>(this, sinkA, sinkB);
     auto ptr = wire.get();
     addWire(std::move(wire));

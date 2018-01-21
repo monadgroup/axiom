@@ -1,6 +1,7 @@
 #include "SchematicCanvas.h"
 
 #include <cmath>
+#include <cassert>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsPathItem>
 #include <QtWidgets/QLineEdit>
@@ -100,8 +101,10 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
     if (isConnecting) return;
 
     isConnecting = true;
-    connectionSink.setPos(control->sink()->pos(), control->sink()->subPos());
-    connectionWire = schematic->connectSinks(control->sink(), &connectionSink);
+    connectionSink = std::make_unique<ConnectionSink>(control->sink()->type);
+    connectionSink->setPos(control->sink()->pos(), control->sink()->subPos());
+    connectionWire = schematic->connectSinks(control->sink(), connectionSink.get());
+    assert(connectionWire != nullptr);
 
     connect(connectionWire, &ConnectionWire::removed,
             [this]() { isConnecting = false; });
@@ -112,9 +115,9 @@ void SchematicCanvas::updateConnecting(QPointF mousePos) {
 
     auto currentItem = itemAt(mousePos, QTransform());
     if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
-        connectionSink.setPos(connectable->sink()->pos(), connectable->sink()->subPos());
+        connectionSink->setPos(connectable->sink()->pos(), connectable->sink()->subPos());
     } else {
-        connectionSink.setPos(
+        connectionSink->setPos(
                 QPoint(
                         (int) (mousePos.x() / SchematicCanvas::nodeGridSize.width()),
                         (int) (mousePos.y() / SchematicCanvas::nodeGridSize.height())
@@ -140,6 +143,7 @@ void SchematicCanvas::endConnecting(QPointF mousePos) {
     }
 
     connectionWire->remove();
+    connectionSink.reset();
 }
 
 void SchematicCanvas::cancelConnecting() {

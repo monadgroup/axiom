@@ -86,7 +86,7 @@ namespace AxiomGui {
         QGraphicsPathItem *selectionPath;
 
         bool isConnecting = false;
-        AxiomModel::ConnectionSink connectionSink;
+        std::unique_ptr<AxiomModel::ConnectionSink> connectionSink;
         AxiomModel::ConnectionWire *connectionWire;
 
         void leftMousePressEvent(QGraphicsSceneMouseEvent *event);
