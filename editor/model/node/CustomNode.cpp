@@ -7,7 +7,7 @@
 using namespace AxiomModel;
 
 CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
-        : Node(parent, std::move(name), pos, size) {
+        : Node(parent, std::move(name), Type::CUSTOM, pos, size) {
 
 }
 

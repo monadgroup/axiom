@@ -11,13 +11,14 @@ namespace AxiomModel {
         bool operator==(const NumValue &other) const {
             return left == other.left && right == other.right;
         }
+
         bool operator!=(const NumValue &other) const {
             return !(*this == other);
         }
     };
 
     class NumConnectionSink : public ConnectionSink {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
 

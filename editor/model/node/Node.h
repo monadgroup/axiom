@@ -16,10 +16,16 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
+        enum class Type {
+            CUSTOM,
+            GROUP
+        };
+        Type type;
+
         NodeSurface surface;
         Schematic *parentSchematic;
 
-        Node(Schematic *parent, QString name, QPoint pos, QSize size);
+        Node(Schematic *parent, QString name, Type type, QPoint pos, QSize size);
 
         QString name() const { return m_name; }
 

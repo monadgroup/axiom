@@ -34,8 +34,14 @@ std::unique_ptr<GridItem> NodeValueControl::clone(GridSurface *newParent, QPoint
 
 void NodeValueControl::setValue(float value) {
     switch (channel) {
-        case Channel::LEFT: m_sink->setLeft(value); break;
-        case Channel::RIGHT: m_sink->setRight(value); break;
-        case Channel::BOTH: m_sink->setValue({ value, value }); break;
+        case Channel::LEFT:
+            m_sink->setLeft(value);
+            break;
+        case Channel::RIGHT:
+            m_sink->setRight(value);
+            break;
+        case Channel::BOTH:
+            m_sink->setValue({value, value});
+            break;
     }
 }

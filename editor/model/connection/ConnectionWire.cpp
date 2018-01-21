@@ -1,12 +1,15 @@
 #include "ConnectionWire.h"
 
-#include "ConnectionSink.h"
+#include <cassert>
+
 #include "../GridSurface.h"
 
 using namespace AxiomModel;
 
 ConnectionWire::ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, ConnectionSink *sinkB)
-        : surface(surface), sinkA(sinkA), sinkB(sinkB) {
+        : surface(surface), sinkA(sinkA), sinkB(sinkB), type(sinkA->type) {
+    assert(sinkA->type == sinkB->type);
+
     connect(surface, &GridSurface::gridChanged,
             this, &ConnectionWire::updateRoute);
     connect(sinkA, &ConnectionSink::posChanged,

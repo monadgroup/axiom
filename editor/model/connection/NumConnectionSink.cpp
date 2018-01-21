@@ -23,9 +23,9 @@ void NumConnectionSink::setValue(NumValue value) {
 }
 
 void NumConnectionSink::setLeft(float leftValue) {
-    setValue({ leftValue, m_value.right });
+    setValue({leftValue, m_value.right});
 }
 
 void NumConnectionSink::setRight(float rightValue) {
-    setValue({ m_value.left, rightValue });
+    setValue({m_value.left, rightValue});
 }

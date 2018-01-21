@@ -3,9 +3,9 @@
 #include <QtCore/QObject>
 #include <deque>
 
-namespace AxiomModel {
+#include "ConnectionSink.h"
 
-    class ConnectionSink;
+namespace AxiomModel {
 
     class GridSurface;
 
@@ -16,6 +16,8 @@ namespace AxiomModel {
         GridSurface *surface;
         ConnectionSink *sinkA;
         ConnectionSink *sinkB;
+
+        const ConnectionSink::Type type;
 
         ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, ConnectionSink *sinkB);
 

@@ -7,6 +7,7 @@
 #include "editor/widgets/ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
 #include "editor/model/node/Node.h"
+#include "editor/model/node/CustomNode.h"
 #include "editor/model/node/ModuleNode.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeValueControl.h"
@@ -104,15 +105,29 @@ QRectF NodeItem::boundingRect() const {
 void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     painter->setRenderHint(QPainter::Antialiasing, false);
 
-    painter->setPen(QPen(QColor::fromRgb(51, 51, 51), 1));
+    QColor darkColor, lightColor, outlineColor;
+    switch (node->type) {
+        case Node::Type::CUSTOM:
+            darkColor = QColor(17, 17, 17, 100);
+            lightColor = QColor(27, 27, 27, 100);
+            outlineColor = QColor(51, 51, 51);
+            break;
+        case Node::Type::GROUP:
+            darkColor = QColor(29, 15, 33, 100);
+            lightColor = QColor(44, 26, 53, 100);
+            outlineColor = QColor(84, 48, 99);
+            break;
+    }
+
+    painter->setPen(QPen(outlineColor, 1));
     if (node->isSelected()) {
-        painter->setBrush(QBrush(QColor::fromRgb(27, 27, 27, 100)));
+        painter->setBrush(QBrush(lightColor));
     } else {
-        painter->setBrush(QBrush(QColor::fromRgb(17, 17, 17, 100)));
+        painter->setBrush(QBrush(darkColor));
     }
     painter->drawRect(boundingRect());
 
-    auto gridPen = QPen(QColor(27, 27, 27), 1);
+    auto gridPen = QPen(QColor(lightColor.red(), lightColor.green(), lightColor.blue(), 255), 1);
 
     if (node->surface.hasSelection()) {
         auto nodeSurfaceSize = NodeSurface::schematicToNodeSurface(node->size());
