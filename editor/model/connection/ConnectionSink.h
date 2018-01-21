@@ -14,6 +14,16 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
+        enum class Type {
+            NONE,
+            NUMBER,
+            MIDI
+        };
+
+        const Type type;
+
+        ConnectionSink(Type type = Type::NONE);
+
         std::vector<ConnectionWire *> const &connections() const { return m_connections; }
 
         QPoint pos() const { return m_pos; }

@@ -8,7 +8,7 @@ namespace AxiomGui {
 
     class IConnectable {
     public:
-        virtual AxiomModel::ConnectionSink &sink() = 0;
+        virtual AxiomModel::ConnectionSink *sink() = 0;
     };
 
 }

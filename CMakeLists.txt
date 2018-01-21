@@ -21,7 +21,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(SOURCE_FILES editor/main.cpp editor/util.cpp editor/AxiomApplication.cpp
         editor/model/Library.cpp editor/model/LibraryEntry.cpp editor/model/Project.cpp editor/model/GridSurface.cpp editor/model/GridItem.cpp
-        editor/model/connection/ConnectionSink.cpp editor/model/connection/ConnectionWire.cpp
+        editor/model/connection/ConnectionSink.cpp editor/model/connection/NumConnectionSink.cpp editor/model/connection/ConnectionWire.cpp
         editor/model/node/Node.cpp editor/model/node/CustomNode.cpp editor/model/node/ModuleNode.cpp editor/model/node/JunctionNode.cpp editor/model/node/NodeSurface.cpp
         editor/model/schematic/ModuleSchematic.cpp  editor/model/schematic/RootSchematic.cpp editor/model/schematic/Schematic.cpp
         editor/model/control/NodeControl.cpp editor/model/control/NodeValueControl.cpp

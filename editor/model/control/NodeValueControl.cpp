@@ -7,8 +7,20 @@
 using namespace AxiomModel;
 
 NodeValueControl::NodeValueControl(Node *node, Type type, Channel channel, QPoint pos, QSize size)
-        : NodeControl(node, channel, pos, size), type(type) {
+        : NodeControl(node, pos, size), type(type), channel(channel) {
+    initSink();
 
+    switch (channel) {
+        case Channel::BOTH:
+        case Channel::LEFT:
+            connect(m_sink.get(), &NumConnectionSink::leftChanged,
+                    this, &NodeValueControl::valueChanged);
+            break;
+        case Channel::RIGHT:
+            connect(m_sink.get(), &NumConnectionSink::rightChanged,
+                    this, &NodeValueControl::valueChanged);
+            break;
+    }
 }
 
 std::unique_ptr<GridItem> NodeValueControl::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
@@ -21,9 +33,9 @@ std::unique_ptr<GridItem> NodeValueControl::clone(GridSurface *newParent, QPoint
 }
 
 void NodeValueControl::setValue(float value) {
-    value = value < 0 ? 0 : value > 1 ? 1 : value;
-    if (value != m_value) {
-        m_value = value;
-        emit valueChanged(value);
+    switch (channel) {
+        case Channel::LEFT: m_sink->setLeft(value); break;
+        case Channel::RIGHT: m_sink->setRight(value); break;
+        case Channel::BOTH: m_sink->setValue({ value, value }); break;
     }
 }

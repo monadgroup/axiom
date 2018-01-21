@@ -26,7 +26,7 @@ namespace AxiomGui {
 
         bool isEditable() const;
 
-        AxiomModel::ConnectionSink &sink() override;
+        AxiomModel::ConnectionSink *sink() override;
 
     protected:
 

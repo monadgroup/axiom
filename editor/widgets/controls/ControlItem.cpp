@@ -71,8 +71,8 @@ bool ControlItem::isEditable() const {
     return !control->isSelected();
 }
 
-AxiomModel::ConnectionSink &ControlItem::sink() {
-    return control->sink;
+AxiomModel::ConnectionSink *ControlItem::sink() {
+    return control->sink();
 }
 
 void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {

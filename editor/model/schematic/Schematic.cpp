@@ -78,7 +78,7 @@ ModuleNode *Schematic::groupSelection() {
                 auto newControl = dynamic_cast<NodeControl *>(clonedNode->surface.items()[i].get());
                 assert(newControl != nullptr);
 
-                oldSinkToNewControlMap.emplace(&oldControl->sink, newControl);
+                oldSinkToNewControlMap.emplace(oldControl->sink(), newControl);
                 oldControlToNewControlMap.emplace(oldControl, newControl);
             }
         }
@@ -91,10 +91,10 @@ ModuleNode *Schematic::groupSelection() {
         auto oldControl = pair.first;
         auto newControl = pair.second;
 
-        for (const auto &connection : oldControl->sink.connections()) {
+        for (const auto &connection : oldControl->sink()->connections()) {
             // only connect from one side, so we don't get two wires
             // todo: this will need to be changed when we account for external connections too
-            if (connection->sinkB == &oldControl->sink) continue;
+            if (connection->sinkB == oldControl->sink()) continue;
 
             auto targetControl = oldSinkToNewControlMap.find(connection->sinkB);
             if (targetControl == oldSinkToNewControlMap.end()) {
@@ -103,7 +103,7 @@ ModuleNode *Schematic::groupSelection() {
                 continue;
             }
 
-            moduleNode->schematic->connectSinks(&newControl->sink, &targetControl->second->sink);
+            moduleNode->schematic->connectSinks(newControl->sink(), targetControl->second->sink());
 
         }
     }

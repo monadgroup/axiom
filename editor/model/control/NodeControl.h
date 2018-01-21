@@ -11,19 +11,11 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        enum class Channel {
-            LEFT = 1 << 0,
-            RIGHT = 1 << 1,
-            BOTH = LEFT | RIGHT
-        };
-
-        const Channel channel;
-
-        ConnectionSink sink;
-
         Node *node;
 
-        NodeControl(Node *node, Channel channel, QPoint pos, QSize size);
+        NodeControl(Node *node, QPoint pos, QSize size);
+
+        virtual ConnectionSink *sink() const = 0;
 
         QString name() const { return m_name; }
 
@@ -36,6 +28,10 @@ namespace AxiomModel {
     signals:
 
         void nameChanged(const QString &newName);
+
+    protected:
+
+        void initSink();
 
     private:
 

@@ -100,8 +100,8 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
     if (isConnecting) return;
 
     isConnecting = true;
-    connectionSink.setPos(control->sink().pos(), control->sink().subPos());
-    connectionWire = schematic->connectSinks(&control->sink(), &connectionSink);
+    connectionSink.setPos(control->sink()->pos(), control->sink()->subPos());
+    connectionWire = schematic->connectSinks(control->sink(), &connectionSink);
 
     connect(connectionWire, &ConnectionWire::removed,
             [this]() { isConnecting = false; });
@@ -112,7 +112,7 @@ void SchematicCanvas::updateConnecting(QPointF mousePos) {
 
     auto currentItem = itemAt(mousePos, QTransform());
     if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
-        connectionSink.setPos(connectable->sink().pos(), connectable->sink().subPos());
+        connectionSink.setPos(connectable->sink()->pos(), connectable->sink()->subPos());
     } else {
         connectionSink.setPos(
                 QPoint(
@@ -134,7 +134,7 @@ void SchematicCanvas::endConnecting(QPointF mousePos) {
 
     if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
         isConnecting = false;
-        schematic->connectSinks(connectionWire->sinkA, &connectable->sink());
+        schematic->connectSinks(connectionWire->sinkA, connectable->sink());
     } else {
         // todo: create JunctionNode if not currentItem is null
     }

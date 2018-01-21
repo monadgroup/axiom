@@ -5,26 +5,11 @@
 
 using namespace AxiomModel;
 
-NodeControl::NodeControl(Node *node, Channel channel, QPoint pos, QSize size)
-        : GridItem(&node->surface, pos, size), node(node), channel(channel) {
-    connect(this, &NodeControl::posChanged,
-            this, &NodeControl::recalcSinkPos);
-    connect(this, &NodeControl::sizeChanged,
-            this, &NodeControl::recalcSinkPos);
-    connect(node, &Node::posChanged,
-            this, &NodeControl::recalcSinkPos);
+NodeControl::NodeControl(Node *node, QPoint pos, QSize size)
+        : GridItem(&node->surface, pos, size), node(node) {
+
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });
-    connect(this, &NodeControl::removed,
-            &sink, &ConnectionSink::removed);
-
-    connect(&sink, &ConnectionSink::connectionAdded,
-            [this](ConnectionWire *wire) {
-                connect(this, &NodeControl::removed,
-                        wire, &ConnectionWire::remove);
-            });
-
-    recalcSinkPos();
 }
 
 void NodeControl::setName(const QString &name) {
@@ -34,8 +19,27 @@ void NodeControl::setName(const QString &name) {
     }
 }
 
+void NodeControl::initSink() {
+    connect(this, &NodeControl::posChanged,
+            this, &NodeControl::recalcSinkPos);
+    connect(this, &NodeControl::sizeChanged,
+            this, &NodeControl::recalcSinkPos);
+    connect(node, &Node::posChanged,
+            this, &NodeControl::recalcSinkPos);
+
+    connect(this, &NodeControl::removed,
+            sink(), &ConnectionSink::removed);
+    connect(sink(), &ConnectionSink::connectionAdded,
+            [this](ConnectionWire *wire) {
+                connect(this, &NodeControl::removed,
+                        wire, &ConnectionWire::remove);
+            });
+
+    recalcSinkPos();
+}
+
 void NodeControl::recalcSinkPos() {
     auto worldPos = pos() + NodeSurface::schematicToNodeSurface(node->pos());
     auto centerPos = worldPos + QPointF(size().width() / 2., size().height() / 2.);
-    sink.setPos(NodeSurface::nodeSurfaceToSchematicFloor(centerPos.toPoint()), centerPos);
+    sink()->setPos(NodeSurface::nodeSurfaceToSchematicFloor(centerPos.toPoint()), centerPos);
 }

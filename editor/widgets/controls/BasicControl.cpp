@@ -48,11 +48,11 @@ BasicControl::BasicControl(NodeValueControl *control, SchematicCanvas *canvas)
 
     connect(control, &NodeValueControl::valueChanged,
             this, &BasicControl::triggerUpdate);
-    connect(&control->sink, &ConnectionSink::connectionAdded,
+    connect(control->sink(), &ConnectionSink::connectionAdded,
             this, &BasicControl::triggerUpdate);
-    connect(&control->sink, &ConnectionSink::connectionRemoved,
+    connect(control->sink(), &ConnectionSink::connectionRemoved,
             this, &BasicControl::triggerUpdate);
-    connect(&control->sink, &ConnectionSink::activeChanged,
+    connect(control->sink(), &ConnectionSink::activeChanged,
             this, &BasicControl::triggerUpdate);
 
     auto machine = new QStateMachine();
@@ -201,21 +201,21 @@ void BasicControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
 void BasicControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mouseDoubleClickEvent(event);
-    control->sink.setActive(false);
+    control->sink()->setActive(false);
     emit mouseLeave();
 }
 
 void BasicControl::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     if (!isEditable()) return;
 
-    control->sink.setActive(true);
+    control->sink()->setActive(true);
     emit mouseEnter();
 }
 
 void BasicControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     if (!isEditable()) return;
 
-    control->sink.setActive(false);
+    control->sink()->setActive(false);
     emit mouseLeave();
 }
 
@@ -261,7 +261,7 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == moveAction) {
         control->select(true);
     } else if (selectedAction == clearAction) {
-        control->sink.clearConnections();
+        control->sink()->clearConnections();
     }
 }
 
@@ -306,9 +306,9 @@ void BasicControl::paintPlug(QPainter *painter) {
     auto connectedActiveColor = QColor(52, 152, 219);
     auto connectedColor = QColor(141, 141, 141);
 
-    if (!control->sink.connections().empty()) {
+    if (!control->sink()->connections().empty()) {
         painter->setPen(Qt::NoPen);
-        painter->setBrush(QBrush(AxiomUtil::mixColor(connectedColor, connectedActiveColor, control->sink.active())));
+        painter->setBrush(QBrush(AxiomUtil::mixColor(connectedColor, connectedActiveColor, control->sink()->active())));
         painter->drawEllipse(externBr.marginsAdded(marginF));
     }
 
@@ -333,9 +333,9 @@ void BasicControl::paintKnob(QPainter *painter) {
 
     // draw background
     painter->setPen(Qt::NoPen);
-    if (!control->sink.connections().empty()) {
+    if (!control->sink()->connections().empty()) {
         auto activeBorderThickness = 0.02 * aspectWidth;
-        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink.active())));
+        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink()->active())));
         painter->drawEllipse(outerBr.marginsAdded(
                 QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
     }
@@ -392,9 +392,9 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
 
     // draw background
     painter->setPen(Qt::NoPen);
-    if (!control->sink.connections().empty()) {
+    if (!control->sink()->connections().empty()) {
         auto activeBorderThickness = 0.04 * br.height();
-        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink.active())));
+        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink()->active())));
         painter->drawRect(flip(
                 br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness,
                                           activeBorderThickness)),

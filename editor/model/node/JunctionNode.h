@@ -13,7 +13,7 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        ConnectionSink sink;
+        std::unique_ptr<ConnectionSink> sink;
 
         JunctionNode(Schematic *parent, QPoint pos);
 

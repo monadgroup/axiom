@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NodeControl.h"
+#include "../connection/NumConnectionSink.h"
 
 namespace AxiomModel {
 
@@ -16,11 +17,21 @@ namespace AxiomModel {
             LABEL
         };
 
+        enum class Channel {
+            LEFT = 1 << 0,
+            RIGHT = 1 << 1,
+            BOTH = LEFT | RIGHT
+        };
+
         const Type type;
+
+        const Channel channel;
 
         NodeValueControl(Node *node, Type type, Channel channel, QPoint pos, QSize size);
 
-        float value() const { return m_value; }
+        NumConnectionSink *sink() const override { return m_sink.get(); }
+
+        float value() const { return channel == Channel::RIGHT ? m_sink->value().right : m_sink->value().left; }
 
         bool isResizable() const override { return true; }
 
@@ -35,7 +46,8 @@ namespace AxiomModel {
         void valueChanged(float newValue);
 
     private:
-        float m_value = 0;
+
+        std::unique_ptr<NumConnectionSink> m_sink = std::make_unique<NumConnectionSink>();
     };
 
 }

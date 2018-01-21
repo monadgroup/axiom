@@ -21,11 +21,11 @@ ToggleControl::ToggleControl(NodeValueControl *control, SchematicCanvas *canvas)
 
     connect(control, &NodeValueControl::valueChanged,
             this, &ToggleControl::triggerUpdate);
-    connect(&control->sink, &ConnectionSink::connectionAdded,
+    connect(control->sink(), &ConnectionSink::connectionAdded,
             this, &ToggleControl::triggerUpdate);
-    connect(&control->sink, &ConnectionSink::connectionRemoved,
+    connect(control->sink(), &ConnectionSink::connectionRemoved,
             this, &ToggleControl::triggerUpdate);
-    connect(&control->sink, &ConnectionSink::activeChanged,
+    connect(control->sink(), &ConnectionSink::activeChanged,
             this, &ToggleControl::triggerUpdate);
 
     // todo: refactor into ControlItem?
@@ -61,9 +61,9 @@ void ToggleControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     auto connectedActiveColor = QColor(52, 152, 219);
 
     // draw background
-    if (!control->sink.connections().empty()) {
+    if (!control->sink()->connections().empty()) {
         painter->setPen(Qt::NoPen);
-        painter->setBrush(QBrush(AxiomUtil::mixColor(connectedColor, connectedActiveColor, control->sink.active())));
+        painter->setBrush(QBrush(AxiomUtil::mixColor(connectedColor, connectedActiveColor, control->sink()->active())));
         painter->drawRect(br.marginsAdded(borderMargin));
     }
 
@@ -119,7 +119,7 @@ void ToggleControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
 void ToggleControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mouseDoubleClickEvent(event);
-    control->sink.setActive(false);
+    control->sink()->setActive(false);
     control->setValue(control->value() ? 0 : 1);
     emit mouseLeave();
 }
@@ -127,14 +127,14 @@ void ToggleControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
 void ToggleControl::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     if (!isEditable()) return;
 
-    control->sink.setActive(true);
+    control->sink()->setActive(true);
     emit mouseEnter();
 }
 
 void ToggleControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     if (!isEditable()) return;
 
-    control->sink.setActive(false);
+    control->sink()->setActive(false);
     emit mouseLeave();
 }
 
@@ -154,7 +154,7 @@ void ToggleControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == moveAction) {
         control->select(true);
     } else if (selectedAction == clearAction) {
-        control->sink.clearConnections();
+        control->sink()->clearConnections();
     }
 }
 
