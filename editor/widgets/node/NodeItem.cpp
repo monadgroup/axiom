@@ -22,7 +22,7 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(canvas) {
-    setAcceptHoverEvents(true);
+    //setAcceptHoverEvents(true);
 
     // create items for all controls that already exist
     for (const auto &item : node->surface.items()) {
@@ -96,9 +96,10 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
 }
 
 QRectF NodeItem::boundingRect() const {
+    auto drawBr = drawBoundingRect();
     return {
-            QPointF(0, 0),
-            SchematicCanvas::nodeRealSize(node->size())
+            drawBr.topLeft() - QPointF(0, textOffset),
+            drawBr.size() + QSizeF(0, textOffset)
     };
 }
 
@@ -125,7 +126,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     } else {
         painter->setBrush(QBrush(darkColor));
     }
-    painter->drawRect(boundingRect());
+    painter->drawRect(drawBoundingRect());
 
     auto gridPen = QPen(QColor(lightColor.red(), lightColor.green(), lightColor.blue(), 255), 1);
 
@@ -139,8 +140,18 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     }
 
     painter->setPen(QPen(QColor(100, 100, 100)));
-    auto textBound = boundingRect().marginsRemoved(QMarginsF(8, 5, 8, 5));
+    auto br = boundingRect();
+    auto textBound = QRectF(
+            br.topLeft(),
+            QSizeF(br.width(), textOffset)
+    );
     painter->drawText(textBound, Qt::AlignLeft | Qt::AlignTop, node->name());
+}
+
+QPainterPath NodeItem::shape() const {
+    QPainterPath path;
+    path.addRect(drawBoundingRect());
+    return path;
 }
 
 void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
@@ -195,9 +206,9 @@ void NodeItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
 }
 
 void NodeItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
-    QTimer::singleShot(10, [this]() {
-        //nodePanel->setNodeHover(false);
-    });
+    /*QTimer::singleShot(10, [this]() {
+        nodePanel->setNodeHover(false);
+    });*/
 }
 
 void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
@@ -301,6 +312,13 @@ void NodeItem::triggerUpdate() {
 
 void NodeItem::triggerGeometryChange() {
     prepareGeometryChange();
+}
+
+QRectF NodeItem::drawBoundingRect() const {
+    return {
+            QPointF(0, 0),
+            SchematicCanvas::nodeRealSize(node->size())
+    };
 }
 
 void NodeItem::updateNodePanelPos(QPointF realNodePos) {

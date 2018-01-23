@@ -30,7 +30,7 @@ namespace AxiomGui {
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-    public slots:
+        QPainterPath shape() const override;
 
     protected:
 
@@ -79,6 +79,10 @@ namespace AxiomGui {
         //QGraphicsProxyWidget *nodePanelProxy;
         bool isDragging = false;
         QPoint mouseStartPoint;
+
+        static const int textOffset = 15;
+
+        QRectF drawBoundingRect() const;
 
         void updateNodePanelPos(QPointF realNodePos);
     };
