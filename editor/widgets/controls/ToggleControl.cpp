@@ -11,6 +11,7 @@
 #include "editor/model/control/NodeValueControl.h"
 #include "editor/model/connection/ConnectionWire.h"
 #include "editor/util.h"
+#include "../CommonColors.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -57,8 +58,8 @@ void ToggleControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 
     auto baseColor = QColor(45, 45, 45);
     auto activeColor = QColor(60, 60, 60);
-    auto connectedColor = QColor(141, 141, 141);
-    auto connectedActiveColor = QColor(52, 152, 219);
+    auto connectedColor = CommonColors::numWireNormal;
+    auto connectedActiveColor = CommonColors::numWireActive;
 
     // draw background
     if (!control->sink()->connections().empty()) {
@@ -79,14 +80,14 @@ void ToggleControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     if (control->value()) {
         auto glowRadius = lightRadius * 2;
         QRadialGradient gradient(lightPos, glowRadius);
-        gradient.setColorAt(0, connectedActiveColor);
-        gradient.setColorAt(1, QColor(connectedActiveColor.red(), connectedActiveColor.green(),
-                                      connectedActiveColor.blue(), 0));
+        gradient.setColorAt(0, CommonColors::controlActive);
+        gradient.setColorAt(1, QColor(CommonColors::controlActive.red(), CommonColors::controlActive.green(),
+                                      CommonColors::controlActive.blue(), 0));
         painter->setBrush(gradient);
         painter->drawEllipse(lightPos, glowRadius, glowRadius);
     }
 
-    auto valColor = control->value() ? connectedActiveColor : QColor(0, 0, 0);
+    auto valColor = control->value() ? CommonColors::controlActive : QColor(0, 0, 0);
     painter->setBrush(QBrush(valColor));
     painter->drawEllipse(lightPos, lightRadius, lightRadius);
 

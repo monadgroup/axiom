@@ -26,7 +26,7 @@ set(SOURCE_FILES editor/main.cpp editor/util.cpp editor/AxiomApplication.cpp
         editor/model/schematic/ModuleSchematic.cpp  editor/model/schematic/RootSchematic.cpp editor/model/schematic/Schematic.cpp
         editor/model/control/NodeControl.cpp editor/model/control/NodeValueControl.cpp
 
-        editor/widgets/ItemResizer.cpp editor/widgets/FloatingValueEditor.cpp
+        editor/widgets/CommonColors.cpp editor/widgets/ItemResizer.cpp editor/widgets/FloatingValueEditor.cpp
         editor/widgets/dock/DockPanel.cpp
         editor/widgets/windows/MainWindow.cpp editor/widgets/windows/AboutWindow.cpp
         editor/widgets/modulebrowser/ModuleBrowserPanel.cpp editor/widgets/modulebrowser/ModulePreviewList.cpp editor/widgets/modulebrowser/ModulePreview.cpp

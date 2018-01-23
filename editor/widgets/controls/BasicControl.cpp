@@ -17,6 +17,7 @@
 #include "../schematic/SchematicCanvas.h"
 #include "editor/util.h"
 #include "../FloatingValueEditor.h"
+#include "../CommonColors.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -320,8 +321,8 @@ void BasicControl::paintPlug(QPainter *painter) {
 
     auto baseColor = QColor(45, 45, 45);
     auto activeColor = QColor(60, 60, 60);
-    auto connectedActiveColor = QColor(52, 152, 219);
-    auto connectedColor = QColor(141, 141, 141);
+    auto connectedActiveColor = CommonColors::numWireActive;
+    auto connectedColor = CommonColors::numWireNormal;
 
     if (!control->sink()->connections().empty()) {
         painter->setPen(Qt::NoPen);
@@ -345,14 +346,14 @@ void BasicControl::paintKnob(QPainter *painter) {
     auto completeAngle = -300 * 16;
 
     auto baseColor = QColor(141, 141, 141);
-    auto activeColor = QColor(52, 152, 219);
+    auto activeColor = CommonColors::controlActive;
     auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, m_hoverState);
 
     // draw background
     painter->setPen(Qt::NoPen);
     if (!control->sink()->connections().empty()) {
         auto activeBorderThickness = 0.02 * aspectWidth;
-        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink()->active())));
+        painter->setBrush(QBrush(AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
         painter->drawEllipse(outerBr.marginsAdded(
                 QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
     }
@@ -404,14 +405,14 @@ void BasicControl::paintSlider(QPainter *painter, bool vertical) {
     auto scaledThickness = (0.12f + 0.08f * m_hoverState) * br.height();
 
     auto baseColor = QColor(141, 141, 141);
-    auto activeColor = QColor(52, 152, 219);
+    auto activeColor = CommonColors::controlActive;
     auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, m_hoverState);
 
     // draw background
     painter->setPen(Qt::NoPen);
     if (!control->sink()->connections().empty()) {
         auto activeBorderThickness = 0.04 * br.height();
-        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, control->sink()->active())));
+        painter->setBrush(QBrush(AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
         painter->drawRect(flip(
                 br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness,
                                           activeBorderThickness)),

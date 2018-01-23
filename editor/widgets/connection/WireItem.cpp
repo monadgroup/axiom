@@ -1,6 +1,7 @@
 #include "WireItem.h"
 
 #include <QtWidgets/QGraphicsScene>
+#include <editor/widgets/CommonColors.h>
 
 #include "editor/model/connection/ConnectionWire.h"
 #include "../schematic/SchematicCanvas.h"
@@ -76,7 +77,7 @@ void WireItem::updateRoute() {
 }
 
 void WireItem::setActive(bool active) {
-    QPen pen(active ? QColor(52, 152, 219) : QColor(141, 141, 141), 2);
+    QPen pen(active ? CommonColors::numWireActive : CommonColors::numWireNormal, 2);
     pen.setJoinStyle(Qt::MiterJoin);
     setPen(pen);
 

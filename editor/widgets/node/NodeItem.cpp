@@ -17,6 +17,7 @@
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
 #include "../FloatingValueEditor.h"
+#include "../CommonColors.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -109,14 +110,14 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     QColor darkColor, lightColor, outlineColor;
     switch (node->type) {
         case Node::Type::CUSTOM:
-            darkColor = QColor(17, 17, 17, 100);
-            lightColor = QColor(27, 27, 27, 100);
-            outlineColor = QColor(51, 51, 51);
+            darkColor = CommonColors::customNodeNormal;
+            lightColor = CommonColors::customNodeActive;
+            outlineColor = CommonColors::customNodeBorder;
             break;
         case Node::Type::GROUP:
-            darkColor = QColor(29, 15, 33, 100);
-            lightColor = QColor(44, 26, 53, 100);
-            outlineColor = QColor(84, 48, 99);
+            darkColor = CommonColors::groupNodeNormal;
+            lightColor = CommonColors::groupNodeActive;
+            outlineColor = CommonColors::groupNodeBorder;
             break;
     }
 
