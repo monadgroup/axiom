@@ -19,15 +19,21 @@ namespace AxiomModel {
 
         QString name() const { return m_name; }
 
+        bool showName() const { return m_showName; }
+
         bool isMovable() const override { return true; }
 
     public slots:
 
         void setName(const QString &name);
 
+        void setShowName(bool showName);
+
     signals:
 
         void nameChanged(const QString &newName);
+
+        void showNameChanged(bool newShowName);
 
     protected:
 
@@ -36,6 +42,7 @@ namespace AxiomModel {
     private:
 
         QString m_name = "";
+        bool m_showName = true;
 
     private slots:
 

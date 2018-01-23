@@ -15,6 +15,8 @@ using namespace AxiomModel;
 ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : control(control), canvas(canvas) {
     connect(control, &NodeControl::nameChanged,
             this, &ControlItem::triggerUpdate);
+    connect(control, &NodeControl::showName,
+            this, &ControlItem::triggerUpdate);
     connect(control, &NodeControl::posChanged,
             this, &ControlItem::setPos);
     connect(control, &NodeControl::beforeSizeChanged,
@@ -69,6 +71,8 @@ QRectF ControlItem::boundingRect() const {
 }
 
 void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    if (!control->showName()) return;
+
     auto br = boundingRect();
     auto pathBr = useBoundingRect();
     auto nameBr = QRectF(br.left(), pathBr.bottom() + 5, br.width(), 20);

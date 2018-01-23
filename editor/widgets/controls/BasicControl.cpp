@@ -242,6 +242,8 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto canPaste = AxiomUtil::strToFloat(clipboard->text(), pasteVal);
 
     QMenu menu;
+    auto clearAction = menu.addAction(tr("C&lear Connections"));
+    menu.addSeparator();
     auto setValAction = menu.addAction(tr("&Set Value..."));
     auto copyValAction = menu.addAction(tr("&Copy Value"));
     auto pasteValAction = menu.addAction(tr("&Paste Value"));
@@ -251,11 +253,15 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto oneAction = menu.addAction(tr("Set to &1"));
     menu.addSeparator();
     auto moveAction = menu.addAction(tr("&Move"));
-    auto clearAction = menu.addAction(tr("C&lear Connections"));
+    auto nameShownAction = menu.addAction(tr("Show &Name"));
+    nameShownAction->setCheckable(true);
+    nameShownAction->setChecked(control->showName());
 
     auto selectedAction = menu.exec(event->screenPos());
 
-    if (selectedAction == setValAction) {
+    if (selectedAction == clearAction) {
+        control->sink()->clearConnections();
+    } else if (selectedAction == setValAction) {
         auto editor = new FloatingValueEditor(QString::number(control->value()), event->scenePos());
         scene()->addItem(editor);
         connect(editor, &FloatingValueEditor::valueSubmitted,
@@ -271,8 +277,8 @@ void BasicControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         control->setValue(1);
     } else if (selectedAction == moveAction) {
         control->select(true);
-    } else if (selectedAction == clearAction) {
-        control->sink()->clearConnections();
+    } else if (selectedAction == nameShownAction) {
+        control->setShowName(nameShownAction->isChecked());
     }
 }
 

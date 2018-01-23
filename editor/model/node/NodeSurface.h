@@ -37,6 +37,8 @@ namespace AxiomModel {
     private slots:
 
         void setSize(QSize size);
+
+        void remove();
     };
 
 }

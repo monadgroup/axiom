@@ -19,6 +19,13 @@ void NodeControl::setName(const QString &name) {
     }
 }
 
+void NodeControl::setShowName(bool showName) {
+    if (showName != m_showName) {
+        m_showName = showName;
+        emit showNameChanged(showName);
+    }
+}
+
 void NodeControl::initSink() {
     connect(this, &NodeControl::posChanged,
             this, &NodeControl::recalcSinkPos);

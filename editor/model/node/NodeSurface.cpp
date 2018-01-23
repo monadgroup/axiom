@@ -8,16 +8,19 @@ NodeSurface::NodeSurface(Node *node) : GridSurface(QPoint(0, 0), QPoint(node->si
                                        node(node) {
     connect(node, &Node::sizeChanged,
             this, &NodeSurface::setSize);
+
     connect(node, &Node::removed,
-            [this]() {
-                while (!items().empty()) {
-                    items()[0]->remove();
-                }
-            });
+            this, &NodeSurface::remove);
 
     setSize(node->size());
 }
 
 void NodeSurface::setSize(QSize size) {
     grid.maxRect = schematicToNodeSurface(QPoint(size.width(), size.height()));
+}
+
+void NodeSurface::remove() {
+    while (!items().empty()) {
+        items()[0]->remove();
+    }
 }

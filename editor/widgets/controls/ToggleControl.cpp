@@ -150,18 +150,25 @@ void ToggleControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 
     QMenu menu;
+
+    auto clearAction = menu.addAction(tr("C&lear Connections"));
+    menu.addSeparator();
     auto toggleAction = menu.addAction(tr(control->value() ? "Turn O&ff" : "Turn O&n"));
     menu.addSeparator();
     auto moveAction = menu.addAction(tr("&Move"));
-    auto clearAction = menu.addAction(tr("C&lear Connections"));
+    auto nameShownAction = menu.addAction(tr("Show &Name"));
+    nameShownAction->setCheckable(true);
+    nameShownAction->setChecked(control->showName());
 
     auto selectedAction = menu.exec(event->screenPos());
 
-    if (selectedAction == toggleAction) {
+    if (selectedAction == clearAction) {
+        control->sink()->clearConnections();
+    } else if (selectedAction == toggleAction) {
         control->setValue(control->value() ? 0 : 1);
     } else if (selectedAction == moveAction) {
         control->select(true);
-    } else if (selectedAction == clearAction) {
-        control->sink()->clearConnections();
+    } else if (selectedAction == nameShownAction) {
+        control->setShowName(nameShownAction->isChecked());
     }
 }
