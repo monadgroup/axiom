@@ -41,5 +41,5 @@ set(RES_FILES editor/resources/axiom.rc editor/resources/res.qrc)
 add_executable(axiom WIN32 ${SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom Qt5::Widgets)
 
-add_subdirectory(compiler)
-target_link_libraries(axiom axiom_compiler)
+# add_subdirectory(compiler)
+# target_link_libraries(axiom axiom_compiler)
