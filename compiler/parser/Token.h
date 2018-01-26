@@ -15,6 +15,7 @@ namespace MaximParser {
             MODULO,
             POWER,
             EQUAL,
+            NOT,
             OPEN_BRACKET,
             CLOSE_BRACKET,
             OPEN_SQUARE,
@@ -27,6 +28,8 @@ namespace MaximParser {
             HASH,
             GT,
             LT,
+            BITWISE_AND,
+            BITWISE_OR,
             END_OF_LINE,
             END_OF_FILE,
 
@@ -34,9 +37,21 @@ namespace MaximParser {
             GTE,
             LTE,
             EQUAL_TO,
+            NOT_EQUAL_TO,
             ELLIPSIS,
             COMMENT_OPEN,
             COMMENT_CLOSE,
+            PLUS_ASSIGN,
+            MINUS_ASSIGN,
+            TIMES_ASSIGN,
+            DIVIDE_ASSIGN,
+            MODULO_ASSIGN,
+            POWER_ASSIGN,
+            INCREMENT,
+            DECREMENT,
+            BITWISE_XOR,
+            LOGICAL_AND,
+            LOGICAL_OR,
 
             NUM_KEYWORD,
             MIDI_KEYWORD,
@@ -55,8 +70,10 @@ namespace MaximParser {
 
         Type type;
         std::string content;
+        int lineNumber;
+        int columnNumber;
 
-        Token(Type type, std::string content);
+        Token(Type type, std::string content, int lineNumber, int columnNumber);
 
         static std::string typeString(Type type);
     };

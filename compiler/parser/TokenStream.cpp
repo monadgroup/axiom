@@ -4,13 +4,15 @@
 using namespace MaximParser;
 
 TokenStream::TokenStream(const std::string &data)
-        : data(data), peekBuffer(Token(Token::Type::UNKNOWN, "")) {
+        : data(data), peekBuffer(Token(Token::Type::END_OF_FILE, "", 0, 0)) {
     restart();
 }
 
 void TokenStream::restart() {
     dataBegin = data.begin();
     hasBuffer = false;
+    currentLine = 0;
+    currentColumn = 0;
 }
 
 Token TokenStream::next() {
@@ -32,7 +34,7 @@ const Token& TokenStream::peek() {
 
 Token TokenStream::processNext() {
     if (dataBegin >= data.end()) {
-        return Token(Token::Type::END_OF_FILE, "");
+        return Token(Token::Type::END_OF_FILE, "", currentLine, currentColumn);
     }
 
     for (const auto &token : TokenStream::matches) {
@@ -45,21 +47,43 @@ Token TokenStream::processNext() {
 
         dataBegin += m.length();
 
+        auto tokenLine = currentLine;
+        auto tokenColumn = currentColumn;
+
+        if (token.second == Token::Type::END_OF_LINE) {
+            currentLine++;
+            currentColumn = 0;
+        } else {
+            currentColumn += m.length();
+        }
+
         auto tokenContent = m.size() > 1 ? m[1].str() : "";
-        return Token(token.second, tokenContent);
+        return Token(token.second, tokenContent, tokenLine, tokenColumn);
     }
 
     auto remainingStr = std::string(dataBegin, data.end());
     dataBegin = data.end();
-    return Token(Token::Type::UNKNOWN, remainingStr);
+    return Token(Token::Type::UNKNOWN, remainingStr, currentLine, currentColumn);
 }
 
 TokenStream::PairListType TokenStream::matches = {
         // multi-char tokens
         getToken(R"(\.\.\.)", Token::Type::ELLIPSIS),
         getToken(R"(==)", Token::Type::EQUAL_TO),
+        getToken(R"(!=)", Token::Type::NOT_EQUAL_TO),
         getToken(R"(<=)", Token::Type::LTE),
         getToken(R"(>=)", Token::Type::GTE),
+        getToken(R"(\+=)", Token::Type::PLUS_ASSIGN),
+        getToken(R"(-=)", Token::Type::MINUS_ASSIGN),
+        getToken(R"(\*=)", Token::Type::TIMES_ASSIGN),
+        getToken(R"(\/=)", Token::Type::DIVIDE_ASSIGN),
+        getToken(R"(%=)", Token::Type::MODULO_ASSIGN),
+        getToken(R"(\^=)", Token::Type::POWER_ASSIGN),
+        getToken(R"(\+\+)", Token::Type::INCREMENT),
+        getToken(R"(--)", Token::Type::DECREMENT),
+        getToken(R"(\^\^)", Token::Type::BITWISE_XOR),
+        getToken(R"(&&)", Token::Type::LOGICAL_AND),
+        getToken(R"(\|\|)", Token::Type::LOGICAL_OR),
         getToken(R"(\/\*)", Token::Type::COMMENT_OPEN),
         getToken(R"(\*\/)", Token::Type::COMMENT_CLOSE),
 
@@ -72,7 +96,7 @@ TokenStream::PairListType TokenStream::matches = {
         // free tokens
         getToken(R"('((?:\\'|(?:(?!').))*)')", Token::Type::SINGLE_STRING),
         getToken(R"(\"((?:\\\"|(?:(?!\").))*)\")", Token::Type::DOUBLE_STRING),
-        getToken(R"(([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*)(?:[eE][+-]?\d+)?))", Token::Type::NUMBER),
+        getToken(R"(((?=\.\d|\d)(?:\d+)?(?:\.?\d*)(?:[eE][+-]?\d+)?))", Token::Type::NUMBER),
         getToken(R"(:([a-zA-Z][0-9]+))", Token::Type::NOTE),
         getToken(R"(([_a-zA-Z][_a-zA-Z0-9]*))", Token::Type::IDENTIFIER),
 
@@ -84,6 +108,7 @@ TokenStream::PairListType TokenStream::matches = {
         getToken(R"(%)", Token::Type::MODULO),
         getToken(R"(\^)", Token::Type::POWER),
         getToken(R"(=)", Token::Type::EQUAL),
+        getToken(R"(!)", Token::Type::NOT),
         getToken(R"(\()", Token::Type::OPEN_BRACKET),
         getToken(R"(\))", Token::Type::CLOSE_BRACKET),
         getToken(R"(\[)", Token::Type::OPEN_SQUARE),
@@ -96,10 +121,15 @@ TokenStream::PairListType TokenStream::matches = {
         getToken(R"(#)", Token::Type::HASH),
         getToken(R"(>)", Token::Type::GT),
         getToken(R"(<)", Token::Type::LT),
+        getToken(R"(&)", Token::Type::BITWISE_AND),
+        getToken(R"(\|)", Token::Type::BITWISE_OR),
 
         getToken(R"(\n)", Token::Type::END_OF_LINE)
 };
 
 TokenStream::PairType TokenStream::getToken(const std::string &regex, Token::Type type) {
-    return std::make_pair(std::regex(R"([^\S\n]*)" + regex + R"([^\S\n]*)", std::regex::ECMAScript | std::regex::optimize), type);
+    return std::make_pair(
+            std::regex(R"([^\S\n]*)" + regex + R"([^\S\n]*)", std::regex::ECMAScript | std::regex::optimize),
+            type
+    );
 }

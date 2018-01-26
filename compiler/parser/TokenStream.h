@@ -21,13 +21,15 @@ namespace MaximParser {
     private:
         std::string data;
         std::string::iterator dataBegin;
+        int currentLine = 0;
+        int currentColumn = 0;
 
         bool hasBuffer = false;
         Token peekBuffer;
 
         Token processNext();
 
-        static constexpr std::size_t matchCount = 35;
+        static constexpr std::size_t matchCount = 50;
 
         using PairType = std::pair<std::regex, Token::Type>;
         using PairListType = std::array<PairType, matchCount>;

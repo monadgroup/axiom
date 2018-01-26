@@ -2,7 +2,8 @@
 
 using namespace MaximParser;
 
-Token::Token(Type type, std::string content) : type(type), content(std::move(content)) {
+Token::Token(Type type, std::string content, int lineNumber, int columnNumber)
+        : type(type), content(std::move(content)), lineNumber(lineNumber), columnNumber(columnNumber) {
 
 }
 
@@ -15,6 +16,7 @@ std::string Token::typeString(Type type) {
         case Type::MODULO: return "%";
         case Type::POWER: return "^";
         case Type::EQUAL: return "=";
+        case Type::NOT: return "!";
         case Type::OPEN_BRACKET: return "(";
         case Type::CLOSE_BRACKET: return ")";
         case Type::OPEN_SQUARE: return "[";
@@ -27,14 +29,28 @@ std::string Token::typeString(Type type) {
         case Type::HASH: return "#";
         case Type::GT: return ">";
         case Type::LT: return "<";
+        case Type::BITWISE_AND: return "&";
+        case Type::BITWISE_OR: return "|";
         case Type::END_OF_LINE: return "EOL";
         case Type::END_OF_FILE: return "EOF";
         case Type::GTE: return ">=";
         case Type::LTE: return "<=";
         case Type::EQUAL_TO: return "==";
+        case Type::NOT_EQUAL_TO: return "!=";
         case Type::ELLIPSIS: return "...";
         case Type::COMMENT_OPEN: return "/*";
         case Type::COMMENT_CLOSE: return "*/";
+        case Type::PLUS_ASSIGN: return "+=";
+        case Type::MINUS_ASSIGN: return "-=";
+        case Type::TIMES_ASSIGN: return "*=";
+        case Type::DIVIDE_ASSIGN: return "/=";
+        case Type::MODULO_ASSIGN: return "%=";
+        case Type::POWER_ASSIGN: return "^=";
+        case Type::INCREMENT: return "++";
+        case Type::DECREMENT: return "--";
+        case Type::BITWISE_XOR: return "^^";
+        case Type::LOGICAL_AND: return "&&";
+        case Type::LOGICAL_OR: return "||";
         case Type::NUM_KEYWORD: return "NUM";
         case Type::MIDI_KEYWORD: return "MIDI";
         case Type::PURE_KEYWORD: return "PURE";
