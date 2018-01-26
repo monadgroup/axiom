@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "../SourcePos.h"
+
 namespace MaximParser {
 
     class Token {
@@ -14,7 +16,7 @@ namespace MaximParser {
             DIVIDE,
             MODULO,
             POWER,
-            EQUAL,
+            ASSIGN,
             NOT,
             OPEN_BRACKET,
             CLOSE_BRACKET,
@@ -39,6 +41,7 @@ namespace MaximParser {
             EQUAL_TO,
             NOT_EQUAL_TO,
             ELLIPSIS,
+            CAST,
             COMMENT_OPEN,
             COMMENT_CLOSE,
             PLUS_ASSIGN,
@@ -70,10 +73,10 @@ namespace MaximParser {
 
         Type type;
         std::string content;
-        int lineNumber;
-        int columnNumber;
+        SourcePos startPos;
+        SourcePos endPos;
 
-        Token(Type type, std::string content, int lineNumber, int columnNumber);
+        Token(Type type, std::string content, SourcePos startPos, SourcePos endPos);
 
         static std::string typeString(Type type);
     };

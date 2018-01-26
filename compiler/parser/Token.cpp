@@ -2,8 +2,8 @@
 
 using namespace MaximParser;
 
-Token::Token(Type type, std::string content, int lineNumber, int columnNumber)
-        : type(type), content(std::move(content)), lineNumber(lineNumber), columnNumber(columnNumber) {
+Token::Token(Type type, std::string content, SourcePos startPos, SourcePos endPos)
+        : type(type), content(std::move(content)), startPos(startPos), endPos(endPos) {
 
 }
 
@@ -15,7 +15,7 @@ std::string Token::typeString(Type type) {
         case Type::DIVIDE: return "/";
         case Type::MODULO: return "%";
         case Type::POWER: return "^";
-        case Type::EQUAL: return "=";
+        case Type::ASSIGN: return "=";
         case Type::NOT: return "!";
         case Type::OPEN_BRACKET: return "(";
         case Type::CLOSE_BRACKET: return ")";
@@ -38,6 +38,7 @@ std::string Token::typeString(Type type) {
         case Type::EQUAL_TO: return "==";
         case Type::NOT_EQUAL_TO: return "!=";
         case Type::ELLIPSIS: return "...";
+        case Type::CAST: return "->";
         case Type::COMMENT_OPEN: return "/*";
         case Type::COMMENT_CLOSE: return "*/";
         case Type::PLUS_ASSIGN: return "+=";

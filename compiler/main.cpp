@@ -25,11 +25,11 @@ int main() {
     std::cout << "---------" << std::endl;
 
     TokenStream stream(results);
-    Token token(Token::Type::END_OF_FILE, "", 0, 0);
+    Token token(Token::Type::END_OF_FILE, "", SourcePos(0, 0), SourcePos(0, 0));
     while ((token = stream.next()).type != Token::Type::END_OF_FILE) {
         std::cout << Token::typeString(token.type);
         if (!token.content.empty()) std::cout << " \"" << token.content << "\"";
-        std::cout << " (" << token.lineNumber << ":" << token.columnNumber << ")" << std::endl;
+        std::cout << " (" << token.startPos.line << ":" << token.startPos.column << " -> " << token.endPos.line << ":" << token.endPos.column << ")" << std::endl;
     }
 
     return 0;

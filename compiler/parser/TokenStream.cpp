@@ -4,7 +4,7 @@
 using namespace MaximParser;
 
 TokenStream::TokenStream(const std::string &data)
-        : data(data), peekBuffer(Token(Token::Type::END_OF_FILE, "", 0, 0)) {
+        : data(data), peekBuffer(Token(Token::Type::END_OF_FILE, "", SourcePos(0, 0), SourcePos(0, 0))) {
     restart();
 }
 
@@ -23,7 +23,7 @@ Token TokenStream::next() {
     return processNext();
 }
 
-const Token& TokenStream::peek() {
+Token TokenStream::peek() {
     if (!hasBuffer) {
         hasBuffer = true;
         peekBuffer = processNext();
@@ -34,36 +34,73 @@ const Token& TokenStream::peek() {
 
 Token TokenStream::processNext() {
     if (dataBegin >= data.end()) {
-        return Token(Token::Type::END_OF_FILE, "", currentLine, currentColumn);
+        return Token(
+                Token::Type::END_OF_FILE, "",
+                SourcePos(currentLine, currentColumn),
+                SourcePos(currentLine, currentColumn)
+        );
     }
 
-    for (const auto &token : TokenStream::matches) {
-        std::match_results<std::string::iterator> m;
-        if (!std::regex_search(
-            dataBegin, data.end(),
-            m, token.first,
-            std::regex_constants::match_continuous
-        )) continue;
+    bool hasToken = false;
+    Token pickToken(Token::Type::UNKNOWN, "", SourcePos(0, 0), SourcePos(0, 0));
 
-        dataBegin += m.length();
+    do {
+        for (const auto &token : TokenStream::matches) {
+            std::match_results<std::string::iterator> m;
+            if (!std::regex_search(
+                    dataBegin, data.end(),
+                    m, token.first,
+                    std::regex_constants::match_continuous
+            ))
+                continue;
 
-        auto tokenLine = currentLine;
-        auto tokenColumn = currentColumn;
+            dataBegin += m.length();
 
-        if (token.second == Token::Type::END_OF_LINE) {
-            currentLine++;
-            currentColumn = 0;
-        } else {
-            currentColumn += m.length();
+            auto tokenLine = currentLine;
+            auto tokenColumn = currentColumn;
+
+            if (token.second == Token::Type::END_OF_LINE) {
+                currentLine++;
+                currentColumn = 0;
+            } else {
+                currentColumn += m.length();
+            }
+
+            auto tokenContent = m.size() > 1 ? m[1].str() : "";
+            hasToken = true;
+            pickToken = Token(
+                    token.second, tokenContent,
+                    SourcePos(tokenLine, tokenColumn),
+                    SourcePos(tokenLine, tokenColumn + m.length())
+            );
+            break;
         }
+    } while (!filter(pickToken));
 
-        auto tokenContent = m.size() > 1 ? m[1].str() : "";
-        return Token(token.second, tokenContent, tokenLine, tokenColumn);
-    }
+    if (hasToken) return pickToken;
 
     auto remainingStr = std::string(dataBegin, data.end());
     dataBegin = data.end();
-    return Token(Token::Type::UNKNOWN, remainingStr, currentLine, currentColumn);
+    return Token(
+            Token::Type::UNKNOWN, remainingStr,
+            SourcePos(currentLine, currentColumn),
+            SourcePos(currentLine, currentColumn)
+    );
+}
+
+bool TokenStream::filter(const Token &token) {
+    if (token.type == Token::Type::HASH) {
+        isSingleLineComment = true;
+    } else if (token.type == Token::Type::END_OF_LINE) {
+        isSingleLineComment = false;
+    } else if (token.type == Token::Type::COMMENT_OPEN) {
+        multiLineCommentCount++;
+    } else if (token.type == Token::Type::COMMENT_CLOSE) {
+        multiLineCommentCount--;
+        if (multiLineCommentCount < 0) multiLineCommentCount = 0;
+    }
+
+    return !isSingleLineComment && !multiLineCommentCount;
 }
 
 TokenStream::PairListType TokenStream::matches = {
@@ -79,6 +116,7 @@ TokenStream::PairListType TokenStream::matches = {
         getToken(R"(\/=)", Token::Type::DIVIDE_ASSIGN),
         getToken(R"(%=)", Token::Type::MODULO_ASSIGN),
         getToken(R"(\^=)", Token::Type::POWER_ASSIGN),
+        getToken(R"(->)", Token::Type::CAST),
         getToken(R"(\+\+)", Token::Type::INCREMENT),
         getToken(R"(--)", Token::Type::DECREMENT),
         getToken(R"(\^\^)", Token::Type::BITWISE_XOR),
@@ -97,7 +135,7 @@ TokenStream::PairListType TokenStream::matches = {
         getToken(R"('((?:\\'|(?:(?!').))*)')", Token::Type::SINGLE_STRING),
         getToken(R"(\"((?:\\\"|(?:(?!\").))*)\")", Token::Type::DOUBLE_STRING),
         getToken(R"(((?=\.\d|\d)(?:\d+)?(?:\.?\d*)(?:[eE][+-]?\d+)?))", Token::Type::NUMBER),
-        getToken(R"(:([a-zA-Z][0-9]+))", Token::Type::NOTE),
+        getToken(R"(:([a-gA-G]#?[0-9]+))", Token::Type::NOTE),
         getToken(R"(([_a-zA-Z][_a-zA-Z0-9]*))", Token::Type::IDENTIFIER),
 
         // single-char tokens
@@ -107,7 +145,7 @@ TokenStream::PairListType TokenStream::matches = {
         getToken(R"(\/)", Token::Type::DIVIDE),
         getToken(R"(%)", Token::Type::MODULO),
         getToken(R"(\^)", Token::Type::POWER),
-        getToken(R"(=)", Token::Type::EQUAL),
+        getToken(R"(=)", Token::Type::ASSIGN),
         getToken(R"(!)", Token::Type::NOT),
         getToken(R"(\()", Token::Type::OPEN_BRACKET),
         getToken(R"(\))", Token::Type::CLOSE_BRACKET),

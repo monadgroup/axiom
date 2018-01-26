@@ -16,7 +16,7 @@ namespace MaximParser {
 
         Token next();
 
-        const Token &peek();
+        Token peek();
 
     private:
         std::string data;
@@ -29,7 +29,12 @@ namespace MaximParser {
 
         Token processNext();
 
-        static constexpr std::size_t matchCount = 50;
+        bool isSingleLineComment = false;
+        int multiLineCommentCount = 0;
+
+        bool filter(const Token &token);
+
+        static constexpr std::size_t matchCount = 51;
 
         using PairType = std::pair<std::regex, Token::Type>;
         using PairListType = std::array<PairType, matchCount>;
