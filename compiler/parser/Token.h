@@ -10,7 +10,7 @@ namespace MaximParser {
     public:
         enum class Type {
             // single-char tokens
-            PLUS,
+                    PLUS,
             MINUS,
             TIMES,
             DIVIDE,
@@ -37,7 +37,7 @@ namespace MaximParser {
             END_OF_FILE,
 
             // multi-char tokens
-            GTE,
+                    GTE,
             LTE,
             EQUAL_TO,
             NOT_EQUAL_TO,
@@ -63,7 +63,7 @@ namespace MaximParser {
             CONST_KEYWORD,
 
             // free tokens
-            SINGLE_STRING,
+                    SINGLE_STRING,
             DOUBLE_STRING,
             NUMBER,
             NOTE,

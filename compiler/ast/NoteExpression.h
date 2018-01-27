@@ -6,7 +6,7 @@ namespace MaximAst {
     public:
         int note;
 
-        NoteExpression(int note, SourcePos start, SourcePos end) : Expression(start, end), note(note) { }
+        NoteExpression(int note, SourcePos start, SourcePos end) : Expression(start, end), note(note) {}
 
         void appendString(std::stringstream &s) override {
             s << "(note " << note << ")";

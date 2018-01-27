@@ -21,19 +21,34 @@ namespace MaximAst {
         Type type;
         std::unique_ptr<Expression> right;
 
-        AssignExpression(std::unique_ptr<LValueExpression> left, Type type, std::unique_ptr<Expression> right, SourcePos start, SourcePos end)
-                : Expression(start, end), left(std::move(left)), type(type), right(std::move(right)) { }
+        AssignExpression(std::unique_ptr<LValueExpression> left, Type type, std::unique_ptr<Expression> right,
+                         SourcePos start, SourcePos end)
+                : Expression(start, end), left(std::move(left)), type(type), right(std::move(right)) {}
 
         void appendString(std::stringstream &s) override {
             s << "(assign ";
             switch (type) {
-                case Type::ASSIGN: s << "="; break;
-                case Type::ADD: s << "+="; break;
-                case Type::SUBTRACT: s << "-="; break;
-                case Type::MULTIPLY: s << "*="; break;
-                case Type::DIVIDE: s << "/="; break;
-                case Type::MODULO: s << "%="; break;
-                case Type::POWER: s << "^="; break;
+                case Type::ASSIGN:
+                    s << "=";
+                    break;
+                case Type::ADD:
+                    s << "+=";
+                    break;
+                case Type::SUBTRACT:
+                    s << "-=";
+                    break;
+                case Type::MULTIPLY:
+                    s << "*=";
+                    break;
+                case Type::DIVIDE:
+                    s << "/=";
+                    break;
+                case Type::MODULO:
+                    s << "%=";
+                    break;
+                case Type::POWER:
+                    s << "^=";
+                    break;
             }
             s << " ";
             left->appendString(s);

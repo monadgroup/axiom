@@ -14,7 +14,7 @@ namespace MaximAst {
         std::vector<std::unique_ptr<Expression>> arguments;
 
         CallExpression(std::string name, SourcePos start, SourcePos end)
-                : Expression(start, end), name(std::move(name)) { }
+                : Expression(start, end), name(std::move(name)) {}
 
         void appendString(std::stringstream &s) override {
             s << "(call " << name << " ";

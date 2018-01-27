@@ -40,6 +40,7 @@ namespace MaximParser {
         using PairListType = std::array<PairType, matchCount>;
 
         static PairListType matches;
+
         static PairType getToken(const std::string &regex, Token::Type type);
     };
 

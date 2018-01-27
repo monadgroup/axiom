@@ -7,7 +7,6 @@
 #include "../util.h"
 
 #include "../ast/Block.h"
-#include "../ast/Expression.h"
 #include "../ast/UnaryExpression.h"
 #include "../ast/VariableExpression.h"
 #include "../ast/ControlExpression.h"
@@ -18,8 +17,6 @@
 #include "../ast/PostfixExpression.h"
 #include "../ast/MathExpression.h"
 #include "../ast/AssignExpression.h"
-#include "../ast/LValueExpression.h"
-#include "../ast/Form.h"
 
 using namespace MaximParser;
 using namespace MaximAst;
@@ -67,26 +64,21 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePrefix(Precedence precedence)
 
     // parse basic expressions
     switch (firstToken.type) {
-        // Comment
-        case Token::Type::HASH:break;
-        case Token::Type::COMMENT_OPEN:break;
+        case Token::Type::COLON:
+            return parseColonTokenExpression(precedence);
 
-            // ControlExpression
-        case Token::Type::COLON: return parseColonTokenExpression(precedence);
+        case Token::Type::OPEN_SQUARE:
+            return parseOpenSquareTokenExpression();
 
-            // Form
-        case Token::Type::OPEN_SQUARE: return parseOpenSquareTokenExpression();
+        case Token::Type::NOTE:
+            return parseNoteTokenExpression();
 
-            // NoteExpression
-        case Token::Type::NOTE: return parseNoteTokenExpression();
+        case Token::Type::NUMBER:
+            return parseNumberTokenExpression();
 
-            // NumberExpression
-        case Token::Type::NUMBER: return parseNumberTokenExpression();
+        case Token::Type::DOUBLE_STRING:
+            return parseStringTokenExpression();
 
-            // StringExpression
-        case Token::Type::DOUBLE_STRING: return parseStringTokenExpression();
-
-            // UnaryExpression
         case Token::Type::PLUS:
         case Token::Type::MINUS:
         case Token::Type::NOT:
@@ -94,13 +86,14 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePrefix(Precedence precedence)
         case Token::Type::DECREMENT:
             return parseUnaryTokenExpression();
 
-            // VariableExpression
-        case Token::Type::IDENTIFIER: return parseIdentifierTokenExpression(precedence);
+        case Token::Type::IDENTIFIER:
+            return parseIdentifierTokenExpression(precedence);
 
-            // Sub-expression
-        case Token::Type::OPEN_BRACKET: return parseSubTokenExpression();
+        case Token::Type::OPEN_BRACKET:
+            return parseSubTokenExpression();
 
-        default: throw fail(firstToken);
+        default:
+            throw fail(firstToken);
     }
 
     throw fail(firstToken);
@@ -184,7 +177,7 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
 }
 
 static std::regex noteRegex("([a-gA-G]#?)([0-9]+)", std::regex::ECMAScript | std::regex::optimize);
-static std::array<std::string, 12> noteNames = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+static std::array<std::string, 12> noteNames = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 std::unique_ptr<MaximAst::Expression> Parser::parseNoteTokenExpression() {
     auto noteToken = stream()->next();
@@ -256,9 +249,15 @@ std::unique_ptr<MaximAst::Expression> Parser::parseUnaryTokenExpression() {
     auto typeToken = stream()->next();
     UnaryExpression::Type unaryType;
     switch (typeToken.type) {
-        case Token::Type::PLUS: unaryType = UnaryExpression::Type::POSITIVE; break;
-        case Token::Type::MINUS: unaryType = UnaryExpression::Type::NEGATIVE; break;
-        case Token::Type::NOT: unaryType = UnaryExpression::Type::NOT; break;
+        case Token::Type::PLUS:
+            unaryType = UnaryExpression::Type::POSITIVE;
+            break;
+        case Token::Type::MINUS:
+            unaryType = UnaryExpression::Type::NEGATIVE;
+            break;
+        case Token::Type::NOT:
+            unaryType = UnaryExpression::Type::NOT;
+            break;
         default:
             throw fail(typeToken);
     }
@@ -280,7 +279,8 @@ std::unique_ptr<MaximAst::Expression> Parser::parseIdentifierTokenExpression(Pre
     }
 }
 
-std::unique_ptr<MaximAst::Expression> Parser::parseLValueListExpression(Precedence precedence, std::string firstName, SourcePos startPos) {
+std::unique_ptr<MaximAst::Expression>
+Parser::parseLValueListExpression(Precedence precedence, std::string firstName, SourcePos startPos) {
     auto lvalueList = std::make_unique<LValueExpression>(stream()->peek().startPos, SourcePos(0, 0));
 
     auto firstIter = true;
@@ -406,7 +406,8 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfixExpression(std::unique
         case Token::Type::DECREMENT:
             postfixType = PostfixExpression::Type::DECREMENT;
             break;
-        default: throw fail(postfixToken);
+        default:
+            throw fail(postfixToken);
     }
 
     auto prefixPtr = prefix.get();
@@ -423,7 +424,8 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfixExpression(std::unique
     auto assignable = std::move(leftVal->assignments[0]);
 
     auto assignableStart = assignable->startPos;
-    return std::make_unique<PostfixExpression>(std::move(assignable), postfixType, assignableStart, postfixToken.endPos);
+    return std::make_unique<PostfixExpression>(std::move(assignable), postfixType, assignableStart,
+                                               postfixToken.endPos);
 }
 
 std::unique_ptr<MaximAst::Expression> Parser::parseMathExpression(std::unique_ptr<MaximAst::Expression> prefix) {
@@ -527,7 +529,8 @@ std::unique_ptr<MaximAst::Expression> Parser::parseAssignExpression(std::unique_
 
     auto assignableStart = assignable->startPos;
     auto postfixEnd = postfix->endPos;
-    return std::make_unique<AssignExpression>(std::move(assignable), opType, std::move(postfix), assignableStart, postfixEnd);
+    return std::make_unique<AssignExpression>(std::move(assignable), opType, std::move(postfix), assignableStart,
+                                              postfixEnd);
 }
 
 Parser::Precedence Parser::operatorToPrecedence(Token::Type type) {
@@ -581,7 +584,8 @@ Parser::Precedence Parser::operatorToPrecedence(Token::Type type) {
 void Parser::expect(const Token &token, Token::Type expectedType) {
     if (token.type != expectedType) {
         throw ParseError(
-                "Dude, why is there a " + Token::typeString(token.type) + "? I expected a " + Token::typeString(expectedType) + " (or something else) here.",
+                "Dude, why is there a " + Token::typeString(token.type) + "? I expected a " +
+                Token::typeString(expectedType) + " (or something else) here.",
                 token.startPos, token.endPos
         );
     }

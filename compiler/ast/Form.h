@@ -17,7 +17,7 @@ namespace MaximAst {
         SourcePos endPos;
 
         Form(std::string name, SourcePos start, SourcePos end)
-                : name(std::move(name)), startPos(start), endPos(end) { }
+                : name(std::move(name)), startPos(start), endPos(end) {}
 
         void appendString(std::stringstream &s) {
             s << "(form " << name << " ";

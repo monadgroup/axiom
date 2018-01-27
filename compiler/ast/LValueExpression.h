@@ -11,7 +11,7 @@ namespace MaximAst {
     public:
         std::vector<std::unique_ptr<AssignableExpression>> assignments;
 
-        LValueExpression(SourcePos startPos, SourcePos endPos) : Expression(startPos, endPos) { }
+        LValueExpression(SourcePos startPos, SourcePos endPos) : Expression(startPos, endPos) {}
 
         void appendString(std::stringstream &s) override {
             s << "(lvalue ";

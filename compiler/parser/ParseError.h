@@ -10,7 +10,7 @@ namespace MaximParser {
         SourcePos start;
         SourcePos end;
 
-        ParseError(std::string message, SourcePos start, SourcePos end) : message(message), start(start), end(end) { }
+        ParseError(std::string message, SourcePos start, SourcePos end) : message(message), start(start), end(end) {}
     };
 
 }
