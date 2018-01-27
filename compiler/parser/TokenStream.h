@@ -34,7 +34,7 @@ namespace MaximParser {
 
         bool filter(const Token &token);
 
-        static constexpr std::size_t matchCount = 51;
+        static constexpr std::size_t matchCount = 52;
 
         using PairType = std::pair<std::regex, Token::Type>;
         using PairListType = std::array<PairType, matchCount>;

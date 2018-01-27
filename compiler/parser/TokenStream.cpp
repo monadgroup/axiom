@@ -20,7 +20,8 @@ Token TokenStream::next() {
         hasBuffer = false;
         return peekBuffer;
     }
-    return processNext();
+    auto nextToken = processNext();
+    return nextToken;
 }
 
 Token TokenStream::peek() {
@@ -28,6 +29,8 @@ Token TokenStream::peek() {
         hasBuffer = true;
         peekBuffer = processNext();
     }
+
+    auto nextToken = peekBuffer;
 
     return peekBuffer;
 }
@@ -95,12 +98,16 @@ bool TokenStream::filter(const Token &token) {
         isSingleLineComment = false;
     } else if (token.type == Token::Type::COMMENT_OPEN) {
         multiLineCommentCount++;
-    } else if (token.type == Token::Type::COMMENT_CLOSE) {
+    }
+
+    auto isValid = !isSingleLineComment && !multiLineCommentCount;
+
+    if (token.type == Token::Type::COMMENT_CLOSE) {
         multiLineCommentCount--;
         if (multiLineCommentCount < 0) multiLineCommentCount = 0;
     }
 
-    return !isSingleLineComment && !multiLineCommentCount;
+    return isValid;
 }
 
 TokenStream::PairListType TokenStream::matches = {
@@ -154,6 +161,7 @@ TokenStream::PairListType TokenStream::matches = {
         getToken(R"(\{)", Token::Type::OPEN_CURLY),
         getToken(R"(\})", Token::Type::CLOSE_CURLY),
         getToken(R"(,)", Token::Type::COMMA),
+        getToken(R"(;)", Token::Type::SEMICOLON),
         getToken(R"(\.)", Token::Type::DOT),
         getToken(R"(:)", Token::Type::COLON),
         getToken(R"(#)", Token::Type::HASH),

@@ -1,6 +1,7 @@
 #include "Parser.h"
 
 #include <cassert>
+#include <iostream>
 
 #include "TokenStream.h"
 #include "../util.h"
@@ -17,6 +18,7 @@
 #include "../ast/PostfixExpression.h"
 #include "../ast/MathExpression.h"
 #include "../ast/AssignExpression.h"
+#include "../ast/LValueExpression.h"
 #include "../ast/Form.h"
 
 using namespace MaximParser;
@@ -35,11 +37,15 @@ std::unique_ptr<Block> Parser::parse() {
     auto block = std::make_unique<Block>();
 
     while (stream()->peek().type != Token::Type::END_OF_FILE) {
-        auto expr = parseExpression();
-        block->expressions.push_back(std::move(expr));
+        if (stream()->peek().type != Token::Type::END_OF_LINE) {
+            auto expr = parseExpression();
+            block->expressions.push_back(std::move(expr));
+        }
 
         expect(stream()->next(), Token::Type::END_OF_LINE);
     }
+
+    return std::move(block);
 }
 
 std::unique_ptr<MaximAst::Expression> Parser::parseExpression() {
@@ -48,9 +54,11 @@ std::unique_ptr<MaximAst::Expression> Parser::parseExpression() {
 
 std::unique_ptr<MaximAst::Expression> Parser::parseExpression(Precedence precedence) {
     auto result = parsePrefix(precedence);
-    while (stream()->peek().type != Token::Type::END_OF_LINE) {
+    MaximAst::Expression *lastResult;
+    do {
+        lastResult = result.get();
         result = parsePostfix(std::move(result), precedence);
-    }
+    } while (result.get() != lastResult);
     return result;
 }
 
@@ -64,7 +72,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePrefix(Precedence precedence)
         case Token::Type::COMMENT_OPEN:break;
 
             // ControlExpression
-        case Token::Type::COLON: return parseColonTokenExpression();
+        case Token::Type::COLON: return parseColonTokenExpression(precedence);
 
             // Form
         case Token::Type::OPEN_SQUARE: return parseOpenSquareTokenExpression();
@@ -87,21 +95,22 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePrefix(Precedence precedence)
             return parseUnaryTokenExpression();
 
             // VariableExpression
-        case Token::Type::IDENTIFIER: return parseIdentifierTokenExpression();
+        case Token::Type::IDENTIFIER: return parseIdentifierTokenExpression(precedence);
 
             // Sub-expression
         case Token::Type::OPEN_BRACKET: return parseSubTokenExpression();
 
-        default:
-            throw fail(firstToken);
+        default: throw fail(firstToken);
     }
+
+    throw fail(firstToken);
 }
 
 std::unique_ptr<MaximAst::Expression> Parser::parsePostfix(std::unique_ptr<MaximAst::Expression> prefix,
                                                            Precedence precedence) {
     auto nextToken = stream()->peek();
     auto nextPrecedence = operatorToPrecedence(nextToken.type);
-    if (precedence > nextPrecedence) return prefix;
+    if (precedence <= nextPrecedence) return prefix;
 
     switch (nextToken.type) {
         case Token::Type::CAST:
@@ -144,9 +153,10 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfix(std::unique_ptr<Maxim
     }
 }
 
-std::unique_ptr<MaximAst::Expression> Parser::parseColonTokenExpression() {
+std::unique_ptr<MaximAst::Expression> Parser::parseColonTokenExpression(Precedence precedence) {
     auto colon = stream()->peek();
-    return parseControlExpression("", colon.startPos);
+    expect(colon, Token::Type::COLON);
+    return parseLValueListExpression(precedence, "", colon.startPos);
 }
 
 std::unique_ptr<MaximAst::Expression> Parser::parseOpenSquareTokenExpression() {
@@ -163,7 +173,9 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     expect(nameToken, Token::Type::IDENTIFIER);
 
     auto form = std::make_unique<Form>(nameToken.content, nameToken.startPos, SourcePos(0, 0));
-    parseArguments(form->arguments);
+    if (stream()->peek().type != Token::Type::CLOSE_SQUARE) {
+        parseArguments(form->arguments);
+    }
     auto closeToken = stream()->next();
     expect(closeToken, Token::Type::CLOSE_SQUARE);
     form->endPos = closeToken.endPos;
@@ -183,7 +195,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNoteTokenExpression() {
 
     auto noteName = toUpperCase(match[1].str());
     auto noteNum = std::distance(noteNames.begin(), std::find(noteNames.begin(), noteNames.end(), noteName));
-    if (noteNum >= noteNames.size()) {
+    if ((size_t) noteNum >= noteNames.size()) {
         throw ParseError(
                 "Ey my man, don't you know that " + noteName + " isn't a valid note?",
                 noteToken.startPos, noteToken.endPos
@@ -203,7 +215,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
     auto endPos = numberToken.endPos;
     auto postMulToken = stream()->peek();
-    Form valueForm("lin", postMulToken.startPos, postMulToken.endPos);
+    auto valueForm = std::make_unique<Form>("lin", postMulToken.startPos, postMulToken.endPos);
     if (postMulToken.type == Token::Type::IDENTIFIER) {
         auto postMulText = toUpperCase(postMulToken.content);
 
@@ -217,21 +229,21 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
         auto didMatchForm = true;
         auto formStart = didMatchMul ? 1u : 0u;
-        if (postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm.name = "freq";
-        else if (postMulText.compare(formStart, postMulText.npos, "DB")) valueForm.name = "db";
-        else if (postMulText.compare(formStart, postMulText.npos, "Q")) valueForm.name = "q";
-        else if (postMulText.compare(formStart, postMulText.npos, "R")) valueForm.name = "res";
-        else if (postMulText.compare(formStart, postMulText.npos, "S")) valueForm.name = "seconds";
-        else if (postMulText.compare(formStart, postMulText.npos, "B")) valueForm.name = "beats";
+        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->name = "freq";
+        else if (!postMulText.compare(formStart, postMulText.npos, "DB")) valueForm->name = "db";
+        else if (!postMulText.compare(formStart, postMulText.npos, "Q")) valueForm->name = "q";
+        else if (!postMulText.compare(formStart, postMulText.npos, "R")) valueForm->name = "res";
+        else if (!postMulText.compare(formStart, postMulText.npos, "S")) valueForm->name = "seconds";
+        else if (!postMulText.compare(formStart, postMulText.npos, "B")) valueForm->name = "beats";
         else didMatchForm = false;
 
-        if (didMatchMul || didMatchForm) {
+        if ((didMatchMul && postMulText.size() == 1) || didMatchForm) {
             endPos = postMulToken.endPos;
             stream()->next();
         }
     }
 
-    return std::make_unique<NumberExpression>(numValue, valueForm, numberToken.startPos, endPos);
+    return std::make_unique<NumberExpression>(numValue, std::move(valueForm), numberToken.startPos, endPos);
 }
 
 std::unique_ptr<MaximAst::Expression> Parser::parseStringTokenExpression() {
@@ -256,46 +268,58 @@ std::unique_ptr<MaximAst::Expression> Parser::parseUnaryTokenExpression() {
     return std::make_unique<UnaryExpression>(unaryType, std::move(expr), typeToken.startPos, exprEnd);
 }
 
-std::unique_ptr<MaximAst::Expression> Parser::parseIdentifierTokenExpression() {
+std::unique_ptr<MaximAst::Expression> Parser::parseIdentifierTokenExpression(Precedence precedence) {
     auto identifier = stream()->next();
     expect(identifier, Token::Type::IDENTIFIER);
 
     auto nextToken = stream()->peek();
-    if (nextToken.type == Token::Type::COLON) {
-        parseCallExpression(identifier.content, identifier.startPos);
-    } else if (nextToken.type == Token::Type::OPEN_BRACKET) {
-        parseControlExpression(identifier.content, identifier.startPos);
+    if (nextToken.type == Token::Type::OPEN_BRACKET) {
+        return parseCallExpression(identifier.content, identifier.startPos);
     } else {
-        return std::make_unique<VariableExpression>(identifier.content, identifier.startPos, identifier.endPos);
+        return parseLValueListExpression(precedence, identifier.content, identifier.startPos);
     }
 }
 
-std::unique_ptr<MaximAst::Expression> Parser::parseCallExpression(std::string name, SourcePos startPos) {
-    auto callExpr = std::make_unique<CallExpression>(name, startPos, SourcePos(0, 0));
+std::unique_ptr<MaximAst::Expression> Parser::parseLValueListExpression(Precedence precedence, std::string firstName, SourcePos startPos) {
+    auto lvalueList = std::make_unique<LValueExpression>(stream()->peek().startPos, SourcePos(0, 0));
 
-    expect(stream()->next(), Token::Type::OPEN_BRACKET);
-    if (stream()->peek().type != Token::Type::CLOSE_BRACKET) {
-        parseArguments(callExpr->arguments);
+    auto firstIter = true;
+    do {
+        std::string itemName;
+        SourcePos itemStart(0, 0);
+
+        if (firstIter) {
+            itemName = firstName;
+            itemStart = startPos;
+        } else {
+            stream()->next();
+
+            auto peekToken = stream()->peek();
+            itemStart = peekToken.startPos;
+            if (peekToken.type == Token::Type::COLON) {
+                itemName = "";
+            } else if (peekToken.type == Token::Type::IDENTIFIER) {
+                stream()->next();
+                itemName = peekToken.content;
+            } else fail(peekToken);
+        }
+        firstIter = false;
+
+        lvalueList->assignments.push_back(parseLValueExpression(itemName, itemStart));
+    } while (precedence > Precedence::ARGUMENTS && stream()->peek().type == Token::Type::COMMA);
+
+    return std::move(lvalueList);
+}
+
+std::unique_ptr<MaximAst::AssignableExpression> Parser::parseLValueExpression(std::string name, SourcePos startPos) {
+    if (stream()->peek().type == Token::Type::COLON) {
+        return parseControlExpression(name, startPos);
+    } else {
+        return std::make_unique<VariableExpression>(name, startPos, stream()->peek().startPos);
     }
-    auto closeBracket = stream()->next();
-    expect(closeBracket, Token::Type::CLOSE_BRACKET);
-    callExpr->endPos = closeBracket.endPos;
-
-    return std::move(callExpr);
 }
 
-std::unique_ptr<MaximAst::Expression> Parser::parseSubTokenExpression() {
-    auto openBracket = stream()->next();
-    expect(openBracket, Token::Type::OPEN_BRACKET);
-    auto subExpr = parseExpression();
-    auto closeBracket = stream()->next();
-    expect(closeBracket, Token::Type::CLOSE_BRACKET);
-    subExpr->startPos = openBracket.startPos;
-    subExpr->endPos = closeBracket.endPos;
-    return subExpr;
-}
-
-std::unique_ptr<MaximAst::Expression> Parser::parseControlExpression(std::string name, SourcePos startPos) {
+std::unique_ptr<MaximAst::AssignableExpression> Parser::parseControlExpression(std::string name, SourcePos startPos) {
     expect(stream()->next(), Token::Type::COLON);
     auto typeToken = stream()->next();
     expect(typeToken, Token::Type::IDENTIFIER);
@@ -330,10 +354,39 @@ std::unique_ptr<MaximAst::Expression> Parser::parseControlExpression(std::string
     return std::make_unique<ControlExpression>(name, controlType, propertyName, startPos, endPos);
 }
 
+std::unique_ptr<MaximAst::Expression> Parser::parseCallExpression(std::string name, SourcePos startPos) {
+    auto callExpr = std::make_unique<CallExpression>(name, startPos, SourcePos(0, 0));
+
+    expect(stream()->next(), Token::Type::OPEN_BRACKET);
+    if (stream()->peek().type != Token::Type::CLOSE_BRACKET) {
+        parseArguments(callExpr->arguments);
+    }
+    auto closeBracket = stream()->next();
+    expect(closeBracket, Token::Type::CLOSE_BRACKET);
+    callExpr->endPos = closeBracket.endPos;
+
+    return std::move(callExpr);
+}
+
+std::unique_ptr<MaximAst::Expression> Parser::parseSubTokenExpression() {
+    auto openBracket = stream()->next();
+    expect(openBracket, Token::Type::OPEN_BRACKET);
+    auto subExpr = parseExpression();
+    auto closeBracket = stream()->next();
+    expect(closeBracket, Token::Type::CLOSE_BRACKET);
+    subExpr->startPos = openBracket.startPos;
+    subExpr->endPos = closeBracket.endPos;
+    return subExpr;
+}
+
 void Parser::parseArguments(std::vector<std::unique_ptr<MaximAst::Expression>> &arguments) {
+    auto firstIter = true;
     do {
-        arguments.push_back(std::move(parseExpression()));
-    } while (stream()->next().type == Token::Type::COMMA);
+        if (!firstIter) stream()->next();
+        firstIter = false;
+
+        arguments.push_back(std::move(parseExpression(Precedence::ARGUMENTS)));
+    } while (stream()->peek().type == Token::Type::COMMA);
 }
 
 std::unique_ptr<MaximAst::Expression> Parser::parseCastExpression(std::unique_ptr<MaximAst::Expression> prefix) {
@@ -356,8 +409,18 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfixExpression(std::unique
         default: throw fail(postfixToken);
     }
 
-    auto assignable = MaximUtil::dynamic_unique_cast<AssignableExpression>(std::move(prefix));
-    if (!assignable) throw castFail(assignable.get());
+    auto prefixPtr = prefix.get();
+    auto leftVal = MaximUtil::dynamic_unique_cast<LValueExpression>(std::move(prefix));
+    if (!leftVal) throw castFail(prefixPtr);
+
+    if (leftVal->assignments.size() != 1) {
+        throw ParseError(
+                "I'm sorry dude... I can't... I just can't do that to multiple variables at once.",
+                leftVal->startPos, postfixToken.endPos
+        );
+    }
+
+    auto assignable = std::move(leftVal->assignments[0]);
 
     auto assignableStart = assignable->startPos;
     return std::make_unique<PostfixExpression>(std::move(assignable), postfixType, assignableStart, postfixToken.endPos);
@@ -456,8 +519,9 @@ std::unique_ptr<MaximAst::Expression> Parser::parseAssignExpression(std::unique_
             fail(opToken);
     }
 
-    auto assignable = MaximUtil::dynamic_unique_cast<AssignableExpression>(std::move(prefix));
-    if (!assignable) throw castFail(assignable.get());
+    auto exprPtr = prefix.get();
+    auto assignable = MaximUtil::dynamic_unique_cast<LValueExpression>(std::move(prefix));
+    if (!assignable) throw castFail(exprPtr);
 
     auto postfix = parseExpression(operatorToPrecedence(opToken.type));
 
@@ -510,14 +574,14 @@ Parser::Precedence Parser::operatorToPrecedence(Token::Type type) {
         case Token::Type::END_OF_LINE:
         case Token::Type::END_OF_FILE:
         default:
-            return Precedence::NONE;
+            return Precedence::ALL;
     }
 }
 
 void Parser::expect(const Token &token, Token::Type expectedType) {
     if (token.type != expectedType) {
         throw ParseError(
-                "Dude, why is there a " + Token::typeString(token.type) + "? I expected a " + Token::typeString(expectedType) + " here.",
+                "Dude, why is there a " + Token::typeString(token.type) + "? I expected a " + Token::typeString(expectedType) + " (or something else) here.",
                 token.startPos, token.endPos
         );
     }
@@ -532,7 +596,7 @@ ParseError Parser::fail(const Token &token) {
 
 ParseError Parser::castFail(MaximAst::Expression *expr) {
     return ParseError(
-            "Hey! I ned something I can assign to here, not this silly fuge you're giving me.",
+            "Hey! I need something I can assign to here, not this silly fudge you're giving me.",
             expr->startPos, expr->endPos
     );
 }

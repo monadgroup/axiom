@@ -25,6 +25,7 @@ namespace MaximParser {
             OPEN_CURLY,
             CLOSE_CURLY,
             COMMA,
+            SEMICOLON,
             DOT,
             COLON,
             HASH,

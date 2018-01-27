@@ -10,6 +10,10 @@ namespace MaximAst {
 
         VariableExpression(std::string name, SourcePos start, SourcePos end)
                 : AssignableExpression(start, end), name(std::move(name)) { }
+
+        void appendString(std::stringstream &s) override {
+            s << "(var " << name << ")";
+        }
     };
 
 }

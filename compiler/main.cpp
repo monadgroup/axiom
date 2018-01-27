@@ -1,6 +1,19 @@
-#include "parser/TokenStream.h"
-
 #include <iostream>
+
+#include "parser/TokenStream.h"
+#include "parser/Parser.h"
+#include "ast/Block.h"
+#include "ast/Expression.h"
+#include "ast/UnaryExpression.h"
+#include "ast/VariableExpression.h"
+#include "ast/ControlExpression.h"
+#include "ast/CallExpression.h"
+#include "ast/CastExpression.h"
+#include "ast/NoteExpression.h"
+#include "ast/NumberExpression.h"
+#include "ast/PostfixExpression.h"
+#include "ast/MathExpression.h"
+#include "ast/AssignExpression.h"
 
 using namespace MaximParser;
 
@@ -18,19 +31,19 @@ std::string getInput() {
 }
 
 int main() {
-    auto results = getInput();
+    while (true) {
+        auto results = getInput();
 
-    std::cout << "Processing: " << std::endl;
-    std::cout << results << std::endl;
-    std::cout << "---------" << std::endl;
+        auto stream = std::make_unique<TokenStream>(results);
+        Parser parser(std::move(stream));
 
-    TokenStream stream(results);
-    Token token(Token::Type::END_OF_FILE, "", SourcePos(0, 0), SourcePos(0, 0));
-    while ((token = stream.next()).type != Token::Type::END_OF_FILE) {
-        std::cout << Token::typeString(token.type);
-        if (!token.content.empty()) std::cout << " \"" << token.content << "\"";
-        std::cout << " (" << token.startPos.line << ":" << token.startPos.column << " -> " << token.endPos.line << ":" << token.endPos.column << ")" << std::endl;
+        try {
+            auto block = parser.parse();
+            std::cout << block->toString() << std::endl;
+        } catch (const ParseError &err) {
+            std::cout << "Parse error from " << err.start.line << ":" << err.start.column << " to " << err.end.line
+                      << ":" << err.end.column << std::endl;
+            std::cout << err.message << std::endl;
+        }
     }
-
-    return 0;
 }

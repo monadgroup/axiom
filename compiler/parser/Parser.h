@@ -9,6 +9,7 @@
 namespace MaximAst {
     class Block;
     class Expression;
+    class AssignableExpression;
     class Form;
 }
 
@@ -34,23 +35,25 @@ namespace MaximParser {
             CASTING = 1,
             UNARY = 2,
 
-            BITWISE = 3,
+            POWER = 3,
 
-            ADD = 4,
-            SUBTRACT = 4,
+            BITWISE = 4,
 
             MULTIPLY = 5,
             DIVIDE = 5,
             MODULO = 5,
 
-            POWER = 6,
+            ADD = 6,
+            SUBTRACT = 6,
 
-            EQUALITY = 8,
-            LOGICAL = 7,
+            EQUALITY = 7,
+            LOGICAL = 8,
 
             ASSIGNMENT = 9,
 
-            ALL = 10
+            ARGUMENTS = 10,
+
+            ALL = 11
         };
 
         std::unique_ptr<TokenStream> _stream;
@@ -58,16 +61,18 @@ namespace MaximParser {
         std::unique_ptr<MaximAst::Expression> parseExpression(Precedence precedence);
         std::unique_ptr<MaximAst::Expression> parsePrefix(Precedence precedence);
         std::unique_ptr<MaximAst::Expression> parsePostfix(std::unique_ptr<MaximAst::Expression> prefix, Precedence precedence);
-        std::unique_ptr<MaximAst::Expression> parseColonTokenExpression();
+        std::unique_ptr<MaximAst::Expression> parseColonTokenExpression(Precedence precedence);
         std::unique_ptr<MaximAst::Expression> parseOpenSquareTokenExpression();
         std::unique_ptr<MaximAst::Form> parseForm();
         std::unique_ptr<MaximAst::Expression> parseNoteTokenExpression();
         std::unique_ptr<MaximAst::Expression> parseNumberTokenExpression();
         std::unique_ptr<MaximAst::Expression> parseStringTokenExpression();
         std::unique_ptr<MaximAst::Expression> parseUnaryTokenExpression();
-        std::unique_ptr<MaximAst::Expression> parseIdentifierTokenExpression();
+        std::unique_ptr<MaximAst::Expression> parseIdentifierTokenExpression(Precedence precedence);
+        std::unique_ptr<MaximAst::Expression> parseLValueListExpression(Precedence precedence, std::string firstName, SourcePos startPos);
+        std::unique_ptr<MaximAst::AssignableExpression> parseLValueExpression(std::string name, SourcePos startPos);
+        std::unique_ptr<MaximAst::AssignableExpression> parseControlExpression(std::string name, SourcePos startPos);
         std::unique_ptr<MaximAst::Expression> parseCallExpression(std::string name, SourcePos startPos);
-        std::unique_ptr<MaximAst::Expression> parseControlExpression(std::string name, SourcePos startPos);
         std::unique_ptr<MaximAst::Expression> parseSubTokenExpression();
         void parseArguments(std::vector<std::unique_ptr<MaximAst::Expression>> &arguments);
 

@@ -14,6 +14,12 @@ namespace MaximAst {
 
         PropertyExpression(std::unique_ptr<AssignableExpression> base, std::string property, SourcePos start, SourcePos end)
                 : AssignableExpression(start, end), base(std::move(base)), property(std::move(property)) { }
+
+        void appendString(std::stringstream &s) override {
+            s << "(prop " << property << " ";
+            base->appendString(s);
+            s << ")";
+        }
     };
 
 }
