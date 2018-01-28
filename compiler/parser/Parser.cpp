@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "TokenStream.h"
-#include "../util.h"
 
 #include "../ast/Block.h"
 #include "../ast/UnaryExpression.h"
@@ -17,6 +16,8 @@
 #include "../ast/PostfixExpression.h"
 #include "../ast/MathExpression.h"
 #include "../ast/AssignExpression.h"
+#include "../ast/TupleExpression.h"
+#include "../util.h"
 
 using namespace MaximParser;
 using namespace MaximAst;
@@ -149,7 +150,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfix(std::unique_ptr<Maxim
 std::unique_ptr<MaximAst::Expression> Parser::parseColonTokenExpression(Precedence precedence) {
     auto colon = stream()->peek();
     expect(colon, Token::Type::COLON);
-    return parseLValueListExpression(precedence, "", colon.startPos);
+    return parseControlExpression("", colon.startPos);
 }
 
 std::unique_ptr<MaximAst::Expression> Parser::parseOpenSquareTokenExpression() {
@@ -274,48 +275,10 @@ std::unique_ptr<MaximAst::Expression> Parser::parseIdentifierTokenExpression(Pre
     auto nextToken = stream()->peek();
     if (nextToken.type == Token::Type::OPEN_BRACKET) {
         return parseCallExpression(identifier.content, identifier.startPos);
+    } else if (nextToken.type == Token::Type::COLON) {
+        return parseControlExpression(identifier.content, identifier.startPos);
     } else {
-        return parseLValueListExpression(precedence, identifier.content, identifier.startPos);
-    }
-}
-
-std::unique_ptr<MaximAst::Expression>
-Parser::parseLValueListExpression(Precedence precedence, std::string firstName, SourcePos startPos) {
-    auto lvalueList = std::make_unique<LValueExpression>(stream()->peek().startPos, SourcePos(0, 0));
-
-    auto firstIter = true;
-    do {
-        std::string itemName;
-        SourcePos itemStart(0, 0);
-
-        if (firstIter) {
-            itemName = firstName;
-            itemStart = startPos;
-        } else {
-            stream()->next();
-
-            auto peekToken = stream()->peek();
-            itemStart = peekToken.startPos;
-            if (peekToken.type == Token::Type::COLON) {
-                itemName = "";
-            } else if (peekToken.type == Token::Type::IDENTIFIER) {
-                stream()->next();
-                itemName = peekToken.content;
-            } else fail(peekToken);
-        }
-        firstIter = false;
-
-        lvalueList->assignments.push_back(parseLValueExpression(itemName, itemStart));
-    } while (precedence > Precedence::ARGUMENTS && stream()->peek().type == Token::Type::COMMA);
-
-    return std::move(lvalueList);
-}
-
-std::unique_ptr<MaximAst::AssignableExpression> Parser::parseLValueExpression(std::string name, SourcePos startPos) {
-    if (stream()->peek().type == Token::Type::COLON) {
-        return parseControlExpression(name, startPos);
-    } else {
-        return std::make_unique<VariableExpression>(name, startPos, stream()->peek().startPos);
+        return std::make_unique<VariableExpression>(identifier.content, identifier.startPos, identifier.endPos);
     }
 }
 
@@ -371,12 +334,27 @@ std::unique_ptr<MaximAst::Expression> Parser::parseCallExpression(std::string na
 std::unique_ptr<MaximAst::Expression> Parser::parseSubTokenExpression() {
     auto openBracket = stream()->next();
     expect(openBracket, Token::Type::OPEN_BRACKET);
-    auto subExpr = parseExpression();
-    auto closeBracket = stream()->next();
-    expect(closeBracket, Token::Type::CLOSE_BRACKET);
-    subExpr->startPos = openBracket.startPos;
-    subExpr->endPos = closeBracket.endPos;
-    return subExpr;
+
+    auto tupleExpr = std::make_unique<TupleExpression>(openBracket.startPos, SourcePos(0, 0));
+
+    auto firstIter = true;
+    auto nextToken = stream()->peek();
+    while (true) {
+        if (nextToken.type == Token::Type::CLOSE_BRACKET) break;
+        if (!firstIter) expect(stream()->next(), Token::Type::COMMA);
+        firstIter = false;
+
+        tupleExpr->expressions.push_back(parseExpression());
+        nextToken = stream()->peek();
+    }
+    stream()->next();
+
+    if (tupleExpr->expressions.size() == 1) {
+        return std::move(tupleExpr->expressions[0]);
+    } else {
+        tupleExpr->endPos = nextToken.endPos;
+        return std::move(tupleExpr);
+    }
 }
 
 void Parser::parseArguments(std::vector<std::unique_ptr<MaximAst::Expression>> &arguments) {
@@ -385,7 +363,7 @@ void Parser::parseArguments(std::vector<std::unique_ptr<MaximAst::Expression>> &
         if (!firstIter) stream()->next();
         firstIter = false;
 
-        arguments.push_back(std::move(parseExpression(Precedence::ARGUMENTS)));
+        arguments.push_back(std::move(parseExpression()));
     } while (stream()->peek().type == Token::Type::COMMA);
 }
 
@@ -410,9 +388,8 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfixExpression(std::unique
             throw fail(postfixToken);
     }
 
-    auto prefixPtr = prefix.get();
-    auto leftVal = MaximUtil::dynamic_unique_cast<LValueExpression>(std::move(prefix));
-    if (!leftVal) throw castFail(prefixPtr);
+    auto leftVal = AxiomUtil::dynamic_unique_cast<LValueExpression>(prefix);
+    if (!leftVal) throw castFail(prefix.get());
 
     if (leftVal->assignments.size() != 1) {
         throw ParseError(
@@ -521,9 +498,8 @@ std::unique_ptr<MaximAst::Expression> Parser::parseAssignExpression(std::unique_
             fail(opToken);
     }
 
-    auto exprPtr = prefix.get();
-    auto assignable = MaximUtil::dynamic_unique_cast<LValueExpression>(std::move(prefix));
-    if (!assignable) throw castFail(exprPtr);
+    auto assignable = std::make_unique<LValueExpression>(prefix->startPos, prefix->endPos);
+    pushAssignable(assignable->assignments, std::move(prefix));
 
     auto postfix = parseExpression(operatorToPrecedence(opToken.type));
 
@@ -578,6 +554,22 @@ Parser::Precedence Parser::operatorToPrecedence(Token::Type type) {
         case Token::Type::END_OF_FILE:
         default:
             return Precedence::ALL;
+    }
+}
+
+void Parser::pushAssignable(std::vector<std::unique_ptr<MaximAst::AssignableExpression>> &target,
+                            std::unique_ptr<MaximAst::Expression> source) {
+    auto tupleSource = AxiomUtil::dynamic_unique_cast<TupleExpression>(source);
+    if (tupleSource) {
+        for (auto &item : tupleSource->expressions) {
+            auto assignableItem = AxiomUtil::dynamic_unique_cast<AssignableExpression>(item);
+            if (assignableItem) target.push_back(std::move(assignableItem));
+            else throw castFail(item.get());
+        }
+    } else {
+        auto assignableItem = AxiomUtil::dynamic_unique_cast<AssignableExpression>(source);
+        if (assignableItem) target.push_back(std::move(assignableItem));
+        else throw castFail(source.get());
     }
 }
 

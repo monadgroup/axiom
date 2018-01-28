@@ -14,13 +14,11 @@ namespace MaximAst {
     public:
         std::vector<std::unique_ptr<Expression>> expressions;
 
-        std::string toString() {
-            std::stringstream s;
+        void appendString(std::ostream &s) {
             for (const auto &expr : expressions) {
                 expr->appendString(s);
                 s << std::endl;
             }
-            return s.str();
         }
     };
 

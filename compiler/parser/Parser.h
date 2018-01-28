@@ -52,9 +52,7 @@ namespace MaximParser {
             EQUALITY = 7,
             LOGICAL = 8,
 
-            ASSIGNMENT = 9,
-
-            ARGUMENTS = 10,
+            ASSIGNMENT = 10,
 
             ALL = 11
         };
@@ -84,11 +82,6 @@ namespace MaximParser {
 
         std::unique_ptr<MaximAst::Expression> parseIdentifierTokenExpression(Precedence precedence);
 
-        std::unique_ptr<MaximAst::Expression>
-        parseLValueListExpression(Precedence precedence, std::string firstName, SourcePos startPos);
-
-        std::unique_ptr<MaximAst::AssignableExpression> parseLValueExpression(std::string name, SourcePos startPos);
-
         std::unique_ptr<MaximAst::AssignableExpression> parseControlExpression(std::string name, SourcePos startPos);
 
         std::unique_ptr<MaximAst::Expression> parseCallExpression(std::string name, SourcePos startPos);
@@ -106,6 +99,8 @@ namespace MaximParser {
         std::unique_ptr<MaximAst::Expression> parseAssignExpression(std::unique_ptr<MaximAst::Expression> prefix);
 
         static Precedence operatorToPrecedence(Token::Type type);
+
+        static void pushAssignable(std::vector<std::unique_ptr<MaximAst::AssignableExpression>> &target, std::unique_ptr<MaximAst::Expression> source);
 
         static void expect(const Token &token, Token::Type expectedType);
 

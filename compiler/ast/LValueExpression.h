@@ -13,8 +13,9 @@ namespace MaximAst {
 
         LValueExpression(SourcePos startPos, SourcePos endPos) : Expression(startPos, endPos) {}
 
-        void appendString(std::stringstream &s) override {
-            s << "(lvalue ";
+        void appendString(std::ostream &s) override {
+            s << "(lvalue";
+            if (!assignments.empty()) s << " ";
             for (size_t i = 0; i < assignments.size(); i++) {
                 assignments[i]->appendString(s);
                 if (i != assignments.size() - 1) s << " ";

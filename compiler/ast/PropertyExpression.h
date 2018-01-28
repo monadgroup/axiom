@@ -16,7 +16,7 @@ namespace MaximAst {
                            SourcePos end)
                 : AssignableExpression(start, end), base(std::move(base)), property(std::move(property)) {}
 
-        void appendString(std::stringstream &s) override {
+        void appendString(std::ostream &s) override {
             s << "(prop " << property << " ";
             base->appendString(s);
             s << ")";

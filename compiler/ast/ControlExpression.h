@@ -24,7 +24,7 @@ namespace MaximAst {
         ControlExpression(std::string name, Type type, std::string prop, SourcePos start, SourcePos end)
                 : AssignableExpression(start, end), name(std::move(name)), type(type), prop(prop) {}
 
-        void appendString(std::stringstream &s) override {
+        void appendString(std::ostream &s) override {
             s << "(control " << name << " ";
             switch (type) {
                 case Type::LABEL:

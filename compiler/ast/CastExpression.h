@@ -15,7 +15,7 @@ namespace MaximAst {
                        SourcePos end)
                 : Expression(start, end), target(std::move(target)), expr(std::move(expr)), isConvert(isConvert) {}
 
-        void appendString(std::stringstream &s) override {
+        void appendString(std::ostream &s) override {
             s << "(" << (isConvert ? "convert" : "cast") << " ";
             target->appendString(s);
             s << " ";

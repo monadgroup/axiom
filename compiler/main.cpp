@@ -39,7 +39,7 @@ int main() {
 
         try {
             auto block = parser.parse();
-            std::cout << block->toString() << std::endl;
+            block->appendString(std::cout);
         } catch (const ParseError &err) {
             std::cout << "Parse error from " << err.start.line << ":" << err.start.column << " to " << err.end.line
                       << ":" << err.end.column << std::endl;

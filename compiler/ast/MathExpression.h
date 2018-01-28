@@ -35,7 +35,7 @@ namespace MaximAst {
                        SourcePos end)
                 : Expression(start, end), left(std::move(left)), type(type), right(std::move(right)) {}
 
-        void appendString(std::stringstream &s) override {
+        void appendString(std::ostream &s) override {
             s << "(math ";
             switch (type) {
                 case Type::ADD:

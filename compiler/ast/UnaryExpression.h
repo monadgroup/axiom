@@ -18,7 +18,7 @@ namespace MaximAst {
         UnaryExpression(Type type, std::unique_ptr<Expression> expr, SourcePos start, SourcePos end)
                 : Expression(start, end), type(type), expr(std::move(expr)) {}
 
-        void appendString(std::stringstream &s) override {
+        void appendString(std::ostream &s) override {
             s << "(unary ";
             switch (type) {
                 case Type::POSITIVE:

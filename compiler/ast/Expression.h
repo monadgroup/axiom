@@ -15,7 +15,7 @@ namespace MaximAst {
 
         virtual ~Expression() = 0;
 
-        virtual void appendString(std::stringstream &s) = 0;
+        virtual void appendString(std::ostream &s) = 0;
     };
 
 }
