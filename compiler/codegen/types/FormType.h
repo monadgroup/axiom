@@ -13,7 +13,9 @@ namespace MaximCodegen {
         FormType(Context *context, Form *form);
 
         llvm::StructType *llType() const override { return _llType; }
+
         llvm::Type *typeType() const { return _typeType; }
+
         llvm::Type *parametersType() const { return _parametersType; }
 
         Form *form() const { return _form; }

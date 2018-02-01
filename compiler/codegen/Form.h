@@ -17,6 +17,7 @@ namespace MaximCodegen {
         explicit Form(Context *context, std::vector<Parameter> parameters);
 
         std::vector<Parameter> const &parameters() const { return _parameters; }
+
         llvm::StructType *type() const { return _type; }
 
     private:

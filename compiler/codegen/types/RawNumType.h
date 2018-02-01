@@ -11,7 +11,9 @@ namespace MaximCodegen {
         explicit RawNumType(Context *context);
 
         llvm::StructType *llType() const override { return _llType; }
+
         llvm::Type *leftType() const { return _leftType; }
+
         llvm::Type *rightType() const { return _rightType; }
 
     private:

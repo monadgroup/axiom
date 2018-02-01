@@ -3,17 +3,6 @@
 #include "parser/TokenStream.h"
 #include "parser/Parser.h"
 #include "ast/Block.h"
-#include "ast/Expression.h"
-#include "ast/UnaryExpression.h"
-#include "ast/VariableExpression.h"
-#include "ast/ControlExpression.h"
-#include "ast/CallExpression.h"
-#include "ast/CastExpression.h"
-#include "ast/NoteExpression.h"
-#include "ast/NumberExpression.h"
-#include "ast/PostfixExpression.h"
-#include "ast/MathExpression.h"
-#include "ast/AssignExpression.h"
 
 using namespace MaximParser;
 

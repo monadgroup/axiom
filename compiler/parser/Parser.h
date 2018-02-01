@@ -100,7 +100,8 @@ namespace MaximParser {
 
         static Precedence operatorToPrecedence(Token::Type type);
 
-        static void pushAssignable(std::vector<std::unique_ptr<MaximAst::AssignableExpression>> &target, std::unique_ptr<MaximAst::Expression> source);
+        static void pushAssignable(std::vector<std::unique_ptr<MaximAst::AssignableExpression>> &target,
+                                   std::unique_ptr<MaximAst::Expression> source);
 
         static void expect(const Token &token, Token::Type expectedType);
 

@@ -9,7 +9,7 @@
 using namespace MaximCodegen;
 
 Form::Form(Context *context, std::vector<Parameter> parameters) : _parameters(std::move(parameters)) {
-    std::vector<llvm::Type*> realTypes;
+    std::vector<llvm::Type *> realTypes;
     realTypes.reserve(_parameters.size());
     for (const auto &param : _parameters) {
         realTypes.push_back(param.type()->llType());

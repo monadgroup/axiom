@@ -239,11 +239,11 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
         auto didMatchForm = true;
         auto formStart = didMatchMul ? 1u : 0u;
         if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->type = Form::Type::FREQUENCY;
-        else if (!postMulText.compare(formStart, postMulText.npos, "DB"))  valueForm->type = Form::Type::DB;
-        else if (!postMulText.compare(formStart, postMulText.npos, "Q"))  valueForm->type = Form::Type::Q;
-        else if (!postMulText.compare(formStart, postMulText.npos, "R"))  valueForm->type = Form::Type::RES;
-        else if (!postMulText.compare(formStart, postMulText.npos, "S"))  valueForm->type = Form::Type::SECONDS;
-        else if (!postMulText.compare(formStart, postMulText.npos, "B"))  valueForm->type = Form::Type::BEATS;
+        else if (!postMulText.compare(formStart, postMulText.npos, "DB")) valueForm->type = Form::Type::DB;
+        else if (!postMulText.compare(formStart, postMulText.npos, "Q")) valueForm->type = Form::Type::Q;
+        else if (!postMulText.compare(formStart, postMulText.npos, "R")) valueForm->type = Form::Type::RES;
+        else if (!postMulText.compare(formStart, postMulText.npos, "S")) valueForm->type = Form::Type::SECONDS;
+        else if (!postMulText.compare(formStart, postMulText.npos, "B")) valueForm->type = Form::Type::BEATS;
         else didMatchForm = false;
 
         if ((didMatchMul && postMulText.size() == 1) || didMatchForm) {

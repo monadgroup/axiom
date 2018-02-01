@@ -11,10 +11,15 @@ namespace MaximCodegen {
         explicit MidiType(Context *context);
 
         llvm::StructType *llType() const override { return _llType; }
+
         llvm::Type *typeType() const { return _typeType; }
+
         llvm::Type *channelType() const { return _channelType; }
+
         llvm::Type *noteType() const { return _noteType; }
+
         llvm::Type *paramType() const { return _paramType; }
+
         llvm::Type *timeType() const { return _timeType; }
 
     private:

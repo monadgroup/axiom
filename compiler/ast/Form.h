@@ -33,14 +33,30 @@ namespace MaximAst {
         void appendString(std::ostream &s) {
             s << "(form ";
             switch (type) {
-                case Type::LINEAR: s << "lin"; break;
-                case Type::FREQUENCY: s << "freq"; break;
-                case Type::NOTE: s << "note"; break;
-                case Type::DB: s << "db"; break;
-                case Type::Q: s << "q"; break;
-                case Type::RES: s << "res"; break;
-                case Type::SECONDS: s << "secs"; break;
-                case Type::BEATS: s << "beats"; break;
+                case Type::LINEAR:
+                    s << "lin";
+                    break;
+                case Type::FREQUENCY:
+                    s << "freq";
+                    break;
+                case Type::NOTE:
+                    s << "note";
+                    break;
+                case Type::DB:
+                    s << "db";
+                    break;
+                case Type::Q:
+                    s << "q";
+                    break;
+                case Type::RES:
+                    s << "res";
+                    break;
+                case Type::SECONDS:
+                    s << "secs";
+                    break;
+                case Type::BEATS:
+                    s << "beats";
+                    break;
             }
             if (!arguments.empty()) s << " ";
             for (size_t i = 0; i < arguments.size(); i++) {
