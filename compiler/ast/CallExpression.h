@@ -17,7 +17,8 @@ namespace MaximAst {
                 : Expression(start, end), name(std::move(name)) {}
 
         void appendString(std::ostream &s) override {
-            s << "(call " << name << " ";
+            s << "(call " << name;
+            if (!arguments.empty()) s << " ";
             for (size_t i = 0; i < arguments.size(); i++) {
                 arguments[i]->appendString(s);
                 if (i != arguments.size() - 1) s << " ";

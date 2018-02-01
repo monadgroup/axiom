@@ -165,8 +165,23 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     expect(stream()->next(), Token::Type::OPEN_SQUARE);
     auto nameToken = stream()->next();
     expect(nameToken, Token::Type::IDENTIFIER);
+    Form::Type formType;
+    if (nameToken.content == "lin") formType = Form::Type::LINEAR;
+    else if (nameToken.content == "freq") formType = Form::Type::FREQUENCY;
+    else if (nameToken.content == "note") formType = Form::Type::NOTE;
+    else if (nameToken.content == "db") formType = Form::Type::DB;
+    else if (nameToken.content == "q") formType = Form::Type::Q;
+    else if (nameToken.content == "res") formType = Form::Type::RES;
+    else if (nameToken.content == "secs") formType = Form::Type::SECONDS;
+    else if (nameToken.content == "beats") formType = Form::Type::BEATS;
+    else {
+        throw ParseError(
+                "Come on man, I don't support " + nameToken.content + " forms.",
+                nameToken.startPos, nameToken.endPos
+        );
+    }
 
-    auto form = std::make_unique<Form>(nameToken.content, nameToken.startPos, SourcePos(0, 0));
+    auto form = std::make_unique<Form>(formType, nameToken.startPos, SourcePos(0, 0));
     if (stream()->peek().type != Token::Type::CLOSE_SQUARE) {
         parseArguments(form->arguments);
     }
@@ -209,7 +224,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
     auto endPos = numberToken.endPos;
     auto postMulToken = stream()->peek();
-    auto valueForm = std::make_unique<Form>("lin", postMulToken.startPos, postMulToken.endPos);
+    auto valueForm = std::make_unique<Form>(Form::Type::LINEAR, postMulToken.startPos, postMulToken.endPos);
     if (postMulToken.type == Token::Type::IDENTIFIER) {
         auto postMulText = toUpperCase(postMulToken.content);
 
@@ -223,12 +238,12 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
         auto didMatchForm = true;
         auto formStart = didMatchMul ? 1u : 0u;
-        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->name = "freq";
-        else if (!postMulText.compare(formStart, postMulText.npos, "DB")) valueForm->name = "db";
-        else if (!postMulText.compare(formStart, postMulText.npos, "Q")) valueForm->name = "q";
-        else if (!postMulText.compare(formStart, postMulText.npos, "R")) valueForm->name = "res";
-        else if (!postMulText.compare(formStart, postMulText.npos, "S")) valueForm->name = "seconds";
-        else if (!postMulText.compare(formStart, postMulText.npos, "B")) valueForm->name = "beats";
+        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->type = Form::Type::FREQUENCY;
+        else if (!postMulText.compare(formStart, postMulText.npos, "DB"))  valueForm->type = Form::Type::DB;
+        else if (!postMulText.compare(formStart, postMulText.npos, "Q"))  valueForm->type = Form::Type::Q;
+        else if (!postMulText.compare(formStart, postMulText.npos, "R"))  valueForm->type = Form::Type::RES;
+        else if (!postMulText.compare(formStart, postMulText.npos, "S"))  valueForm->type = Form::Type::SECONDS;
+        else if (!postMulText.compare(formStart, postMulText.npos, "B"))  valueForm->type = Form::Type::BEATS;
         else didMatchForm = false;
 
         if ((didMatchMul && postMulText.size() == 1) || didMatchForm) {
@@ -288,7 +303,7 @@ std::unique_ptr<MaximAst::AssignableExpression> Parser::parseControlExpression(s
     expect(typeToken, Token::Type::IDENTIFIER);
     ControlExpression::Type controlType;
     if (typeToken.content == "label") controlType = ControlExpression::Type::LABEL;
-    else if (typeToken.content == "value") controlType = ControlExpression::Type::VALUE;
+    else if (typeToken.content == "values") controlType = ControlExpression::Type::VALUE;
     else if (typeToken.content == "toggle") controlType = ControlExpression::Type::TOGGLE;
     else if (typeToken.content == "graph") controlType = ControlExpression::Type::GRAPH;
     else if (typeToken.content == "scope") controlType = ControlExpression::Type::SCOPE;
@@ -302,7 +317,7 @@ std::unique_ptr<MaximAst::AssignableExpression> Parser::parseControlExpression(s
         );
     }
 
-    std::string propertyName = "value";
+    std::string propertyName = "values";
 
     auto endPos = typeToken.endPos;
     auto propToken = stream()->peek();
