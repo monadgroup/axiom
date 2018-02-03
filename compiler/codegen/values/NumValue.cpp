@@ -18,15 +18,15 @@ NumValue::NumValue(bool isConst, llvm::Value *value, Context *context)
 
 }
 
-llvm::StructType* NumValue::type() const {
+llvm::StructType *NumValue::type() const {
     return _context->getStructType(Context::Type::NUM);
 }
 
-llvm::Value* NumValue::valuePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *NumValue::valuePtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 0, builder);
 }
 
-llvm::Value* NumValue::formPtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *NumValue::formPtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 1, builder);
 }
 

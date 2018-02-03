@@ -7,17 +7,21 @@ namespace llvm {
 namespace MaximCodegen {
 
     class Scope;
+
     class Context;
 
     class Function {
     public:
         Context *context() const;
+
         Scope *scope() const;
 
         llvm::BasicBlock *initBlock() const { return _initBlock; }
+
         llvm::BasicBlock *codeBlock() const { return _codeBlock; }
 
         llvm::IRBuilder<> &initBuilder() { return _initBuilder; }
+
         llvm::IRBuilder<> &codeBuilder() { return _codeBuilder; }
 
     private:

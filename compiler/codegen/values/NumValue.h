@@ -17,12 +17,15 @@ namespace MaximCodegen {
         using ParamArr = std::array<llvm::Value *, Context::formParamCount>;
 
         NumValue(bool isConst, llvm::Value *value, const FormValue &form, Context *context, Function *function);
+
         NumValue(bool isConst, llvm::Value *value, Context *context);
 
         llvm::StructType *type() const override;
+
         llvm::Value *value() const override { return _value; }
 
         llvm::Value *valuePtr(llvm::IRBuilder<> &builder) const;
+
         llvm::Value *formPtr(llvm::IRBuilder<> &builder) const;
 
         std::unique_ptr<Value> clone() const override;

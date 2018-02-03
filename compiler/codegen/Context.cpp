@@ -15,32 +15,32 @@ Context::Context() {
     }, "form");
 
     llvm::StructType::create(_llvm, std::array<llvm::Type *, 2> {
-        llvm::VectorType::get(
-            llvm::Type::getFloatTy(_llvm),
-            2
-        ),
+            llvm::VectorType::get(
+                    llvm::Type::getFloatTy(_llvm),
+                    2
+            ),
 
-        getStructType(Type::FORM)
+            getStructType(Type::FORM)
     }, "num");
 
     llvm::StructType::create(_llvm, std::array<llvm::Type *, 5> {
-        llvm::Type::getIntNTy(_llvm, 4), // event type
-        llvm::Type::getIntNTy(_llvm, 4), // channel
-        llvm::Type::getInt8Ty(_llvm),    // note
-        llvm::Type::getInt8Ty(_llvm),    // param
-        llvm::Type::getInt32Ty(_llvm)    // time
+            llvm::Type::getIntNTy(_llvm, 4), // event type
+            llvm::Type::getIntNTy(_llvm, 4), // channel
+            llvm::Type::getInt8Ty(_llvm),    // note
+            llvm::Type::getInt8Ty(_llvm),    // param
+            llvm::Type::getInt32Ty(_llvm)    // time
     }, "midi");
 }
 
-llvm::Constant* Context::getConstantInt(unsigned int numBits, uint64_t val, bool isSigned) {
+llvm::Constant *Context::getConstantInt(unsigned int numBits, uint64_t val, bool isSigned) {
     return llvm::ConstantInt::get(_llvm, llvm::APInt(numBits, val, isSigned));
 }
 
-llvm::Constant* Context::getConstantFloat(float num) {
+llvm::Constant *Context::getConstantFloat(float num) {
     return llvm::ConstantFP::get(_llvm, llvm::APFloat(num));
 }
 
-llvm::Value* Context::getStructParamPtr(llvm::Value *ptr, llvm::Type *type, unsigned int param,
+llvm::Value *Context::getStructParamPtr(llvm::Value *ptr, llvm::Type *type, unsigned int param,
                                         llvm::IRBuilder<> &builder) {
     return builder.Insert(llvm::GetElementPtrInst::Create(
             type, ptr,
@@ -51,36 +51,46 @@ llvm::Value* Context::getStructParamPtr(llvm::Value *ptr, llvm::Type *type, unsi
     ));
 }
 
-llvm::Value* Context::checkType(llvm::Value *val, llvm::Type *type, SourcePos start, SourcePos end) {
+llvm::Value *Context::checkType(llvm::Value *val, llvm::Type *type, SourcePos start, SourcePos end) {
     if (val->getType() != type) {
         throw CodegenError(
-                "Oyyyyy m80, I need a " + typeToString(type) + " here, not this bad boi " + typeToString(val->getType()),
+                "Oyyyyy m80, I need a " + typeToString(type) + " here, not this bad boi " +
+                typeToString(val->getType()),
                 start, end
         );
     }
     return val;
 }
 
-llvm::Value* Context::checkType(llvm::Value *val, Type type, SourcePos start, SourcePos end) {
+llvm::Value *Context::checkType(llvm::Value *val, Type type, SourcePos start, SourcePos end) {
     return checkType(val, getType(type), start, end);
 }
 
 llvm::Type *Context::getType(Type type) {
     switch (type) {
-        case Type::FLOAT: return llvm::Type::getFloatTy(_llvm);
-        case Type::INT4: return llvm::Type::getIntNTy(_llvm, 4);
-        case Type::INT8: return llvm::Type::getInt8Ty(_llvm);
-        case Type::INT32: return llvm::Type::getInt32Ty(_llvm);
-        default: return getStructType(type);
+        case Type::FLOAT:
+            return llvm::Type::getFloatTy(_llvm);
+        case Type::INT4:
+            return llvm::Type::getIntNTy(_llvm, 4);
+        case Type::INT8:
+            return llvm::Type::getInt8Ty(_llvm);
+        case Type::INT32:
+            return llvm::Type::getInt32Ty(_llvm);
+        default:
+            return getStructType(type);
     }
 }
 
-llvm::StructType* Context::getStructType(Type type) {
+llvm::StructType *Context::getStructType(Type type) {
     switch (type) {
-        case Type::FORM: return llvm::StructType::create(_llvm, "form");
-        case Type::NUM: return llvm::StructType::create(_llvm, "num");
-        case Type::MIDI: return llvm::StructType::create(_llvm, "midi");
-        default: assert(false);
+        case Type::FORM:
+            return llvm::StructType::create(_llvm, "form");
+        case Type::NUM:
+            return llvm::StructType::create(_llvm, "num");
+        case Type::MIDI:
+            return llvm::StructType::create(_llvm, "midi");
+        default:
+            assert(false);
     }
 
     throw;
@@ -103,24 +113,38 @@ std::string Context::typeToString(llvm::Type *type) {
 
 std::string Context::typeToString(Type type) {
     switch (type) {
-        case Type::FLOAT: return "float";
-        case Type::INT4: return "i4";
-        case Type::INT8: return "i8";
-        case Type::INT32: return "i32";
-        case Type::FORM: return "form";
-        case Type::NUM: return "num";
-        case Type::MIDI: return "midi";
-        case Type::TUPLE: return "tuple";
+        case Type::FLOAT:
+            return "float";
+        case Type::INT4:
+            return "i4";
+        case Type::INT8:
+            return "i8";
+        case Type::INT32:
+            return "i32";
+        case Type::FORM:
+            return "form";
+        case Type::NUM:
+            return "num";
+        case Type::MIDI:
+            return "midi";
+        case Type::TUPLE:
+            return "tuple";
     }
+    assert(false);
+    throw;
 }
 
 std::unique_ptr<Value> Context::llToValue(bool isConst, llvm::Value *value) {
     auto type = getType(value->getType());
     switch (type) {
-        case Type::NUM: return std::make_unique<NumValue>(isConst, value, this);
-        case Type::MIDI: return std::make_unique<MidiValue>(isConst, value, this);
-        case Type::TUPLE: return std::make_unique<TupleValue>(isConst, value, this);
-        default: assert(false);
+        case Type::NUM:
+            return std::make_unique<NumValue>(isConst, value, this);
+        case Type::MIDI:
+            return std::make_unique<MidiValue>(isConst, value, this);
+        case Type::TUPLE:
+            return std::make_unique<TupleValue>(isConst, value, this);
+        default:
+            assert(false);
     }
 
     throw;

@@ -10,19 +10,14 @@
 #include "values/MidiValue.h"
 #include "values/NumValue.h"
 #include "values/TupleValue.h"
-#include "values/FormValue.h"
 
-#include "../ast/Expression.h"
-#include "../ast/ControlExpression.h"
 #include "../ast/NoteExpression.h"
 #include "../ast/NumberExpression.h"
 #include "../ast/TupleExpression.h"
 #include "../ast/CallExpression.h"
 #include "../ast/CastExpression.h"
 #include "../ast/VariableExpression.h"
-#include "../ast/MathExpression.h"
 #include "../ast/UnaryExpression.h"
-#include "../ast/AssignExpression.h"
 #include "../ast/PostfixExpression.h"
 
 #include "../util.h"
@@ -30,7 +25,7 @@
 using namespace MaximCodegen;
 using namespace MaximAst;
 
-std::unique_ptr<Value>  ExpressionGenerator::generateExpr(MaximAst::Expression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value> ExpressionGenerator::generateExpr(MaximAst::Expression *expr, Function *function, Scope *scope) {
     if (auto note = dynamic_cast<NoteExpression *>(expr)) return generateNote(note, function, scope);
     if (auto number = dynamic_cast<NumberExpression *>(expr)) return generateNumber(number, function, scope);
     if (auto tuple = dynamic_cast<TupleExpression *>(expr)) return generateTuple(tuple, function, scope);
@@ -47,25 +42,28 @@ std::unique_ptr<Value>  ExpressionGenerator::generateExpr(MaximAst::Expression *
     throw;
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateNote(MaximAst::NoteExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateNote(MaximAst::NoteExpression *expr, Function *function, Scope *scope) {
     auto constFloat = _context->getConstantFloat(expr->note);
-    auto constVec = llvm::ConstantVector::get(std::array<llvm::Constant *, 2> { constFloat, constFloat });
+    auto constVec = llvm::ConstantVector::get(std::array<llvm::Constant *, 2> {constFloat, constFloat});
 
     return std::make_unique<NumValue>(true, constVec, FormValue(
             Form::Type::NOTE, FormValue::ParamArr {}, _context, function
     ), _context, function);
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateNumber(MaximAst::NumberExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateNumber(MaximAst::NumberExpression *expr, Function *function, Scope *scope) {
     auto constFloat = _context->getConstantFloat(expr->value);
-    auto constVec = llvm::ConstantVector::get(std::array<llvm::Constant *, 2> { constFloat, constFloat });
+    auto constVec = llvm::ConstantVector::get(std::array<llvm::Constant *, 2> {constFloat, constFloat});
 
     return std::make_unique<NumValue>(true, constVec, FormValue(
             Form::Type::LINEAR, FormValue::ParamArr {}, _context, function
     ), _context, function);
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateTuple(MaximAst::TupleExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateTuple(MaximAst::TupleExpression *expr, Function *function, Scope *scope) {
     std::vector<llvm::Value *> tupleValues;
     tupleValues.reserve(expr->expressions.size());
     bool isConst = true;
@@ -78,13 +76,15 @@ std::unique_ptr<Value>  ExpressionGenerator::generateTuple(MaximAst::TupleExpres
     return std::move(finalVal);
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateCall(MaximAst::CallExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateCall(MaximAst::CallExpression *expr, Function *function, Scope *scope) {
     // todo
     assert(false);
     throw;
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateCast(MaximAst::CastExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateCast(MaximAst::CastExpression *expr, Function *function, Scope *scope) {
     // get base expression value
     auto exprValue = generateExpr(expr->expr.get(), function, scope);
     _context->checkType(exprValue->value(), Context::Type::NUM, expr->expr->startPos, expr->expr->endPos);
@@ -94,7 +94,8 @@ std::unique_ptr<Value>  ExpressionGenerator::generateCast(MaximAst::CastExpressi
     auto targetForm = expr->target.get();
     if (targetForm->arguments.size() > Context::formParamCount) {
         throw CodegenError(
-                "Oy, you doin me a bamboozle. I only want " + std::to_string(Context::formParamCount) + " parameters here.",
+                "Oy, you doin me a bamboozle. I only want " + std::to_string(Context::formParamCount) +
+                " parameters here.",
                 targetForm->arguments[0]->startPos,
                 targetForm->arguments[targetForm->arguments.size() - 1]->endPos
         );
@@ -104,7 +105,8 @@ std::unique_ptr<Value>  ExpressionGenerator::generateCast(MaximAst::CastExpressi
     FormValue::ParamArr params = {};
     for (size_t i = 0; i < targetForm->arguments.size(); i++) {
         auto argExpr = generateExpr(targetForm->arguments[i].get(), function, scope);
-        _context->checkType(argExpr->value(), Context::Type::NUM, targetForm->arguments[i]->startPos, targetForm->arguments[i]->endPos);
+        _context->checkType(argExpr->value(), Context::Type::NUM, targetForm->arguments[i]->startPos,
+                            targetForm->arguments[i]->endPos);
         auto numArg = AxiomUtil::strict_unique_cast<NumValue>(std::move(argExpr));
         params[i] = function->codeBuilder().CreateLoad(numArg->valuePtr(function->codeBuilder()));
         if (!numArg->isConst()) isConst = false;
@@ -118,18 +120,20 @@ std::unique_ptr<Value>  ExpressionGenerator::generateCast(MaximAst::CastExpressi
         throw;
     } else {
         return std::make_unique<NumValue>(
-            isConst,
-            function->codeBuilder().CreateLoad(numValue->valuePtr(function->codeBuilder())),
-            form, _context, function
+                isConst,
+                function->codeBuilder().CreateLoad(numValue->valuePtr(function->codeBuilder())),
+                form, _context, function
         );
     }
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateControl(MaximAst::ControlExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateControl(MaximAst::ControlExpression *expr, Function *function, Scope *scope) {
     return scope->findControl(expr->name, expr->type, expr->prop)->clone();
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateVariable(MaximAst::VariableExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateVariable(MaximAst::VariableExpression *expr, Function *function, Scope *scope) {
     auto val = scope->findValue(expr->name);
     if (!val) {
         throw CodegenError("Ah hekkers mah dude! This variable hasn't been set yet!", expr->startPos, expr->endPos);
@@ -138,7 +142,8 @@ std::unique_ptr<Value>  ExpressionGenerator::generateVariable(MaximAst::Variable
     return val->clone();
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateMath(MaximAst::MathExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateMath(MaximAst::MathExpression *expr, Function *function, Scope *scope) {
     auto leftExpr = generateExpr(expr->left.get(), function, scope);
     auto rightExpr = generateExpr(expr->right.get(), function, scope);
 
@@ -182,7 +187,8 @@ llvm::Value *ExpressionGenerator::generateFloatIntCompMath(MaximAst::MathExpress
             assert(false);
             throw;
             break;
-        default: return generateIntCompMath(type, leftVal, rightVal, function);
+        default:
+            return generateIntCompMath(type, leftVal, rightVal, function);
     }
 }
 
@@ -206,7 +212,8 @@ llvm::Value *ExpressionGenerator::generateIntCompMath(MaximAst::MathExpression::
         case MathExpression::Type::BITWISE_XOR:
             result = function->codeBuilder().CreateXor(intLeft, intRight);
             break;
-        default: return generateCompareMath(type, leftVal, rightVal, function);
+        default:
+            return generateCompareMath(type, leftVal, rightVal, function);
     }
 
     return function->codeBuilder().CreateSIToFP(result, floatVec);
@@ -217,7 +224,7 @@ llvm::Value *ExpressionGenerator::generateCompareMath(MaximAst::MathExpression::
     auto floatVec = llvm::VectorType::get(llvm::Type::getFloatTy(_context->llvm()), 2);
 
     auto zeroConst = _context->getConstantFloat(0);
-    auto zeroVec = llvm::ConstantVector::get(std::array<llvm::Constant *, 2> { zeroConst, zeroConst });
+    auto zeroVec = llvm::ConstantVector::get(std::array<llvm::Constant *, 2> {zeroConst, zeroConst});
 
     llvm::Value *result;
 
@@ -260,7 +267,8 @@ llvm::Value *ExpressionGenerator::generateCompareMath(MaximAst::MathExpression::
     return function->codeBuilder().CreateSIToFP(result, floatVec);
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateUnary(MaximAst::UnaryExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateUnary(MaximAst::UnaryExpression *expr, Function *function, Scope *scope) {
     auto valExpr = generateExpr(expr->expr.get(), function, scope);
 
     _context->checkType(valExpr->value(), Context::Type::NUM, expr->expr->startPos, expr->expr->endPos);
@@ -298,18 +306,20 @@ std::unique_ptr<Value>  ExpressionGenerator::generateUnary(MaximAst::UnaryExpres
     return evaluateConstVal(std::move(finalVal));
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generateAssign(MaximAst::AssignExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generateAssign(MaximAst::AssignExpression *expr, Function *function, Scope *scope) {
     auto rightExpr = generateExpr(expr->right.get(), function, scope);
 
     auto leftTuple = expr->left->assignments.size() > 1;
-    auto rightTuple = dynamic_cast<TupleValue*>(rightExpr.get());
+    auto rightTuple = dynamic_cast<TupleValue *>(rightExpr.get());
 
     if (leftTuple && rightTuple) {
         auto leftSize = expr->left->assignments.size();
         auto rightSize = rightTuple->type()->getNumElements();
         if (leftSize != rightSize) {
             throw CodegenError(
-                    "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to assign " + std::to_string(rightSize) + " values to " + std::to_string(leftSize) + " ones!",
+                    "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to assign " + std::to_string(rightSize) +
+                    " values to " + std::to_string(leftSize) + " ones!",
                     expr->startPos, expr->endPos
             );
         }
@@ -320,22 +330,25 @@ std::unique_ptr<Value>  ExpressionGenerator::generateAssign(MaximAst::AssignExpr
                     rightExpr->isConst(),
                     function->codeBuilder().CreateLoad(rightTuple->itemPtr((unsigned int) i, function->codeBuilder()))
             );
-            generateSingleAssign(leftAssignable, rightValue.get(), expr->type, expr->right->startPos, expr->right->endPos, function, scope);
+            generateSingleAssign(leftAssignable, rightValue.get(), expr->type, expr->right->startPos,
+                                 expr->right->endPos, function, scope);
         }
 
     } else if (leftTuple) {
         for (const auto &assignment : expr->left->assignments) {
-            generateSingleAssign(assignment.get(), rightExpr.get(), expr->type, expr->right->startPos, expr->right->endPos, function, scope);
+            generateSingleAssign(assignment.get(), rightExpr.get(), expr->type, expr->right->startPos,
+                                 expr->right->endPos, function, scope);
         }
     } else {
-        generateSingleAssign(expr->left->assignments[0].get(), rightExpr.get(), expr->type, expr->right->startPos, expr->right->endPos, function, scope);
+        generateSingleAssign(expr->left->assignments[0].get(), rightExpr.get(), expr->type, expr->right->startPos,
+                             expr->right->endPos, function, scope);
     }
 
     return std::move(rightExpr);
 }
 
 void ExpressionGenerator::generateSingleAssign(MaximAst::AssignableExpression *leftExpr, Value *rightValue,
-                                               MaximAst::AssignExpression::Type type,  SourcePos rightStart,
+                                               MaximAst::AssignExpression::Type type, SourcePos rightStart,
                                                SourcePos rightEnd, Function *function, Scope *scope) {
     if (type == AssignExpression::Type::ASSIGN) {
         generateBasicAssign(leftExpr, rightValue, function, scope);
@@ -347,7 +360,7 @@ void ExpressionGenerator::generateSingleAssign(MaximAst::AssignableExpression *l
     auto leftNum = AxiomUtil::strict_unique_cast<NumValue>(std::move(leftValue));
 
     _context->checkType(rightValue->value(), Context::Type::NUM, rightStart, rightEnd);
-    auto rightNum = dynamic_cast<NumValue*>(rightValue);
+    auto rightNum = dynamic_cast<NumValue *>(rightValue);
     assert(rightNum);
 
     auto cb = function->codeBuilder();
@@ -375,7 +388,8 @@ void ExpressionGenerator::generateSingleAssign(MaximAst::AssignableExpression *l
         case AssignExpression::Type::POWER:
             // todo: call intrinsic?
             break;
-        default: assert(false);
+        default:
+            assert(false);
     }
 
     NumValue realVal(
@@ -407,7 +421,8 @@ void ExpressionGenerator::generateControlAssign(MaximAst::ControlExpression *lef
     scope->setControl(leftExpr->name, leftExpr->type, leftExpr->prop, rightValue->clone());
 }
 
-std::unique_ptr<Value>  ExpressionGenerator::generatePostfix(MaximAst::PostfixExpression *expr, Function *function, Scope *scope) {
+std::unique_ptr<Value>
+ExpressionGenerator::generatePostfix(MaximAst::PostfixExpression *expr, Function *function, Scope *scope) {
     bool isResultConst = true;
     std::vector<llvm::Value *> resultValues;
     resultValues.reserve(expr->left->assignments.size());

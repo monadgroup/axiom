@@ -7,6 +7,7 @@
 namespace MaximCodegen {
 
     class Function;
+
     class Value;
 
     class Context {
@@ -33,7 +34,8 @@ namespace MaximCodegen {
 
         llvm::Constant *getConstantFloat(float num);
 
-        llvm::Value *getStructParamPtr(llvm::Value *ptr, llvm::Type *type, unsigned int param, llvm::IRBuilder<> &builder);
+        llvm::Value *
+        getStructParamPtr(llvm::Value *ptr, llvm::Type *type, unsigned int param, llvm::IRBuilder<> &builder);
 
         llvm::Value *checkType(llvm::Value *val, llvm::Type *type, SourcePos start, SourcePos end);
 

@@ -26,10 +26,10 @@ TupleValue::TupleValue(bool isConst, const std::vector<llvm::Value *> &values, C
 TupleValue::TupleValue(bool isConst, llvm::Value *value, Context *context)
         : Value(isConst), _value(value), _context(context) {
     assert(value->getType()->isStructTy());
-    _type = (llvm::StructType*) value->getType();
+    _type = (llvm::StructType *) value->getType();
 }
 
-llvm::Value* TupleValue::itemPtr(unsigned int index, llvm::IRBuilder<> &builder) const {
+llvm::Value *TupleValue::itemPtr(unsigned int index, llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, _type, index, builder);
 }
 

@@ -4,6 +4,7 @@
 
 namespace llvm {
     class Type;
+
     class Value;
 }
 

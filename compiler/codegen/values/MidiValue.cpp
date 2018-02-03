@@ -22,27 +22,27 @@ MidiValue::MidiValue(bool isConst, llvm::Value *value, Context *context)
 
 }
 
-llvm::StructType* MidiValue::type() const {
+llvm::StructType *MidiValue::type() const {
     return _context->getStructType(Context::Type::MIDI);
 }
 
-llvm::Value* MidiValue::typePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::typePtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 0, builder);
 }
 
-llvm::Value* MidiValue::channelPtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::channelPtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 1, builder);
 }
 
-llvm::Value* MidiValue::notePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::notePtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 2, builder);
 }
 
-llvm::Value* MidiValue::paramPtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::paramPtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 3, builder);
 }
 
-llvm::Value* MidiValue::timePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::timePtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 4, builder);
 }
 

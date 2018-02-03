@@ -42,7 +42,8 @@ FormValue::FormValue(MaximAst::Form::Type formType, const ParamArr &params, Cont
     cb.CreateStore(paramsVal, paramsPtr(cb));
 }
 
-FormValue::FormValue(llvm::Value *formType, llvm::Value *params, Context *context, Function *function) : _context(context) {
+FormValue::FormValue(llvm::Value *formType, llvm::Value *params, Context *context, Function *function) : _context(
+        context) {
     _value = function->initBuilder().CreateAlloca(type());
 
     auto cb = function->codeBuilder();
@@ -54,14 +55,14 @@ FormValue::FormValue(llvm::Value *value, Context *context) : _context(context), 
 
 }
 
-llvm::Type* FormValue::type() const {
+llvm::Type *FormValue::type() const {
     return _context->getType(Context::Type::FORM);
 }
 
-llvm::Value* FormValue::typePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *FormValue::typePtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 0, builder);
 }
 
-llvm::Value* FormValue::paramsPtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *FormValue::paramsPtr(llvm::IRBuilder<> &builder) const {
     return _context->getStructParamPtr(_value, type(), 1, builder);
 }

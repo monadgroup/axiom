@@ -14,7 +14,7 @@ namespace MaximCodegen {
     class FunctionDeclaration {
     public:
         FunctionDeclaration(bool isPure, llvm::Type *returnType, std::vector<Parameter> parameters,
-                 std::unique_ptr<Parameter> variadicParam);
+                            std::unique_ptr<Parameter> variadicParam);
 
         bool isPure() const { return _isPure; }
 

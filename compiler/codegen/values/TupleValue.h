@@ -9,14 +9,17 @@
 namespace MaximCodegen {
 
     class Function;
+
     class Context;
 
     class TupleValue : public Value {
     public:
         TupleValue(bool isConst, const std::vector<llvm::Value *> &values, Context *context, Function *function);
+
         TupleValue(bool isConst, llvm::Value *value, Context *context);
 
         llvm::StructType *type() const override { return _type; }
+
         llvm::Value *value() const override { return _value; }
 
         llvm::Value *itemPtr(unsigned int index, llvm::IRBuilder<> &builder) const;
