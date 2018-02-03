@@ -26,8 +26,8 @@ namespace MaximCodegen {
         llvm::Value *paramsPtr(llvm::IRBuilder<> &builder) const;
 
     private:
-        llvm::Value *_value;
         Context *_context;
+        llvm::Value *_value;
     };
 
 }
