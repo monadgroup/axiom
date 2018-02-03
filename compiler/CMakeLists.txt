@@ -12,8 +12,9 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 set(SOURCE_FILES util.h
         parser/TokenStream.cpp parser/Token.cpp parser/Parser.cpp
-        codegen/Context.cpp codegen/Form.cpp codegen/Function.cpp codegen/Parameter.cpp
-        codegen/types/FormType.cpp codegen/types/MidiType.cpp codegen/types/NumType.cpp codegen/types/RawNumType.cpp codegen/types/TupleType.cpp codegen/types/Type.cpp)
+        codegen/Context.cpp codegen/ExpressionGenerator.cpp codegen/FunctionDeclaration.cpp codegen/Parameter.cpp codegen/Function.cpp codegen/Scope.cpp
+        codegen/values/Value.cpp codegen/values/NumValue.cpp codegen/values/TupleValue.cpp codegen/values/MidiValue.cpp codegen/values/FormValue.cpp
+        ast/Expression.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

@@ -406,17 +406,8 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfixExpression(std::unique
     auto leftVal = AxiomUtil::dynamic_unique_cast<LValueExpression>(prefix);
     if (!leftVal) throw castFail(prefix.get());
 
-    if (leftVal->assignments.size() != 1) {
-        throw ParseError(
-                "I'm sorry dude... I can't... I just can't do that to multiple variables at once.",
-                leftVal->startPos, postfixToken.endPos
-        );
-    }
-
-    auto assignable = std::move(leftVal->assignments[0]);
-
-    auto assignableStart = assignable->startPos;
-    return std::make_unique<PostfixExpression>(std::move(assignable), postfixType, assignableStart,
+    auto assignableStart = leftVal->startPos;
+    return std::make_unique<PostfixExpression>(std::move(leftVal), postfixType, assignableStart,
                                                postfixToken.endPos);
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Expression.h"
+#include "LValueExpression.h"
 
 namespace MaximAst {
 
@@ -11,10 +12,10 @@ namespace MaximAst {
             DECREMENT
         };
 
-        std::unique_ptr<AssignableExpression> left;
+        std::unique_ptr<LValueExpression> left;
         Type type;
 
-        PostfixExpression(std::unique_ptr<AssignableExpression> left, Type type, SourcePos start, SourcePos end)
+        PostfixExpression(std::unique_ptr<LValueExpression> left, Type type, SourcePos start, SourcePos end)
                 : Expression(start, end), left(std::move(left)), type(type) {}
 
         void appendString(std::ostream &s) override {

@@ -2,26 +2,27 @@
 
 #include <memory>
 
-namespace MaximCodegen {
-
+namespace llvm {
     class Type;
-
     class Value;
+}
+
+namespace MaximCodegen {
 
     class Parameter {
     public:
-        Parameter(bool isConst, std::unique_ptr<Type> type, std::unique_ptr<Value> defaultValue);
+        Parameter(bool isConst, llvm::Type *type, llvm::Value *defaultValue);
 
         bool isConst() const { return _isConst; }
 
-        Type *type() const { return _type.get(); }
+        llvm::Type *type() const { return _type; }
 
-        Value *defaultValue() const { return _defaultValue.get(); }
+        llvm::Value *defaultValue() const { return _defaultValue; }
 
     private:
         bool _isConst;
-        std::unique_ptr<Type> _type;
-        std::unique_ptr<Value> _defaultValue;
+        llvm::Type *_type;
+        llvm::Value *_defaultValue;
     };
 
 }

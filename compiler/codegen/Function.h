@@ -1,32 +1,30 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-
-#include "Parameter.h"
+namespace llvm {
+    class BasicBlock;
+}
 
 namespace MaximCodegen {
 
-    class TupleType;
+    class Scope;
+    class Context;
 
     class Function {
     public:
-        Function(bool isPure, std::unique_ptr<TupleType> returnType, std::vector<Parameter> parameters,
-                 std::unique_ptr<Parameter> variadicParam);
+        Context *context() const;
+        Scope *scope() const;
 
-        bool isPure() const { return _isPure; }
+        llvm::BasicBlock *initBlock() const { return _initBlock; }
+        llvm::BasicBlock *codeBlock() const { return _codeBlock; }
 
-        TupleType *returnType() const { return _returnType.get(); }
-
-        std::vector<Parameter> const &parameters() const { return _parameters; }
-
-        Parameter *variadicParam() const { return _variadicParam.get(); }
+        llvm::IRBuilder<> &initBuilder() { return _initBuilder; }
+        llvm::IRBuilder<> &codeBuilder() { return _codeBuilder; }
 
     private:
-        bool _isPure;
-        std::unique_ptr<TupleType> _returnType;
-        std::vector<Parameter> _parameters;
-        std::unique_ptr<Parameter> _variadicParam;
+        llvm::BasicBlock *_initBlock;
+        llvm::BasicBlock *_codeBlock;
+        llvm::IRBuilder<> _initBuilder;
+        llvm::IRBuilder<> _codeBuilder;
     };
 
 }

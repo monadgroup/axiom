@@ -13,4 +13,11 @@ namespace AxiomUtil {
         return std::unique_ptr<To>(nullptr);
     };
 
+    template<class To, class From>
+    std::unique_ptr<To> strict_unique_cast(std::unique_ptr<From> from) {
+        To *result = dynamic_cast<To *>(from.release());
+        assert(result);
+        return std::unique_ptr<To>(result);
+    };
+
 }
