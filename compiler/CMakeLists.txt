@@ -22,5 +22,5 @@ add_definitions(${LLVM_DEFINITIONS})
 add_library(axiom_compiler ${SOURCE_FILES})
 add_executable(axiom_test_compiler main.cpp ${SOURCE_FILES})
 
-llvm_map_components_to_libnames(llvm_libs support core irreader passes)
+llvm_map_components_to_libnames(llvm_libs support core irreader)
 target_link_libraries(axiom_test_compiler ${llvm_libs})

@@ -6,8 +6,9 @@
 
 using namespace MaximCodegen;
 
-Function::Function(llvm::Function *fun, Context *context)
-        : _context(context), _scope(_context), _initBuilder(context->llvm()), _codeBuilder(context->llvm()) {
+Function::Function(FunctionDeclaration decl, llvm::Function *fun, Context *context)
+        : _context(context), _scope(_context), _decl(decl), _llFunc(fun), _initBuilder(context->llvm()),
+          _codeBuilder(context->llvm()) {
     _initBlock = llvm::BasicBlock::Create(context->llvm(), "entry", fun);
     _initBuilder.SetInsertPoint(_initBlock);
 

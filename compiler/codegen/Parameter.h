@@ -12,7 +12,7 @@ namespace MaximCodegen {
 
     class Parameter {
     public:
-        Parameter(bool isConst, llvm::Type *type, llvm::Value *defaultValue);
+        Parameter(bool isConst, llvm::Type *type, llvm::Value *defaultValue = nullptr);
 
         bool isConst() const { return _isConst; }
 

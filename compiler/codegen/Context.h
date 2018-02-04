@@ -6,14 +6,15 @@
 
 #include "../ast/ControlExpression.h"
 #include "../SourcePos.h"
+#include "FunctionDeclaration.h"
 
 namespace MaximCodegen {
 
     class Value;
 
-    class ControlDeclaration;
+    class Function;
 
-    class FunctionDeclaration;
+    class ControlDeclaration;
 
     class Context {
     public:
@@ -59,19 +60,23 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value> llToValue(bool isConst, llvm::Value *value);
 
-        FunctionDeclaration *getFunctionDecl(const std::string &name) const;
+        Function *getFunctionDecl(const std::string &name) const;
 
         ControlDeclaration *getControlDecl(MaximAst::ControlExpression::Type type) const;
 
     private:
         llvm::LLVMContext _llvm;
 
-        std::unordered_map<std::string, std::unique_ptr<FunctionDeclaration>> functionDecls;
+        std::unordered_map<std::string, std::unique_ptr<Function>> functionDecls;
         std::unordered_map<MaximAst::ControlExpression::Type, std::unique_ptr<ControlDeclaration>> controlDecls;
 
         llvm::StructType *_formType;
         llvm::StructType *_numType;
         llvm::StructType *_midiType;
+
+        llvm::Function *getVecIntrinsic(std::string name, size_t paramCount, llvm::Module *module);
+        Function *addFunc(std::string name, const FunctionDeclaration &decl, llvm::Module *module);
+        Function *addNumVecIntrinsic(std::string name, std::string intrinsicName, size_t paramCount, llvm::Module *module);
     };
 
 }

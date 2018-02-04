@@ -46,7 +46,7 @@ void parseAndCompile() {
     Context context;
     llvm::Module module("test module", context.llvm());
 
-    llvm::legacy::FunctionPassManager passManager(&module);
+    /*llvm::legacy::FunctionPassManager passManager(&module);
     passManager.add(llvm::createPromoteMemoryToRegisterPass());
     passManager.add(llvm::createInstructionCombiningPass());
     passManager.add(llvm::createReassociatePass());
@@ -59,7 +59,7 @@ void parseAndCompile() {
     passManager.add(llvm::createScalarizerPass());
     passManager.add(llvm::createSCCPPass());
     passManager.add(llvm::createIndVarSimplifyPass());
-    passManager.doInitialization();
+    passManager.doInitialization();*/
 
     auto mainFuncType = llvm::FunctionType::get(llvm::VectorType::get(llvm::Type::getFloatTy(context.llvm()), 2), false);
     auto mainFunc = llvm::Function::Create(mainFuncType, llvm::Function::ExternalLinkage, "main", &module);
@@ -82,7 +82,7 @@ void parseAndCompile() {
     fun.initBuilder().CreateBr(fun.codeBlock());
 
     llvm::verifyFunction(*mainFunc);
-    passManager.run(*mainFunc);
+    //passManager.run(*mainFunc);
 
     module.print(llvm::errs(), nullptr);
 }

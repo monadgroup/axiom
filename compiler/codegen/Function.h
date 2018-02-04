@@ -2,18 +2,25 @@
 
 #include "llvm/IR/IRBuilder.h"
 #include "Scope.h"
+#include "FunctionDeclaration.h"
 
 namespace MaximCodegen {
 
     class Context;
 
+    class FunctionDeclaration;
+
     class Function {
     public:
-        Function(llvm::Function *fun, Context *context);
+        Function(FunctionDeclaration decl, llvm::Function *fun, Context *context);
 
         Context *context() { return _context; }
 
         Scope *scope() { return &_scope; }
+
+        FunctionDeclaration *decl() { return &_decl; }
+
+        llvm::Function *llFunc() const { return _llFunc; }
 
         llvm::BasicBlock *initBlock() const { return _initBlock; }
 
@@ -26,7 +33,9 @@ namespace MaximCodegen {
     private:
         Context *_context;
         Scope _scope;
+        FunctionDeclaration _decl;
 
+        llvm::Function *_llFunc;
         llvm::BasicBlock *_initBlock;
         llvm::BasicBlock *_codeBlock;
         llvm::IRBuilder<> _initBuilder;
