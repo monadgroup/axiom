@@ -14,11 +14,11 @@ TupleValue::TupleValue(bool isConst, const std::vector<llvm::Value *> &values, C
     }
 
     _type = llvm::StructType::get(_context->llvm(), tupleTypes);
-    _value = function->initBuilder().CreateAlloca(_type);
+    _value = function->initBuilder().CreateAlloca(_type, nullptr, "tuple_val");
     for (size_t i = 0; i < values.size(); i++) {
         function->codeBuilder().CreateStore(
                 values[i],
-                _context->getStructParamPtr(_value, _type, (unsigned int) i, function->codeBuilder())
+                _context->getPtr(_value, (unsigned int) i, function->codeBuilder())
         );
     }
 }
@@ -30,7 +30,7 @@ TupleValue::TupleValue(bool isConst, llvm::Value *value, Context *context)
 }
 
 llvm::Value *TupleValue::itemPtr(unsigned int index, llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, _type, index, builder);
+    return _context->getPtr(_value, index, builder);
 }
 
 std::unique_ptr<Value> TupleValue::clone() const {

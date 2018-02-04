@@ -1,3 +1,4 @@
+#include <iostream>
 #include "NumValue.h"
 
 #include "../Function.h"
@@ -6,11 +7,11 @@ using namespace MaximCodegen;
 
 NumValue::NumValue(bool isConst, llvm::Value *value, const FormValue &form, Context *context, Function *function)
         : Value(isConst), _context(context) {
-    _value = function->initBuilder().CreateAlloca(type());
+    _value = function->initBuilder().CreateAlloca(type(), nullptr, "num_val");
 
     auto cb = function->codeBuilder();
     cb.CreateStore(value, valuePtr(cb));
-    cb.CreateStore(form.value(), formPtr(cb));
+    cb.CreateStore(cb.CreateLoad(form.value(), "form_to_num_temp"), formPtr(cb));
 }
 
 NumValue::NumValue(bool isConst, llvm::Value *value, Context *context)
@@ -23,11 +24,11 @@ llvm::StructType *NumValue::type() const {
 }
 
 llvm::Value *NumValue::valuePtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 0, builder);
+    return _context->getPtr(_value, 0, builder);
 }
 
 llvm::Value *NumValue::formPtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 1, builder);
+    return _context->getPtr(_value, 1, builder);
 }
 
 std::unique_ptr<Value> NumValue::clone() const {

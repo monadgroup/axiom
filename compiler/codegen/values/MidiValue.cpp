@@ -7,7 +7,7 @@ using namespace MaximCodegen;
 
 MidiValue::MidiValue(bool isConst, llvm::Value *type, llvm::Value *channel, llvm::Value *note, llvm::Value *param,
                      llvm::Value *time, Context *context, Function *function) : Value(isConst), _context(context) {
-    _value = function->initBuilder().CreateAlloca(this->type());
+    _value = function->initBuilder().CreateAlloca(this->type(), nullptr, "midi_val");
 
     auto cb = function->codeBuilder();
     cb.CreateStore(type, typePtr(cb));
@@ -27,23 +27,23 @@ llvm::StructType *MidiValue::type() const {
 }
 
 llvm::Value *MidiValue::typePtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 0, builder);
+    return _context->getPtr(_value, 0, builder);
 }
 
 llvm::Value *MidiValue::channelPtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 1, builder);
+    return _context->getPtr(_value, 1, builder);
 }
 
 llvm::Value *MidiValue::notePtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 2, builder);
+    return _context->getPtr(_value, 2, builder);
 }
 
 llvm::Value *MidiValue::paramPtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 3, builder);
+    return _context->getPtr(_value, 3, builder);
 }
 
 llvm::Value *MidiValue::timePtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 4, builder);
+    return _context->getPtr(_value, 4, builder);
 }
 
 std::unique_ptr<Value> MidiValue::clone() const {

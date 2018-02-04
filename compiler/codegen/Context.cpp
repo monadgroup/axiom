@@ -6,24 +6,24 @@
 #include "values/MidiValue.h"
 #include "values/TupleValue.h"
 
+#include "FunctionDeclaration.h"
+#include "ControlDeclaration.h"
+
 using namespace MaximCodegen;
 
 Context::Context() {
-    llvm::StructType::create(_llvm, std::array<llvm::Type *, 2> {
+    _formType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 2> {
             llvm::Type::getInt8Ty(_llvm), // type
             llvm::ArrayType::get(llvm::Type::getFloatTy(_llvm), formParamCount) // form params
     }, "form");
 
-    llvm::StructType::create(_llvm, std::array<llvm::Type *, 2> {
-            llvm::VectorType::get(
-                    llvm::Type::getFloatTy(_llvm),
-                    2
-            ),
+    _numType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 2> {
+            llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2),
 
-            getStructType(Type::FORM)
+            _formType
     }, "num");
 
-    llvm::StructType::create(_llvm, std::array<llvm::Type *, 5> {
+    _midiType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 5> {
             llvm::Type::getIntNTy(_llvm, 4), // event type
             llvm::Type::getIntNTy(_llvm, 4), // channel
             llvm::Type::getInt8Ty(_llvm),    // note
@@ -40,30 +40,36 @@ llvm::Constant *Context::getConstantFloat(float num) {
     return llvm::ConstantFP::get(_llvm, llvm::APFloat(num));
 }
 
-llvm::Value *Context::getStructParamPtr(llvm::Value *ptr, llvm::Type *type, unsigned int param,
-                                        llvm::IRBuilder<> &builder) {
-    return builder.Insert(llvm::GetElementPtrInst::Create(
-            type, ptr,
-            std::array<llvm::Value *, 2> {
-                    getConstantInt(32, 0, false),
-                    getConstantInt(32, param, false)
-            }
-    ));
+llvm::Value *Context::getPtr(llvm::Value *ptr, unsigned int param, llvm::IRBuilder<> &builder) {
+    auto targetType = ptr->getType()->getPointerElementType();
+    auto idxList = std::array<llvm::Value *, 2> {
+            getConstantInt(32, 0, false),
+            getConstantInt(32, param, false)
+    };
+    auto indexedType = llvm::GetElementPtrInst::getIndexedType(targetType, idxList);
+
+    return builder.Insert(
+            llvm::GetElementPtrInst::Create(ptr->getType()->getPointerElementType(), ptr, idxList),
+            "ptr_" + typeToString(targetType) + "_" + std::to_string(param) + "_" + typeToString(indexedType)
+    );
 }
 
-llvm::Value *Context::checkType(llvm::Value *val, llvm::Type *type, SourcePos start, SourcePos end) {
-    if (val->getType() != type) {
+void Context::checkType(llvm::Type *type, llvm::Type *expectedType, SourcePos start, SourcePos end) {
+    if (type != expectedType) {
         throw CodegenError(
-                "Oyyyyy m80, I need a " + typeToString(type) + " here, not this bad boi " +
-                typeToString(val->getType()),
+                "Oyyyyy m80, I need a " + typeToString(expectedType) + " here, not this bad boi " +
+                typeToString(type),
                 start, end
         );
     }
-    return val;
 }
 
-llvm::Value *Context::checkType(llvm::Value *val, Type type, SourcePos start, SourcePos end) {
-    return checkType(val, getType(type), start, end);
+void Context::checkType(llvm::Type *type, Type expectedType, SourcePos start, SourcePos end) {
+    checkType(type, getType(expectedType), start, end);
+}
+
+void Context::checkPtrType(llvm::Value *ptr, Type expectedType, SourcePos start, SourcePos end) {
+    checkType(ptr->getType()->getPointerElementType(), expectedType, start, end);
 }
 
 llvm::Type *Context::getType(Type type) {
@@ -84,11 +90,11 @@ llvm::Type *Context::getType(Type type) {
 llvm::StructType *Context::getStructType(Type type) {
     switch (type) {
         case Type::FORM:
-            return llvm::StructType::create(_llvm, "form");
+            return _formType;
         case Type::NUM:
-            return llvm::StructType::create(_llvm, "num");
+            return _numType;
         case Type::MIDI:
-            return llvm::StructType::create(_llvm, "midi");
+            return _midiType;
         default:
             assert(false);
     }
@@ -148,4 +154,16 @@ std::unique_ptr<Value> Context::llToValue(bool isConst, llvm::Value *value) {
     }
 
     throw;
+}
+
+FunctionDeclaration* Context::getFunctionDecl(const std::string &name) const {
+    auto pair = functionDecls.find(name);
+    if (pair == functionDecls.end()) return nullptr;
+    return pair->second.get();
+}
+
+ControlDeclaration* Context::getControlDecl(MaximAst::ControlExpression::Type type) const {
+    auto pair = controlDecls.find(type);
+    assert(pair != controlDecls.end());
+    return pair->second.get();
 }

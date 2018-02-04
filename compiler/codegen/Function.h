@@ -1,20 +1,19 @@
 #pragma once
 
-namespace llvm {
-    class BasicBlock;
-}
+#include "llvm/IR/IRBuilder.h"
+#include "Scope.h"
 
 namespace MaximCodegen {
-
-    class Scope;
 
     class Context;
 
     class Function {
     public:
-        Context *context() const;
+        Function(llvm::Function *fun, Context *context);
 
-        Scope *scope() const;
+        Context *context() { return _context; }
+
+        Scope *scope() { return &_scope; }
 
         llvm::BasicBlock *initBlock() const { return _initBlock; }
 
@@ -25,6 +24,9 @@ namespace MaximCodegen {
         llvm::IRBuilder<> &codeBuilder() { return _codeBuilder; }
 
     private:
+        Context *_context;
+        Scope _scope;
+
         llvm::BasicBlock *_initBlock;
         llvm::BasicBlock *_codeBlock;
         llvm::IRBuilder<> _initBuilder;

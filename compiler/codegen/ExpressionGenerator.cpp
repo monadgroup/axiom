@@ -6,6 +6,7 @@
 #include "Function.h"
 #include "Scope.h"
 #include "CodegenError.h"
+#include "Control.h"
 #include "values/Value.h"
 #include "values/MidiValue.h"
 #include "values/NumValue.h"
@@ -24,6 +25,10 @@
 
 using namespace MaximCodegen;
 using namespace MaximAst;
+
+ExpressionGenerator::ExpressionGenerator(Context *context) : _context(context) {
+
+}
 
 std::unique_ptr<Value> ExpressionGenerator::generateExpr(MaximAst::Expression *expr, Function *function, Scope *scope) {
     if (auto note = dynamic_cast<NoteExpression *>(expr)) return generateNote(note, function, scope);
@@ -87,7 +92,7 @@ std::unique_ptr<Value>
 ExpressionGenerator::generateCast(MaximAst::CastExpression *expr, Function *function, Scope *scope) {
     // get base expression value
     auto exprValue = generateExpr(expr->expr.get(), function, scope);
-    _context->checkType(exprValue->value(), Context::Type::NUM, expr->expr->startPos, expr->expr->endPos);
+    _context->checkPtrType(exprValue->value(), Context::Type::NUM, expr->expr->startPos, expr->expr->endPos);
     auto numValue = AxiomUtil::strict_unique_cast<NumValue>(std::move(exprValue));
 
     // get form expression value
@@ -105,10 +110,10 @@ ExpressionGenerator::generateCast(MaximAst::CastExpression *expr, Function *func
     FormValue::ParamArr params = {};
     for (size_t i = 0; i < targetForm->arguments.size(); i++) {
         auto argExpr = generateExpr(targetForm->arguments[i].get(), function, scope);
-        _context->checkType(argExpr->value(), Context::Type::NUM, targetForm->arguments[i]->startPos,
+        _context->checkPtrType(argExpr->value(), Context::Type::NUM, targetForm->arguments[i]->startPos,
                             targetForm->arguments[i]->endPos);
         auto numArg = AxiomUtil::strict_unique_cast<NumValue>(std::move(argExpr));
-        params[i] = function->codeBuilder().CreateLoad(numArg->valuePtr(function->codeBuilder()));
+        params[i] = function->codeBuilder().CreateLoad(numArg->valuePtr(function->codeBuilder()), "cast_param");
         if (!numArg->isConst()) isConst = false;
     }
 
@@ -121,7 +126,7 @@ ExpressionGenerator::generateCast(MaximAst::CastExpression *expr, Function *func
     } else {
         return std::make_unique<NumValue>(
                 isConst,
-                function->codeBuilder().CreateLoad(numValue->valuePtr(function->codeBuilder())),
+                function->codeBuilder().CreateLoad(numValue->valuePtr(function->codeBuilder()), "cast_val_temp"),
                 form, _context, function
         );
     }
@@ -129,7 +134,17 @@ ExpressionGenerator::generateCast(MaximAst::CastExpression *expr, Function *func
 
 std::unique_ptr<Value>
 ExpressionGenerator::generateControl(MaximAst::ControlExpression *expr, Function *function, Scope *scope) {
-    return scope->findControl(expr->name, expr->type, expr->prop)->clone();
+    auto control = scope->getControl(expr->name, expr->type);
+    control->setMode(Control::Mode::INPUT);
+    auto prop = control->getProperty(expr->prop);
+    if (!prop) {
+        throw CodegenError(
+                "My longest ye boi ever: before you tried to read the " + expr->prop + " property which doesn't freakin exist!",
+                expr->startPos, expr->endPos
+        );
+    }
+
+    return prop->clone();
 }
 
 std::unique_ptr<Value>
@@ -147,23 +162,24 @@ ExpressionGenerator::generateMath(MaximAst::MathExpression *expr, Function *func
     auto leftExpr = generateExpr(expr->left.get(), function, scope);
     auto rightExpr = generateExpr(expr->right.get(), function, scope);
 
-    _context->checkType(leftExpr->value(), Context::Type::NUM, expr->left->startPos, expr->left->endPos);
-    _context->checkType(rightExpr->value(), Context::Type::NUM, expr->right->startPos, expr->right->endPos);
+    // todo: if both left and right are tuples, add them piece-wise
+    //       if one is a tuple but the other isn't, add the constant to each of them
+
+    _context->checkPtrType(leftExpr->value(), Context::Type::NUM, expr->left->startPos, expr->left->endPos);
+    _context->checkPtrType(rightExpr->value(), Context::Type::NUM, expr->right->startPos, expr->right->endPos);
 
     auto leftNum = AxiomUtil::strict_unique_cast<NumValue>(std::move(leftExpr));
     auto rightNum = AxiomUtil::strict_unique_cast<NumValue>(std::move(rightExpr));
 
     auto isConst = leftNum->isConst() && rightNum->isConst();
     auto cb = function->codeBuilder();
-    auto leftVal = cb.CreateLoad(leftNum->valuePtr(cb));
-    auto rightVal = cb.CreateLoad(rightNum->valuePtr(cb));
+    auto leftVal = cb.CreateLoad(leftNum->valuePtr(cb), "math_left");
+    auto rightVal = cb.CreateLoad(rightNum->valuePtr(cb), "math_right");
 
-    // todo: if both left and right are tuples, add them piece-wise
-    //       if one is a tuple but the other isn't, add the constant to each of them
     auto newVal = generateFloatIntCompMath(expr->type, leftVal, rightVal, function);
     auto finalVal = std::make_unique<NumValue>(
             isConst, newVal,
-            FormValue(function->codeBuilder().CreateLoad(leftNum->formPtr(cb)), _context),
+            FormValue(leftNum->formPtr(cb), _context),
             _context, function
     );
     return evaluateConstVal(std::move(finalVal));
@@ -173,15 +189,15 @@ llvm::Value *ExpressionGenerator::generateFloatIntCompMath(MaximAst::MathExpress
                                                            llvm::Value *rightVal, Function *function) {
     switch (type) {
         case MathExpression::Type::ADD:
-            return function->codeBuilder().CreateFAdd(leftVal, rightVal);
+            return function->codeBuilder().CreateFAdd(leftVal, rightVal, "math_add");
         case MathExpression::Type::SUBTRACT:
-            return function->codeBuilder().CreateFSub(leftVal, rightVal);
+            return function->codeBuilder().CreateFSub(leftVal, rightVal, "math_sub");
         case MathExpression::Type::MULTIPLY:
-            return function->codeBuilder().CreateFMul(leftVal, rightVal);
+            return function->codeBuilder().CreateFMul(leftVal, rightVal, "math_mul");
         case MathExpression::Type::DIVIDE:
-            return function->codeBuilder().CreateFDiv(leftVal, rightVal);
+            return function->codeBuilder().CreateFDiv(leftVal, rightVal, "math_div");
         case MathExpression::Type::MODULO:
-            return function->codeBuilder().CreateFRem(leftVal, rightVal);
+            return function->codeBuilder().CreateFRem(leftVal, rightVal, "math_rem");
         case MathExpression::Type::POWER:
             // todo: call intrinsic?
             assert(false);
@@ -197,26 +213,26 @@ llvm::Value *ExpressionGenerator::generateIntCompMath(MaximAst::MathExpression::
     auto floatVec = llvm::VectorType::get(llvm::Type::getFloatTy(_context->llvm()), 2);;
     auto intVec = llvm::VectorType::get(llvm::Type::getInt32Ty(_context->llvm()), 2);
 
-    auto intLeft = function->codeBuilder().CreateFPToSI(leftVal, intVec);
-    auto intRight = function->codeBuilder().CreateFPToSI(rightVal, intVec);
+    auto intLeft = function->codeBuilder().CreateFPToSI(leftVal, intVec, "comp_left_int");
+    auto intRight = function->codeBuilder().CreateFPToSI(rightVal, intVec, "comp_right_int");
 
     llvm::Value *result;
 
     switch (type) {
         case MathExpression::Type::BITWISE_AND:
-            result = function->codeBuilder().CreateAnd(intLeft, intRight);
+            result = function->codeBuilder().CreateAnd(intLeft, intRight, "comp_and");
             break;
         case MathExpression::Type::BITWISE_OR:
-            result = function->codeBuilder().CreateOr(intLeft, intRight);
+            result = function->codeBuilder().CreateOr(intLeft, intRight, "comp_or");
             break;
         case MathExpression::Type::BITWISE_XOR:
-            result = function->codeBuilder().CreateXor(intLeft, intRight);
+            result = function->codeBuilder().CreateXor(intLeft, intRight, "comp_xor");
             break;
         default:
             return generateCompareMath(type, leftVal, rightVal, function);
     }
 
-    return function->codeBuilder().CreateSIToFP(result, floatVec);
+    return function->codeBuilder().CreateSIToFP(result, floatVec, "comp_result");
 }
 
 llvm::Value *ExpressionGenerator::generateCompareMath(MaximAst::MathExpression::Type type, llvm::Value *leftVal,
@@ -231,50 +247,52 @@ llvm::Value *ExpressionGenerator::generateCompareMath(MaximAst::MathExpression::
     switch (type) {
         case MathExpression::Type::LOGICAL_AND:
             result = function->codeBuilder().CreateAnd(
-                    function->codeBuilder().CreateFCmpONE(leftVal, zeroVec),
-                    function->codeBuilder().CreateFCmpONE(leftVal, zeroVec)
+                    function->codeBuilder().CreateFCmpONE(leftVal, zeroVec, "comp_land_left"),
+                    function->codeBuilder().CreateFCmpONE(leftVal, zeroVec, "comp_land_right"),
+                    "comp_land"
             );
             break;
         case MathExpression::Type::LOGICAL_OR:
             result = function->codeBuilder().CreateOr(
-                    function->codeBuilder().CreateFCmpONE(leftVal, zeroVec),
-                    function->codeBuilder().CreateFCmpONE(leftVal, zeroVec)
+                    function->codeBuilder().CreateFCmpONE(leftVal, zeroVec, "comp_lor_left"),
+                    function->codeBuilder().CreateFCmpONE(leftVal, zeroVec, "comp_lor_right"),
+                    "comp_lor"
             );
             break;
         case MathExpression::Type::LOGICAL_EQUAL:
-            result = function->codeBuilder().CreateFCmpOEQ(leftVal, rightVal);
+            result = function->codeBuilder().CreateFCmpOEQ(leftVal, rightVal, "comp_leq");
             break;
         case MathExpression::Type::LOGICAL_NOT_EQUAL:
-            result = function->codeBuilder().CreateFCmpONE(leftVal, rightVal);
+            result = function->codeBuilder().CreateFCmpONE(leftVal, rightVal, "comp_lne");
             break;
         case MathExpression::Type::LOGICAL_GT:
-            result = function->codeBuilder().CreateFCmpOGT(leftVal, rightVal);
+            result = function->codeBuilder().CreateFCmpOGT(leftVal, rightVal, "comp_gt");
             break;
         case MathExpression::Type::LOGICAL_LT:
-            result = function->codeBuilder().CreateFCmpOLT(leftVal, rightVal);
+            result = function->codeBuilder().CreateFCmpOLT(leftVal, rightVal, "comp_lt");
             break;
         case MathExpression::Type::LOGICAL_GTE:
-            result = function->codeBuilder().CreateFCmpOGE(leftVal, rightVal);
+            result = function->codeBuilder().CreateFCmpOGE(leftVal, rightVal, "comp_gte");
             break;
         case MathExpression::Type::LOGICAL_LTE:
-            result = function->codeBuilder().CreateFCmpOLE(leftVal, rightVal);
+            result = function->codeBuilder().CreateFCmpOLE(leftVal, rightVal, "comp_lte");
             break;
         default:
             assert(false);
             throw;
     }
 
-    return function->codeBuilder().CreateSIToFP(result, floatVec);
+    return function->codeBuilder().CreateSIToFP(result, floatVec, "comp_result");
 }
 
 std::unique_ptr<Value>
 ExpressionGenerator::generateUnary(MaximAst::UnaryExpression *expr, Function *function, Scope *scope) {
     auto valExpr = generateExpr(expr->expr.get(), function, scope);
 
-    _context->checkType(valExpr->value(), Context::Type::NUM, expr->expr->startPos, expr->expr->endPos);
+    _context->checkPtrType(valExpr->value(), Context::Type::NUM, expr->expr->startPos, expr->expr->endPos);
 
     auto valNum = AxiomUtil::strict_unique_cast<NumValue>(std::move(valExpr));
-    auto readVal = function->codeBuilder().CreateLoad(valNum->valuePtr(function->codeBuilder()));
+    auto readVal = function->codeBuilder().CreateLoad(valNum->valuePtr(function->codeBuilder()), "unary_temp");
 
     auto floatVec = llvm::VectorType::get(llvm::Type::getFloatTy(_context->llvm()), 2);
 
@@ -286,21 +304,23 @@ ExpressionGenerator::generateUnary(MaximAst::UnaryExpression *expr, Function *fu
         case UnaryExpression::Type::NEGATIVE:
             result = function->codeBuilder().CreateFMul(
                     readVal,
-                    _context->getConstantFloat(-1)
+                    _context->getConstantFloat(-1),
+                    "unary_negate"
             );
             break;
         case UnaryExpression::Type::NOT:
             result = function->codeBuilder().CreateSIToFP(function->codeBuilder().CreateFCmpOEQ(
                     readVal,
-                    _context->getConstantFloat(0)
-            ), floatVec);
+                    _context->getConstantFloat(0),
+                    "unary_not_temp"
+            ), floatVec, "unary_not");
             break;
     }
 
     auto cb = function->codeBuilder();
     auto finalVal = std::make_unique<NumValue>(
             valNum->isConst(), result,
-            FormValue(cb.CreateLoad(valNum->formPtr(cb)), _context),
+            FormValue(valNum->formPtr(cb), _context),
             _context, function
     );
     return evaluateConstVal(std::move(finalVal));
@@ -328,7 +348,7 @@ ExpressionGenerator::generateAssign(MaximAst::AssignExpression *expr, Function *
             auto leftAssignable = expr->left->assignments[i].get();
             auto rightValue = _context->llToValue(
                     rightExpr->isConst(),
-                    function->codeBuilder().CreateLoad(rightTuple->itemPtr((unsigned int) i, function->codeBuilder()))
+                    function->codeBuilder().CreateLoad(rightTuple->itemPtr((unsigned int) i, function->codeBuilder()), "assign_temp")
             );
             generateSingleAssign(leftAssignable, rightValue.get(), expr->type, expr->right->startPos,
                                  expr->right->endPos, function, scope);
@@ -356,34 +376,34 @@ void ExpressionGenerator::generateSingleAssign(MaximAst::AssignableExpression *l
     }
 
     auto leftValue = generateExpr(leftExpr, function, scope);
-    _context->checkType(leftValue->value(), Context::Type::NUM, leftExpr->startPos, leftExpr->endPos);
+    _context->checkPtrType(leftValue->value(), Context::Type::NUM, leftExpr->startPos, leftExpr->endPos);
     auto leftNum = AxiomUtil::strict_unique_cast<NumValue>(std::move(leftValue));
 
-    _context->checkType(rightValue->value(), Context::Type::NUM, rightStart, rightEnd);
+    _context->checkPtrType(rightValue->value(), Context::Type::NUM, rightStart, rightEnd);
     auto rightNum = dynamic_cast<NumValue *>(rightValue);
     assert(rightNum);
 
     auto cb = function->codeBuilder();
-    auto leftVal = cb.CreateLoad(leftNum->valuePtr(cb));
-    auto rightVal = cb.CreateLoad(rightNum->valuePtr(cb));
+    auto leftVal = cb.CreateLoad(leftNum->valuePtr(cb), "assign_left");
+    auto rightVal = cb.CreateLoad(rightNum->valuePtr(cb), "assign_right");
 
     llvm::Value *newRight;
 
     switch (type) {
         case AssignExpression::Type::ADD:
-            newRight = cb.CreateFAdd(leftVal, rightVal);
+            newRight = cb.CreateFAdd(leftVal, rightVal, "assign_add");
             break;
         case AssignExpression::Type::SUBTRACT:
-            newRight = cb.CreateFSub(leftVal, rightVal);
+            newRight = cb.CreateFSub(leftVal, rightVal, "assign_sub");
             break;
         case AssignExpression::Type::MULTIPLY:
-            newRight = cb.CreateFMul(leftVal, rightVal);
+            newRight = cb.CreateFMul(leftVal, rightVal, "assign_mul");
             break;
         case AssignExpression::Type::DIVIDE:
-            newRight = cb.CreateFDiv(leftVal, rightVal);
+            newRight = cb.CreateFDiv(leftVal, rightVal, "assign_div");
             break;
         case AssignExpression::Type::MODULO:
-            newRight = cb.CreateFRem(leftVal, rightVal);
+            newRight = cb.CreateFRem(leftVal, rightVal, "assign_mod");
             break;
         case AssignExpression::Type::POWER:
             // todo: call intrinsic?
@@ -394,7 +414,7 @@ void ExpressionGenerator::generateSingleAssign(MaximAst::AssignableExpression *l
 
     NumValue realVal(
             leftNum->isConst() && rightNum->isConst(), newRight,
-            FormValue(function->codeBuilder().CreateLoad(leftNum->formPtr(cb)), _context),
+            FormValue(leftNum->formPtr(cb), _context),
             _context, function
     );
     generateBasicAssign(leftExpr, &realVal, function, scope);
@@ -418,7 +438,14 @@ void ExpressionGenerator::generateVariableAssign(MaximAst::VariableExpression *l
 
 void ExpressionGenerator::generateControlAssign(MaximAst::ControlExpression *leftExpr, Value *rightValue,
                                                 Function *function, Scope *scope) {
-    scope->setControl(leftExpr->name, leftExpr->type, leftExpr->prop, rightValue->clone());
+    auto control = scope->getControl(leftExpr->name, leftExpr->type);
+    control->setMode(Control::Mode::OUTPUT);
+    if (!control->setProperty(leftExpr->prop, rightValue->clone())) {
+        throw CodegenError(
+            "A wise man once said, you can't bake your cake and eat it too. On a completely unrelated topic, " + leftExpr->prop + " ISN\"T A VALID PROPERTY HERE!! D:",
+            leftExpr->startPos, leftExpr->endPos
+        );
+    }
 }
 
 std::unique_ptr<Value>
@@ -429,30 +456,32 @@ ExpressionGenerator::generatePostfix(MaximAst::PostfixExpression *expr, Function
 
     for (const auto &var : expr->left->assignments) {
         auto leftValue = generateExpr(var.get(), function, scope);
-        _context->checkType(leftValue->value(), Context::Type::NUM, var->startPos, var->endPos);
+        _context->checkPtrType(leftValue->value(), Context::Type::NUM, var->startPos, var->endPos);
         auto leftNum = AxiomUtil::strict_unique_cast<NumValue>(std::move(leftValue));
 
-        auto leftVal = function->codeBuilder().CreateLoad(leftNum->valuePtr(function->codeBuilder()));
+        auto leftVal = function->codeBuilder().CreateLoad(leftNum->valuePtr(function->codeBuilder()), "postfix_temp");
 
         llvm::Value *newRight;
         switch (expr->type) {
             case PostfixExpression::Type::INCREMENT:
                 newRight = function->codeBuilder().CreateFAdd(
                         leftVal,
-                        _context->getConstantFloat(1)
+                        _context->getConstantFloat(1),
+                        "postfix_inc"
                 );
                 break;
             case PostfixExpression::Type::DECREMENT:
                 newRight = function->codeBuilder().CreateFSub(
                         leftVal,
-                        _context->getConstantFloat(1)
+                        _context->getConstantFloat(1),
+                        "postfix_dec"
                 );
                 break;
         }
 
         auto rightVal = evaluateConstVal(std::make_unique<NumValue>(
                 leftNum->isConst(), newRight,
-                FormValue(function->codeBuilder().CreateLoad(leftNum->formPtr(function->codeBuilder())), _context),
+                FormValue(leftNum->formPtr(function->codeBuilder()), _context),
                 _context, function
         ));
         generateBasicAssign(var.get(), rightVal.get(), function, scope);
@@ -466,18 +495,15 @@ ExpressionGenerator::generatePostfix(MaximAst::PostfixExpression *expr, Function
 
 std::unique_ptr<NumValue> ExpressionGenerator::evaluateConstVal(std::unique_ptr<NumValue> value) {
     // todo
-    assert(false);
-    throw;
+    return value;
 }
 
 std::unique_ptr<MidiValue> ExpressionGenerator::evaluateConstVal(std::unique_ptr<MidiValue> value) {
     // todo
-    assert(false);
-    throw;
+    return value;
 }
 
 std::unique_ptr<TupleValue> ExpressionGenerator::evaluateConstVal(std::unique_ptr<TupleValue> value) {
     // todo
-    assert(false);
-    throw;
+    return value;
 }

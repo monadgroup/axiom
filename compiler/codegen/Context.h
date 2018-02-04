@@ -1,14 +1,19 @@
 #pragma once
 
 #include <llvm/IR/IRBuilder.h>
+#include <unordered_map>
+#include <string>
 
+#include "../ast/ControlExpression.h"
 #include "../SourcePos.h"
 
 namespace MaximCodegen {
 
-    class Function;
-
     class Value;
+
+    class ControlDeclaration;
+
+    class FunctionDeclaration;
 
     class Context {
     public:
@@ -34,12 +39,13 @@ namespace MaximCodegen {
 
         llvm::Constant *getConstantFloat(float num);
 
-        llvm::Value *
-        getStructParamPtr(llvm::Value *ptr, llvm::Type *type, unsigned int param, llvm::IRBuilder<> &builder);
+        llvm::Value *getPtr(llvm::Value *ptr, unsigned int param, llvm::IRBuilder<> &builder);
 
-        llvm::Value *checkType(llvm::Value *val, llvm::Type *type, SourcePos start, SourcePos end);
+        void checkType(llvm::Type *type, llvm::Type *expectedType, SourcePos start, SourcePos end);
 
-        llvm::Value *checkType(llvm::Value *val, Type type, SourcePos start, SourcePos end);
+        void checkType(llvm::Type *type, Type expectedType, SourcePos start, SourcePos end);
+
+        void checkPtrType(llvm::Value *ptr, Type expectedType, SourcePos start, SourcePos end);
 
         llvm::Type *getType(Type type);
 
@@ -53,8 +59,19 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value> llToValue(bool isConst, llvm::Value *value);
 
+        FunctionDeclaration *getFunctionDecl(const std::string &name) const;
+
+        ControlDeclaration *getControlDecl(MaximAst::ControlExpression::Type type) const;
+
     private:
         llvm::LLVMContext _llvm;
+
+        std::unordered_map<std::string, std::unique_ptr<FunctionDeclaration>> functionDecls;
+        std::unordered_map<MaximAst::ControlExpression::Type, std::unique_ptr<ControlDeclaration>> controlDecls;
+
+        llvm::StructType *_formType;
+        llvm::StructType *_numType;
+        llvm::StructType *_midiType;
     };
 
 }

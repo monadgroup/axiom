@@ -57,12 +57,12 @@ namespace MaximCodegen {
 
     class ExpressionGenerator {
     public:
-        ExpressionGenerator(Context *context);
+        explicit ExpressionGenerator(Context *context);
+
+        std::unique_ptr<Value> generateExpr(MaximAst::Expression *expr, Function *function, Scope *scope);
 
     private:
         Context *_context;
-
-        std::unique_ptr<Value> generateExpr(MaximAst::Expression *expr, Function *function, Scope *scope);
 
         // primitives
         std::unique_ptr<Value> generateNote(MaximAst::NoteExpression *expr, Function *function, Scope *scope);

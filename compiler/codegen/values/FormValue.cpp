@@ -6,7 +6,7 @@ using namespace MaximCodegen;
 
 FormValue::FormValue(MaximAst::Form::Type formType, const ParamArr &params, Context *context, Function *function)
         : _context(context) {
-    _value = function->initBuilder().CreateAlloca(type());
+    _value = function->initBuilder().CreateAlloca(type(), nullptr, "form_val_raw");
 
     std::array<llvm::Value *, Context::formParamCount> paramValues = {};
     switch (formType) {
@@ -26,25 +26,22 @@ FormValue::FormValue(MaximAst::Form::Type formType, const ParamArr &params, Cont
             break;
     }
 
-    auto paramsType = type()->getStructElementType(1);
-    auto paramsVal = function->initBuilder().CreateAlloca(paramsType);
-
     auto cb = function->codeBuilder();
+    cb.CreateStore(_context->getConstantInt(8, (unsigned int) formType, false), typePtr(cb));
+    auto paramArrPtr = paramsPtr(cb);
+
     for (size_t i = 0; i < Context::formParamCount; i++) {
         auto setValue = params[i] ? params[i] : paramValues[i];
         cb.CreateStore(
                 setValue,
-                _context->getStructParamPtr(paramsVal, paramsType, (unsigned int) i, cb)
+                _context->getPtr(paramArrPtr, (unsigned int) i, cb)
         );
     }
-
-    cb.CreateStore(_context->getConstantInt(8, (unsigned int) formType, false), typePtr(cb));
-    cb.CreateStore(paramsVal, paramsPtr(cb));
 }
 
 FormValue::FormValue(llvm::Value *formType, llvm::Value *params, Context *context, Function *function) : _context(
         context) {
-    _value = function->initBuilder().CreateAlloca(type());
+    _value = function->initBuilder().CreateAlloca(type(), nullptr, "form_val_copy");
 
     auto cb = function->codeBuilder();
     cb.CreateStore(formType, typePtr(cb));
@@ -60,9 +57,9 @@ llvm::Type *FormValue::type() const {
 }
 
 llvm::Value *FormValue::typePtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 0, builder);
+    return _context->getPtr(_value, 0, builder);
 }
 
 llvm::Value *FormValue::paramsPtr(llvm::IRBuilder<> &builder) const {
-    return _context->getStructParamPtr(_value, type(), 1, builder);
+    return _context->getPtr(_value, 1, builder);
 }
