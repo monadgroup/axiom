@@ -461,11 +461,55 @@ void Context::addStandardLibrary() {
         func->initBuilder().CreateBr(func->codeBlock());
     }
 
+    // pure num mix(num a, num b, num v)
+    {
+        auto func = addFunc("mix", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {
+                        Parameter(false, _numType),
+                        Parameter(false, _numType),
+                        Parameter(false, _numType)
+                }
+        ), &_builtinModule);
+
+        auto aAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "a");
+        auto bAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "b");
+        auto vAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "v");
+
+        auto cb = func->codeBuilder();
+        cb.CreateStore(func->llFunc()->arg_begin() + 1, aAlloc);
+        cb.CreateStore(func->llFunc()->arg_begin() + 2, bAlloc);
+        cb.CreateStore(func->llFunc()->arg_begin() + 3, vAlloc);
+
+        auto aVal = std::make_unique<NumValue>(false, aAlloc, this);
+        auto bVal = std::make_unique<NumValue>(false, bAlloc, this);
+        auto vVal = std::make_unique<NumValue>(false, vAlloc, this);
+
+        auto aNum = cb.CreateLoad(aVal->valuePtr(cb), "a_num");
+        auto abDiff = cb.CreateFSub(
+                cb.CreateLoad(bVal->valuePtr(cb), "b_num"),
+                aNum,
+                "ab_diff"
+        );
+        auto abMul = cb.CreateFMul(
+                abDiff,
+                cb.CreateLoad(vVal->valuePtr(cb), "v_num"),
+                "ab_mul"
+        );
+        auto resultNum = cb.CreateFAdd(
+                aNum,
+                abMul,
+                "am_add"
+        );
+        auto newNum = std::make_unique<NumValue>(
+                false, resultNum, FormValue(MaximAst::Form::Type::LINEAR, {}, this, func), this, func
+        );
+        cb.CreateRet(cb.CreateLoad(newNum->value(), "value_temp"));
+
+        func->initBuilder().CreateBr(func->codeBlock());
+    }
+
     // math functions
 
-    // pure num clamp(num x, num min, num max)
-    // pure num mix(num a, num b, num v)
-    // pure num gate(num edge, num x)
     // pure num if(num cond, num t, num f)
     // pure num pan(num x, num pan)
     // pure num left(num x)
