@@ -26,12 +26,12 @@ Context::Context() : _builtinModule("builtins.llvm", llvm()) {
     _formType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 2> {
             llvm::Type::getInt8Ty(_llvm), // type
             llvm::ArrayType::get(llvm::Type::getFloatTy(_llvm), formParamCount) // form params
-    }, "form");
+    }, "struct.form");
 
     _numType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 2> {
             llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2),
             _formType
-    }, "num");
+    }, "struct.num");
 
     _midiType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 5> {
             llvm::Type::getIntNTy(_llvm, 4), // event type
@@ -39,25 +39,13 @@ Context::Context() : _builtinModule("builtins.llvm", llvm()) {
             llvm::Type::getInt8Ty(_llvm),    // note
             llvm::Type::getInt8Ty(_llvm),    // param
             llvm::Type::getInt32Ty(_llvm)    // time
-    }, "midi");
+    }, "struct.midi");
 
-    addNumVecIntrinsic("cos", llvm::Intrinsic::ID::cos, 1, &_builtinModule);
-    addNumVecIntrinsic("sin", llvm::Intrinsic::ID::sin, 1, &_builtinModule);
-    addNumScalarIntrinsic("tan", "tanf", 1, &_builtinModule);
-    addNumScalarIntrinsic("acos", "acosf", 1, &_builtinModule);
-    addNumScalarIntrinsic("asin", "asinf", 1, &_builtinModule);
-    addNumScalarIntrinsic("atan", "atanf", 1, &_builtinModule);
-    addNumScalarIntrinsic("atan2", "atan2f", 2, &_builtinModule);
-    addNumScalarIntrinsic("hypot", "hypotf", 2, &_builtinModule);
-    addNumVecIntrinsic("log", llvm::Intrinsic::ID::log, 1, &_builtinModule);
-    addNumVecIntrinsic("log2", llvm::Intrinsic::ID::log2, 1, &_builtinModule);
-    addNumVecIntrinsic("log10", llvm::Intrinsic::ID::log10, 1, &_builtinModule);
-    addNumScalarIntrinsic("logb", "logbf", 2, &_builtinModule);
-    addNumVecIntrinsic("sqrt", llvm::Intrinsic::ID::sqrt, 1, &_builtinModule);
-    addNumVecIntrinsic("ceil", llvm::Intrinsic::ID::ceil, 1, &_builtinModule);
-    addNumVecIntrinsic("floor", llvm::Intrinsic::ID::floor, 1, &_builtinModule);
-    addNumVecIntrinsic("round", llvm::Intrinsic::ID::round, 1, &_builtinModule);
-    addNumVecIntrinsic("abs", llvm::Intrinsic::ID::fabs, 1, &_builtinModule);
+    _vaType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 1> {
+            llvm::Type::getInt8Ty(_llvm)
+    }, "struct.va_list");
+
+    addStandardLibrary();
 
     // todo: min
     // todo: max
@@ -204,9 +192,8 @@ ControlDeclaration* Context::getControlDecl(MaximAst::ControlExpression::Type ty
     return pair->second.get();
 }
 
-llvm::Function* Context::getVecIntrinsic(llvm::Intrinsic::ID id, size_t paramCount, llvm::Module *module) {
+llvm::Function* Context::getVecIntrinsic(llvm::Intrinsic::ID id, llvm::Module *module) {
     auto numVec = llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2);
-    std::vector<llvm::Type*> items(paramCount, numVec);
     return llvm::Intrinsic::getDeclaration(module, id, numVec);
 }
 
@@ -227,8 +214,9 @@ Function* Context::addFunc(std::string name, std::unique_ptr<FunctionDeclaration
     return newFuncPtr;
 }
 
-Function* Context::addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, size_t paramCount, llvm::Module *module) {
-    auto intrinsicFunc = getVecIntrinsic(id, paramCount, module);
+Function* Context::addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, size_t paramCount, bool copyForm,
+                                      llvm::Module *module) {
+    auto intrinsicFunc = getVecIntrinsic(id, module);
 
     std::vector<Parameter> funcParams(paramCount, Parameter(false, _numType));
     auto realFunc = addFunc(std::move(name), std::move(std::make_unique<FunctionDeclaration>(true, _numType, funcParams)), module);
@@ -237,20 +225,23 @@ Function* Context::addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, 
     std::vector<llvm::Value*> paramValues;
     paramValues.reserve(paramCount);
     llvm::Value *firstFormPtr = nullptr;
-    for (auto &param : realFunc->llFunc()->args()) {
+
+    for (auto i = 0; i < paramCount; i++) {
+        // skip first parameter, it's the number of arguments passed
+        auto param = realFunc->llFunc()->arg_begin() + i + 1;
         auto paramDest = realFunc->initBuilder().CreateAlloca(_numType, nullptr, "param_temp");
-        cb.CreateStore(&param, paramDest);
+        cb.CreateStore(param, paramDest);
         auto paramX = std::make_unique<NumValue>(false, paramDest, this);
         if (!firstFormPtr) firstFormPtr = paramX->formPtr(cb);
         paramValues.push_back(cb.CreateLoad(paramX->valuePtr(cb), "intrinsic_param"));
     }
 
     auto intrinsicResult = cb.CreateCall(intrinsicFunc, paramValues, "intrinsic_result");
-    NumValue numResult(
-            false, intrinsicResult,
-            FormValue(firstFormPtr, this),
-            this, realFunc
-    );
+
+    FormValue val = copyForm ? FormValue(firstFormPtr, this)
+                             : FormValue(MaximAst::Form::Type::LINEAR, {}, this, realFunc);
+
+    NumValue numResult(false, intrinsicResult, val, this, realFunc);
 
     cb.CreateRet(cb.CreateLoad(numResult.value(), "num_val_temp"));
     realFunc->initBuilder().CreateBr(realFunc->codeBlock());
@@ -258,7 +249,7 @@ Function* Context::addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, 
     return realFunc;
 }
 
-Function* Context::addNumScalarIntrinsic(std::string name, std::string internalName, size_t paramCount,
+Function* Context::addNumScalarIntrinsic(std::string name, std::string internalName, size_t paramCount, bool copyForm,
                                          llvm::Module *module) {
     auto intrinsicFunc = getScalarIntrinsic(std::move(internalName), paramCount, module);
 
@@ -269,9 +260,12 @@ Function* Context::addNumScalarIntrinsic(std::string name, std::string internalN
     llvm::Value *firstFormPtr = nullptr;
     std::vector<llvm::Value*> paramVecs;
     paramVecs.reserve(paramCount);
-    for (auto &param : realFunc->llFunc()->args()) {
+
+    // skip first parameter, it's the number of arguments passed
+    for (auto i = 0; i < paramCount; i++) {
+        auto param = realFunc->llFunc()->arg_begin() + i + 1;
         auto paramDest = realFunc->initBuilder().CreateAlloca(_numType, nullptr, "param_temp");
-        cb.CreateStore(&param, paramDest);
+        cb.CreateStore(param, paramDest);
         auto paramX = std::make_unique<NumValue>(false, paramDest, this);
         if (!firstFormPtr) firstFormPtr = paramX->formPtr(cb);
         paramVecs.push_back(cb.CreateLoad(paramX->valuePtr(cb), "intrinsic_param"));
@@ -290,14 +284,145 @@ Function* Context::addNumScalarIntrinsic(std::string name, std::string internalN
         intrinsicResult = cb.CreateInsertElement(intrinsicResult, intrinsicSingleResult, i, "intrinsic_result");
     }
 
-    NumValue numResult(
-            false, intrinsicResult,
-            FormValue(firstFormPtr, this),
-            this, realFunc
-    );
+    FormValue val = copyForm ? FormValue(firstFormPtr, this)
+                             : FormValue(MaximAst::Form::Type::LINEAR, {}, this, realFunc);
+
+    NumValue numResult(false, intrinsicResult, val, this, realFunc);
 
     cb.CreateRet(cb.CreateLoad(numResult.value(), "num_val_temp"));
     realFunc->initBuilder().CreateBr(realFunc->codeBlock());
     llvm::verifyFunction(*realFunc->llFunc());
     return realFunc;
+}
+
+Function* Context::addNumVecFoldIntrinsic(const std::string &name, llvm::Intrinsic::ID id, bool copyForm,
+                                          llvm::Module *module) {
+    auto vaStartIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, llvm::Intrinsic::ID::vastart);
+    auto vaEndIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, llvm::Intrinsic::ID::vaend);
+    auto vecType = llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2);
+
+
+    auto minIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, id, vecType);
+    auto decl = std::make_unique<FunctionDeclaration>(true, _numType, std::vector<Parameter>{},
+                                                      std::make_unique<Parameter>(false, _numType));
+    auto func = addFunc(name, std::move(decl), &_builtinModule);
+    auto cb = func->codeBuilder();
+    auto ap = cb.CreateAlloca(_vaType, nullptr, "ap");
+    auto ap2 = cb.CreateBitCast(ap, llvm::PointerType::get(llvm::Type::getInt8Ty(_llvm), 0), "ap2");
+    cb.CreateCall(vaStartIntrinsic, std::array<llvm::Value*, 1>{ ap2 });
+
+    auto varCountType = llvm::Type::getInt8Ty(_llvm);
+    auto incrementVal = func->initBuilder().CreateAlloca(varCountType, nullptr, "increment");
+    cb.CreateStore(llvm::ConstantInt::get(varCountType, 0), incrementVal);
+    auto incrTotal = func->llFunc()->arg_begin();
+
+    auto accumVal = func->initBuilder().CreateAlloca(vecType, nullptr, "accum");
+    auto initialLoadTarget = func->initBuilder().CreateAlloca(_numType, nullptr, "load_init_temp");
+    cb.CreateStore(cb.CreateVAArg(ap2, _numType, "first_arg"), initialLoadTarget);
+    auto firstArg = std::make_unique<NumValue>(false, initialLoadTarget, this);
+    cb.CreateStore(
+            cb.CreateLoad(firstArg->valuePtr(cb), "first_arg_num"),
+            accumVal
+    );
+
+    auto loopCheckBlock = llvm::BasicBlock::Create(_llvm, "loop_check", func->llFunc());
+    auto loopContinueBlock = llvm::BasicBlock::Create(_llvm, "loop_continue", func->llFunc());
+    auto loopFinishBlock = llvm::BasicBlock::Create(_llvm, "loop_finish", func->llFunc());
+
+    cb.CreateBr(loopCheckBlock);
+
+    llvm::IRBuilder<> loopCheckBuilder(loopCheckBlock);
+    auto incrAdd = loopCheckBuilder.CreateAdd(
+            loopCheckBuilder.CreateLoad(incrementVal, "increment_temp.load"),
+            llvm::ConstantInt::get(varCountType, 1),
+            "increment_temp.add"
+    );
+    loopCheckBuilder.CreateStore(incrAdd, incrementVal);
+    auto incrResult = loopCheckBuilder.CreateICmpUGE(incrAdd, incrTotal, "increment_compare");
+    loopCheckBuilder.CreateCondBr(incrResult, loopFinishBlock, loopContinueBlock);
+
+    llvm::IRBuilder<> loopContinueBuilder(loopContinueBlock);
+    auto continueLoadTarget = func->initBuilder().CreateAlloca(_numType, nullptr, "load_cont_temp");
+    loopContinueBuilder.CreateStore(loopContinueBuilder.CreateVAArg(ap2, _numType, "next_arg"), continueLoadTarget);
+    auto nextArg = std::make_unique<NumValue>(false, continueLoadTarget, this);
+    auto lastNum = loopContinueBuilder.CreateLoad(accumVal, "last_num");
+    auto nextNum = loopContinueBuilder.CreateLoad(nextArg->valuePtr(loopContinueBuilder), "next_arg_num");
+    auto resultVal = loopContinueBuilder.CreateCall(minIntrinsic, std::array<llvm::Value*, 2> {
+            lastNum,
+            nextNum
+    }, "intrinsic_result");
+    loopContinueBuilder.CreateStore(resultVal, accumVal);
+    loopContinueBuilder.CreateBr(loopCheckBlock);
+
+    func->codeBuilder().SetInsertPoint(loopFinishBlock);
+    func->codeBuilder().CreateCall(vaEndIntrinsic, std::array<llvm::Value*, 1>{ ap2 });
+
+    FormValue newForm = copyForm ? FormValue(firstArg->formPtr(func->codeBuilder()), this)
+                                 : FormValue(MaximAst::Form::Type::LINEAR, {}, this, func);
+
+    auto finalAccum = func->codeBuilder().CreateLoad(accumVal, "accum_temp");
+    auto newNum = std::make_unique<NumValue>(false, finalAccum, newForm, this, func);
+    func->codeBuilder().CreateRet(func->codeBuilder().CreateLoad(newNum->value(), "accum_load"));
+
+    func->initBuilder().CreateBr(func->codeBlock());
+
+    return func;
+}
+
+void Context::addStandardLibrary() {
+    // functions that map directly to libm
+    addNumVecIntrinsic("cos", llvm::Intrinsic::ID::cos, 1, false, &_builtinModule);
+    addNumVecIntrinsic("sin", llvm::Intrinsic::ID::sin, 1, false, &_builtinModule);
+    addNumScalarIntrinsic("tan", "tanf", 1, false, &_builtinModule);
+    addNumScalarIntrinsic("acos", "acosf", 1, false, &_builtinModule);
+    addNumScalarIntrinsic("asin", "asinf", 1, false, &_builtinModule);
+    addNumScalarIntrinsic("atan", "atanf", 1, false, &_builtinModule);
+    addNumScalarIntrinsic("atan2", "atan2f", 2, false, &_builtinModule);
+    addNumScalarIntrinsic("hypot", "hypotf", 2, false, &_builtinModule);
+    addNumVecIntrinsic("log", llvm::Intrinsic::ID::log, 1, false, &_builtinModule);
+    addNumVecIntrinsic("log2", llvm::Intrinsic::ID::log2, 1, false, &_builtinModule);
+    addNumVecIntrinsic("log10", llvm::Intrinsic::ID::log10, 1, false, &_builtinModule);
+    addNumScalarIntrinsic("logb", "logbf", 2, false, &_builtinModule);
+    addNumVecIntrinsic("sqrt", llvm::Intrinsic::ID::sqrt, 1, false, &_builtinModule);
+    addNumVecIntrinsic("ceil", llvm::Intrinsic::ID::ceil, 1, false, &_builtinModule);
+    addNumVecIntrinsic("floor", llvm::Intrinsic::ID::floor, 1, false, &_builtinModule);
+    addNumVecIntrinsic("round", llvm::Intrinsic::ID::round, 1, false, &_builtinModule);
+    addNumVecIntrinsic("abs", llvm::Intrinsic::ID::fabs, 1, false, &_builtinModule);
+    addNumVecFoldIntrinsic("min", llvm::Intrinsic::ID::minnum, false, &_builtinModule);
+    addNumVecFoldIntrinsic("max", llvm::Intrinsic::ID::maxnum, false, &_builtinModule);
+
+    // math functions
+
+    // pure num clamp(num x, num min, num max)
+    // pure num mix(num a, num b, num v)
+    // pure num gate(num edge, num x)
+    // pure num if(num cond, num t, num f)
+    // pure num pan(num x, num pan)
+    // pure num left(num x)
+    // pure num right(num x)
+    // pure num combine(num left, num right)
+    // pure num swap(num x)
+    // pure num sequence(num n, num ...x)
+    // num noise(min=-1, max=1)
+
+    // filters
+    // num lowBqFilter(num x, num freq, num q)
+    // num highBqFilter(num x, num freq, num q)
+    // num peakBqFilter(num x, num freq, num q, num gain)
+    // (num, num, num, num) svFilter(num x, num freq, num q)
+
+    // generators
+    // num sinOsc(num freq, num phase)
+    // num sqrOsc(num freq, num phase)
+    // num sawOsc(num freq, num phase)
+    // num triOsc(num freq, num phase)
+    // num rmpOsc(num freq, num phase)
+
+    // time
+    // num amplitude(num x)
+    // num delay(num x, const num d)
+    // num resDelay(num x, num d, const num r)
+    // num next(num x)
+    // num hold(num x, num gate, num else=0)
+    // num accum(num x, num gate, num base=0)
 }

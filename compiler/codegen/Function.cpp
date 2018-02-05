@@ -31,7 +31,8 @@ std::unique_ptr<Value> Function::generateCall(const std::vector<ParamData> &para
 
     auto resultConst = _decl->isPure();
     std::vector<llvm::Value *> paramValues;
-    paramValues.reserve(params.size());
+    paramValues.reserve(params.size() + 1);
+    paramValues.push_back(nullptr);
 
     // handle all parameters passed in
     for (size_t i = 0; i < params.size(); i++) {
@@ -62,6 +63,9 @@ std::unique_ptr<Value> Function::generateCall(const std::vector<ParamData> &para
             paramValues.push_back(param.defaultValue());
         }
     }
+
+    // add number of arguments passed
+    paramValues[0] = llvm::ConstantInt::get(llvm::Type::getInt8Ty(_context->llvm()), paramValues.size() - 1);
 
     auto returnDest = function->initBuilder().CreateAlloca(_decl->returnType(), nullptr, "call_result");
     auto returnVal = function->codeBuilder().CreateCall(_llFunc, paramValues, "call_result_temp");

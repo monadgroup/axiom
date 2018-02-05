@@ -12,7 +12,11 @@ FunctionDeclaration::FunctionDeclaration(bool isPure, llvm::Type *returnType, st
     _maxParamCount = _variadicParam ? -1 : (int) _parameters.size();
 
     std::vector<llvm::Type *> paramTypes;
-    paramTypes.reserve(_parameters.size());
+    paramTypes.reserve(_parameters.size() + 1);
+
+    // always add a parameter for number of parameters passed (used for variadic funcs)
+    paramTypes.push_back(llvm::Type::getInt8Ty(returnType->getContext()));
+
     for (const auto &param : _parameters) {
         paramTypes.push_back(param.type());
         if (param.defaultValue()) _minParamCount--;
