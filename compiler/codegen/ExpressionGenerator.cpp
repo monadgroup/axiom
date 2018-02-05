@@ -297,7 +297,7 @@ llvm::Value *ExpressionGenerator::generateCompareMath(MaximAst::MathExpression::
             throw;
     }
 
-    return function->codeBuilder().CreateSIToFP(result, floatVec, "comp_result");
+    return function->codeBuilder().CreateUIToFP(result, floatVec, "comp_result");
 }
 
 std::unique_ptr<Value>
@@ -324,7 +324,7 @@ ExpressionGenerator::generateUnary(MaximAst::UnaryExpression *expr, Function *fu
             );
             break;
         case UnaryExpression::Type::NOT:
-            result = function->codeBuilder().CreateSIToFP(function->codeBuilder().CreateFCmpOEQ(
+            result = function->codeBuilder().CreateUIToFP(function->codeBuilder().CreateFCmpOEQ(
                     readVal,
                     _context->getConstantFloat(0),
                     "unary_not_temp"
