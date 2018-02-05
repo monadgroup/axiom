@@ -17,7 +17,11 @@ Value *Scope::findValue(std::string name) {
 }
 
 void Scope::setValue(std::string name, std::unique_ptr<Value> value) {
-    values.emplace(name, std::move(value));
+    value->value()->setName(name);
+
+    auto pair = values.find(name);
+    if (pair == values.end()) values.emplace(name, std::move(value));
+    else pair->second = std::move(value);
 }
 
 Control* Scope::getControl(std::string name, MaximAst::ControlExpression::Type type) {

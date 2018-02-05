@@ -74,7 +74,7 @@ ExpressionGenerator::generateTuple(MaximAst::TupleExpression *expr, Function *fu
     bool isConst = true;
     for (const auto &tupleItem : expr->expressions) {
         auto val = generateExpr(tupleItem.get(), function, scope);
-        tupleValues.push_back(val->value());
+        tupleValues.push_back(function->codeBuilder().CreateLoad(val->value(), "tuple_val"));
         if (!val->isConst()) isConst = false;
     }
     auto finalVal = std::make_unique<TupleValue>(isConst, tupleValues, _context, function);
@@ -366,7 +366,7 @@ ExpressionGenerator::generateAssign(MaximAst::AssignExpression *expr, Function *
             auto leftAssignable = expr->left->assignments[i].get();
             auto rightValue = _context->llToValue(
                     rightExpr->isConst(),
-                    function->codeBuilder().CreateLoad(rightTuple->itemPtr((unsigned int) i, function->codeBuilder()), "assign_temp")
+                    rightTuple->itemPtr((unsigned int) i, function->codeBuilder())
             );
             auto resVal = generateSingleAssign(leftAssignable, rightValue.get(), expr->type, expr->right->startPos,
                                                expr->right->endPos, function, scope);
@@ -479,6 +479,9 @@ ExpressionGenerator::generatePostfix(MaximAst::PostfixExpression *expr, Function
     std::vector<llvm::Value *> resultValues;
     resultValues.reserve(expr->left->assignments.size());
 
+    auto oneFloat = _context->getConstantFloat(1);
+    auto oneVec = llvm::ConstantVector::get({ oneFloat, oneFloat });
+
     for (const auto &var : expr->left->assignments) {
         auto leftValue = generateExpr(var.get(), function, scope);
         _context->checkPtrType(leftValue->value(), Context::Type::NUM, var->startPos, var->endPos);
@@ -489,18 +492,10 @@ ExpressionGenerator::generatePostfix(MaximAst::PostfixExpression *expr, Function
         llvm::Value *newRight;
         switch (expr->type) {
             case PostfixExpression::Type::INCREMENT:
-                newRight = function->codeBuilder().CreateFAdd(
-                        leftVal,
-                        _context->getConstantFloat(1),
-                        "postfix_inc"
-                );
+                newRight = function->codeBuilder().CreateFAdd(leftVal, oneVec, "postfix_inc");
                 break;
             case PostfixExpression::Type::DECREMENT:
-                newRight = function->codeBuilder().CreateFSub(
-                        leftVal,
-                        _context->getConstantFloat(1),
-                        "postfix_dec"
-                );
+                newRight = function->codeBuilder().CreateFSub(leftVal, oneVec, "postfix_dec");
                 break;
         }
 
@@ -512,10 +507,14 @@ ExpressionGenerator::generatePostfix(MaximAst::PostfixExpression *expr, Function
         generateBasicAssign(var.get(), rightVal.get(), function, scope);
 
         if (!leftNum->isConst()) isResultConst = false;
-        resultValues.push_back(rightVal->value());
+        resultValues.push_back(leftNum->value());
     }
 
-    return std::make_unique<TupleValue>(isResultConst, resultValues, _context, function);
+    if (resultValues.size() > 1) {
+        return std::make_unique<TupleValue>(isResultConst, resultValues, _context, function);
+    } else {
+        return std::make_unique<NumValue>(isResultConst, resultValues[0], _context);
+    }
 }
 
 std::unique_ptr<NumValue> ExpressionGenerator::evaluateConstVal(std::unique_ptr<NumValue> value) {
