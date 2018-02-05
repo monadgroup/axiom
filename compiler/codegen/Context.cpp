@@ -63,6 +63,29 @@ llvm::Constant *Context::getConstantFloat(float num) {
     return llvm::ConstantFP::get(_llvm, llvm::APFloat(num));
 }
 
+llvm::Constant* Context::getConstantNum(float left, float right, llvm::Constant *form) {
+    return llvm::ConstantStruct::get(_numType, std::array<llvm::Constant *, 2> {
+            llvm::ConstantVector::get(std::array<llvm::Constant *, 2> {
+                    getConstantFloat(left),
+                    getConstantFloat(right)
+            }),
+            form
+    });
+}
+
+llvm::Constant* Context::getConstantForm(MaximAst::Form::Type type, std::initializer_list<float> params) {
+    std::vector<llvm::Constant *> paramConsts;
+    paramConsts.reserve(params.size());
+    for (const auto &p : params) {
+        paramConsts.push_back(getConstantFloat(p));
+    }
+
+    return llvm::ConstantStruct::get(_formType, std::array<llvm::Constant *, 2> {
+            getConstantInt(8, (unsigned int) type, false),
+            llvm::ConstantArray::get(llvm::ArrayType::get(llvm::Type::getFloatTy(_llvm), formParamCount), paramConsts)
+    });
+}
+
 llvm::Value *Context::getPtr(llvm::Value *ptr, unsigned int param, llvm::IRBuilder<> &builder) {
     auto targetType = ptr->getType()->getPointerElementType();
     auto idxList = std::array<llvm::Value *, 2> {
@@ -390,6 +413,53 @@ void Context::addStandardLibrary() {
     addNumVecIntrinsic("abs", llvm::Intrinsic::ID::fabs, 1, false, &_builtinModule);
     addNumVecFoldIntrinsic("min", llvm::Intrinsic::ID::minnum, false, &_builtinModule);
     addNumVecFoldIntrinsic("max", llvm::Intrinsic::ID::maxnum, false, &_builtinModule);
+
+    auto vecType = llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2);
+
+    // pure num clamp(num x, num min, num max)
+    {
+        auto defaultMin = getConstantNum(-1, -1, getConstantForm(MaximAst::Form::Type::LINEAR, {0, 1}));
+        auto defaultMax = getConstantNum(1, 1, getConstantForm(MaximAst::Form::Type::LINEAR, {0, 1}));
+        auto minIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, llvm::Intrinsic::ID::minnum, vecType);
+        auto maxIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, llvm::Intrinsic::ID::maxnum, vecType);
+
+        auto func = addFunc("clamp", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {
+                        Parameter(false, _numType),
+                        Parameter(false, _numType, defaultMin),
+                        Parameter(false, _numType, defaultMax)
+                }
+        ), &_builtinModule);
+
+        auto numAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "num");
+        auto minAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "min");
+        auto maxAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "max");
+
+        auto cb = func->codeBuilder();
+        cb.CreateStore(func->llFunc()->arg_begin() + 1, numAlloc);
+        cb.CreateStore(func->llFunc()->arg_begin() + 2, minAlloc);
+        cb.CreateStore(func->llFunc()->arg_begin() + 3, maxAlloc);
+
+        auto numVal = std::make_unique<NumValue>(false, numAlloc, this);
+        auto minVal = std::make_unique<NumValue>(false, minAlloc, this);
+        auto maxVal = std::make_unique<NumValue>(false, maxAlloc, this);
+
+        auto biggerValue = cb.CreateCall(maxIntrinsic, std::array<llvm::Value*, 2> {
+                cb.CreateLoad(numVal->valuePtr(cb), "load_num"),
+                cb.CreateLoad(minVal->valuePtr(cb), "load_min")
+        }, "bigger_val");
+        auto smallerValue = cb.CreateCall(minIntrinsic, std::array<llvm::Value*, 2> {
+                biggerValue,
+                cb.CreateLoad(maxVal->valuePtr(cb), "load_max")
+        }, "smaller_val");
+
+        auto newNum = std::make_unique<NumValue>(
+                false, smallerValue, FormValue(MaximAst::Form::Type::LINEAR, {}, this, func), this, func
+        );
+        cb.CreateRet(cb.CreateLoad(newNum->value(), "value_temp"));
+
+        func->initBuilder().CreateBr(func->codeBlock());
+    }
 
     // math functions
 

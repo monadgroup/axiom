@@ -319,14 +319,20 @@ ExpressionGenerator::generateUnary(MaximAst::UnaryExpression *expr, Function *fu
         case UnaryExpression::Type::NEGATIVE:
             result = function->codeBuilder().CreateFMul(
                     readVal,
-                    _context->getConstantFloat(-1),
+                    llvm::ConstantVector::get(std::array<llvm::Constant *, 2> {
+                            _context->getConstantFloat(-1),
+                            _context->getConstantFloat(-1)
+                    }),
                     "unary_negate"
             );
             break;
         case UnaryExpression::Type::NOT:
             result = function->codeBuilder().CreateUIToFP(function->codeBuilder().CreateFCmpOEQ(
                     readVal,
-                    _context->getConstantFloat(0),
+                    llvm::ConstantVector::get(std::array<llvm::Constant *, 2> {
+                            _context->getConstantFloat(0),
+                            _context->getConstantFloat(0)
+                    }),
                     "unary_not_temp"
             ), floatVec, "unary_not");
             break;

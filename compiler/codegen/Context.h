@@ -6,6 +6,7 @@
 #include <llvm/IR/LegacyPassManager.h>
 
 #include "../ast/ControlExpression.h"
+#include "../ast/Form.h"
 #include "../SourcePos.h"
 #include "FunctionDeclaration.h"
 
@@ -42,6 +43,10 @@ namespace MaximCodegen {
         llvm::Constant *getConstantInt(unsigned int numBits, uint64_t val, bool isSigned);
 
         llvm::Constant *getConstantFloat(float num);
+
+        llvm::Constant *getConstantNum(float left, float right, llvm::Constant *form);
+
+        llvm::Constant *getConstantForm(MaximAst::Form::Type type, std::initializer_list<float> params);
 
         llvm::Value *getPtr(llvm::Value *ptr, unsigned int param, llvm::IRBuilder<> &builder);
 

@@ -59,7 +59,7 @@ std::unique_ptr<Value> Function::generateCall(const std::vector<ParamData> &para
     // add in extra parameters
     for (size_t i = 0; i < _decl->parameters().size(); i++) {
         auto param = _decl->parameters()[i];
-        if (param.defaultValue() && paramValues.size() <= i) {
+        if (param.defaultValue() && paramValues.size() - 1 <= i) {
             paramValues.push_back(param.defaultValue());
         }
     }
