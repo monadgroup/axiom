@@ -3,6 +3,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <unordered_map>
 #include <string>
+#include <llvm/IR/LegacyPassManager.h>
 
 #include "../ast/ControlExpression.h"
 #include "../SourcePos.h"
@@ -36,6 +37,8 @@ namespace MaximCodegen {
 
         llvm::LLVMContext &llvm() { return _llvm; }
 
+        llvm::Module *builtinModule() { return &_builtinModule; }
+
         llvm::Constant *getConstantInt(unsigned int numBits, uint64_t val, bool isSigned);
 
         llvm::Constant *getConstantFloat(float num);
@@ -60,12 +63,13 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value> llToValue(bool isConst, llvm::Value *value);
 
-        Function *getFunctionDecl(const std::string &name) const;
+        Function *getFunction(const std::string &name) const;
 
         ControlDeclaration *getControlDecl(MaximAst::ControlExpression::Type type) const;
 
     private:
         llvm::LLVMContext _llvm;
+        llvm::Module _builtinModule;
 
         std::unordered_map<std::string, std::unique_ptr<Function>> functionDecls;
         std::unordered_map<MaximAst::ControlExpression::Type, std::unique_ptr<ControlDeclaration>> controlDecls;
@@ -74,9 +78,9 @@ namespace MaximCodegen {
         llvm::StructType *_numType;
         llvm::StructType *_midiType;
 
-        llvm::Function *getVecIntrinsic(std::string name, size_t paramCount, llvm::Module *module);
-        Function *addFunc(std::string name, const FunctionDeclaration &decl, llvm::Module *module);
-        Function *addNumVecIntrinsic(std::string name, std::string intrinsicName, size_t paramCount, llvm::Module *module);
+        llvm::Function *getVecIntrinsic(llvm::Intrinsic::ID id, size_t paramCount, llvm::Module *module);
+        Function *addFunc(std::string name, std::unique_ptr<FunctionDeclaration> decl, llvm::Module *module);
+        Function *addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, size_t paramCount, llvm::Module *module);
     };
 
 }

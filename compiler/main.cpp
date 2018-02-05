@@ -2,7 +2,6 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/LegacyPassManager.h>
-#include <llvm/Transforms/Scalar.h>
 
 #include "parser/TokenStream.h"
 #include "parser/Parser.h"
@@ -44,26 +43,10 @@ void parseAndCompile() {
     auto block = parser.parse();
 
     Context context;
-    llvm::Module module("test module", context.llvm());
 
-    /*llvm::legacy::FunctionPassManager passManager(&module);
-    passManager.add(llvm::createPromoteMemoryToRegisterPass());
-    passManager.add(llvm::createInstructionCombiningPass());
-    passManager.add(llvm::createReassociatePass());
-    passManager.add(llvm::createNewGVNPass());
-    passManager.add(llvm::createCFGSimplificationPass());
-    passManager.add(llvm::createDeadStoreEliminationPass());
-    passManager.add(llvm::createAggressiveDCEPass());
-    passManager.add(llvm::createMemCpyOptPass());
-    passManager.add(llvm::createReassociatePass());
-    passManager.add(llvm::createScalarizerPass());
-    passManager.add(llvm::createSCCPPass());
-    passManager.add(llvm::createIndVarSimplifyPass());
-    passManager.doInitialization();*/
-
-    auto mainFuncType = llvm::FunctionType::get(llvm::VectorType::get(llvm::Type::getFloatTy(context.llvm()), 2), false);
-    auto mainFunc = llvm::Function::Create(mainFuncType, llvm::Function::ExternalLinkage, "main", &module);
-    auto fun = Function(mainFunc, &context);
+    auto vecType = llvm::VectorType::get(llvm::Type::getFloatTy(context.llvm()), 2);
+    auto mainFuncDecl = std::make_unique<FunctionDeclaration>(false, vecType, std::vector<Parameter>{});
+    auto fun = Function(std::move(mainFuncDecl), "main", llvm::Function::ExternalLinkage, context.builtinModule(), &context);
     auto exprGen = ExpressionGenerator(&context);
 
     MaximAst::Expression *lastExpr = nullptr;
@@ -81,15 +64,12 @@ void parseAndCompile() {
 
     fun.initBuilder().CreateBr(fun.codeBlock());
 
-    llvm::verifyFunction(*mainFunc);
-    //passManager.run(*mainFunc);
+    llvm::verifyFunction(*fun.llFunc());
 
-    module.print(llvm::errs(), nullptr);
+    context.builtinModule()->print(llvm::errs(), nullptr);
 }
 
 int main() {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (true) {
         try {
             parseAndCompile();
@@ -103,5 +83,4 @@ int main() {
             std::cout << err.message << std::endl;
         }
     }
-#pragma clang diagnostic pop
 }

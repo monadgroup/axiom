@@ -25,8 +25,10 @@ TupleValue::TupleValue(bool isConst, const std::vector<llvm::Value *> &values, C
 
 TupleValue::TupleValue(bool isConst, llvm::Value *value, Context *context)
         : Value(isConst), _value(value), _context(context) {
-    assert(value->getType()->isStructTy());
-    _type = (llvm::StructType *) value->getType();
+
+    auto pointerType = value->getType()->getPointerElementType();
+    assert(pointerType->isStructTy());
+    _type = (llvm::StructType *) pointerType;
 }
 
 llvm::Value *TupleValue::itemPtr(unsigned int index, llvm::IRBuilder<> &builder) const {

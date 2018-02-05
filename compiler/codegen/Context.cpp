@@ -1,6 +1,8 @@
 #include "Context.h"
 
 #include <llvm/IR/InlineAsm.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Transforms/Scalar.h>
 
 #include "CodegenError.h"
 
@@ -11,14 +13,13 @@
 #include "FunctionDeclaration.h"
 #include "Function.h"
 #include "ControlDeclaration.h"
+#include "Control.h"
 
 #include "../util.h"
 
 using namespace MaximCodegen;
 
-Context::Context() {
-    llvm::Module builtinModule("builtins.llvm", llvm());
-
+Context::Context() : _builtinModule("builtins.llvm", llvm()) {
     // generate built-in types
     _formType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 2> {
             llvm::Type::getInt8Ty(_llvm), // type
@@ -38,23 +39,23 @@ Context::Context() {
             llvm::Type::getInt32Ty(_llvm)    // time
     }, "midi");
 
-    addNumVecIntrinsic("cos", "llvm.cos.f32", 1, &builtinModule);
-    addNumVecIntrinsic("sin", "llvm.sin.f32", 1, &builtinModule);
-    addNumVecIntrinsic("tan", "tan", 1, &builtinModule);
-    addNumVecIntrinsic("acos", "acos", 1, &builtinModule);
-    addNumVecIntrinsic("asin", "asin", 1, &builtinModule);
-    addNumVecIntrinsic("atan", "llvm.atan.f32", 1, &builtinModule);
-    addNumVecIntrinsic("atan2", "atan2", 2, &builtinModule);
-    addNumVecIntrinsic("hypot", "hypot", 2, &builtinModule);
-    addNumVecIntrinsic("log", "llvm.log.f32", 1, &builtinModule);
-    addNumVecIntrinsic("log2", "llvm.log2.f32", 1, &builtinModule);
-    addNumVecIntrinsic("log10", "llvm.log10.f32", 1, &builtinModule);
-    addNumVecIntrinsic("logb", "logb", 2, &builtinModule);
-    addNumVecIntrinsic("sqrt", "llvm.sqrt.f32", 1, &builtinModule);
-    addNumVecIntrinsic("ceil", "llvm.ceil.f32", 1, &builtinModule);
-    addNumVecIntrinsic("floor", "llvm.floor.f32", 1, &builtinModule);
-    addNumVecIntrinsic("round", "llvm.rint.f32", 1, &builtinModule);
-    addNumVecIntrinsic("abs", "llvm.fabs.f32", 1, &builtinModule);
+    addNumVecIntrinsic("cos", llvm::Intrinsic::ID::cos, 1, &_builtinModule);
+    addNumVecIntrinsic("sin", llvm::Intrinsic::ID::sin, 1, &_builtinModule);
+    //addNumVecIntrinsic("tan", "tan", 1, &builtinModule);
+    //addNumVecIntrinsic("acos", "acos", 1, &builtinModule);
+    //addNumVecIntrinsic("asin", "asin", 1, &builtinModule);
+    //addNumVecIntrinsic("atan", "atan", 1, &builtinModule);
+    //addNumVecIntrinsic("atan2", "atan2", 2, &builtinModule);
+    //addNumVecIntrinsic("hypot", "hypot", 2, &builtinModule);
+    addNumVecIntrinsic("log", llvm::Intrinsic::ID::log, 1, &_builtinModule);
+    addNumVecIntrinsic("log2", llvm::Intrinsic::ID::log2, 1, &_builtinModule);
+    addNumVecIntrinsic("log10", llvm::Intrinsic::ID::log10, 1, &_builtinModule);
+    //addNumVecIntrinsic("logb", "logb", 2, &builtinModule);
+    addNumVecIntrinsic("sqrt", llvm::Intrinsic::ID::sqrt, 1, &_builtinModule);
+    addNumVecIntrinsic("ceil", llvm::Intrinsic::ID::ceil, 1, &_builtinModule);
+    addNumVecIntrinsic("floor", llvm::Intrinsic::ID::floor, 1, &_builtinModule);
+    addNumVecIntrinsic("round", llvm::Intrinsic::ID::round, 1, &_builtinModule);
+    addNumVecIntrinsic("abs", llvm::Intrinsic::ID::fabs, 1, &_builtinModule);
 
     // todo: min
     // todo: max
@@ -173,7 +174,8 @@ std::string Context::typeToString(Type type) {
 }
 
 std::unique_ptr<Value> Context::llToValue(bool isConst, llvm::Value *value) {
-    auto type = getType(value->getType());
+    assert(value->getType()->isPointerTy());
+    auto type = getType(value->getType()->getPointerElementType());
     switch (type) {
         case Type::NUM:
             return std::make_unique<NumValue>(isConst, value, this);
@@ -188,7 +190,7 @@ std::unique_ptr<Value> Context::llToValue(bool isConst, llvm::Value *value) {
     throw;
 }
 
-Function* Context::getFunctionDecl(const std::string &name) const {
+Function* Context::getFunction(const std::string &name) const {
     auto pair = functionDecls.find(name);
     if (pair == functionDecls.end()) return nullptr;
     return pair->second.get();
@@ -200,36 +202,33 @@ ControlDeclaration* Context::getControlDecl(MaximAst::ControlExpression::Type ty
     return pair->second.get();
 }
 
-llvm::Function* Context::getVecIntrinsic(std::string name, size_t paramCount, llvm::Module *module) {
+llvm::Function* Context::getVecIntrinsic(llvm::Intrinsic::ID id, size_t paramCount, llvm::Module *module) {
     auto numVec = llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2);
     std::vector<llvm::Type*> items(paramCount, numVec);
-    return llvm::Function::Create(
-            llvm::FunctionType::get(numVec, items, false),
-            llvm::Function::ExternalLinkage,
-            name, module
-    );
+    return llvm::Intrinsic::getDeclaration(module, id, numVec);
 }
 
-Function* Context::addFunc(std::string name, const FunctionDeclaration &decl, llvm::Module *module) {
-    auto llFunc = llvm::Function::Create(decl.type(), llvm::Function::ExternalLinkage, name, module);
-    auto newFunc = std::make_unique<Function>(decl, llFunc, this);
+Function* Context::addFunc(std::string name, std::unique_ptr<FunctionDeclaration> decl, llvm::Module *module) {
+    auto newFunc = std::make_unique<Function>(std::move(decl), name, llvm::Function::InternalLinkage, module, this);
     auto newFuncPtr = newFunc.get();
     functionDecls.emplace(name, std::move(newFunc));
     return newFuncPtr;
 }
 
-Function* Context::addNumVecIntrinsic(std::string name, std::string intrinsicName, size_t paramCount, llvm::Module *module) {
-    auto intrinsicFunc = getVecIntrinsic(std::move(intrinsicName), paramCount, module);
+Function* Context::addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, size_t paramCount, llvm::Module *module) {
+    auto intrinsicFunc = getVecIntrinsic(id, paramCount, module);
 
     std::vector<Parameter> funcParams(paramCount, Parameter(false, _numType));
-    auto realFunc = addFunc(std::move(name), FunctionDeclaration(true, _numType, funcParams), module);
+    auto realFunc = addFunc(std::move(name), std::move(std::make_unique<FunctionDeclaration>(true, _numType, funcParams)), module);
     auto cb = realFunc->codeBuilder();
 
     std::vector<llvm::Value*> paramValues;
     paramValues.reserve(paramCount);
     llvm::Value *firstFormPtr = nullptr;
-    for (const auto &param : realFunc->llFunc()->args()) {
-        auto paramX = AxiomUtil::strict_unique_cast<NumValue>(llToValue(false, &param));
+    for (auto &param : realFunc->llFunc()->args()) {
+        auto paramDest = realFunc->initBuilder().CreateAlloca(_numType, nullptr, "param_temp");
+        cb.CreateStore(&param, paramDest);
+        auto paramX = std::make_unique<NumValue>(false, paramDest, this);
         if (!firstFormPtr) firstFormPtr = paramX->formPtr(cb);
         paramValues.push_back(cb.CreateLoad(paramX->valuePtr(cb), "intrinsic_param"));
     }
@@ -241,6 +240,8 @@ Function* Context::addNumVecIntrinsic(std::string name, std::string intrinsicNam
             this, realFunc
     );
 
-    cb.CreateRet(numResult.value());
+    cb.CreateRet(cb.CreateLoad(numResult.value(), "num_val_temp"));
+    realFunc->initBuilder().CreateBr(realFunc->codeBlock());
+    llvm::verifyFunction(*realFunc->llFunc());
     return realFunc;
 }

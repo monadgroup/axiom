@@ -31,12 +31,21 @@ namespace MaximCodegen {
 
         llvm::FunctionType *type() const { return _type; }
 
+        size_t minParamCount() const { return _minParamCount; }
+
+        int maxParamCount() const { return _maxParamCount; }
+
+        Parameter *getParameter(size_t index);
+
     private:
         bool _isPure;
         llvm::Type *_returnType;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _variadicParam;
         llvm::FunctionType *_type;
+
+        size_t _minParamCount;
+        int _maxParamCount;
     };
 
 }

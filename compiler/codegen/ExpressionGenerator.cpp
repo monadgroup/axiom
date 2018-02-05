@@ -83,9 +83,24 @@ ExpressionGenerator::generateTuple(MaximAst::TupleExpression *expr, Function *fu
 
 std::unique_ptr<Value>
 ExpressionGenerator::generateCall(MaximAst::CallExpression *expr, Function *function, Scope *scope) {
-    // todo
-    assert(false);
-    throw;
+    auto func = _context->getFunction(expr->name);
+    if (!func) {
+        throw CodegenError(
+                "WHAT IS THIS??!?! def not a valid function name :(",
+                expr->startPos, expr->endPos
+        );
+    }
+
+    std::vector<Function::ParamData> params;
+    params.reserve(expr->arguments.size());
+    for (const auto &arg : expr->arguments) {
+        params.emplace_back(
+                generateExpr(arg.get(), function, scope),
+                arg->startPos,
+                arg->endPos
+        );
+    }
+    return func->generateCall(params, expr->startPos, expr->endPos, function);
 }
 
 std::unique_ptr<Value>
