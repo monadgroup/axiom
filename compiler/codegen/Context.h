@@ -79,8 +79,10 @@ namespace MaximCodegen {
         llvm::StructType *_midiType;
 
         llvm::Function *getVecIntrinsic(llvm::Intrinsic::ID id, size_t paramCount, llvm::Module *module);
+        llvm::Function *getScalarIntrinsic(std::string name, size_t paramCount, llvm::Module *module);
         Function *addFunc(std::string name, std::unique_ptr<FunctionDeclaration> decl, llvm::Module *module);
         Function *addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, size_t paramCount, llvm::Module *module);
+        Function *addNumScalarIntrinsic(std::string name, std::string internalName, size_t paramCount, llvm::Module *module);
     };
 
 }
