@@ -403,12 +403,12 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfixExpression(std::unique
             throw fail(postfixToken);
     }
 
-    auto leftVal = AxiomUtil::dynamic_unique_cast<LValueExpression>(prefix);
-    if (!leftVal) throw castFail(prefix.get());
+    auto assignable = std::make_unique<LValueExpression>(prefix->startPos, prefix->endPos);
+    pushAssignable(assignable->assignments, std::move(prefix));
 
-    auto assignableStart = leftVal->startPos;
-    return std::make_unique<PostfixExpression>(std::move(leftVal), postfixType, assignableStart,
-                                               postfixToken.endPos);
+    auto assignableStart = assignable->startPos;
+    auto assignableEnd = assignable->endPos;
+    return std::make_unique<PostfixExpression>(std::move(assignable), postfixType, assignableStart, assignableEnd);
 }
 
 std::unique_ptr<MaximAst::Expression> Parser::parseMathExpression(std::unique_ptr<MaximAst::Expression> prefix) {
