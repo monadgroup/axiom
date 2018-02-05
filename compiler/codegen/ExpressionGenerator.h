@@ -97,7 +97,7 @@ namespace MaximCodegen {
         // assignments
         std::unique_ptr<Value> generateAssign(MaximAst::AssignExpression *expr, Function *function, Scope *scope);
 
-        void generateSingleAssign(MaximAst::AssignableExpression *leftExpr, Value *rightValue,
+        std::unique_ptr<Value> generateSingleAssign(MaximAst::AssignableExpression *leftExpr, Value *rightValue,
                                   MaximAst::AssignExpression::Type type, SourcePos rightStart, SourcePos rightEnd,
                                   Function *function, Scope *scope);
 

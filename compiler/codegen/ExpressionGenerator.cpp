@@ -359,35 +359,44 @@ ExpressionGenerator::generateAssign(MaximAst::AssignExpression *expr, Function *
             );
         }
 
+        auto allValuesConst = true;
+        std::vector<llvm::Value *> returnTupleVals;
+        returnTupleVals.reserve(leftSize);
         for (size_t i = 0; i < leftSize; i++) {
             auto leftAssignable = expr->left->assignments[i].get();
             auto rightValue = _context->llToValue(
                     rightExpr->isConst(),
                     function->codeBuilder().CreateLoad(rightTuple->itemPtr((unsigned int) i, function->codeBuilder()), "assign_temp")
             );
-            generateSingleAssign(leftAssignable, rightValue.get(), expr->type, expr->right->startPos,
-                                 expr->right->endPos, function, scope);
+            auto resVal = generateSingleAssign(leftAssignable, rightValue.get(), expr->type, expr->right->startPos,
+                                               expr->right->endPos, function, scope);
+            returnTupleVals.push_back(function->codeBuilder().CreateLoad(resVal->value(), "assign_tuple_return"));
+            if (!resVal->isConst()) allValuesConst = false;
         }
-
+        return std::make_unique<TupleValue>(allValuesConst, returnTupleVals, _context, function);
     } else if (leftTuple) {
+        auto allValuesConst = true;
+        std::vector<llvm::Value *> returnTupleVals;
+        returnTupleVals.reserve(expr->left->assignments.size());
         for (const auto &assignment : expr->left->assignments) {
-            generateSingleAssign(assignment.get(), rightExpr.get(), expr->type, expr->right->startPos,
-                                 expr->right->endPos, function, scope);
+            auto resVal = generateSingleAssign(assignment.get(), rightExpr.get(), expr->type, expr->right->startPos,
+                                               expr->right->endPos, function, scope);
+            returnTupleVals.push_back(function->codeBuilder().CreateLoad(resVal->value(), "assign_tuple_return"));
+            if (!resVal->isConst()) allValuesConst = false;
         }
+        return std::make_unique<TupleValue>(allValuesConst, returnTupleVals, _context, function);
     } else {
-        generateSingleAssign(expr->left->assignments[0].get(), rightExpr.get(), expr->type, expr->right->startPos,
-                             expr->right->endPos, function, scope);
+        return generateSingleAssign(expr->left->assignments[0].get(), rightExpr.get(), expr->type, expr->right->startPos,
+                                    expr->right->endPos, function, scope);
     }
-
-    return std::move(rightExpr);
 }
 
-void ExpressionGenerator::generateSingleAssign(MaximAst::AssignableExpression *leftExpr, Value *rightValue,
+std::unique_ptr<Value> ExpressionGenerator::generateSingleAssign(MaximAst::AssignableExpression *leftExpr, Value *rightValue,
                                                MaximAst::AssignExpression::Type type, SourcePos rightStart,
                                                SourcePos rightEnd, Function *function, Scope *scope) {
     if (type == AssignExpression::Type::ASSIGN) {
         generateBasicAssign(leftExpr, rightValue, function, scope);
-        return;
+        return rightValue->clone();
     }
 
     auto leftValue = generateExpr(leftExpr, function, scope);
@@ -427,12 +436,13 @@ void ExpressionGenerator::generateSingleAssign(MaximAst::AssignableExpression *l
             assert(false);
     }
 
-    NumValue realVal(
+    auto realVal = std::make_unique<NumValue>(
             leftNum->isConst() && rightNum->isConst(), newRight,
             FormValue(leftNum->formPtr(cb), _context),
             _context, function
     );
-    generateBasicAssign(leftExpr, &realVal, function, scope);
+    generateBasicAssign(leftExpr, realVal.get(), function, scope);
+    return std::move(realVal);
 }
 
 void ExpressionGenerator::generateBasicAssign(MaximAst::AssignableExpression *leftExpr, Value *rightValue,
