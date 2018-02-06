@@ -73,6 +73,7 @@ std::unique_ptr<Value> Function::generateCall(const std::vector<ParamData> &para
                 countValue,
                 "va_arg_arr"
         );
+        size_t paramIndex = 0;
         for (auto i = consumedParams; i < params.size(); i++) {
             auto paramItem = &params[i];
             checkParam(paramItem, vaData);
@@ -80,7 +81,7 @@ std::unique_ptr<Value> Function::generateCall(const std::vector<ParamData> &para
             resultConst = resultConst && paramItem->value->isConst();
             auto storePos = function->codeBuilder().Insert(
                     llvm::GetElementPtrInst::Create(vaData->type(), vaArray, {
-                            _context->getConstantInt(32, i, false)
+                            _context->getConstantInt(32, paramIndex++, false)
                     }),
                     "va_store_pos"
             );

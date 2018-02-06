@@ -7,7 +7,7 @@ using namespace MaximCodegen;
 FunctionDeclaration::FunctionDeclaration(bool isPure, llvm::Type *returnType, std::vector<Parameter> parameters,
                                          std::unique_ptr<Parameter> variadicParam)
         : _isPure(isPure), _returnType(returnType), _parameters(std::move(parameters)), _variadicParam(std::move(variadicParam)) {
-    _requiredParamCount = parameters.size();
+    _requiredParamCount = _parameters.size();
     _optionalParamCount = 0;
     _minParamCount = _requiredParamCount + (_variadicParam ? 1 : 0);
     _maxParamCount = _variadicParam ? -1 : (int) _parameters.size();
