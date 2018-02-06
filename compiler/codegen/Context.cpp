@@ -693,10 +693,12 @@ void Context::addStandardLibrary() {
                 "rand", &_builtinModule
         );
 
+        auto defaultMin = getConstantNum(-1, -1, getConstantForm(MaximAst::Form::Type::LINEAR, {0, 1}));
+        auto defaultMax = getConstantNum(1, 1, getConstantForm(MaximAst::Form::Type::LINEAR, {0, 1}));
         auto func = addFunc("noise", std::make_unique<FunctionDeclaration>(
                 true, _numType, std::vector<Parameter> {
-                        Parameter(false, _numType, getConstantFloat(-1)),
-                        Parameter(false, _numType, getConstantFloat(1))
+                        Parameter(false, _numType, defaultMin),
+                        Parameter(false, _numType, defaultMax)
                 }
         ), &_builtinModule);
 
