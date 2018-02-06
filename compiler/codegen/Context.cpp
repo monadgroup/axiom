@@ -490,17 +490,17 @@ void Context::addStandardLibrary() {
     }
 
     // pure num pan(num x, num pan)
-    /*{
-        auto func = addFunc("pan", std::make_unique<FunctionDeclaration>(
+    {
+        /*auto func = addFunc("pan", std::make_unique<FunctionDeclaration>(
                 true, _numType, std::vector<Parameter> {
                         Parameter(false, _numType),
                         Parameter(false, _numType)
                 }
         ), &_builtinModule);
 
-        auto xVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 1, this, func);
-        auto panVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 2, this, func);
-    }*/
+        auto xVal = NumValue::fromRegister(false, func->llFunc()->arg_begin(), this, func);
+        auto panVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 1, this, func);*/
+    }
 
     // pure num left(num x)
     {
@@ -710,10 +710,19 @@ void Context::addStandardLibrary() {
         auto maxNum = cb.CreateLoad(maxVal->valuePtr(cb), "max_num");
         auto magnitude = cb.CreateFSub(maxNum, minNum, "magnitude");
 
-        auto randValLeft = cb.CreateVectorSplat(2, cb.CreateCall(randIntrinsic, {}, "rand_left_val"), "rand_val_splat");
+        auto randCallMetadata = llvm::MDNode::get(_llvm, {
+                llvm::ConstantAsMetadata::get(getConstantInt(32, 0, true)),
+                llvm::ConstantAsMetadata::get(getConstantInt(32, RAND_MAX + 1, true))
+        });
+
+        auto randLeftCall = cb.CreateCall(randIntrinsic, {}, "rand_left_val");
+        randLeftCall->setMetadata("range", randCallMetadata);
+        auto randValLeft = cb.CreateVectorSplat(2, randLeftCall, "rand_val_splat");
+        auto randRightCall = cb.CreateCall(randIntrinsic, {}, "rand_right_val");
+        randRightCall->setMetadata("range", randCallMetadata);
         auto randVal = cb.CreateInsertElement(
                 randValLeft,
-                cb.CreateCall(randIntrinsic, {}, "rand_right_val"),
+                randRightCall,
                 (uint64_t) 1,
                 "rand_val"
         );
@@ -751,10 +760,27 @@ void Context::addStandardLibrary() {
     // num rmpOsc(num freq, num phase)
 
     // time
+    // num next(num x)
+    {
+        auto storageInitializer = getConstantNum(0, 0, getConstantForm(MaximAst::Form::Type::LINEAR, {0, 1}));
+        auto func = addFunc("next", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {Parameter(false, _numType)},
+                nullptr, storageInitializer
+        ), &_builtinModule);
+
+        auto lastVal = std::make_unique<NumValue>(false, func->llFunc()->arg_begin(), this);
+
+        auto lastValLoad = func->codeBuilder().CreateLoad(lastVal->value(), "val_load");
+        func->codeBuilder().CreateStore(func->llFunc()->arg_begin() + 1, func->llFunc()->arg_begin());
+
+        func->codeBuilder().CreateRet(lastValLoad);
+        
+        func->initBuilder().CreateBr(func->codeBlock());
+    }
+
     // num amplitude(num x)
     // num delay(num x, const num d)
     // num resDelay(num x, num d, const num r)
-    // num next(num x)
     // num hold(num x, num gate, num else=0)
     // num accum(num x, num gate, num base=0)
 }

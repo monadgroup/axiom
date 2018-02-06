@@ -5,15 +5,20 @@
 using namespace MaximCodegen;
 
 FunctionDeclaration::FunctionDeclaration(bool isPure, llvm::Type *returnType, std::vector<Parameter> parameters,
-                                         std::unique_ptr<Parameter> variadicParam)
-        : _isPure(isPure), _returnType(returnType), _parameters(std::move(parameters)), _variadicParam(std::move(variadicParam)) {
+                                         std::unique_ptr<Parameter> variadicParam, llvm::Constant *storage)
+        : _isPure(isPure), _returnType(returnType), _parameters(std::move(parameters)),
+          _variadicParam(std::move(variadicParam)), _storage(storage) {
     _requiredParamCount = _parameters.size();
     _optionalParamCount = 0;
     _minParamCount = _requiredParamCount + (_variadicParam ? 1 : 0);
     _maxParamCount = _variadicParam ? -1 : (int) _parameters.size();
 
     std::vector<llvm::Type *> paramTypes;
-    paramTypes.reserve(_minParamCount);
+    paramTypes.reserve(_minParamCount + storage ? 1 : 0);
+
+    if (storage) {
+        paramTypes.push_back(llvm::PointerType::get(storage->getType(), 0));
+    }
 
     for (const auto &param : _parameters) {
         paramTypes.push_back(param.type());

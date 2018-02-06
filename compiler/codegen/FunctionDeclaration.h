@@ -19,7 +19,7 @@ namespace MaximCodegen {
     class FunctionDeclaration {
     public:
         FunctionDeclaration(bool isPure, llvm::Type *returnType, std::vector<Parameter> parameters,
-                            std::unique_ptr<Parameter> variadicParam = nullptr);
+                            std::unique_ptr<Parameter> variadicParam = nullptr, llvm::Constant *storage = nullptr);
 
         bool isPure() const { return _isPure; }
 
@@ -32,6 +32,8 @@ namespace MaximCodegen {
         Parameter *variadicParam() const { return _variadicParam.get(); }
 
         llvm::FunctionType *type() const { return _type; }
+
+        llvm::Constant *storage() const { return _storage; }
 
         size_t minParamCount() const { return _minParamCount; }
 
@@ -50,6 +52,7 @@ namespace MaximCodegen {
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _variadicParam;
         llvm::FunctionType *_type;
+        llvm::Constant *_storage;
 
         size_t _minParamCount;
         int _maxParamCount;

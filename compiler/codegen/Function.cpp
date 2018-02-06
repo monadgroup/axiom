@@ -97,6 +97,18 @@ std::unique_ptr<Value> Function::generateCall(const std::vector<ParamData> &para
         paramValues.push_back(function->codeBuilder().CreateLoad(vaStruct, "va_args_temp"));
     }
 
+    if (_decl->storage()) {
+        auto globalStorage = new llvm::GlobalVariable(
+                *_context->builtinModule(),
+                _decl->storage()->getType(),
+                false,
+                llvm::GlobalVariable::LinkageTypes::InternalLinkage,
+                _decl->storage(),
+                "func_storage"
+        );
+        paramValues.insert(paramValues.begin(), globalStorage);
+    }
+
     auto returnDest = function->initBuilder().CreateAlloca(_decl->returnType(), nullptr, "call_result");
     auto returnVal = function->codeBuilder().CreateCall(_llFunc, paramValues, "call_result_temp");
     function->codeBuilder().CreateStore(returnVal, returnDest);
