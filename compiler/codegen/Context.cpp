@@ -686,6 +686,54 @@ void Context::addStandardLibrary() {
     }
 
     // num noise(min=-1, max=1)
+    {
+        auto randIntrinsic = llvm::Function::Create(
+                llvm::FunctionType::get(llvm::Type::getInt32Ty(_llvm), {}, false),
+                llvm::Function::ExternalLinkage,
+                "rand", &_builtinModule
+        );
+
+        auto func = addFunc("noise", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {
+                        Parameter(false, _numType, getConstantFloat(-1)),
+                        Parameter(false, _numType, getConstantFloat(1))
+                }
+        ), &_builtinModule);
+
+        auto minVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 0, this, func);
+        auto maxVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 1, this, func);
+
+        auto cb = func->codeBuilder();
+        auto minNum = cb.CreateLoad(minVal->valuePtr(cb), "min_num");
+        auto maxNum = cb.CreateLoad(maxVal->valuePtr(cb), "max_num");
+        auto magnitude = cb.CreateFSub(maxNum, minNum, "magnitude");
+
+        auto randValLeft = cb.CreateVectorSplat(2, cb.CreateCall(randIntrinsic, {}, "rand_left_val"), "rand_val_splat");
+        auto randVal = cb.CreateInsertElement(
+                randValLeft,
+                cb.CreateCall(randIntrinsic, {}, "rand_right_val"),
+                (uint64_t) 1,
+                "rand_val"
+        );
+        auto randFloatVal = cb.CreateSIToFP(randVal, vecType, "rand_num");
+
+        // todo: probably shouldn't use RAND_MAX here as it's compiler-dependent
+        auto randNormalized = cb.CreateFDiv(
+                randFloatVal,
+                llvm::ConstantVector::get({ getConstantFloat(RAND_MAX), getConstantFloat(RAND_MAX) }),
+                "rand_normalized"
+        );
+        auto randMag = cb.CreateFMul(randNormalized, magnitude, "rand_mag");
+        auto randRes = cb.CreateFAdd(randMag, minNum, "rand_result");
+
+        auto newNum = std::make_unique<NumValue>(
+                false, randRes, FormValue(MaximAst::Form::Type::LINEAR, {}, this, func),
+                this, func
+        );
+        cb.CreateRet(cb.CreateLoad(newNum->value(), "result_load"));
+
+        func->initBuilder().CreateBr(func->codeBlock());
+    }
 
     // filters
     // num lowBqFilter(num x, num freq, num q)
