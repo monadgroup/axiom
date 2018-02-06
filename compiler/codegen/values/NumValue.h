@@ -20,6 +20,8 @@ namespace MaximCodegen {
 
         NumValue(bool isConst, llvm::Value *value, Context *context);
 
+        static std::unique_ptr<NumValue> fromRegister(bool isConst, llvm::Value *value, Context *context, Function *function);
+
         llvm::StructType *type() const override;
 
         llvm::Value *value() const override { return _value; }

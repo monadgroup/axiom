@@ -25,6 +25,8 @@ namespace MaximCodegen {
 
         llvm::Type *returnType() const { return _returnType; }
 
+        llvm::Type *vaType() const { return _vaType; }
+
         std::vector<Parameter> const &parameters() const { return _parameters; }
 
         Parameter *variadicParam() const { return _variadicParam.get(); }
@@ -35,17 +37,24 @@ namespace MaximCodegen {
 
         int maxParamCount() const { return _maxParamCount; }
 
+        size_t requiredParamCount() const { return _requiredParamCount; }
+
+        size_t optionalParamCount() const { return _optionalParamCount; }
+
         Parameter *getParameter(size_t index);
 
     private:
         bool _isPure;
         llvm::Type *_returnType;
+        llvm::Type *_vaType = nullptr;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _variadicParam;
         llvm::FunctionType *_type;
 
         size_t _minParamCount;
         int _maxParamCount;
+        size_t _requiredParamCount;
+        size_t _optionalParamCount;
     };
 
 }

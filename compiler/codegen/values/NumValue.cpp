@@ -19,6 +19,16 @@ NumValue::NumValue(bool isConst, llvm::Value *value, Context *context)
 
 }
 
+std::unique_ptr<NumValue> NumValue::fromRegister(bool isConst, llvm::Value *value, Context *context,
+                                                 Function *function) {
+    auto numType = context->getStructType(Context::Type::NUM);
+    auto alloc = function->initBuilder().CreateAlloca(numType, nullptr, "num_val");
+
+    function->codeBuilder().CreateStore(value, alloc);
+
+    return std::make_unique<NumValue>(isConst, alloc, context);
+}
+
 llvm::StructType *NumValue::type() const {
     return _context->getStructType(Context::Type::NUM);
 }

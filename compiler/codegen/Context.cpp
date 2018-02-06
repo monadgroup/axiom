@@ -41,9 +41,13 @@ Context::Context() : _builtinModule("builtins.llvm", llvm()) {
             llvm::Type::getInt32Ty(_llvm)    // time
     }, "struct.midi");
 
-    _vaType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 1> {
+    /*_vaType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 1> {
             llvm::Type::getInt8Ty(_llvm)
-    }, "struct.va_list");
+    }, "struct.va_list");*/
+    /*_vaType = llvm::StructType::create(_llvm, {
+            llvm::Type::getInt8Ty(_llvm), // number of arguments
+            llvm::PointerType::get(llvm::ArrayType::get)
+    }, "struct.va_list");*/
 
     addStandardLibrary();
 
@@ -249,12 +253,8 @@ Function* Context::addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, 
     paramValues.reserve(paramCount);
     llvm::Value *firstFormPtr = nullptr;
 
-    for (auto i = 0; i < paramCount; i++) {
-        // skip first parameter, it's the number of arguments passed
-        auto param = realFunc->llFunc()->arg_begin() + i + 1;
-        auto paramDest = realFunc->initBuilder().CreateAlloca(_numType, nullptr, "param_temp");
-        cb.CreateStore(param, paramDest);
-        auto paramX = std::make_unique<NumValue>(false, paramDest, this);
+    for (auto &param : realFunc->llFunc()->args()) {
+        auto paramX = NumValue::fromRegister(false, &param, this, realFunc);
         if (!firstFormPtr) firstFormPtr = paramX->formPtr(cb);
         paramValues.push_back(cb.CreateLoad(paramX->valuePtr(cb), "intrinsic_param"));
     }
@@ -284,12 +284,8 @@ Function* Context::addNumScalarIntrinsic(std::string name, std::string internalN
     std::vector<llvm::Value*> paramVecs;
     paramVecs.reserve(paramCount);
 
-    // skip first parameter, it's the number of arguments passed
-    for (auto i = 0; i < paramCount; i++) {
-        auto param = realFunc->llFunc()->arg_begin() + i + 1;
-        auto paramDest = realFunc->initBuilder().CreateAlloca(_numType, nullptr, "param_temp");
-        cb.CreateStore(param, paramDest);
-        auto paramX = std::make_unique<NumValue>(false, paramDest, this);
+    for (auto &param : realFunc->llFunc()->args()) {
+        auto paramX = NumValue::fromRegister(false, &param, this, realFunc);
         if (!firstFormPtr) firstFormPtr = paramX->formPtr(cb);
         paramVecs.push_back(cb.CreateLoad(paramX->valuePtr(cb), "intrinsic_param"));
     }
@@ -320,29 +316,30 @@ Function* Context::addNumScalarIntrinsic(std::string name, std::string internalN
 
 Function* Context::addNumVecFoldIntrinsic(const std::string &name, llvm::Intrinsic::ID id, bool copyForm,
                                           llvm::Module *module) {
-    auto vaStartIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, llvm::Intrinsic::ID::vastart);
-    auto vaEndIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, llvm::Intrinsic::ID::vaend);
     auto vecType = llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2);
-
-
-    auto minIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, id, vecType);
+    auto minIntrinsic = llvm::Intrinsic::getDeclaration(module, id, vecType);
     auto decl = std::make_unique<FunctionDeclaration>(true, _numType, std::vector<Parameter>{},
                                                       std::make_unique<Parameter>(false, _numType));
-    auto func = addFunc(name, std::move(decl), &_builtinModule);
+    auto func = addFunc(name, std::move(decl), module);
+
     auto cb = func->codeBuilder();
-    auto ap = cb.CreateAlloca(_vaType, nullptr, "ap");
-    auto ap2 = cb.CreateBitCast(ap, llvm::PointerType::get(llvm::Type::getInt8Ty(_llvm), 0), "ap2");
-    cb.CreateCall(vaStartIntrinsic, std::array<llvm::Value*, 1>{ ap2 });
+    auto vaArg = func->llFunc()->arg_begin();
+
+    auto vaArgCount = cb.CreateExtractValue(vaArg, std::array<unsigned, 1> { 0 }, "arg_count");
+    auto vaArrayPtr = cb.CreateExtractValue(vaArg, std::array<unsigned, 1> { 1 }, "arg_array");
 
     auto varCountType = llvm::Type::getInt8Ty(_llvm);
     auto incrementVal = func->initBuilder().CreateAlloca(varCountType, nullptr, "increment");
     cb.CreateStore(llvm::ConstantInt::get(varCountType, 0), incrementVal);
-    auto incrTotal = func->llFunc()->arg_begin();
 
     auto accumVal = func->initBuilder().CreateAlloca(vecType, nullptr, "accum");
-    auto initialLoadTarget = func->initBuilder().CreateAlloca(_numType, nullptr, "load_init_temp");
-    cb.CreateStore(cb.CreateVAArg(ap2, _numType, "first_arg"), initialLoadTarget);
-    auto firstArg = std::make_unique<NumValue>(false, initialLoadTarget, this);
+    auto firstReadPos = cb.Insert(
+            llvm::GetElementPtrInst::Create(_numType, vaArrayPtr, {
+                    getConstantInt(32, 0, false)
+            }),
+            "first_arg"
+    );
+    auto firstArg = std::make_unique<NumValue>(false, firstReadPos, this);
     cb.CreateStore(
             cb.CreateLoad(firstArg->valuePtr(cb), "first_arg_num"),
             accumVal
@@ -361,24 +358,27 @@ Function* Context::addNumVecFoldIntrinsic(const std::string &name, llvm::Intrins
             "increment_temp.add"
     );
     loopCheckBuilder.CreateStore(incrAdd, incrementVal);
-    auto incrResult = loopCheckBuilder.CreateICmpUGE(incrAdd, incrTotal, "increment_compare");
+    auto incrResult = loopCheckBuilder.CreateICmpUGE(incrAdd, vaArgCount, "increment_compare");
     loopCheckBuilder.CreateCondBr(incrResult, loopFinishBlock, loopContinueBlock);
 
-    llvm::IRBuilder<> loopContinueBuilder(loopContinueBlock);
-    auto continueLoadTarget = func->initBuilder().CreateAlloca(_numType, nullptr, "load_cont_temp");
-    loopContinueBuilder.CreateStore(loopContinueBuilder.CreateVAArg(ap2, _numType, "next_arg"), continueLoadTarget);
-    auto nextArg = std::make_unique<NumValue>(false, continueLoadTarget, this);
-    auto lastNum = loopContinueBuilder.CreateLoad(accumVal, "last_num");
-    auto nextNum = loopContinueBuilder.CreateLoad(nextArg->valuePtr(loopContinueBuilder), "next_arg_num");
-    auto resultVal = loopContinueBuilder.CreateCall(minIntrinsic, std::array<llvm::Value*, 2> {
+    func->codeBuilder().SetInsertPoint(loopContinueBlock);
+    auto nextReadPos = func->codeBuilder().Insert(
+            llvm::GetElementPtrInst::Create(_numType, vaArrayPtr, {
+                    incrAdd
+            }),
+            "next_arg"
+    );
+    auto nextArg = std::make_unique<NumValue>(false, nextReadPos, this);
+    auto lastNum = func->codeBuilder().CreateLoad(accumVal, "last_num");
+    auto nextNum = func->codeBuilder().CreateLoad(nextArg->valuePtr(func->codeBuilder()), "next_arg_num");
+    auto resultVal = func->codeBuilder().CreateCall(minIntrinsic, std::array<llvm::Value*, 2> {
             lastNum,
             nextNum
     }, "intrinsic_result");
-    loopContinueBuilder.CreateStore(resultVal, accumVal);
-    loopContinueBuilder.CreateBr(loopCheckBlock);
+    func->codeBuilder().CreateStore(resultVal, accumVal);
+    func->codeBuilder().CreateBr(loopCheckBlock);
 
     func->codeBuilder().SetInsertPoint(loopFinishBlock);
-    func->codeBuilder().CreateCall(vaEndIntrinsic, std::array<llvm::Value*, 1>{ ap2 });
 
     FormValue newForm = copyForm ? FormValue(firstArg->formPtr(func->codeBuilder()), this)
                                  : FormValue(MaximAst::Form::Type::LINEAR, {}, this, func);
@@ -394,23 +394,23 @@ Function* Context::addNumVecFoldIntrinsic(const std::string &name, llvm::Intrins
 
 void Context::addStandardLibrary() {
     // functions that map directly to libm
-    addNumVecIntrinsic("cos", llvm::Intrinsic::ID::cos, 1, false, &_builtinModule);
-    addNumVecIntrinsic("sin", llvm::Intrinsic::ID::sin, 1, false, &_builtinModule);
-    addNumScalarIntrinsic("tan", "tanf", 1, false, &_builtinModule);
-    addNumScalarIntrinsic("acos", "acosf", 1, false, &_builtinModule);
-    addNumScalarIntrinsic("asin", "asinf", 1, false, &_builtinModule);
-    addNumScalarIntrinsic("atan", "atanf", 1, false, &_builtinModule);
+    addNumVecIntrinsic("cos", llvm::Intrinsic::ID::cos, 1, true, &_builtinModule);
+    addNumVecIntrinsic("sin", llvm::Intrinsic::ID::sin, 1, true, &_builtinModule);
+    addNumScalarIntrinsic("tan", "tanf", 1, true, &_builtinModule);
+    addNumScalarIntrinsic("acos", "acosf", 1, true, &_builtinModule);
+    addNumScalarIntrinsic("asin", "asinf", 1, true, &_builtinModule);
+    addNumScalarIntrinsic("atan", "atanf", 1, true, &_builtinModule);
     addNumScalarIntrinsic("atan2", "atan2f", 2, false, &_builtinModule);
     addNumScalarIntrinsic("hypot", "hypotf", 2, false, &_builtinModule);
-    addNumVecIntrinsic("log", llvm::Intrinsic::ID::log, 1, false, &_builtinModule);
-    addNumVecIntrinsic("log2", llvm::Intrinsic::ID::log2, 1, false, &_builtinModule);
-    addNumVecIntrinsic("log10", llvm::Intrinsic::ID::log10, 1, false, &_builtinModule);
+    addNumVecIntrinsic("log", llvm::Intrinsic::ID::log, 1, true, &_builtinModule);
+    addNumVecIntrinsic("log2", llvm::Intrinsic::ID::log2, 1, true, &_builtinModule);
+    addNumVecIntrinsic("log10", llvm::Intrinsic::ID::log10, 1, true, &_builtinModule);
     addNumScalarIntrinsic("logb", "logbf", 2, false, &_builtinModule);
-    addNumVecIntrinsic("sqrt", llvm::Intrinsic::ID::sqrt, 1, false, &_builtinModule);
-    addNumVecIntrinsic("ceil", llvm::Intrinsic::ID::ceil, 1, false, &_builtinModule);
-    addNumVecIntrinsic("floor", llvm::Intrinsic::ID::floor, 1, false, &_builtinModule);
-    addNumVecIntrinsic("round", llvm::Intrinsic::ID::round, 1, false, &_builtinModule);
-    addNumVecIntrinsic("abs", llvm::Intrinsic::ID::fabs, 1, false, &_builtinModule);
+    addNumVecIntrinsic("sqrt", llvm::Intrinsic::ID::sqrt, 1, true, &_builtinModule);
+    addNumVecIntrinsic("ceil", llvm::Intrinsic::ID::ceil, 1, true, &_builtinModule);
+    addNumVecIntrinsic("floor", llvm::Intrinsic::ID::floor, 1, true, &_builtinModule);
+    addNumVecIntrinsic("round", llvm::Intrinsic::ID::round, 1, true, &_builtinModule);
+    addNumVecIntrinsic("abs", llvm::Intrinsic::ID::fabs, 1, true, &_builtinModule);
     addNumVecFoldIntrinsic("min", llvm::Intrinsic::ID::minnum, false, &_builtinModule);
     addNumVecFoldIntrinsic("max", llvm::Intrinsic::ID::maxnum, false, &_builtinModule);
 
@@ -431,19 +431,11 @@ void Context::addStandardLibrary() {
                 }
         ), &_builtinModule);
 
-        auto numAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "num");
-        auto minAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "min");
-        auto maxAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "max");
+        auto numVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 0, this, func);
+        auto minVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 1, this, func);
+        auto maxVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 2, this, func);
 
         auto cb = func->codeBuilder();
-        cb.CreateStore(func->llFunc()->arg_begin() + 1, numAlloc);
-        cb.CreateStore(func->llFunc()->arg_begin() + 2, minAlloc);
-        cb.CreateStore(func->llFunc()->arg_begin() + 3, maxAlloc);
-
-        auto numVal = std::make_unique<NumValue>(false, numAlloc, this);
-        auto minVal = std::make_unique<NumValue>(false, minAlloc, this);
-        auto maxVal = std::make_unique<NumValue>(false, maxAlloc, this);
-
         auto biggerValue = cb.CreateCall(maxIntrinsic, std::array<llvm::Value*, 2> {
                 cb.CreateLoad(numVal->valuePtr(cb), "load_num"),
                 cb.CreateLoad(minVal->valuePtr(cb), "load_min")
@@ -471,19 +463,11 @@ void Context::addStandardLibrary() {
                 }
         ), &_builtinModule);
 
-        auto aAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "a");
-        auto bAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "b");
-        auto vAlloc = func->initBuilder().CreateAlloca(_numType, nullptr, "v");
+        auto aVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 0, this, func);
+        auto bVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 1, this, func);
+        auto vVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 2, this, func);
 
         auto cb = func->codeBuilder();
-        cb.CreateStore(func->llFunc()->arg_begin() + 1, aAlloc);
-        cb.CreateStore(func->llFunc()->arg_begin() + 2, bAlloc);
-        cb.CreateStore(func->llFunc()->arg_begin() + 3, vAlloc);
-
-        auto aVal = std::make_unique<NumValue>(false, aAlloc, this);
-        auto bVal = std::make_unique<NumValue>(false, bAlloc, this);
-        auto vVal = std::make_unique<NumValue>(false, vAlloc, this);
-
         auto aNum = cb.CreateLoad(aVal->valuePtr(cb), "a_num");
         auto abDiff = cb.CreateFSub(
                 cb.CreateLoad(bVal->valuePtr(cb), "b_num"),
@@ -508,15 +492,257 @@ void Context::addStandardLibrary() {
         func->initBuilder().CreateBr(func->codeBlock());
     }
 
-    // math functions
-
-    // pure num if(num cond, num t, num f)
     // pure num pan(num x, num pan)
+    /*{
+        auto func = addFunc("pan", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {
+                        Parameter(false, _numType),
+                        Parameter(false, _numType)
+                }
+        ), &_builtinModule);
+
+        auto xVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 1, this, func);
+        auto panVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 2, this, func);
+    }*/
+
     // pure num left(num x)
+    {
+        auto func = addFunc("left", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {Parameter(false, _numType)}
+        ), &_builtinModule);
+
+        auto xVal = NumValue::fromRegister(false, func->llFunc()->arg_begin(), this, func);
+        auto cb = func->codeBuilder();
+        auto xValNum = cb.CreateLoad(xVal->valuePtr(cb), "num_temp");
+        auto leftVec = cb.CreateVectorSplat(
+                2,
+                cb.CreateExtractElement(xValNum, (uint64_t) 0, "num_left"),
+                "num_left_splat"
+        );
+
+        auto numVal = std::make_unique<NumValue>(false, leftVec, FormValue(xVal->formPtr(cb), this), this, func);
+        cb.CreateRet(cb.CreateLoad(numVal->value(), "num_result"));
+
+        func->initBuilder().CreateBr(func->codeBlock());
+    }
+
     // pure num right(num x)
+    {
+        auto func = addFunc("right", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {Parameter(false, _numType)}
+        ), &_builtinModule);
+
+        auto xVal = NumValue::fromRegister(false, func->llFunc()->arg_begin(), this, func);
+        auto cb = func->codeBuilder();
+        auto xValNum = cb.CreateLoad(xVal->valuePtr(cb), "num_temp");
+        auto leftVec = cb.CreateVectorSplat(
+                2,
+                cb.CreateExtractElement(xValNum, (uint64_t) 1, "num_right"),
+                "num_right_splat"
+        );
+
+        auto numVal = std::make_unique<NumValue>(false, leftVec, FormValue(xVal->formPtr(cb), this), this, func);
+        cb.CreateRet(cb.CreateLoad(numVal->value(), "num_result"));
+
+        func->initBuilder().CreateBr(func->codeBlock());
+    }
+
     // pure num combine(num left, num right)
+    {
+        auto func = addFunc("combine", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {Parameter(false, _numType), Parameter(false, _numType)}
+        ), &_builtinModule);
+
+        auto leftVal = NumValue::fromRegister(false, func->llFunc()->arg_begin(), this, func);
+        auto rightVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 1, this, func);
+        auto cb = func->codeBuilder();
+        auto leftVec = cb.CreateLoad(leftVal->valuePtr(cb), "left_temp");
+        auto rightVec = cb.CreateLoad(rightVal->valuePtr(cb), "right_temp");
+        auto shuffledVec = cb.CreateShuffleVector(
+                leftVec, rightVec,
+                std::array<uint32_t, 2> { 0, 3 },
+                "num_shuffled"
+        );
+
+        auto numVal = std::make_unique<NumValue>(
+                false, shuffledVec, FormValue(MaximAst::Form::Type::LINEAR, {}, this, func),
+                this, func
+        );
+        cb.CreateRet(cb.CreateLoad(numVal->value(), "num_result"));
+
+        func->initBuilder().CreateBr(func->codeBlock());
+    }
+
     // pure num swap(num x)
+    {
+        auto func = addFunc("swap", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {Parameter(false, _numType)}
+        ), &_builtinModule);
+
+        auto xVal = NumValue::fromRegister(false, func->llFunc()->arg_begin(), this, func);
+        auto cb = func->codeBuilder();
+        auto xVec = cb.CreateLoad(xVal->valuePtr(cb), "x_temp");
+        auto shuffledVec = cb.CreateShuffleVector(
+                xVec, xVec,
+                std::array<uint32_t, 2> { 1, 0 },
+                "x_swapped"
+        );
+
+        auto numVal = std::make_unique<NumValue>(false, shuffledVec, FormValue(xVal->formPtr(cb), this), this, func);
+        cb.CreateRet(cb.CreateLoad(numVal->value(), "num_result"));
+
+        func->initBuilder().CreateBr(func->codeBlock());
+    }
+
     // pure num sequence(num n, num ...x)
+    /*{
+        auto vaStartIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, llvm::Intrinsic::ID::vastart);
+        auto vaEndIntrinsic = llvm::Intrinsic::getDeclaration(&_builtinModule, llvm::Intrinsic::ID::vaend);
+
+        // strategy:
+        //    for each channel in n, called index
+        //        consume va_args until floor(index)
+        //        store va_arg as base_val
+        //        store va_arg as next_val
+        //        return mix(base_val, next_val, remainder of index)
+
+        // create function to do sequencing for one channel
+        auto channelSeqDecl = std::make_unique<FunctionDeclaration>(
+            true,
+            llvm::Type::getFloatTy(_llvm), std::vector<Parameter> {
+                    Parameter(false, llvm::Type::getInt8Ty(_llvm)), // number of parameters passed
+                    Parameter(false, llvm::Type::getInt8Ty(_llvm)), // vector channel to read
+                    Parameter(false, llvm::Type::getFloatTy(_llvm)), // index
+                    Parameter(false, llvm::PointerType::get(llvm::Type::getInt8Ty(_llvm), 0)) // va_args object
+            },
+            std::make_unique<Parameter>(false, _numType), false
+        );
+        Function channelSeqFunc(
+                std::move(channelSeqDecl), "maxim._sequenceChannel",
+                llvm::Function::InternalLinkage, &_builtinModule, this
+        );
+
+        {
+            // parameters
+            auto paramCount = channelSeqFunc.llFunc()->arg_begin();
+            auto paramChannel = channelSeqFunc.llFunc()->arg_begin() + 1;
+            auto paramIndex = channelSeqFunc.llFunc()->arg_begin() + 2;
+            auto paramVa = channelSeqFunc.llFunc()->arg_begin() + 3;
+
+            auto cb = channelSeqFunc.codeBuilder();
+
+            auto varCountType = llvm::Type::getInt8Ty(_llvm);
+            auto incrementVal = channelSeqFunc.initBuilder().CreateAlloca(varCountType, nullptr, "increment");
+            cb.CreateStore(llvm::ConstantInt::get(varCountType, 0, false), incrementVal);
+
+            auto flooredIndex = cb.CreateFPToUI(paramIndex, varCountType);
+            auto remainingIndex = cb.CreateFRem(paramIndex, getConstantFloat(1));
+
+            auto consumeCheckBlock = llvm::BasicBlock::Create(_llvm, "consume_check", channelSeqFunc.llFunc());
+            auto consumeContinueBlock = llvm::BasicBlock::Create(_llvm, "consume_continue", channelSeqFunc.llFunc());
+            auto consumeFinishBlock = llvm::BasicBlock::Create(_llvm, "consume_finish", channelSeqFunc.llFunc());
+
+            cb.CreateBr(consumeCheckBlock);
+            llvm::IRBuilder<> consumeCheckBuilder(consumeCheckBlock);
+            auto incrAdd = consumeCheckBuilder.CreateAdd(
+                    consumeCheckBuilder.CreateLoad(incrementVal, "increment_temp.load"),
+                    llvm::ConstantInt::get(varCountType, 1),
+                    "increment_temp.add"
+            );
+            consumeCheckBuilder.CreateStore(incrAdd, incrementVal);
+            auto incrResult = consumeCheckBuilder.CreateICmpUGT(incrAdd, flooredIndex, "increment_compare");
+            consumeCheckBuilder.CreateCondBr(incrResult, consumeFinishBlock, consumeContinueBlock);
+
+            llvm::IRBuilder<> consumeContinueBuilder(consumeContinueBlock);
+            consumeContinueBuilder.CreateVAArg(paramVa, _numType, "va_consume");
+            consumeContinueBuilder.CreateBr(consumeCheckBlock);
+
+            // todo: handle case where read loops back to start
+            channelSeqFunc.codeBuilder().SetInsertPoint(consumeFinishBlock);
+            auto firstVal = NumValue::fromRegister(
+                    false, channelSeqFunc.codeBuilder().CreateVAArg(paramVa, _numType, "va_first"), this,
+                    &channelSeqFunc
+            );
+            auto secondVal = NumValue::fromRegister(
+                    false, channelSeqFunc.codeBuilder().CreateVAArg(paramVa, _numType, "va_second"), this,
+                    &channelSeqFunc
+            );
+            auto firstNum = channelSeqFunc.codeBuilder().CreateExtractElement(
+                    channelSeqFunc.codeBuilder().CreateLoad(firstVal->valuePtr(channelSeqFunc.codeBuilder()),
+                                                            "first_num_temp"),
+                    paramChannel,
+                    "first_num_channel"
+            );
+            auto secondNum = channelSeqFunc.codeBuilder().CreateExtractElement(
+                    channelSeqFunc.codeBuilder().CreateLoad(secondVal->valuePtr(channelSeqFunc.codeBuilder()),
+                                                            "second_num_temp"),
+                    paramChannel,
+                    "second_num_channel"
+            );
+            auto numDiff = channelSeqFunc.codeBuilder().CreateFSub(secondNum, firstNum, "num_diff");
+            auto numMul = channelSeqFunc.codeBuilder().CreateFMul(numDiff, remainingIndex, "num_mul");
+            auto numAdd = channelSeqFunc.codeBuilder().CreateFAdd(firstNum, numMul, "num_add");
+            channelSeqFunc.codeBuilder().CreateRet(numAdd);
+
+            channelSeqFunc.initBuilder().CreateBr(channelSeqFunc.codeBlock());
+        }
+
+        // create function to do sequencing
+        auto func = addFunc("sequence", std::make_unique<FunctionDeclaration>(
+                true, _numType, std::vector<Parameter> {Parameter(false, _numType)},
+                std::make_unique<Parameter>(false, _numType)
+        ), &_builtinModule);
+
+        {
+            auto cb = func->codeBuilder();
+            auto vaCount = cb.CreateSub(
+                    func->llFunc()->arg_begin(),
+                    llvm::ConstantInt::get(llvm::Type::getInt8Ty(_llvm), 1),
+                    "va_count"
+            );
+            auto indexVal = NumValue::fromRegister(false, func->llFunc()->arg_begin() + 1, this, func);
+            auto modIndex = cb.CreateFRem(
+                    cb.CreateLoad(indexVal->valuePtr(cb)),
+                    cb.CreateVectorSplat(2, cb.CreateUIToFP(vaCount, llvm::Type::getFloatTy(_llvm), "va_count_float"), "va_count_splat")
+            );
+
+            auto leftAp = cb.CreateAlloca(_vaType, nullptr, "left_ap");
+            auto leftAp2 = cb.CreateBitCast(leftAp, llvm::PointerType::get(llvm::Type::getInt8Ty(_llvm), 0), "left_ap2");
+            cb.CreateCall(vaStartIntrinsic, { leftAp2 });
+            auto leftIndex = cb.CreateExtractElement(modIndex, (uint64_t) 0, "left_index");
+            auto leftResult = cb.CreateCall(channelSeqFunc.llFunc(), {
+                    vaCount,
+                    getConstantInt(8, 0, false),
+                    leftIndex,
+                    leftAp2
+            }, "left_val");
+            cb.CreateCall(vaEndIntrinsic, { leftAp2 });
+
+            auto rightAp = cb.CreateAlloca(_vaType, nullptr, "right_ap");
+            auto rightAp2 = cb.CreateBitCast(rightAp, llvm::PointerType::get(llvm::Type::getInt8Ty(_llvm), 0), "right_ap2");
+            cb.CreateCall(vaStartIntrinsic, {rightAp2});
+            auto rightIndex = cb.CreateExtractElement(modIndex, (uint64_t) 1, "right_index");
+            auto rightResult = cb.CreateCall(channelSeqFunc.llFunc(), {
+                    vaCount,
+                    getConstantInt(8, 1, false),
+                    rightIndex,
+                    rightAp2
+            }, "right_val");
+            cb.CreateCall(vaEndIntrinsic, { rightAp2 });
+
+            auto resultVecLeft = cb.CreateVectorSplat(2, leftResult, "result_left");
+            auto resultVec = cb.CreateInsertElement(resultVecLeft, rightResult, 1, "result_both");
+
+            auto numVal = std::make_unique<NumValue>(
+                    false, resultVec, FormValue(MaximAst::Form::Type::LINEAR, {}, this, func),
+                    this, func
+            );
+            cb.CreateRet(cb.CreateLoad(numVal->value(), "result"));
+
+            func->initBuilder().CreateBr(func->codeBlock());
+        }
+    }*/
+
     // num noise(min=-1, max=1)
 
     // filters

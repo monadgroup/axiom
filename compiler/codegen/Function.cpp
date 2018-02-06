@@ -31,44 +31,88 @@ std::unique_ptr<Value> Function::generateCall(const std::vector<ParamData> &para
 
     auto resultConst = _decl->isPure();
     std::vector<llvm::Value *> paramValues;
-    paramValues.reserve(params.size() + 1);
-    paramValues.push_back(nullptr);
+    paramValues.reserve(params.size());
 
-    // handle all parameters passed in
-    for (size_t i = 0; i < params.size(); i++) {
-        auto paramData = _decl->getParameter(i);
+    size_t consumedParams = 0;
+
+    // handle all required + optional parameters
+    for (size_t i = 0; i < _decl->parameters().size(); i++) {
+        if (i >= params.size()) break;
+
+        auto paramData = &_decl->parameters()[i];
         auto paramItem = &params[i];
-        _context->checkPtrType(
-                paramItem->value->value(),
-                _context->getType(paramData->type()),
-                paramItem->start,
-                paramItem->end
-        );
+        consumedParams++;
+        checkParam(paramItem, paramData);
 
-        if (paramData->isConst() && !paramItem->value->isConst()) {
-            throw CodegenError(
-                    "I constantly insist that constant values must be passed into constant parameters, and yet they consistently aren't constant.",
-                    paramItem->start, paramItem->end
-            );
-        }
-        if (!paramItem->value->isConst()) resultConst = false;
-
+        resultConst = resultConst && paramItem->value->isConst();
         paramValues.push_back(function->codeBuilder().CreateLoad(paramItem->value->value(), "call_param_temp"));
     }
 
-    // add in extra parameters
-    for (size_t i = 0; i < _decl->parameters().size(); i++) {
-        auto param = _decl->parameters()[i];
-        if (param.defaultValue() && paramValues.size() - 1 <= i) {
-            paramValues.push_back(param.defaultValue());
-        }
+    // handle all remaining optional parameters
+    for (size_t i = paramValues.size(); i < _decl->parameters().size(); i++) {
+        auto paramData = &_decl->parameters()[i];
+        assert(paramData->defaultValue());
+        paramValues.push_back(paramData->defaultValue());
     }
 
-    // add number of arguments passed
-    paramValues[0] = llvm::ConstantInt::get(llvm::Type::getInt8Ty(_context->llvm()), paramValues.size() - 1);
+    // handle varargs
+    if (_decl->variadicParam()) {
+        auto vaData = _decl->variadicParam();
+        auto remainingParams = params.size() - consumedParams;
+        auto countValue = llvm::ConstantInt::get(llvm::Type::getInt8Ty(_context->llvm()), remainingParams, false);
+        assert(remainingParams > 0);
+
+        auto vaStruct = function->initBuilder().CreateAlloca(_decl->vaType(), nullptr, "va_args");
+        function->codeBuilder().CreateStore(
+                countValue,
+                _context->getPtr(vaStruct, 0, function->codeBuilder())
+        );
+
+        auto vaArray = function->initBuilder().CreateAlloca(
+                vaData->type(),
+                countValue,
+                "va_arg_arr"
+        );
+        for (auto i = consumedParams; i < params.size(); i++) {
+            auto paramItem = &params[i];
+            checkParam(paramItem, vaData);
+
+            resultConst = resultConst && paramItem->value->isConst();
+            auto storePos = function->codeBuilder().Insert(
+                    llvm::GetElementPtrInst::Create(vaData->type(), vaArray, {
+                            _context->getConstantInt(32, i, false)
+                    }),
+                    "va_store_pos"
+            );
+            function->codeBuilder().CreateStore(
+                    function->codeBuilder().CreateLoad(paramItem->value->value(), "call_param_temp"),
+                    storePos
+            );
+        }
+        function->codeBuilder().CreateStore(
+                vaArray,
+                _context->getPtr(vaStruct, 1, function->codeBuilder())
+        );
+        paramValues.push_back(function->codeBuilder().CreateLoad(vaStruct, "va_args_temp"));
+    }
 
     auto returnDest = function->initBuilder().CreateAlloca(_decl->returnType(), nullptr, "call_result");
     auto returnVal = function->codeBuilder().CreateCall(_llFunc, paramValues, "call_result_temp");
     function->codeBuilder().CreateStore(returnVal, returnDest);
     return _context->llToValue(resultConst, returnDest);
+}
+
+void Function::checkParam(const ParamData *paramItem, const Parameter *paramData) {
+    _context->checkPtrType(
+            paramItem->value->value(),
+            _context->getType(paramData->type()),
+            paramItem->start,
+            paramItem->end
+    );
+    if (paramData->isConst() && !paramItem->value->isConst()) {
+        throw CodegenError(
+                "I constantly insist that constant values must be passed into constant parameters, and yet they consistently aren't constant.",
+                paramItem->start, paramItem->end
+        );
+    }
 }

@@ -86,7 +86,7 @@ ExpressionGenerator::generateCall(MaximAst::CallExpression *expr, Function *func
     auto func = _context->getFunction(expr->name);
     if (!func) {
         throw CodegenError(
-                "WHAT IS THIS??!?! def not a valid function name :(",
+                "WHAT IS THIS?\?!?! def not a valid function name :(",
                 expr->startPos, expr->endPos
         );
     }

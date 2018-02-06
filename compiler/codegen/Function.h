@@ -12,6 +12,8 @@ namespace MaximCodegen {
 
     class FunctionDeclaration;
 
+    class Parameter;
+
     class Function {
     public:
         struct ParamData {
@@ -54,6 +56,8 @@ namespace MaximCodegen {
         llvm::BasicBlock *_codeBlock;
         llvm::IRBuilder<> _initBuilder;
         llvm::IRBuilder<> _codeBuilder;
+
+        void checkParam(const ParamData *paramItem, const Parameter *paramData);
     };
 
 }
