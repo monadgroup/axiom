@@ -31,7 +31,7 @@ TupleValue::TupleValue(bool isConst, llvm::Value *value, Context *context)
     _type = (llvm::StructType *) pointerType;
 }
 
-llvm::Value *TupleValue::itemPtr(unsigned int index, llvm::IRBuilder<> &builder) const {
+llvm::Value *TupleValue::itemPtr(unsigned int index, Builder &builder) const {
     return _context->getPtr(_value, index, builder);
 }
 

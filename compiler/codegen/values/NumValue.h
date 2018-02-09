@@ -26,9 +26,9 @@ namespace MaximCodegen {
 
         llvm::Value *value() const override { return _value; }
 
-        llvm::Value *valuePtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *valuePtr(Builder &builder) const;
 
-        llvm::Value *formPtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *formPtr(Builder &builder) const;
 
         std::unique_ptr<Value> clone() const override;
 

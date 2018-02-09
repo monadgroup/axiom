@@ -1,10 +1,9 @@
 #pragma once
 
-#include <llvm/IR/IRBuilder.h>
-
 #include "Scope.h"
 #include "../SourcePos.h"
 #include "values/Value.h"
+#include "Builder.h"
 
 namespace MaximCodegen {
 
@@ -40,9 +39,9 @@ namespace MaximCodegen {
 
         llvm::BasicBlock *codeBlock() const { return _codeBlock; }
 
-        llvm::IRBuilder<> &initBuilder() { return _initBuilder; }
+        Builder &initBuilder() { return _initBuilder; }
 
-        llvm::IRBuilder<> &codeBuilder() { return _codeBuilder; }
+        Builder &codeBuilder() { return _codeBuilder; }
 
         std::unique_ptr<Value> generateCall(const std::vector<ParamData> &params, SourcePos start, SourcePos end, Function *function);
 
@@ -54,8 +53,8 @@ namespace MaximCodegen {
         llvm::Function *_llFunc;
         llvm::BasicBlock *_initBlock;
         llvm::BasicBlock *_codeBlock;
-        llvm::IRBuilder<> _initBuilder;
-        llvm::IRBuilder<> _codeBuilder;
+        Builder _initBuilder;
+        Builder _codeBuilder;
 
         void checkParam(const ParamData *paramItem, const Parameter *paramData);
     };

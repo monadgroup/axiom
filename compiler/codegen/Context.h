@@ -9,6 +9,7 @@
 #include "../ast/Form.h"
 #include "../SourcePos.h"
 #include "FunctionDeclaration.h"
+#include "Builder.h"
 
 namespace MaximCodegen {
 
@@ -17,6 +18,12 @@ namespace MaximCodegen {
     class Function;
 
     class ControlDeclaration;
+
+    class NumValue;
+
+    class MidiValue;
+
+    class TupleValue;
 
     class Context {
     public:
@@ -48,7 +55,7 @@ namespace MaximCodegen {
 
         llvm::Constant *getConstantForm(MaximAst::Form::Type type, std::initializer_list<float> params);
 
-        llvm::Value *getPtr(llvm::Value *ptr, unsigned int param, llvm::IRBuilder<> &builder);
+        llvm::Value *getPtr(llvm::Value *ptr, unsigned int param, Builder &builder);
 
         void checkType(llvm::Type *type, llvm::Type *expectedType, SourcePos start, SourcePos end);
 
@@ -70,13 +77,16 @@ namespace MaximCodegen {
 
         Function *getFunction(const std::string &name) const;
 
+        Function *getConverter(MaximAst::Form::Type form) const;
+
         ControlDeclaration *getControlDecl(MaximAst::ControlExpression::Type type) const;
 
     private:
         llvm::LLVMContext _llvm;
         llvm::Module _builtinModule;
 
-        std::unordered_map<std::string, std::unique_ptr<Function>> functionDecls;
+        std::unordered_map<std::string, std::unique_ptr<Function>> stdFuncs;
+        std::unordered_map<MaximAst::Form::Type, std::unique_ptr<Function>> stdConverters;
         std::unordered_map<MaximAst::ControlExpression::Type, std::unique_ptr<ControlDeclaration>> controlDecls;
 
         llvm::StructType *_formType;
@@ -87,11 +97,14 @@ namespace MaximCodegen {
         llvm::Function *getVecIntrinsic(llvm::Intrinsic::ID id, llvm::Module *module);
         llvm::Function *getScalarIntrinsic(std::string name, size_t paramCount, llvm::Module *module);
         Function *addFunc(std::string name, std::unique_ptr<FunctionDeclaration> decl, llvm::Module *module);
+        Function *addConverter(MaximAst::Form::Type form, llvm::Module *module);
         Function *addNumVecIntrinsic(std::string name, llvm::Intrinsic::ID id, size_t paramCount, bool copyForm, llvm::Module *module);
         Function *addNumScalarIntrinsic(std::string name, std::string internalName, size_t paramCount, bool copyForm, llvm::Module *module);
         Function *addNumVecFoldIntrinsic(const std::string &name, llvm::Intrinsic::ID id, bool copyForm, llvm::Module *module);
 
-        void addStandardLibrary();
+        void addStandardFunctions();
+
+        void addStandardConverters();
     };
 
 }

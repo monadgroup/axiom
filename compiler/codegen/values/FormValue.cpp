@@ -11,6 +11,7 @@ FormValue::FormValue(MaximAst::Form::Type formType, const ParamArr &params, Cont
     std::array<llvm::Value *, Context::formParamCount> paramValues = {};
     switch (formType) {
         case MaximAst::Form::Type::LINEAR:
+        case MaximAst::Form::Type::CONTROL:
             paramValues = {_context->getConstantFloat(0), _context->getConstantFloat(1)};
             break;
         case MaximAst::Form::Type::FREQUENCY:
@@ -56,10 +57,10 @@ llvm::Type *FormValue::type() const {
     return _context->getType(Context::Type::FORM);
 }
 
-llvm::Value *FormValue::typePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *FormValue::typePtr(Builder &builder) const {
     return _context->getPtr(_value, 0, builder);
 }
 
-llvm::Value *FormValue::paramsPtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *FormValue::paramsPtr(Builder &builder) const {
     return _context->getPtr(_value, 1, builder);
 }

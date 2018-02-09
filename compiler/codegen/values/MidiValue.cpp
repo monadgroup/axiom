@@ -26,23 +26,23 @@ llvm::StructType *MidiValue::type() const {
     return _context->getStructType(Context::Type::MIDI);
 }
 
-llvm::Value *MidiValue::typePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::typePtr(Builder &builder) const {
     return _context->getPtr(_value, 0, builder);
 }
 
-llvm::Value *MidiValue::channelPtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::channelPtr(Builder &builder) const {
     return _context->getPtr(_value, 1, builder);
 }
 
-llvm::Value *MidiValue::notePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::notePtr(Builder &builder) const {
     return _context->getPtr(_value, 2, builder);
 }
 
-llvm::Value *MidiValue::paramPtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::paramPtr(Builder &builder) const {
     return _context->getPtr(_value, 3, builder);
 }
 
-llvm::Value *MidiValue::timePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *MidiValue::timePtr(Builder &builder) const {
     return _context->getPtr(_value, 4, builder);
 }
 

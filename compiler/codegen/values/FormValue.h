@@ -2,6 +2,7 @@
 
 #include "../Context.h"
 #include "../../ast/Form.h"
+#include "../Builder.h"
 
 namespace MaximCodegen {
 
@@ -21,9 +22,9 @@ namespace MaximCodegen {
 
         llvm::Value *value() const { return _value; }
 
-        llvm::Value *typePtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *typePtr(Builder &builder) const;
 
-        llvm::Value *paramsPtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *paramsPtr(Builder &builder) const;
 
     private:
         Context *_context;

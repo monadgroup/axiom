@@ -5,6 +5,7 @@
 #include <llvm/IR/DerivedTypes.h>
 
 #include "Value.h"
+#include "../Builder.h"
 
 namespace MaximCodegen {
 
@@ -22,7 +23,7 @@ namespace MaximCodegen {
 
         llvm::Value *value() const override { return _value; }
 
-        llvm::Value *itemPtr(unsigned int index, llvm::IRBuilder<> &builder) const;
+        llvm::Value *itemPtr(unsigned int index, Builder &builder) const;
 
         std::unique_ptr<Value> clone() const override;
 

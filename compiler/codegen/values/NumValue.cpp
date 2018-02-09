@@ -33,11 +33,11 @@ llvm::StructType *NumValue::type() const {
     return _context->getStructType(Context::Type::NUM);
 }
 
-llvm::Value *NumValue::valuePtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *NumValue::valuePtr(Builder &builder) const {
     return _context->getPtr(_value, 0, builder);
 }
 
-llvm::Value *NumValue::formPtr(llvm::IRBuilder<> &builder) const {
+llvm::Value *NumValue::formPtr(Builder &builder) const {
     return _context->getPtr(_value, 1, builder);
 }
 

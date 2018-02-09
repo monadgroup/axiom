@@ -12,7 +12,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 set(SOURCE_FILES util.h
         parser/TokenStream.cpp parser/Token.cpp parser/Parser.cpp
-        codegen/Context.cpp codegen/ExpressionGenerator.cpp codegen/FunctionDeclaration.cpp codegen/Parameter.cpp codegen/Function.cpp codegen/Scope.cpp codegen/ControlDeclaration.cpp codegen/Control.cpp
+        codegen/Context.cpp codegen/ExpressionGenerator.cpp codegen/FunctionDeclaration.cpp codegen/Parameter.cpp codegen/Function.cpp codegen/Scope.cpp codegen/ControlDeclaration.cpp codegen/Control.cpp codegen/Builder.cpp
         codegen/values/Value.cpp codegen/values/NumValue.cpp codegen/values/TupleValue.cpp codegen/values/MidiValue.cpp codegen/values/FormValue.cpp
         ast/Expression.cpp)
 

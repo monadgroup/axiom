@@ -167,6 +167,7 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     expect(nameToken, Token::Type::IDENTIFIER);
     Form::Type formType;
     if (nameToken.content == "lin") formType = Form::Type::LINEAR;
+    else if (nameToken.content == "control") formType = Form::Type::CONTROL;
     else if (nameToken.content == "freq") formType = Form::Type::FREQUENCY;
     else if (nameToken.content == "note") formType = Form::Type::NOTE;
     else if (nameToken.content == "db") formType = Form::Type::DB;

@@ -79,12 +79,9 @@ std::unique_ptr<Value> Function::generateCall(const std::vector<ParamData> &para
             checkParam(paramItem, vaData);
 
             resultConst = resultConst && paramItem->value->isConst();
-            auto storePos = function->codeBuilder().Insert(
-                    llvm::GetElementPtrInst::Create(vaData->type(), vaArray, {
-                            _context->getConstantInt(32, paramIndex++, false)
-                    }),
-                    "va_store_pos"
-            );
+            auto storePos = function->codeBuilder().CreateGEP(vaData->type(), vaArray, {
+                    _context->getConstantInt(32, paramIndex++, false)
+            }, "va_store_pos");
             function->codeBuilder().CreateStore(
                     function->codeBuilder().CreateLoad(paramItem->value->value(), "call_param_temp"),
                     storePos

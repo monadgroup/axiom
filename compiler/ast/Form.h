@@ -12,6 +12,7 @@ namespace MaximAst {
     public:
         enum class Type {
             LINEAR,
+            CONTROL,
             FREQUENCY,
             NOTE,
             DB,
@@ -31,39 +32,27 @@ namespace MaximAst {
                 : type(type), startPos(start), endPos(end) {}
 
         void appendString(std::ostream &s) {
-            s << "(form ";
-            switch (type) {
-                case Type::LINEAR:
-                    s << "lin";
-                    break;
-                case Type::FREQUENCY:
-                    s << "freq";
-                    break;
-                case Type::NOTE:
-                    s << "note";
-                    break;
-                case Type::DB:
-                    s << "db";
-                    break;
-                case Type::Q:
-                    s << "q";
-                    break;
-                case Type::RES:
-                    s << "res";
-                    break;
-                case Type::SECONDS:
-                    s << "secs";
-                    break;
-                case Type::BEATS:
-                    s << "beats";
-                    break;
-            }
+            s << "(form " << typeToString(type);
             if (!arguments.empty()) s << " ";
             for (size_t i = 0; i < arguments.size(); i++) {
                 arguments[i]->appendString(s);
                 if (i != arguments.size() - 1) s << " ";
             }
             s << ")";
+        }
+
+        static std::string typeToString(Type type) {
+            switch (type) {
+                case Type::LINEAR: return "lin";
+                case Type::CONTROL: return "control";
+                case Type::FREQUENCY: return "freq";
+                case Type::NOTE: return "note";
+                case Type::DB: return "db";
+                case Type::Q: return "q";
+                case Type::RES: return "res";
+                case Type::SECONDS: return "secs";
+                case Type::BEATS: return "beats";
+            }
         }
     };
 

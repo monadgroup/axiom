@@ -4,8 +4,6 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Scalar.h>
 
-#include <utility>
-
 #include "CodegenError.h"
 
 #include "values/NumValue.h"
@@ -41,22 +39,9 @@ Context::Context() : _builtinModule("builtins.llvm", llvm()) {
             llvm::Type::getInt32Ty(_llvm)    // time
     }, "struct.midi");
 
-    /*_vaType = llvm::StructType::create(_llvm, std::array<llvm::Type *, 1> {
-            llvm::Type::getInt8Ty(_llvm)
-    }, "struct.va_list");*/
-    /*_vaType = llvm::StructType::create(_llvm, {
-            llvm::Type::getInt8Ty(_llvm), // number of arguments
-            llvm::PointerType::get(llvm::ArrayType::get)
-    }, "struct.va_list");*/
+    addStandardFunctions();
 
-    addStandardLibrary();
-
-    // todo: min
-    // todo: max
-    // todo: clamp
-    // todo: mix
-    // todo: step
-    // todo
+    addStandardConverters();
 }
 
 llvm::Constant *Context::getConstantInt(unsigned int numBits, uint64_t val, bool isSigned) {
@@ -90,17 +75,20 @@ llvm::Constant* Context::getConstantForm(MaximAst::Form::Type type, std::initial
     });
 }
 
-llvm::Value *Context::getPtr(llvm::Value *ptr, unsigned int param, llvm::IRBuilder<> &builder) {
+llvm::Value *Context::getPtr(llvm::Value *ptr, unsigned int param, Builder &builder) {
     auto targetType = ptr->getType()->getPointerElementType();
     auto idxList = std::array<llvm::Value *, 2> {
             getConstantInt(32, 0, false),
             getConstantInt(32, param, false)
     };
-    auto indexedType = llvm::GetElementPtrInst::getIndexedType(targetType, idxList);
 
-    return builder.Insert(
+    /*return builder.Insert(
             llvm::GetElementPtrInst::Create(ptr->getType()->getPointerElementType(), ptr, idxList),
             "ptr_" + typeToString(targetType) + "_" + std::to_string(param) + "_" + typeToString(indexedType)
+    );*/
+    return builder.CreateGEP(
+            ptr->getType()->getPointerElementType(), ptr, idxList,
+            "ptr_" + typeToString(targetType) + "_" + std::to_string(param)
     );
 }
 
@@ -208,8 +196,14 @@ std::unique_ptr<Value> Context::llToValue(bool isConst, llvm::Value *value) {
 }
 
 Function* Context::getFunction(const std::string &name) const {
-    auto pair = functionDecls.find(name);
-    if (pair == functionDecls.end()) return nullptr;
+    auto pair = stdFuncs.find(name);
+    if (pair == stdFuncs.end()) return nullptr;
+    return pair->second.get();
+}
+
+Function* Context::getConverter(MaximAst::Form::Type form) const {
+    auto pair = stdConverters.find(form);
+    assert(pair != stdConverters.end());
     return pair->second.get();
 }
 
@@ -235,9 +229,17 @@ llvm::Function* Context::getScalarIntrinsic(std::string name, size_t paramCount,
 }
 
 Function* Context::addFunc(std::string name, std::unique_ptr<FunctionDeclaration> decl, llvm::Module *module) {
-    auto newFunc = std::make_unique<Function>(std::move(decl), "maxim." + name, llvm::Function::InternalLinkage, module, this);
+    auto newFunc = std::make_unique<Function>(std::move(decl), "maxim.func." + name, llvm::Function::InternalLinkage, module, this);
     auto newFuncPtr = newFunc.get();
-    functionDecls.emplace(name, std::move(newFunc));
+    stdFuncs.emplace(name, std::move(newFunc));
+    return newFuncPtr;
+}
+
+Function* Context::addConverter(MaximAst::Form::Type form, llvm::Module *module) {
+    auto decl = std::make_unique<FunctionDeclaration>(true, _numType, std::vector<Parameter>{Parameter(false, _numType)});
+    auto newFunc = std::make_unique<Function>(std::move(decl), "maxim.convert." + MaximAst::Form::typeToString(form), llvm::Function::InternalLinkage, module, this);
+    auto newFuncPtr = newFunc.get();
+    stdConverters.emplace(form, std::move(newFunc));
     return newFuncPtr;
 }
 
@@ -333,12 +335,9 @@ Function* Context::addNumVecFoldIntrinsic(const std::string &name, llvm::Intrins
     cb.CreateStore(llvm::ConstantInt::get(varCountType, 0), incrementVal);
 
     auto accumVal = func->initBuilder().CreateAlloca(vecType, nullptr, "accum");
-    auto firstReadPos = cb.Insert(
-            llvm::GetElementPtrInst::Create(_numType, vaArrayPtr, {
-                    getConstantInt(32, 0, false)
-            }),
-            "first_arg"
-    );
+    auto firstReadPos = cb.CreateGEP(_numType, vaArrayPtr, {
+            getConstantInt(32, 0, false)
+    }, "first_arg");
     auto firstArg = std::make_unique<NumValue>(false, firstReadPos, this);
     cb.CreateStore(
             cb.CreateLoad(firstArg->valuePtr(cb), "first_arg_num"),
@@ -351,7 +350,7 @@ Function* Context::addNumVecFoldIntrinsic(const std::string &name, llvm::Intrins
 
     cb.CreateBr(loopCheckBlock);
 
-    llvm::IRBuilder<> loopCheckBuilder(loopCheckBlock);
+    Builder loopCheckBuilder(loopCheckBlock);
     auto incrAdd = loopCheckBuilder.CreateAdd(
             loopCheckBuilder.CreateLoad(incrementVal, "increment_temp.load"),
             llvm::ConstantInt::get(varCountType, 1),
@@ -362,9 +361,7 @@ Function* Context::addNumVecFoldIntrinsic(const std::string &name, llvm::Intrins
     loopCheckBuilder.CreateCondBr(incrResult, loopFinishBlock, loopContinueBlock);
 
     func->codeBuilder().SetInsertPoint(loopContinueBlock);
-    auto nextReadPos = func->codeBuilder().Insert(
-            llvm::GetElementPtrInst::Create(_numType, vaArrayPtr, {incrAdd}), "next_arg"
-    );
+    auto nextReadPos = func->codeBuilder().CreateGEP(_numType, vaArrayPtr, {incrAdd}, "next_arg");
     auto nextArg = std::make_unique<NumValue>(false, nextReadPos, this);
     auto lastNum = func->codeBuilder().CreateLoad(accumVal, "last_num");
     auto nextNum = func->codeBuilder().CreateLoad(nextArg->valuePtr(func->codeBuilder()), "next_arg_num");
@@ -389,7 +386,7 @@ Function* Context::addNumVecFoldIntrinsic(const std::string &name, llvm::Intrins
     return func;
 }
 
-void Context::addStandardLibrary() {
+void Context::addStandardFunctions() {
     // functions that map directly to libm
     addNumVecIntrinsic("cos", llvm::Intrinsic::ID::cos, 1, true, &_builtinModule);
     addNumVecIntrinsic("sin", llvm::Intrinsic::ID::sin, 1, true, &_builtinModule);
@@ -613,8 +610,10 @@ void Context::addStandardLibrary() {
                         indexNum,
                         cb.CreateUIToFP(
                                 argCountSplat,
-                                llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2)
-                        )
+                                llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2),
+                                "arg_count_float"
+                        ),
+                        "base_index_rem"
                 ),
                 llvm::VectorType::get(countTy, 2),
                 "base_index"
@@ -626,41 +625,31 @@ void Context::addStandardLibrary() {
                     llvm::ConstantVector::get({ incrVal, incrVal }),
                     "next_index_raw"
                 ),
-                argCountSplat
+                argCountSplat,
+                "next_index_rem"
         );
 
-        auto baseLeftPtr = cb.Insert(
-                llvm::GetElementPtrInst::Create(_numType, vaArrayPtr, {
-                        cb.CreateExtractElement(baseIndex, (uint64_t) 0, "base_left_index")
-                }),
-                "base_left_ptr"
-        );
+        auto baseLeftPtr = cb.CreateGEP(_numType, vaArrayPtr, {
+                cb.CreateExtractElement(baseIndex, (uint64_t) 0, "base_left_index")
+        }, "base_left_ptr");
         auto baseLeftNum = std::make_unique<NumValue>(false, baseLeftPtr, this);
-        auto baseRightPtr = cb.Insert(
-                llvm::GetElementPtrInst::Create(_numType, vaArrayPtr, {
-                        cb.CreateExtractElement(baseIndex, (uint64_t) 1, "base_right_index")
-                }),
-                "base_right_ptr"
-        );
+        auto baseRightPtr = cb.CreateGEP(_numType, vaArrayPtr, {
+                cb.CreateExtractElement(baseIndex, (uint64_t) 1, "base_right_index")
+        }, "base_right_ptr");
         auto baseRightNum = std::make_unique<NumValue>(false, baseRightPtr, this);
 
         auto baseValLeft = cb.CreateLoad(baseLeftNum->valuePtr(cb), "base_left_tmp");
         auto baseValRight = cb.CreateLoad(baseRightNum->valuePtr(cb), "base_right_tmp");
         auto baseVal = cb.CreateShuffleVector(baseValLeft, baseValRight, {0, 3}, "base_val");
 
-        auto nextLeftPtr = cb.Insert(
-                llvm::GetElementPtrInst::Create(_numType, vaArrayPtr, {
-                        cb.CreateExtractElement(nextIndex, (uint64_t) 0, "next_left_index")
-                }),
-                "next_left_ptr"
-        );
+        auto nextLeftPtr = cb.CreateGEP(_numType, vaArrayPtr, {
+                cb.CreateExtractElement(nextIndex, (uint64_t) 0, "next_left_index")
+        }, "next_left_ptr");
         auto nextLeftNum = std::make_unique<NumValue>(false, nextLeftPtr, this);
-        auto nextRightPtr = cb.Insert(
-                llvm::GetElementPtrInst::Create(_numType, vaArrayPtr, {
-                        cb.CreateExtractElement(nextIndex, (uint64_t) 1, "next_right_index")
-                }),
-                "next_right_ptr"
-        );
+
+        auto nextRightPtr = cb.CreateGEP(_numType, vaArrayPtr, {
+                cb.CreateExtractElement(nextIndex, (uint64_t) 1, "next_right_index")
+        }, "next_right_ptr");
         auto nextRightNum = std::make_unique<NumValue>(false, nextRightPtr, this);
 
         auto nextValLeft = cb.CreateLoad(nextLeftNum->valuePtr(cb), "next_left_tmp");
@@ -696,7 +685,7 @@ void Context::addStandardLibrary() {
         auto defaultMin = getConstantNum(-1, -1, getConstantForm(MaximAst::Form::Type::LINEAR, {0, 1}));
         auto defaultMax = getConstantNum(1, 1, getConstantForm(MaximAst::Form::Type::LINEAR, {0, 1}));
         auto func = addFunc("noise", std::make_unique<FunctionDeclaration>(
-                true, _numType, std::vector<Parameter> {
+                false, _numType, std::vector<Parameter> {
                         Parameter(false, _numType, defaultMin),
                         Parameter(false, _numType, defaultMax)
                 }
@@ -774,7 +763,7 @@ void Context::addStandardLibrary() {
         func->codeBuilder().CreateStore(func->llFunc()->arg_begin() + 1, func->llFunc()->arg_begin());
 
         func->codeBuilder().CreateRet(lastValLoad);
-        
+
         func->initBuilder().CreateBr(func->codeBlock());
     }
 
@@ -783,4 +772,17 @@ void Context::addStandardLibrary() {
     // num resDelay(num x, num d, const num r)
     // num hold(num x, num gate, num else=0)
     // num accum(num x, num gate, num base=0)
+}
+
+void Context::addStandardConverters() {
+    {
+        /*auto func = addConverter(MaximAst::Form::Type::LINEAR, &_builtinModule);
+
+        auto input = std::make_unique<NumValue>(false, func->llFunc()->arg_begin(), this);
+        auto newNum = std::make_unique<NumValue>(
+                false,
+                func->codeBuilder().CreateLoad(input->valuePtr(func->codeBuilder()), "input_num"),
+                FormValue()
+        )*/
+    }
 }

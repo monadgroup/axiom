@@ -4,6 +4,7 @@
 #include <llvm/IR/DerivedTypes.h>
 
 #include "Value.h"
+#include "../Builder.h"
 
 namespace MaximCodegen {
 
@@ -22,15 +23,15 @@ namespace MaximCodegen {
 
         llvm::Value *value() const override { return _value; }
 
-        llvm::Value *typePtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *typePtr(Builder &builder) const;
 
-        llvm::Value *channelPtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *channelPtr(Builder &builder) const;
 
-        llvm::Value *notePtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *notePtr(Builder &builder) const;
 
-        llvm::Value *paramPtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *paramPtr(Builder &builder) const;
 
-        llvm::Value *timePtr(llvm::IRBuilder<> &builder) const;
+        llvm::Value *timePtr(Builder &builder) const;
 
         std::unique_ptr<Value> clone() const override;
 
