@@ -3,7 +3,7 @@
 using namespace MaximParser;
 
 Token::Token(Type type, std::string content, SourcePos startPos, SourcePos endPos)
-        : type(type), content(std::move(content)), startPos(startPos), endPos(endPos) {
+    : type(type), content(std::move(content)), startPos(startPos), endPos(endPos) {
 
 }
 

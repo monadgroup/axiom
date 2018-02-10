@@ -13,7 +13,7 @@ namespace MaximAst {
 
         CastExpression(std::unique_ptr<Form> target, std::unique_ptr<Expression> expr, bool isConvert, SourcePos start,
                        SourcePos end)
-                : Expression(start, end), target(std::move(target)), expr(std::move(expr)), isConvert(isConvert) {}
+            : Expression(start, end), target(std::move(target)), expr(std::move(expr)), isConvert(isConvert) {}
 
         void appendString(std::ostream &s) override {
             s << "(" << (isConvert ? "convert" : "cast") << " ";

@@ -9,7 +9,7 @@ namespace MaximAst {
         std::string name;
 
         VariableExpression(std::string name, SourcePos start, SourcePos end)
-                : AssignableExpression(start, end), name(std::move(name)) {}
+            : AssignableExpression(start, end), name(std::move(name)) {}
 
         void appendString(std::ostream &s) override {
             s << "(var " << name << ")";

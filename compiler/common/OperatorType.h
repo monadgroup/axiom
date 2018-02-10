@@ -27,24 +27,42 @@ namespace MaximCommon {
 
     std::string operatorType2String(OperatorType type) {
         switch (type) {
-            case OperatorType::IDENTITY: return "=";
-            case OperatorType::ADD: return "+";
-            case OperatorType::SUBTRACT: return "-";
-            case OperatorType::MULTIPLY: return "*";
-            case OperatorType::DIVIDE: return "/";
-            case OperatorType::MODULO: return "%";
-            case OperatorType::POWER: return "^";
-            case OperatorType::BITWISE_AND: return "&";
-            case OperatorType::BITWISE_OR: return "|";
-            case OperatorType::BITWISE_XOR: return "^^";
-            case OperatorType::LOGICAL_AND: return "&&";
-            case OperatorType::LOGICAL_OR: return "||";
-            case OperatorType::LOGICAL_EQUAL: return "==";
-            case OperatorType::LOGICAL_NOT_EQUAL: return "!=";
-            case OperatorType::LOGICAL_GT: return ">";
-            case OperatorType::LOGICAL_LT: return "<";
-            case OperatorType::LOGICAL_GTE: return ">=";
-            case OperatorType::LOGICAL_LTE: return "<=";
+            case OperatorType::IDENTITY:
+                return "=";
+            case OperatorType::ADD:
+                return "+";
+            case OperatorType::SUBTRACT:
+                return "-";
+            case OperatorType::MULTIPLY:
+                return "*";
+            case OperatorType::DIVIDE:
+                return "/";
+            case OperatorType::MODULO:
+                return "%";
+            case OperatorType::POWER:
+                return "^";
+            case OperatorType::BITWISE_AND:
+                return "&";
+            case OperatorType::BITWISE_OR:
+                return "|";
+            case OperatorType::BITWISE_XOR:
+                return "^^";
+            case OperatorType::LOGICAL_AND:
+                return "&&";
+            case OperatorType::LOGICAL_OR:
+                return "||";
+            case OperatorType::LOGICAL_EQUAL:
+                return "==";
+            case OperatorType::LOGICAL_NOT_EQUAL:
+                return "!=";
+            case OperatorType::LOGICAL_GT:
+                return ">";
+            case OperatorType::LOGICAL_LT:
+                return "<";
+            case OperatorType::LOGICAL_GTE:
+                return ">=";
+            case OperatorType::LOGICAL_LTE:
+                return "<=";
         }
     }
 

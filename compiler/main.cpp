@@ -10,7 +10,6 @@
 
 #include "codegen/Context.h"
 #include "codegen/Function.h"
-#include "codegen/Control.h"
 #include "codegen/ExpressionGenerator.h"
 #include "codegen/FunctionDeclaration.h"
 #include "codegen/ControlDeclaration.h"
@@ -46,7 +45,8 @@ void parseAndCompile() {
 
     auto vecType = llvm::VectorType::get(llvm::Type::getFloatTy(context.llvm()), 2);
     auto mainFuncDecl = std::make_unique<FunctionDeclaration>(false, vecType, std::vector<Parameter>{});
-    auto fun = Function(std::move(mainFuncDecl), "main", llvm::Function::ExternalLinkage, context.builtinModule(), &context);
+    auto fun = Function(std::move(mainFuncDecl), "main", llvm::Function::ExternalLinkage, context.builtinModule(),
+                        &context);
     auto exprGen = ExpressionGenerator(&context);
 
     MaximAst::Expression *lastExpr = nullptr;

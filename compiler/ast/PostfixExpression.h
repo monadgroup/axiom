@@ -16,7 +16,7 @@ namespace MaximAst {
         Type type;
 
         PostfixExpression(std::unique_ptr<LValueExpression> left, Type type, SourcePos start, SourcePos end)
-                : Expression(start, end), left(std::move(left)), type(type) {}
+            : Expression(start, end), left(std::move(left)), type(type) {}
 
         void appendString(std::ostream &s) override {
             s << "(postfix ";

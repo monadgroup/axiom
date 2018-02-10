@@ -11,9 +11,10 @@ namespace MaximAst {
         MaximCommon::OperatorType type;
         std::unique_ptr<Expression> right;
 
-        MathExpression(std::unique_ptr<Expression> left, MaximCommon::OperatorType type, std::unique_ptr<Expression> right, SourcePos start,
+        MathExpression(std::unique_ptr<Expression> left, MaximCommon::OperatorType type,
+                       std::unique_ptr<Expression> right, SourcePos start,
                        SourcePos end)
-                : Expression(start, end), left(std::move(left)), type(type), right(std::move(right)) {}
+            : Expression(start, end), left(std::move(left)), type(type), right(std::move(right)) {}
 
         void appendString(std::ostream &s) override {
             s << "(math " << MaximCommon::operatorType2String(type) << " ";

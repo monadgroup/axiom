@@ -4,7 +4,9 @@
 
 namespace llvm {
     class Value;
+
     class Function;
+
     class BasicBlock;
 }
 
@@ -19,7 +21,8 @@ namespace MaximCodegen {
         llvm::Value *
         CreateInsertValue(llvm::Value *agg, llvm::Value *val, llvm::ArrayRef<unsigned> idxs, const llvm::Twine &name);
 
-        llvm::Value *CreateGEP(llvm::Type *type, llvm::Value *val, llvm::ArrayRef<llvm::Value*> idxList, const llvm::Twine &name);
+        llvm::Value *
+        CreateGEP(llvm::Type *type, llvm::Value *val, llvm::ArrayRef<llvm::Value *> idxList, const llvm::Twine &name);
 
         llvm::Value *CreateLoad(llvm::Value *ptr, const llvm::Twine &name);
 
@@ -29,7 +32,7 @@ namespace MaximCodegen {
 
         llvm::Value *CreateAlloca(llvm::Type *type, llvm::Value *arraySize, const llvm::Twine &name);
 
-        llvm::Value *CreateCall(llvm::Function *func, llvm::ArrayRef<llvm::Value*> args, const Twine &name);
+        llvm::Value *CreateCall(llvm::Function *func, llvm::ArrayRef<llvm::Value *> args, const Twine &name);
 
         void CreateRet(llvm::Value *v);
     };

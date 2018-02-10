@@ -14,7 +14,7 @@
 using namespace MaximCodegen;
 
 Function::Function(MaximContext *context, std::string name, ValueType returnType, std::vector<Parameter> parameters,
-                   std::unique_ptr <Parameter> vararg, llvm::Type *contextType, llvm::Module *module)
+                   std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module)
     : _context(context), _returnType(returnType), _parameters(std::move(parameters)),
       _vararg(std::move(vararg)), _contextType(contextType) {
 
@@ -74,7 +74,9 @@ Function::Function(MaximContext *context, std::string name, ValueType returnType
     builder.CreateRet(res->get());
 }
 
-std::unique_ptr<Value> Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, Builder &b, SourcePos startPos, SourcePos endPos) {
+std::unique_ptr<Value>
+Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, Builder &b, SourcePos startPos,
+               SourcePos endPos) {
     // validate and map arguments - first validation can do without optional values, second can't
     validateArgs(values, false, startPos, endPos);
     auto mappedArgs = mapArguments(std::move(values));
@@ -214,7 +216,7 @@ std::unique_ptr<Value> Function::ConstVarArg::atIndex(llvm::Value *index, Builde
     return vals[constVal->getZExtValue()]->clone();
 }
 
-llvm::Value* Function::ConstVarArg::count(Builder &b) {
+llvm::Value *Function::ConstVarArg::count(Builder &b) {
     return context->constInt(8, vals.size(), false);
 }
 
@@ -227,6 +229,6 @@ std::unique_ptr<Value> Function::DynVarArg::atIndex(llvm::Value *index, Builder 
     return context->createType(b.CreateLoad(ptr, "va.element"), type);
 }
 
-llvm::Value* Function::DynVarArg::count(Builder &b) {
+llvm::Value *Function::DynVarArg::count(Builder &b) {
     return b.CreateExtractValue(argStruct, {0}, "va.count");
 }
