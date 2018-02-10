@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Expression.h"
+
 namespace MaximAst {
 
     class NoteExpression : public Expression {

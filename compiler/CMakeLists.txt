@@ -12,8 +12,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 set(SOURCE_FILES util.h
         parser/TokenStream.cpp parser/Token.cpp parser/Parser.cpp
-        codegen/Context.cpp codegen/ExpressionGenerator.cpp codegen/FunctionDeclaration.cpp codegen/Parameter.cpp codegen/Function.cpp codegen/Scope.cpp codegen/ControlDeclaration.cpp codegen/Control.cpp codegen/Builder.cpp
-        codegen/values/Value.cpp codegen/values/NumValue.cpp codegen/values/TupleValue.cpp codegen/values/MidiValue.cpp codegen/values/FormValue.cpp
+        codegen/MaximContext.cpp codegen/Midi.cpp codegen/Num.cpp codegen/Tuple.cpp codegen/Converter.cpp codegen/Function.cpp codegen/Operator.cpp
+        codegen/visitors/AssignVisitor.cpp codegen/visitors/CallVisitor.cpp codegen/visitors/CastVisitor.cpp codegen/visitors/ControlVisitor.cpp codegen/visitors/ExpressionVisitor.cpp codegen/visitors/MathVisitor.cpp codegen/visitors/NoteVisitor.cpp codegen/visitors/NumberVisitor.cpp codegen/visitors/PostfixVisitor.cpp codegen/visitors/TupleVisitor.cpp codegen/visitors/UnaryVisitor.cpp codegen/visitors/VariableVisitor.cpp
         ast/Expression.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS})

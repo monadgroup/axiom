@@ -21,6 +21,7 @@
 
 using namespace MaximParser;
 using namespace MaximAst;
+using namespace MaximCommon;
 
 static std::string toUpperCase(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(), ::toupper);
@@ -165,16 +166,16 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     expect(stream()->next(), Token::Type::OPEN_SQUARE);
     auto nameToken = stream()->next();
     expect(nameToken, Token::Type::IDENTIFIER);
-    Form::Type formType;
-    if (nameToken.content == "lin") formType = Form::Type::LINEAR;
-    else if (nameToken.content == "control") formType = Form::Type::CONTROL;
-    else if (nameToken.content == "freq") formType = Form::Type::FREQUENCY;
-    else if (nameToken.content == "note") formType = Form::Type::NOTE;
-    else if (nameToken.content == "db") formType = Form::Type::DB;
-    else if (nameToken.content == "q") formType = Form::Type::Q;
-    else if (nameToken.content == "res") formType = Form::Type::RES;
-    else if (nameToken.content == "secs") formType = Form::Type::SECONDS;
-    else if (nameToken.content == "beats") formType = Form::Type::BEATS;
+    FormType formType;
+    if (nameToken.content == "lin") formType = FormType::LINEAR;
+    else if (nameToken.content == "control") formType = FormType::CONTROL;
+    else if (nameToken.content == "freq") formType = FormType::FREQUENCY;
+    else if (nameToken.content == "note") formType = FormType::NOTE;
+    else if (nameToken.content == "db") formType = FormType::DB;
+    else if (nameToken.content == "q") formType = FormType::Q;
+    else if (nameToken.content == "res") formType = FormType::RESONANCE;
+    else if (nameToken.content == "secs") formType = FormType::SECONDS;
+    else if (nameToken.content == "beats") formType = FormType::BEATS;
     else {
         throw ParseError(
                 "Come on man, I don't support " + nameToken.content + " forms.",
@@ -225,7 +226,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
     auto endPos = numberToken.endPos;
     auto postMulToken = stream()->peek();
-    auto valueForm = std::make_unique<Form>(Form::Type::LINEAR, postMulToken.startPos, postMulToken.endPos);
+    auto valueForm = std::make_unique<Form>(FormType::LINEAR, postMulToken.startPos, postMulToken.endPos);
     if (postMulToken.type == Token::Type::IDENTIFIER) {
         auto postMulText = toUpperCase(postMulToken.content);
 
@@ -239,12 +240,12 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
         auto didMatchForm = true;
         auto formStart = didMatchMul ? 1u : 0u;
-        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->type = Form::Type::FREQUENCY;
-        else if (!postMulText.compare(formStart, postMulText.npos, "DB")) valueForm->type = Form::Type::DB;
-        else if (!postMulText.compare(formStart, postMulText.npos, "Q")) valueForm->type = Form::Type::Q;
-        else if (!postMulText.compare(formStart, postMulText.npos, "R")) valueForm->type = Form::Type::RES;
-        else if (!postMulText.compare(formStart, postMulText.npos, "S")) valueForm->type = Form::Type::SECONDS;
-        else if (!postMulText.compare(formStart, postMulText.npos, "B")) valueForm->type = Form::Type::BEATS;
+        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->type = FormType::FREQUENCY;
+        else if (!postMulText.compare(formStart, postMulText.npos, "DB")) valueForm->type = FormType::DB;
+        else if (!postMulText.compare(formStart, postMulText.npos, "Q")) valueForm->type = FormType::Q;
+        else if (!postMulText.compare(formStart, postMulText.npos, "R")) valueForm->type = FormType::RESONANCE;
+        else if (!postMulText.compare(formStart, postMulText.npos, "S")) valueForm->type = FormType::SECONDS;
+        else if (!postMulText.compare(formStart, postMulText.npos, "B")) valueForm->type = FormType::BEATS;
         else didMatchForm = false;
 
         if ((didMatchMul && postMulText.size() == 1) || didMatchForm) {
