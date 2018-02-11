@@ -2,8 +2,8 @@
 
 #include <memory>
 #include <vector>
+#include <llvm/ADT/ArrayRef.h>
 
-#include "ValueType.h"
 #include "Builder.h"
 #include "../SourcePos.h"
 
@@ -25,13 +25,15 @@ namespace MaximCodegen {
 
     class MaximContext;
 
+    class Type;
+
     class Parameter {
     public:
-        ValueType type;
+        Type *type;
         bool requireConst;
         bool optional;
 
-        Parameter(ValueType type, bool requireConst, bool optional);
+        Parameter(Type *type, bool requireConst, bool optional);
     };
 
     class VarArg {
@@ -50,14 +52,16 @@ namespace MaximCodegen {
 
     class Function {
     public:
-        Function(MaximContext *context, std::string name, ValueType returnType, std::vector<Parameter> parameters,
+        Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
                  std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module);
 
-        ValueType returnType() const { return _returnType; }
+        Type *returnType() const { return _returnType; }
 
         bool isPure() const { return !_contextType; }
 
         std::vector<Parameter> const &parameters() const { return _parameters; }
+
+        bool acceptsParameters(const llvm::ArrayRef<llvm::Type*> &types);
 
         std::unique_ptr<Value>
         call(Node *node, std::vector<std::unique_ptr<Value>> values, Builder &b, SourcePos startPos, SourcePos endPos);
@@ -66,6 +70,9 @@ namespace MaximCodegen {
         virtual std::unique_ptr<Value>
         generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
                  llvm::Value *context) = 0;
+
+        virtual std::unique_ptr<Value> generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
+                                                     llvm::Value *context);
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
 
@@ -76,7 +83,7 @@ namespace MaximCodegen {
         public:
             std::vector<std::unique_ptr<Value>> vals;
 
-            ConstVarArg(MaximContext *context, ValueType type, std::vector<std::unique_ptr<Value>> vals);
+            ConstVarArg(MaximContext *context, std::vector<std::unique_ptr<Value>> vals);
 
             std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &b) override;
 
@@ -86,9 +93,9 @@ namespace MaximCodegen {
         class DynVarArg : public VarArg {
         public:
             llvm::Value *argStruct;
-            ValueType type;
+            Type *type;
 
-            DynVarArg(MaximContext *context, llvm::Value *argStruct, ValueType type);
+            DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type);
 
             std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &b) override;
 
@@ -96,7 +103,7 @@ namespace MaximCodegen {
         };
 
         MaximContext *_context;
-        ValueType _returnType;
+        Type *_returnType;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _vararg;
         llvm::Type *_vaType;
@@ -117,7 +124,7 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value>
         callNonConst(Node *node, std::vector<std::unique_ptr<Value>> allArgs, std::vector<std::unique_ptr<Value>> args,
-                     std::vector<std::unique_ptr<Value>> varargs, Builder &b);
+                     const std::vector<std::unique_ptr<Value>> &varargs, Builder &b, SourcePos startPos, SourcePos endPos);
     };
 
 }

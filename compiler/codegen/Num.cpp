@@ -6,12 +6,12 @@
 
 using namespace MaximCodegen;
 
-Num::Num(MaximContext *context, float left, float right, MaximCommon::FormType type, bool active,
+Num::Num(MaximContext *context, float left, float right, MaximCommon::FormType form, bool active,
          SourcePos startPos, SourcePos endPos) : Value(startPos, endPos), _context(context) {
-    _get = llvm::ConstantStruct::get(context->numType(), {
+    _get = llvm::ConstantStruct::get(type()->get(), {
         llvm::ConstantVector::get({context->constFloat(left), context->constFloat(right)}),
-        llvm::ConstantInt::get(context->numFormType(), (uint64_t) type, false),
-        llvm::ConstantInt::get(context->numActiveType(), (uint64_t) active, false)
+        llvm::ConstantInt::get(type()->formType(), (uint64_t) form, false),
+        llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false)
     });
 }
 
@@ -20,9 +20,9 @@ Num::Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos 
 }
 
 std::unique_ptr<Num>
-Num::create(MaximContext *context, float left, float right, MaximCommon::FormType type, bool active,
+Num::create(MaximContext *context, float left, float right, MaximCommon::FormType form, bool active,
             SourcePos startPos, SourcePos endPos) {
-    return std::make_unique<Num>(context, left, right, type, active, startPos, endPos);
+    return std::make_unique<Num>(context, left, right, form, active, startPos, endPos);
 }
 
 std::unique_ptr<Num> Num::create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos) {
@@ -66,10 +66,10 @@ std::unique_ptr<Num> Num::withForm(Builder &builder, llvm::Value *newForm, Sourc
     );
 }
 
-std::unique_ptr<Num> Num::withForm(Builder &builder, MaximCommon::FormType type, SourcePos startPos,
+std::unique_ptr<Num> Num::withForm(Builder &builder, MaximCommon::FormType form, SourcePos startPos,
                                    SourcePos endPos) const {
     return withForm(
-        builder, llvm::ConstantInt::get(_context->numFormType(), (uint64_t) type, false),
+        builder, llvm::ConstantInt::get(type()->formType(), (uint64_t) form, false),
         startPos, endPos
     );
 }
@@ -85,11 +85,15 @@ std::unique_ptr<Num> Num::withActive(Builder &builder, llvm::Value *newActive, S
 
 std::unique_ptr<Num> Num::withActive(Builder &builder, bool active, SourcePos startPos, SourcePos endPos) const {
     return withForm(
-        builder, llvm::ConstantInt::get(_context->numActiveType(), (uint64_t) active, false),
+        builder, llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false),
         startPos, endPos
     );
 }
 
 std::unique_ptr<Value> Num::withSource(SourcePos startPos, SourcePos endPos) const {
     return Num::create(_context, _get, startPos, endPos);
+}
+
+Type* Num::type() const {
+    return _context->numType();
 }

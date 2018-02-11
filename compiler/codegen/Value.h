@@ -4,6 +4,8 @@
 
 namespace MaximCodegen {
 
+    class Type;
+
     class Value {
     public:
         Value(SourcePos startPos, SourcePos endPos);
@@ -12,9 +14,9 @@ namespace MaximCodegen {
 
         virtual std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const = 0;
 
-        std::unique_ptr<Value> clone() const;
+        virtual Type *type() const = 0;
 
-        llvm::Type *type() const;
+        std::unique_ptr<Value> clone() const;
 
         SourcePos startPos;
         SourcePos endPos;

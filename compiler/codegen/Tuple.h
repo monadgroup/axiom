@@ -4,6 +4,8 @@
 #include <vector>
 
 #include "Value.h"
+#include "TupleType.h"
+#include "Builder.h"
 
 namespace llvm {
     class Value;
@@ -11,19 +13,34 @@ namespace llvm {
 
 namespace MaximCodegen {
 
-    class TupleType;
+    class MaximContext;
 
     class Tuple : public Value {
     public:
-        using Storage = std::vector<std::unique_ptr<Value>>;
+        using Storage = std::vector<Value*>;
 
-        Tuple(Storage values);
+        Tuple(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
 
-        static std::unique_ptr<Tuple> create(Storage values);
+        Tuple(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
-        Value *atIndex(size_t index) const;
+        static std::unique_ptr<Tuple> create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
 
-        TupleType *type();
+        static std::unique_ptr<Tuple> create(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
+
+        std::unique_ptr<Value> atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos) const;
+
+        llvm::Value *get() const override { return _get; }
+
+        std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
+
+        std::unique_ptr<Tuple> withIndex(size_t index, Value *val, Builder &builder, SourcePos startPos, SourcePos endPos) const override;
+
+        TupleType *type() const override { return _type; }
+
+    private:
+        TupleType *_type;
+        llvm::Value *_get;
+        MaximContext *_context;
     };
 
 }

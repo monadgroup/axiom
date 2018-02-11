@@ -4,6 +4,7 @@
 
 #include "Value.h"
 #include "Builder.h"
+#include "NumType.h"
 #include "../common/FormType.h"
 
 namespace llvm {
@@ -16,13 +17,13 @@ namespace MaximCodegen {
 
     class Num : public Value {
     public:
-        Num(MaximContext *context, float left, float right, MaximCommon::FormType type, bool active,
+        Num(MaximContext *context, float left, float right, MaximCommon::FormType form, bool active,
             SourcePos startPos, SourcePos endPos);
 
         Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Num>
-        create(MaximContext *context, float left, float right, MaximCommon::FormType type, bool active,
+        create(MaximContext *context, float left, float right, MaximCommon::FormType form, bool active,
                SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Num>
@@ -45,7 +46,7 @@ namespace MaximCodegen {
         withForm(Builder &builder, llvm::Value *newForm, SourcePos startPos, SourcePos endPos) const;
 
         std::unique_ptr<Num>
-        withForm(Builder &builder, MaximCommon::FormType type, SourcePos startPos, SourcePos endPos) const;
+        withForm(Builder &builder, MaximCommon::FormType form, SourcePos startPos, SourcePos endPos) const;
 
         std::unique_ptr<Num>
         withActive(Builder &builder, llvm::Value *newActive, SourcePos startPos, SourcePos endPos) const;
@@ -53,6 +54,8 @@ namespace MaximCodegen {
         std::unique_ptr<Num> withActive(Builder &builder, bool active, SourcePos startPos, SourcePos endPos) const;
 
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
+
+        NumType *type() const override;
 
     private:
         llvm::Value *_get;

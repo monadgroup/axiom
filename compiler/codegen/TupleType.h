@@ -1,23 +1,36 @@
 #pragma once
 
-namespace llvm {
-    class Type;
+#include <vector>
+#include <llvm/IR/DerivedTypes.h>
 
+#include "Type.h"
+
+namespace llvm {
     class StructType;
 }
 
 namespace MaximCodegen {
 
-    class TupleType {
+    class MaximContext;
+
+    class TupleType : public Type {
     public:
-        TupleType(std::vector<llvm::Type *> types);
+        TupleType(MaximContext *context, std::vector<Type*> types, llvm::StructType *type);
 
-        llvm::StructType *type() const;
+        llvm::StructType *get() const override { return _type; }
 
-        std::vector<llvm::Type *> const &types() const;
+        std::vector<Type*> const &types() const { return _types; }
+
+        std::string name() const override { return "tuple"; }
+
+        std::unique_ptr<Value> createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) override;
 
     private:
-        std::vector<llvm::Type *> _types;
+        MaximContext *_context;
+
+        llvm::StructType *_type;
+
+        std::vector<Type*> _types;
     };
 
 }

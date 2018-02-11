@@ -1,10 +1,14 @@
 #pragma once
 
 #include <llvm/IR/LLVMContext.h>
+#include <unordered_map>
 
 #include "../common/FormType.h"
 #include "../common/OperatorType.h"
-#include "ValueType.h"
+#include "../SourcePos.h"
+#include "CodegenError.h"
+#include "NumType.h"
+#include "MidiType.h"
 
 namespace llvm {
     class Type;
@@ -28,6 +32,12 @@ namespace MaximCodegen {
 
     class Tuple;
 
+    class NumType;
+
+    class MidiType;
+
+    class TupleType;
+
     class Operator;
 
     class Function;
@@ -40,29 +50,11 @@ namespace MaximCodegen {
 
         llvm::LLVMContext &llvm() { return _llvm; }
 
-        llvm::VectorType *numVecType() const { return _numVecType; }
+        NumType *numType() const { return &_numType; }
 
-        llvm::Type *numFormType() const { return _numFormType; }
+        MidiType *midiType() const { return &_midiType; }
 
-        llvm::Type *numActiveType() const { return _numActiveType; }
-
-        llvm::StructType *numType() const { return _numType; }
-
-        llvm::Type *midiEventType() const { return _midiEventType; }
-
-        llvm::Type *midiChannelType() const { return _midiChannelType; }
-
-        llvm::Type *midiNoteType() const { return _midiNoteType; }
-
-        llvm::Type *midiParamType() const { return _midiParamType; }
-
-        llvm::StructType *midiType() const { return _midiType; }
-
-        llvm::Type *getType(ValueType type) const;
-
-        void assertType(Value *val, ValueType type) const;
-
-        std::unique_ptr<Value> createType(llvm::Value *val, ValueType type) const;
+        void assertType(Value *val, Type *type) const;
 
         std::unique_ptr<Num> assertNum(std::unique_ptr<Value> val) const;
 
@@ -72,13 +64,21 @@ namespace MaximCodegen {
 
         Midi *assertMidi(Value *val) const;
 
-        std::unique_ptr<Tuple> assertTuple(std::unique_ptr<Value> val) const;
+        std::unique_ptr<Tuple> assertTuple(std::unique_ptr<Value> val, TupleType *type) const;
 
-        Tuple *assertTuple(Value *val) const;
+        Tuple *assertTuple(Value *val, TupleType *type) const;
+
+        TupleType *getTupleType(const std::vector<Type*> &types);
 
         llvm::Constant *constFloat(float num) const;
 
-        llvm::Constant *constInt(size_t numBits, int64_t val, bool isSigned) const;
+        llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned) const;
+
+        void registerOperator(MaximCommon::OperatorType type, std::unique_ptr<Operator> op);
+
+        void registerFunction(std::string name, std::unique_ptr<Function> func);
+
+        void registerConverter(MaximCommon::FormType destType, std::unique_ptr<Converter> con);
 
         Operator *getOperator(MaximCommon::OperatorType type, llvm::Type *leftType, llvm::Type *rightType);
 
@@ -96,16 +96,12 @@ namespace MaximCodegen {
     private:
         llvm::LLVMContext _llvm;
 
-        llvm::VectorType *_numVecType;
-        llvm::Type *_numFormType;
-        llvm::Type *_numActiveType;
-        llvm::StructType *_numType;
+        NumType _numType;
+        MidiType _midiType;
 
-        llvm::Type *_midiEventType;
-        llvm::Type *_midiChannelType;
-        llvm::Type *_midiNoteType;
-        llvm::Type *_midiParamType;
-        llvm::StructType *_midiType;
+        std::unordered_map<llvm::StructType*, TupleType> tupleTypeMap;
+
+        CodegenError typeAssertFailed(Type *expectedType, Type *receivedType, SourcePos startPos, SourcePos endPos) const;
     };
 
 }
