@@ -61,7 +61,7 @@ namespace MaximCodegen {
 
         std::vector<Parameter> const &parameters() const { return _parameters; }
 
-        bool acceptsParameters(const std::vector<Type*> &types);
+        bool acceptsParameters(const std::vector<Type *> &types);
 
         std::unique_ptr<Value>
         call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);
@@ -71,8 +71,9 @@ namespace MaximCodegen {
         generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
                  llvm::Value *context) = 0;
 
-        virtual std::unique_ptr<Value> generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                                                     llvm::Value *context);
+        virtual std::unique_ptr<Value>
+        generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
+                      llvm::Value *context);
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
 
@@ -117,8 +118,11 @@ namespace MaximCodegen {
         Parameter *getParameter(size_t index);
 
         bool validateCount(size_t passedCount, bool requireOptional);
-        bool validateTypes(const std::vector<Type*> &types);
-        void validateAndThrow(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional, bool requireConst, SourcePos startPos, SourcePos endPos);
+
+        bool validateTypes(const std::vector<Type *> &types);
+
+        void validateAndThrow(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional, bool requireConst,
+                              SourcePos startPos, SourcePos endPos);
 
         std::unique_ptr<Value>
         callConst(Node *node, std::vector<std::unique_ptr<Value>> args, std::vector<std::unique_ptr<Value>> varargs);

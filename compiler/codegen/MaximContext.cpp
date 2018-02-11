@@ -1,6 +1,5 @@
 #include "MaximContext.h"
 
-#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Constants.h>
 
 #include "Num.h"
@@ -28,8 +27,8 @@ std::unique_ptr<Num> MaximContext::assertNum(std::unique_ptr<Value> val) const {
     return std::unique_ptr<Num>(res);
 }
 
-Num* MaximContext::assertNum(Value *val) const {
-    if (auto res = dynamic_cast<Num*>(val)) return res;
+Num *MaximContext::assertNum(Value *val) const {
+    if (auto res = dynamic_cast<Num *>(val)) return res;
     throw typeAssertFailed(numType(), val->type(), val->startPos, val->endPos);
 }
 
@@ -39,8 +38,8 @@ std::unique_ptr<Midi> MaximContext::assertMidi(std::unique_ptr<Value> val) const
     return std::unique_ptr<Midi>(res);
 }
 
-Midi* MaximContext::assertMidi(Value *val) const {
-    if (auto res = dynamic_cast<Midi*>(val)) return res;
+Midi *MaximContext::assertMidi(Value *val) const {
+    if (auto res = dynamic_cast<Midi *>(val)) return res;
     throw typeAssertFailed(midiType(), val->type(), val->startPos, val->endPos);
 }
 
@@ -50,7 +49,7 @@ std::unique_ptr<Tuple> MaximContext::assertTuple(std::unique_ptr<Value> val, Tup
     return std::unique_ptr<Tuple>(res);
 }
 
-Tuple* MaximContext::assertTuple(Value *val, TupleType *type) const {
+Tuple *MaximContext::assertTuple(Value *val, TupleType *type) const {
     if (val->type() == type) {
         if (auto res = dynamic_cast<Tuple *>(val)) {
             return res;
@@ -59,7 +58,7 @@ Tuple* MaximContext::assertTuple(Value *val, TupleType *type) const {
     throw typeAssertFailed(type, val->type(), val->startPos, val->endPos);
 }
 
-TupleType* MaximContext::getTupleType(const std::vector<Type *> &types) {
+TupleType *MaximContext::getTupleType(const std::vector<Type *> &types) {
     std::vector<llvm::Type *> llTypes;
     llTypes.reserve(types.size());
     for (const auto &type : types) {
@@ -75,16 +74,16 @@ TupleType* MaximContext::getTupleType(const std::vector<Type *> &types) {
     }
 }
 
-llvm::Constant* MaximContext::constFloat(float num) const {
+llvm::Constant *MaximContext::constFloat(float num) const {
     return llvm::ConstantFP::get(llvm::Type::getFloatTy(_llvm), num);
 }
 
-llvm::Constant* MaximContext::constInt(unsigned int numBits, uint64_t val, bool isSigned) const {
+llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool isSigned) const {
     return llvm::ConstantInt::get(llvm::Type::getIntNTy(_llvm, numBits), val, isSigned);
 }
 
 void MaximContext::registerOperator(MaximCommon::OperatorType type, std::unique_ptr<Operator> op) {
-    OperatorKey key = { type, op->leftType(), op->rightType() };
+    OperatorKey key = {type, op->leftType(), op->rightType()};
     operatorMap.emplace(key, std::move(op));
 }
 
@@ -96,8 +95,8 @@ void MaximContext::registerConverter(MaximCommon::FormType destType, std::unique
     converterMap.emplace(destType, std::move(con));
 }
 
-Operator* MaximContext::getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType) {
-    OperatorKey key = { type, leftType, rightType };
+Operator *MaximContext::getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType) {
+    OperatorKey key = {type, leftType, rightType};
     auto op = operatorMap.find(key);
     if (op == operatorMap.end()) return nullptr;
     return op->second.get();
@@ -106,8 +105,8 @@ Operator* MaximContext::getOperator(MaximCommon::OperatorType type, Type *leftTy
 std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal,
                                                   std::unique_ptr<Value> rightVal, Builder &b, SourcePos startPos,
                                                   SourcePos endPos) {
-    auto leftTuple = dynamic_cast<Tuple*>(leftVal.get());
-    auto rightTuple = dynamic_cast<Tuple*>(rightVal.get());
+    auto leftTuple = dynamic_cast<Tuple *>(leftVal.get());
+    auto rightTuple = dynamic_cast<Tuple *>(rightVal.get());
 
     if (leftTuple && rightTuple) {
         // if both sides are tuples, operate piece-wise
@@ -118,7 +117,8 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
 
         if (leftSize != rightSize) {
             throw CodegenError(
-                "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to " + MaximCommon::operatorType2Verb(type) + " " + std::to_string(leftSize) + " values to " + std::to_string(rightSize) + " ones!",
+                "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to " + MaximCommon::operatorType2Verb(type) + " " +
+                std::to_string(leftSize) + " values to " + std::to_string(rightSize) + " ones!",
                 startPos, endPos
             );
         }
@@ -162,7 +162,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
     }
 }
 
-Function* MaximContext::getFunction(std::string name, std::vector<Type *> types) {
+Function *MaximContext::getFunction(std::string name, std::vector<Type *> types) {
     auto pos = functionMap.find(name);
     if (pos == functionMap.end() || pos->second.empty()) return nullptr;
 
@@ -175,8 +175,10 @@ Function* MaximContext::getFunction(std::string name, std::vector<Type *> types)
     return pos->second[0].get();
 }
 
-std::unique_ptr<Value> MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, Node *node, SourcePos startPos, SourcePos endPos) {
-    std::vector<Type*> types;
+std::unique_ptr<Value>
+MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, Node *node,
+                           SourcePos startPos, SourcePos endPos) {
+    std::vector<Type *> types;
     types.reserve(values.size());
     for (const auto &val : values) {
         types.push_back(val->type());
@@ -189,7 +191,7 @@ std::unique_ptr<Value> MaximContext::callFunction(const std::string &name, std::
     return func->call(node, std::move(values), startPos, endPos);
 }
 
-Converter* MaximContext::getConverter(MaximCommon::FormType destType) {
+Converter *MaximContext::getConverter(MaximCommon::FormType destType) {
     auto pos = converterMap.find(destType);
     if (pos == converterMap.end()) return nullptr;
     return pos->second.get();
@@ -202,7 +204,7 @@ std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType,
     return con->call(std::move(value));
 }
 
-std::vector<std::unique_ptr<Function>>& MaximContext::getOrCreateFunctionList(std::string name) {
+std::vector<std::unique_ptr<Function>> &MaximContext::getOrCreateFunctionList(std::string name) {
     auto pos = functionMap.find(name);
     if (pos == functionMap.end()) {
         return functionMap.emplace(name).first->second;
@@ -213,10 +215,14 @@ std::vector<std::unique_ptr<Function>>& MaximContext::getOrCreateFunctionList(st
 
 CodegenError MaximContext::typeAssertFailed(Type *expectedType, Type *receivedType, SourcePos startPos,
                                             SourcePos endPos) const {
-    return CodegenError("Oyyyy m80, I need a " + expectedType->name() + " here, not this bad boi " + receivedType->name(), startPos, endPos);
+    return CodegenError(
+        "Oyyyy m80, I need a " + expectedType->name() + " here, not this bad boi " + receivedType->name(), startPos,
+        endPos);
 }
 
-Operator* MaximContext::alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType, SourcePos startPos, SourcePos endPos) {
+Operator *
+MaximContext::alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType, SourcePos startPos,
+                                SourcePos endPos) {
     auto op = getOperator(type, leftType, rightType);
     if (!op) {
         throw CodegenError("WHAT IS THIS?\?!?! This operator doesn't work on these types of values.", startPos, endPos);

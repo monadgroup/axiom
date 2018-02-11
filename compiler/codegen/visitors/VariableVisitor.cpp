@@ -3,7 +3,6 @@
 #include "../../ast/VariableExpression.h"
 #include "../Node.h"
 #include "../MaximContext.h"
-#include "../CodegenError.h"
 #include "../Value.h"
 
 using namespace MaximCodegen;

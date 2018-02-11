@@ -18,9 +18,12 @@ namespace MaximCodegen {
 
         Midi(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
-        static std::unique_ptr<Midi> create(MaximContext *context, MaximCommon::MidiEventType event, uint8_t channel, uint8_t note, uint8_t param, SourcePos startPos, SourcePos endPos);
+        static std::unique_ptr<Midi>
+        create(MaximContext *context, MaximCommon::MidiEventType event, uint8_t channel, uint8_t note, uint8_t param,
+               SourcePos startPos, SourcePos endPos);
 
-        static std::unique_ptr<Midi> create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
+        static std::unique_ptr<Midi>
+        create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         llvm::Value *get() const override { return _get; }
 

@@ -8,7 +8,6 @@
 
 #include "MaximContext.h"
 #include "FunctionCall.h"
-#include "CodegenError.h"
 #include "Value.h"
 #include "Node.h"
 
@@ -145,7 +144,7 @@ bool Function::validateCount(size_t passedCount, bool requireOptional) {
            passedCount >= (requireOptional ? _allArguments : _minArguments);
 }
 
-bool Function::validateTypes(const std::vector<Type*> &types) {
+bool Function::validateTypes(const std::vector<Type *> &types) {
     for (size_t i = 0; i < types.size(); i++) {
         auto param = getParameter(i);
         if (param->type != types[i]) return false;

@@ -15,11 +15,11 @@ namespace MaximCodegen {
 
     class TupleType : public Type {
     public:
-        TupleType(MaximContext *context, std::vector<Type*> types, llvm::StructType *type);
+        TupleType(MaximContext *context, std::vector<Type *> types, llvm::StructType *type);
 
         llvm::StructType *get() const override { return _type; }
 
-        std::vector<Type*> const &types() const { return _types; }
+        std::vector<Type *> const &types() const { return _types; }
 
         std::string name() const override { return "tuple"; }
 
@@ -30,7 +30,7 @@ namespace MaximCodegen {
 
         llvm::StructType *_type;
 
-        std::vector<Type*> _types;
+        std::vector<Type *> _types;
     };
 
 }

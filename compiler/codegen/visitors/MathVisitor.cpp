@@ -12,6 +12,6 @@ std::unique_ptr<Value> MaximCodegen::visitMath(Node *node, MaximAst::MathExpress
         expr->type,
         visitExpression(node, expr->left.get()),
         visitExpression(node, expr->right.get()),
-        expr->startPos, expr->endPos
+        node->builder(), expr->startPos, expr->endPos
     );
 }

@@ -5,8 +5,6 @@
 #include "../MaximContext.h"
 #include "../Operator.h"
 #include "../Tuple.h"
-#include "../TupleType.h"
-#include "../CodegenError.h"
 #include "ExpressionVisitor.h"
 
 using namespace MaximCodegen;
@@ -19,7 +17,7 @@ std::unique_ptr<Value> MaximCodegen::visitAssign(Node *node, MaximAst::AssignExp
             expr->type,
             visitExpression(node, expr->left.get()),
             visitExpression(node, expr->right.get()),
-            expr->startPos, expr->endPos
+            node->builder(), expr->startPos, expr->endPos
         );
     }
 

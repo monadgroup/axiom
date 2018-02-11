@@ -94,6 +94,6 @@ std::unique_ptr<Value> Num::withSource(SourcePos startPos, SourcePos endPos) con
     return Num::create(_context, _get, startPos, endPos);
 }
 
-Type* Num::type() const {
+Type *Num::type() const {
     return _context->numType();
 }

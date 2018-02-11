@@ -71,7 +71,7 @@ namespace MaximCodegen {
 
         Tuple *assertTuple(Value *val, TupleType *type) const;
 
-        TupleType *getTupleType(const std::vector<Type*> &types);
+        TupleType *getTupleType(const std::vector<Type *> &types);
 
         llvm::Constant *constFloat(float num) const;
 
@@ -86,11 +86,14 @@ namespace MaximCodegen {
         Operator *getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType);
 
         std::unique_ptr<Value>
-        callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal, std::unique_ptr<Value> rightVal, Builder &b, SourcePos startPos, SourcePos endPos);
+        callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal, std::unique_ptr<Value> rightVal,
+                     Builder &b, SourcePos startPos, SourcePos endPos);
 
         Function *getFunction(std::string name, std::vector<Type *> types);
 
-        std::unique_ptr<Value> callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, Node *node, SourcePos startPos, SourcePos endPos);
+        std::unique_ptr<Value>
+        callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, Node *node,
+                     SourcePos startPos, SourcePos endPos);
 
         Converter *getConverter(MaximCommon::FormType destType);
 
@@ -108,16 +111,18 @@ namespace MaximCodegen {
             Type *rightType;
         };
 
-        std::unordered_map<llvm::StructType*, TupleType> tupleTypeMap;
+        std::unordered_map<llvm::StructType *, TupleType> tupleTypeMap;
         std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
         std::unordered_map<std::string, std::vector<std::unique_ptr<Function>>> functionMap;
         std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> converterMap;
 
         std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);
 
-        CodegenError typeAssertFailed(Type *expectedType, Type *receivedType, SourcePos startPos, SourcePos endPos) const;
+        CodegenError
+        typeAssertFailed(Type *expectedType, Type *receivedType, SourcePos startPos, SourcePos endPos) const;
 
-        Operator *alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType, SourcePos startPos, SourcePos endPos);
+        Operator *alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType, SourcePos startPos,
+                                    SourcePos endPos);
     };
 
 }

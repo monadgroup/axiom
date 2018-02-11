@@ -23,9 +23,11 @@ namespace MaximCodegen {
 
         Tuple(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
-        static std::unique_ptr<Tuple> create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
+        static std::unique_ptr<Tuple>
+        create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
 
-        static std::unique_ptr<Tuple> create(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
+        static std::unique_ptr<Tuple>
+        create(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         std::unique_ptr<Value> atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos) const;
 
@@ -33,7 +35,8 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
 
-        std::unique_ptr<Tuple> withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, SourcePos startPos, SourcePos endPos) const override;
+        std::unique_ptr<Tuple> withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, SourcePos startPos,
+                                         SourcePos endPos) const override;
 
         TupleType *type() const override { return _type; }
 

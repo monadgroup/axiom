@@ -29,22 +29,22 @@ std::unique_ptr<Midi> Midi::create(MaximContext *context, llvm::Value *get, Sour
     return std::make_unique<Midi>(context, get, startPos, endPos);
 }
 
-llvm::Value* Midi::event(Builder &builder) const {
+llvm::Value *Midi::event(Builder &builder) const {
     return builder.CreateExtractValue(_get, {0}, "midi.event");
 }
 
-llvm::Value* Midi::channel(Builder &builder) const {
+llvm::Value *Midi::channel(Builder &builder) const {
     return builder.CreateExtractValue(_get, {1}, "midi.channel");
 }
 
-llvm::Value* Midi::note(Builder &builder) const {
+llvm::Value *Midi::note(Builder &builder) const {
     return builder.CreateExtractValue(_get, {2}, "midi.note");
 }
 
-llvm::Value* Midi::param(Builder &builder) const {
+llvm::Value *Midi::param(Builder &builder) const {
     return builder.CreateExtractValue(_get, {3}, "midi.param");
 }
 
-MidiType* Midi::type() const {
+MidiType *Midi::type() const {
     return _context->midiType();
 }
