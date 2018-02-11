@@ -67,13 +67,17 @@ namespace MaximCodegen {
         call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);
 
     protected:
+        llvm::Module *module() const { return _module; }
+
+        MaximContext *context() const { return _context; }
+
         virtual std::unique_ptr<Value>
         generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                 llvm::Value *context) = 0;
+                 llvm::Value *funcContext) = 0;
 
         virtual std::unique_ptr<Value>
         generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                      llvm::Value *context);
+                      llvm::Value *funcContext);
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
 
@@ -110,6 +114,7 @@ namespace MaximCodegen {
         llvm::Type *_vaType;
         llvm::Type *_contextType;
         llvm::Function *_func;
+        llvm::Module *_module;
 
         size_t _allArguments;
         size_t _minArguments;

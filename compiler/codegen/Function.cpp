@@ -16,7 +16,7 @@ using namespace MaximCodegen;
 Function::Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
                    std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module)
     : _context(context), _returnType(returnType), _parameters(std::move(parameters)),
-      _vararg(std::move(vararg)), _contextType(contextType) {
+      _vararg(std::move(vararg)), _contextType(contextType), _module(module) {
 
     // calculate argument requirements
     _allArguments = _parameters.size() + (_vararg ? 1 : 0);
