@@ -46,7 +46,7 @@ std::unique_ptr<Value> Tuple::withSource(SourcePos startPos, SourcePos endPos) c
     return Tuple::create(_context, _type, _get, startPos, endPos);
 }
 
-std::unique_ptr<Tuple> Tuple::withIndex(size_t index, Value *val, Builder &builder, SourcePos startPos, SourcePos endPos) const {
+std::unique_ptr<Tuple> Tuple::withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, SourcePos startPos, SourcePos endPos) const {
     assert(index < _type->types().size());
     assert(_type->types()[index] == val->type());
 

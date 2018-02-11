@@ -17,7 +17,7 @@ namespace MaximCodegen {
 
     class Tuple : public Value {
     public:
-        using Storage = std::vector<Value*>;
+        using Storage = std::vector<std::unique_ptr<Value>>;
 
         Tuple(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
 
@@ -33,7 +33,7 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
 
-        std::unique_ptr<Tuple> withIndex(size_t index, Value *val, Builder &builder, SourcePos startPos, SourcePos endPos) const override;
+        std::unique_ptr<Tuple> withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, SourcePos startPos, SourcePos endPos) const override;
 
         TupleType *type() const override { return _type; }
 

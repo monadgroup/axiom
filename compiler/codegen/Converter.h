@@ -1,4 +1,10 @@
-#ifndef AXIOM_COMPILER_CONVERTER_H
-#define AXIOM_COMPILER_CONVERTER_H
+#pragma once
 
-#endif //AXIOM_COMPILER_CONVERTER_H
+namespace MaximCodegen {
+
+    class Converter {
+    public:
+        std::unique_ptr<Num> call(std::unique_ptr<Num> value);
+    };
+
+}

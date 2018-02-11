@@ -85,13 +85,17 @@ Function::Function(MaximContext *context, std::string name, Type *returnType, st
     builder.CreateRet(res->get());
 }
 
+bool Function::acceptsParameters(const std::vector<llvm::Type *> &types) {
+    return validateCount(types.size(), false) && validateTypes(types);
+}
+
 std::unique_ptr<Value>
-Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, Builder &b, SourcePos startPos,
+Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos,
                SourcePos endPos) {
     // validate and map arguments - first validation can do without optional values, second can't
-    validateArgs(values, false, startPos, endPos);
+    validateAndThrow(values, false, true, startPos, endPos);
     auto mappedArgs = mapArguments(std::move(values));
-    validateArgs(mappedArgs, true, startPos, endPos);
+    validateAndThrow(mappedArgs, true, true, startPos, endPos);
 
     // figure out if we can constant-fold this function
     auto computeConst = isPure();
@@ -114,7 +118,7 @@ Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, Builder &
 
     // either call inline with constant folding, or generate call
     if (computeConst) return callConst(node, std::move(args), std::move(varargs));
-    else return callNonConst(node, std::move(mappedArgs), std::move(args), std::move(varargs), b, startPos, endPos);
+    else return callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos);
 }
 
 std::unique_ptr<Value> Function::generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params,
@@ -127,7 +131,7 @@ std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::uniq
 }
 
 std::unique_ptr<FunctionCall> Function::generateCall(std::vector<std::unique_ptr<Value>> args) {
-    return std::make_unique<FunctionCall>(this, std::move(args));
+    assert(false);
 }
 
 Parameter *Function::getParameter(size_t index) {
@@ -136,23 +140,42 @@ Parameter *Function::getParameter(size_t index) {
     return _vararg.get();
 }
 
-void Function::validateArgs(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional,
-                            SourcePos startPos, SourcePos endPos) {
-    // ensure correct number of arguments are provided
-    if (args.size() < (requireOptional ? _allArguments : _minArguments)) {
-        throw CodegenError("Eyy! I need more arguments than that my dude.", startPos, endPos);
-    }
-    if (args.size() > _maxArguments && _maxArguments >= 0) {
-        throw CodegenError("Eyy! I need less arguments than that my dude.", startPos, endPos);
-    }
+bool Function::validateCount(size_t passedCount, bool requireOptional) {
+    return (passedCount <= _maxArguments || _maxArguments < 0) &&
+           passedCount >= (requireOptional ? _allArguments : _minArguments);
+}
 
-    // verify types/const requirements on each argument
+bool Function::validateTypes(const std::vector<Type*> &types) {
+    for (size_t i = 0; i < types.size(); i++) {
+        auto param = getParameter(i);
+        if (param->type != types[i]) return false;
+    }
+    return true;
+}
+
+bool Function::validateArgs(const std::vector<std::unique_ptr<Value>> &args, bool requireConst) {
     for (size_t i = 0; i < args.size(); i++) {
         auto providedArg = args[i].get();
         auto param = getParameter(i);
-        _context->assertType(providedArg, param->type);
 
-        if (param->requireConst && !llvm::isa<llvm::Constant>(providedArg->get())) {
+        if (providedArg->type() != param->type) return false;
+        if (requireConst && param->requireConst && !llvm::isa<llvm::Constant>(providedArg->get())) return false;
+    }
+    return true;
+}
+
+void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional,
+                                bool requireConst, SourcePos startPos, SourcePos endPos) {
+    if (!validateCount(args.size(), requireOptional)) {
+        throw CodegenError("Eyy! That's the wrong number of arguments my dude.", startPos, endPos);
+    }
+
+    for (size_t i = 0; i < args.size(); i++) {
+        auto providedArg = args[i].get();
+        auto param = getParameter(i);
+
+        _context->assertType(providedArg, param->type);
+        if (requireConst && param->requireConst && !llvm::isa<llvm::Constant>(providedArg->get())) {
             throw CodegenError(
                 "I constantly insist that constant values must be passed into constant parameters, and yet they constantly aren't constant.",
                 providedArg->startPos, providedArg->endPos
@@ -176,7 +199,7 @@ std::unique_ptr<Value> Function::callConst(Node *node, std::vector<std::unique_p
 std::unique_ptr<Value> Function::callNonConst(Node *node,
                                               std::vector<std::unique_ptr<Value>> allArgs,
                                               std::vector<std::unique_ptr<Value>> args,
-                                              const std::vector<std::unique_ptr<Value>> &varargs, Builder &b,
+                                              const std::vector<std::unique_ptr<Value>> &varargs,
                                               SourcePos startPos, SourcePos endPos) {
     std::vector<llvm::Value *> values;
     values.reserve(args.size());
@@ -189,18 +212,18 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
         assert(!varargs.empty());
         auto vaType = _vararg->type->get();
         auto countVal = _context->constInt(8, varargs.size(), false);
-        auto vaStruct = b.CreateInsertValue(
+        auto vaStruct = node->builder().CreateInsertValue(
             llvm::UndefValue::get(_vaType),
             countVal, {0}, "va.withsize"
         );
-        auto vaArray = b.CreateAlloca(vaType, countVal, "va.arr");
+        auto vaArray = node->builder().CreateAlloca(vaType, countVal, "va.arr");
         for (size_t i = 0; i < varargs.size(); i++) {
-            auto storePos = b.CreateGEP(vaType, vaArray, {
+            auto storePos = node->builder().CreateGEP(vaType, vaArray, {
                 _context->constInt(32, i, false)
             }, "va.arr.itemptr");
-            b.CreateStore(varargs[i]->get(), storePos);
+            node->builder().CreateStore(varargs[i]->get(), storePos);
         }
-        values.push_back(b.CreateInsertValue(vaStruct, vaArray, {1}, "va"));
+        values.push_back(node->builder().CreateInsertValue(vaStruct, vaArray, {1}, "va"));
     }
 
     // create context in the parent node
@@ -211,7 +234,7 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
         values.push_back(contextPtr);
     }
 
-    auto result = b.CreateCall(_func, values, "result");
+    auto result = node->builder().CreateCall(_func, values, "result");
     return _returnType->createInstance(result, startPos, endPos);
 }
 

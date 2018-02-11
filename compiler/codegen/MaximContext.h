@@ -9,6 +9,7 @@
 #include "CodegenError.h"
 #include "NumType.h"
 #include "MidiType.h"
+#include "Builder.h"
 
 namespace llvm {
     class Type;
@@ -43,6 +44,8 @@ namespace MaximCodegen {
     class Function;
 
     class Converter;
+
+    class Node;
 
     class MaximContext {
     public:
@@ -80,14 +83,14 @@ namespace MaximCodegen {
 
         void registerConverter(MaximCommon::FormType destType, std::unique_ptr<Converter> con);
 
-        Operator *getOperator(MaximCommon::OperatorType type, llvm::Type *leftType, llvm::Type *rightType);
+        Operator *getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType);
 
         std::unique_ptr<Value>
-        callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal, std::unique_ptr<Value> rightVal);
+        callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal, std::unique_ptr<Value> rightVal, Builder &b, SourcePos startPos, SourcePos endPos);
 
-        Function *getFunction(std::string name, llvm::ArrayRef<llvm::Type *> types);
+        Function *getFunction(std::string name, std::vector<Type *> types);
 
-        std::unique_ptr<Value> callFunction(std::string name, llvm::ArrayRef<std::unique_ptr<Value>> values);
+        std::unique_ptr<Value> callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, Node *node, SourcePos startPos, SourcePos endPos);
 
         Converter *getConverter(MaximCommon::FormType destType);
 
@@ -99,9 +102,22 @@ namespace MaximCodegen {
         NumType _numType;
         MidiType _midiType;
 
+        struct OperatorKey {
+            MaximCommon::OperatorType type;
+            Type *leftType;
+            Type *rightType;
+        };
+
         std::unordered_map<llvm::StructType*, TupleType> tupleTypeMap;
+        std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
+        std::unordered_map<std::string, std::vector<std::unique_ptr<Function>>> functionMap;
+        std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> converterMap;
+
+        std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);
 
         CodegenError typeAssertFailed(Type *expectedType, Type *receivedType, SourcePos startPos, SourcePos endPos) const;
+
+        Operator *alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType, SourcePos startPos, SourcePos endPos);
     };
 
 }

@@ -13,5 +13,5 @@ std::unique_ptr<Value> MaximCodegen::visitCall(Node *node, MaximAst::CallExpress
     for (const auto &subexpr : expr->arguments) {
         argVals.push_back(visitExpression(node, subexpr.get()));
     }
-    return node->ctx()->callFunction(expr->name, argVals);
+    return node->ctx()->callFunction(expr->name, argVals, node, expr->startPos, expr->endPos);
 }

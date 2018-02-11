@@ -9,9 +9,9 @@ namespace MaximCodegen {
     class FunctionCall : public Instantiable {
         FunctionCall(Function *func, std::vector<std::unique_ptr<Value>> args);
 
-        llvm::Constant *instantiate() override;
+        //llvm::Constant *instantiate() override;
 
-    private:
+    protected:
         Function *func;
         std::vector<std::unique_ptr<Value>> params;
     };

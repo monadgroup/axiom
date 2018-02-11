@@ -61,10 +61,10 @@ namespace MaximCodegen {
 
         std::vector<Parameter> const &parameters() const { return _parameters; }
 
-        bool acceptsParameters(const llvm::ArrayRef<llvm::Type*> &types);
+        bool acceptsParameters(const std::vector<Type*> &types);
 
         std::unique_ptr<Value>
-        call(Node *node, std::vector<std::unique_ptr<Value>> values, Builder &b, SourcePos startPos, SourcePos endPos);
+        call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);
 
     protected:
         virtual std::unique_ptr<Value>
@@ -116,15 +116,16 @@ namespace MaximCodegen {
 
         Parameter *getParameter(size_t index);
 
-        void validateArgs(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional,
-                          SourcePos startPos, SourcePos endPos);
+        bool validateCount(size_t passedCount, bool requireOptional);
+        bool validateTypes(const std::vector<Type*> &types);
+        void validateAndThrow(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional, bool requireConst, SourcePos startPos, SourcePos endPos);
 
         std::unique_ptr<Value>
         callConst(Node *node, std::vector<std::unique_ptr<Value>> args, std::vector<std::unique_ptr<Value>> varargs);
 
         std::unique_ptr<Value>
         callNonConst(Node *node, std::vector<std::unique_ptr<Value>> allArgs, std::vector<std::unique_ptr<Value>> args,
-                     const std::vector<std::unique_ptr<Value>> &varargs, Builder &b, SourcePos startPos, SourcePos endPos);
+                     const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos, SourcePos endPos);
     };
 
 }

@@ -18,7 +18,8 @@ std::unique_ptr<Value> MaximCodegen::visitAssign(Node *node, MaximAst::AssignExp
         rightVal = node->ctx()->callOperator(
             expr->type,
             visitExpression(node, expr->left.get()),
-            visitExpression(node, expr->right.get())
+            visitExpression(node, expr->right.get()),
+            expr->startPos, expr->endPos
         );
     }
 
@@ -37,9 +38,10 @@ std::unique_ptr<Value> MaximCodegen::visitAssign(Node *node, MaximAst::AssignExp
         }
 
         for (size_t i = 0; i < leftSize; i++) {
+            auto assignment = expr->left->assignments[i].get();
             node->setAssignable(
-                expr->left->assignments[i].get(),
-                rightTuple->atIndex(i)->clone()
+                assignment,
+                rightTuple->atIndex(i, node->builder(), assignment->startPos, assignment->endPos)->clone()
             );
         }
     } else {
