@@ -34,6 +34,8 @@ namespace MaximCodegen {
         bool optional;
 
         Parameter(Type *type, bool requireConst, bool optional);
+
+        static std::unique_ptr<Parameter> create(Type *type, bool requireConst, bool optional);
     };
 
     class VarArg {
@@ -70,6 +72,8 @@ namespace MaximCodegen {
 
     protected:
         llvm::Module *module() const { return _module; }
+
+        llvm::Function *func() const { return _func; }
 
         MaximContext *context() const { return _context; }
 

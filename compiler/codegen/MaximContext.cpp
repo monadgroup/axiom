@@ -11,6 +11,7 @@
 
 #include "functions/VectorIntrinsicFunction.h"
 #include "functions/ScalarExternalFunction.h"
+#include "functions/VectorIntrinsicFoldFunction.h"
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
 #include "operators/NumIntOperator.h"
@@ -219,16 +220,18 @@ void MaximContext::setupCoreModule(llvm::Module *module) {
     registerFunction(ScalarExternalFunction::create(this, "acosf", "acos", 1, true, module));
     registerFunction(ScalarExternalFunction::create(this, "asinf", "asin", 1, true, module));
     registerFunction(ScalarExternalFunction::create(this, "atanf", "atan", 1, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "atan2f", "atan2", 2, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "hypotf", "hypot", 2, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "atan2f", "atan2", 2, false, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log, "log", 1, true, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log2, "log2", 1, true, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log10, "log10", 1, true, module));
     registerFunction(ScalarExternalFunction::create(this, "logbf", "logb", 1, true, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sqrt, "sqrt", 1, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "hypotf", "hypot", 2, false, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::ceil, "ceil", 1, true, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::floor, "floor", 1, true, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::fabs, "abs", 1, true, module));
+    registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::minnum, "min", module));
+    registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::maxnum, "max", module));
 
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::ADD, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FAdd));
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::SUBTRACT, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FSub));
@@ -236,18 +239,15 @@ void MaximContext::setupCoreModule(llvm::Module *module) {
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::DIVIDE, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FDiv));
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MODULO, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FMul));
     registerOperator(NumIntrinsicOperator::create(this, module, MaximCommon::OperatorType::POWER, ActiveMode::FIRST_INPUT, llvm::Intrinsic::ID::pow));
-
     registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_AND, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::And, true));
     registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_OR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Or, true));
     registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_XOR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Xor, true));
-
     registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_EQUAL, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OEQ));
     registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_NOT_EQUAL, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_ONE));
     registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_GT, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OGT));
     registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LT, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OLT));
     registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_GTE, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OGE));
     registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LTE, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OLE));
-
     registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_AND, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::And));
     registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_OR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Or));
 }

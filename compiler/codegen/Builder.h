@@ -16,6 +16,8 @@ namespace MaximCodegen {
     public:
         Builder(llvm::BasicBlock *block);
 
+        void SetInsertPoint(llvm::BasicBlock *block);
+
         llvm::Value *CreateExtractValue(llvm::Value *agg, llvm::ArrayRef<unsigned> idxs, const llvm::Twine &name);
 
         llvm::Value *
@@ -48,6 +50,8 @@ namespace MaximCodegen {
 
         llvm::Value *CreateFCmp(llvm::CmpInst::Predicate p, llvm::Value *lhs, llvm::Value *rhs, const llvm::Twine &name);
 
+        llvm::Value *CreateICmp(llvm::CmpInst::Predicate p, llvm::Value *lhs, llvm::Value *rhs, const llvm::Twine &name);
+
         llvm::Value *CreateBinOp(llvm::Instruction::BinaryOps opc, llvm::Value *lhs, llvm::Value *rhs, const llvm::Twine &name);
 
         llvm::Value *CreateFPToSI(llvm::Value *val, llvm::Type *type, const llvm::Twine &name);
@@ -57,6 +61,10 @@ namespace MaximCodegen {
         llvm::Value *CreateSIToFP(llvm::Value *val, llvm::Type *type, const llvm::Twine &name);
 
         llvm::Value *CreateUIToFP(llvm::Value *val, llvm::Type *type, const llvm::Twine &name);
+
+        void CreateBr(llvm::BasicBlock *dest);
+
+        void CreateCondBr(llvm::Value *cond, llvm::BasicBlock *t, llvm::BasicBlock *f);
 
         void CreateRet(llvm::Value *v);
     };
