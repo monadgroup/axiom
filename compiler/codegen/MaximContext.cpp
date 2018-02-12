@@ -12,6 +12,9 @@
 #include "functions/VectorIntrinsicFunction.h"
 #include "functions/ScalarExternalFunction.h"
 #include "functions/VectorIntrinsicFoldFunction.h"
+#include "functions/ToRadFunction.h"
+#include "functions/ToDegFunction.h"
+
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
 #include "operators/NumIntOperator.h"
@@ -230,6 +233,10 @@ void MaximContext::setupCoreModule(llvm::Module *module) {
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::ceil, "ceil", 1, true, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::floor, "floor", 1, true, module));
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::fabs, "abs", 1, true, module));
+    registerFunction(ToRadFunction::create(this, module));
+    registerFunction(ToDegFunction::create(this, module));
+
+    // todo: add hot paths for when only two params are provided
     registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::minnum, "min", module));
     registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::maxnum, "max", module));
 

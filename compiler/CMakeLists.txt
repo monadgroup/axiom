@@ -14,7 +14,7 @@ set(SOURCE_FILES util.h
         parser/TokenStream.cpp parser/Token.cpp parser/Parser.cpp
         codegen/MaximContext.cpp codegen/Midi.cpp codegen/Num.cpp codegen/Tuple.cpp codegen/NumType.cpp codegen/MidiType.cpp codegen/TupleType.cpp codegen/Converter.cpp codegen/Function.cpp codegen/Operator.cpp
         codegen/visitors/AssignVisitor.cpp codegen/visitors/CallVisitor.cpp codegen/visitors/CastVisitor.cpp codegen/visitors/ControlVisitor.cpp codegen/visitors/ExpressionVisitor.cpp codegen/visitors/MathVisitor.cpp codegen/visitors/NoteVisitor.cpp codegen/visitors/NumberVisitor.cpp codegen/visitors/PostfixVisitor.cpp codegen/visitors/TupleVisitor.cpp codegen/visitors/UnaryVisitor.cpp codegen/visitors/VariableVisitor.cpp
-        codegen/functions/VectorIntrinsicFunction.cpp codegen/functions/ScalarExternalFunction.cpp codegen/functions/VectorIntrinsicFoldFunction.cpp
+        codegen/functions/VectorIntrinsicFunction.cpp codegen/functions/ScalarExternalFunction.cpp codegen/functions/VectorIntrinsicFoldFunction.cpp codegen/functions/ToRadFunction.cpp codegen/functions/ToDegFunction.cpp
         codegen/operators/NumOperator.cpp codegen/operators/NumFloatOperator.cpp codegen/operators/NumIntrinsicOperator.cpp codegen/operators/NumIntOperator.cpp codegen/operators/NumComparisonOperator.cpp codegen/operators/NumLogicalOperator.cpp
         ast/Expression.cpp)
 
