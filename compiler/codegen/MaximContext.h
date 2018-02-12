@@ -77,9 +77,9 @@ namespace MaximCodegen {
 
         llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned) const;
 
-        void registerOperator(MaximCommon::OperatorType type, std::unique_ptr<Operator> op);
+        void registerOperator(std::unique_ptr<Operator> op);
 
-        void registerFunction(std::string name, std::unique_ptr<Function> func);
+        void registerFunction(std::unique_ptr<Function> func);
 
         void registerConverter(MaximCommon::FormType destType, std::unique_ptr<Converter> con);
 
@@ -98,6 +98,8 @@ namespace MaximCodegen {
         Converter *getConverter(MaximCommon::FormType destType);
 
         std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value);
+
+        void setupCoreModule(llvm::Module *module);
 
     private:
         llvm::LLVMContext _llvm;

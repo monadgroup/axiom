@@ -13,9 +13,18 @@ VectorIntrinsicFunction::VectorIntrinsicFunction(MaximContext *context, llvm::In
 
 }
 
+std::unique_ptr<VectorIntrinsicFunction> VectorIntrinsicFunction::create(MaximContext *context, llvm::Intrinsic::ID id,
+                                                                         std::string name, size_t paramCount,
+                                                                         bool propagateForm, llvm::Module *module) {
+    return std::make_unique<VectorIntrinsicFunction>(context, id, name, paramCount, propagateForm, module);
+}
+
 std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                          std::unique_ptr<VarArg> vararg, llvm::Value *funcContext) {
     auto intrinsic = llvm::Intrinsic::getDeclaration(module(), id, {context()->numType()->get()});
+
+    llvm::Value *isActive = context()->constInt(1, 0, false);
+
     std::vector<llvm::Value*> llParams;
     llParams.reserve(params.size());
 
@@ -25,13 +34,14 @@ std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector
         assert(numParam);
         if (!firstParam) firstParam = numParam;
         llParams.push_back(numParam->vec(b));
+        isActive = b.CreateOr(isActive, numParam->active(b), "activecheck");
     }
     assert(firstParam);
 
     auto res = b.CreateCall(intrinsic, llParams, "intrinsic.result");
 
     SourcePos undefPos(-1, -1);
-    auto num = firstParam->withVec(b, res, undefPos, undefPos);
+    auto num = firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
     if (propagateForm) {
         return std::move(num);
     } else {

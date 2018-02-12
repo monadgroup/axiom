@@ -9,6 +9,14 @@
 #include "Operator.h"
 #include "Converter.h"
 
+#include "functions/VectorIntrinsicFunction.h"
+#include "functions/ScalarExternalFunction.h"
+#include "operators/NumFloatOperator.h"
+#include "operators/NumIntrinsicOperator.h"
+#include "operators/NumIntOperator.h"
+#include "operators/NumComparisonOperator.h"
+#include "operators/NumLogicalOperator.h"
+
 using namespace MaximCodegen;
 
 MaximContext::MaximContext() : _numType(this), _midiType(this) {
@@ -82,13 +90,13 @@ llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool 
     return llvm::ConstantInt::get(llvm::Type::getIntNTy(_llvm, numBits), val, isSigned);
 }
 
-void MaximContext::registerOperator(MaximCommon::OperatorType type, std::unique_ptr<Operator> op) {
-    OperatorKey key = {type, op->leftType(), op->rightType()};
+void MaximContext::registerOperator(std::unique_ptr<Operator> op) {
+    OperatorKey key = {op->type(), op->leftType(), op->rightType()};
     operatorMap.emplace(key, std::move(op));
 }
 
-void MaximContext::registerFunction(std::string name, std::unique_ptr<Function> func) {
-    getOrCreateFunctionList(std::move(name)).push_back(std::move(func));
+void MaximContext::registerFunction(std::unique_ptr<Function> func) {
+    getOrCreateFunctionList(func->name()).push_back(std::move(func));
 }
 
 void MaximContext::registerConverter(MaximCommon::FormType destType, std::unique_ptr<Converter> con) {
@@ -127,7 +135,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
             auto leftTupleVal = leftTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto rightTupleVal = rightTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftTupleVal->type(), rightTupleVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(std::move(leftTupleVal), std::move(rightTuple)));
+            resultVals.push_back(op->call(b, std::move(leftTupleVal), std::move(rightTuple)));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
@@ -139,7 +147,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
         for (size_t i = 0; i < leftSize; i++) {
             auto leftTupleVal = leftTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftTupleVal->type(), rightVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(std::move(leftTupleVal), rightVal->clone()));
+            resultVals.push_back(op->call(b, std::move(leftTupleVal), rightVal->clone()));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
@@ -151,14 +159,14 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
         for (size_t i = 0; i < rightSize; i++) {
             auto rightTupleVal = rightTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftVal->type(), rightTupleVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(leftVal->clone(), std::move(rightTupleVal)));
+            resultVals.push_back(op->call(b, leftVal->clone(), std::move(rightTupleVal)));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
     } else {
         // if neither are tuples, operate normally
         auto op = alwaysGetOperator(type, leftVal->type(), rightVal->type(), startPos, endPos);
-        return op->call(std::move(leftVal), std::move(rightVal));
+        return op->call(b, std::move(leftVal), std::move(rightVal));
     }
 }
 
@@ -202,6 +210,46 @@ std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType,
     assert(con);
 
     return con->call(std::move(value));
+}
+
+void MaximContext::setupCoreModule(llvm::Module *module) {
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::cos, "cos", 1, true, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sin, "sin", 1, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "tanf", "tan", 1, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "acosf", "acos", 1, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "asinf", "asin", 1, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "atanf", "atan", 1, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "atan2f", "atan2", 2, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "hypotf", "hypot", 2, true, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log, "log", 1, true, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log2, "log2", 1, true, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log10, "log10", 1, true, module));
+    registerFunction(ScalarExternalFunction::create(this, "logbf", "logb", 1, true, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sqrt, "sqrt", 1, true, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::ceil, "ceil", 1, true, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::floor, "floor", 1, true, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::fabs, "abs", 1, true, module));
+
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::ADD, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FAdd));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::SUBTRACT, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FSub));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MULTIPLY, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FMul));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::DIVIDE, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FDiv));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MODULO, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FMul));
+    registerOperator(NumIntrinsicOperator::create(this, module, MaximCommon::OperatorType::POWER, ActiveMode::FIRST_INPUT, llvm::Intrinsic::ID::pow));
+
+    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_AND, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::And, true));
+    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_OR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Or, true));
+    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_XOR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Xor, true));
+
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_EQUAL, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OEQ));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_NOT_EQUAL, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_ONE));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_GT, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OGT));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LT, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OLT));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_GTE, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OGE));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LTE, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OLE));
+
+    registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_AND, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::And));
+    registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_OR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Or));
 }
 
 std::vector<std::unique_ptr<Function>> &MaximContext::getOrCreateFunctionList(std::string name) {
