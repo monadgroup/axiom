@@ -16,13 +16,15 @@ using namespace MaximCodegen;
 Function::Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
                    std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module, bool isPure)
     : _context(context), _returnType(returnType), _parameters(std::move(parameters)),
-      _vararg(std::move(vararg)), _contextType(contextType), _module(module), _name(name), _isPure(isPure) {
+      _vararg(std::move(vararg)), _contextType(contextType), _module(module), _name(std::move(name)), _isPure(isPure) {
 
     // calculate argument requirements
     _allArguments = _parameters.size() + (_vararg ? 1 : 0);
     _minArguments = _allArguments;
     _maxArguments = _vararg ? -1 : (int) _parameters.size();
+}
 
+void Function::generate() {
     std::vector<llvm::Type *> paramTypes;
     paramTypes.reserve(_allArguments);
 
@@ -37,8 +39,8 @@ Function::Function(MaximContext *context, std::string name, Type *returnType, st
 
     // build vararg and context parameters
     if (_vararg) {
-        _vaType = llvm::StructType::get(context->llvm(), {
-            llvm::Type::getInt8Ty(context->llvm()),
+        _vaType = llvm::StructType::get(context()->llvm(), {
+            llvm::Type::getInt8Ty(context()->llvm()),
             llvm::PointerType::get(_vararg->type->get(), 0)
         });
         vaIndex = paramTypes.size();
@@ -51,7 +53,7 @@ Function::Function(MaximContext *context, std::string name, Type *returnType, st
 
     // mangle name
     std::stringstream mangledName;
-    mangledName << "maxim." << name;
+    mangledName << "maxim." << _name;
     for (const auto &param : _parameters) {
         mangledName << "." << param.type->name();
     }
@@ -61,7 +63,7 @@ Function::Function(MaximContext *context, std::string name, Type *returnType, st
 
     // create LLVM function
     auto funcType = llvm::FunctionType::get(_returnType->get(), paramTypes, false);
-    _func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mangledName.str(), module);
+    _func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mangledName.str(), _module);
 
     // prettify arguments to pass into generate method
     std::vector<std::unique_ptr<Value>> genArgs;
@@ -80,12 +82,8 @@ Function::Function(MaximContext *context, std::string name, Type *returnType, st
 
     auto funcBlock = llvm::BasicBlock::Create(_context->llvm(), "entry", _func);
     Builder builder(funcBlock);
-    auto res = generate(builder, genArgs, std::move(genVarArg), genContext);
+    auto res = generate(builder, std::move(genArgs), std::move(genVarArg), genContext);
     builder.CreateRet(res->get());
-}
-
-bool Function::acceptsParameters(const std::vector<llvm::Type *> &types) {
-    return validateCount(types.size(), false) && validateTypes(types);
 }
 
 std::unique_ptr<Value>
@@ -133,7 +131,7 @@ std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::uniq
 }
 
 std::unique_ptr<FunctionCall> Function::generateCall(std::vector<std::unique_ptr<Value>> args) {
-    assert(false);
+    assert(false); throw;
 }
 
 Parameter *Function::getParameter(size_t index) {
@@ -143,7 +141,7 @@ Parameter *Function::getParameter(size_t index) {
 }
 
 bool Function::validateCount(size_t passedCount, bool requireOptional) {
-    return (passedCount <= _maxArguments || _maxArguments < 0) &&
+    return ((int) passedCount <= _maxArguments || _maxArguments < 0) &&
            passedCount >= (requireOptional ? _allArguments : _minArguments);
 }
 
@@ -151,17 +149,6 @@ bool Function::validateTypes(const std::vector<Type *> &types) {
     for (size_t i = 0; i < types.size(); i++) {
         auto param = getParameter(i);
         if (param->type != types[i]) return false;
-    }
-    return true;
-}
-
-bool Function::validateArgs(const std::vector<std::unique_ptr<Value>> &args, bool requireConst) {
-    for (size_t i = 0; i < args.size(); i++) {
-        auto providedArg = args[i].get();
-        auto param = getParameter(i);
-
-        if (providedArg->type() != param->type) return false;
-        if (requireConst && param->requireConst && !llvm::isa<llvm::Constant>(providedArg->get())) return false;
     }
     return true;
 }
@@ -231,12 +218,12 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
     // create context in the parent node
     if (_contextType) {
         auto inst = generateCall(std::move(allArgs));
-        auto contextPtr = node->addInstantiable(std::move(inst));
+        auto contextPtr = node->addInstantiable(std::move(inst), node->builder());
         assert(contextPtr->getType()->isPointerTy() && contextPtr->getType()->getPointerElementType() == _contextType);
         values.push_back(contextPtr);
     }
 
-    auto result = node->builder().CreateCall(_func, values, "result");
+    auto result = CreateCall(node->builder(), _func, values, "result");
     return _returnType->createInstance(result, startPos, endPos);
 }
 

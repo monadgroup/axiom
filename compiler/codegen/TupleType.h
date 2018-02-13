@@ -26,11 +26,11 @@ namespace MaximCodegen {
         std::unique_ptr<Value> createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) override;
 
     private:
-        MaximContext *_context;
+        std::vector<Type *> _types;
 
         llvm::StructType *_type;
 
-        std::vector<Type *> _types;
+        MaximContext *_context;
     };
 
 }

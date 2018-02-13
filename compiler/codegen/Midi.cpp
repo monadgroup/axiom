@@ -45,6 +45,10 @@ llvm::Value *Midi::param(Builder &builder) const {
     return builder.CreateExtractValue(_get, {3}, "midi.param");
 }
 
+std::unique_ptr<Value> Midi::withSource(SourcePos startPos, SourcePos endPos) const {
+    return Midi::create(_context, _get, startPos, endPos);
+}
+
 MidiType *Midi::type() const {
     return _context->midiType();
 }

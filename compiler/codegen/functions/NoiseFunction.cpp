@@ -38,8 +38,8 @@ std::unique_ptr<Value> NoiseFunction::generate(Builder &b, std::vector<std::uniq
 
     auto magnitude = b.CreateBinOp(llvm::Instruction::BinaryOps::FSub, maxVec, minVec, "magnitude");
 
-    auto leftRand = b.CreateCall(randFunc, {}, "rand.left");
-    auto rightRand = b.CreateCall(randFunc, {}, "rand.right");
+    auto leftRand = CreateCall(b, randFunc, {}, "rand.left");
+    auto rightRand = CreateCall(b, randFunc, {}, "rand.right");
     auto randVec = b.CreateInsertElement(llvm::UndefValue::get(llvm::VectorType::get(randType, 2)), leftRand, (uint64_t) 0, "rand");
     randVec = b.CreateInsertElement(randVec, rightRand, (uint64_t) 1, "rand");
     auto randFloatVec = b.CreateSIToFP(randVec, context()->numType()->vecType(), "rand.float");

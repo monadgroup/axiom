@@ -16,7 +16,7 @@ std::unique_ptr<NumIntrinsicOperator> NumIntrinsicOperator::create(MaximContext 
 
 std::unique_ptr<Num> NumIntrinsicOperator::call(Builder &b, Num *numLeft, Num *numRight) {
     auto powIntrinsic = llvm::Intrinsic::getDeclaration(_module, _id, context()->numType()->vecType());
-    auto operatedVal = b.CreateCall(powIntrinsic, {
+    auto operatedVal = CreateCall(b, powIntrinsic, {
         numLeft->vec(b),
         numRight->vec(b)
     }, "op.vec");

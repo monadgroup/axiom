@@ -34,41 +34,41 @@ MaximContext::MaximContext() : _numType(this), _midiType(this) {
 
 }
 
-void MaximContext::assertType(Value *val, Type *type) const {
+void MaximContext::assertType(const Value *val, const Type *type) const {
     if (val->type() != type) {
         throw typeAssertFailed(type, val->type(), val->startPos, val->endPos);
     }
 }
 
-std::unique_ptr<Num> MaximContext::assertNum(std::unique_ptr<Value> val) const {
+std::unique_ptr<Num> MaximContext::assertNum(std::unique_ptr<Value> val) {
     auto res = assertNum(val.get());
     val.release();
     return std::unique_ptr<Num>(res);
 }
 
-Num *MaximContext::assertNum(Value *val) const {
+Num *MaximContext::assertNum(Value *val) {
     if (auto res = dynamic_cast<Num *>(val)) return res;
     throw typeAssertFailed(numType(), val->type(), val->startPos, val->endPos);
 }
 
-std::unique_ptr<Midi> MaximContext::assertMidi(std::unique_ptr<Value> val) const {
+std::unique_ptr<Midi> MaximContext::assertMidi(std::unique_ptr<Value> val) {
     auto res = assertMidi(val.get());
     val.release();
     return std::unique_ptr<Midi>(res);
 }
 
-Midi *MaximContext::assertMidi(Value *val) const {
+Midi *MaximContext::assertMidi(Value *val) {
     if (auto res = dynamic_cast<Midi *>(val)) return res;
     throw typeAssertFailed(midiType(), val->type(), val->startPos, val->endPos);
 }
 
-std::unique_ptr<Tuple> MaximContext::assertTuple(std::unique_ptr<Value> val, TupleType *type) const {
+std::unique_ptr<Tuple> MaximContext::assertTuple(std::unique_ptr<Value> val, TupleType *type) {
     auto res = assertTuple(val.get(), type);
     val.release();
     return std::unique_ptr<Tuple>(res);
 }
 
-Tuple *MaximContext::assertTuple(Value *val, TupleType *type) const {
+Tuple *MaximContext::assertTuple(Value *val, TupleType *type) {
     if (val->type() == type) {
         if (auto res = dynamic_cast<Tuple *>(val)) {
             return res;
@@ -93,11 +93,11 @@ TupleType *MaximContext::getTupleType(const std::vector<Type *> &types) {
     }
 }
 
-llvm::Constant *MaximContext::constFloat(float num) const {
+llvm::Constant *MaximContext::constFloat(float num) {
     return llvm::ConstantFP::get(llvm::Type::getFloatTy(_llvm), num);
 }
 
-llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool isSigned) const {
+llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool isSigned) {
     return llvm::ConstantInt::get(llvm::Type::getIntNTy(_llvm, numBits), val, isSigned);
 }
 
@@ -107,6 +107,7 @@ void MaximContext::registerOperator(std::unique_ptr<Operator> op) {
 }
 
 void MaximContext::registerFunction(std::unique_ptr<Function> func) {
+    func->generate();
     getOrCreateFunctionList(func->name()).push_back(std::move(func));
 }
 
@@ -146,7 +147,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
             auto leftTupleVal = leftTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto rightTupleVal = rightTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftTupleVal->type(), rightTupleVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(b, std::move(leftTupleVal), std::move(rightTuple), startPos, endPos));
+            resultVals.push_back(op->call(b, std::move(leftTupleVal), std::move(rightTupleVal), startPos, endPos));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
@@ -288,13 +289,13 @@ void MaximContext::setupCoreModule(llvm::Module *module) {
 std::vector<std::unique_ptr<Function>> &MaximContext::getOrCreateFunctionList(std::string name) {
     auto pos = functionMap.find(name);
     if (pos == functionMap.end()) {
-        return functionMap.emplace(name).first->second;
+        return functionMap.emplace(name, std::vector<std::unique_ptr<Function>>{}).first->second;
     } else {
         return pos->second;
     }
 }
 
-CodegenError MaximContext::typeAssertFailed(Type *expectedType, Type *receivedType, SourcePos startPos,
+CodegenError MaximContext::typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos,
                                             SourcePos endPos) const {
     return CodegenError(
         "Oyyyy m80, I need a " + expectedType->name() + " here, not this bad boi " + receivedType->name(), startPos,

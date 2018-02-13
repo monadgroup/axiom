@@ -1,6 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include "../SourcePos.h"
+
+namespace llvm {
+    class Value;
+}
 
 namespace MaximCodegen {
 

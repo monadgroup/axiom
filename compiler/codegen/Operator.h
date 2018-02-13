@@ -26,10 +26,10 @@ namespace MaximCodegen {
         MaximContext *context() const { return _context; }
 
     private:
-        Type *_leftType;
-        Type *_rightType;
         MaximContext *_context;
         MaximCommon::OperatorType _type;
+        Type *_leftType;
+        Type *_rightType;
     };
 
 }

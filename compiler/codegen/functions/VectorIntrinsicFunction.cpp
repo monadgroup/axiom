@@ -21,7 +21,7 @@ std::unique_ptr<VectorIntrinsicFunction> VectorIntrinsicFunction::create(MaximCo
 
 std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                          std::unique_ptr<VarArg> vararg, llvm::Value *funcContext) {
-    auto intrinsic = llvm::Intrinsic::getDeclaration(module(), id, {context()->numType()->get()});
+    auto intrinsic = llvm::Intrinsic::getDeclaration(module(), id, {context()->numType()->vecType()});
 
     llvm::Value *isActive = context()->constInt(1, 0, false);
 
@@ -38,7 +38,7 @@ std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector
     }
     assert(firstParam);
 
-    auto res = b.CreateCall(intrinsic, llParams, "intrinsic.result");
+    auto res = CreateCall(b, intrinsic, llParams, "intrinsic.result");
 
     SourcePos undefPos(-1, -1);
     return  firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);

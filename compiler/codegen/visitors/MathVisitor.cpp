@@ -2,6 +2,7 @@
 
 #include "../../ast/MathExpression.h"
 #include "../Node.h"
+#include "../Value.h"
 #include "../MaximContext.h"
 #include "ExpressionVisitor.h"
 

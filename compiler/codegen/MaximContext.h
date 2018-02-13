@@ -9,7 +9,28 @@
 #include "CodegenError.h"
 #include "NumType.h"
 #include "MidiType.h"
+#include "TupleType.h"
 #include "Builder.h"
+
+namespace MaximCodegen {
+    struct OperatorKey {
+        MaximCommon::OperatorType type;
+        Type *leftType;
+        Type *rightType;
+
+        bool operator==(const MaximCodegen::OperatorKey &x) const {
+            return type == x.type && leftType == x.leftType && rightType == x.rightType;
+        }
+    };
+}
+
+namespace std {
+    template<> struct hash<MaximCodegen::OperatorKey> {
+        size_t operator()(const MaximCodegen::OperatorKey &x) const {
+            return (size_t) x.type ^ ((size_t) x.leftType) ^ ((size_t) x.rightType);
+        }
+    };
+}
 
 namespace llvm {
     class Type;
@@ -33,12 +54,6 @@ namespace MaximCodegen {
 
     class Tuple;
 
-    class NumType;
-
-    class MidiType;
-
-    class TupleType;
-
     class Operator;
 
     class Function;
@@ -53,29 +68,33 @@ namespace MaximCodegen {
 
         llvm::LLVMContext &llvm() { return _llvm; }
 
-        NumType *numType() const { return &_numType; }
+        NumType *numType() { return &_numType; }
 
-        MidiType *midiType() const { return &_midiType; }
+        MidiType *midiType() { return &_midiType; }
 
-        void assertType(Value *val, Type *type) const;
+        const NumType *numType() const { return &_numType; }
 
-        std::unique_ptr<Num> assertNum(std::unique_ptr<Value> val) const;
+        const MidiType *midiType() const { return &_midiType; }
 
-        Num *assertNum(Value *val) const;
+        void assertType(const Value *val, const Type *type) const;
 
-        std::unique_ptr<Midi> assertMidi(std::unique_ptr<Value> val) const;
+        std::unique_ptr<Num> assertNum(std::unique_ptr<Value> val);
 
-        Midi *assertMidi(Value *val) const;
+        Num *assertNum(Value *val);
 
-        std::unique_ptr<Tuple> assertTuple(std::unique_ptr<Value> val, TupleType *type) const;
+        std::unique_ptr<Midi> assertMidi(std::unique_ptr<Value> val);
 
-        Tuple *assertTuple(Value *val, TupleType *type) const;
+        Midi *assertMidi(Value *val);
+
+        std::unique_ptr<Tuple> assertTuple(std::unique_ptr<Value> val, TupleType *type);
+
+        Tuple *assertTuple(Value *val, TupleType *type);
 
         TupleType *getTupleType(const std::vector<Type *> &types);
 
-        llvm::Constant *constFloat(float num) const;
+        llvm::Constant *constFloat(float num);
 
-        llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned) const;
+        llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned);
 
         void registerOperator(std::unique_ptr<Operator> op);
 
@@ -107,12 +126,6 @@ namespace MaximCodegen {
         NumType _numType;
         MidiType _midiType;
 
-        struct OperatorKey {
-            MaximCommon::OperatorType type;
-            Type *leftType;
-            Type *rightType;
-        };
-
         std::unordered_map<llvm::StructType *, TupleType> tupleTypeMap;
         std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
         std::unordered_map<std::string, std::vector<std::unique_ptr<Function>>> functionMap;
@@ -121,7 +134,7 @@ namespace MaximCodegen {
         std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);
 
         CodegenError
-        typeAssertFailed(Type *expectedType, Type *receivedType, SourcePos startPos, SourcePos endPos) const;
+        typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos, SourcePos endPos) const;
 
         Operator *alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType, SourcePos startPos,
                                     SourcePos endPos);

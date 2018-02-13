@@ -1,9 +1,14 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include "Instantiable.h"
 #include "Builder.h"
+
+namespace MaximAst {
+    class AssignableExpression;
+}
 
 namespace MaximCodegen {
 
@@ -13,9 +18,15 @@ namespace MaximCodegen {
 
     class Node : public Instantiable {
     public:
-        MaximContext *ctx() const;
+        explicit Node(MaximContext *ctx, llvm::Module *module);
 
-        Builder &builder();
+        MaximContext *ctx() const { return _ctx; }
+
+        Builder &builder() { return _builder; }
+
+        llvm::Module *module() const { return _module; }
+
+        llvm::Function *func() const { return _func; }
 
         Value *getVariable(std::string name);
 
@@ -23,7 +34,25 @@ namespace MaximCodegen {
 
         void setAssignable(MaximAst::AssignableExpression *assignable, std::unique_ptr<Value> value);
 
-        llvm::Value *addInstantiable(std::unique_ptr<Instantiable> inst);
+        llvm::Value *addInstantiable(std::unique_ptr<Instantiable> inst, Builder &b);
+
+        void complete();
+
+        llvm::Constant *instantiate() override;
+
+        llvm::Type *type() const override { return _ctxType; }
+
+    private:
+        MaximContext *_ctx;
+        Builder _builder;
+        llvm::Module *_module;
+
+        llvm::Function *_func;
+        llvm::Value *_nodeCtx;
+        llvm::StructType *_ctxType;
+
+        std::unordered_map<std::string, std::unique_ptr<Value>> _variables;
+        std::vector<std::unique_ptr<Instantiable>> _instantiables;
     };
 
 }

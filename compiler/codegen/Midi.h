@@ -35,6 +35,8 @@ namespace MaximCodegen {
 
         llvm::Value *param(Builder &builder) const;
 
+        std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
+
         MidiType *type() const override;
 
     private:

@@ -18,7 +18,7 @@ namespace MaximCodegen {
 
         virtual std::string name() const = 0;
 
-        virtual std::unique_ptr<Value> createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos);
+        virtual std::unique_ptr<Value> createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) = 0;
     };
 
 }

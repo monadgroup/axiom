@@ -2,22 +2,22 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/Linker/Linker.h>
+#include <llvm/Transforms/Utils/Cloning.h>
 
 #include "parser/TokenStream.h"
 #include "parser/Parser.h"
 #include "ast/Expression.h"
 #include "ast/Block.h"
 
-#include "codegen/Context.h"
+#include "codegen/MaximContext.h"
+#include "codegen/Node.h"
+#include "codegen/visitors/ExpressionVisitor.h"
+#include "codegen/Value.h"
+#include "codegen/Operator.h"
+#include "codegen/Converter.h"
 #include "codegen/Function.h"
-#include "codegen/ExpressionGenerator.h"
-#include "codegen/FunctionDeclaration.h"
-#include "codegen/ControlDeclaration.h"
-#include "codegen/CodegenError.h"
-#include "codegen/values/Value.h"
-#include "codegen/values/NumValue.h"
-
-#include "util.h"
+#include "codegen/Num.h"
 
 using namespace MaximParser;
 using namespace MaximCodegen;
@@ -35,44 +35,52 @@ std::string getInput() {
     return accumulate;
 }
 
-void parseAndCompile() {
+void parseAndCompile(MaximContext *ctx, llvm::Module *mainModule) {
     auto input = getInput();
     auto stream = std::make_unique<TokenStream>(input);
     Parser parser(std::move(stream));
     auto block = parser.parse();
 
-    Context context;
+    llvm::Module nodeModule("node", ctx->llvm());
+    Node node(ctx, &nodeModule);
 
-    auto vecType = llvm::VectorType::get(llvm::Type::getFloatTy(context.llvm()), 2);
-    auto mainFuncDecl = std::make_unique<FunctionDeclaration>(false, vecType, std::vector<Parameter>{});
-    auto fun = Function(std::move(mainFuncDecl), "main", llvm::Function::ExternalLinkage, context.builtinModule(),
-                        &context);
-    auto exprGen = ExpressionGenerator(&context);
+    auto numType = ctx->numType();
+    auto global = new llvm::GlobalVariable(
+        nodeModule, numType->get(), false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+        llvm::ConstantStruct::get(numType->get(), {
+            llvm::ConstantVector::get({ctx->constFloat(0), ctx->constFloat(0)}),
+            llvm::ConstantInt::get(numType->formType(), (uint64_t) MaximCommon::FormType::LINEAR, false),
+            llvm::ConstantInt::get(numType->activeType(), (uint64_t) true, false)
+        }), "result"
+    );
 
-    MaximAst::Expression *lastExpr = nullptr;
     std::unique_ptr<Value> lastVal;
     for (const auto &expr : block->expressions) {
-        lastExpr = expr.get();
-        lastVal = exprGen.generateExpr(lastExpr, &fun, fun.scope());
+        lastVal = visitExpression(&node, expr.get());
     }
-    if (lastVal && lastExpr) {
-        context.checkPtrType(lastVal->value(), Context::Type::NUM, lastExpr->startPos, lastExpr->endPos);
-        auto numValue = AxiomUtil::strict_unique_cast<NumValue>(std::move(lastVal));
-
-        fun.codeBuilder().CreateRet(fun.codeBuilder().CreateLoad(numValue->valuePtr(fun.codeBuilder()), "ret_load"));
+    if (lastVal) {
+        if (auto numVal = dynamic_cast<Num *>(lastVal.get())) {
+            node.builder().CreateStore(numVal->get(), global);
+        }
     }
 
-    fun.initBuilder().CreateBr(fun.codeBlock());
+    node.builder().CreateRetVoid();
+    node.complete();
 
-    llvm::verifyFunction(*fun.llFunc());
+    llvm::verifyFunction(*node.func());
 
-    context.builtinModule()->print(llvm::errs(), nullptr);
+    llvm::Linker::linkModules(nodeModule, llvm::CloneModule(mainModule));
+    nodeModule.print(llvm::errs(), nullptr);
 }
 
 int main() {
+    MaximContext ctx;
+    llvm::Module mainModule("main", ctx.llvm());
+    ctx.setupCoreModule(&mainModule);
+
     while (true) {
         try {
-            parseAndCompile();
+            parseAndCompile(&ctx, &mainModule);
         } catch (const ParseError &err) {
             std::cout << "Parse error from " << err.start.line << ":" << err.start.column << " to " << err.end.line
                       << ":" << err.end.column << std::endl;

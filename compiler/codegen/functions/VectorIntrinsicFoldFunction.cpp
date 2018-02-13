@@ -31,13 +31,13 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::ve
     auto firstNum = dynamic_cast<Num*>(firstVal.get());
     assert(firstNum);
 
-    auto vecPtr = b.CreateAlloca(context()->numType()->vecType(), "accum.vecptr");
+    auto vecPtr = b.CreateAlloca(context()->numType()->vecType(), nullptr, "accum.vecptr");
     b.CreateStore(firstNum->vec(b), vecPtr);
-    auto activePtr = b.CreateAlloca(context()->numType()->activeType(), "accum.activeptr");
+    auto activePtr = b.CreateAlloca(context()->numType()->activeType(), nullptr, "accum.activeptr");
     b.CreateStore(firstNum->active(b), activePtr);
 
     auto indexType = llvm::Type::getInt8Ty(context()->llvm());
-    auto indexPtr = b.CreateAlloca(indexType, "accum.indexptr");
+    auto indexPtr = b.CreateAlloca(indexType, nullptr, "accum.indexptr");
     b.CreateStore(llvm::ConstantInt::get(indexType, 0, false), indexPtr);
 
     auto loopCheckBlock = llvm::BasicBlock::Create(context()->llvm(), "loop.check", func());
@@ -70,14 +70,14 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::ve
     assert(nextNum);
     auto nextVec = nextNum->vec(b);
 
-    auto storeVec = b.CreateCall(intrinsic, {lastVec, nextVec}, "storevec");
+    auto storeVec = CreateCall(b, intrinsic, {lastVec, nextVec}, "storevec");
     b.CreateStore(storeVec, vecPtr);
 
-    b.CreateStore(activePtr, b.CreateOr(
+    b.CreateStore(b.CreateOr(
         b.CreateLoad(activePtr, "lastactive"),
         nextNum->active(b),
         "storeactive"
-    ));
+    ), activePtr);
 
     b.CreateBr(loopCheckBlock);
     b.SetInsertPoint(finishBlock);

@@ -2,6 +2,7 @@
 
 #include "../../ast/CallExpression.h"
 #include "../Node.h"
+#include "../Value.h"
 #include "../MaximContext.h"
 #include "ExpressionVisitor.h"
 
@@ -13,5 +14,5 @@ std::unique_ptr<Value> MaximCodegen::visitCall(Node *node, MaximAst::CallExpress
     for (const auto &subexpr : expr->arguments) {
         argVals.push_back(visitExpression(node, subexpr.get()));
     }
-    return node->ctx()->callFunction(expr->name, argVals, node, expr->startPos, expr->endPos);
+    return node->ctx()->callFunction(expr->name, std::move(argVals), node, expr->startPos, expr->endPos);
 }

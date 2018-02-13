@@ -79,13 +79,13 @@ std::unique_ptr<Num> Num::withActive(Builder &builder, llvm::Value *newActive, S
                                      SourcePos endPos) const {
     return Num::create(
         _context,
-        builder.CreateInsertValue(_get, newActive, {2}, "num.new_active"),
+        builder.CreateInsertValue(_get, newActive, {2}, _get->getName() + ".new_active"),
         startPos, endPos
     );
 }
 
 std::unique_ptr<Num> Num::withActive(Builder &builder, bool active, SourcePos startPos, SourcePos endPos) const {
-    return withForm(
+    return withActive(
         builder, llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false),
         startPos, endPos
     );
@@ -95,6 +95,6 @@ std::unique_ptr<Value> Num::withSource(SourcePos startPos, SourcePos endPos) con
     return Num::create(_context, _get, startPos, endPos);
 }
 
-Type *Num::type() const {
+NumType *Num::type() const {
     return _context->numType();
 }

@@ -36,7 +36,7 @@ namespace MaximCodegen {
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
 
         std::unique_ptr<Tuple> withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, SourcePos startPos,
-                                         SourcePos endPos) const override;
+                                         SourcePos endPos) const;
 
         TupleType *type() const override { return _type; }
 

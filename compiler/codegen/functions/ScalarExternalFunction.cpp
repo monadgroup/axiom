@@ -54,7 +54,7 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<
             llValues.push_back(b.CreateExtractElement(llVec, i, "vec.temp"));
         }
 
-        auto singleResult = b.CreateCall(external, llValues, "result.temp");
+        auto singleResult = CreateCall(b, external, llValues, "result.temp");
         res = b.CreateInsertElement(res, singleResult, i, "result");
     }
 

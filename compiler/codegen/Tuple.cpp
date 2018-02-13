@@ -23,12 +23,12 @@ Tuple::Tuple(MaximContext *context, Storage values, Builder &builder, SourcePos 
 }
 
 Tuple::Tuple(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos)
-    : Value(startPos, endPos), _context(context), _get(get) {
+    : Value(startPos, endPos), _get(get), _context(context) {
 }
 
 std::unique_ptr<Tuple> Tuple::create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos,
                                      SourcePos endPos) {
-    return std::make_unique<Tuple>(context, values, builder, startPos, endPos);
+    return std::make_unique<Tuple>(context, std::move(values), builder, startPos, endPos);
 }
 
 std::unique_ptr<Tuple> Tuple::create(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos,

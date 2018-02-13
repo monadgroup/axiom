@@ -26,4 +26,7 @@ llvm::Value *NumOperator::getActive(Builder &b, Num *left, Num *right) {
         case ActiveMode::FIRST_INPUT:
             return left->active(b);
     }
+
+    assert(false);
+    throw;
 }

@@ -1,6 +1,10 @@
 #pragma once
 
+#include <memory>
+
 namespace MaximCodegen {
+
+    class Num;
 
     class Converter {
     public:

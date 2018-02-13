@@ -184,9 +184,6 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     }
 
     auto form = std::make_unique<Form>(formType, nameToken.startPos, SourcePos(0, 0));
-    if (stream()->peek().type != Token::Type::CLOSE_SQUARE) {
-        parseArguments(form->arguments);
-    }
     auto closeToken = stream()->next();
     expect(closeToken, Token::Type::CLOSE_SQUARE);
     form->endPos = closeToken.endPos;
@@ -415,58 +412,58 @@ std::unique_ptr<MaximAst::Expression> Parser::parsePostfixExpression(std::unique
 
 std::unique_ptr<MaximAst::Expression> Parser::parseMathExpression(std::unique_ptr<MaximAst::Expression> prefix) {
     auto opToken = stream()->next();
-    MathExpression::Type opType;
+    MaximCommon::OperatorType opType;
     switch (opToken.type) {
         case Token::Type::BITWISE_AND:
-            opType = MathExpression::Type::BITWISE_AND;
+            opType = MaximCommon::OperatorType::BITWISE_AND;
             break;
         case Token::Type::BITWISE_OR:
-            opType = MathExpression::Type::BITWISE_OR;
+            opType = MaximCommon::OperatorType::BITWISE_OR;
             break;
         case Token::Type::BITWISE_XOR:
-            opType = MathExpression::Type::BITWISE_XOR;
+            opType = MaximCommon::OperatorType::BITWISE_XOR;
             break;
         case Token::Type::LOGICAL_AND:
-            opType = MathExpression::Type::LOGICAL_AND;
+            opType = MaximCommon::OperatorType::LOGICAL_AND;
             break;
         case Token::Type::LOGICAL_OR:
-            opType = MathExpression::Type::LOGICAL_OR;
+            opType = MaximCommon::OperatorType::LOGICAL_OR;
             break;
         case Token::Type::EQUAL_TO:
-            opType = MathExpression::Type::LOGICAL_EQUAL;
+            opType = MaximCommon::OperatorType::LOGICAL_EQUAL;
             break;
         case Token::Type::NOT_EQUAL_TO:
-            opType = MathExpression::Type::LOGICAL_NOT_EQUAL;
+            opType = MaximCommon::OperatorType::LOGICAL_NOT_EQUAL;
             break;
         case Token::Type::LT:
-            opType = MathExpression::Type::LOGICAL_LT;
+            opType = MaximCommon::OperatorType::LOGICAL_LT;
             break;
         case Token::Type::GT:
-            opType = MathExpression::Type::LOGICAL_GT;
+            opType = MaximCommon::OperatorType::LOGICAL_GT;
             break;
         case Token::Type::LTE:
-            opType = MathExpression::Type::LOGICAL_LTE;
+            opType = MaximCommon::OperatorType::LOGICAL_LTE;
             break;
         case Token::Type::GTE:
-            opType = MathExpression::Type::LOGICAL_GTE;
+            opType = MaximCommon::OperatorType::LOGICAL_GTE;
             break;
         case Token::Type::PLUS:
-            opType = MathExpression::Type::ADD;
+            opType = MaximCommon::OperatorType::ADD;
             break;
         case Token::Type::MINUS:
-            opType = MathExpression::Type::SUBTRACT;
+            opType = MaximCommon::OperatorType::SUBTRACT;
             break;
         case Token::Type::TIMES:
-            opType = MathExpression::Type::MULTIPLY;
+            opType = MaximCommon::OperatorType::MULTIPLY;
             break;
         case Token::Type::DIVIDE:
-            opType = MathExpression::Type::DIVIDE;
+            opType = MaximCommon::OperatorType::DIVIDE;
             break;
         case Token::Type::MODULO:
-            opType = MathExpression::Type::MODULO;
+            opType = MaximCommon::OperatorType::MODULO;
             break;
         case Token::Type::POWER:
-            opType = MathExpression::Type::POWER;
+            opType = MaximCommon::OperatorType::POWER;
             break;
         default:
             fail(opToken);
@@ -479,28 +476,28 @@ std::unique_ptr<MaximAst::Expression> Parser::parseMathExpression(std::unique_pt
 
 std::unique_ptr<MaximAst::Expression> Parser::parseAssignExpression(std::unique_ptr<MaximAst::Expression> prefix) {
     auto opToken = stream()->next();
-    AssignExpression::Type opType;
+    MaximCommon::OperatorType opType;
     switch (opToken.type) {
         case Token::Type::ASSIGN:
-            opType = AssignExpression::Type::ASSIGN;
+            opType = MaximCommon::OperatorType::IDENTITY;
             break;
         case Token::Type::PLUS_ASSIGN:
-            opType = AssignExpression::Type::ADD;
+            opType = MaximCommon::OperatorType::ADD;
             break;
         case Token::Type::MINUS_ASSIGN:
-            opType = AssignExpression::Type::SUBTRACT;
+            opType = MaximCommon::OperatorType::SUBTRACT;
             break;
         case Token::Type::TIMES_ASSIGN:
-            opType = AssignExpression::Type::MULTIPLY;
+            opType = MaximCommon::OperatorType::MULTIPLY;
             break;
         case Token::Type::DIVIDE_ASSIGN:
-            opType = AssignExpression::Type::DIVIDE;
+            opType = MaximCommon::OperatorType::DIVIDE;
             break;
         case Token::Type::MODULO_ASSIGN:
-            opType = AssignExpression::Type::MODULO;
+            opType = MaximCommon::OperatorType::MODULO;
             break;
         case Token::Type::POWER_ASSIGN:
-            opType = AssignExpression::Type::POWER;
+            opType = MaximCommon::OperatorType::POWER;
             break;
         default:
             fail(opToken);

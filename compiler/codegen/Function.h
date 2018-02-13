@@ -65,7 +65,11 @@ namespace MaximCodegen {
 
         std::vector<Parameter> const &parameters() const { return _parameters; }
 
-        bool acceptsParameters(const std::vector<Type *> &types);
+        void generate();
+
+        bool acceptsParameters(const std::vector<Type *> &types) {
+            return validateCount(types.size(), false) && validateTypes(types);
+        }
 
         std::unique_ptr<Value>
         call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);

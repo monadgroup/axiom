@@ -57,13 +57,13 @@ std::unique_ptr<Value> PanFunction::generate(Builder &b, std::vector<std::unique
     amplitudeVec = b.CreateInsertElement(amplitudeVec, rightAmplitude, (uint64_t) 1, "amplitude");
 
     // clamp to [0, 1] range
-    amplitudeVec = b.CreateCall(
-        maxIntrinsic,
+    amplitudeVec = CreateCall(
+        b, maxIntrinsic,
         {amplitudeVec, llvm::ConstantVector::get({zeroFloat, zeroFloat})},
         "amplitude.maxed"
     );
-    amplitudeVec = b.CreateCall(
-        minIntrinsic,
+    amplitudeVec = CreateCall(
+        b, minIntrinsic,
         {amplitudeVec, llvm::ConstantVector::get({oneFloat, oneFloat})},
         "amplitude.clamped"
     );

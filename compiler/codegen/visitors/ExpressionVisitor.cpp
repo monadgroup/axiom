@@ -18,6 +18,7 @@
 #include "CallVisitor.h"
 #include "CastVisitor.h"
 #include "ControlVisitor.h"
+#include "LValueVisitor.h"
 #include "MathVisitor.h"
 #include "NoteVisitor.h"
 #include "NumberVisitor.h"
@@ -25,6 +26,8 @@
 #include "TupleVisitor.h"
 #include "UnaryVisitor.h"
 #include "VariableVisitor.h"
+
+#include "../Value.h"
 
 using namespace MaximCodegen;
 using namespace MaximAst;
@@ -34,6 +37,7 @@ std::unique_ptr<Value> MaximCodegen::visitExpression(Node *node, MaximAst::Expre
     if (auto call = dynamic_cast<CallExpression *>(expr)) return visitCall(node, call);
     if (auto cast = dynamic_cast<CastExpression *>(expr)) return visitCast(node, cast);
     if (auto control = dynamic_cast<ControlExpression *>(expr)) return visitControl(node, control);
+    if (auto lvalue = dynamic_cast<LValueExpression *>(expr)) return visitLValue(node, lvalue);
     if (auto math = dynamic_cast<MathExpression *>(expr)) return visitMath(node, math);
     if (auto note = dynamic_cast<NoteExpression *>(expr)) return visitNote(node, note);
     if (auto number = dynamic_cast<NumberExpression *>(expr)) return visitNumber(node, number);

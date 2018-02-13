@@ -33,8 +33,8 @@ std::unique_ptr<Value> ClampFunction::generate(Builder &b, std::vector<std::uniq
     assert(maxNum);
 
     auto currentVec = xNum->vec(b);
-    currentVec = b.CreateCall(maxIntrinsic, {currentVec, minNum->vec(b)}, "maxed");
-    currentVec = b.CreateCall(minIntrinsic, {currentVec, maxNum->vec(b)}, "clamped");
+    currentVec = CreateCall(b, maxIntrinsic, {currentVec, minNum->vec(b)}, "maxed");
+    currentVec = CreateCall(b, minIntrinsic, {currentVec, maxNum->vec(b)}, "clamped");
 
     auto undefPos = SourcePos(-1, -1);
     return xNum->withVec(b, currentVec, undefPos, undefPos);
