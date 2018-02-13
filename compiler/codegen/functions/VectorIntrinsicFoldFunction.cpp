@@ -10,22 +10,21 @@
 using namespace MaximCodegen;
 
 VectorIntrinsicFoldFunction::VectorIntrinsicFoldFunction(MaximContext *context, llvm::Intrinsic::ID id,
-                                                         std::string name, llvm::Module *module)
+                                                         std::string name)
     : Function(context,
-               std::move(name), context->numType(), {}, Parameter::create(context->numType(), false, false), nullptr, module),
+               std::move(name), context->numType(), {}, Parameter::create(context->numType(), false, false), nullptr),
       _id(id) {
 }
 
 std::unique_ptr<VectorIntrinsicFoldFunction> VectorIntrinsicFoldFunction::create(MaximContext *context,
-                                                                             llvm::Intrinsic::ID id, std::string name,
-                                                                             llvm::Module *module) {
-    return std::make_unique<VectorIntrinsicFoldFunction>(context, id, name, module);
+                                                                             llvm::Intrinsic::ID id, std::string name) {
+    return std::make_unique<VectorIntrinsicFoldFunction>(context, id, name);
 }
 
 std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                              std::unique_ptr<VarArg> vararg,
-                                                             llvm::Value *funcContext) {
-    auto intrinsic = llvm::Intrinsic::getDeclaration(module(), _id, {context()->numType()->vecType()});
+                                                             llvm::Value *funcContext, llvm::Module *module) {
+    auto intrinsic = llvm::Intrinsic::getDeclaration(module, _id, {context()->numType()->vecType()});
     auto varCount = vararg->count(b);
     auto firstVal = vararg->atIndex((uint64_t) 0, b);
     auto firstNum = dynamic_cast<Num*>(firstVal.get());

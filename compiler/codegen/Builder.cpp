@@ -23,5 +23,9 @@ llvm::Value* MaximCodegen::CreateCall(Builder &b, llvm::Function *f, llvm::Array
         }
     }
 
-    return llvm::ConstantFoldCall(site, f, constOperands);
+    // todo: seem to be some cases where this doesn't work even though canConstantFoldCallTo does (eg tan)
+    // need to fix this
+    auto constFold = llvm::ConstantFoldCall(site, f, constOperands);
+    if (constFold) return constFold;
+    return b.Insert(callInst, name);
 }

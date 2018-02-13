@@ -55,7 +55,7 @@ namespace MaximCodegen {
     class Function {
     public:
         Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
-                 std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module, bool isPure = true);
+                 std::unique_ptr<Parameter> vararg, llvm::Type *contextType, bool isPure = true);
 
         std::string name() const { return _name; }
 
@@ -65,7 +65,7 @@ namespace MaximCodegen {
 
         std::vector<Parameter> const &parameters() const { return _parameters; }
 
-        void generate();
+        void generate(llvm::Module *module);
 
         bool acceptsParameters(const std::vector<Type *> &types) {
             return validateCount(types.size(), false) && validateTypes(types);
@@ -75,19 +75,17 @@ namespace MaximCodegen {
         call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);
 
     protected:
-        llvm::Module *module() const { return _module; }
-
         llvm::Function *func() const { return _func; }
 
         MaximContext *context() const { return _context; }
 
         virtual std::unique_ptr<Value>
         generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                 llvm::Value *funcContext) = 0;
+                 llvm::Value *funcContext, llvm::Module *module) = 0;
 
         virtual std::unique_ptr<Value>
         generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                      llvm::Value *funcContext);
+                      llvm::Value *funcContext, llvm::Module *module);
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
 
@@ -124,7 +122,6 @@ namespace MaximCodegen {
         llvm::Type *_vaType;
         llvm::Type *_contextType;
         llvm::Function *_func;
-        llvm::Module *_module;
         std::string _name;
         bool _isPure;
 
@@ -142,7 +139,7 @@ namespace MaximCodegen {
                               SourcePos startPos, SourcePos endPos);
 
         std::unique_ptr<Value>
-        callConst(Node *node, std::vector<std::unique_ptr<Value>> args, std::vector<std::unique_ptr<Value>> varargs);
+        callConst(Node *node, std::vector<std::unique_ptr<Value>> args, std::vector<std::unique_ptr<Value>> varargs, llvm::Module *module);
 
         std::unique_ptr<Value>
         callNonConst(Node *node, std::vector<std::unique_ptr<Value>> allArgs, std::vector<std::unique_ptr<Value>> args,

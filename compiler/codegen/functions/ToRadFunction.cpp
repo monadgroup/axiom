@@ -8,17 +8,18 @@
 
 using namespace MaximCodegen;
 
-ToRadFunction::ToRadFunction(MaximContext *context, llvm::Module *module)
-    : Function(context, "toRad", context->numType(), {Parameter(context->numType(), false, false)}, nullptr, nullptr, module) {
+ToRadFunction::ToRadFunction(MaximContext *context)
+    : Function(context, "toRad", context->numType(), {Parameter(context->numType(), false, false)}, nullptr, nullptr) {
 
 }
 
-std::unique_ptr<ToRadFunction> ToRadFunction::create(MaximContext *context, llvm::Module *module) {
-    return std::make_unique<ToRadFunction>(context, module);
+std::unique_ptr<ToRadFunction> ToRadFunction::create(MaximContext *context) {
+    return std::make_unique<ToRadFunction>(context);
 }
 
 std::unique_ptr<Value> ToRadFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext) {
+                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
+                                               llvm::Module *module) {
     auto numArg = dynamic_cast<Num*>(params[0].get());
     assert(numArg);
 

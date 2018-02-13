@@ -8,24 +8,25 @@
 
 using namespace MaximCodegen;
 
-NoiseFunction::NoiseFunction(MaximContext *context, llvm::Module *module)
+NoiseFunction::NoiseFunction(MaximContext *context)
     : Function(context, "noise", context->numType(),
                {Parameter(context->numType(), false, true), Parameter(context->numType(), false, true)},
-               nullptr, nullptr, module, false) {
+               nullptr, nullptr, false) {
 
 }
 
-std::unique_ptr<NoiseFunction> NoiseFunction::create(MaximContext *context, llvm::Module *module) {
-    return std::make_unique<NoiseFunction>(context, module);
+std::unique_ptr<NoiseFunction> NoiseFunction::create(MaximContext *context) {
+    return std::make_unique<NoiseFunction>(context);
 }
 
 std::unique_ptr<Value> NoiseFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext) {
+                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
+                                               llvm::Module *module) {
     auto randType = llvm::Type::getInt32Ty(context()->llvm());
     auto randFunc = llvm::Function::Create(
         llvm::FunctionType::get(randType, {}, false),
         llvm::Function::ExternalLinkage,
-        "rand", module()
+        "rand", module
     );
 
     auto minNum = dynamic_cast<Num*>(params[0].get());

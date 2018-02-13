@@ -106,8 +106,8 @@ void MaximContext::registerOperator(std::unique_ptr<Operator> op) {
     operatorMap.emplace(key, std::move(op));
 }
 
-void MaximContext::registerFunction(std::unique_ptr<Function> func) {
-    func->generate();
+void MaximContext::registerFunction(std::unique_ptr<Function> func, llvm::Module *module) {
+    func->generate(module);
     getOrCreateFunctionList(func->name()).push_back(std::move(func));
 }
 
@@ -226,45 +226,45 @@ std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType,
 
 void MaximContext::setupCoreModule(llvm::Module *module) {
     // functions that map directly to a built-in LLVM vector intrinsic
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::cos, "cos", 1, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sin, "sin", 1, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log, "log", 1, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log2, "log2", 1, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log10, "log10", 1, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sqrt, "sqrt", 1, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::ceil, "ceil", 1, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::floor, "floor", 1, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::fabs, "abs", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::cos, "cos", 1), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sin, "sin", 1), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log, "log", 1), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log2, "log2", 1), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log10, "log10", 1), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sqrt, "sqrt", 1), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::ceil, "ceil", 1), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::floor, "floor", 1), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::fabs, "abs", 1), module);
 
     // functions that map directly to an external scalar function
-    registerFunction(ScalarExternalFunction::create(this, "tanf", "tan", 1, module));
-    registerFunction(ScalarExternalFunction::create(this, "acosf", "acos", 1, module));
-    registerFunction(ScalarExternalFunction::create(this, "asinf", "asin", 1, module));
-    registerFunction(ScalarExternalFunction::create(this, "atanf", "atan", 1, module));
-    registerFunction(ScalarExternalFunction::create(this, "atan2f", "atan2", 2, module));
-    registerFunction(ScalarExternalFunction::create(this, "logbf", "logb", 1, module));
-    registerFunction(ScalarExternalFunction::create(this, "hypotf", "hypot", 2, module));
+    registerFunction(ScalarExternalFunction::create(this, "tanf", "tan", 1), module);
+    registerFunction(ScalarExternalFunction::create(this, "acosf", "acos", 1), module);
+    registerFunction(ScalarExternalFunction::create(this, "asinf", "asin", 1), module);
+    registerFunction(ScalarExternalFunction::create(this, "atanf", "atan", 1), module);
+    registerFunction(ScalarExternalFunction::create(this, "atan2f", "atan2", 2), module);
+    registerFunction(ScalarExternalFunction::create(this, "logbf", "logb", 1), module);
+    registerFunction(ScalarExternalFunction::create(this, "hypotf", "hypot", 2), module);
 
     // other functions
-    registerFunction(ToRadFunction::create(this, module));
-    registerFunction(ToDegFunction::create(this, module));
-    registerFunction(ClampFunction::create(this, module));
-    registerFunction(PanFunction::create(this, module));
-    registerFunction(VectorShuffleFunction::create(this, "left", {0, 0}, module));
-    registerFunction(VectorShuffleFunction::create(this, "right", {1, 1}, module));
-    registerFunction(VectorShuffleFunction::create(this, "swap", {1, 0}, module));
-    registerFunction(CombineFunction::create(this, module));
-    registerFunction(NoiseFunction::create(this, module));
-    registerFunction(ActiveFunction::create(this, module));
-    registerFunction(WithActiveFunction::create(this, module));
+    registerFunction(ToRadFunction::create(this), module);
+    registerFunction(ToDegFunction::create(this), module);
+    registerFunction(ClampFunction::create(this), module);
+    registerFunction(PanFunction::create(this), module);
+    registerFunction(VectorShuffleFunction::create(this, "left", {0, 0}), module);
+    registerFunction(VectorShuffleFunction::create(this, "right", {1, 1}), module);
+    registerFunction(VectorShuffleFunction::create(this, "swap", {1, 0}), module);
+    registerFunction(CombineFunction::create(this), module);
+    registerFunction(NoiseFunction::create(this), module);
+    registerFunction(ActiveFunction::create(this), module);
+    registerFunction(WithActiveFunction::create(this), module);
 
     // hot paths for when only two parameters are provided to min/max
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::minnum, "min", 2, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::maxnum, "max", 2, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::minnum, "min", 2), module);
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::maxnum, "max", 2), module);
 
     // variadic versions of min/max
-    registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::minnum, "min", module));
-    registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::maxnum, "max", module));
+    registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::minnum, "min"), module);
+    registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::maxnum, "max"), module);
 
     // operators
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::ADD, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FAdd));

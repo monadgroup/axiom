@@ -9,22 +9,23 @@
 
 using namespace MaximCodegen;
 
-PanFunction::PanFunction(MaximContext *context, llvm::Module *module)
+PanFunction::PanFunction(MaximContext *context)
     : Function(context, "pan", context->numType(),
                {Parameter(context->numType(), false, false),
                 Parameter(context->numType(), false, false)},
-               nullptr, nullptr, module) {
+               nullptr, nullptr) {
 
 }
 
-std::unique_ptr<PanFunction> PanFunction::create(MaximContext *context, llvm::Module *module) {
-    return std::make_unique<PanFunction>(context, module);
+std::unique_ptr<PanFunction> PanFunction::create(MaximContext *context) {
+    return std::make_unique<PanFunction>(context);
 }
 
 std::unique_ptr<Value> PanFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                             std::unique_ptr<VarArg> vararg, llvm::Value *funcContext) {
-    auto minIntrinsic = llvm::Intrinsic::getDeclaration(module(), llvm::Intrinsic::ID::minnum, {context()->numType()->vecType()});
-    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(module(), llvm::Intrinsic::ID::maxnum, {context()->numType()->vecType()});
+                                             std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
+                                             llvm::Module *module) {
+    auto minIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::minnum, {context()->numType()->vecType()});
+    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::maxnum, {context()->numType()->vecType()});
 
     auto xNum = dynamic_cast<Num*>(params[0].get());
     auto panNum = dynamic_cast<Num*>(params[1].get());

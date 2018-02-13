@@ -8,17 +8,18 @@
 
 using namespace MaximCodegen;
 
-ToDegFunction::ToDegFunction(MaximContext *context, llvm::Module *module)
-    : Function(context, "toDeg", context->numType(), {Parameter(context->numType(), false, false)}, nullptr, nullptr, module) {
+ToDegFunction::ToDegFunction(MaximContext *context)
+    : Function(context, "toDeg", context->numType(), {Parameter(context->numType(), false, false)}, nullptr, nullptr) {
 
 }
 
-std::unique_ptr<ToDegFunction> ToDegFunction::create(MaximContext *context, llvm::Module *module) {
-    return std::make_unique<ToDegFunction>(context, module);
+std::unique_ptr<ToDegFunction> ToDegFunction::create(MaximContext *context) {
+    return std::make_unique<ToDegFunction>(context);
 }
 
 std::unique_ptr<Value> ToDegFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext) {
+                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
+                                               llvm::Module *module) {
     auto numArg = dynamic_cast<Num*>(params[0].get());
     assert(numArg);
 

@@ -14,9 +14,9 @@
 using namespace MaximCodegen;
 
 Function::Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
-                   std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module, bool isPure)
+                   std::unique_ptr<Parameter> vararg, llvm::Type *contextType, bool isPure)
     : _context(context), _returnType(returnType), _parameters(std::move(parameters)),
-      _vararg(std::move(vararg)), _contextType(contextType), _module(module), _name(std::move(name)), _isPure(isPure) {
+      _vararg(std::move(vararg)), _contextType(contextType), _name(std::move(name)), _isPure(isPure) {
 
     // calculate argument requirements
     _allArguments = _parameters.size() + (_vararg ? 1 : 0);
@@ -24,7 +24,7 @@ Function::Function(MaximContext *context, std::string name, Type *returnType, st
     _maxArguments = _vararg ? -1 : (int) _parameters.size();
 }
 
-void Function::generate() {
+void Function::generate(llvm::Module *module) {
     std::vector<llvm::Type *> paramTypes;
     paramTypes.reserve(_allArguments);
 
@@ -63,7 +63,7 @@ void Function::generate() {
 
     // create LLVM function
     auto funcType = llvm::FunctionType::get(_returnType->get(), paramTypes, false);
-    _func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mangledName.str(), _module);
+    _func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mangledName.str(), module);
 
     // prettify arguments to pass into generate method
     std::vector<std::unique_ptr<Value>> genArgs;
@@ -82,7 +82,7 @@ void Function::generate() {
 
     auto funcBlock = llvm::BasicBlock::Create(_context->llvm(), "entry", _func);
     Builder builder(funcBlock);
-    auto res = generate(builder, std::move(genArgs), std::move(genVarArg), genContext);
+    auto res = generate(builder, std::move(genArgs), std::move(genVarArg), genContext, module);
     builder.CreateRet(res->get());
 }
 
@@ -116,14 +116,15 @@ Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos
     }
 
     // either call inline with constant folding, or generate call
-    auto result = computeConst ? callConst(node, std::move(args), std::move(varargs))
+    auto result = computeConst ? callConst(node, std::move(args), std::move(varargs), node->module())
                                : callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos);
     return result->withSource(startPos, endPos);
 }
 
 std::unique_ptr<Value> Function::generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                               std::unique_ptr<VarArg> vararg, llvm::Value *context) {
-    return generate(b, std::move(params), std::move(vararg), context);
+                                               std::unique_ptr<VarArg> vararg, llvm::Value *context,
+                                               llvm::Module *module) {
+    return generate(b, std::move(params), std::move(vararg), context, module);
 }
 
 std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
@@ -174,7 +175,7 @@ void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args,
 }
 
 std::unique_ptr<Value> Function::callConst(Node *node, std::vector<std::unique_ptr<Value>> args,
-                                           std::vector<std::unique_ptr<Value>> varargs) {
+                                           std::vector<std::unique_ptr<Value>> varargs, llvm::Module *module) {
     std::unique_ptr<VarArg> vararg;
     if (_vararg) {
         assert(!varargs.empty());
@@ -182,7 +183,7 @@ std::unique_ptr<Value> Function::callConst(Node *node, std::vector<std::unique_p
     }
 
     // evaluate function inline and let constant folding do the rest
-    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr);
+    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr, module);
 }
 
 std::unique_ptr<Value> Function::callNonConst(Node *node,

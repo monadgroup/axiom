@@ -7,21 +7,20 @@
 
 using namespace MaximCodegen;
 
-VectorShuffleFunction::VectorShuffleFunction(MaximContext *context, std::string name, llvm::ArrayRef<uint32_t> shuffle,
-                                             llvm::Module *module)
+VectorShuffleFunction::VectorShuffleFunction(MaximContext *context, std::string name, llvm::ArrayRef<uint32_t> shuffle)
     : Function(context, std::move(name), context->numType(),
-               {Parameter(context->numType(), false, false)}, nullptr, nullptr, module), _shuffle(shuffle) {
+               {Parameter(context->numType(), false, false)}, nullptr, nullptr), _shuffle(shuffle) {
 
 }
 
 std::unique_ptr<VectorShuffleFunction> VectorShuffleFunction::create(MaximContext *context, std::string name,
-                                                                     llvm::ArrayRef<uint32_t> shuffle,
-                                                                     llvm::Module *module) {
-    return std::make_unique<VectorShuffleFunction>(context, name, shuffle, module);
+                                                                     llvm::ArrayRef<uint32_t> shuffle) {
+    return std::make_unique<VectorShuffleFunction>(context, name, shuffle);
 }
 
 std::unique_ptr<Value> VectorShuffleFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                                       std::unique_ptr<VarArg> vararg, llvm::Value *funcContext) {
+                                                       std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
+                                                       llvm::Module *module) {
     auto xNum = dynamic_cast<Num*>(params[0].get());
     assert(xNum);
 

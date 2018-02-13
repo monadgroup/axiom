@@ -98,7 +98,7 @@ namespace MaximCodegen {
 
         void registerOperator(std::unique_ptr<Operator> op);
 
-        void registerFunction(std::unique_ptr<Function> func);
+        void registerFunction(std::unique_ptr<Function> func, llvm::Module *module);
 
         void registerConverter(MaximCommon::FormType destType, std::unique_ptr<Converter> con);
 

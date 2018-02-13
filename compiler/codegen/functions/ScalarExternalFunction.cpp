@@ -9,25 +9,24 @@
 using namespace MaximCodegen;
 
 ScalarExternalFunction::ScalarExternalFunction(MaximContext *context, std::string externalName, std::string name,
-                                               size_t paramCount, llvm::Module *module)
-    : Function(context, std::move(name), context->numType(), std::vector<Parameter>(paramCount, Parameter(context->numType(), false, false)), nullptr, nullptr, module),
-      externalName(std::move(externalName)) {
-
+                                               size_t paramCount)
+    : Function(context, std::move(name), context->numType(), std::vector<Parameter>(paramCount, Parameter(context->numType(), false, false)), nullptr, nullptr),
+      _externalName(std::move(externalName)) {
 }
 
 std::unique_ptr<ScalarExternalFunction> ScalarExternalFunction::create(MaximContext *context, std::string externalName,
-                                                                       std::string name, size_t paramCount,
-                                                                       llvm::Module *module) {
-    return std::make_unique<ScalarExternalFunction>(context, externalName, name, paramCount, module);
+                                                                       std::string name, size_t paramCount) {
+    return std::make_unique<ScalarExternalFunction>(context, externalName, name, paramCount);
 }
 
 std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                                        std::unique_ptr<VarArg> vararg, llvm::Value *funcContext) {
+                                                        std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
+                                                        llvm::Module *module) {
     auto floatTy = llvm::Type::getFloatTy(context()->llvm());
-    auto external = llvm::Function::Create(
+    auto func = llvm::Function::Create(
         llvm::FunctionType::get(floatTy, std::vector<llvm::Type*>(params.size(), floatTy), false),
         llvm::Function::ExternalLinkage,
-        externalName, module()
+        _externalName, module
     );
 
     llvm::Value *isActive = context()->constInt(1, 0, false);
@@ -54,7 +53,7 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<
             llValues.push_back(b.CreateExtractElement(llVec, i, "vec.temp"));
         }
 
-        auto singleResult = CreateCall(b, external, llValues, "result.temp");
+        auto singleResult = CreateCall(b, func, llValues, "result.temp");
         res = b.CreateInsertElement(res, singleResult, i, "result");
     }
 
