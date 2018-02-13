@@ -9,16 +9,16 @@
 using namespace MaximCodegen;
 
 ScalarExternalFunction::ScalarExternalFunction(MaximContext *context, std::string externalName, std::string name,
-                                               size_t paramCount, bool propagateForm, llvm::Module *module)
+                                               size_t paramCount, llvm::Module *module)
     : Function(context, std::move(name), context->numType(), std::vector<Parameter>(paramCount, Parameter(context->numType(), false, false)), nullptr, nullptr, module),
-      externalName(externalName), propagateForm(propagateForm) {
+      externalName(std::move(externalName)) {
 
 }
 
 std::unique_ptr<ScalarExternalFunction> ScalarExternalFunction::create(MaximContext *context, std::string externalName,
                                                                        std::string name, size_t paramCount,
-                                                                       bool propagateForm, llvm::Module *module) {
-    return std::make_unique<ScalarExternalFunction>(context, externalName, name, paramCount, propagateForm, module);
+                                                                       llvm::Module *module) {
+    return std::make_unique<ScalarExternalFunction>(context, externalName, name, paramCount, module);
 }
 
 std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
@@ -59,10 +59,5 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<
     }
 
     SourcePos undefPos(-1, -1);
-    auto num = firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
-    if (propagateForm) {
-        return std::move(num);
-    } else {
-        return num->withForm(b, MaximCommon::FormType::LINEAR, undefPos, undefPos);
-    }
+    return firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
 }

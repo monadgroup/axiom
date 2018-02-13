@@ -13,6 +13,7 @@ Num::Num(MaximContext *context, float left, float right, MaximCommon::FormType f
         llvm::ConstantInt::get(type()->formType(), (uint64_t) form, false),
         llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false)
     });
+    _get->setName("num");
 }
 
 Num::Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos)
@@ -30,21 +31,21 @@ std::unique_ptr<Num> Num::create(MaximContext *context, llvm::Value *get, Source
 }
 
 llvm::Value *Num::vec(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {0}, "num.vec");
+    return builder.CreateExtractValue(_get, {0}, _get->getName() + ".vec");
 }
 
 llvm::Value *Num::form(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {1}, "num.form");
+    return builder.CreateExtractValue(_get, {1}, _get->getName() + ".form");
 }
 
 llvm::Value *Num::active(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {2}, "num.active");
+    return builder.CreateExtractValue(_get, {2}, _get->getName() + ".active");
 }
 
 std::unique_ptr<Num> Num::withVec(Builder &builder, llvm::Value *newVec, SourcePos startPos, SourcePos endPos) const {
     return Num::create(
         _context,
-        builder.CreateInsertValue(_get, newVec, {0}, "num.new_vec"),
+        builder.CreateInsertValue(_get, newVec, {0}, _get->getName() + ".new_vec"),
         startPos, endPos
     );
 }
@@ -61,7 +62,7 @@ std::unique_ptr<Num> Num::withForm(Builder &builder, llvm::Value *newForm, Sourc
                                    SourcePos endPos) const {
     return Num::create(
         _context,
-        builder.CreateInsertValue(_get, newForm, {1}, "num.new_form"),
+        builder.CreateInsertValue(_get, newForm, {1}, _get->getName() + ".new_form"),
         startPos, endPos
     );
 }

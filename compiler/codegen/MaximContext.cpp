@@ -14,6 +14,13 @@
 #include "functions/VectorIntrinsicFoldFunction.h"
 #include "functions/ToRadFunction.h"
 #include "functions/ToDegFunction.h"
+#include "functions/ClampFunction.h"
+#include "functions/PanFunction.h"
+#include "functions/VectorShuffleFunction.h"
+#include "functions/CombineFunction.h"
+#include "functions/NoiseFunction.h"
+#include "functions/ActiveFunction.h"
+#include "functions/WithActiveFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -139,7 +146,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
             auto leftTupleVal = leftTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto rightTupleVal = rightTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftTupleVal->type(), rightTupleVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(b, std::move(leftTupleVal), std::move(rightTuple)));
+            resultVals.push_back(op->call(b, std::move(leftTupleVal), std::move(rightTuple), startPos, endPos));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
@@ -151,7 +158,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
         for (size_t i = 0; i < leftSize; i++) {
             auto leftTupleVal = leftTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftTupleVal->type(), rightVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(b, std::move(leftTupleVal), rightVal->clone()));
+            resultVals.push_back(op->call(b, std::move(leftTupleVal), rightVal->clone(), startPos, endPos));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
@@ -163,14 +170,14 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
         for (size_t i = 0; i < rightSize; i++) {
             auto rightTupleVal = rightTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftVal->type(), rightTupleVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(b, leftVal->clone(), std::move(rightTupleVal)));
+            resultVals.push_back(op->call(b, leftVal->clone(), std::move(rightTupleVal), startPos, endPos));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
     } else {
         // if neither are tuples, operate normally
         auto op = alwaysGetOperator(type, leftVal->type(), rightVal->type(), startPos, endPos);
-        return op->call(b, std::move(leftVal), std::move(rightVal));
+        return op->call(b, std::move(leftVal), std::move(rightVal), startPos, endPos);
     }
 }
 
@@ -217,29 +224,48 @@ std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType,
 }
 
 void MaximContext::setupCoreModule(llvm::Module *module) {
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::cos, "cos", 1, true, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sin, "sin", 1, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "tanf", "tan", 1, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "acosf", "acos", 1, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "asinf", "asin", 1, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "atanf", "atan", 1, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "atan2f", "atan2", 2, false, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log, "log", 1, true, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log2, "log2", 1, true, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log10, "log10", 1, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "logbf", "logb", 1, true, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sqrt, "sqrt", 1, true, module));
-    registerFunction(ScalarExternalFunction::create(this, "hypotf", "hypot", 2, false, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::ceil, "ceil", 1, true, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::floor, "floor", 1, true, module));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::fabs, "abs", 1, true, module));
+    // functions that map directly to a built-in LLVM vector intrinsic
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::cos, "cos", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sin, "sin", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log, "log", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log2, "log2", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log10, "log10", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sqrt, "sqrt", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::ceil, "ceil", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::floor, "floor", 1, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::fabs, "abs", 1, module));
+
+    // functions that map directly to an external scalar function
+    registerFunction(ScalarExternalFunction::create(this, "tanf", "tan", 1, module));
+    registerFunction(ScalarExternalFunction::create(this, "acosf", "acos", 1, module));
+    registerFunction(ScalarExternalFunction::create(this, "asinf", "asin", 1, module));
+    registerFunction(ScalarExternalFunction::create(this, "atanf", "atan", 1, module));
+    registerFunction(ScalarExternalFunction::create(this, "atan2f", "atan2", 2, module));
+    registerFunction(ScalarExternalFunction::create(this, "logbf", "logb", 1, module));
+    registerFunction(ScalarExternalFunction::create(this, "hypotf", "hypot", 2, module));
+
+    // other functions
     registerFunction(ToRadFunction::create(this, module));
     registerFunction(ToDegFunction::create(this, module));
+    registerFunction(ClampFunction::create(this, module));
+    registerFunction(PanFunction::create(this, module));
+    registerFunction(VectorShuffleFunction::create(this, "left", {0, 0}, module));
+    registerFunction(VectorShuffleFunction::create(this, "right", {1, 1}, module));
+    registerFunction(VectorShuffleFunction::create(this, "swap", {1, 0}, module));
+    registerFunction(CombineFunction::create(this, module));
+    registerFunction(NoiseFunction::create(this, module));
+    registerFunction(ActiveFunction::create(this, module));
+    registerFunction(WithActiveFunction::create(this, module));
 
-    // todo: add hot paths for when only two params are provided
+    // hot paths for when only two parameters are provided to min/max
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::minnum, "min", 2, module));
+    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::maxnum, "max", 2, module));
+
+    // variadic versions of min/max
     registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::minnum, "min", module));
     registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::maxnum, "max", module));
 
+    // operators
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::ADD, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FAdd));
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::SUBTRACT, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FSub));
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MULTIPLY, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FMul));

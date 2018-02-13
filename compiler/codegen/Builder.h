@@ -1,18 +1,12 @@
 #pragma once
 
-#include <llvm/ADT/Twine.h>
-
-namespace llvm {
-    class Value;
-
-    class Function;
-
-    class BasicBlock;
-}
+#include <llvm/IR/IRBuilder.h>
 
 namespace MaximCodegen {
 
-    class Builder {
+    using Builder = llvm::IRBuilder<>;
+
+    /*class Builder {
     public:
         Builder(llvm::BasicBlock *block);
 
@@ -30,6 +24,8 @@ namespace MaximCodegen {
         llvm::Value *CreateInsertElement(llvm::Value *vec, llvm::Value *newElt, llvm::Value *idx, const llvm::Twine &name);
 
         llvm::Value *CreateInsertElement(llvm::Value *vec, llvm::Value *newElt, uint64_t idx, const llvm::Twine &name);
+
+        llvm::Value *CreateShuffleVector(llvm::Value *v1, llvm::Value *v2, llvm::ArrayRef<uint32_t> intMask, const llvm::Twine &name);
 
         llvm::Value *
         CreateGEP(llvm::Type *type, llvm::Value *val, llvm::ArrayRef<llvm::Value *> idxList, const llvm::Twine &name);
@@ -67,6 +63,6 @@ namespace MaximCodegen {
         void CreateCondBr(llvm::Value *cond, llvm::BasicBlock *t, llvm::BasicBlock *f);
 
         void CreateRet(llvm::Value *v);
-    };
+    };*/
 
 }

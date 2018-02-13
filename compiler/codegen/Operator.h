@@ -14,7 +14,7 @@ namespace MaximCodegen {
     public:
         Operator(MaximContext *context, MaximCommon::OperatorType type, Type *leftType, Type *rightType);
 
-        virtual std::unique_ptr<Value> call(Builder &b, std::unique_ptr<Value> left, std::unique_ptr<Value> right) = 0;
+        virtual std::unique_ptr<Value> call(Builder &b, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos, SourcePos endPos) = 0;
 
         MaximCommon::OperatorType type() const { return _type; }
 

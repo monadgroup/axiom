@@ -14,9 +14,9 @@
 using namespace MaximCodegen;
 
 Function::Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
-                   std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module)
+                   std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module, bool isPure)
     : _context(context), _returnType(returnType), _parameters(std::move(parameters)),
-      _vararg(std::move(vararg)), _contextType(contextType), _module(module), _name(name) {
+      _vararg(std::move(vararg)), _contextType(contextType), _module(module), _name(name), _isPure(isPure) {
 
     // calculate argument requirements
     _allArguments = _parameters.size() + (_vararg ? 1 : 0);
@@ -98,10 +98,12 @@ Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos
 
     // figure out if we can constant-fold this function
     auto computeConst = isPure();
-    for (const auto &val : mappedArgs) {
-        if (!computeConst) break;
-        if (!llvm::isa<llvm::Constant>(val->get())) {
-            computeConst = false;
+    if (computeConst) {
+        for (const auto &val : mappedArgs) {
+            if (!llvm::isa<llvm::Constant>(val->get())) {
+                computeConst = false;
+                break;
+            }
         }
     }
 
@@ -116,8 +118,9 @@ Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos
     }
 
     // either call inline with constant folding, or generate call
-    if (computeConst) return callConst(node, std::move(args), std::move(varargs));
-    else return callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos);
+    auto result = computeConst ? callConst(node, std::move(args), std::move(varargs))
+                               : callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos);
+    return result->withSource(startPos, endPos);
 }
 
 std::unique_ptr<Value> Function::generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params,
@@ -239,6 +242,10 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
 
 Parameter::Parameter(Type *type, bool requireConst, bool optional)
     : type(type), requireConst(requireConst), optional(optional) {}
+
+std::unique_ptr<Parameter> Parameter::create(Type *type, bool requireConst, bool optional) {
+    return std::make_unique<Parameter>(type, requireConst, optional);
+}
 
 VarArg::VarArg(MaximContext *context) : context(context) {}
 

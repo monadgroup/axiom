@@ -4,6 +4,7 @@
 
 #include "../../ast/TupleExpression.h"
 #include "../Tuple.h"
+#include "../Node.h"
 #include "ExpressionVisitor.h"
 
 using namespace MaximCodegen;
@@ -14,5 +15,5 @@ std::unique_ptr<Value> MaximCodegen::visitTuple(Node *node, MaximAst::TupleExpre
     for (const auto &subExpr : expr->expressions) {
         values.push_back(visitExpression(node, subExpr.get()));
     }
-    return Tuple::create(values);
+    return Tuple::create(node->ctx(), values, node->builder(), expr->startPos, expr->endPos);
 }

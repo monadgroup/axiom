@@ -55,13 +55,13 @@ namespace MaximCodegen {
     class Function {
     public:
         Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
-                 std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module);
+                 std::unique_ptr<Parameter> vararg, llvm::Type *contextType, llvm::Module *module, bool isPure = true);
 
         std::string name() const { return _name; }
 
         Type *returnType() const { return _returnType; }
 
-        bool isPure() const { return !_contextType; }
+        bool isPure() const { return _isPure && !_contextType; }
 
         std::vector<Parameter> const &parameters() const { return _parameters; }
 
@@ -122,6 +122,7 @@ namespace MaximCodegen {
         llvm::Function *_func;
         llvm::Module *_module;
         std::string _name;
+        bool _isPure;
 
         size_t _allArguments;
         size_t _minArguments;

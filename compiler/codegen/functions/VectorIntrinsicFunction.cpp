@@ -7,16 +7,16 @@
 using namespace MaximCodegen;
 
 VectorIntrinsicFunction::VectorIntrinsicFunction(MaximContext *context, llvm::Intrinsic::ID id, std::string name,
-                                                 size_t paramCount, bool propagateForm, llvm::Module *module)
+                                                 size_t paramCount, llvm::Module *module)
     : Function(context, std::move(name), context->numType(), std::vector<Parameter>(paramCount, Parameter(context->numType(), false, false)), nullptr, nullptr, module),
-      id(id), propagateForm(propagateForm) {
+      id(id) {
 
 }
 
 std::unique_ptr<VectorIntrinsicFunction> VectorIntrinsicFunction::create(MaximContext *context, llvm::Intrinsic::ID id,
                                                                          std::string name, size_t paramCount,
-                                                                         bool propagateForm, llvm::Module *module) {
-    return std::make_unique<VectorIntrinsicFunction>(context, id, name, paramCount, propagateForm, module);
+                                                                         llvm::Module *module) {
+    return std::make_unique<VectorIntrinsicFunction>(context, id, name, paramCount, module);
 }
 
 std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
@@ -41,10 +41,5 @@ std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector
     auto res = b.CreateCall(intrinsic, llParams, "intrinsic.result");
 
     SourcePos undefPos(-1, -1);
-    auto num = firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
-    if (propagateForm) {
-        return std::move(num);
-    } else {
-        return num->withForm(b, MaximCommon::FormType::LINEAR, undefPos, undefPos);
-    }
+    return  firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
 }
