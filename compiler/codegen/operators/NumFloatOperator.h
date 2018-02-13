@@ -12,7 +12,7 @@ namespace MaximCodegen {
 
         static std::unique_ptr<NumFloatOperator> create(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Instruction::BinaryOps op);
 
-        std::unique_ptr<Num> call(Builder &b, Num *numLeft, Num *numRight) override;
+        std::unique_ptr<Num> call(Node *node, Num *numLeft, Num *numRight) override;
 
     private:
         llvm::Instruction::BinaryOps _op;

@@ -2,6 +2,7 @@
 
 #include "../MaximContext.h"
 #include "../Num.h"
+#include "../Node.h"
 
 using namespace MaximCodegen;
 
@@ -15,7 +16,8 @@ std::unique_ptr<NumFloatOperator> NumFloatOperator::create(MaximContext *context
     return std::make_unique<NumFloatOperator>(context, type, activeMode, op);
 }
 
-std::unique_ptr<Num> NumFloatOperator::call(Builder &b, Num *numLeft, Num *numRight) {
+std::unique_ptr<Num> NumFloatOperator::call(Node *node, Num *numLeft, Num *numRight) {
+    auto &b = node->builder();
     auto operatedVal = b.CreateBinOp(_op, numLeft->vec(b), numRight->vec(b), "op.vec");
     auto isActive = getActive(b, numLeft, numRight);
 

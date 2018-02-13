@@ -98,7 +98,7 @@ namespace MaximCodegen {
 
         void registerOperator(std::unique_ptr<Operator> op);
 
-        void registerFunction(std::unique_ptr<Function> func, llvm::Module *module);
+        void registerFunction(std::unique_ptr<Function> func);
 
         void registerConverter(MaximCommon::FormType destType, std::unique_ptr<Converter> con);
 
@@ -106,7 +106,7 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value>
         callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal, std::unique_ptr<Value> rightVal,
-                     Builder &b, SourcePos startPos, SourcePos endPos);
+                     Node *node, SourcePos startPos, SourcePos endPos);
 
         Function *getFunction(std::string name, std::vector<Type *> types);
 
@@ -118,7 +118,7 @@ namespace MaximCodegen {
 
         std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value);
 
-        void setupCoreModule(llvm::Module *module);
+        void buildFunctions(llvm::Module *module);
 
     private:
         llvm::LLVMContext _llvm;

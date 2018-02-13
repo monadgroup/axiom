@@ -23,7 +23,8 @@ std::unique_ptr<VectorIntrinsicFoldFunction> VectorIntrinsicFoldFunction::create
 
 std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                              std::unique_ptr<VarArg> vararg,
-                                                             llvm::Value *funcContext, llvm::Module *module) {
+                                                             llvm::Value *funcContext, llvm::Function *func,
+                                                             llvm::Module *module) {
     auto intrinsic = llvm::Intrinsic::getDeclaration(module, _id, {context()->numType()->vecType()});
     auto varCount = vararg->count(b);
     auto firstVal = vararg->atIndex((uint64_t) 0, b);
@@ -39,9 +40,9 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::ve
     auto indexPtr = b.CreateAlloca(indexType, nullptr, "accum.indexptr");
     b.CreateStore(llvm::ConstantInt::get(indexType, 0, false), indexPtr);
 
-    auto loopCheckBlock = llvm::BasicBlock::Create(context()->llvm(), "loop.check", func());
-    auto loopContinueBlock = llvm::BasicBlock::Create(context()->llvm(), "loop.continue", func());
-    auto finishBlock = llvm::BasicBlock::Create(context()->llvm(), "finish", func());
+    auto loopCheckBlock = llvm::BasicBlock::Create(context()->llvm(), "loop.check", func);
+    auto loopContinueBlock = llvm::BasicBlock::Create(context()->llvm(), "loop.continue", func);
+    auto finishBlock = llvm::BasicBlock::Create(context()->llvm(), "finish", func);
 
     b.CreateBr(loopCheckBlock);
     b.SetInsertPoint(loopCheckBlock);

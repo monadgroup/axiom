@@ -32,6 +32,7 @@ void Node::setVariable(std::string name, std::unique_ptr<Value> value) {
 void Node::setAssignable(MaximAst::AssignableExpression *assignable, std::unique_ptr<Value> value) {
     if (auto var = dynamic_cast<MaximAst::VariableExpression*>(assignable)) {
         setVariable(var->name, std::move(value));
+        return;
     }
     assert(false);
 }

@@ -16,73 +16,66 @@ using namespace MaximCodegen;
 Function::Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
                    std::unique_ptr<Parameter> vararg, llvm::Type *contextType, bool isPure)
     : _context(context), _returnType(returnType), _parameters(std::move(parameters)),
-      _vararg(std::move(vararg)), _contextType(contextType), _name(std::move(name)), _isPure(isPure) {
+      _vararg(std::move(vararg)), _contextType(contextType), _name(name), _isPure(isPure) {
 
     // calculate argument requirements
     _allArguments = _parameters.size() + (_vararg ? 1 : 0);
     _minArguments = _allArguments;
     _maxArguments = _vararg ? -1 : (int) _parameters.size();
-}
 
-void Function::generate(llvm::Module *module) {
-    std::vector<llvm::Type *> paramTypes;
-    paramTypes.reserve(_allArguments);
+    _paramTypes.reserve(_allArguments);
 
     for (const auto &param : _parameters) {
-        paramTypes.push_back(param.type->get());
-        if (param.optional) {
-            _minArguments--;
-        }
+        _paramTypes.push_back(param.type->get());
+        if (param.optional) _minArguments--;
     }
 
-    size_t vaIndex = 0, contextIndex = 0;
-
-    // build vararg and context parameters
     if (_vararg) {
-        _vaType = llvm::StructType::get(context()->llvm(), {
-            llvm::Type::getInt8Ty(context()->llvm()),
+        _vaType = llvm::StructType::get(context->llvm(), {
+            llvm::Type::getInt8Ty(context->llvm()),
             llvm::PointerType::get(_vararg->type->get(), 0)
         });
-        vaIndex = paramTypes.size();
-        paramTypes.push_back(_vaType);
+        _vaIndex = _paramTypes.size();
+        _paramTypes.push_back(_vaType);
     }
     if (_contextType) {
-        contextIndex = paramTypes.size();
-        paramTypes.push_back(llvm::PointerType::get(_contextType, 0));
+        _contextIndex = _paramTypes.size();
+        _paramTypes.push_back(llvm::PointerType::get(_contextType, 0));
     }
 
     // mangle name
     std::stringstream mangledName;
-    mangledName << "maxim." << _name;
+    mangledName << "maxim." << name;
     for (const auto &param : _parameters) {
         mangledName << "." << param.type->name();
     }
     if (_vararg) {
         mangledName << "_" << _vararg->type->name();
     }
+    _mangledName = mangledName.str();
+}
 
-    // create LLVM function
-    auto funcType = llvm::FunctionType::get(_returnType->get(), paramTypes, false);
-    _func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, mangledName.str(), module);
+void Function::generate(llvm::Module *module) {
+    auto func = createFuncForModule(module);
 
     // prettify arguments to pass into generate method
     std::vector<std::unique_ptr<Value>> genArgs;
     genArgs.reserve(_parameters.size());
     for (size_t i = 0; i < _parameters.size(); i++) {
-        auto argVal = _func->arg_begin() + i;
+        auto argVal = func->arg_begin() + i;
         auto argType = _parameters[i].type;
         genArgs.push_back(argType->createInstance(argVal, SourcePos(-1, -1), SourcePos(-1, -1)));
     }
 
     std::unique_ptr<VarArg> genVarArg;
-    if (_vararg) genVarArg = std::make_unique<DynVarArg>(_context, _func->arg_begin() + vaIndex, _vararg->type);
+    if (_vararg) genVarArg = std::make_unique<DynVarArg>(_context, func->arg_begin() + _vaIndex, _vararg->type);
 
     llvm::Value *genContext = nullptr;
-    if (_contextType) genContext = _func->arg_begin() + contextIndex;
+    if (_contextType) genContext = func->arg_begin() + _contextIndex;
 
-    auto funcBlock = llvm::BasicBlock::Create(_context->llvm(), "entry", _func);
+    auto funcBlock = llvm::BasicBlock::Create(_context->llvm(), "entry", func);
     Builder builder(funcBlock);
-    auto res = generate(builder, std::move(genArgs), std::move(genVarArg), genContext, module);
+    auto res = generate(builder, std::move(genArgs), std::move(genVarArg), genContext, func, module);
     builder.CreateRet(res->get());
 }
 
@@ -117,14 +110,14 @@ Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos
 
     // either call inline with constant folding, or generate call
     auto result = computeConst ? callConst(node, std::move(args), std::move(varargs), node->module())
-                               : callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos);
+                               : callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos, node->module());
     return result->withSource(startPos, endPos);
 }
 
 std::unique_ptr<Value> Function::generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                std::unique_ptr<VarArg> vararg, llvm::Value *context,
-                                               llvm::Module *module) {
-    return generate(b, std::move(params), std::move(vararg), context, module);
+                                               llvm::Function *func, llvm::Module *module) {
+    return generate(b, std::move(params), std::move(vararg), context, func, module);
 }
 
 std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
@@ -183,14 +176,14 @@ std::unique_ptr<Value> Function::callConst(Node *node, std::vector<std::unique_p
     }
 
     // evaluate function inline and let constant folding do the rest
-    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr, module);
+    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr, node->func(), module);
 }
 
 std::unique_ptr<Value> Function::callNonConst(Node *node,
                                               std::vector<std::unique_ptr<Value>> allArgs,
                                               std::vector<std::unique_ptr<Value>> args,
                                               const std::vector<std::unique_ptr<Value>> &varargs,
-                                              SourcePos startPos, SourcePos endPos) {
+                                              SourcePos startPos, SourcePos endPos, llvm::Module *module) {
     std::vector<llvm::Value *> values;
     values.reserve(args.size());
     for (const auto &arg : args) {
@@ -224,8 +217,13 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
         values.push_back(contextPtr);
     }
 
-    auto result = CreateCall(node->builder(), _func, values, "result");
+    auto result = CreateCall(node->builder(), createFuncForModule(module), values, "result");
     return _returnType->createInstance(result, startPos, endPos);
+}
+
+llvm::Function* Function::createFuncForModule(llvm::Module *module) {
+    auto funcType = llvm::FunctionType::get(_returnType->get(), _paramTypes, false);
+    return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, _mangledName, module);
 }
 
 Parameter::Parameter(Type *type, bool requireConst, bool optional)

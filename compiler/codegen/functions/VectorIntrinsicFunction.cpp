@@ -20,7 +20,7 @@ std::unique_ptr<VectorIntrinsicFunction> VectorIntrinsicFunction::create(MaximCo
 
 std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                          std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                                         llvm::Module *module) {
+                                                         llvm::Function *func, llvm::Module *module) {
     auto intrinsic = llvm::Intrinsic::getDeclaration(module, id, {context()->numType()->vecType()});
 
     llvm::Value *isActive = context()->constInt(1, 0, false);

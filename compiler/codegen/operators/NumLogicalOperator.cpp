@@ -5,6 +5,7 @@
 
 #include "../MaximContext.h"
 #include "../Num.h"
+#include "../Node.h"
 
 using namespace MaximCodegen;
 
@@ -18,7 +19,8 @@ std::unique_ptr<NumLogicalOperator> NumLogicalOperator::create(MaximContext *con
     return std::make_unique<NumLogicalOperator>(context, type, activeMode, op);
 }
 
-std::unique_ptr<Num> NumLogicalOperator::call(Builder &b, Num *numLeft, Num *numRight) {
+std::unique_ptr<Num> NumLogicalOperator::call(Node *node, Num *numLeft, Num *numRight) {
+    auto &b = node->builder();
     auto zeroConst = context()->constFloat(0);
     auto zeroVec = llvm::ConstantVector::get({zeroConst, zeroConst});
 

@@ -2,6 +2,7 @@
 
 #include "../MaximContext.h"
 #include "../Num.h"
+#include "../Node.h"
 
 using namespace MaximCodegen;
 
@@ -17,7 +18,8 @@ std::unique_ptr<NumComparisonOperator> NumComparisonOperator::create(MaximContex
     return std::make_unique<NumComparisonOperator>(context, type, activeMode, op);
 }
 
-std::unique_ptr<Num> NumComparisonOperator::call(Builder &b, Num *numLeft, Num *numRight) {
+std::unique_ptr<Num> NumComparisonOperator::call(Node *node, Num *numLeft, Num *numRight) {
+    auto &b = node->builder();
     auto operatedInt = b.CreateFCmp(_op, numLeft->vec(b), numRight->vec(b), "op.ivec");
     auto isActive = b.CreateAnd(getActive(b, numLeft, numRight), operatedInt, "op.active");
     auto operatedVal = b.CreateUIToFP(operatedInt, context()->numType()->vecType(), "op.vec");

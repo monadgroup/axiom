@@ -12,14 +12,13 @@ namespace MaximCodegen {
 
     class NumIntrinsicOperator : public NumOperator {
     public:
-        NumIntrinsicOperator(MaximContext *context, llvm::Module *module, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id);
+        NumIntrinsicOperator(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id);
 
-        static std::unique_ptr<NumIntrinsicOperator> create(MaximContext *context, llvm::Module *module, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id);
+        static std::unique_ptr<NumIntrinsicOperator> create(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id);
 
-        std::unique_ptr<Num> call(Builder &b, Num *numLeft, Num *numRight) override;
+        std::unique_ptr<Num> call(Node *node, Num *numLeft, Num *numRight) override;
 
     private:
-        llvm::Module *_module;
         llvm::Intrinsic::ID _id;
     };
 

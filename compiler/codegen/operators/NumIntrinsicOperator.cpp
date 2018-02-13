@@ -2,20 +2,22 @@
 
 #include "../MaximContext.h"
 #include "../Num.h"
+#include "../Node.h"
 
 using namespace MaximCodegen;
 
-NumIntrinsicOperator::NumIntrinsicOperator(MaximContext *context, llvm::Module *module, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id)
-    : NumOperator(context, type, activeMode), _module(module), _id(id) {
+NumIntrinsicOperator::NumIntrinsicOperator(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id)
+    : NumOperator(context, type, activeMode), _id(id) {
 
 }
 
-std::unique_ptr<NumIntrinsicOperator> NumIntrinsicOperator::create(MaximContext *context, llvm::Module *module, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id) {
-    return std::make_unique<NumIntrinsicOperator>(context, module, type, activeMode, id);
+std::unique_ptr<NumIntrinsicOperator> NumIntrinsicOperator::create(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id) {
+    return std::make_unique<NumIntrinsicOperator>(context, type, activeMode, id);
 }
 
-std::unique_ptr<Num> NumIntrinsicOperator::call(Builder &b, Num *numLeft, Num *numRight) {
-    auto powIntrinsic = llvm::Intrinsic::getDeclaration(_module, _id, context()->numType()->vecType());
+std::unique_ptr<Num> NumIntrinsicOperator::call(Node *node, Num *numLeft, Num *numRight) {
+    auto &b = node->builder();
+    auto powIntrinsic = llvm::Intrinsic::getDeclaration(node->module(), _id, context()->numType()->vecType());
     auto operatedVal = CreateCall(b, powIntrinsic, {
         numLeft->vec(b),
         numRight->vec(b)

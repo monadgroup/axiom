@@ -21,9 +21,9 @@ std::unique_ptr<ScalarExternalFunction> ScalarExternalFunction::create(MaximCont
 
 std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                         std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                                        llvm::Module *module) {
+                                                        llvm::Function *func, llvm::Module *module) {
     auto floatTy = llvm::Type::getFloatTy(context()->llvm());
-    auto func = llvm::Function::Create(
+    auto extFunc = llvm::Function::Create(
         llvm::FunctionType::get(floatTy, std::vector<llvm::Type*>(params.size(), floatTy), false),
         llvm::Function::ExternalLinkage,
         _externalName, module
@@ -53,7 +53,7 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<
             llValues.push_back(b.CreateExtractElement(llVec, i, "vec.temp"));
         }
 
-        auto singleResult = CreateCall(b, func, llValues, "result.temp");
+        auto singleResult = CreateCall(b, extFunc, llValues, "result.temp");
         res = b.CreateInsertElement(res, singleResult, i, "result");
     }
 

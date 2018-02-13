@@ -21,7 +21,7 @@ std::unique_ptr<NoiseFunction> NoiseFunction::create(MaximContext *context) {
 
 std::unique_ptr<Value> NoiseFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                               llvm::Module *module) {
+                                               llvm::Function *func, llvm::Module *module) {
     auto randType = llvm::Type::getInt32Ty(context()->llvm());
     auto randFunc = llvm::Function::Create(
         llvm::FunctionType::get(randType, {}, false),

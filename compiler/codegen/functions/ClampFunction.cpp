@@ -22,7 +22,7 @@ std::unique_ptr<ClampFunction> ClampFunction::create(MaximContext *context) {
 
 std::unique_ptr<Value> ClampFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                               llvm::Module *module) {
+                                               llvm::Function *func, llvm::Module *module) {
     auto minIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::minnum, {context()->numType()->vecType()});
     auto maxIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::maxnum, {context()->numType()->vecType()});
 

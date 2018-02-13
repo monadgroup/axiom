@@ -17,7 +17,7 @@ std::unique_ptr<Value> MaximCodegen::visitAssign(Node *node, MaximAst::AssignExp
             expr->type,
             visitExpression(node, expr->left.get()),
             visitExpression(node, expr->right.get()),
-            node->builder(), expr->startPos, expr->endPos
+            node, expr->startPos, expr->endPos
         );
     }
 

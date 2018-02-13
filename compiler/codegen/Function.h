@@ -75,17 +75,15 @@ namespace MaximCodegen {
         call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);
 
     protected:
-        llvm::Function *func() const { return _func; }
-
         MaximContext *context() const { return _context; }
 
         virtual std::unique_ptr<Value>
         generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                 llvm::Value *funcContext, llvm::Module *module) = 0;
+                 llvm::Value *funcContext, llvm::Function *func, llvm::Module *module) = 0;
 
         virtual std::unique_ptr<Value>
         generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                      llvm::Value *funcContext, llvm::Module *module);
+                      llvm::Value *funcContext, llvm::Function *func, llvm::Module *module);
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
 
@@ -117,14 +115,17 @@ namespace MaximCodegen {
 
         MaximContext *_context;
         Type *_returnType;
+        std::vector<llvm::Type*> _paramTypes;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _vararg;
         llvm::Type *_vaType;
         llvm::Type *_contextType;
-        llvm::Function *_func;
         std::string _name;
+        std::string _mangledName;
         bool _isPure;
 
+        size_t _vaIndex = 0;
+        size_t _contextIndex = 0;
         size_t _allArguments;
         size_t _minArguments;
         int _maxArguments;
@@ -143,7 +144,9 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value>
         callNonConst(Node *node, std::vector<std::unique_ptr<Value>> allArgs, std::vector<std::unique_ptr<Value>> args,
-                     const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos, SourcePos endPos);
+                     const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos, SourcePos endPos, llvm::Module *module);
+
+        llvm::Function *createFuncForModule(llvm::Module *module);
     };
 
 }

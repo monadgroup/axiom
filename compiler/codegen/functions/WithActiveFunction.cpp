@@ -18,7 +18,7 @@ std::unique_ptr<WithActiveFunction> WithActiveFunction::create(MaximContext *con
 
 std::unique_ptr<Value> WithActiveFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                     std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                                    llvm::Module *module) {
+                                                    llvm::Function *func, llvm::Module *module) {
     auto xNum = dynamic_cast<Num*>(params[0].get());
     auto activeNum = dynamic_cast<Num*>(params[1].get());
     assert(xNum);

@@ -69,14 +69,14 @@ void parseAndCompile(MaximContext *ctx, llvm::Module *mainModule) {
 
     llvm::verifyFunction(*node.func());
 
-    //llvm::Linker::linkModules(nodeModule, llvm::CloneModule(mainModule));
+    llvm::Linker::linkModules(nodeModule, llvm::CloneModule(mainModule));
     nodeModule.print(llvm::errs(), nullptr);
 }
 
 int main() {
     MaximContext ctx;
     llvm::Module mainModule("main", ctx.llvm());
-    ctx.setupCoreModule(&mainModule);
+    ctx.buildFunctions(&mainModule);
 
     while (true) {
         try {

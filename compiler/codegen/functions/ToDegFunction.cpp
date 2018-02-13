@@ -19,7 +19,7 @@ std::unique_ptr<ToDegFunction> ToDegFunction::create(MaximContext *context) {
 
 std::unique_ptr<Value> ToDegFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                               llvm::Module *module) {
+                                               llvm::Function *func, llvm::Module *module) {
     auto numArg = dynamic_cast<Num*>(params[0].get());
     assert(numArg);
 
