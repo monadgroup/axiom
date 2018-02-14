@@ -31,8 +31,7 @@ std::unique_ptr<Value> NoiseFunction::generate(Builder &b, std::vector<std::uniq
 
     auto minNum = dynamic_cast<Num*>(params[0].get());
     auto maxNum = dynamic_cast<Num*>(params[1].get());
-    assert(minNum);
-    assert(maxNum);
+    assert(minNum && maxNum);
 
     auto minVec = minNum->vec(b);
     auto maxVec = maxNum->vec(b);

@@ -29,9 +29,7 @@ std::unique_ptr<Value> ClampFunction::generate(Builder &b, std::vector<std::uniq
     auto xNum = dynamic_cast<Num*>(params[0].get());
     auto minNum = dynamic_cast<Num*>(params[1].get());
     auto maxNum = dynamic_cast<Num*>(params[2].get());
-    assert(xNum);
-    assert(minNum);
-    assert(maxNum);
+    assert(xNum && minNum && maxNum);
 
     auto currentVec = xNum->vec(b);
     currentVec = CreateCall(b, maxIntrinsic, {currentVec, minNum->vec(b)}, "maxed");

@@ -29,8 +29,7 @@ std::unique_ptr<Value> PanFunction::generate(Builder &b, std::vector<std::unique
 
     auto xNum = dynamic_cast<Num*>(params[0].get());
     auto panNum = dynamic_cast<Num*>(params[1].get());
-    assert(xNum);
-    assert(panNum);
+    assert(xNum && panNum);
 
     auto zeroFloat = context()->constFloat(0);
     auto oneFloat = context()->constFloat(1);

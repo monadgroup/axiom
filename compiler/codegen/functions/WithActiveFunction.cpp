@@ -21,8 +21,7 @@ std::unique_ptr<Value> WithActiveFunction::generate(Builder &b, std::vector<std:
                                                     llvm::Function *func, llvm::Module *module) {
     auto xNum = dynamic_cast<Num*>(params[0].get());
     auto activeNum = dynamic_cast<Num*>(params[1].get());
-    assert(xNum);
-    assert(activeNum);
+    assert(xNum && activeNum);
 
     auto activeVec = activeNum->vec(b);
     auto activeVal = b.CreateFCmp(

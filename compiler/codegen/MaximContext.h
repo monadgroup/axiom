@@ -66,6 +66,8 @@ namespace MaximCodegen {
     public:
         MaximContext();
 
+        uint64_t sampleRate = 44100;
+
         llvm::LLVMContext &llvm() { return _llvm; }
 
         NumType *numType() { return &_numType; }
@@ -119,6 +121,10 @@ namespace MaximCodegen {
         std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value);
 
         void buildFunctions(llvm::Module *module);
+
+        uint64_t secondsToSamples(float seconds);
+
+        llvm::Value *secondsToSamples(llvm::Value *seconds, Builder &b);
 
     private:
         llvm::LLVMContext _llvm;

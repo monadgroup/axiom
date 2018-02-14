@@ -21,8 +21,7 @@ std::unique_ptr<Value> CombineFunction::generate(Builder &b, std::vector<std::un
                                                  llvm::Function *func, llvm::Module *module) {
     auto leftNum = dynamic_cast<Num*>(params[0].get());
     auto rightNum = dynamic_cast<Num*>(params[1].get());
-    assert(leftNum);
-    assert(rightNum);
+    assert(leftNum && rightNum);
 
     auto newVec = b.CreateShuffleVector(
         leftNum->vec(b), rightNum->vec(b),

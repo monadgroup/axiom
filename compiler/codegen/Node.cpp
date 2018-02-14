@@ -64,11 +64,11 @@ llvm::Constant* Node::getInitialVal(MaximContext *ctx) {
     return llvm::ConstantStruct::get(_ctxType, instValues);
 }
 
-void Node::initializeVal(MaximContext *ctx, llvm::Value *ptr, Builder &b) {
+void Node::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, Builder &b) {
     assert(!_ctxType->isOpaque());
 
     for (size_t i = 0; i < _instantiables.size(); i++) {
         auto itemPtr = b.CreateStructGEP(_ctxType, ptr, (unsigned int) i, "nodeinst");
-        _instantiables[i]->initializeVal(ctx, itemPtr, b);
+        _instantiables[i]->initializeVal(ctx, module, itemPtr, b);
     }
 }

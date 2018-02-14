@@ -29,10 +29,10 @@ std::unique_ptr<Value> NextFunction::generate(Builder &b, std::vector<std::uniqu
 }
 
 std::unique_ptr<Instantiable> NextFunction::generateCall(std::vector<std::unique_ptr<Value>> args) {
-    return std::make_unique<NextFunctionCall>();
+    return std::make_unique<FunctionCall>();
 }
 
-llvm::Constant* NextFunction::NextFunctionCall::getInitialVal(MaximContext *ctx) {
+llvm::Constant* NextFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
     return llvm::ConstantStruct::get(ctx->numType()->get(), {
         llvm::ConstantVector::get({ctx->constFloat(0), ctx->constFloat(0)}),
         llvm::ConstantInt::get(ctx->numType()->formType(), (uint64_t) MaximCommon::FormType::LINEAR, false),
@@ -40,6 +40,6 @@ llvm::Constant* NextFunction::NextFunctionCall::getInitialVal(MaximContext *ctx)
     });
 }
 
-llvm::Type* NextFunction::NextFunctionCall::type(MaximContext *ctx) const {
+llvm::Type* NextFunction::FunctionCall::type(MaximContext *ctx) const {
     return ctx->numType()->get();
 }

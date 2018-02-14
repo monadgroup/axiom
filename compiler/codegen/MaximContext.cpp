@@ -23,6 +23,7 @@
 #include "functions/ActiveFunction.h"
 #include "functions/WithActiveFunction.h"
 #include "functions/NextFunction.h"
+#include "functions/DelayFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -67,6 +68,7 @@ MaximContext::MaximContext() : _numType(this), _midiType(this) {
     registerFunction(ActiveFunction::create(this));
     registerFunction(WithActiveFunction::create(this));
     registerFunction(NextFunction::create(this));
+    registerFunction(DelayFunction::create(this));
 
     // hot paths for when only two parameters are provided to min/max
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::minnum, "min", 2));
@@ -292,6 +294,22 @@ void MaximContext::buildFunctions(llvm::Module *module) {
             overload->generate(module);
         }
     }
+}
+
+uint64_t MaximContext::secondsToSamples(float seconds) {
+    return (uint64_t)(seconds * sampleRate);
+}
+
+llvm::Value* MaximContext::secondsToSamples(llvm::Value *seconds, Builder &b) {
+    llvm::Constant *sampleRateConst = constFloat(sampleRate);
+    llvm::Type *castType = llvm::Type::getInt64Ty(_llvm);
+    if (seconds->getType()->isVectorTy()) {
+        sampleRateConst = llvm::ConstantVector::getSplat(seconds->getType()->getVectorNumElements(), sampleRateConst);
+        castType = llvm::VectorType::get(castType, seconds->getType()->getVectorNumElements());
+    }
+
+    auto floatResult = b.CreateBinOp(llvm::Instruction::BinaryOps::FMul, seconds, sampleRateConst, "samplerate.float");
+    return b.CreateFPToUI(floatResult, castType, "samplerate.int64");
 }
 
 std::vector<std::unique_ptr<Function>> &MaximContext::getOrCreateFunctionList(std::string name) {
