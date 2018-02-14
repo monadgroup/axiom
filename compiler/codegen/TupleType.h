@@ -21,7 +21,7 @@ namespace MaximCodegen {
 
         std::vector<Type *> const &types() const { return _types; }
 
-        std::string name() const override { return "tuple"; }
+        std::string name() const override;
 
         std::unique_ptr<Value> createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) override;
 

@@ -23,7 +23,7 @@ Tuple::Tuple(MaximContext *context, Storage values, Builder &builder, SourcePos 
 }
 
 Tuple::Tuple(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos)
-    : Value(startPos, endPos), _get(get), _context(context) {
+    : Value(startPos, endPos), _type(type), _get(get), _context(context) {
 }
 
 std::unique_ptr<Tuple> Tuple::create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos,

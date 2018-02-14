@@ -21,7 +21,7 @@ std::unique_ptr<Value> MaximCodegen::visitAssign(Node *node, MaximAst::AssignExp
         );
     }
 
-    auto leftTuple = expr->left->assignments.size() > 1;
+    auto leftTuple = expr->left->assignments.size() != 1;
     auto rightTuple = dynamic_cast<Tuple *>(rightVal.get());
 
     if (leftTuple && rightTuple) {
@@ -42,13 +42,24 @@ std::unique_ptr<Value> MaximCodegen::visitAssign(Node *node, MaximAst::AssignExp
                 rightTuple->atIndex(i, node->builder(), assignment->startPos, assignment->endPos)->clone()
             );
         }
-    } else {
-        for (const auto &assignment : expr->left->assignments) {
-            node->setAssignable(
-                assignment.get(),
-                rightVal->clone()
-            );
+
+        return rightVal;
+    }
+
+    for (const auto &assignment : expr->left->assignments) {
+        node->setAssignable(
+            assignment.get(),
+            rightVal->clone()
+        );
+    }
+
+    if (leftTuple) {
+        Tuple::Storage rightVals;
+        rightVals.reserve(expr->left->assignments.size());
+        for (size_t i = 0; i < expr->left->assignments.size(); i++) {
+            rightVals.push_back(rightVal->clone());
         }
+        return Tuple::create(node->ctx(), std::move(rightVals), node->builder(), expr->startPos, expr->endPos);
     }
 
     return rightVal;
