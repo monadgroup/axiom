@@ -300,15 +300,13 @@ std::unique_ptr<MaximAst::AssignableExpression> Parser::parseControlExpression(s
     expect(stream()->next(), Token::Type::COLON);
     auto typeToken = stream()->next();
     expect(typeToken, Token::Type::IDENTIFIER);
-    ControlExpression::Type controlType;
-    if (typeToken.content == "label") controlType = ControlExpression::Type::LABEL;
-    else if (typeToken.content == "values") controlType = ControlExpression::Type::VALUE;
-    else if (typeToken.content == "toggle") controlType = ControlExpression::Type::TOGGLE;
-    else if (typeToken.content == "graph") controlType = ControlExpression::Type::GRAPH;
-    else if (typeToken.content == "scope") controlType = ControlExpression::Type::SCOPE;
-    else if (typeToken.content == "keys") controlType = ControlExpression::Type::KEYS;
-    else if (typeToken.content == "roll") controlType = ControlExpression::Type::ROLL;
-    else if (typeToken.content == "plug") controlType = ControlExpression::Type::PLUG;
+    ControlType controlType;
+    if (typeToken.content == "num") controlType = ControlType::NUMBER;
+    else if (typeToken.content == "graph") controlType = ControlType::GRAPH;
+    else if (typeToken.content == "keys") controlType = ControlType::KEYS;
+    else if (typeToken.content == "roll") controlType = ControlType::ROLL;
+    else if (typeToken.content == "num[]") controlType = ControlType::NUM_EXTRACT;
+    else if (typeToken.content == "midi[]") controlType = ControlType::MIDI_EXTRACT;
     else {
         throw ParseError(
             "Come on man, I don't support " + typeToken.content + " controls.",

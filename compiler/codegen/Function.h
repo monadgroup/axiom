@@ -21,11 +21,11 @@ namespace MaximCodegen {
 
     class Value;
 
-    class FunctionCall;
-
     class MaximContext;
 
     class Type;
+
+    class Instantiable;
 
     class Parameter {
     public:
@@ -102,7 +102,7 @@ namespace MaximCodegen {
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
 
-        virtual std::unique_ptr<FunctionCall> generateCall(std::vector<std::unique_ptr<Value>> args);
+        virtual std::unique_ptr<Instantiable> generateCall(std::vector<std::unique_ptr<Value>> args);
 
     private:
         class DynVarArg : public VarArg {

@@ -38,9 +38,11 @@ namespace MaximCodegen {
 
         void complete();
 
-        llvm::Constant *instantiate() override;
+        llvm::Constant *getInitialVal(MaximContext *ctx) override;
 
-        llvm::Type *type() const override { return _ctxType; }
+        void initializeVal(MaximContext *ctx, llvm::Value *ptr, Builder &b) override;
+
+        llvm::Type *type(MaximContext *ctx) const override { return _ctxType; }
 
     private:
         MaximContext *_ctx;
@@ -50,6 +52,7 @@ namespace MaximCodegen {
         llvm::Function *_func;
         llvm::Value *_nodeCtx;
         llvm::StructType *_ctxType;
+        std::vector<llvm::Type*> _instTypes;
 
         std::unordered_map<std::string, std::unique_ptr<Value>> _variables;
         std::vector<std::unique_ptr<Instantiable>> _instantiables;

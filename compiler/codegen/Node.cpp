@@ -9,7 +9,7 @@ using namespace MaximCodegen;
 Node::Node(MaximContext *ctx, llvm::Module *module) : _ctx(ctx), _builder(ctx->llvm()), _module(module) {
     _ctxType = llvm::StructType::create(ctx->llvm(), "nodectx");
 
-    auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx->llvm()), {_ctxType}, false);
+    auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx->llvm()), {llvm::PointerType::get(_ctxType, 0)}, false);
     _func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "node", module);
     _nodeCtx = _func->arg_begin();
 
@@ -39,26 +39,36 @@ void Node::setAssignable(MaximAst::AssignableExpression *assignable, std::unique
 
 llvm::Value* Node::addInstantiable(std::unique_ptr<Instantiable> inst, Builder &b) {
     auto index = _instantiables.size();
-    auto instType = inst->type();
+    _instTypes.push_back(inst->type(ctx()));
     _instantiables.push_back(std::move(inst));
-    return b.CreateStructGEP(instType, _nodeCtx, (unsigned int) index, "nodeinst");
+
+    // figure out type of struct so far to use in GEP
+    auto currentStructType = llvm::StructType::get(_ctx->llvm(), _instTypes, false);
+    auto typedCtx = b.CreatePointerCast(_nodeCtx, llvm::PointerType::get(currentStructType, 0));
+
+    return b.CreateStructGEP(currentStructType, typedCtx, (unsigned int) index, "nodeinst");
 }
 
 void Node::complete() {
-    std::vector<llvm::Type*> instTypes;
-    for (const auto &inst : _instantiables) {
-        instTypes.push_back(inst->type());
-    }
-    _ctxType->setBody(instTypes, false);
+    _ctxType->setBody(_instTypes, false);
 }
 
-llvm::Constant* Node::instantiate() {
+llvm::Constant* Node::getInitialVal(MaximContext *ctx) {
     assert(!_ctxType->isOpaque());
 
     std::vector<llvm::Constant*> instValues;
     for (const auto &inst : _instantiables) {
-        instValues.push_back(inst->instantiate());
+        instValues.push_back(inst->getInitialVal(ctx));
     }
 
     return llvm::ConstantStruct::get(_ctxType, instValues);
+}
+
+void Node::initializeVal(MaximContext *ctx, llvm::Value *ptr, Builder &b) {
+    assert(!_ctxType->isOpaque());
+
+    for (size_t i = 0; i < _instantiables.size(); i++) {
+        auto itemPtr = b.CreateStructGEP(_ctxType, ptr, (unsigned int) i, "nodeinst");
+        _instantiables[i]->initializeVal(ctx, itemPtr, b);
+    }
 }

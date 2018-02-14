@@ -7,7 +7,6 @@
 #include <sstream>
 
 #include "MaximContext.h"
-#include "FunctionCall.h"
 #include "Value.h"
 #include "Node.h"
 
@@ -124,7 +123,7 @@ std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::uniq
     return providedArgs;
 }
 
-std::unique_ptr<FunctionCall> Function::generateCall(std::vector<std::unique_ptr<Value>> args) {
+std::unique_ptr<Instantiable> Function::generateCall(std::vector<std::unique_ptr<Value>> args) {
     assert(false); throw;
 }
 

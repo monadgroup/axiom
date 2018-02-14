@@ -6,7 +6,7 @@ namespace MaximCodegen {
 
     class NoiseFunction : public Function {
     public:
-        NoiseFunction(MaximContext *context);
+        explicit NoiseFunction(MaximContext *context);
 
         static std::unique_ptr<NoiseFunction> create(MaximContext *context);
 

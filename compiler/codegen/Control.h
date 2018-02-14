@@ -1,4 +1,13 @@
-#ifndef AXIOM_COMPILER_CONTROL_H
-#define AXIOM_COMPILER_CONTROL_H
+#pragma once
 
-#endif //AXIOM_COMPILER_CONTROL_H
+namespace MaximCodegen {
+
+    class Control {
+    public:
+        enum class Direction {
+            IN,
+            OUT
+        };
+    };
+
+}
