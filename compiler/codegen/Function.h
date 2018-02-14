@@ -52,6 +52,21 @@ namespace MaximCodegen {
         MaximContext *context;
     };
 
+    class ConstVarArg : public VarArg {
+    public:
+        std::vector<std::unique_ptr<Value>> vals;
+
+        ConstVarArg(MaximContext *context, std::vector<std::unique_ptr<Value>> vals);
+
+        std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &b) override;
+
+        std::unique_ptr<Value> atIndex(size_t index);
+
+        llvm::Value *count(Builder &b) override;
+
+        size_t count() const;
+    };
+
     class Function {
     public:
         Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
@@ -82,7 +97,7 @@ namespace MaximCodegen {
                  llvm::Value *funcContext, llvm::Function *func, llvm::Module *module) = 0;
 
         virtual std::unique_ptr<Value>
-        generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
+        generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<ConstVarArg> vararg,
                       llvm::Value *funcContext, llvm::Function *func, llvm::Module *module);
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
@@ -90,17 +105,6 @@ namespace MaximCodegen {
         virtual std::unique_ptr<FunctionCall> generateCall(std::vector<std::unique_ptr<Value>> args);
 
     private:
-        class ConstVarArg : public VarArg {
-        public:
-            std::vector<std::unique_ptr<Value>> vals;
-
-            ConstVarArg(MaximContext *context, std::vector<std::unique_ptr<Value>> vals);
-
-            std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &b) override;
-
-            llvm::Value *count(Builder &b) override;
-        };
-
         class DynVarArg : public VarArg {
         public:
             llvm::Value *argStruct;

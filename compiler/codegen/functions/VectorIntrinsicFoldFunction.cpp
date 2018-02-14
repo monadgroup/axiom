@@ -87,3 +87,30 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::ve
     auto undefPos = SourcePos(-1, -1);
     return firstNum->withVec(b, finalVec, undefPos, undefPos)->withActive(b, finalActive, undefPos, undefPos);
 }
+
+std::unique_ptr<Value> VectorIntrinsicFoldFunction::generateConst(Builder &b,
+                                                                  std::vector<std::unique_ptr<Value>> params,
+                                                                  std::unique_ptr<ConstVarArg> vararg,
+                                                                  llvm::Value *funcContext, llvm::Function *func,
+                                                                  llvm::Module *module) {
+    auto intrinsic = llvm::Intrinsic::getDeclaration(module, _id, {context()->numType()->vecType()});
+    auto firstVal = vararg->atIndex(0);
+    auto firstNum = dynamic_cast<Num*>(firstVal.get());
+    assert(firstNum);
+
+    auto currentVec = firstNum->vec(b);
+    auto currentActive = firstNum->active(b);
+
+    for (size_t i = 1; i < vararg->count(); i++) {
+        auto nextVal = vararg->atIndex(i);
+        auto nextNum = dynamic_cast<Num*>(nextVal.get());
+        assert(nextNum);
+        auto nextVec = nextNum->vec(b);
+        auto nextActive = nextNum->active(b);
+        currentVec = CreateCall(b, intrinsic, {currentVec, nextVec}, "storevec");
+        currentActive = b.CreateOr(currentActive, nextActive, "storeactive");
+    }
+
+    auto undefPos = SourcePos(-1, -1);
+    return firstNum->withVec(b, currentVec, undefPos, undefPos)->withActive(b, currentActive, undefPos, undefPos);
+}

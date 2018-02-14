@@ -115,7 +115,7 @@ Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos
 }
 
 std::unique_ptr<Value> Function::generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                               std::unique_ptr<VarArg> vararg, llvm::Value *context,
+                                               std::unique_ptr<ConstVarArg> vararg, llvm::Value *context,
                                                llvm::Function *func, llvm::Module *module) {
     return generate(b, std::move(params), std::move(vararg), context, func, module);
 }
@@ -169,7 +169,7 @@ void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args,
 
 std::unique_ptr<Value> Function::callConst(Node *node, std::vector<std::unique_ptr<Value>> args,
                                            std::vector<std::unique_ptr<Value>> varargs, llvm::Module *module) {
-    std::unique_ptr<VarArg> vararg;
+    std::unique_ptr<ConstVarArg> vararg;
     if (_vararg) {
         assert(!varargs.empty());
         vararg = std::make_unique<ConstVarArg>(_context, std::move(varargs));
@@ -239,18 +239,26 @@ std::unique_ptr<Value> VarArg::atIndex(uint64_t index, Builder &b) {
     return atIndex(context->constInt(8, index, false), b);
 }
 
-Function::ConstVarArg::ConstVarArg(MaximContext *context, std::vector<std::unique_ptr<Value>> vals)
+ConstVarArg::ConstVarArg(MaximContext *context, std::vector<std::unique_ptr<Value>> vals)
     : VarArg(context), vals(std::move(vals)) {}
 
-std::unique_ptr<Value> Function::ConstVarArg::atIndex(llvm::Value *index, Builder &b) {
+std::unique_ptr<Value> ConstVarArg::atIndex(llvm::Value *index, Builder &b) {
     auto constVal = llvm::dyn_cast<llvm::ConstantInt>(index);
     assert(constVal);
 
     return vals[constVal->getZExtValue()]->clone();
 }
 
-llvm::Value *Function::ConstVarArg::count(Builder &b) {
+std::unique_ptr<Value> ConstVarArg::atIndex(size_t index) {
+    return vals[index]->clone();
+}
+
+llvm::Value *ConstVarArg::count(Builder &b) {
     return context->constInt(8, vals.size(), false);
+}
+
+size_t ConstVarArg::count() const {
+    return vals.size();
 }
 
 Function::DynVarArg::DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type)
