@@ -32,7 +32,8 @@ std::unique_ptr<Value> HoldFunction::generate(Builder &b, std::vector<std::uniqu
 
     auto gateBool = b.CreateFCmp(
         llvm::CmpInst::Predicate::FCMP_ONE,
-        gateVal->vec(b), llvm::ConstantVector::getSplat(2, context()->constFloat(0))
+        gateVal->vec(b), llvm::ConstantVector::getSplat(2, context()->constFloat(0)),
+        "gatebool"
     );
 
     auto lastGate = b.CreateLoad(gatePtr, "lastgate");
@@ -73,6 +74,7 @@ std::unique_ptr<Value> HoldFunction::generate(Builder &b, std::vector<std::uniqu
         b.CreateExtractElement(gateBool, (uint64_t) 1, "gate.right"),
         "active"
     );
+    activeFlag = b.CreateAnd(gateVal->active(b), activeFlag, "active");
 
     auto undefPos = SourcePos(-1, -1);
     return xVal->withVec(b, resultVec, undefPos, undefPos)->withActive(b, activeFlag, undefPos, undefPos);
