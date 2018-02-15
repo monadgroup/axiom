@@ -67,7 +67,20 @@ void parseAndCompile(MaximContext *ctx, llvm::Module *mainModule) {
     node.builder().CreateRetVoid();
     node.complete();
 
+    auto mainFunc = llvm::Function::Create(
+        llvm::FunctionType::get(llvm::Type::getVoidTy(ctx->llvm()), {}),
+        llvm::Function::LinkageTypes::ExternalLinkage, "main", &nodeModule
+    );
+    auto funcBlock = llvm::BasicBlock::Create(ctx->llvm(), "entry", mainFunc);
+    Builder mainBuilder(funcBlock);
+    auto ctxType = node.type(ctx);
+    auto ctxConst = node.getInitialVal(ctx);
+    auto ctxGlobal = new llvm::GlobalVariable(nodeModule, ctxType, false, llvm::GlobalValue::LinkageTypes::InternalLinkage, ctxConst, "ctx");
+    node.initializeVal(ctx, &nodeModule, ctxGlobal, mainBuilder);
+    mainBuilder.CreateRetVoid();
+
     llvm::verifyFunction(*node.func());
+    llvm::verifyFunction(*mainFunc);
 
     llvm::Linker::linkModules(nodeModule, llvm::CloneModule(mainModule));
     nodeModule.print(llvm::errs(), nullptr);

@@ -32,12 +32,12 @@ std::unique_ptr<Value> DelayFunction::generate(Builder &b, std::vector<std::uniq
     auto inputVec = inputNum->vec(b);
 
     // calculate the number of samples of delay we have, used for modulo later
-    // todo: handle case when delay == 0
     auto delayPercentVec = delayNum->vec(b);
     auto reserveVec = reserveNum->vec(b);
     auto delaySecs = b.CreateBinOp(llvm::Instruction::BinaryOps::FMul, delayPercentVec, reserveVec, "delay.secs");
+    auto minSecs = 1 / (float) context()->sampleRate;
     delaySecs = CreateCall(b, maxIntrinsic, {
-        delaySecs, llvm::ConstantVector::getSplat(2, context()->constFloat(0))
+        delaySecs, llvm::ConstantVector::getSplat(2, context()->constFloat(minSecs))
     }, "delay.secs");
     delaySecs = CreateCall(b, minIntrinsic, {
         delaySecs, llvm::ConstantVector::getSplat(2, context()->constFloat(1))
@@ -89,7 +89,10 @@ std::unique_ptr<Value> DelayFunction::generate(Builder &b, std::vector<std::uniq
 }
 
 std::vector<std::unique_ptr<Value>> DelayFunction::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
-    if (providedArgs.size() < 3) providedArgs.push_back(providedArgs[1]->clone());
+    if (providedArgs.size() < 3) {
+        auto undefPos = SourcePos(-1, -1);
+        providedArgs.insert(providedArgs.begin() + 1, Num::create(context(), 1, 1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+    }
     return providedArgs;
 }
 
@@ -103,9 +106,12 @@ std::unique_ptr<Instantiable> DelayFunction::generateCall(std::vector<std::uniqu
     auto leftSecs = llvm::cast<llvm::ConstantFP>(constVec->getAggregateElement((unsigned) 0))->getValueAPF().convertToFloat();
     auto rightSecs = llvm::cast<llvm::ConstantFP>(constVec->getAggregateElement((unsigned) 1))->getValueAPF().convertToFloat();
 
+    if (leftSecs < 0) leftSecs = 0;
+    if (rightSecs < 0) rightSecs = 0;
+
     auto leftSamples = context()->secondsToSamples(leftSecs);
     auto rightSamples = context()->secondsToSamples(rightSecs);
-    return std::make_unique<FunctionCall>(leftSamples, rightSamples);
+    return std::make_unique<FunctionCall>(leftSamples < 1 ? 1 : leftSamples, rightSamples < 1 ? 1 : rightSamples);
 }
 
 llvm::StructType* DelayFunction::getChannelType(MaximContext *ctx) {
@@ -142,17 +148,17 @@ void DelayFunction::FunctionCall::initializeVal(MaximContext *ctx, llvm::Module 
 
     auto leftArray = llvm::ArrayType::get(channelType, leftDelaySize);
     auto leftGlobalArray = new llvm::GlobalVariable(
-        *module, leftArray, false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+        *module, leftArray, false, llvm::GlobalValue::LinkageTypes::InternalLinkage,
         llvm::UndefValue::get(leftArray), "delay.left"
     );
-    auto leftFirstPtr = b.CreateGEP(leftGlobalArray, ctx->constInt(64, 0, false), "delay.left.ptr");
+    auto leftFirstPtr = b.CreateGEP(leftGlobalArray, {ctx->constInt(64, 0, false), ctx->constInt(32, 0, false)}, "delay.left.ptr");
 
     auto rightArray = llvm::ArrayType::get(channelType, rightDelaySize);
     auto rightGlobalArray = new llvm::GlobalVariable(
-        *module, rightArray, false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+        *module, rightArray, false, llvm::GlobalValue::LinkageTypes::InternalLinkage,
         llvm::UndefValue::get(rightArray), "delay.right"
     );
-    auto rightFirstPtr = b.CreateGEP(rightGlobalArray, ctx->constInt(64, 0, false), "delay.right.ptr");
+    auto rightFirstPtr = b.CreateGEP(rightGlobalArray, {ctx->constInt(64, 0, false), ctx->constInt(32, 0, false)}, "delay.right.ptr");
 
     auto ptrVec = b.CreateInsertElement(llvm::UndefValue::get(llvm::VectorType::get(channelPtrType, 2)), leftFirstPtr, (uint64_t) 0, "delay.ptr.temp");
     ptrVec = b.CreateInsertElement(ptrVec, rightFirstPtr, 1, "delay.ptr");
