@@ -19,13 +19,15 @@ set(SOURCE_FILES util.h
         codegen/functions/VectorIntrinsicFunction.cpp codegen/functions/ScalarExternalFunction.cpp codegen/functions/VectorIntrinsicFoldFunction.cpp codegen/functions/ToRadFunction.cpp codegen/functions/ToDegFunction.cpp codegen/functions/ClampFunction.cpp codegen/functions/PanFunction.cpp codegen/functions/VectorShuffleFunction.cpp codegen/functions/CombineFunction.cpp codegen/functions/NoiseFunction.cpp codegen/functions/ActiveFunction.cpp codegen/functions/WithActiveFunction.cpp codegen/functions/NextFunction.cpp codegen/functions/DelayFunction.cpp codegen/functions/AmplitudeFunction.cpp codegen/functions/HoldFunction.cpp codegen/functions/AccumFunction.cpp
         codegen/operators/NumOperator.cpp codegen/operators/NumFloatOperator.cpp codegen/operators/NumIntrinsicOperator.cpp codegen/operators/NumIntOperator.cpp codegen/operators/NumComparisonOperator.cpp codegen/operators/NumLogicalOperator.cpp
         codegen/converters/LinearConverter.cpp codegen/converters/BeatsConverter.cpp codegen/converters/ControlConverter.cpp codegen/converters/DbConverter.cpp
-        codegen/Controls/NumberControl.cpp)
+        codegen/controls/NumberControl.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_library(axiom_compiler ${SOURCE_FILES})
 add_executable(axiom_test_compiler main.cpp ${SOURCE_FILES})
+
+set_target_properties(axiom_compiler PROPERTIES LINKER_LANGUAGE CXX)
 
 llvm_map_components_to_libnames(llvm_libs support core irreader linker)
 target_link_libraries(axiom_test_compiler ${llvm_libs})

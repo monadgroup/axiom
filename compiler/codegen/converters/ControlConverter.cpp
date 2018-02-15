@@ -5,12 +5,12 @@
 using namespace MaximCodegen;
 
 ControlConverter::ControlConverter(MaximContext *context) : Converter(context, MaximCommon::FormType::CONTROL) {
-    converters.emplace(MaximCommon::FormType::OSCILLATOR, (FormConverter)fromOscillator);
-    converters.emplace(MaximCommon::FormType::NOTE, (FormConverter)fromNote);
-    converters.emplace(MaximCommon::FormType::DB, (FormConverter)fromDb);
-    converters.emplace(MaximCommon::FormType::Q, (FormConverter)fromQ);
-    converters.emplace(MaximCommon::FormType::SECONDS, (FormConverter)fromSeconds);
-    converters.emplace(MaximCommon::FormType::BEATS, (FormConverter)fromBeats);
+    converters.emplace(MaximCommon::FormType::OSCILLATOR, (FormConverter)&MaximCodegen::ControlConverter::fromOscillator);
+    converters.emplace(MaximCommon::FormType::NOTE, (FormConverter)&MaximCodegen::ControlConverter::fromNote);
+    converters.emplace(MaximCommon::FormType::DB, (FormConverter)&MaximCodegen::ControlConverter::fromDb);
+    converters.emplace(MaximCommon::FormType::Q, (FormConverter)&MaximCodegen::ControlConverter::fromQ);
+    converters.emplace(MaximCommon::FormType::SECONDS, (FormConverter)&MaximCodegen::ControlConverter::fromSeconds);
+    converters.emplace(MaximCommon::FormType::BEATS, (FormConverter)&MaximCodegen::ControlConverter::fromBeats);
 }
 
 std::unique_ptr<ControlConverter> ControlConverter::create(MaximContext *context) {

@@ -5,7 +5,7 @@
 using namespace MaximCodegen;
 
 DbConverter::DbConverter(MaximContext *context) : Converter(context, MaximCommon::FormType::DB) {
-    converters.emplace(MaximCommon::FormType::CONTROL, (FormConverter)fromControl);
+    converters.emplace(MaximCommon::FormType::CONTROL, (FormConverter)&MaximCodegen::DbConverter::fromControl);
 }
 
 std::unique_ptr<DbConverter> DbConverter::create(MaximContext *context) {

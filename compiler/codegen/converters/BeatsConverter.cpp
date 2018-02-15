@@ -5,7 +5,7 @@
 using namespace MaximCodegen;
 
 BeatsConverter::BeatsConverter(MaximContext *context) : Converter(context, MaximCommon::FormType::BEATS) {
-    converters.emplace(MaximCommon::FormType::SECONDS, (FormConverter)fromSeconds);
+    converters.emplace(MaximCommon::FormType::SECONDS, (FormConverter)&MaximCodegen::BeatsConverter::fromSeconds);
 }
 
 std::unique_ptr<BeatsConverter> BeatsConverter::create(MaximContext *context) {
