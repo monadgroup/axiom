@@ -1,7 +1,5 @@
 #include "Node.h"
 
-#include <utility>
-
 #include "MaximContext.h"
 #include "Value.h"
 #include "Num.h"
@@ -12,16 +10,7 @@
 
 using namespace MaximCodegen;
 
-Node::Node(MaximContext *ctx, llvm::Module *module) : _ctx(ctx), _builder(ctx->llvm()), _module(module) {
-    _ctxType = llvm::StructType::create(ctx->llvm(), "nodectx");
-
-    auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx->llvm()), {llvm::PointerType::get(_ctxType, 0)}, false);
-    _func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "node", module);
-    _nodeCtx = _func->arg_begin();
-
-    auto funcBlock = llvm::BasicBlock::Create(_ctx->llvm(), "entry", _func);
-    _builder.SetInsertPoint(funcBlock);
-
+Node::Node(MaximContext *ctx, llvm::Module *module) : InstantiableFunction(ctx, module) {
     auto undefPos = SourcePos(-1, -1);
     setVariable("PI", Num::create(ctx, M_PI, M_PI, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     setVariable("E", Num::create(ctx, M_E, M_E, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
@@ -78,42 +67,6 @@ void Node::setAssignable(Builder &b, MaximAst::AssignableExpression *assignable,
     setControl(b, controlExpr, std::move(value));
 }
 
-llvm::Value* Node::addInstantiable(std::unique_ptr<Instantiable> inst, Builder &b) {
-    auto index = _instantiables.size();
-    _instTypes.push_back(inst->type(ctx()));
-    _instantiables.push_back(std::move(inst));
-
-    // figure out type of struct so far to use in GEP
-    auto currentStructType = llvm::StructType::get(_ctx->llvm(), _instTypes, false);
-    auto typedCtx = b.CreatePointerCast(_nodeCtx, llvm::PointerType::get(currentStructType, 0));
-
-    return b.CreateStructGEP(currentStructType, typedCtx, (unsigned int) index, "nodeinst");
-}
-
-void Node::complete() {
-    _ctxType->setBody(_instTypes, false);
-}
-
-llvm::Constant* Node::getInitialVal(MaximContext *ctx) {
-    assert(!_ctxType->isOpaque());
-
-    std::vector<llvm::Constant*> instValues;
-    for (const auto &inst : _instantiables) {
-        instValues.push_back(inst->getInitialVal(ctx));
-    }
-
-    return llvm::ConstantStruct::get(_ctxType, instValues);
-}
-
-void Node::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, Builder &b) {
-    assert(!_ctxType->isOpaque());
-
-    for (size_t i = 0; i < _instantiables.size(); i++) {
-        auto itemPtr = b.CreateStructGEP(_ctxType, ptr, (unsigned int) i, "nodeinst");
-        _instantiables[i]->initializeVal(ctx, module, itemPtr, b);
-    }
-}
-
 Node::ControlValue &Node::getControl(std::string name, MaximCommon::ControlType type, Builder &b) {
     ControlKey key = {std::move(name), type};
     auto pair = _controls.find(key);
@@ -130,7 +83,7 @@ Node::ControlValue &Node::getControl(std::string name, MaximCommon::ControlType 
 
 std::unique_ptr<Control> Node::createControl(MaximCommon::ControlType type) {
     switch (type) {
-        case MaximCommon::ControlType::NUMBER: return NumberControl::create(_ctx);
-        default: assert(false);
+        case MaximCommon::ControlType::NUMBER: return NumberControl::create(ctx());
+        default: assert(false); throw;
     }
 }
