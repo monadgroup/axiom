@@ -1,4 +1,18 @@
-#ifndef AXIOM_COMPILER_LINCONVERTER_H
-#define AXIOM_COMPILER_LINCONVERTER_H
+#pragma once
 
-#endif //AXIOM_COMPILER_LINCONVERTER_H
+#include "../Converter.h"
+
+namespace MaximCodegen {
+
+    class LinearConverter : public Converter {
+    public:
+        explicit LinearConverter(MaximContext *context);
+
+        static std::unique_ptr<LinearConverter> create(MaximContext *context);
+
+        void generate(llvm::Module *module) override;
+
+        std::unique_ptr<Num> call(Node *node, std::unique_ptr<Num> value, SourcePos startPos, SourcePos endPos) override;
+    };
+
+}

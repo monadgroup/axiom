@@ -2,6 +2,7 @@
 
 #include "MaximContext.h"
 #include "Value.h"
+#include "Num.h"
 #include "../ast/VariableExpression.h"
 
 using namespace MaximCodegen;
@@ -15,6 +16,11 @@ Node::Node(MaximContext *ctx, llvm::Module *module) : _ctx(ctx), _builder(ctx->l
 
     auto funcBlock = llvm::BasicBlock::Create(_ctx->llvm(), "entry", _func);
     _builder.SetInsertPoint(funcBlock);
+
+    auto undefPos = SourcePos(-1, -1);
+    setVariable("PI", Num::create(ctx, M_PI, M_PI, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+    setVariable("E", Num::create(ctx, M_E, M_E, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+    setVariable("INFINITY", Num::create(ctx, FP_INFINITE, FP_INFINITE, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
 }
 
 Value* Node::getVariable(std::string name) {

@@ -16,9 +16,9 @@ namespace MaximCodegen {
 
         llvm::VectorType *vecType() const { return _vecType; }
 
-        llvm::Type *formType() const { return _formType; }
+        llvm::IntegerType *formType() const { return _formType; }
 
-        llvm::Type *activeType() const { return _activeType; }
+        llvm::IntegerType *activeType() const { return _activeType; }
 
         std::string name() const override { return "num"; }
 
@@ -31,9 +31,9 @@ namespace MaximCodegen {
 
         llvm::VectorType *_vecType;
 
-        llvm::Type *_formType;
+        llvm::IntegerType *_formType;
 
-        llvm::Type *_activeType;
+        llvm::IntegerType *_activeType;
     };
 
 }

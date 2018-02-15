@@ -6,12 +6,11 @@ namespace MaximCommon {
 
     enum class FormType {
         LINEAR,
+        OSCILLATOR,
         CONTROL,
-        FREQUENCY,
         NOTE,
         DB,
         Q,
-        RESONANCE,
         SECONDS,
         BEATS
     };

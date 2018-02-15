@@ -34,6 +34,11 @@
 #include "operators/NumComparisonOperator.h"
 #include "operators/NumLogicalOperator.h"
 
+#include "converters/BeatsConverter.h"
+#include "converters/ControlConverter.h"
+#include "converters/DbConverter.h"
+#include "converters/LinearConverter.h"
+
 using namespace MaximCodegen;
 
 MaximContext::MaximContext() : _numType(this), _midiType(this) {
@@ -102,6 +107,16 @@ MaximContext::MaximContext() : _numType(this), _midiType(this) {
     registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LTE, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OLE));
     registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_AND, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::And));
     registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_OR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Or));
+
+    /// REGISTER CONVERTERS
+    registerConverter(BeatsConverter::create(this));
+    registerConverter(ControlConverter::create(this));
+    registerConverter(DbConverter::create(this));
+    registerConverter(LinearConverter::create(this));
+}
+
+llvm::Value* MaximContext::beatsPerSecond() const {
+    return llvm::UndefValue::get(llvm::PointerType::get(numType()->vecType(), 0));
 }
 
 void MaximContext::assertType(const Value *val, const Type *type) const {
@@ -180,8 +195,8 @@ void MaximContext::registerFunction(std::unique_ptr<Function> func) {
     getOrCreateFunctionList(func->name()).push_back(std::move(func));
 }
 
-void MaximContext::registerConverter(MaximCommon::FormType destType, std::unique_ptr<Converter> con) {
-    converterMap.emplace(destType, std::move(con));
+void MaximContext::registerConverter(std::unique_ptr<Converter> con) {
+    converterMap.emplace(con->toType(), std::move(con));
 }
 
 Operator *MaximContext::getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType) {
@@ -287,11 +302,12 @@ Converter *MaximContext::getConverter(MaximCommon::FormType destType) {
     return pos->second.get();
 }
 
-std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value) {
+std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, Node *node,
+                                                 SourcePos startPos, SourcePos endPos) {
     auto con = getConverter(destType);
     assert(con);
 
-    return con->call(std::move(value));
+    return con->call(node, std::move(value), startPos, endPos);
 }
 
 void MaximContext::buildFunctions(llvm::Module *module) {
@@ -299,6 +315,9 @@ void MaximContext::buildFunctions(llvm::Module *module) {
         for (const auto &overload : pair.second) {
             overload->generate(module);
         }
+    }
+    for (const auto &pair : converterMap) {
+        pair.second->generate(module);
     }
 }
 

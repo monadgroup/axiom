@@ -168,12 +168,12 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     expect(nameToken, Token::Type::IDENTIFIER);
     FormType formType;
     if (nameToken.content == "lin") formType = FormType::LINEAR;
+    else if (nameToken.content == "osc") formType = FormType::OSCILLATOR;
     else if (nameToken.content == "control") formType = FormType::CONTROL;
-    else if (nameToken.content == "freq") formType = FormType::FREQUENCY;
+    else if (nameToken.content == "freq") formType = FormType::SECONDS;
     else if (nameToken.content == "note") formType = FormType::NOTE;
     else if (nameToken.content == "db") formType = FormType::DB;
     else if (nameToken.content == "q") formType = FormType::Q;
-    else if (nameToken.content == "res") formType = FormType::RESONANCE;
     else if (nameToken.content == "secs") formType = FormType::SECONDS;
     else if (nameToken.content == "beats") formType = FormType::BEATS;
     else {
@@ -237,10 +237,9 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
         auto didMatchForm = true;
         auto formStart = didMatchMul ? 1u : 0u;
-        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->type = FormType::FREQUENCY;
+        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->type = FormType::SECONDS;
         else if (!postMulText.compare(formStart, postMulText.npos, "DB")) valueForm->type = FormType::DB;
         else if (!postMulText.compare(formStart, postMulText.npos, "Q")) valueForm->type = FormType::Q;
-        else if (!postMulText.compare(formStart, postMulText.npos, "R")) valueForm->type = FormType::RESONANCE;
         else if (!postMulText.compare(formStart, postMulText.npos, "S")) valueForm->type = FormType::SECONDS;
         else if (!postMulText.compare(formStart, postMulText.npos, "B")) valueForm->type = FormType::BEATS;
         else didMatchForm = false;

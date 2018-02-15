@@ -70,6 +70,9 @@ namespace MaximCodegen {
 
         llvm::LLVMContext &llvm() { return _llvm; }
 
+        // some LLVM globals
+        llvm::Value *beatsPerSecond() const;
+
         NumType *numType() { return &_numType; }
 
         MidiType *midiType() { return &_midiType; }
@@ -102,7 +105,7 @@ namespace MaximCodegen {
 
         void registerFunction(std::unique_ptr<Function> func);
 
-        void registerConverter(MaximCommon::FormType destType, std::unique_ptr<Converter> con);
+        void registerConverter(std::unique_ptr<Converter> con);
 
         Operator *getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType);
 
@@ -118,7 +121,8 @@ namespace MaximCodegen {
 
         Converter *getConverter(MaximCommon::FormType destType);
 
-        std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value);
+        std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, Node *node,
+                                           SourcePos startPos, SourcePos endPos);
 
         void buildFunctions(llvm::Module *module);
 
