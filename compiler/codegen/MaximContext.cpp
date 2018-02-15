@@ -178,6 +178,17 @@ TupleType *MaximContext::getTupleType(const std::vector<Type *> &types) {
     }
 }
 
+ArrayType* MaximContext::getArrayType(Type *baseType) {
+    auto arrayType = llvm::ArrayType::get(baseType->get(), ArrayType::arraySize);
+    auto mapIndex = arrayTypeMap.find(arrayType);
+
+    if (mapIndex == arrayTypeMap.end()) {
+        return &arrayTypeMap.emplace(arrayType, ArrayType(this, baseType, arrayType)).first->second;
+    } else {
+        return &mapIndex->second;
+    }
+}
+
 llvm::Constant *MaximContext::constFloat(float num) {
     return llvm::ConstantFP::get(llvm::Type::getFloatTy(_llvm), num);
 }

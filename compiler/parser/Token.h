@@ -57,11 +57,6 @@ namespace MaximParser {
             LOGICAL_AND,
             LOGICAL_OR,
 
-            NUM_KEYWORD,
-            MIDI_KEYWORD,
-            PURE_KEYWORD,
-            CONST_KEYWORD,
-
             // free tokens
                 SINGLE_STRING,
             DOUBLE_STRING,

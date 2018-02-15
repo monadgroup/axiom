@@ -97,14 +97,6 @@ std::string Token::typeString(Type type) {
             return "logical AND operator";
         case Type::LOGICAL_OR:
             return "logical OR operator";
-        case Type::NUM_KEYWORD:
-            return "NUM keyword";
-        case Type::MIDI_KEYWORD:
-            return "MIDI keyword";
-        case Type::PURE_KEYWORD:
-            return "PURE keyword";
-        case Type::CONST_KEYWORD:
-            return "CONST keyword";
         case Type::SINGLE_STRING:
             return "string";
         case Type::DOUBLE_STRING:

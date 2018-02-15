@@ -8,8 +8,6 @@ namespace MaximCodegen {
             IN,
             OUT
         };
-
-
     };
 
 }

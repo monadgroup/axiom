@@ -10,6 +10,7 @@
 #include "NumType.h"
 #include "MidiType.h"
 #include "TupleType.h"
+#include "ArrayType.h"
 #include "Builder.h"
 
 namespace MaximCodegen {
@@ -97,6 +98,8 @@ namespace MaximCodegen {
 
         TupleType *getTupleType(const std::vector<Type *> &types);
 
+        ArrayType *getArrayType(Type *baseType);
+
         llvm::Constant *constFloat(float num);
 
         llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned);
@@ -137,6 +140,7 @@ namespace MaximCodegen {
         MidiType _midiType;
 
         std::unordered_map<llvm::StructType *, TupleType> tupleTypeMap;
+        std::unordered_map<llvm::ArrayType *, ArrayType> arrayTypeMap;
         std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
         std::unordered_map<std::string, std::vector<std::unique_ptr<Function>>> functionMap;
         std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> converterMap;

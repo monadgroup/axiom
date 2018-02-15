@@ -5,10 +5,6 @@
 
 #include "Type.h"
 
-namespace llvm {
-    class StructType;
-}
-
 namespace MaximCodegen {
 
     class MaximContext;

@@ -132,18 +132,12 @@ TokenStream::PairListType TokenStream::matches = {
     getToken(R"(\/\*)", Token::Type::COMMENT_OPEN),
     getToken(R"(\*\/)", Token::Type::COMMENT_CLOSE),
 
-    // multi-char identifiers
-    getToken(R"(\bnum\b)", Token::Type::NUM_KEYWORD),
-    getToken(R"(\bmidi\b)", Token::Type::MIDI_KEYWORD),
-    getToken(R"(\bpure\b)", Token::Type::PURE_KEYWORD),
-    getToken(R"(\bconst\b)", Token::Type::CONST_KEYWORD),
-
     // free tokens
     getToken(R"('((?:\\'|(?:(?!').))*)')", Token::Type::SINGLE_STRING),
     getToken(R"(\"((?:\\\"|(?:(?!\").))*)\")", Token::Type::DOUBLE_STRING),
     getToken(R"(((?=\.\d|\d)(?:\d+)?(?:\.?\d*)(?:[eE][+-]?\d+)?))", Token::Type::NUMBER),
     getToken(R"(:([a-gA-G]#?[0-9]+))", Token::Type::NOTE),
-    getToken(R"(([_a-zA-Z][_a-zA-Z0-9]*))", Token::Type::IDENTIFIER),
+    getToken(R"(([_a-zA-Z][_a-zA-Z0-9]*(?:\[\])?))", Token::Type::IDENTIFIER),
 
     // single-char tokens
     getToken(R"(\+)", Token::Type::PLUS),
