@@ -24,6 +24,7 @@
 #include "functions/WithActiveFunction.h"
 #include "functions/NextFunction.h"
 #include "functions/DelayFunction.h"
+#include "functions/AmplitudeFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -69,6 +70,7 @@ MaximContext::MaximContext() : _numType(this), _midiType(this) {
     registerFunction(WithActiveFunction::create(this));
     registerFunction(NextFunction::create(this));
     registerFunction(DelayFunction::create(this));
+    registerFunction(AmplitudeFunction::create(this));
 
     // hot paths for when only two parameters are provided to min/max
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::minnum, "min", 2));
