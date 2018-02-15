@@ -97,11 +97,20 @@ std::vector<std::unique_ptr<Value>> DelayFunction::mapArguments(std::vector<std:
 }
 
 std::unique_ptr<Instantiable> DelayFunction::generateCall(std::vector<std::unique_ptr<Value>> args) {
+    llvm::ConstantFolder folder;
+    auto delayNum = dynamic_cast<Num*>(args[1].get());
     auto reserveNum = dynamic_cast<Num*>(args[2].get());
     assert(reserveNum);
 
     auto constNum = llvm::cast<llvm::Constant>(reserveNum->get());
     auto constVec = constNum->getAggregateElement((unsigned) 0);
+
+    // if delay is constant, premultiply it
+    auto constDelay = llvm::dyn_cast<llvm::Constant>(delayNum->get());
+    if (constDelay) {
+        auto delayVec = constDelay->getAggregateElement((unsigned) 0);
+        constVec = folder.CreateFMul(constVec, delayVec);
+    }
 
     auto leftSecs = llvm::cast<llvm::ConstantFP>(constVec->getAggregateElement((unsigned) 0))->getValueAPF().convertToFloat();
     auto rightSecs = llvm::cast<llvm::ConstantFP>(constVec->getAggregateElement((unsigned) 1))->getValueAPF().convertToFloat();
