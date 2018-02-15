@@ -27,7 +27,7 @@ Array::Array(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos
 
 std::unique_ptr<Array> Array::create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos,
                                      SourcePos endPos) {
-    return std::make_unique<Array>(context, values, builder, startPos, endPos);
+    return std::make_unique<Array>(context, std::move(values), builder, startPos, endPos);
 }
 
 std::unique_ptr<Array> Array::create(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos startPos,

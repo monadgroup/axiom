@@ -8,12 +8,12 @@
 using namespace MaximCodegen;
 
 std::unique_ptr<Value> MaximCodegen::visitVariable(Node *node, MaximAst::VariableExpression *expr) {
-    auto val = node->getVariable(expr->name);
+    auto val = node->getVariable(expr->name, expr->startPos, expr->endPos);
     if (!val) {
         throw CodegenError(
             "Ah hekkers mah dude! This variable hasn't been set yet!",
             expr->startPos, expr->endPos
         );
     }
-    return val->withSource(expr->startPos, expr->endPos);
+    return val;
 }

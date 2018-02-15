@@ -1,10 +1,10 @@
 #include "ControlVisitor.h"
 
-#include <cassert>
+#include "../Node.h"
+#include "../Value.h"
 
 using namespace MaximCodegen;
 
 std::unique_ptr<Value> MaximCodegen::visitControl(Node *node, MaximAst::ControlExpression *expr) {
-    assert(false);
-    throw;
+    return node->getControl(node->builder(), expr);
 }

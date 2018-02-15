@@ -313,7 +313,7 @@ std::unique_ptr<MaximAst::AssignableExpression> Parser::parseControlExpression(s
         );
     }
 
-    std::string propertyName = "values";
+    std::string propertyName = "value";
 
     auto endPos = typeToken.endPos;
     auto propToken = stream()->peek();

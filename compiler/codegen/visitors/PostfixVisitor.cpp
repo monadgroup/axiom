@@ -26,7 +26,7 @@ static std::unique_ptr<Num> visitSinglePostfix(Node *node, MaximAst::PostfixExpr
     }
 
     auto newNum = num->withVec(node->builder(), numVec, expr->startPos, expr->endPos);
-    node->setAssignable(assignable, std::move(newNum));
+    node->setAssignable(node->builder(), assignable, std::move(newNum));
 
     return num;
 }
