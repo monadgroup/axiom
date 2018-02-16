@@ -14,6 +14,7 @@
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
 #include "../IConnectable.h"
+#include "../FloatingValueEditor.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -58,8 +59,6 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
             });
     connect(schematic, &Schematic::wireAdded,
             this, &SchematicCanvas::addWire);
-
-    newNode(QPointF(0, 0));
 }
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
@@ -158,14 +157,14 @@ void SchematicCanvas::addNode(AxiomModel::Node *node) {
     addItem(item);
 }
 
-void SchematicCanvas::newNode(QPointF scenePos) {
+void SchematicCanvas::newNode(QPointF scenePos, QString name) {
     auto defaultSize = QSize(5, 5);
     auto targetPos = QPoint(
-            qRound((float) scenePos.x() / SchematicCanvas::nodeGridSize.width()) - defaultSize.width() / 2,
-            qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height()) - defaultSize.height() / 2
+            qRound((float) scenePos.x() / SchematicCanvas::nodeGridSize.width()),
+            qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height())
     );
 
-    auto newNode = std::make_unique<CustomNode>(schematic, tr("New Node"), targetPos, defaultSize);
+    auto newNode = std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
 
     auto newControl = std::make_unique<NodeValueControl>(
             newNode.get(), tr("Frequency"),
@@ -299,7 +298,14 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
     auto newNodeAction = menu.addAction(tr("New Node"));
     connect(newNodeAction, &QAction::triggered,
-            [this, scenePos]() { newNode(scenePos); });
+            [this, scenePos]() {
+                auto editor = new FloatingValueEditor("New Node", scenePos);
+                addItem(editor);
+                connect(editor, &FloatingValueEditor::valueSubmitted,
+                        [this, scenePos](QString value) {
+                            newNode(scenePos, value);
+                        });
+            });
 
     menu.addSeparator();
     menu.addAction(new QAction(tr("LFO")));
