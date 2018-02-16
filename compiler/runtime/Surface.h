@@ -6,6 +6,7 @@
 
 #include "ControlGroup.h"
 #include "../codegen/InstantiableFunction.h"
+#include "Runtime.h"
 
 namespace llvm {
     class Function;
@@ -33,13 +34,15 @@ namespace MaximRuntime {
 
         void markAsDirty();
 
-        MaximCodegen::InstantiableFunction *getFunction();
+        MaximCodegen::InstantiableFunction *getFunction(Runtime *runtime);
 
         std::vector<ControlGroup*> &groups() { return _groups; }
 
         llvm::Module *module() { return &_module; }
 
         MaximCodegen::MaximContext *context() const { return _context; }
+
+        bool isDirty() const { return _isDirty; }
 
     private:
         MaximCodegen::MaximContext *_context;
@@ -49,6 +52,9 @@ namespace MaximRuntime {
 
         std::vector<std::unique_ptr<Node>> _nodes;
         std::vector<ControlGroup*> _groups;
+
+        bool _hasHandle = false;
+        Runtime::ModuleHandle _handle;
     };
 
 }

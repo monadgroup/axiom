@@ -27,6 +27,3 @@ add_definitions(${LLVM_DEFINITIONS})
 
 add_library(axiom_compiler ${SOURCE_FILES})
 set_target_properties(axiom_compiler PROPERTIES LINKER_LANGUAGE CXX)
-
-llvm_map_components_to_libnames(llvm_libs support core irreader linker)
-target_link_libraries(axiom_compiler ${llvm_libs})

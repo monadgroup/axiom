@@ -8,6 +8,11 @@ message("Debug flags: ${CMAKE_CXX_FLAGS_DEBUG}")
 message("Reldeb flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 message("Release flags: ${CMAKE_CXX_FLAGS_RELEASE}")
 
+find_package(LLVM REQUIRED CONFIG)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
+
 # setup LTO linking
 #set(CMAKE_AR "gcc-ar")
 #set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
@@ -38,8 +43,15 @@ set(SOURCE_FILES editor/main.cpp editor/util.cpp editor/AxiomApplication.cpp
 
 set(RES_FILES editor/resources/axiom.rc editor/resources/res.qrc)
 
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
+
 add_executable(axiom WIN32 ${SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom Qt5::Widgets)
 
 add_subdirectory(compiler)
 target_link_libraries(axiom axiom_compiler)
+
+llvm_map_components_to_libnames(llvm_libs support core irreader orcjit)
+target_link_libraries(axiom ${llvm_libs})
+

@@ -1,5 +1,7 @@
 #include "CustomNode.h"
 
+#include <llvm/Transforms/Utils/Cloning.h>
+
 #include "../codegen/MaximContext.h"
 #include "../parser/TokenStream.h"
 #include "../parser/Parser.h"
@@ -15,7 +17,7 @@ CustomNode::CustomNode(MaximCodegen::MaximContext *context, Surface *surface)
 
 }
 
-ErrorLog CustomNode::compile(std::string content) {
+ErrorLog CustomNode::compile(std::string content, Runtime *runtime) {
     _node.reset();
 
     ErrorLog log{};
@@ -41,10 +43,13 @@ ErrorLog CustomNode::compile(std::string content) {
         log.codegenErrors.push_back(err);
     }
 
+    if (_hasHandle) runtime->removeModule(_handle);
+    _handle = runtime->addModule(llvm::CloneModule(&_module));
+
     return log;
 }
 
-MaximCodegen::Node* CustomNode::getFunction() {
+MaximCodegen::Node* CustomNode::getFunction(Runtime *runtime) {
     return &_node;
 }
 

@@ -13,6 +13,8 @@ namespace MaximRuntime {
 
     class Surface;
 
+    class Runtime;
+
     class Node {
     public:
         explicit Node(Surface *surface);
@@ -21,7 +23,7 @@ namespace MaximRuntime {
 
         virtual std::vector<std::unique_ptr<Control>> &controls() = 0;
 
-        virtual MaximCodegen::InstantiableFunction *getFunction() = 0;
+        virtual MaximCodegen::InstantiableFunction *getFunction(Runtime *runtime) = 0;
 
     private:
         Surface *_surface;

@@ -2,6 +2,7 @@
 
 #include <unordered_set>
 #include <queue>
+#include <llvm/Transforms/Utils/Cloning.h>
 
 #include "../codegen/MaximContext.h"
 #include "Node.h"
@@ -35,7 +36,7 @@ void Surface::markAsDirty() {
     if (parent) parent->markAsDirty();
 }
 
-MaximCodegen::InstantiableFunction *Surface::getFunction() {
+MaximCodegen::InstantiableFunction *Surface::getFunction(Runtime *runtime) {
     if (!_isDirty) {
         return &_instFunc;
     }
@@ -81,8 +82,8 @@ MaximCodegen::InstantiableFunction *Surface::getFunction() {
     // add nodes and calls to them in the functions, assign controls to their globals
     for (size_t i = inverseOrder.size() - 1; i >= 0; i--) {
         auto node = inverseOrder[i];
-        auto nodeFunc = node->getFunction();
-        auto ptr = _instFunc.addInstantiable(inverseOrder[i]->getFunction());
+        auto nodeFunc = node->getFunction(runtime);
+        auto ptr = _instFunc.addInstantiable(nodeFunc);
 
         // used when the control is initialized
         for (const auto &control : node->controls()) {
@@ -93,6 +94,10 @@ MaximCodegen::InstantiableFunction *Surface::getFunction() {
     }
 
     _instFunc.complete();
+
+    if (_hasHandle) runtime->removeModule(_handle);
+    _handle = runtime->addModule(llvm::CloneModule(&_module));
+    _hasHandle = true;
 
     return &_instFunc;
 }
