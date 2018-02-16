@@ -12,7 +12,7 @@ namespace MaximCodegen {
 
         llvm::Constant *getInitialVal(MaximContext *ctx) override;
 
-        llvm::StructType *type(MaximContext *ctx) const override;
+        llvm::Type *type(MaximContext *ctx) const override;
 
         bool validateProperty(std::string name) override;
 

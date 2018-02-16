@@ -11,6 +11,7 @@
 namespace MaximAst {
     class AssignableExpression;
     class ControlExpression;
+    class Block;
 }
 
 namespace MaximCodegen {
@@ -43,7 +44,15 @@ namespace MaximCodegen {
 
     class Node : public InstantiableFunction {
     public:
+        struct ControlValue {
+            Control *control;
+            llvm::Value *instPtr;
+            uint64_t instIndex;
+        };
+
         explicit Node(MaximContext *ctx, llvm::Module *module);
+
+        void generateCode(MaximAst::Block *block);
 
         std::unique_ptr<Value> getVariable(const std::string &name, SourcePos startPos, SourcePos endPos);
 
@@ -55,12 +64,11 @@ namespace MaximCodegen {
 
         void setAssignable(Builder &b, MaximAst::AssignableExpression *assignable, std::unique_ptr<Value> value);
 
-    private:
-        struct ControlValue {
-            Control *control;
-            llvm::Value *instPtr;
-        };
+        void reset() override;
 
+        std::unordered_map<ControlKey, ControlValue> &controls() { return _controls; };
+
+    private:
         std::unordered_map<std::string, std::unique_ptr<Value>> _variables;
         std::unordered_map<ControlKey, ControlValue> _controls;
 

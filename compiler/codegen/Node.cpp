@@ -3,8 +3,10 @@
 #include "MaximContext.h"
 #include "Value.h"
 #include "Num.h"
+#include "visitors/ExpressionVisitor.h"
 #include "../ast/VariableExpression.h"
 #include "../ast/ControlExpression.h"
+#include "../ast/Block.h"
 
 #include "controls/NumberControl.h"
 
@@ -15,6 +17,12 @@ Node::Node(MaximContext *ctx, llvm::Module *module) : InstantiableFunction(ctx, 
     setVariable("PI", Num::create(ctx, M_PI, M_PI, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     setVariable("E", Num::create(ctx, M_E, M_E, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     setVariable("INFINITY", Num::create(ctx, FP_INFINITE, FP_INFINITE, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+}
+
+void Node::generateCode(MaximAst::Block *block) {
+    for (const auto &expr : block->expressions) {
+        visitExpression(this, expr.get());
+    }
 }
 
 std::unique_ptr<Value> Node::getVariable(const std::string &name, SourcePos startPos, SourcePos endPos) {
@@ -32,7 +40,7 @@ std::unique_ptr<Value> Node::getControl(Builder &b, MaximAst::ControlExpression 
             expr->startPos, expr->endPos
         );
     }
-    control->direction = Control::Direction::IN;
+    control->direction = MaximCommon::ControlDirection::IN;
     return control->getProperty(b, expr->prop, controlDat.instPtr)->withSource(expr->startPos, expr->endPos);
 }
 
@@ -52,7 +60,7 @@ void Node::setControl(Builder &b, MaximAst::ControlExpression *expr,
             expr->startPos, expr->endPos
         );
     }
-    control->direction = Control::Direction::OUT;
+    control->direction = MaximCommon::ControlDirection::OUT;
     control->setProperty(b, expr->prop, std::move(value), controlDat.instPtr);
 }
 
@@ -67,6 +75,12 @@ void Node::setAssignable(Builder &b, MaximAst::AssignableExpression *assignable,
     setControl(b, controlExpr, std::move(value));
 }
 
+void Node::reset() {
+    _variables.clear();
+    _controls.clear();
+    InstantiableFunction::reset();
+}
+
 Node::ControlValue &Node::getControl(std::string name, MaximCommon::ControlType type, Builder &b) {
     ControlKey key = {std::move(name), type};
     auto pair = _controls.find(key);
@@ -74,8 +88,9 @@ Node::ControlValue &Node::getControl(std::string name, MaximCommon::ControlType 
     if (pair == _controls.end()) {
         auto newControl = createControl(type);
         auto controlPtr = newControl.get();
-        auto ptr = addInstantiable(std::move(newControl), b);
-        return _controls.emplace(key, ControlValue {controlPtr, ptr}).first->second;
+        auto index = instantiables().size();
+        auto ptr = addInstantiable(std::move(newControl));
+        return _controls.emplace(key, ControlValue {controlPtr, ptr, index}).first->second;
     } else {
         return pair->second;
     }

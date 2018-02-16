@@ -175,7 +175,7 @@ std::unique_ptr<Value> Function::callConst(Node *node, std::vector<std::unique_p
     }
 
     // evaluate function inline and let constant folding do the rest
-    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr, node->func(), module);
+    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr, node->generateFunc(module), module);
 }
 
 std::unique_ptr<Value> Function::callNonConst(Node *node,
@@ -211,7 +211,7 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
     // create context in the parent node
     if (_contextType) {
         auto inst = generateCall(std::move(allArgs));
-        auto contextPtr = node->addInstantiable(std::move(inst), node->builder());
+        auto contextPtr = node->addInstantiable(std::move(inst));
         assert(contextPtr->getType()->isPointerTy() && contextPtr->getType()->getPointerElementType() == _contextType);
         values.push_back(contextPtr);
     }

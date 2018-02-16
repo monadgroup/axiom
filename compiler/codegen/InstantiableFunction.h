@@ -6,19 +6,29 @@ namespace MaximCodegen {
 
     class InstantiableFunction : public Instantiable {
     public:
-        explicit InstantiableFunction(MaximContext *ctx, llvm::Module *module);
+        InstantiableFunction(MaximContext *ctx, llvm::Module *module);
+
+        static std::unique_ptr<InstantiableFunction> create(MaximContext *ctx, llvm::Module *module);
 
         MaximContext *ctx() const { return _ctx; }
 
         Builder &builder() { return _builder; }
 
+        Builder &initBuilder() { return _initBuilder; }
+
         llvm::Module *module() const { return _module; }
 
-        llvm::Function *func() const { return _func; }
+        llvm::Function *generateFunc(llvm::Module *module);
 
-        llvm::Value *addInstantiable(std::unique_ptr<Instantiable> inst, Builder &b);
+        llvm::Function *initializeFunc(llvm::Module *module);
 
-        void complete();
+        llvm::Value *addInstantiable(std::unique_ptr<Instantiable> inst);
+
+        llvm::Value *addInstantiable(Instantiable *inst);
+
+        virtual void complete();
+
+        virtual void reset();
 
         llvm::Constant *getInitialVal(MaximContext *ctx) override;
 
@@ -26,17 +36,24 @@ namespace MaximCodegen {
 
         llvm::Type *type(MaximContext *ctx) const override { return _ctxType; }
 
+        std::vector<Instantiable*> &instantiables() { return _instantiables; }
+
     private:
+        static size_t _nextId;
+        size_t _id;
+
         MaximContext *_ctx;
         Builder _builder;
+        Builder _initBuilder;
         llvm::Module *_module;
 
-        llvm::Function *_func;
-        llvm::Value *_nodeCtx;
+        llvm::Function *_generateFunc;
+        llvm::Function *_initializeFunc;
         llvm::StructType *_ctxType;
         std::vector<llvm::Type*> _instTypes;
 
-        std::vector<std::unique_ptr<Instantiable>> _instantiables;
+        std::vector<std::unique_ptr<Instantiable>> _ownedInstantiables;
+        std::vector<Instantiable*> _instantiables;
     };
 
 }
