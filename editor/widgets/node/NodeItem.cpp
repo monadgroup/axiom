@@ -10,9 +10,8 @@
 #include "editor/model/node/CustomNode.h"
 #include "editor/model/node/ModuleNode.h"
 #include "editor/model/control/NodeControl.h"
-#include "editor/model/control/NodeValueControl.h"
-#include "../controls/BasicControl.h"
-#include "../controls/ToggleControl.h"
+#include "editor/model/control/NodeNumControl.h"
+#include "editor/widgets/controls/NumControl.h"
 #include "NodePanel.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
@@ -263,24 +262,10 @@ void NodeItem::setSize(QSize newSize) {
 }
 
 void NodeItem::addControl(NodeControl *control) {
-    if (auto valueControl = dynamic_cast<NodeValueControl *>(control)) {
-        QGraphicsItem *c = nullptr;
-
-        switch (valueControl->type) {
-            case NodeValueControl::Type::BASIC:
-                c = new BasicControl(valueControl, canvas);
-                break;
-            case NodeValueControl::Type::TOGGLE:
-                c = new ToggleControl(valueControl, canvas);
-                break;
-            case NodeValueControl::Type::LABEL:
-                break;
-        }
-
-        if (c) {
-            c->setZValue(2);
-            c->setParentItem(this);
-        }
+    if (auto numControl = dynamic_cast<NodeNumControl *>(control)) {
+        auto c = new NumControl(numControl, canvas);
+        c->setZValue(2);
+        c->setParentItem(this);
     }
 }
 

@@ -1,16 +1,17 @@
 #pragma once
 
 #include "ControlItem.h"
+#include "editor/model/connection/NumConnectionSink.h"
 
 namespace AxiomModel {
-    class NodeValueControl;
+    class NodeNumControl;
 }
 
 namespace AxiomGui {
 
     class NodeItem;
 
-    class BasicControl : public ControlItem {
+    class NumControl : public ControlItem {
     Q_OBJECT
         Q_PROPERTY(float hoverState
                            READ
@@ -19,24 +20,15 @@ namespace AxiomGui {
                            setHoverState)
 
     public:
-        enum class BasicMode {
-            PLUG,
-            KNOB,
-            SLIDER_H,
-            SLIDER_V
-        };
+        AxiomModel::NodeNumControl *control;
 
-        AxiomModel::NodeValueControl *control;
-
-        explicit BasicControl(AxiomModel::NodeValueControl *control, SchematicCanvas *canvas);
+        explicit NumControl(AxiomModel::NodeNumControl *control, SchematicCanvas *canvas);
 
         QRectF aspectBoundingRect() const;
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
         QPainterPath shape() const override;
-
-        BasicMode mode() const;
 
         float hoverState() const { return m_hoverState; }
 
@@ -76,7 +68,7 @@ namespace AxiomGui {
     private:
         float m_hoverState = 0;
         bool isDragging = false;
-        float beforeDragVal = 0;
+        AxiomModel::NumValue beforeDragVal;
         QPointF mouseStartPoint;
 
         QRectF getPlugBounds() const;
@@ -85,11 +77,23 @@ namespace AxiomGui {
 
         QRectF getSliderBounds(bool vertical) const;
 
+        QRectF getToggleBounds() const;
+
         void paintPlug(QPainter *painter);
 
         void paintKnob(QPainter *painter);
 
         void paintSlider(QPainter *painter, bool vertical);
+
+        void paintToggle(QPainter *painter);
+
+        QString valueAsString(AxiomModel::NumValue num);
+
+        AxiomModel::NumValue stringAsValue(const QString &str, AxiomModel::NumValue oldNum);
+
+        AxiomModel::NumValue getCVal() const;
+
+        void setCVal(AxiomModel::NumValue v) const;
     };
 
 }

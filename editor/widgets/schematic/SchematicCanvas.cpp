@@ -10,7 +10,7 @@
 
 #include "editor/AxiomApplication.h"
 #include "editor/model/node/CustomNode.h"
-#include "editor/model/control/NodeValueControl.h"
+#include "editor/model/control/NodeNumControl.h"
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
 #include "../IConnectable.h"
@@ -165,49 +165,6 @@ void SchematicCanvas::newNode(QPointF scenePos, QString name) {
     );
 
     auto newNode = std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
-
-    auto newControl = std::make_unique<NodeValueControl>(
-            newNode.get(), tr("Frequency"),
-            NodeValueControl::Type::BASIC,
-            NodeValueControl::Channel::BOTH,
-            QPoint(0, 0), QSize(2, 2)
-    );
-    newControl->setValue(0.2);
-    newNode->surface.addItem(std::move(newControl));
-
-    auto newControl2 = std::make_unique<NodeValueControl>(
-            newNode.get(), tr("Detune"),
-            NodeValueControl::Type::BASIC,
-            NodeValueControl::Channel::BOTH,
-            QPoint(2, 0), QSize(2, 2)
-    );
-    newControl2->setValue(0.4);
-    newNode->surface.addItem(std::move(newControl2));
-
-    auto newControl3 = std::make_unique<NodeValueControl>(
-            newNode.get(), tr("LFO Freq"),
-            NodeValueControl::Type::BASIC,
-            NodeValueControl::Channel::BOTH,
-            QPoint(0, 2), QSize(2, 6)
-    );
-    newNode->surface.addItem(std::move(newControl3));
-
-    auto newControl4 = std::make_unique<NodeValueControl>(
-            newNode.get(), tr("LFO Amt"),
-            NodeValueControl::Type::BASIC,
-            NodeValueControl::Channel::BOTH,
-            QPoint(2, 2), QSize(6, 2)
-    );
-    newNode->surface.addItem(std::move(newControl4));
-
-    auto newControl5 = std::make_unique<NodeValueControl>(
-            newNode.get(), tr("Pulse"),
-            NodeValueControl::Type::TOGGLE,
-            NodeValueControl::Channel::BOTH,
-            QPoint(4, 4), QSize(2, 2)
-    );
-    newNode->surface.addItem(std::move(newControl5));
-
     schematic->addItem(std::move(newNode));
 }
 
