@@ -47,8 +47,8 @@ namespace MaximCodegen {
         Builder _initBuilder;
         llvm::Module *_module;
 
-        llvm::Function *_generateFunc;
-        llvm::Function *_initializeFunc;
+        llvm::Function *_generateFunc = nullptr;
+        llvm::Function *_initializeFunc = nullptr;
         llvm::StructType *_ctxType;
         std::vector<llvm::Type*> _instTypes;
 

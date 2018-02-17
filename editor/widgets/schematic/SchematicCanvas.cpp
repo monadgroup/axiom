@@ -158,7 +158,7 @@ void SchematicCanvas::addNode(AxiomModel::Node *node) {
 }
 
 void SchematicCanvas::newNode(QPointF scenePos, QString name) {
-    auto defaultSize = QSize(5, 5);
+    auto defaultSize = QSize(3, 2);
     auto targetPos = QPoint(
             qRound((float) scenePos.x() / SchematicCanvas::nodeGridSize.width()),
             qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height())

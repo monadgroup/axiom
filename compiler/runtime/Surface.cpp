@@ -12,7 +12,7 @@ using namespace MaximRuntime;
 
 Surface::Surface(MaximCodegen::MaximContext *context)
     : _context(context), _module("surface", context->llvm()), _instFunc(context, &_module) {
-
+    _module.setDataLayout(context->dataLayout());
 }
 
 void Surface::addNode(std::unique_ptr<Node> node) {
@@ -40,6 +40,7 @@ MaximCodegen::InstantiableFunction *Surface::getFunction(Runtime *runtime) {
     if (!_isDirty) {
         return &_instFunc;
     }
+    _isDirty = false;
 
     // get order of nodes with breadth-first search
     // search seed is the exposed writer nodes
@@ -80,23 +81,25 @@ MaximCodegen::InstantiableFunction *Surface::getFunction(Runtime *runtime) {
     // todo: handle any nodes that haven't been included yet??
 
     // add nodes and calls to them in the functions, assign controls to their globals
-    for (size_t i = inverseOrder.size() - 1; i >= 0; i--) {
-        auto node = inverseOrder[i];
-        auto nodeFunc = node->getFunction(runtime);
-        auto ptr = _instFunc.addInstantiable(nodeFunc);
+    if (!inverseOrder.empty()) {
+        for (size_t i = inverseOrder.size() - 1; i >= 0; i--) {
+            auto node = inverseOrder[i];
+            auto nodeFunc = node->getFunction(runtime);
+            auto ptr = _instFunc.addInstantiable(nodeFunc);
 
-        // used when the control is initialized
-        for (const auto &control : node->controls()) {
-            control->control()->storagePointer = control->group()->global();
+            // used when the control is initialized
+            for (const auto &control : node->controls()) {
+                control->control()->storagePointer = control->group()->global();
+            }
+
+            MaximCodegen::CreateCall(_instFunc.builder(), nodeFunc->generateFunc(&_module), {ptr}, "");
         }
-
-        MaximCodegen::CreateCall(_instFunc.builder(), nodeFunc->generateFunc(&_module), {ptr}, "");
     }
 
     _instFunc.complete();
 
     if (_hasHandle) runtime->removeModule(_handle);
-    _handle = runtime->addModule(llvm::CloneModule(&_module));
+    _handle = runtime->addModule(llvm::CloneModule(_module));
     _hasHandle = true;
 
     return &_instFunc;

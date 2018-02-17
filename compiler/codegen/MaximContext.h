@@ -65,11 +65,13 @@ namespace MaximCodegen {
 
     class MaximContext {
     public:
-        MaximContext();
+        explicit MaximContext(llvm::DataLayout dataLayout);
 
         uint64_t sampleRate = 44100;
 
         llvm::LLVMContext &llvm() { return _llvm; }
+
+        llvm::DataLayout &dataLayout() { return _dataLayout; }
 
         // some LLVM globals
         llvm::Value *beatsPerSecond() const;
@@ -135,6 +137,7 @@ namespace MaximCodegen {
 
     private:
         llvm::LLVMContext _llvm;
+        llvm::DataLayout _dataLayout;
 
         NumType _numType;
         MidiType _midiType;

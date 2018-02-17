@@ -21,7 +21,7 @@ llvm::Function* InstantiableFunction::generateFunc(llvm::Module *module) {
     if (existingFunc) return existingFunc;
 
     auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(_ctx->llvm()), {llvm::PointerType::get(_ctxType, 0)}, false);
-    return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, _module);
+    return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, module);
 }
 
 llvm::Function* InstantiableFunction::initializeFunc(llvm::Module *module) {
@@ -30,7 +30,7 @@ llvm::Function* InstantiableFunction::initializeFunc(llvm::Module *module) {
     if (existingFunc) return existingFunc;
 
     auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(_ctx->llvm()), {llvm::PointerType::get(_ctxType, 0)}, false);
-    return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, _module);
+    return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, module);
 }
 
 llvm::Value* InstantiableFunction::addInstantiable(std::unique_ptr<Instantiable> inst) {
@@ -59,6 +59,9 @@ void InstantiableFunction::complete() {
         auto itemPtr = _initBuilder.CreateStructGEP(_ctxType, _initializeFunc->arg_begin(), (unsigned int) i, "inst");
         _instantiables[i]->initializeVal(_ctx, _module, itemPtr, _initBuilder);
     }
+
+    _builder.CreateRetVoid();
+    _initBuilder.CreateRetVoid();
 }
 
 void InstantiableFunction::reset() {
@@ -75,7 +78,7 @@ void InstantiableFunction::reset() {
     auto genBlock = llvm::BasicBlock::Create(_ctx->llvm(), "entry", _generateFunc);
     _builder.SetInsertPoint(genBlock);
 
-    _initializeFunc = generateFunc(_module);
+    _initializeFunc = initializeFunc(_module);
     auto initBlock = llvm::BasicBlock::Create(_ctx->llvm(), "entry", _initializeFunc);
     _initBuilder.SetInsertPoint(initBlock);
 }

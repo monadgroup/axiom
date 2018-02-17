@@ -14,7 +14,7 @@ using namespace MaximRuntime;
 
 CustomNode::CustomNode(MaximCodegen::MaximContext *context, Surface *surface)
     : Node(surface), _context(context), _module("node", context->llvm()), _node(context, &_module) {
-
+    _module.setDataLayout(context->dataLayout());
 }
 
 ErrorLog CustomNode::compile(std::string content, Runtime *runtime) {
@@ -44,7 +44,8 @@ ErrorLog CustomNode::compile(std::string content, Runtime *runtime) {
     }
 
     if (_hasHandle) runtime->removeModule(_handle);
-    _handle = runtime->addModule(llvm::CloneModule(&_module));
+    _handle = runtime->addModule(llvm::CloneModule(_module));
+    _hasHandle = true;
 
     return log;
 }

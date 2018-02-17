@@ -52,6 +52,6 @@ target_link_libraries(axiom Qt5::Widgets)
 add_subdirectory(compiler)
 target_link_libraries(axiom axiom_compiler)
 
-llvm_map_components_to_libnames(llvm_libs support core irreader orcjit)
+llvm_map_components_to_libnames(llvm_libs support core irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
 target_link_libraries(axiom ${llvm_libs})
 

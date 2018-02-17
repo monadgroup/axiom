@@ -1,5 +1,8 @@
 #include <QApplication>
 
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/Support/TargetSelect.h>
+
 #include "AxiomApplication.h"
 #include "../compiler/runtime/Runtime.h"
 #include "../compiler/runtime/Surface.h"
@@ -9,8 +12,12 @@
 #include "../compiler/codegen/Function.h"
 
 int main(int argc, char *argv[]) {
-    //MaximRuntime::Runtime runtime;
-    //runtime.rebuild();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+    llvm::InitializeNativeTargetAsmParser();
+
+    MaximRuntime::Runtime runtime;
+    runtime.rebuild();
 
     AxiomApplication::main = new AxiomApplication(argc, argv);
     AxiomApplication::main->win.show();

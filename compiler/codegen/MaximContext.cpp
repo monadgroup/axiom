@@ -41,7 +41,7 @@
 
 using namespace MaximCodegen;
 
-MaximContext::MaximContext() : _numType(this), _midiType(this) {
+MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout), _numType(this), _midiType(this) {
     /// REGISTER FUNCTIONS
     // functions that map directly to a built-in LLVM vector intrinsic
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::cos, "cos", 1));
