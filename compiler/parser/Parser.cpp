@@ -41,7 +41,9 @@ std::unique_ptr<Block> Parser::parse() {
             block->expressions.push_back(std::move(expr));
         }
 
-        expect(stream()->next(), Token::Type::END_OF_LINE);
+        auto nextToken = stream()->next();
+        if (nextToken.type == Token::Type::END_OF_FILE) break;
+        expect(nextToken, Token::Type::END_OF_LINE);
     }
 
     return std::move(block);

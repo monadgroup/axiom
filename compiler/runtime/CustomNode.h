@@ -23,7 +23,7 @@ namespace MaximRuntime {
 
         ~CustomNode();
 
-        ErrorLog compile(std::string content);
+        ErrorLog compile(std::string content, std::vector<std::unique_ptr<Control>> &removedControls);
 
         std::vector<std::unique_ptr<Control>> &controls() override { return _controls; }
 
@@ -40,7 +40,7 @@ namespace MaximRuntime {
         bool _hasHandle = false;
         Runtime::ModuleHandle _handle;
 
-        void updateControls();
+        void updateControls(std::vector<std::unique_ptr<Control>> &removedControls);
     };
 
 }

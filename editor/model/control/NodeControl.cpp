@@ -1,22 +1,40 @@
 #include "NodeControl.h"
 
+#include "NodeNumControl.h"
 #include "../node/Node.h"
 #include "../connection/ConnectionWire.h"
+#include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
 
-NodeControl::NodeControl(Node *node, QString name, QPoint pos, QSize size)
-        : GridItem(&node->surface, pos, size), node(node), m_name(std::move(name)) {
+NodeControl::NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
+        : GridItem(&node->surface, pos, size), node(node), _runtime(runtime) {
 
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });
 }
 
-void NodeControl::setName(const QString &name) {
-    if (name != m_name) {
-        m_name = name;
-        emit nameChanged(name);
+std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRuntime::Control *runtime) {
+    QSize newSize;
+
+    switch (runtime->type()) {
+        case MaximCommon::ControlType::NUMBER:
+            newSize = QSize(1, 1);
+            break;
+        default: assert(false);
     }
+
+    auto newPos = node->surface.grid.findNearestAvailable(QPoint(0, 0), newSize);
+
+    switch (runtime->type()) {
+        case MaximCommon::ControlType::NUMBER:
+            return std::make_unique<NodeNumControl>(node, runtime, newPos, newSize);
+        default: assert(false); throw;
+    }
+}
+
+QString NodeControl::name() const {
+    return QString::fromStdString(_runtime->name());
 }
 
 void NodeControl::setShowName(bool showName) {

@@ -48,10 +48,10 @@ namespace MaximRuntime {
 
         Surface *_surface;
         MaximCommon::ControlType _type;
-        Control *_writer;
+        Control *_writer = nullptr;
         std::vector<Control*> _controls;
         llvm::GlobalVariable *_global;
-        bool _isExposed;
+        bool _isExposed = false;
 
         size_t _id;
 

@@ -21,19 +21,14 @@ Surface::~Surface() {
     }
 }
 
-void Surface::addNode(std::unique_ptr<Node> node) {
-    _nodes.push_back(std::move(node));
+void Surface::addNode(Node *node) {
+    _nodes.push_back(node);
     markAsDirty();
 }
 
 void Surface::removeNode(Node *node) {
-    for (auto i = _nodes.begin(); i < _nodes.end(); i++) {
-        if (i->get() == node) {
-            _nodes.erase(i);
-            markAsDirty();
-            return;
-        }
-    }
+    auto index = std::find(_nodes.begin(), _nodes.end(), node);
+    if (index != _nodes.end()) _nodes.erase(index);
 }
 
 void Surface::markAsDirty() {
@@ -84,7 +79,12 @@ MaximCodegen::InstantiableFunction *Surface::getFunction() {
         }
     }
 
-    // todo: handle any nodes that haven't been included yet??
+    // add nodes that haven't been included yet
+    for (const auto &node : _nodes) {
+        if (visitedNodes.find(node) != visitedNodes.end()) continue;
+
+        inverseOrder.push_back(node);
+    }
 
     // add nodes and calls to them in the functions, assign controls to their globals
     if (!inverseOrder.empty()) {
@@ -97,6 +97,7 @@ MaximCodegen::InstantiableFunction *Surface::getFunction() {
             for (const auto &control : node->controls()) {
                 control->control()->storagePointer = control->group()->global();
             }
+            node->getFunction()->complete();
 
             MaximCodegen::CreateCall(_instFunc.builder(), nodeFunc->generateFunc(&_module), {ptr}, "");
         }

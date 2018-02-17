@@ -22,6 +22,9 @@ namespace MaximRuntime {
 
     class Control {
     public:
+        bool isNew = true;
+        bool isDeleted = false;
+
         Control(Node *node, std::string name, MaximCodegen::Control *control);
 
         static std::unique_ptr<Control> create(Node *node, std::string name, MaximCodegen::Control *control);
@@ -63,7 +66,7 @@ namespace MaximRuntime {
         MaximCommon::ControlDirection _dir;
         std::shared_ptr<ControlGroup> _group;
         std::vector<Control*> _connections;
-        ExposedControl *_exposer;
+        ExposedControl *_exposer = nullptr;
         MaximCodegen::Control *_control;
     };
 

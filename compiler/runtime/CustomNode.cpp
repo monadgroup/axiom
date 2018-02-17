@@ -21,7 +21,7 @@ CustomNode::~CustomNode() {
     if (_hasHandle) _surface->runtime()->removeModule(_handle);
 }
 
-ErrorLog CustomNode::compile(std::string content) {
+ErrorLog CustomNode::compile(std::string content, std::vector<std::unique_ptr<Control>> &removedControls) {
     _node.reset();
 
     ErrorLog log{};
@@ -34,13 +34,14 @@ ErrorLog CustomNode::compile(std::string content) {
         // parse and generate code
         auto block = parser.parse();
         _node.generateCode(block.get());
+
+        surface()->markAsDirty();
+        surface()->getFunction();
+
         _node.complete();
 
         // update control list
-        updateControls();
-
-        // tell the surface it needs to update
-        surface()->markAsDirty();
+        updateControls(removedControls);
 
         if (_hasHandle) _surface->runtime()->removeModule(_handle);
         _handle = _surface->runtime()->addModule(llvm::CloneModule(_module));
@@ -63,7 +64,7 @@ struct ControlUpdateVal {
     ControlUpdateVal(std::unique_ptr<Control> control, bool isUsed) : control(std::move(control)), isUsed(isUsed) { }
 };
 
-void CustomNode::updateControls() {
+void CustomNode::updateControls(std::vector<std::unique_ptr<Control>> &removedControls) {
     std::unordered_map<MaximCodegen::ControlKey, ControlUpdateVal> currentControls;
     for (auto &control : _controls) {
         MaximCodegen::ControlKey key { control->name(), control->type() };
@@ -89,6 +90,7 @@ void CustomNode::updateControls() {
             // it's an old control
             pair->second.isUsed = true;
             pair->second.control->setControl(newControl.second.control);
+            pair->second.control->isNew = false;
         }
     }
 
@@ -97,7 +99,9 @@ void CustomNode::updateControls() {
             _controls.push_back(std::move(control.second.control));
         } else {
             // ensure that control is cleaned up before _any_ controls are deleted
+            control.second.control->isDeleted = true;
             control.second.control->cleanup();
+            removedControls.push_back(std::move(control.second.control));
         }
     }
 }

@@ -25,7 +25,7 @@ namespace AxiomModel {
             BOTH = LEFT | RIGHT
         };
 
-        NodeNumControl(Node *node, QString name, QPoint pos, QSize size);
+        NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size);
 
         NumConnectionSink *sink() const override { return m_sink.get(); }
 

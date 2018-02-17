@@ -24,7 +24,7 @@ ControlGroup::~ControlGroup() {
     _global->removeFromParent();
 }
 
-ControlGroup::ControlGroup(Control *control) : _surface(control->node()->surface()), _controls({control}), _id(_nextId++) {
+ControlGroup::ControlGroup(Control *control) : _surface(control->node()->surface()), _type(control->type()), _controls({control}), _id(_nextId++) {
     if (control->direction() == MaximCommon::ControlDirection::OUT) _writer = control;
     if (control->exposer()) _isExposed = true;
     setupGlobal();

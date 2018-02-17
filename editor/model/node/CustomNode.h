@@ -13,6 +13,8 @@ namespace AxiomModel {
     public:
         CustomNode(Schematic *parent, QString name, QPoint pos, QSize);
 
+        ~CustomNode();
+
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 
         MaximRuntime::CustomNode *runtime() override { return &_runtime; }

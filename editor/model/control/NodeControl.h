@@ -3,6 +3,12 @@
 #include "../GridItem.h"
 #include "../connection/ConnectionSink.h"
 
+namespace MaximRuntime {
+
+    class Control;
+
+}
+
 namespace AxiomModel {
 
     class Node;
@@ -13,11 +19,15 @@ namespace AxiomModel {
     public:
         Node *node;
 
-        NodeControl(Node *node, QString name, QPoint pos, QSize size);
+        NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size);
+
+        static std::unique_ptr<NodeControl> fromRuntimeControl(Node *node, MaximRuntime::Control *runtime);
 
         virtual ConnectionSink *sink() const = 0;
 
-        QString name() const { return m_name; }
+        MaximRuntime::Control *runtime() const { return _runtime; }
+
+        QString name() const;
 
         bool showName() const { return m_showName; }
 
@@ -25,13 +35,9 @@ namespace AxiomModel {
 
     public slots:
 
-        void setName(const QString &name);
-
         void setShowName(bool showName);
 
     signals:
-
-        void nameChanged(const QString &newName);
 
         void showNameChanged(bool newShowName);
 
@@ -41,8 +47,8 @@ namespace AxiomModel {
 
     private:
 
-        QString m_name = "";
         bool m_showName = true;
+        MaximRuntime::Control *_runtime;
 
     private slots:
 

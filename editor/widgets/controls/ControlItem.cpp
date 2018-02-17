@@ -13,8 +13,6 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : control(control), canvas(canvas) {
-    connect(control, &NodeControl::nameChanged,
-            this, &ControlItem::triggerUpdate);
     connect(control, &NodeControl::showName,
             this, &ControlItem::triggerUpdate);
     connect(control, &NodeControl::posChanged,

@@ -6,8 +6,8 @@
 
 using namespace AxiomModel;
 
-NodeNumControl::NodeNumControl(Node *node, QString name, QPoint pos, QSize size)
-        : NodeControl(node, std::move(name), pos, size) {
+NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
+        : NodeControl(node, runtime, pos, size) {
     initSink();
 
     connect(m_sink.get(), &NumConnectionSink::valueChanged,
@@ -15,12 +15,15 @@ NodeNumControl::NodeNumControl(Node *node, QString name, QPoint pos, QSize size)
 }
 
 std::unique_ptr<GridItem> NodeNumControl::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
-    auto nodeSurface = dynamic_cast<NodeSurface *>(newParent);
+    /*auto nodeSurface = dynamic_cast<NodeSurface *>(newParent);
     assert(nodeSurface != nullptr);
 
     auto control = std::make_unique<NodeNumControl>(nodeSurface->node, name(), pos(), size());
     control->setValue(value());
-    return std::move(control);
+    return std::move(control);*/
+
+    assert(false);
+    throw;
 }
 
 void NodeNumControl::setValue(NumValue value) {

@@ -30,7 +30,7 @@ namespace MaximRuntime {
 
         ~Surface();
 
-        void addNode(std::unique_ptr<Node> node);
+        void addNode(Node *node);
 
         void removeNode(Node *node);
 
@@ -54,7 +54,7 @@ namespace MaximRuntime {
         MaximCodegen::InstantiableFunction _instFunc;
         bool _isDirty = true;
 
-        std::vector<std::unique_ptr<Node>> _nodes;
+        std::vector<Node*> _nodes;
         std::vector<ControlGroup*> _groups;
 
         bool _hasHandle = false;
