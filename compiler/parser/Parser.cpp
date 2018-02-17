@@ -177,7 +177,7 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     else if (nameToken.content == "secs") formType = FormType::SECONDS;
     else if (nameToken.content == "beats") formType = FormType::BEATS;
     else {
-        throw ParseError(
+        throw MaximCommon::CompileError(
             "Come on man, I don't support " + nameToken.content + " forms.",
             nameToken.startPos, nameToken.endPos
         );
@@ -204,7 +204,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNoteTokenExpression() {
     auto noteName = toUpperCase(match[1].str());
     auto noteNum = std::distance(noteNames.begin(), std::find(noteNames.begin(), noteNames.end(), noteName));
     if ((size_t) noteNum >= noteNames.size()) {
-        throw ParseError(
+        throw MaximCommon::CompileError(
             "Ey my man, don't you know that " + noteName + " isn't a valid note?",
             noteToken.startPos, noteToken.endPos
         );
@@ -307,7 +307,7 @@ std::unique_ptr<MaximAst::AssignableExpression> Parser::parseControlExpression(s
     else if (typeToken.content == "num[]") controlType = ControlType::NUM_EXTRACT;
     else if (typeToken.content == "midi[]") controlType = ControlType::MIDI_EXTRACT;
     else {
-        throw ParseError(
+        throw MaximCommon::CompileError(
             "Come on man, I don't support " + typeToken.content + " controls.",
             typeToken.startPos, typeToken.endPos
         );
@@ -577,7 +577,7 @@ void Parser::pushAssignable(std::vector<std::unique_ptr<MaximAst::AssignableExpr
 
 void Parser::expect(const Token &token, Token::Type expectedType) {
     if (token.type != expectedType) {
-        throw ParseError(
+        throw MaximCommon::CompileError(
             "Dude, why is there a " + Token::typeString(token.type) + "? I expected a " +
             Token::typeString(expectedType) + " (or something else) here.",
             token.startPos, token.endPos
@@ -585,15 +585,15 @@ void Parser::expect(const Token &token, Token::Type expectedType) {
     }
 }
 
-ParseError Parser::fail(const Token &token) {
-    return ParseError(
+MaximCommon::CompileError Parser::fail(const Token &token) {
+    return MaximCommon::CompileError(
         "Hey man, not cool. I didn't expect this " + Token::typeString(token.type) + "!",
         token.startPos, token.endPos
     );
 }
 
-ParseError Parser::castFail(MaximAst::Expression *expr) {
-    return ParseError(
+MaximCommon::CompileError Parser::castFail(MaximAst::Expression *expr) {
+    return MaximCommon::CompileError(
         "Hey! I need something I can assign to here, not this silly fudge you're giving me.",
         expr->startPos, expr->endPos
     );

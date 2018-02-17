@@ -28,7 +28,7 @@ std::unique_ptr<Value> MaximCodegen::visitAssign(Node *node, MaximAst::AssignExp
         auto leftSize = expr->left->assignments.size();
         auto rightSize = rightTuple->type()->types().size();
         if (leftSize != rightSize) {
-            throw CodegenError(
+            throw MaximCommon::CompileError(
                 "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to assign " + std::to_string(rightSize) +
                 " values to " + std::to_string(leftSize) + " ones!",
                 expr->startPos, expr->endPos

@@ -149,7 +149,7 @@ bool Function::validateTypes(const std::vector<Type *> &types) {
 void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional,
                                 bool requireConst, SourcePos startPos, SourcePos endPos) {
     if (!validateCount(args.size(), requireOptional)) {
-        throw CodegenError("Eyy! That's the wrong number of arguments my dude.", startPos, endPos);
+        throw MaximCommon::CompileError("Eyy! That's the wrong number of arguments my dude.", startPos, endPos);
     }
 
     for (size_t i = 0; i < args.size(); i++) {
@@ -158,7 +158,7 @@ void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args,
 
         _context->assertType(providedArg, param->type);
         if (requireConst && param->requireConst && !llvm::isa<llvm::Constant>(providedArg->get())) {
-            throw CodegenError(
+            throw MaximCommon::CompileError(
                 "I constantly insist that constant values must be passed into constant parameters, and yet they constantly aren't constant.",
                 providedArg->startPos, providedArg->endPos
             );

@@ -8,6 +8,10 @@
 #include "../GridItem.h"
 #include "NodeSurface.h"
 
+namespace MaximRuntime {
+    class Node;
+}
+
 namespace AxiomModel {
 
     class Schematic;
@@ -16,6 +20,8 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
+        static constexpr float minPanelHeight = 40;
+
         enum class Type {
             CUSTOM,
             GROUP
@@ -29,6 +35,12 @@ namespace AxiomModel {
 
         QString name() const { return m_name; }
 
+        virtual MaximRuntime::Node *runtime() = 0;
+
+        bool isPanelOpen() const { return m_panelOpen; }
+
+        float panelHeight() const { return m_panelHeight; }
+
         bool isMovable() const override { return true; }
 
         bool isResizable() const override { return true; }
@@ -39,12 +51,24 @@ namespace AxiomModel {
 
         void setCorners(QPoint topLeft, QPoint bottomRight) override;
 
+        void setPanelOpen(bool panelOpen);
+
+        void setPanelHeight(float panelHeight);
+
     signals:
 
         void nameChanged(const QString &newName);
 
+        void panelOpenChanged(bool newPanelOpen);
+
+        void beforePanelHeightChanged(float newPanelHeight);
+
+        void panelHeightChanged(float newPanelHeight);
+
     private:
         QString m_name = "";
+        bool m_panelOpen = false;
+        float m_panelHeight = 50;
     };
 
 }

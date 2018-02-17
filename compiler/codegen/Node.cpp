@@ -35,7 +35,7 @@ std::unique_ptr<Value> Node::getControl(Builder &b, MaximAst::ControlExpression 
     auto controlDat = getControl(expr->name, expr->type, b);
     auto control = controlDat.control;
     if (!control->validateProperty(expr->prop)) {
-        throw CodegenError(
+        throw MaximCommon::CompileError(
             "so... uh... you... know that " + expr->prop + " isnt a valid property, right??",
             expr->startPos, expr->endPos
         );
@@ -55,7 +55,7 @@ void Node::setControl(Builder &b, MaximAst::ControlExpression *expr,
     auto controlDat = getControl(expr->name, expr->type, b);
     auto control = controlDat.control;
     if (!control->validateProperty(expr->prop)) {
-        throw CodegenError(
+        throw MaximCommon::CompileError(
             "so... uh... you... know that " + expr->prop + " isnt a valid property, right??",
             expr->startPos, expr->endPos
         );

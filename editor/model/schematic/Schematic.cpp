@@ -7,8 +7,13 @@
 #include "../node/Node.h"
 #include "../node/ModuleNode.h"
 #include "../control/NodeControl.h"
+#include "../../AxiomApplication.h"
 
 using namespace AxiomModel;
+
+Schematic::Schematic() : _runtime(AxiomApplication::runtime) {
+
+}
 
 void Schematic::serialize(QDataStream &stream) const {
     stream << pan() << static_cast<quint32>(items().size());

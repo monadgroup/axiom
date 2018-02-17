@@ -5,8 +5,8 @@
 
 #include "../common/FormType.h"
 #include "../common/OperatorType.h"
+#include "../common/CompileError.h"
 #include "../SourcePos.h"
-#include "CodegenError.h"
 #include "NumType.h"
 #include "MidiType.h"
 #include "TupleType.h"
@@ -150,7 +150,7 @@ namespace MaximCodegen {
 
         std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);
 
-        CodegenError
+        MaximCommon::CompileError
         typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos, SourcePos endPos) const;
 
         Operator *alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType, SourcePos startPos,

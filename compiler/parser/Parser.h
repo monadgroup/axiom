@@ -3,8 +3,8 @@
 #include <vector>
 #include <memory>
 
-#include "ParseError.h"
 #include "Token.h"
+#include "../common/CompileError.h"
 
 namespace MaximAst {
     class Block;
@@ -105,9 +105,9 @@ namespace MaximParser {
 
         static void expect(const Token &token, Token::Type expectedType);
 
-        static ParseError fail(const Token &token);
+        static MaximCommon::CompileError fail(const Token &token);
 
-        static ParseError castFail(MaximAst::Expression *expr);
+        static MaximCommon::CompileError castFail(MaximAst::Expression *expr);
     };
 
 }

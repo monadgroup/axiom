@@ -232,7 +232,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
         std::vector<std::unique_ptr<Value>> resultVals;
 
         if (leftSize != rightSize) {
-            throw CodegenError(
+            throw MaximCommon::CompileError(
                 "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to " + MaximCommon::operatorType2Verb(type) + " " +
                 std::to_string(leftSize) + " values to " + std::to_string(rightSize) + " ones!",
                 startPos, endPos
@@ -302,7 +302,7 @@ MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<
 
     auto func = getFunction(name, types);
     if (!func) {
-        throw CodegenError("WHAT IS THIS?\?!?! " + name + " is def not a valid function :(", startPos, endPos);
+        throw MaximCommon::CompileError("WHAT IS THIS?\?!?! " + name + " is def not a valid function :(", startPos, endPos);
     }
     return func->call(node, std::move(values), startPos, endPos);
 }
@@ -357,9 +357,9 @@ std::vector<std::unique_ptr<Function>> &MaximContext::getOrCreateFunctionList(st
     }
 }
 
-CodegenError MaximContext::typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos,
+MaximCommon::CompileError MaximContext::typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos,
                                             SourcePos endPos) const {
-    return CodegenError(
+    return MaximCommon::CompileError(
         "Oyyyy m80, I need a " + expectedType->name() + " here, not this bad boi " + receivedType->name(), startPos,
         endPos);
 }
@@ -369,7 +369,7 @@ MaximContext::alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, 
                                 SourcePos endPos) {
     auto op = getOperator(type, leftType, rightType);
     if (!op) {
-        throw CodegenError("WHAT IS THIS?\?!?! This operator doesn't work on these types of values.", startPos, endPos);
+        throw MaximCommon::CompileError("WHAT IS THIS?\?!?! This operator doesn't work on these types of values.", startPos, endPos);
     }
     return op;
 }

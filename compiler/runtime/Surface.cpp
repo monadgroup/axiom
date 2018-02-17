@@ -10,9 +10,15 @@
 
 using namespace MaximRuntime;
 
-Surface::Surface(MaximCodegen::MaximContext *context)
-    : _context(context), _module("surface", context->llvm()), _instFunc(context, &_module) {
-    _module.setDataLayout(context->dataLayout());
+Surface::Surface(Runtime *runtime)
+    : _runtime(runtime), _module("surface", runtime->context.llvm()), _instFunc(&runtime->context, &_module) {
+    _module.setDataLayout(runtime->context.dataLayout());
+}
+
+Surface::~Surface() {
+    if (_hasHandle) {
+        _runtime->removeModule(_handle);
+    }
 }
 
 void Surface::addNode(std::unique_ptr<Node> node) {
@@ -36,7 +42,7 @@ void Surface::markAsDirty() {
     if (parent) parent->markAsDirty();
 }
 
-MaximCodegen::InstantiableFunction *Surface::getFunction(Runtime *runtime) {
+MaximCodegen::InstantiableFunction *Surface::getFunction() {
     if (!_isDirty) {
         return &_instFunc;
     }
@@ -84,7 +90,7 @@ MaximCodegen::InstantiableFunction *Surface::getFunction(Runtime *runtime) {
     if (!inverseOrder.empty()) {
         for (size_t i = inverseOrder.size() - 1; i >= 0; i--) {
             auto node = inverseOrder[i];
-            auto nodeFunc = node->getFunction(runtime);
+            auto nodeFunc = node->getFunction();
             auto ptr = _instFunc.addInstantiable(nodeFunc);
 
             // used when the control is initialized
@@ -98,8 +104,8 @@ MaximCodegen::InstantiableFunction *Surface::getFunction(Runtime *runtime) {
 
     _instFunc.complete();
 
-    if (_hasHandle) runtime->removeModule(_handle);
-    _handle = runtime->addModule(llvm::CloneModule(_module));
+    if (_hasHandle) _runtime->removeModule(_handle);
+    _handle = _runtime->addModule(llvm::CloneModule(_module));
     _hasHandle = true;
 
     return &_instFunc;

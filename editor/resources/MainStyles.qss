@@ -15,6 +15,17 @@ QLineEdit:focus {
     border-color: #444;
 }
 
+QTextEdit {
+    background: #0A0A0A;
+    border: 1px solid #333;
+    padding: 2px;
+    font-family: 'Consolas', monospace;
+}
+
+QTextEdit:focus {
+    background: #111;
+}
+
 /* scroll bar styling */
 QScrollBar {
 

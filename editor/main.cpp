@@ -12,13 +12,16 @@
 #include "../compiler/codegen/Function.h"
 
 int main(int argc, char *argv[]) {
+    // initialize LLVM
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    MaximRuntime::Runtime runtime;
-    runtime.rebuild();
+    // initialize runtime (generates and loads core modules)
+    AxiomApplication::runtime = new MaximRuntime::Runtime();
+    AxiomApplication::project = new AxiomModel::Project();
 
+    // show the window
     AxiomApplication::main = new AxiomApplication(argc, argv);
     AxiomApplication::main->win.show();
     return AxiomApplication::main->exec();

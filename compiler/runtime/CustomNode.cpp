@@ -12,12 +12,16 @@
 
 using namespace MaximRuntime;
 
-CustomNode::CustomNode(MaximCodegen::MaximContext *context, Surface *surface)
-    : Node(surface), _context(context), _module("node", context->llvm()), _node(context, &_module) {
-    _module.setDataLayout(context->dataLayout());
+CustomNode::CustomNode(Surface *surface)
+    : Node(surface), _surface(surface), _module("node", surface->context()->llvm()), _node(surface->context(), &_module) {
+    _module.setDataLayout(surface->context()->dataLayout());
 }
 
-ErrorLog CustomNode::compile(std::string content, Runtime *runtime) {
+CustomNode::~CustomNode() {
+    if (_hasHandle) _surface->runtime()->removeModule(_handle);
+}
+
+ErrorLog CustomNode::compile(std::string content) {
     _node.reset();
 
     ErrorLog log{};
@@ -37,20 +41,18 @@ ErrorLog CustomNode::compile(std::string content, Runtime *runtime) {
 
         // tell the surface it needs to update
         surface()->markAsDirty();
-    } catch (const MaximParser::ParseError &err) {
-        log.parseErrors.push_back(err);
-    } catch (const MaximCodegen::CodegenError &err) {
-        log.codegenErrors.push_back(err);
-    }
 
-    if (_hasHandle) runtime->removeModule(_handle);
-    _handle = runtime->addModule(llvm::CloneModule(_module));
-    _hasHandle = true;
+        if (_hasHandle) _surface->runtime()->removeModule(_handle);
+        _handle = _surface->runtime()->addModule(llvm::CloneModule(_module));
+        _hasHandle = true;
+    } catch (const MaximCommon::CompileError &err) {
+        log.errors.push_back(err);
+    }
 
     return log;
 }
 
-MaximCodegen::Node* CustomNode::getFunction(Runtime *runtime) {
+MaximCodegen::Node* CustomNode::getFunction() {
     return &_node;
 }
 

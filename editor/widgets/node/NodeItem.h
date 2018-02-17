@@ -2,8 +2,6 @@
 
 #include <QtWidgets/QGraphicsObject>
 
-class QGraphicsProxyWidget;
-
 namespace AxiomModel {
     class Node;
 
@@ -11,8 +9,6 @@ namespace AxiomModel {
 }
 
 namespace AxiomGui {
-
-    class NodePanel;
 
     class SchematicCanvas;
 
@@ -41,10 +37,6 @@ namespace AxiomGui {
         void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
-
-        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
-
-        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
@@ -75,16 +67,12 @@ namespace AxiomGui {
         void resizerSizeChanged(QSizeF newSize);
 
     private:
-        //NodePanel *nodePanel;
-        //QGraphicsProxyWidget *nodePanelProxy;
         bool isDragging = false;
         QPoint mouseStartPoint;
 
         static const int textOffset = 15;
 
         QRectF drawBoundingRect() const;
-
-        void updateNodePanelPos(QPointF realNodePos);
     };
 
 }

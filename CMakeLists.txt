@@ -36,7 +36,7 @@ set(SOURCE_FILES editor/main.cpp editor/util.cpp editor/AxiomApplication.cpp
         editor/widgets/windows/MainWindow.cpp editor/widgets/windows/AboutWindow.cpp
         editor/widgets/modulebrowser/ModuleBrowserPanel.cpp editor/widgets/modulebrowser/ModulePreviewList.cpp editor/widgets/modulebrowser/ModulePreview.cpp
         editor/widgets/schematic/SchematicPanel.cpp editor/widgets/schematic/SchematicView.cpp editor/widgets/schematic/SchematicCanvas.cpp
-        editor/widgets/node/NodeItem.cpp editor/widgets/node/NodePanel.cpp
+        editor/widgets/node/NodeItem.cpp editor/widgets/node/CustomNodePanel.cpp editor/widgets/node/SyntaxHighlighter.cpp
         editor/widgets/controls/ControlItem.cpp editor/widgets/controls/NumControl.cpp
         editor/widgets/connection/WireItem.cpp
         editor/layouts/FlowLayout.cpp)

@@ -17,6 +17,22 @@ void Node::setName(const QString &name) {
     }
 }
 
+void Node::setPanelOpen(bool panelOpen) {
+    if (panelOpen != m_panelOpen) {
+        m_panelOpen = panelOpen;
+        emit panelOpenChanged(panelOpen);
+    }
+}
+
+void Node::setPanelHeight(float panelHeight) {
+    if (panelHeight < minPanelHeight) panelHeight = minPanelHeight;
+    if (panelHeight != m_panelHeight) {
+        emit beforePanelHeightChanged(panelHeight);
+        m_panelHeight = panelHeight;
+        emit panelHeightChanged(panelHeight);
+    }
+}
+
 void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     auto initialPos = pos();
     auto initialBottomRight = initialPos + QPoint(size().width(), size().height());

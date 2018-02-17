@@ -5,7 +5,6 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
-#include <iostream>
 
 #include "Node.h"
 #include "Surface.h"
@@ -18,7 +17,7 @@ using namespace MaximRuntime;
 Runtime::Runtime()
     : targetMachine(llvm::EngineBuilder().selectTarget()),
       dataLayout(targetMachine->createDataLayout()),
-      context(dataLayout), rootSurface(std::make_unique<Surface>(&context)),
+      context(dataLayout), rootSurface(std::make_unique<Surface>(this)),
       executionSession(symbolPool),
       resolver(llvm::orc::createLegacyLookupResolver(
           [this](const std::string &name) -> llvm::JITSymbol {
@@ -57,7 +56,7 @@ void Runtime::rebuild() {
         oldGenerateFunc->removeFromParent();
     }
 
-    auto func = rootSurface->getFunction(this);
+    auto func = rootSurface->getFunction();
 
     auto ctxGlobal = new llvm::GlobalVariable(
         _controllerModule,
@@ -101,13 +100,8 @@ void Runtime::generate() {
 }
 
 Runtime::ModuleHandle Runtime::addModule(std::unique_ptr<llvm::Module> m) {
-    std::cout << "Adding module:" << std::endl;
-    m->print(llvm::errs(), nullptr);
-    std::cout << std::endl;
-
     auto k = executionSession.allocateVModule();
     auto result = compileLayer.addModule(k, std::move(m));
-
     return k;
 }
 
@@ -126,8 +120,7 @@ llvm::JITSymbol Runtime::findSymbol(llvm::GlobalValue *value) {
     std::string mangledName;
     llvm::raw_string_ostream mangledNameStream(mangledName);
     mangler.getNameWithPrefix(mangledNameStream, value, false);
-    auto outName = mangledNameStream.str();
-    return compileLayer.findSymbol(outName, false); // todo: shouldn't need false here
+    return compileLayer.findSymbol(mangledNameStream.str(), false); // todo: shouldn't need false here
 }
 
 llvm::JITTargetAddress Runtime::getSymbolAddress(const std::string &name) {

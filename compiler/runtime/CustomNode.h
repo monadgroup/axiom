@@ -2,7 +2,7 @@
 
 #include "Node.h"
 #include "ErrorLog.h"
-#include "codegen/Node.h"
+#include "../codegen/Node.h"
 #include "Runtime.h"
 
 namespace llvm {
@@ -19,16 +19,18 @@ namespace MaximRuntime {
 
     class CustomNode : public Node {
     public:
-        CustomNode(MaximCodegen::MaximContext *context, Surface *surface);
+        explicit CustomNode(Surface *surface);
 
-        ErrorLog compile(std::string content, Runtime *runtime);
+        ~CustomNode();
+
+        ErrorLog compile(std::string content);
 
         std::vector<std::unique_ptr<Control>> &controls() override { return _controls; }
 
-        MaximCodegen::Node *getFunction(Runtime *runtime) override;
+        MaximCodegen::Node *getFunction() override;
 
     private:
-        MaximCodegen::MaximContext *_context;
+        Surface *_surface;
         llvm::Module _module;
 
         MaximCodegen::Node _node;

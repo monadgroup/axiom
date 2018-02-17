@@ -26,7 +26,9 @@ namespace MaximRuntime {
     public:
         Surface *parent = nullptr;
 
-        explicit Surface(MaximCodegen::MaximContext *context);
+        explicit Surface(Runtime *runtime);
+
+        ~Surface();
 
         void addNode(std::unique_ptr<Node> node);
 
@@ -34,18 +36,20 @@ namespace MaximRuntime {
 
         void markAsDirty();
 
-        MaximCodegen::InstantiableFunction *getFunction(Runtime *runtime);
+        MaximCodegen::InstantiableFunction *getFunction();
 
         std::vector<ControlGroup*> &groups() { return _groups; }
 
         llvm::Module *module() { return &_module; }
 
-        MaximCodegen::MaximContext *context() const { return _context; }
+        Runtime *runtime() const { return _runtime; }
+
+        MaximCodegen::MaximContext *context() const { return &_runtime->context; }
 
         bool isDirty() const { return _isDirty; }
 
     private:
-        MaximCodegen::MaximContext *_context;
+        Runtime *_runtime;
         llvm::Module _module;
         MaximCodegen::InstantiableFunction _instFunc;
         bool _isDirty = true;

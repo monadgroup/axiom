@@ -12,18 +12,16 @@
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeNumControl.h"
 #include "editor/widgets/controls/NumControl.h"
-#include "NodePanel.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
 #include "../FloatingValueEditor.h"
 #include "../CommonColors.h"
+#include "CustomNodePanel.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
 NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(canvas) {
-    //setAcceptHoverEvents(true);
-
     // create items for all controls that already exist
     for (const auto &item : node->surface.items()) {
         if (auto control = dynamic_cast<NodeControl *>(item.get())) {
@@ -84,10 +82,11 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
         resizer->setVisible(!node->surface.hasSelection());
     }
 
-    // create panel
-    /*nodePanel = new NodePanel(node);
-    nodePanelProxy = canvas->addWidget(nodePanel);
-    nodePanelProxy->setZValue(SchematicCanvas::panelZVal);*/
+    if (auto customNode = dynamic_cast<CustomNode*>(node)) {
+        auto panel = new CustomNodePanel(customNode);
+        panel->setParentItem(this);
+        panel->setFlag(QGraphicsItem::ItemStacksBehindParent);
+    }
 
     // set initial state
     setPos(node->pos());
@@ -197,18 +196,9 @@ void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
                 false
         );
     } else {
-        event->ignore();
+        event->accept();
+        node->setPanelOpen(!node->isPanelOpen());
     }
-}
-
-void NodeItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
-    //nodePanel->setNodeHover(true);
-}
-
-void NodeItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
-    /*QTimer::singleShot(10, [this]() {
-        nodePanel->setNodeHover(false);
-    });*/
 }
 
 void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
@@ -249,15 +239,11 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
 void NodeItem::setPos(QPoint newPos) {
     auto realPos = SchematicCanvas::nodeRealPos(newPos);
-    updateNodePanelPos(realPos);
     QGraphicsItem::setPos(realPos.x(), realPos.y());
     emit resizerPosChanged(realPos);
 }
 
 void NodeItem::setSize(QSize newSize) {
-    updateNodePanelPos(SchematicCanvas::nodeRealPos(node->pos()));
-    //nodePanelProxy->widget()->setFixedWidth(node->size().width() * SchematicCanvas::nodeGridSize.width());
-
     emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
 }
 
@@ -274,7 +260,6 @@ void NodeItem::setIsSelected(bool selected) {
 }
 
 void NodeItem::remove() {
-    //scene()->removeItem(nodePanelProxy);
     scene()->removeItem(this);
 }
 
@@ -305,9 +290,4 @@ QRectF NodeItem::drawBoundingRect() const {
             QPointF(0, 0),
             SchematicCanvas::nodeRealSize(node->size())
     };
-}
-
-void NodeItem::updateNodePanelPos(QPointF realNodePos) {
-    //nodePanelProxy->setPos(realNodePos.x(),
-    //                       realNodePos.y() + node->size().height() * SchematicCanvas::nodeGridSize.height() + 1);
 }
