@@ -1,78 +1,99 @@
 #include "ControlGroup.h"
 
-#include <llvm/IR/GlobalVariable.h>
-
-#include "../codegen/MaximContext.h"
-#include "Control.h"
+#include "Schematic.h"
 #include "Node.h"
-#include "Surface.h"
+#include "Control.h"
+#include "codegen/MaximContext.h"
+#include "codegen/Control.h"
 
 using namespace MaximRuntime;
 
-size_t ControlGroup::_nextId = 0;
+ControlGroup::ControlGroup(MaximCommon::ControlType type, Schematic *initialSchematic)
+    : _type(type), _schematic(initialSchematic) {
 
-ControlGroup::ControlGroup(Surface *surface, MaximCommon::ControlType type, Control *writer, std::vector<Control *> controls, bool isExposed)
-    : _surface(surface), _type(type), _writer(writer), _controls(std::move(controls)), _isExposed(isExposed), _id(_nextId++) {
-    surface->groups().push_back(this);
-    setupGlobal();
 }
 
-ControlGroup::~ControlGroup() {
-    auto index = std::find(_surface->groups().begin(), _surface->groups().end(), this);
-    if (index != _surface->groups().end()) _surface->groups().erase(index);
+void ControlGroup::absorb(ControlGroup *other) {
+    for (const auto &control : other->controls()) {
+        control->setGroup(this);
+    }
+}
+
+void ControlGroup::addControl(Control *control) {
+    _controls.emplace(control);
+
+    auto controlSchematic = control->node()->parentUnit();
+    if (controlSchematic->depth() < _schematic->depth()) {
+        setSchematic(controlSchematic);
+    }
+}
+
+void ControlGroup::removeControl(Control *control) {
+    // remove control from list
+    _controls.erase(control);
+
+    // if we're empty, remove self from parent
+    // note: our destructor is called from this!
+    if (_controls.empty()) {
+        _schematic->removeControlGroup(this);
+        return;
+    }
+
+    // otherwise, find the lowest-depth schematic in our controls (it might've changed)
+    Schematic *newSchematic = nullptr;
+    for (const auto &indexedControl : _controls) {
+        auto controlSchematic = indexedControl->node()->parentUnit();
+        if (!newSchematic || controlSchematic->depth() < newSchematic->depth()) {
+            newSchematic = controlSchematic;
+        }
+    }
+    assert(newSchematic);
+
+    if (_schematic != newSchematic) {
+        setSchematic(newSchematic);
+    }
+}
+
+llvm::Constant* ControlGroup::getInitialVal(MaximCodegen::MaximContext *ctx) {
+    switch (type()) {
+        case MaximCommon::ControlType::NUMBER:
+            return llvm::ConstantStruct::get(ctx->numType()->get(), {
+                llvm::ConstantVector::get({ctx->constFloat(0), ctx->constFloat(0)}),
+                llvm::ConstantInt::get(ctx->numType()->formType(), (uint64_t) MaximCommon::FormType::CONTROL, false),
+                llvm::ConstantInt::get(ctx->numType()->activeType(), (uint64_t) true, false)
+            });
+        default: assert(false); throw;
+    }
+}
+
+void ControlGroup::initializeVal(MaximCodegen::MaximContext *ctx, llvm::Module *module, llvm::Value *ptr,
+                                 MaximCodegen::InstantiableFunction *parent, MaximCodegen::Builder &b) {
+    for (const auto &control : _controls) {
+        auto codegenControl = control->control();
+        if (!codegenControl) continue;
+
+        // todo: need a better way to do this: it's slow (requires searching the entire subtree each time)
+        // and won't work with nodes/controls that are instanced multiple times
+        auto controlPtr = parent->getInitializePointer(codegenControl);
+        assert(controlPtr->getType()->isPointerTy()
+               && controlPtr->getType()->getPointerElementType()->isPointerTy()
+               && controlPtr->getType()->getPointerElementType()->getPointerElementType() == type(ctx));
+
+        b.CreateStore(ptr, controlPtr);
+    }
+}
+
+llvm::Type* ControlGroup::type(MaximCodegen::MaximContext *ctx) const {
+    switch (type()) {
+        case MaximCommon::ControlType::NUMBER: return ctx->numType()->get();
+        default: assert(false); throw;
+    }
+}
+
+void ControlGroup::setSchematic(Schematic *newSchematic) {
+    auto owner = _schematic->removeControlGroup(this);
+    newSchematic->addControlGroup(std::move(owner));
+    _schematic = newSchematic;
 
     _global->removeFromParent();
-}
-
-ControlGroup::ControlGroup(Control *control) : _surface(control->node()->surface()), _type(control->type()), _controls({control}), _id(_nextId++) {
-    if (control->direction() == MaximCommon::ControlDirection::OUT) _writer = control;
-    if (control->exposer()) _isExposed = true;
-    setupGlobal();
-}
-
-void ControlGroup::findWriter(Control *ignore) {
-    for (const auto &control : _controls) {
-        if (control == ignore || control->direction() != MaximCommon::ControlDirection::OUT) continue;
-        _writer = control;
-        _surface->markAsDirty();
-        break;
-    }
-}
-
-void ControlGroup::updateExposed() {
-    _isExposed = false;
-    for (const auto &control : _controls) {
-        if (!control->exposer()) continue;
-        _isExposed = true;
-        _surface->markAsDirty();
-        break;
-    }
-}
-
-void ControlGroup::setupGlobal() {
-    auto globalName = "control." + std::to_string(_id);
-
-    // todo: refactor somewhere else
-    llvm::Constant *_globalIni;
-    switch (_type) {
-        case MaximCommon::ControlType::NUMBER:
-            _globalIni = llvm::ConstantStruct::get(_surface->context()->numType()->get(), {
-                llvm::ConstantVector::getSplat(2, _surface->context()->constFloat(0)),
-                llvm::ConstantInt::get(_surface->context()->numType()->formType(), (uint64_t) MaximCommon::FormType::LINEAR, false),
-                llvm::ConstantInt::get(_surface->context()->numType()->activeType(), (uint64_t) false, false)
-            });
-            break;
-        default:
-            assert(false);
-            throw;
-    }
-
-    _global = new llvm::GlobalVariable(
-        *_surface->module(),
-        _globalIni->getType(),
-        false,
-        llvm::GlobalVariable::LinkageTypes::ExternalLinkage,
-        _globalIni,
-        globalName
-    );
 }

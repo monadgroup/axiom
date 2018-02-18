@@ -12,10 +12,6 @@ std::unique_ptr<NumberControl> NumberControl::create(MaximContext *context) {
     return std::make_unique<NumberControl>(context);
 }
 
-llvm::Constant* NumberControl::getInitialVal(MaximContext *ctx) {
-    return llvm::UndefValue::get(type(ctx));
-}
-
 llvm::Type* NumberControl::type(MaximContext *ctx) const {
     return llvm::PointerType::get(ctx->numType()->get(), 0);
 }

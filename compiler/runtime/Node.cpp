@@ -2,6 +2,6 @@
 
 using namespace MaximRuntime;
 
-Node::Node(Surface *surface) : _surface(surface) {
+Node::Node(Schematic *parent) : CompileUnit(parent->runtime()), _parent(parent) {
 
 }

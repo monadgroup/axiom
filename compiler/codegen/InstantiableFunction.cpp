@@ -51,13 +51,44 @@ llvm::Value* InstantiableFunction::addInstantiable(Instantiable *inst) {
     return _builder.CreateStructGEP(currentStructType, typedCtx, (unsigned int) index, "inst");
 }
 
+llvm::Value* InstantiableFunction::getInitializePointer(Instantiable *inst) {
+    std::vector<llvm::Value*> indexList;
+    indexList.push_back(_ctx->constInt(64, 0, false));
+    assert(getInstIndex(inst, indexList));
+
+    llvm::Value *typedCtx = _initializeFunc->arg_begin();
+
+    if (_ctxType->isOpaque()) {
+        auto currentStructType = llvm::StructType::get(_ctx->llvm(), _instTypes, false);
+        typedCtx = _initBuilder.CreatePointerCast(_initializeFunc->arg_begin(),
+                                                  llvm::PointerType::get(currentStructType, 0));
+    }
+
+    return _initBuilder.CreateGEP(typedCtx, indexList, "inst");
+}
+
+llvm::Value* InstantiableFunction::getGeneratePointer(Instantiable *inst) {
+    std::vector<llvm::Value*> indexList;
+    indexList.push_back(_ctx->constInt(64, 0, false));
+    assert(getInstIndex(inst, indexList));
+
+    llvm::Value *typedCtx = _generateFunc->arg_begin();
+
+    if (_ctxType->isOpaque()) {
+        auto currentStructType = llvm::StructType::get(_ctx->llvm(), _instTypes, false);
+        typedCtx = _builder.CreatePointerCast(_generateFunc->arg_begin(),
+                                              llvm::PointerType::get(currentStructType, 0));
+    }
+
+    return _builder.CreateGEP(typedCtx, indexList, "inst");
+}
+
 void InstantiableFunction::complete() {
     _ctxType->setBody(_instTypes, false);
 
-
     for (size_t i = 0; i < _instantiables.size(); i++) {
         auto itemPtr = _initBuilder.CreateStructGEP(_ctxType, _initializeFunc->arg_begin(), (unsigned int) i, "inst");
-        _instantiables[i]->initializeVal(_ctx, _module, itemPtr, _initBuilder);
+        _instantiables[i]->initializeVal(_ctx, _module, itemPtr, this, _initBuilder);
     }
 
     _builder.CreateRetVoid();
@@ -66,6 +97,9 @@ void InstantiableFunction::complete() {
 
 void InstantiableFunction::reset() {
     _ctxType = llvm::StructType::create(_ctx->llvm(), "nodectx");
+    _instTypes.clear();
+    _ownedInstantiables.clear();
+    _instantiables.clear();
 
     if (_generateFunc) {
         _generateFunc->removeFromParent();
@@ -96,4 +130,26 @@ llvm::Constant* InstantiableFunction::getInitialVal(MaximContext *ctx) {
 
 void InstantiableFunction::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, Builder &b) {
     CreateCall(b, initializeFunc(module), {ptr}, "");
+}
+
+bool InstantiableFunction::getInstIndex(Instantiable *inst, std::vector<llvm::Value*> &indexes) {
+    for (size_t i = 0; i < _instantiables.size(); i++) {
+        if (_instantiables[i] == inst) {
+            indexes.push_back(_ctx->constInt(32, i, false));
+            return true;
+        }
+    }
+
+    std::vector<llvm::Value*> beforeIndexes(indexes);
+
+    for (size_t i = 0; i < _instantiables.size(); i++) {
+        auto indexedInst = _instantiables[i];
+        if (auto indexedInstFunc = dynamic_cast<InstantiableFunction*>(indexedInst)) {
+            indexes = beforeIndexes;
+            indexes.push_back(_ctx->constInt(32, i, false));
+            if (indexedInstFunc->getInstIndex(inst, indexes)) return true;
+        }
+    }
+
+    return false;
 }

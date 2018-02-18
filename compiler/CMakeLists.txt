@@ -6,6 +6,11 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOCC ON)
+set(CMAKE_AUTORCC ON)
+find_package(Qt5 COMPONENTS Core REQUIRED)
+
 set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
@@ -20,7 +25,7 @@ set(SOURCE_FILES util.h
         codegen/operators/NumOperator.cpp codegen/operators/NumFloatOperator.cpp codegen/operators/NumIntrinsicOperator.cpp codegen/operators/NumIntOperator.cpp codegen/operators/NumComparisonOperator.cpp codegen/operators/NumLogicalOperator.cpp
         codegen/converters/LinearConverter.cpp codegen/converters/BeatsConverter.cpp codegen/converters/ControlConverter.cpp codegen/converters/DbConverter.cpp
         codegen/controls/NumberControl.cpp
-        runtime/Runtime.cpp runtime/CustomNode.cpp runtime/GroupNode.cpp runtime/Node.cpp runtime/ControlGroup.cpp runtime/Surface.cpp runtime/Control.cpp runtime/ExposedControl.cpp)
+        runtime/CompileUnit.cpp runtime/Schematic.cpp runtime/ControlGroup.cpp runtime/Control.cpp runtime/HardControl.cpp runtime/SoftControl.cpp runtime/Runtime.cpp runtime/Node.cpp runtime/CustomNode.cpp runtime/GroupNode.cpp runtime/Jit.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

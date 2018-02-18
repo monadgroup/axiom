@@ -1,65 +1,39 @@
 #pragma once
 
-#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
-#include <llvm/ExecutionEngine/Orc/CompileUtils.h>
-#include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
-#include <llvm/IR/Mangler.h>
-#include <functional>
+#include <memory>
+#include <vector>
 
+#include "Jit.h"
 #include "../codegen/MaximContext.h"
-
-namespace llvm {
-    class TargetMachine;
-}
+#include "Schematic.h"
 
 namespace MaximRuntime {
 
-    class Surface;
+    class ControlGroup;
 
     class Runtime {
-    private:
-        using ObjectLayerTy = llvm::orc::RTDyldObjectLinkingLayer;
-        using CompileLayerTy = llvm::orc::IRCompileLayer<ObjectLayerTy, llvm::orc::SimpleCompiler>;
     public:
-        using ModuleHandle = llvm::orc::VModuleKey;
-
-        llvm::TargetMachine *targetMachine;
-        const llvm::DataLayout dataLayout;
-        MaximCodegen::MaximContext context;
-        std::unique_ptr<Surface> rootSurface;
+        Jit jit;
 
         Runtime();
 
-        void rebuild();
+        MaximCodegen::MaximContext *context() { return &_context; }
+
+        Schematic &mainSchematic() { return _mainSchematic; }
+
+        void compileAndDeploy();
 
         void generate();
 
-        ModuleHandle addModule(std::unique_ptr<llvm::Module> m);
-
-        void removeModule(ModuleHandle h);
-
-        llvm::JITSymbol findSymbol(const std::string &name);
-
-        llvm::JITSymbol findSymbol(llvm::GlobalValue *value);
-
-        llvm::JITTargetAddress getSymbolAddress(const std::string &name);
-
-        llvm::JITTargetAddress getSymbolAddress(llvm::GlobalValue *value);
-
     private:
-        llvm::orc::SymbolStringPool symbolPool;
-        llvm::orc::ExecutionSession executionSession;
-        std::shared_ptr<llvm::orc::SymbolResolver> resolver;
-        llvm::orc::RTDyldObjectLinkingLayer objectLayer;
-        llvm::orc::IRCompileLayer<decltype(objectLayer), llvm::orc::SimpleCompiler> compileLayer;
-        llvm::Mangler mangler;
+        MaximCodegen::MaximContext _context;
+        Schematic _mainSchematic;
+        llvm::Module _module;
 
-        llvm::Module _controllerModule;
+        bool _isDeployed = false;
+        Jit::ModuleKey _deployKey;
 
-        bool _hasHandle = false;
-        ModuleHandle _handle;
-
-        void (*_generateFunc)();
+        void (*_generateFuncPtr)() = nullptr;
     };
 
 }

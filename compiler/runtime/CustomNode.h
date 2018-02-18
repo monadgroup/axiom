@@ -1,46 +1,35 @@
 #pragma once
 
-#include "Node.h"
-#include "ErrorLog.h"
 #include "../codegen/Node.h"
-#include "Runtime.h"
-
-namespace llvm {
-    class Function;
-}
-
-namespace MaximCodegen {
-    class Node;
-}
+#include "Node.h"
+#include "HardControl.h"
+#include "ErrorLog.h"
 
 namespace MaximRuntime {
 
-    class Control;
-
     class CustomNode : public Node {
     public:
-        explicit CustomNode(Surface *surface);
+        explicit CustomNode(Schematic *parent);
 
-        ~CustomNode();
+        std::string code() const { return _code; }
 
-        ErrorLog compile(std::string content, std::vector<std::unique_ptr<Control>> &removedControls);
+        void setCode(const std::string &code);
 
-        std::vector<std::unique_ptr<Control>> &controls() override { return _controls; }
+        void compile() override;
 
-        MaximCodegen::Node *getFunction() override;
+        std::vector<HardControl*> &controls() { return _controls; }
+
+        ErrorLog const &errorLog() const { return _errorLog; }
 
     private:
-        Surface *_surface;
-        llvm::Module _module;
+
+        std::string _code = "";
+
+        std::vector<HardControl*> _controls;
 
         MaximCodegen::Node _node;
 
-        std::vector<std::unique_ptr<Control>> _controls;
-
-        bool _hasHandle = false;
-        Runtime::ModuleHandle _handle;
-
-        void updateControls(std::vector<std::unique_ptr<Control>> &removedControls);
+        ErrorLog _errorLog;
     };
 
 }

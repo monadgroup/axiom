@@ -1,18 +1,22 @@
 #pragma once
 
-#include "Surface.h"
 #include "Node.h"
+#include "Schematic.h"
 
 namespace MaximRuntime {
 
     class GroupNode : public Node {
     public:
-        GroupNode(MaximCodegen::MaximContext *context, Surface *surface);
+        explicit GroupNode(Schematic *parent);
 
-        Surface &childSurface() const { return _surface; }
+        Schematic &subsurface() const { return _subsurface; }
+
+        void compile() override;
 
     private:
-        Surface _surface;
+
+        Schematic _subsurface;
+
     };
 
 }

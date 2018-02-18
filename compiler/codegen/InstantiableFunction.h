@@ -26,6 +26,10 @@ namespace MaximCodegen {
 
         llvm::Value *addInstantiable(Instantiable *inst);
 
+        llvm::Value *getInitializePointer(Instantiable *inst);
+
+        llvm::Value *getGeneratePointer(Instantiable *inst);
+
         virtual void complete();
 
         virtual void reset();
@@ -54,6 +58,8 @@ namespace MaximCodegen {
 
         std::vector<std::unique_ptr<Instantiable>> _ownedInstantiables;
         std::vector<Instantiable*> _instantiables;
+
+        bool getInstIndex(Instantiable *inst, std::vector<llvm::Value*> &indexes);
     };
 
 }

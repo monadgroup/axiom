@@ -1,32 +1,22 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-
-namespace MaximCodegen {
-    class InstantiableFunction;
-}
+#include "CompileUnit.h"
+#include "Schematic.h"
 
 namespace MaximRuntime {
 
     class Control;
 
-    class Surface;
-
-    class Runtime;
-
-    class Node {
+    class Node : public CompileUnit {
     public:
-        explicit Node(Surface *surface);
+        explicit Node(Schematic *parent);
 
-        Surface *surface() const { return _surface; }
+        Schematic *parentUnit() const override { return _parent; }
 
-        virtual std::vector<std::unique_ptr<Control>> &controls() = 0;
-
-        virtual MaximCodegen::InstantiableFunction *getFunction() = 0;
+        void compile() override = 0;
 
     private:
-        Surface *_surface;
+        Schematic *_parent;
     };
 
 }

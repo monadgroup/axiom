@@ -14,8 +14,6 @@ namespace MaximCodegen {
     public:
         MaximCommon::ControlDirection direction = MaximCommon::ControlDirection::NONE;
 
-        llvm::Value *storagePointer;
-
         Control(MaximContext *context, MaximCommon::ControlType type);
 
         MaximCommon::ControlType type() const { return _type; }
@@ -25,6 +23,10 @@ namespace MaximCodegen {
         virtual void setProperty(Builder &b, std::string name, std::unique_ptr<Value> val, llvm::Value *ptr) = 0;
 
         virtual std::unique_ptr<Value> getProperty(Builder &b, std::string name, llvm::Value *ptr) = 0;
+
+        llvm::Type *type(MaximContext *ctx) const override = 0;
+
+        llvm::Constant *getInitialVal(MaximContext *ctx) override;
 
         void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, Builder &b) override;
 

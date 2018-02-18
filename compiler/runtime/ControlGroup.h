@@ -1,61 +1,52 @@
 #pragma once
 
-#include <vector>
+#include <set>
+#include <memory>
 
+#include "codegen/Instantiable.h"
 #include "../common/ControlType.h"
-
-namespace llvm {
-    class GlobalVariable;
-}
 
 namespace MaximRuntime {
 
-    class Surface;
-
     class Control;
 
-    class ControlGroup {
+    class Schematic;
+
+    class ControlGroup : public MaximCodegen::Instantiable {
     public:
 
-        ControlGroup(Surface *surface, MaximCommon::ControlType type, Control *writer, std::vector<Control*> controls, bool isExposed);
+        ControlGroup(MaximCommon::ControlType type, Schematic *initialSchematic);
 
-        ~ControlGroup();
+        MaximCommon::ControlType type() const { return _type; }
 
-        explicit ControlGroup(Control *control);
+        Schematic *schematic() const { return _schematic; }
 
-        void findWriter(Control *ignore = nullptr);
+        std::set<Control*> &controls() { return _controls; }
 
-        void updateExposed();
+        void absorb(ControlGroup *other);
 
-        Surface *surface() const { return _surface; }
+        void addControl(Control *control);
 
-        void setSurface(Surface *surface) { _surface = surface; }
+        void removeControl(Control *control);
 
-        Control *writer() const { return _writer; }
+        llvm::Constant *getInitialVal(MaximCodegen::MaximContext *ctx) override;
 
-        void setWriter(Control *writer) { _writer = writer; }
+        void initializeVal(MaximCodegen::MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, MaximCodegen::InstantiableFunction *parent, MaximCodegen::Builder &b) override;
 
-        std::vector<Control*> &controls() { return _controls; }
-
-        bool isExposed() const { return _isExposed; }
-
-        void setExposed(bool exposed) { _isExposed = exposed; }
-
-        llvm::GlobalVariable *global() const { return _global; }
+        llvm::Type *type(MaximCodegen::MaximContext *ctx) const override;
 
     private:
-        static size_t _nextId;
 
-        Surface *_surface;
         MaximCommon::ControlType _type;
-        Control *_writer = nullptr;
-        std::vector<Control*> _controls;
-        llvm::GlobalVariable *_global;
-        bool _isExposed = false;
 
-        size_t _id;
+        Schematic *_schematic;
 
-        void setupGlobal();
+        std::set<Control*> _controls;
+
+        llvm::GlobalVariable *_global = nullptr;
+
+        void setSchematic(Schematic *newSchematic);
+
     };
 
 }

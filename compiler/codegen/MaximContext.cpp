@@ -41,6 +41,7 @@
 
 using namespace MaximCodegen;
 
+// todo: remove dataLayout from MaximContext as it's only used in the runtime library
 MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout), _numType(this), _midiType(this) {
     /// REGISTER FUNCTIONS
     // functions that map directly to a built-in LLVM vector intrinsic

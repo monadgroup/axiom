@@ -1,73 +1,68 @@
 #pragma once
 
-#include <string>
-#include <memory>
-#include <vector>
+#include <QtCore/QObject>
+#include <set>
 
 #include "../common/ControlType.h"
 #include "../common/ControlDirection.h"
-#include "../codegen/Control.h"
 
-namespace llvm {
-    class Value;
+namespace MaximCodegen {
+
+    class Control;
+
 }
 
 namespace MaximRuntime {
 
-    class Node;
-
     class ControlGroup;
 
-    class ExposedControl;
+    class SoftControl;
 
-    class Control {
+    class Node;
+
+    class Control : QObject {
+        Q_OBJECT
+
     public:
-        bool isNew = true;
-        bool isDeleted = false;
+        Control(Node *node, std::string name, MaximCommon::ControlType type);
 
-        Control(Node *node, std::string name, MaximCodegen::Control *control);
-
-        static std::unique_ptr<Control> create(Node *node, std::string name, MaximCodegen::Control *control);
+        Node *node() const { return _node; }
 
         std::string name() const { return _name; }
 
         MaximCommon::ControlType type() const { return _type; }
 
-        Node *node() const { return _node; }
+        virtual MaximCommon::ControlDirection direction() const = 0;
 
-        std::shared_ptr<ControlGroup> &group() { return _group; }
+        virtual MaximCodegen::Control *control() const = 0;
 
-        MaximCommon::ControlDirection direction() const { return _dir; }
+        ControlGroup *group() const { return _group; }
 
-        void setDirection(MaximCommon::ControlDirection dir);
+        void setGroup(ControlGroup *newGroup);
 
-        void setGroup(std::shared_ptr<ControlGroup> &group) { _group = group; }
+        void connect(Control *other);
 
-        std::vector<Control*> &connections() { return _connections; }
+        void disconnect(Control *other);
 
-        ExposedControl *exposer() const { return _exposer; }
+        std::set<Control*> &connections() { return _connections; }
 
-        void setExposer(ExposedControl *exposer);
+    public slots:
 
-        MaximCodegen::Control *control() const { return _control; }
+        void remove();
 
-        void setControl(MaximCodegen::Control *control) { _control = control; }
-
-        void connectTo(Control *control);
-
-        void disconnectFrom(Control *control);
-
-        virtual void cleanup();
+    signals:
+        void removed();
 
     private:
         Node *_node;
+
         std::string _name;
+
         MaximCommon::ControlType _type;
-        MaximCommon::ControlDirection _dir;
-        std::shared_ptr<ControlGroup> _group;
-        std::vector<Control*> _connections;
-        ExposedControl *_exposer = nullptr;
-        MaximCodegen::Control *_control;
+
+        ControlGroup *_group = nullptr;
+
+        std::set<Control*> _connections;
     };
 
 }

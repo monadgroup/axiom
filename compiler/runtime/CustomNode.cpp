@@ -1,107 +1,48 @@
 #include "CustomNode.h"
 
-#include <llvm/Transforms/Utils/Cloning.h>
-
-#include "../codegen/MaximContext.h"
-#include "../parser/TokenStream.h"
-#include "../parser/Parser.h"
-#include "../ast/Block.h"
-#include "../codegen/Value.h"
-#include "Surface.h"
-#include "Control.h"
+#include "parser/TokenStream.h"
+#include "parser/Parser.h"
+#include "ast/Block.h"
+#include "Runtime.h"
 
 using namespace MaximRuntime;
 
-CustomNode::CustomNode(Surface *surface)
-    : Node(surface), _surface(surface), _module("node", surface->context()->llvm()), _node(surface->context(), &_module) {
-    _module.setDataLayout(surface->context()->dataLayout());
+CustomNode::CustomNode(Schematic *parent) : Node(parent), _node(parent->runtime()->context(), module()) {
+
 }
 
-CustomNode::~CustomNode() {
-    if (_hasHandle) _surface->runtime()->removeModule(_handle);
+void CustomNode::setCode(const std::string &code) {
+    if (code != _code) {
+        _code = code;
+        scheduleCompile();
+    }
 }
 
-ErrorLog CustomNode::compile(std::string content, std::vector<std::unique_ptr<Control>> &removedControls) {
-    _node.reset();
+void CustomNode::compile() {
+    instFunc()->reset();
 
-    ErrorLog log{};
+    _errorLog.errors.clear();
 
     try {
-        // create token stream and parser
-        auto stream = std::make_unique<MaximParser::TokenStream>(content);
+        auto stream = std::make_unique<MaximParser::TokenStream>(_code);
         MaximParser::Parser parser(std::move(stream));
 
         // parse and generate code
         auto block = parser.parse();
+        _node.reset();
         _node.generateCode(block.get());
-
-        surface()->markAsDirty();
-        surface()->getFunction();
-
         _node.complete();
 
-        // update control list
-        updateControls(removedControls);
-
-        if (_hasHandle) _surface->runtime()->removeModule(_handle);
-        _handle = _surface->runtime()->addModule(llvm::CloneModule(_module));
-        _hasHandle = true;
+        instFunc()->addInstantiable(&_node);
+        instFunc()->complete();
     } catch (const MaximCommon::CompileError &err) {
-        log.errors.push_back(err);
+        _errorLog.errors.push_back(err);
+
+        // clear flag for deploy, since we want to keep the old module loaded
+        // note: this won't clear parent CompileUnit's deploy flags, so they will still deploy unnecessarily
+        // would be good to fix this, but it's not too important
+        cancelDeploy();
     }
 
-    return log;
-}
-
-MaximCodegen::Node* CustomNode::getFunction() {
-    return &_node;
-}
-
-struct ControlUpdateVal {
-    std::unique_ptr<Control> control;
-    bool isUsed;
-
-    ControlUpdateVal(std::unique_ptr<Control> control, bool isUsed) : control(std::move(control)), isUsed(isUsed) { }
-};
-
-void CustomNode::updateControls(std::vector<std::unique_ptr<Control>> &removedControls) {
-    std::unordered_map<MaximCodegen::ControlKey, ControlUpdateVal> currentControls;
-    for (auto &control : _controls) {
-        MaximCodegen::ControlKey key { control->name(), control->type() };
-
-        ControlUpdateVal updateVal(std::move(control), false);
-
-        currentControls.emplace(key, std::move(updateVal));
-    }
-    _controls.clear();
-
-    for (const auto &newControl : _node.controls()) {
-        auto pair = currentControls.find(newControl.first);
-
-        if (pair == currentControls.end()) {
-            // it's a new control
-            auto genControl = Control::create(this, newControl.first.name, newControl.second.control);
-
-            currentControls.emplace(
-                newControl.first,
-                ControlUpdateVal { std::move(genControl), true }
-            );
-        } else {
-            // it's an old control
-            pair->second.isUsed = true;
-            pair->second.control->setControl(newControl.second.control);
-            pair->second.control->isNew = false;
-        }
-    }
-
-    for (auto &control : currentControls) {
-        if (control.second.isUsed) {
-            _controls.push_back(std::move(control.second.control));
-        } else {
-            // ensure that control is cleaned up before _any_ controls are deleted
-            control.second.control->isDeleted = true;
-            control.second.control->cleanup();
-            removedControls.push_back(std::move(control.second.control));
-        }
-    }
+    Node::compile();
 }

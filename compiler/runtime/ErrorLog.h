@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "../common/CompileError.h"
+#include "compiler/common/CompileError.h"
 
 namespace MaximRuntime {
 

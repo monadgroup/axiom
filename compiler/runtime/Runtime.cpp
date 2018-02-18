@@ -1,132 +1,74 @@
 #include "Runtime.h"
 
-#include <llvm/Transforms/Utils/Cloning.h>
-
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/ExecutionEngine/SectionMemoryManager.h>
-#include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
-
-#include "Node.h"
-#include "Surface.h"
-#include "../codegen/Operator.h"
-#include "../codegen/Converter.h"
-#include "../codegen/Function.h"
-
 using namespace MaximRuntime;
 
-Runtime::Runtime()
-    : targetMachine(llvm::EngineBuilder().selectTarget()),
-      dataLayout(targetMachine->createDataLayout()),
-      context(dataLayout), rootSurface(std::make_unique<Surface>(this)),
-      executionSession(symbolPool),
-      resolver(llvm::orc::createLegacyLookupResolver(
-          [this](const std::string &name) -> llvm::JITSymbol {
-              if (auto sym = compileLayer.findSymbol(name, false)) return sym;
-              else if (auto err = sym.takeError()) return std::move(err);
+static const std::string initFuncName = "init";
+static const std::string generateFuncName = "generate";
+static const std::string globalCtxName = "globalCtx";
 
-              if (auto symAddr = llvm::RTDyldMemoryManager::getSymbolAddressInProcess(name)) {
-                  return llvm::JITSymbol(symAddr, llvm::JITSymbolFlags::Exported);
-              }
-              return nullptr;
-          },
-          [](llvm::Error err) { llvm::cantFail(std::move(err), "lookupFlags failed"); }
-      )),
-      objectLayer(executionSession, [this](llvm::orc::VModuleKey) {
-          return llvm::orc::RTDyldObjectLinkingLayer::Resources {
-              std::make_shared<llvm::SectionMemoryManager>(), resolver
-          };
-      }),
-      compileLayer(objectLayer, llvm::orc::SimpleCompiler(*targetMachine)),
-      _controllerModule("controller", context.llvm()) {
-    _controllerModule.setDataLayout(dataLayout);
-
-    auto mainModule = std::make_unique<llvm::Module>("main", context.llvm());
-    mainModule->setDataLayout(dataLayout);
-    context.buildFunctions(mainModule.get());
-    addModule(std::move(mainModule));
+Runtime::Runtime() : _context(jit.dataLayout()), _mainSchematic(this, nullptr, 0), _module("controller", _context.llvm()) {
+    auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
+    libModule->setDataLayout(jit.dataLayout());
+    _context.buildFunctions(libModule.get());
+    jit.addModule(std::move(libModule));
 }
 
-void Runtime::rebuild() {
-    if (!rootSurface->isDirty()) return;
+void Runtime::compileAndDeploy() {
+    if (_mainSchematic.needsCompile()) _mainSchematic.compile();
+    if (_mainSchematic.needsDeploy()) _mainSchematic.deploy();
 
-    if (auto oldInitFunc = _controllerModule.getFunction("init")) {
+    auto mainFunc = _mainSchematic.instFunc();
+
+    // remove old functions and global variables
+    if (auto oldInitFunc = _module.getFunction(initFuncName)) {
         oldInitFunc->removeFromParent();
     }
-    if (auto oldGenerateFunc = _controllerModule.getFunction("generate")) {
+    if (auto oldGenerateFunc = _module.getFunction(generateFuncName)) {
         oldGenerateFunc->removeFromParent();
     }
+    if (auto oldGlobalCtx = _module.getGlobalVariable(globalCtxName)) {
+        oldGlobalCtx->removeFromParent();
+    }
 
-    auto func = rootSurface->getFunction();
-
+    // create global variable for all storage
     auto ctxGlobal = new llvm::GlobalVariable(
-        _controllerModule,
-        func->type(&context),
-        false,
-        llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-        func->getInitialVal(&context),
-        "ctx"
+        _module, mainFunc->type(&_context), false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+        mainFunc->getInitialVal(&_context), globalCtxName
     );
 
+    // create func to call any initializers
     auto initFunc = llvm::Function::Create(
-        llvm::FunctionType::get(llvm::Type::getVoidTy(context.llvm()), {}),
-        llvm::Function::LinkageTypes::ExternalLinkage, "__init", &_controllerModule
+        llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {}),
+        llvm::Function::LinkageTypes::ExternalLinkage, initFuncName, &_module
     );
-    auto initBlock = llvm::BasicBlock::Create(context.llvm(), "entry", initFunc);
+    auto initBlock = llvm::BasicBlock::Create(_context.llvm(), "entry", initFunc);
     MaximCodegen::Builder b(initBlock);
-    b.CreateCall(func->initializeFunc(&_controllerModule), {ctxGlobal});
+    b.CreateCall(mainFunc->initializeFunc(&_module), {ctxGlobal});
     b.CreateRetVoid();
 
+    // create func to call on every generate cycle
     auto generateFunc = llvm::Function::Create(
-        llvm::FunctionType::get(llvm::Type::getVoidTy(context.llvm()), {}),
-        llvm::Function::LinkageTypes::ExternalLinkage, "__generate", &_controllerModule
+        llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {}),
+        llvm::Function::LinkageTypes::ExternalLinkage, generateFuncName, &_module
     );
-    auto generateBlock = llvm::BasicBlock::Create(context.llvm(), "entry", generateFunc);
+    auto generateBlock = llvm::BasicBlock::Create(_context.llvm(), "entry", generateFunc);
     b.SetInsertPoint(generateBlock);
-    b.CreateCall(func->generateFunc(&_controllerModule), {ctxGlobal});
+    b.CreateCall(mainFunc->generateFunc(&_module), {ctxGlobal});
     b.CreateRetVoid();
 
-    if (_hasHandle) removeModule(_handle);
-    _handle = addModule(llvm::CloneModule(_controllerModule));
-    _hasHandle = true;
+    // deploy the new module to the JIT
+    if (_isDeployed) jit.removeModule(_deployKey);
+    _deployKey = jit.addModule(_module);
+    _isDeployed = true;
 
-    auto initFuncPtr = (void (*)()) getSymbolAddress(initFunc);
-    _generateFunc = (void (*)()) getSymbolAddress(generateFunc);
+    // update function pointers for the two functions we just made
+    auto initFuncPtr = (void (*) ()) jit.getSymbolAddress(initFunc);
+    _generateFuncPtr = (void (*) ()) jit.getSymbolAddress(generateFunc);
 
+    // run the damn thing!
     initFuncPtr();
 }
 
 void Runtime::generate() {
-    if (_generateFunc) _generateFunc();
-}
-
-Runtime::ModuleHandle Runtime::addModule(std::unique_ptr<llvm::Module> m) {
-    auto k = executionSession.allocateVModule();
-    auto result = compileLayer.addModule(k, std::move(m));
-    return k;
-}
-
-void Runtime::removeModule(ModuleHandle h) {
-    llvm::cantFail(compileLayer.removeModule(h));
-}
-
-llvm::JITSymbol Runtime::findSymbol(const std::string &name) {
-    std::string mangledName;
-    llvm::raw_string_ostream mangledNameStream(mangledName);
-    llvm::Mangler::getNameWithPrefix(mangledNameStream, name, dataLayout);
-    return compileLayer.findSymbol(mangledNameStream.str(), false); // todo: shouldn't need false here
-}
-
-llvm::JITSymbol Runtime::findSymbol(llvm::GlobalValue *value) {
-    std::string mangledName;
-    llvm::raw_string_ostream mangledNameStream(mangledName);
-    mangler.getNameWithPrefix(mangledNameStream, value, false);
-    return compileLayer.findSymbol(mangledNameStream.str(), false); // todo: shouldn't need false here
-}
-
-llvm::JITTargetAddress Runtime::getSymbolAddress(const std::string &name) {
-    return llvm::cantFail(findSymbol(name).getAddress());
-}
-
-llvm::JITTargetAddress Runtime::getSymbolAddress(llvm::GlobalValue *value) {
-    return llvm::cantFail(findSymbol(value).getAddress());
+    _generateFuncPtr();
 }

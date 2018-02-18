@@ -10,8 +10,6 @@ namespace MaximCodegen {
 
         static std::unique_ptr<NumberControl> create(MaximContext *context);
 
-        llvm::Constant *getInitialVal(MaximContext *ctx) override;
-
         llvm::Type *type(MaximContext *ctx) const override;
 
         bool validateProperty(std::string name) override;
