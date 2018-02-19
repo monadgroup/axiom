@@ -87,9 +87,16 @@ void CustomNodePanel::resizerChanged(QPointF topLeft, QPointF bottomRight) {
 }
 
 bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
-    if (object == textEditor && event->type() == QEvent::FocusOut) {
-        node->setCode(textEditor->toPlainText());
-        return true;
+    if (object == textEditor) {
+        if (event->type() == QEvent::FocusOut) {
+            node->setCode(textEditor->toPlainText());
+            return true;
+        } else if (event->type() == QEvent::KeyPress) {
+            auto keyEvent = (QKeyEvent*) event;
+            if (keyEvent->key() == Qt::Key_Escape) {
+                node->setPanelOpen(false);
+            }
+        }
     }
 
     return QGraphicsObject::eventFilter(object, event);
