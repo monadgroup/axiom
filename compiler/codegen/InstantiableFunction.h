@@ -42,10 +42,9 @@ namespace MaximCodegen {
 
         std::vector<Instantiable*> &instantiables() { return _instantiables; }
 
-    private:
-        static size_t _nextId;
-        size_t _id;
+        bool getInstIndex(Instantiable *inst, std::vector<llvm::Value*> &indexes);
 
+    private:
         MaximContext *_ctx;
         Builder _builder;
         Builder _initBuilder;
@@ -57,8 +56,6 @@ namespace MaximCodegen {
 
         std::vector<std::unique_ptr<Instantiable>> _ownedInstantiables;
         std::vector<Instantiable*> _instantiables;
-
-        bool getInstIndex(Instantiable *inst, std::vector<llvm::Value*> &indexes);
     };
 
 }

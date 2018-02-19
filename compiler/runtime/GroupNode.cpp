@@ -20,9 +20,12 @@ void GroupNode::remove() {
 }
 
 void GroupNode::compile() {
-    instFunc()->reset();
-    instFunc()->addInstantiable(_subsurface.instFunc());
-    instFunc()->complete();
+    inst()->reset();
+    auto itemCtx = inst()->addInstantiable(_subsurface.inst());
+    MaximCodegen::CreateCall(inst()->builder(), _subsurface.inst()->generateFunc(module()), {itemCtx}, "");
+    inst()->complete();
+
+    _subsurface.updateGetter(_subsurface.module());
 
     CompileUnit::compile();
 }

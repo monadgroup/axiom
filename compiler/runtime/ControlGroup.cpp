@@ -9,7 +9,7 @@
 using namespace MaximRuntime;
 
 ControlGroup::ControlGroup(MaximCommon::ControlType type, Schematic *initialSchematic)
-    : _type(type), _schematic(initialSchematic) {
+    : CompileLeaf(initialSchematic->runtime()), _type(type), _schematic(initialSchematic) {
 
 }
 
@@ -97,4 +97,6 @@ void ControlGroup::setSchematic(Schematic *newSchematic) {
     _schematic = newSchematic;
 
     _global->removeFromParent();
+    getValueFunction->removeFromParent();
+    getValueFunction = nullptr;
 }

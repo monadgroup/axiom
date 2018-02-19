@@ -14,7 +14,7 @@ Schematic::Schematic(Runtime *runtime, CompileUnit *parentUnit, size_t depth)
 Schematic::~Schematic() = default;
 
 void Schematic::compile() {
-    instFunc()->reset();
+    inst()->reset();
 
     // instantiate nodes
     // todo: calculate ordering?
@@ -22,17 +22,23 @@ void Schematic::compile() {
     for (const auto &node : _nodes) {
         if (node->needsCompile()) node->compile();
 
-        auto ptr = instFunc()->addInstantiable(node->instFunc());
-        MaximCodegen::CreateCall(instFunc()->builder(), node->instFunc()->generateFunc(module()), {ptr}, "");
+        auto ptr = inst()->addInstantiable(node->inst());
+        MaximCodegen::CreateCall(inst()->builder(), node->inst()->generateFunc(module()), {ptr}, "");
     }
 
     // instantiate control groups
     for (const auto &group : _controlGroups) {
-        auto groupPtr = group.get();
-        instFunc()->addInstantiable(groupPtr);
+        inst()->addInstantiable(group.get());
     }
 
-    instFunc()->complete();
+    inst()->complete();
+
+    for (const auto &node : _nodes) {
+        node->updateGetter(node->module());
+    }
+    for (const auto &group : _controlGroups) {
+        group->updateGetter(module());
+    }
 
     CompileUnit::compile();
 }
@@ -44,6 +50,10 @@ void Schematic::deploy() {
     }
 
     CompileUnit::deploy();
+
+    for (const auto &group : _controlGroups) {
+        group->deploy();
+    }
 }
 
 void Schematic::addNode(Node *node) {

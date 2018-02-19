@@ -30,7 +30,7 @@ void CustomNode::remove() {
 }
 
 void CustomNode::compile() {
-    instFunc()->reset();
+    inst()->reset();
 
     _errorLog.errors.clear();
 
@@ -47,8 +47,8 @@ void CustomNode::compile() {
         // update control list
         updateControls();
 
-        instFunc()->addInstantiable(&_node);
-        instFunc()->complete();
+        inst()->addInstantiable(&_node);
+        inst()->complete();
     } catch (const MaximCommon::CompileError &err) {
         _errorLog.errors.push_back(err);
 

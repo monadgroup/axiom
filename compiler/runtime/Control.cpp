@@ -27,7 +27,7 @@ void Control::connectTo(Control *other) {
     _group->absorb(other->group());
     _connections.emplace(other);
     other->_connections.emplace(this);
-    _group->schematic()->scheduleCompile();
+    _group->parentUnit()->scheduleCompile();
 }
 
 void Control::disconnectFrom(Control *other) {
@@ -41,9 +41,9 @@ void Control::disconnectFrom(Control *other) {
     std::unordered_set<Control*> visitedControls;
     std::queue<Control*> visitQueue;
 
-    auto newGroup = std::make_unique<ControlGroup>(_type, _group->schematic());
+    auto newGroup = std::make_unique<ControlGroup>(_type, _group->parentUnit());
     auto newGroupPtr = newGroup.get();
-    _group->schematic()->addControlGroup(std::move(newGroup));
+    _group->parentUnit()->addControlGroup(std::move(newGroup));
 
     visitedControls.emplace(this);
     visitQueue.emplace(this);
@@ -64,10 +64,10 @@ void Control::disconnectFrom(Control *other) {
     }
 
     if (newGroupPtr->controls().empty()) {
-        _group->schematic()->removeControlGroup(newGroupPtr);
+        _group->parentUnit()->removeControlGroup(newGroupPtr);
     }
 
-    _group->schematic()->scheduleCompile();
+    _group->parentUnit()->scheduleCompile();
 }
 
 void Control::setGroup(ControlGroup *newGroup) {

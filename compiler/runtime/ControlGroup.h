@@ -5,21 +5,22 @@
 
 #include "codegen/Instantiable.h"
 #include "../common/ControlType.h"
+#include "CompileLeaf.h"
+#include "Schematic.h"
 
 namespace MaximRuntime {
 
     class Control;
 
-    class Schematic;
 
-    class ControlGroup : public MaximCodegen::Instantiable {
+    class ControlGroup : public MaximCodegen::Instantiable, public CompileLeaf {
     public:
 
         ControlGroup(MaximCommon::ControlType type, Schematic *initialSchematic);
 
         MaximCommon::ControlType type() const { return _type; }
 
-        Schematic *schematic() const { return _schematic; }
+        Schematic *parentUnit() const override { return _schematic; }
 
         std::set<Control*> &controls() { return _controls; }
 
@@ -28,6 +29,8 @@ namespace MaximRuntime {
         void addControl(Control *control);
 
         void removeControl(Control *control);
+
+        MaximCodegen::Instantiable *inst() override { return this; }
 
         llvm::Constant *getInitialVal(MaximCodegen::MaximContext *ctx) override;
 

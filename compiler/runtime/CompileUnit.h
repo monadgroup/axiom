@@ -4,24 +4,23 @@
 
 #include "../codegen/InstantiableFunction.h"
 #include "Jit.h"
+#include "CompileLeaf.h"
 
 namespace MaximRuntime {
 
     class Runtime;
 
-    class CompileUnit {
+    class CompileUnit : public CompileLeaf {
     public:
         explicit CompileUnit(Runtime *runtime);
 
         virtual ~CompileUnit();
 
-        Runtime *runtime() const { return _runtime; }
-
-        virtual CompileUnit *parentUnit() const = 0;
+        CompileUnit *parentUnit() const override = 0;
 
         llvm::Module *module() { return &_module; }
 
-        virtual MaximCodegen::InstantiableFunction *instFunc() { return &_instFunc; }
+        MaximCodegen::InstantiableFunction *inst() override { return &_instFunc; }
 
         bool needsCompile() const { return _needsCompile; }
 
@@ -42,7 +41,6 @@ namespace MaximRuntime {
         void cancelDeploy() { _needsDeploy = false; }
 
     private:
-        Runtime *_runtime;
         llvm::Module _module;
         MaximCodegen::InstantiableFunction _instFunc;
         bool _needsCompile = true;

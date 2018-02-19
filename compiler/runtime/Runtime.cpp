@@ -19,10 +19,13 @@ Runtime::Runtime() : _context(jit.dataLayout()), _mainSchematic(this, nullptr, 0
 }
 
 void Runtime::compileAndDeploy() {
-    if (_mainSchematic.needsCompile()) _mainSchematic.compile();
+    if (_mainSchematic.needsCompile()) {
+        _mainSchematic.compile();
+        _mainSchematic.updateGetter(_mainSchematic.module());
+    }
     if (_mainSchematic.needsDeploy()) _mainSchematic.deploy();
 
-    auto mainFunc = _mainSchematic.instFunc();
+    auto mainFunc = _mainSchematic.inst();
 
     // remove old functions and global variables
     if (auto oldInitFunc = _module.getFunction(initFuncName)) {

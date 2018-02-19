@@ -6,12 +6,12 @@
 using namespace MaximRuntime;
 
 CompileUnit::CompileUnit(Runtime *runtime)
-    : _runtime(runtime), _module("compileunit", runtime->context()->llvm()), _instFunc(runtime->context(), &_module) {
+    : CompileLeaf(runtime), _module("compileunit", runtime->context()->llvm()), _instFunc(runtime->context(), &_module) {
     _module.setDataLayout(runtime->context()->dataLayout());
 }
 
 CompileUnit::~CompileUnit() {
-    if (_isDeployed) _runtime->jit.removeModule(_deployKey);
+    if (_isDeployed) runtime()->jit.removeModule(_deployKey);
 }
 
 void CompileUnit::scheduleCompile() {
@@ -30,8 +30,10 @@ void CompileUnit::compile() {
 }
 
 void CompileUnit::deploy() {
-    if (_isDeployed) _runtime->jit.removeModule(_deployKey);
-    _deployKey = _runtime->jit.addModule(_module);
+    if (_isDeployed) runtime()->jit.removeModule(_deployKey);
+    _deployKey = runtime()->jit.addModule(_module);
     _isDeployed = true;
     _needsDeploy = false;
+
+    CompileLeaf::deploy();
 }

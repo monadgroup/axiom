@@ -5,10 +5,8 @@
 
 using namespace MaximCodegen;
 
-size_t InstantiableFunction::_nextId = 0;
-
 InstantiableFunction::InstantiableFunction(MaximContext *ctx, llvm::Module *module)
-    : _id(_nextId++), _ctx(ctx), _builder(ctx->llvm()), _initBuilder(ctx->llvm()), _module(module) {
+    : _ctx(ctx), _builder(ctx->llvm()), _initBuilder(ctx->llvm()), _module(module) {
     reset();
 }
 
@@ -17,7 +15,7 @@ std::unique_ptr<InstantiableFunction> InstantiableFunction::create(MaximContext 
 }
 
 llvm::Function* InstantiableFunction::generateFunc(llvm::Module *module) {
-    auto funcName = "generate." + std::to_string(_id);
+    auto funcName = "generate." + std::to_string(id());
     auto existingFunc = module->getFunction(funcName);
     if (existingFunc) return existingFunc;
 
@@ -26,7 +24,7 @@ llvm::Function* InstantiableFunction::generateFunc(llvm::Module *module) {
 }
 
 llvm::Function* InstantiableFunction::initializeFunc(llvm::Module *module) {
-    auto funcName = "initialize." + std::to_string(_id);
+    auto funcName = "initialize." + std::to_string(id());
     auto existingFunc = module->getFunction(funcName);
     if (existingFunc) return existingFunc;
 
