@@ -63,6 +63,10 @@ void Control::disconnectFrom(Control *other) {
         }
     }
 
+    if (newGroupPtr->controls().empty()) {
+        _group->schematic()->removeControlGroup(newGroupPtr);
+    }
+
     _group->schematic()->scheduleCompile();
 }
 

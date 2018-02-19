@@ -157,7 +157,6 @@ ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *s
 void Schematic::removeWire(ConnectionWire *wire) {
     if (wire->sinkA->runtime() && wire->sinkB->runtime()) {
         wire->sinkA->runtime()->disconnectFrom(wire->sinkB->runtime());
-        _runtime->runtime()->compileAndDeploy();
     }
 
     for (auto i = m_wires.begin(); i < m_wires.end(); i++) {

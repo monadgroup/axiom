@@ -16,21 +16,20 @@ Schematic::~Schematic() = default;
 void Schematic::compile() {
     instFunc()->reset();
 
-    for (const auto &node : _nodes) {
-        if (node->needsCompile()) node->compile();
-    }
-
     // instantiate nodes
     // todo: calculate ordering?
     // todo: instantiate extractor nodes several times
     for (const auto &node : _nodes) {
+        if (node->needsCompile()) node->compile();
+
         auto ptr = instFunc()->addInstantiable(node->instFunc());
         MaximCodegen::CreateCall(instFunc()->builder(), node->instFunc()->generateFunc(module()), {ptr}, "");
     }
 
     // instantiate control groups
     for (const auto &group : _controlGroups) {
-        instFunc()->addInstantiable(group.get());
+        auto groupPtr = group.get();
+        instFunc()->addInstantiable(groupPtr);
     }
 
     instFunc()->complete();
