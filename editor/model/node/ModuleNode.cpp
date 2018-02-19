@@ -1,13 +1,21 @@
 #include "ModuleNode.h"
+
 #include "compiler/runtime/SoftControl.h"
+#include "compiler/runtime/Runtime.h"
 
 using namespace AxiomModel;
 
 ModuleNode::ModuleNode(Schematic *parent, QString name, QPoint pos, QSize size)
         : Node(parent, std::move(name), Type::GROUP, pos, size),
-          schematic(std::make_unique<ModuleSchematic>(this)), _node(parent->runtime()) {
+          schematic(std::make_unique<ModuleSchematic>(this)), _runtime(parent->runtime()) {
     connect(this, &ModuleNode::removed,
             schematic.get(), &ModuleSchematic::removed);
+
+    connect(this, &ModuleNode::removed,
+            [this]() {
+                _runtime.remove();
+                _runtime.runtime()->compileAndDeploy();
+            });
 }
 
 std::unique_ptr<GridItem> ModuleNode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {

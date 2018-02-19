@@ -84,6 +84,8 @@ namespace MaximCodegen {
 
         const MidiType *midiType() const { return &_midiType; }
 
+        llvm::Type *voidPointerType();
+
         void assertType(const Value *val, const Type *type) const;
 
         std::unique_ptr<Num> assertNum(std::unique_ptr<Value> val);

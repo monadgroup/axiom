@@ -12,16 +12,21 @@ CustomNode::CustomNode(Schematic *parent) : Node(parent), _node(parent->runtime(
 
 }
 
-CustomNode::~CustomNode() {
-    // destructor is here for unique_ptrs, means we don't need to include destructed
-    // headers in the CustomNode header
-}
+CustomNode::~CustomNode() = default;
 
 void CustomNode::setCode(const std::string &code) {
     if (code != _code) {
         _code = code;
         scheduleCompile();
     }
+}
+
+void CustomNode::remove() {
+    for (const auto &control : _controls) {
+        control->remove();
+    }
+
+    Node::remove();
 }
 
 void CustomNode::compile() {

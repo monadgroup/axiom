@@ -38,7 +38,7 @@ namespace MaximCodegen {
 
         void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) override;
 
-        llvm::Type *type(MaximContext *ctx) const override { return _ctxType; }
+        llvm::StructType *type(MaximContext *ctx) const override;
 
         std::vector<Instantiable*> &instantiables() { return _instantiables; }
 
@@ -53,7 +53,6 @@ namespace MaximCodegen {
 
         llvm::Function *_generateFunc = nullptr;
         llvm::Function *_initializeFunc = nullptr;
-        llvm::StructType *_ctxType;
         std::vector<llvm::Type*> _instTypes;
 
         std::vector<std::unique_ptr<Instantiable>> _ownedInstantiables;

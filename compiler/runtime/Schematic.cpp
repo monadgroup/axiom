@@ -2,6 +2,7 @@
 
 #include "Node.h"
 #include "ControlGroup.h"
+#include "Runtime.h"
 
 using namespace MaximRuntime;
 
@@ -53,6 +54,7 @@ void Schematic::addNode(Node *node) {
 
 void Schematic::removeNode(Node *node) {
     _nodes.erase(node);
+    scheduleCompile();
 }
 
 void Schematic::addControlGroup(std::unique_ptr<ControlGroup> group) {

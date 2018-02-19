@@ -19,6 +19,8 @@ namespace MaximRuntime {
 
         Schematic &subsurface() { return _subsurface; }
 
+        void remove() override;
+
         void compile() override;
 
         std::vector<std::unique_ptr<SoftControl>> &controls() { return _controls; }

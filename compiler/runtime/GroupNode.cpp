@@ -9,8 +9,14 @@ GroupNode::GroupNode(Schematic *parent) : Node(parent), _subsurface(parent->runt
 
 }
 
-GroupNode::~GroupNode() {
+GroupNode::~GroupNode() = default;
 
+void GroupNode::remove() {
+    for (const auto &control : _controls) {
+        control->remove();
+    }
+
+    Node::remove();
 }
 
 void GroupNode::compile() {

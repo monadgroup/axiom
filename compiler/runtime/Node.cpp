@@ -6,6 +6,6 @@ Node::Node(Schematic *parent) : CompileUnit(parent->runtime()), _parent(parent) 
     parent->addNode(this);
 }
 
-Node::~Node() {
+void Node::remove() {
     _parent->removeNode(this);
 }

@@ -12,6 +12,12 @@ CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
           _runtime(parent->runtime()) {
     connect(&_runtime, &MaximRuntime::CustomNode::controlAdded,
             this, &CustomNode::controlAdded);
+
+    connect(this, &CustomNode::removed,
+            [this]() {
+                _runtime.remove();
+                _runtime.runtime()->compileAndDeploy();
+            });
 }
 
 std::unique_ptr<GridItem> CustomNode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {

@@ -19,6 +19,8 @@ namespace MaximRuntime {
 
         void setCode(const std::string &code);
 
+        void remove() override;
+
         void compile() override;
 
         std::vector<std::unique_ptr<HardControl>> &controls() { return _controls; }

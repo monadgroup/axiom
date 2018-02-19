@@ -19,11 +19,11 @@ namespace AxiomModel {
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 
-        MaximRuntime::GroupNode *runtime() { return &_node; }
+        MaximRuntime::GroupNode *runtime() { return &_runtime; }
 
     private:
 
-        MaximRuntime::GroupNode _node;
+        MaximRuntime::GroupNode _runtime;
     };
 
 }

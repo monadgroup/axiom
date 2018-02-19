@@ -21,7 +21,7 @@ llvm::Function* InstantiableFunction::generateFunc(llvm::Module *module) {
     auto existingFunc = module->getFunction(funcName);
     if (existingFunc) return existingFunc;
 
-    auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(_ctx->llvm()), {llvm::PointerType::get(_ctxType, 0)}, false);
+    auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(_ctx->llvm()), {_ctx->voidPointerType()}, false);
     return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, module);
 }
 
@@ -30,7 +30,7 @@ llvm::Function* InstantiableFunction::initializeFunc(llvm::Module *module) {
     auto existingFunc = module->getFunction(funcName);
     if (existingFunc) return existingFunc;
 
-    auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(_ctx->llvm()), {llvm::PointerType::get(_ctxType, 0)}, false);
+    auto funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(_ctx->llvm()), {_ctx->voidPointerType()}, false);
     return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, module);
 }
 
@@ -45,11 +45,10 @@ llvm::Value* InstantiableFunction::addInstantiable(Instantiable *inst) {
     _instTypes.push_back(inst->type(ctx()));
     _instantiables.push_back(inst);
 
-    // cast nodeCtx to struct of what we have so far, since it's opaque at this point
-    auto currentStructType = llvm::StructType::get(_ctx->llvm(), _instTypes, false);
-    auto typedCtx = _builder.CreatePointerCast(_generateFunc->arg_begin(), llvm::PointerType::get(currentStructType, 0));
+    auto currentType = type(_ctx);
+    auto typedCtx = _builder.CreatePointerCast(_generateFunc->arg_begin(), llvm::PointerType::get(currentType, 0));
 
-    return _builder.CreateStructGEP(currentStructType, typedCtx, (unsigned int) index, "inst");
+    return _builder.CreateStructGEP(currentType, typedCtx, (unsigned int) index, "inst");
 }
 
 llvm::Value* InstantiableFunction::getInitializePointer(Instantiable *inst) {
@@ -57,13 +56,7 @@ llvm::Value* InstantiableFunction::getInitializePointer(Instantiable *inst) {
     indexList.push_back(_ctx->constInt(64, 0, false));
     assert(getInstIndex(inst, indexList));
 
-    llvm::Value *typedCtx = _initializeFunc->arg_begin();
-
-    if (_ctxType->isOpaque()) {
-        auto currentStructType = llvm::StructType::get(_ctx->llvm(), _instTypes, false);
-        typedCtx = _initBuilder.CreatePointerCast(_initializeFunc->arg_begin(),
-                                                  llvm::PointerType::get(currentStructType, 0));
-    }
+    auto typedCtx = _initBuilder.CreatePointerCast(_initializeFunc->arg_begin(), llvm::PointerType::get(type(_ctx), 0));
 
     return _initBuilder.CreateGEP(typedCtx, indexList, "inst");
 }
@@ -73,22 +66,17 @@ llvm::Value* InstantiableFunction::getGeneratePointer(Instantiable *inst) {
     indexList.push_back(_ctx->constInt(64, 0, false));
     assert(getInstIndex(inst, indexList));
 
-    llvm::Value *typedCtx = _generateFunc->arg_begin();
-
-    if (_ctxType->isOpaque()) {
-        auto currentStructType = llvm::StructType::get(_ctx->llvm(), _instTypes, false);
-        typedCtx = _builder.CreatePointerCast(_generateFunc->arg_begin(),
-                                              llvm::PointerType::get(currentStructType, 0));
-    }
+    auto typedCtx = _builder.CreatePointerCast(_generateFunc->arg_begin(), llvm::PointerType::get(type(_ctx), 0));
 
     return _builder.CreateGEP(typedCtx, indexList, "inst");
 }
 
 void InstantiableFunction::complete() {
-    _ctxType->setBody(_instTypes, false);
+    auto t = type(_ctx);
 
     for (size_t i = 0; i < _instantiables.size(); i++) {
-        auto itemPtr = _initBuilder.CreateStructGEP(_ctxType, _initializeFunc->arg_begin(), (unsigned int) i, "inst");
+        auto typedCtx = _initBuilder.CreatePointerCast(_initializeFunc->arg_begin(), llvm::PointerType::get(t, 0));
+        auto itemPtr = _initBuilder.CreateStructGEP(t, typedCtx, (unsigned int) i, "inst");
         _instantiables[i]->initializeVal(_ctx, _module, itemPtr, this, _initBuilder);
     }
 
@@ -97,7 +85,6 @@ void InstantiableFunction::complete() {
 }
 
 void InstantiableFunction::reset() {
-    _ctxType = llvm::StructType::create(_ctx->llvm(), "nodectx");
     _instTypes.clear();
     _ownedInstantiables.clear();
     _instantiables.clear();
@@ -119,14 +106,16 @@ void InstantiableFunction::reset() {
 }
 
 llvm::Constant* InstantiableFunction::getInitialVal(MaximContext *ctx) {
-    assert(!_ctxType->isOpaque());
-
     std::vector<llvm::Constant*> instValues;
     for (const auto &inst : _instantiables) {
         instValues.push_back(inst->getInitialVal(ctx));
     }
 
-    return llvm::ConstantStruct::get(_ctxType, instValues);
+    return llvm::ConstantStruct::get(type(ctx), instValues);
+}
+
+llvm::StructType* InstantiableFunction::type(MaximContext *ctx) const {
+    return llvm::StructType::get(ctx->llvm(), _instTypes);
 }
 
 void InstantiableFunction::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) {

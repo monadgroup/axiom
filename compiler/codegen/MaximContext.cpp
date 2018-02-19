@@ -120,6 +120,10 @@ llvm::Value* MaximContext::beatsPerSecond() const {
     return llvm::UndefValue::get(llvm::PointerType::get(numType()->vecType(), 0));
 }
 
+llvm::Type* MaximContext::voidPointerType() {
+    return llvm::PointerType::get(llvm::Type::getInt1Ty(_llvm), 0);
+}
+
 void MaximContext::assertType(const Value *val, const Type *type) const {
     if (val->type() != type) {
         throw typeAssertFailed(type, val->type(), val->startPos, val->endPos);
