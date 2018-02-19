@@ -15,6 +15,8 @@ namespace MaximRuntime {
     public:
         explicit GroupNode(Schematic *parent);
 
+        ~GroupNode() override;
+
         Schematic &subsurface() { return _subsurface; }
 
         void compile() override;

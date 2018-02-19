@@ -9,6 +9,7 @@
 #include "editor/widgets/schematic/SchematicPanel.h"
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
+#include "editor/model/Project.h"
 
 using namespace AxiomGui;
 

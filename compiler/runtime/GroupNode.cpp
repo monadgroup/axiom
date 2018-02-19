@@ -9,12 +9,16 @@ GroupNode::GroupNode(Schematic *parent) : Node(parent), _subsurface(parent->runt
 
 }
 
+GroupNode::~GroupNode() {
+
+}
+
 void GroupNode::compile() {
     instFunc()->reset();
     instFunc()->addInstantiable(_subsurface.instFunc());
     instFunc()->complete();
 
-    Node::compile();
+    CompileUnit::compile();
 }
 
 void GroupNode::addControl(std::unique_ptr<SoftControl> control) {

@@ -8,7 +8,11 @@
 
 #include "../connection/ConnectionWire.h"
 #include "../GridSurface.h"
-#include "compiler/runtime/Surface.h"
+namespace MaximRuntime {
+
+    class Schematic;
+
+}
 
 namespace AxiomModel {
 
@@ -18,11 +22,11 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        Schematic();
+        explicit Schematic(MaximRuntime::Schematic *runtime);
 
         virtual QString name() = 0;
 
-        MaximRuntime::Surface *runtime() { return &_runtime; }
+        MaximRuntime::Schematic *runtime() { return _runtime; }
 
         QPointF pan() const { return m_pan; }
 
@@ -59,7 +63,7 @@ namespace AxiomModel {
     private:
         std::vector<std::unique_ptr<ConnectionWire>> m_wires;
         QPointF m_pan;
-        MaximRuntime::Surface _runtime;
+        MaximRuntime::Schematic *_runtime;
     };
 
 }

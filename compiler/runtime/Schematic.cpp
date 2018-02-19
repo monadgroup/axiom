@@ -10,8 +10,16 @@ Schematic::Schematic(Runtime *runtime, CompileUnit *parentUnit, size_t depth)
 
 }
 
+Schematic::~Schematic() {
+
+}
+
 void Schematic::compile() {
     instFunc()->reset();
+
+    for (const auto &node : _nodes) {
+        if (node->needsCompile()) node->compile();
+    }
 
     // instantiate nodes
     // todo: calculate ordering?
@@ -37,6 +45,16 @@ void Schematic::deploy() {
     }
 
     CompileUnit::deploy();
+}
+
+void Schematic::addNode(Node *node) {
+    assert(node->parentUnit() == this);
+
+    _nodes.emplace(node);
+}
+
+void Schematic::removeNode(Node *node) {
+    _nodes.erase(node);
 }
 
 void Schematic::addControlGroup(std::unique_ptr<ControlGroup> group) {

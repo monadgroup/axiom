@@ -9,6 +9,7 @@
 #include <QtWidgets/QWidgetAction>
 
 #include "editor/AxiomApplication.h"
+#include "editor/model/schematic/Schematic.h"
 #include "editor/model/node/CustomNode.h"
 #include "editor/model/control/NodeNumControl.h"
 #include "../node/NodeItem.h"

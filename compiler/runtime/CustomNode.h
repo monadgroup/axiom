@@ -13,7 +13,7 @@ namespace MaximRuntime {
     public:
         explicit CustomNode(Schematic *parent);
 
-        ~CustomNode();
+        ~CustomNode() override;
 
         std::string code() const { return _code; }
 

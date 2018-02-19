@@ -53,7 +53,7 @@ void CustomNode::compile() {
         cancelDeploy();
     }
 
-    Node::compile();
+    CompileUnit::compile();
 }
 
 struct ControlUpdateVal {

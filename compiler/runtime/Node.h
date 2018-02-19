@@ -11,6 +11,8 @@ namespace MaximRuntime {
     public:
         explicit Node(Schematic *parent);
 
+        ~Node() override;
+
         Schematic *parentUnit() const override { return _parent; }
 
         void compile() override = 0;

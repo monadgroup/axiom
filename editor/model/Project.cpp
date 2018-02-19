@@ -1,6 +1,12 @@
 #include "Project.h"
 
+#include "compiler/runtime/Runtime.h"
+
 using namespace AxiomModel;
+
+Project::Project(MaximRuntime::Runtime *runtime) : _runtime(runtime), root(&runtime->mainSchematic()) {
+
+}
 
 void Project::serialize(QDataStream &stream) const {
     library.serialize(stream);

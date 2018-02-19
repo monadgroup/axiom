@@ -13,7 +13,7 @@ namespace MaximRuntime {
     public:
         explicit CompileUnit(Runtime *runtime);
 
-        ~CompileUnit();
+        virtual ~CompileUnit();
 
         Runtime *runtime() const { return _runtime; }
 

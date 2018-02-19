@@ -4,11 +4,13 @@
 
 namespace MaximRuntime {
 
+    class GroupNode;
+
     class SoftControl : public Control {
     public:
         Q_OBJECT
 
-        SoftControl(Node *node, Control *linkedControl);
+        SoftControl(GroupNode *node, Control *linkedControl);
 
         MaximCodegen::Control *control() const override { return nullptr; }
 

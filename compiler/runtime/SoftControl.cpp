@@ -1,8 +1,10 @@
 #include "SoftControl.h"
 
+#include "GroupNode.h"
+
 using namespace MaximRuntime;
 
-SoftControl::SoftControl(Node *node, Control *linkedControl)
+SoftControl::SoftControl(GroupNode *node, Control *linkedControl)
     : Control(node, linkedControl->name(), linkedControl->type()), _linkedControl(linkedControl) {
     connect(linkedControl, &Control::removed,
             this, &SoftControl::remove);

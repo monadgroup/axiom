@@ -7,11 +7,12 @@
 #include "../node/Node.h"
 #include "../node/ModuleNode.h"
 #include "../control/NodeControl.h"
-#include "../../AxiomApplication.h"
+#include "editor/AxiomApplication.h"
+#include "compiler/runtime/SoftControl.h"
 
 using namespace AxiomModel;
 
-Schematic::Schematic() : _runtime(AxiomApplication::runtime) {
+Schematic::Schematic(MaximRuntime::Schematic *runtime) : _runtime(runtime) {
 
 }
 

@@ -4,12 +4,8 @@
 #include <llvm/Support/TargetSelect.h>
 
 #include "AxiomApplication.h"
+#include "model/Project.h"
 #include "../compiler/runtime/Runtime.h"
-#include "../compiler/runtime/Surface.h"
-#include "../compiler/runtime/Node.h"
-#include "../compiler/codegen/Operator.h"
-#include "../compiler/codegen/Converter.h"
-#include "../compiler/codegen/Function.h"
 
 int main(int argc, char *argv[]) {
     // initialize LLVM
@@ -19,7 +15,7 @@ int main(int argc, char *argv[]) {
 
     // initialize runtime (generates and loads core modules)
     AxiomApplication::runtime = new MaximRuntime::Runtime();
-    AxiomApplication::project = new AxiomModel::Project();
+    AxiomApplication::project = new AxiomModel::Project(AxiomApplication::runtime);
 
     // show the window
     AxiomApplication::main = new AxiomApplication(argc, argv);

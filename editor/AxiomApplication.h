@@ -2,7 +2,14 @@
 
 #include <QApplication>
 #include "widgets/windows/MainWindow.h"
-#include "editor/model/Project.h"
+
+namespace MaximRuntime {
+    class Runtime;
+}
+
+namespace AxiomModel {
+    class Project;
+}
 
 class AxiomApplication : public QApplication {
 Q_OBJECT

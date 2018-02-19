@@ -1,5 +1,7 @@
 #include "NodeControl.h"
 
+#include <cassert>
+
 #include "NodeNumControl.h"
 #include "../node/Node.h"
 #include "../connection/ConnectionWire.h"

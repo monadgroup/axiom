@@ -5,6 +5,7 @@
 
 #include "editor/model/schematic/ModuleSchematic.h"
 #include "Node.h"
+#include "compiler/runtime/GroupNode.h"
 
 namespace AxiomModel {
 
@@ -18,7 +19,11 @@ namespace AxiomModel {
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 
-        MaximRuntime::Node *runtime() { assert(false); return nullptr; }
+        MaximRuntime::GroupNode *runtime() { return &_node; }
+
+    private:
+
+        MaximRuntime::GroupNode _node;
     };
 
 }

@@ -11,6 +11,8 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
+        explicit RootSchematic(MaximRuntime::Schematic *runtime);
+
         QString name() override;
     };
 

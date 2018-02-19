@@ -12,6 +12,8 @@ namespace MaximRuntime {
     public:
         explicit Schematic(Runtime *runtime, CompileUnit *parentUnit, size_t depth);
 
+        ~Schematic() override;
+
         size_t depth() const { return _depth; }
 
         CompileUnit *parentUnit() const override { return _parentUnit; }
@@ -20,7 +22,11 @@ namespace MaximRuntime {
 
         void deploy() override;
 
-        std::vector<Node*> &nodes() { return _nodes; }
+        void addNode(Node *node);
+
+        void removeNode(Node *node);
+
+        std::set<Node*> &nodes() { return _nodes; }
 
         void addControlGroup(std::unique_ptr<ControlGroup> group);
 
@@ -31,7 +37,7 @@ namespace MaximRuntime {
 
         CompileUnit *_parentUnit;
 
-        std::vector<Node*> _nodes;
+        std::set<Node*> _nodes;
 
         std::vector<std::unique_ptr<ControlGroup>> _controlGroups;
     };

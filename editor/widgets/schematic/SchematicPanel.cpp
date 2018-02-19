@@ -3,6 +3,7 @@
 #include "editor/util.h"
 #include "editor/AxiomApplication.h"
 #include "SchematicView.h"
+#include "editor/model/schematic/Schematic.h"
 
 using namespace AxiomGui;
 
