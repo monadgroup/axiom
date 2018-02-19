@@ -8,6 +8,7 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QWidgetAction>
 
+#include "compiler/runtime/Runtime.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/schematic/Schematic.h"
 #include "editor/model/node/CustomNode.h"
@@ -101,7 +102,7 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
     if (isConnecting) return;
 
     isConnecting = true;
-    connectionSink = std::make_unique<ConnectionSink>(control->sink()->type);
+    connectionSink = std::make_unique<ConnectionSink>(control->sink()->type, nullptr);
     connectionSink->setPos(control->sink()->pos(), control->sink()->subPos());
     connectionWire = schematic->connectSinks(control->sink(), connectionSink.get());
     assert(connectionWire != nullptr);
@@ -167,6 +168,8 @@ void SchematicCanvas::newNode(QPointF scenePos, QString name) {
 
     auto newNode = std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
     schematic->addItem(std::move(newNode));
+
+    schematic->runtime()->runtime()->compileAndDeploy();
 }
 
 void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {

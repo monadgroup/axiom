@@ -14,7 +14,8 @@ ControlGroup::ControlGroup(MaximCommon::ControlType type, Schematic *initialSche
 }
 
 void ControlGroup::absorb(ControlGroup *other) {
-    for (const auto &control : other->controls()) {
+    auto otherControls = std::set<Control*>(other->controls());
+    for (const auto &control : otherControls) {
         control->setGroup(this);
     }
 }

@@ -9,7 +9,7 @@ namespace AxiomModel {
 
     public:
 
-        MidiConnectionSink();
+        MidiConnectionSink(MaximRuntime::Control *runtime);
 
     };
 

@@ -110,5 +110,12 @@ llvm::JITTargetAddress Jit::getSymbolAddress(const std::string &name) {
 }
 
 llvm::JITTargetAddress Jit::getSymbolAddress(llvm::GlobalValue *value) {
-    return llvm::cantFail(findSymbol(value).getAddress());
+    auto addr = findSymbol(value).getAddress();
+    if (auto err = addr.takeError()) {
+        llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "");
+        assert(false);
+        throw;
+    }
+
+    return llvm::cantFail(std::move(addr));
 }

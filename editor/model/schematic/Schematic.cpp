@@ -8,6 +8,7 @@
 #include "../node/ModuleNode.h"
 #include "../control/NodeControl.h"
 #include "editor/AxiomApplication.h"
+#include "compiler/runtime/Runtime.h"
 #include "compiler/runtime/SoftControl.h"
 
 using namespace AxiomModel;
@@ -142,6 +143,11 @@ ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *s
         return nullptr;
     }
 
+    if (sinkA->runtime() && sinkB->runtime()) {
+        sinkA->runtime()->connectTo(sinkB->runtime());
+        _runtime->runtime()->compileAndDeploy();
+    }
+
     auto wire = std::make_unique<ConnectionWire>(this, sinkA, sinkB);
     auto ptr = wire.get();
     addWire(std::move(wire));
@@ -149,6 +155,11 @@ ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *s
 }
 
 void Schematic::removeWire(ConnectionWire *wire) {
+    if (wire->sinkA->runtime() && wire->sinkB->runtime()) {
+        wire->sinkA->runtime()->disconnectFrom(wire->sinkB->runtime());
+        _runtime->runtime()->compileAndDeploy();
+    }
+
     for (auto i = m_wires.begin(); i < m_wires.end(); i++) {
         if (i->get() == wire) {
             m_wires.erase(i);

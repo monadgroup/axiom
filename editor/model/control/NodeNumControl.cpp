@@ -7,27 +7,20 @@
 using namespace AxiomModel;
 
 NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-        : NodeControl(node, runtime, pos, size) {
+        : NodeControl(node, runtime, pos, size), m_sink(runtime) {
     initSink();
 
-    connect(m_sink.get(), &NumConnectionSink::valueChanged,
+    connect(&m_sink, &NumConnectionSink::valueChanged,
             this, &NodeNumControl::valueChanged);
 }
 
 std::unique_ptr<GridItem> NodeNumControl::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
-    /*auto nodeSurface = dynamic_cast<NodeSurface *>(newParent);
-    assert(nodeSurface != nullptr);
-
-    auto control = std::make_unique<NodeNumControl>(nodeSurface->node, name(), pos(), size());
-    control->setValue(value());
-    return std::move(control);*/
-
     assert(false);
     throw;
 }
 
 void NodeNumControl::setValue(NumValue value) {
-    m_sink->setValue(value);
+    m_sink.setValue(value);
 }
 
 void NodeNumControl::setMode(Mode mode) {

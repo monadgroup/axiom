@@ -27,9 +27,9 @@ namespace AxiomModel {
 
         NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size);
 
-        NumConnectionSink *sink() const override { return m_sink.get(); }
+        NumConnectionSink *sink() override { return &m_sink; }
 
-        NumValue value() const { return m_sink->value(); }
+        NumValue value() const { return m_sink.value(); }
 
         Mode mode() const { return m_mode; }
 
@@ -59,7 +59,7 @@ namespace AxiomModel {
 
         Mode m_mode = Mode::KNOB;
         Channel m_channel = Channel::BOTH;
-        std::unique_ptr<NumConnectionSink> m_sink = std::make_unique<NumConnectionSink>();
+        NumConnectionSink m_sink;
     };
 
 }

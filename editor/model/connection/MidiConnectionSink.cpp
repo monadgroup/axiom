@@ -2,6 +2,6 @@
 
 using namespace AxiomModel;
 
-MidiConnectionSink::MidiConnectionSink() : ConnectionSink(Type::MIDI) {
+MidiConnectionSink::MidiConnectionSink(MaximRuntime::Control *runtime) : ConnectionSink(Type::MIDI, runtime) {
 
 }

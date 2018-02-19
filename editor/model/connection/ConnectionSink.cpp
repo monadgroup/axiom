@@ -1,10 +1,11 @@
 #include "ConnectionSink.h"
 
 #include "ConnectionWire.h"
+#include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
 
-ConnectionSink::ConnectionSink(Type type) : type(type) {
+ConnectionSink::ConnectionSink(Type type, MaximRuntime::Control *runtime) : type(type), _runtime(runtime) {
 
 }
 

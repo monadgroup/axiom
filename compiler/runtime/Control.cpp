@@ -73,7 +73,8 @@ void Control::setGroup(ControlGroup *newGroup) {
 }
 
 void Control::remove() {
-    for (const auto &connectedNode : _connections) {
+    auto connections = std::set<Control*>(_connections);
+    for (const auto &connectedNode : connections) {
         disconnectFrom(connectedNode);
     }
     _group->removeControl(this);

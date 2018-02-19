@@ -24,7 +24,8 @@ void Schematic::compile() {
     // todo: calculate ordering?
     // todo: instantiate extractor nodes several times
     for (const auto &node : _nodes) {
-        instFunc()->addInstantiable(node->instFunc());
+        auto ptr = instFunc()->addInstantiable(node->instFunc());
+        MaximCodegen::CreateCall(instFunc()->builder(), node->instFunc()->generateFunc(module()), {ptr}, "");
     }
 
     // instantiate control groups
@@ -50,6 +51,7 @@ void Schematic::addNode(Node *node) {
     assert(node->parentUnit() == this);
 
     _nodes.emplace(node);
+    scheduleCompile();
 }
 
 void Schematic::removeNode(Node *node) {

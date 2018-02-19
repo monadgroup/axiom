@@ -23,7 +23,7 @@ namespace AxiomModel {
 
         static std::unique_ptr<NodeControl> fromRuntimeControl(Node *node, MaximRuntime::Control *runtime);
 
-        virtual ConnectionSink *sink() const = 0;
+        virtual ConnectionSink *sink() = 0;
 
         MaximRuntime::Control *runtime() const { return _runtime; }
 

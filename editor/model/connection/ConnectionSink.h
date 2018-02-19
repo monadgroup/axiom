@@ -4,6 +4,12 @@
 #include <QtCore/QPoint>
 #include <vector>
 
+namespace MaximRuntime {
+
+    class Control;
+
+}
+
 namespace AxiomModel {
 
     class ConnectionWire;
@@ -21,7 +27,7 @@ namespace AxiomModel {
 
         const Type type;
 
-        explicit ConnectionSink(Type type);
+        explicit ConnectionSink(Type type, MaximRuntime::Control *runtime);
 
         std::vector<ConnectionWire *> const &connections() const { return m_connections; }
 
@@ -30,6 +36,8 @@ namespace AxiomModel {
         QPointF subPos() const { return m_subPos; }
 
         bool active() const { return m_active; }
+
+        MaximRuntime::Control *runtime() const { return _runtime; }
 
     public slots:
 
@@ -64,6 +72,7 @@ namespace AxiomModel {
         QPoint m_pos;
         QPointF m_subPos;
         bool m_active = false;
+        MaximRuntime::Control *_runtime;
     };
 
 }
