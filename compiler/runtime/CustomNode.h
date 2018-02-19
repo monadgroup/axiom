@@ -7,9 +7,13 @@
 
 namespace MaximRuntime {
 
-    class CustomNode : public Node {
+    class CustomNode : public QObject, public Node {
+        Q_OBJECT
+
     public:
         explicit CustomNode(Schematic *parent);
+
+        ~CustomNode();
 
         std::string code() const { return _code; }
 
@@ -17,19 +21,25 @@ namespace MaximRuntime {
 
         void compile() override;
 
-        std::vector<HardControl*> &controls() { return _controls; }
+        std::vector<std::unique_ptr<HardControl>> &controls() { return _controls; }
 
         ErrorLog const &errorLog() const { return _errorLog; }
+
+    signals:
+
+        void controlAdded(HardControl *control);
 
     private:
 
         std::string _code = "";
 
-        std::vector<HardControl*> _controls;
+        std::vector<std::unique_ptr<HardControl>> _controls;
 
         MaximCodegen::Node _node;
 
         ErrorLog _errorLog;
+
+        void updateControls();
     };
 
 }

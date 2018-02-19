@@ -20,7 +20,7 @@ namespace MaximRuntime {
 
     class Node;
 
-    class Control : QObject {
+    class Control : public QObject {
         Q_OBJECT
 
     public:
@@ -40,9 +40,9 @@ namespace MaximRuntime {
 
         void setGroup(ControlGroup *newGroup);
 
-        void connect(Control *other);
+        void connectTo(Control *other);
 
-        void disconnect(Control *other);
+        void disconnectFrom(Control *other);
 
         std::set<Control*> &connections() { return _connections; }
 
@@ -52,6 +52,8 @@ namespace MaximRuntime {
 
     signals:
         void removed();
+
+        void cleanup();
 
     private:
         Node *_node;

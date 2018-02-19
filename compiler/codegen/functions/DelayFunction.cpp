@@ -151,7 +151,7 @@ llvm::Constant* DelayFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
     });
 }
 
-void DelayFunction::FunctionCall::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, Builder &b) {
+void DelayFunction::FunctionCall::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) {
     auto channelType = getChannelType(ctx);
     auto channelPtrType = llvm::PointerType::get(channelType, 0);
 

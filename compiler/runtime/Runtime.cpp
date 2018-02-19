@@ -1,5 +1,10 @@
 #include "Runtime.h"
 
+#include "ControlGroup.h"
+#include "../codegen/Operator.h"
+#include "../codegen/Converter.h"
+#include "../codegen/Function.h"
+
 using namespace MaximRuntime;
 
 static const std::string initFuncName = "init";

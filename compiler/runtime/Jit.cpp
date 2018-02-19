@@ -49,10 +49,9 @@ void Jit::removeModule(ModuleKey k) {
 llvm::JITSymbol Jit::findSymbol(const std::string &name) {
     std::string mangledName;
     llvm::raw_string_ostream mangledNameStream(mangledName);
-    llvm::Mangler::getNameWithPrefix(mangledNameStream, name, dataLayout);
+    llvm::Mangler::getNameWithPrefix(mangledNameStream, name, _dataLayout);
     return compileLayer.findSymbol(mangledNameStream.str(), false); // todo: shouldn't need false here
 }
-
 
 llvm::JITSymbol Jit::findSymbol(llvm::GlobalValue *value) {
     std::string mangledName;

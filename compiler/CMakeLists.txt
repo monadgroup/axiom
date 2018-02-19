@@ -9,7 +9,7 @@ message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOCC ON)
 set(CMAKE_AUTORCC ON)
-find_package(Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -31,4 +31,5 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_library(axiom_compiler ${SOURCE_FILES})
+target_link_libraries(axiom_compiler Qt5::Widgets)
 set_target_properties(axiom_compiler PROPERTIES LINKER_LANGUAGE CXX)

@@ -10,6 +10,6 @@ llvm::Constant* Control::getInitialVal(MaximContext *ctx) {
     return llvm::UndefValue::get(type(ctx));
 }
 
-void Control::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, Builder &b) {
+void Control::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) {
 
 }

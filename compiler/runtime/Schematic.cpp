@@ -58,4 +58,5 @@ std::unique_ptr<ControlGroup> Schematic::removeControlGroup(ControlGroup *group)
     }
 
     assert(false);
+    throw;
 }

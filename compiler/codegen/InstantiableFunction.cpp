@@ -128,7 +128,7 @@ llvm::Constant* InstantiableFunction::getInitialVal(MaximContext *ctx) {
     return llvm::ConstantStruct::get(_ctxType, instValues);
 }
 
-void InstantiableFunction::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, Builder &b) {
+void InstantiableFunction::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) {
     CreateCall(b, initializeFunc(module), {ptr}, "");
 }
 

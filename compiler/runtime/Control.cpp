@@ -19,7 +19,7 @@ Control::Control(Node *node, std::string name, MaximCommon::ControlType type)
     setGroup(newGroupPtr);
 }
 
-void Control::connect(Control *other) {
+void Control::connectTo(Control *other) {
     assert(other->type() == type());
 
     if (other->group() == _group) return;
@@ -27,11 +27,11 @@ void Control::connect(Control *other) {
     _group->absorb(other->group());
     _connections.emplace(other);
     other->_connections.emplace(this);
-    _node->runtime()->scheduleCompile();
+    _group->schematic()->scheduleCompile();
 }
 
-void Control::disconnect(Control *other) {
-    if (other->group != _group) return;
+void Control::disconnectFrom(Control *other) {
+    if (other->group() != _group) return;
 
     _connections.erase(other);
     other->_connections.erase(this);
@@ -63,7 +63,7 @@ void Control::disconnect(Control *other) {
         }
     }
 
-    _node->runtime()->scheduleCompile();
+    _group->schematic()->scheduleCompile();
 }
 
 void Control::setGroup(ControlGroup *newGroup) {
@@ -74,8 +74,9 @@ void Control::setGroup(ControlGroup *newGroup) {
 
 void Control::remove() {
     for (const auto &connectedNode : _connections) {
-        disconnect(connectedNode);
+        disconnectFrom(connectedNode);
     }
 
     emit removed();
+    emit cleanup();
 }

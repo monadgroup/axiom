@@ -36,7 +36,7 @@ namespace MaximCodegen {
 
         llvm::Constant *getInitialVal(MaximContext *ctx) override;
 
-        void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, Builder &b) override;
+        void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) override;
 
         llvm::Type *type(MaximContext *ctx) const override { return _ctxType; }
 

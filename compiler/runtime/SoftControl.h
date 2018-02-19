@@ -1,13 +1,13 @@
 #pragma once
 
-#include <QtCore/QObject>
-
 #include "Control.h"
 
 namespace MaximRuntime {
 
     class SoftControl : public Control {
     public:
+        Q_OBJECT
+
         SoftControl(Node *node, Control *linkedControl);
 
         MaximCodegen::Control *control() const override { return nullptr; }

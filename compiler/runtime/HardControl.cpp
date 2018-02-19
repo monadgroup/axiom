@@ -9,6 +9,10 @@ HardControl::HardControl(Node *node, std::string name, MaximCodegen::Control *co
 
 }
 
+std::unique_ptr<HardControl> HardControl::create(Node *node, std::string name, MaximCodegen::Control *control) {
+    return std::make_unique<HardControl>(node, name, control);
+}
+
 MaximCommon::ControlDirection HardControl::direction() const {
     return _control->direction;
 }
