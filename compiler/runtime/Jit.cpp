@@ -4,6 +4,7 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
+#include <iostream>
 
 using namespace MaximRuntime;
 
@@ -34,6 +35,8 @@ Jit::Jit()
 
 Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
     auto k = executionSession.allocateVModule();
+    _debugNames.emplace(k, m->getName().str());
+    std::cout << "Deploying module " << m->getName().str() << std::endl;
     auto result = compileLayer.addModule(k, std::move(m));
     return k;
 }
@@ -43,6 +46,10 @@ Jit::ModuleKey Jit::addModule(const llvm::Module &m) {
 }
 
 void Jit::removeModule(ModuleKey k) {
+    auto keyIndex = _debugNames.find(k);
+    assert(keyIndex != _debugNames.end());
+    std::cout << "Removing module " << keyIndex->second << std::endl;
+
     llvm::cantFail(compileLayer.removeModule(k));
 }
 

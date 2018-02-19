@@ -59,8 +59,9 @@ void CustomNode::compile() {
 struct ControlUpdateVal {
     std::unique_ptr<HardControl> control;
     bool isUsed;
+    bool isNew;
 
-    ControlUpdateVal(std::unique_ptr<HardControl> control, bool isUsed) : control(std::move(control)), isUsed(isUsed) { }
+    ControlUpdateVal(std::unique_ptr<HardControl> control, bool isUsed, bool isNew) : control(std::move(control)), isUsed(isUsed), isNew(isNew) { }
 };
 
 void CustomNode::updateControls() {
@@ -68,7 +69,7 @@ void CustomNode::updateControls() {
     std::unordered_map<MaximCodegen::ControlKey, ControlUpdateVal> currentControls;
     for (auto &control : _controls) {
         MaximCodegen::ControlKey key { control->name(), control->type() };
-        ControlUpdateVal updateVal(std::move(control), false);
+        ControlUpdateVal updateVal(std::move(control), false, false);
         currentControls.emplace(key, std::move(updateVal));
     }
     _controls.clear();
@@ -83,10 +84,8 @@ void CustomNode::updateControls() {
 
             currentControls.emplace(
                 newControl.first,
-                ControlUpdateVal { std::move(genControl), true }
+                ControlUpdateVal(std::move(genControl), true, true)
             );
-
-            emit controlAdded(genControl.get());
         } else {
             // it's an old control
             pair->second.isUsed = true;
@@ -94,12 +93,23 @@ void CustomNode::updateControls() {
         }
     }
 
-    // update controls list
+    std::vector<HardControl*> newControls;
+
+    // update controls list, remove old controls
     for (auto &control : currentControls) {
+        if (control.second.isNew) {
+            newControls.push_back(control.second.control.get());
+        }
         if (control.second.isUsed) {
             _controls.push_back(std::move(control.second.control));
         } else {
             control.second.control->remove();
         }
+    }
+
+    // add new controls - note: ordering is important here so the UI can free
+    // grid space before allocating new controls
+    for (const auto &newControl : newControls) {
+        emit controlAdded(newControl);
     }
 }

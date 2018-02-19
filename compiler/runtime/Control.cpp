@@ -76,6 +76,7 @@ void Control::remove() {
     for (const auto &connectedNode : _connections) {
         disconnectFrom(connectedNode);
     }
+    _group->removeControl(this);
 
     emit removed();
     emit cleanup();

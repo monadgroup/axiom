@@ -14,6 +14,8 @@ NodeControl::NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos,
 
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });
+    connect(runtime, &MaximRuntime::Control::removed,
+            this, &NodeControl::remove);
 }
 
 std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRuntime::Control *runtime) {

@@ -5,6 +5,8 @@
 #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
 #include <llvm/IR/Mangler.h>
 
+#include <unordered_map>
+
 namespace llvm {
     class Module;
 }
@@ -42,6 +44,8 @@ namespace MaximRuntime {
         llvm::orc::RTDyldObjectLinkingLayer objectLayer;
         llvm::orc::IRCompileLayer<decltype(objectLayer), llvm::orc::SimpleCompiler> compileLayer;
         llvm::Mangler mangler;
+
+        std::unordered_map<ModuleKey, std::string> _debugNames;
     };
 
 }

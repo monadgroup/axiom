@@ -10,9 +10,7 @@ Schematic::Schematic(Runtime *runtime, CompileUnit *parentUnit, size_t depth)
 
 }
 
-Schematic::~Schematic() {
-
-}
+Schematic::~Schematic() = default;
 
 void Schematic::compile() {
     instFunc()->reset();
