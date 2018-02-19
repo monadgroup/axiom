@@ -279,6 +279,7 @@ void SchematicCanvas::leftMousePressEvent(QGraphicsSceneMouseEvent *event) {
     isSelecting = true;
     if (!(event->modifiers() & Qt::ShiftModifier)) {
         schematic->deselectAll();
+        if (focusItem()) focusItem()->clearFocus();
     }
     selectionPoints.append(event->scenePos());
     event->accept();

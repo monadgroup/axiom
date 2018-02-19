@@ -91,6 +91,8 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
         if (event->type() == QEvent::FocusOut) {
             node->setCode(textEditor->toPlainText());
             return true;
+        } else if (event->type() == QEvent::FocusIn) {
+            node->parentSurface->deselectAll();
         } else if (event->type() == QEvent::KeyPress) {
             auto keyEvent = (QKeyEvent*) event;
             if (keyEvent->key() == Qt::Key_Escape) {
