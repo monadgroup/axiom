@@ -221,6 +221,8 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
 }
 
 llvm::Function* Function::createFuncForModule(llvm::Module *module) {
+    if (auto func = module->getFunction(_mangledName)) return func;
+
     auto funcType = llvm::FunctionType::get(_returnType->get(), _paramTypes, false);
     return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, _mangledName, module);
 }
