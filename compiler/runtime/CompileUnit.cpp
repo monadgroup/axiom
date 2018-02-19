@@ -16,8 +16,8 @@ CompileUnit::~CompileUnit() {
 
 void CompileUnit::scheduleCompile() {
     _needsCompile = true;
-    scheduleDeploy();
-    //if (parentUnit()) parentUnit()->scheduleCompile(); // todo: do we need this? or just scheduleDeploy?
+    _needsDeploy = true;
+    if (parentUnit()) parentUnit()->scheduleCompile();
 }
 
 void CompileUnit::scheduleDeploy() {

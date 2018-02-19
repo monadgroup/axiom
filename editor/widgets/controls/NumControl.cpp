@@ -443,7 +443,7 @@ void NumControl::paintKnob(QPainter *painter) {
     pen.setColor(darkerCurrent);
     painter->setPen(pen);
     painter->drawArc(ringBr, startAngle + completeAngle * minVal,
-                             completeAngle - completeAngle * (maxVal - minVal));
+                             completeAngle * maxVal - completeAngle * minVal);
 
     // draw min ring
     pen.setColor(currentColor);
@@ -579,7 +579,7 @@ void NumControl::paintToggle(QPainter *painter) {
     painter->setBrush(gradient);
     painter->drawEllipse(lightPos, glowRadius, glowRadius);
 
-    painter->setBrush(QBrush(activeAlpha));
+    painter->setBrush(QBrush(AxiomUtil::mixColor(Qt::black, CommonColors::controlActive, brightness)));
     painter->drawEllipse(lightPos, lightRadius, lightRadius);
 }
 
@@ -615,7 +615,7 @@ AxiomModel::NumValue NumControl::getCVal() const {
     switch (control->channel()) {
         case NodeNumControl::Channel::LEFT: return v.withLR(v.left, v.left);
         case NodeNumControl::Channel::RIGHT: return v.withLR(v.right, v.right);
-        case NodeNumControl::Channel::BOTH: v;
+        case NodeNumControl::Channel::BOTH: return v;
     }
 }
 
