@@ -25,10 +25,19 @@ namespace MaximRuntime {
 
         void generate();
 
+        llvm::GlobalVariable *outputPtr(llvm::Module *module);
+
+        void *output() const { return _outputPtr; }
+
+        void *globalCtx() const { return _globalCtxPtr; }
+
     private:
         MaximCodegen::MaximContext _context;
         Schematic _mainSchematic;
         llvm::Module _module;
+        llvm::GlobalVariable *_outputGlobal;
+        void *_outputPtr = nullptr;
+        void *_globalCtxPtr = nullptr;
 
         bool _isDeployed = false;
         Jit::ModuleKey _deployKey;

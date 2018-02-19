@@ -10,12 +10,22 @@ using namespace MaximRuntime;
 static const std::string initFuncName = "init";
 static const std::string generateFuncName = "generate";
 static const std::string globalCtxName = "globalCtx";
+static const std::string outputName = "output";
 
 Runtime::Runtime() : _context(jit.dataLayout()), _mainSchematic(this, nullptr, 0), _module("controller", _context.llvm()) {
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
     libModule->setDataLayout(jit.dataLayout());
     _context.buildFunctions(libModule.get());
     jit.addModule(std::move(libModule));
+
+    _outputGlobal = new llvm::GlobalVariable(
+        _module, _context.numType()->get(), false, llvm::GlobalVariable::ExternalLinkage,
+        llvm::ConstantStruct::get(_context.numType()->get(), {
+            llvm::ConstantVector::getSplat(2, _context.constFloat(0)),
+            llvm::ConstantInt::get(_context.numType()->formType(), (uint64_t) MaximCommon::FormType::LINEAR, false),
+            llvm::ConstantInt::get(_context.numType()->activeType(), (uint64_t) false, false)
+        })
+    );
 }
 
 void Runtime::compileAndDeploy() {
@@ -69,9 +79,12 @@ void Runtime::compileAndDeploy() {
     _deployKey = jit.addModule(_module);
     _isDeployed = true;
 
-    // update function pointers for the two functions we just made
+    // update pointers for things that need to be accessed
     auto initFuncPtr = (void (*) ()) jit.getSymbolAddress(initFunc);
     _generateFuncPtr = (void (*) ()) jit.getSymbolAddress(generateFunc);
+
+    _outputPtr = (void*) jit.getSymbolAddress(_outputGlobal);
+    _globalCtxPtr = (void*) jit.getSymbolAddress(ctxGlobal);
 
     // run the damn thing!
     initFuncPtr();
@@ -79,4 +92,12 @@ void Runtime::compileAndDeploy() {
 
 void Runtime::generate() {
     _generateFuncPtr();
+}
+
+llvm::GlobalVariable* Runtime::outputPtr(llvm::Module *module) {
+    if (auto val = module->getGlobalVariable(outputName)) {
+        return val;
+    }
+
+    return new llvm::GlobalVariable(*module, context()->numType()->get(), false, llvm::GlobalVariable::ExternalLinkage, nullptr, outputName);
 }
