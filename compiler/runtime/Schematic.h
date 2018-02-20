@@ -26,6 +26,8 @@ namespace MaximRuntime {
 
         void removeNode(Node *node);
 
+        void *updateCurrentPtr(void *parentCtx) override;
+
         std::set<Node*> &nodes() { return _nodes; }
 
         void addControlGroup(std::unique_ptr<ControlGroup> group);

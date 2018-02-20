@@ -12,7 +12,7 @@ static const std::string generateFuncName = "generate";
 static const std::string globalCtxName = "globalCtx";
 static const std::string outputName = "output";
 
-Runtime::Runtime() : _context(jit.dataLayout()), _mainSchematic(this, nullptr, 0), _module("controller", _context.llvm()) {
+Runtime::Runtime() : _context(jit.dataLayout()), _mainSchematic(this), _module("controller", _context.llvm()) {
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
     libModule->setDataLayout(jit.dataLayout());
     _context.buildFunctions(libModule.get());
@@ -88,6 +88,8 @@ void Runtime::compileAndDeploy() {
 
     // run the damn thing!
     initFuncPtr();
+
+    _mainSchematic.updateCurrentPtr(_globalCtxPtr);
 }
 
 void Runtime::generate() {

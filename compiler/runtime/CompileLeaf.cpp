@@ -47,3 +47,13 @@ void* CompileLeaf::getValuePtr(void *parentCtx) {
     if (_getValuePtr == nullptr || parentCtx == nullptr) return nullptr;
     return _getValuePtr(parentCtx);
 }
+
+void *CompileLeaf::updateCurrentPtr(void *parentCtx) {
+    _currentPtr = getValuePtr(parentCtx);
+    return currentPtr();
+}
+
+void* CompileLeaf::currentPtr() const {
+    assert(_currentPtr);
+    return _currentPtr;
+}

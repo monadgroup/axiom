@@ -35,7 +35,11 @@ namespace MaximRuntime {
 
         virtual void deploy();
 
-        void *getValuePtr(void *parentCtx);
+        virtual void *getValuePtr(void *parentCtx);
+
+        virtual void *updateCurrentPtr(void *parentCtx);
+
+        void *currentPtr() const;
 
     protected:
 
@@ -44,6 +48,8 @@ namespace MaximRuntime {
     private:
 
         void *(*_getValuePtr)(void *) = nullptr;
+
+        void *_currentPtr = nullptr;
 
         Runtime *_runtime;
 

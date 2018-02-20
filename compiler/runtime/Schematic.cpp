@@ -68,6 +68,20 @@ void Schematic::removeNode(Node *node) {
     scheduleCompile();
 }
 
+void* Schematic::updateCurrentPtr(void *parentCtx) {
+    auto ptr = CompileLeaf::updateCurrentPtr(parentCtx);
+
+    for (const auto &node : _nodes) {
+        node->updateCurrentPtr(ptr);
+    }
+
+    for (const auto &group : _controlGroups) {
+        group->updateCurrentPtr(ptr);
+    }
+
+    return ptr;
+}
+
 void Schematic::addControlGroup(std::unique_ptr<ControlGroup> group) {
     _controlGroups.push_back(std::move(group));
     scheduleCompile();

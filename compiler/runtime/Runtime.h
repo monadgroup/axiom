@@ -5,7 +5,7 @@
 
 #include "Jit.h"
 #include "../codegen/MaximContext.h"
-#include "Schematic.h"
+#include "RootSchematic.h"
 
 namespace MaximRuntime {
 
@@ -33,7 +33,7 @@ namespace MaximRuntime {
 
     private:
         MaximCodegen::MaximContext _context;
-        Schematic _mainSchematic;
+        RootSchematic _mainSchematic;
         llvm::Module _module;
         llvm::GlobalVariable *_outputGlobal;
         void *_outputPtr = nullptr;
