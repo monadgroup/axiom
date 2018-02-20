@@ -41,6 +41,11 @@ QString NodeControl::name() const {
     return QString::fromStdString(_runtime->name());
 }
 
+std::unique_ptr<GridItem> NodeControl::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
+    assert(false);
+    throw;
+}
+
 void NodeControl::setShowName(bool showName) {
     if (showName != m_showName) {
         m_showName = showName;

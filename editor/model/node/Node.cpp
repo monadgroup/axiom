@@ -1,6 +1,7 @@
 #include "Node.h"
 
 #include "../schematic/Schematic.h"
+#include "../control/NodeControl.h"
 
 using namespace AxiomModel;
 

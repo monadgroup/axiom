@@ -11,7 +11,9 @@
 #include "editor/model/node/ModuleNode.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeNumControl.h"
+#include "editor/model/control/NodeOutputControl.h"
 #include "editor/widgets/controls/NumControl.h"
+#include "editor/widgets/controls/OutputControl.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
 #include "../FloatingValueEditor.h"
@@ -55,31 +57,33 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
             });
 
     // create resize items
-    ItemResizer::Direction directions[] = {
+    if (node->isResizable()) {
+        ItemResizer::Direction directions[] = {
             ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
             ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
-    };
-    for (auto i = 0; i < 8; i++) {
-        auto resizer = new ItemResizer(directions[i], SchematicCanvas::nodeGridSize);
+        };
+        for (auto i = 0; i < 8; i++) {
+            auto resizer = new ItemResizer(directions[i], SchematicCanvas::nodeGridSize);
 
-        // ensure corners are on top of edges
-        resizer->setZValue(i > 3 ? 2 : 1);
+            // ensure corners are on top of edges
+            resizer->setZValue(i > 3 ? 2 : 1);
 
-        connect(this, &NodeItem::resizerPosChanged,
-                resizer, &ItemResizer::setPos);
-        connect(this, &NodeItem::resizerSizeChanged,
-                resizer, &ItemResizer::setSize);
+            connect(this, &NodeItem::resizerPosChanged,
+                    resizer, &ItemResizer::setPos);
+            connect(this, &NodeItem::resizerSizeChanged,
+                    resizer, &ItemResizer::setSize);
 
-        connect(resizer, &ItemResizer::startDrag,
-                this, &NodeItem::resizerStartDrag);
-        connect(resizer, &ItemResizer::changed,
-                this, &NodeItem::resizerChanged);
+            connect(resizer, &ItemResizer::startDrag,
+                    this, &NodeItem::resizerStartDrag);
+            connect(resizer, &ItemResizer::changed,
+                    this, &NodeItem::resizerChanged);
 
-        connect(&node->surface, &NodeSurface::hasSelectionChanged,
-                [this, resizer](auto hasSelection) { resizer->setVisible(!hasSelection); });
+            connect(&node->surface, &NodeSurface::hasSelectionChanged,
+                    [this, resizer](auto hasSelection) { resizer->setVisible(!hasSelection); });
 
-        resizer->setParentItem(this);
-        resizer->setVisible(!node->surface.hasSelection());
+            resizer->setParentItem(this);
+            resizer->setVisible(!node->surface.hasSelection());
+        }
     }
 
     if (auto customNode = dynamic_cast<CustomNode*>(node)) {
@@ -92,6 +96,11 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
     setPos(node->pos());
     setSize(node->size());
     setIsSelected(node->isSelected());
+    for (const auto &item : node->surface.items()) {
+        if (auto control = dynamic_cast<NodeControl *>(item.get())) {
+            addControl(control);
+        }
+    }
 }
 
 QRectF NodeItem::boundingRect() const {
@@ -107,6 +116,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     QColor darkColor, lightColor, outlineColor;
     switch (node->type) {
+        case Node::Type::OUTPUT:
         case Node::Type::CUSTOM:
             darkColor = CommonColors::customNodeNormal;
             lightColor = CommonColors::customNodeActive;
@@ -215,6 +225,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto savePresetAction = menu.addAction(tr("&Save as Preset..."));
     menu.addSeparator();
     auto deleteAction = menu.addAction(tr("&Delete"));
+    deleteAction->setEnabled(node->isDeletable());
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == renameAction) {
@@ -248,11 +259,17 @@ void NodeItem::setSize(QSize newSize) {
 }
 
 void NodeItem::addControl(NodeControl *control) {
+    ControlItem *item = nullptr;
+
     if (auto numControl = dynamic_cast<NodeNumControl *>(control)) {
-        auto c = new NumControl(numControl, canvas);
-        c->setZValue(2);
-        c->setParentItem(this);
+        item = new NumControl(numControl, canvas);
+    } else if (auto outputControl = dynamic_cast<NodeOutputControl *>(control)) {
+        item = new OutputControl(outputControl, canvas);
     }
+
+    assert(item);
+    item->setZValue(2);
+    item->setParentItem(this);
 }
 
 void NodeItem::setIsSelected(bool selected) {

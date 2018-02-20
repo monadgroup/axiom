@@ -4,6 +4,10 @@
 
 #include "Type.h"
 
+namespace llvm {
+    class StructLayout;
+}
+
 namespace MaximCodegen {
 
     class MaximContext;
@@ -22,6 +26,8 @@ namespace MaximCodegen {
 
         llvm::Type *paramType() const { return _paramType; }
 
+        const llvm::StructLayout *layout() const { return _layout; }
+
         std::string name() const override { return "midi"; }
 
         std::unique_ptr<Value> createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) override;
@@ -38,6 +44,8 @@ namespace MaximCodegen {
         llvm::Type *_noteType;
 
         llvm::Type *_paramType;
+
+        const llvm::StructLayout *_layout;
     };
 
 }

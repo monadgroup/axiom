@@ -13,6 +13,7 @@ MidiType::MidiType(MaximContext *context) : _context(context) {
     _type = llvm::StructType::create(context->llvm(), {
         _eventType, _channelType, _noteType, _paramType
     }, "struct.midi");
+    _layout = context->dataLayout().getStructLayout(_type);
 }
 
 std::unique_ptr<Value> MidiType::createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) {

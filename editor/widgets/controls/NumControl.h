@@ -22,7 +22,7 @@ namespace AxiomGui {
     public:
         AxiomModel::NodeNumControl *control;
 
-        explicit NumControl(AxiomModel::NodeNumControl *control, SchematicCanvas *canvas);
+        NumControl(AxiomModel::NodeNumControl *control, SchematicCanvas *canvas);
 
         QRectF aspectBoundingRect() const;
 

@@ -5,6 +5,10 @@
 
 #include "Type.h"
 
+namespace llvm {
+    class StructLayout;
+}
+
 namespace MaximCodegen {
 
     class MaximContext;
@@ -21,12 +25,16 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value> createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) override;
 
+        const llvm::StructLayout *layout() const { return _layout; }
+
     private:
         std::vector<Type *> _types;
 
         llvm::StructType *_type;
 
         MaximContext *_context;
+
+        const llvm::StructLayout *_layout;
     };
 
 }

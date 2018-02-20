@@ -33,6 +33,10 @@ namespace AxiomModel {
 
         bool isMovable() const override { return true; }
 
+        std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
+
+        virtual void doRuntimeUpdate() = 0;
+
     public slots:
 
         void setShowName(bool showName);

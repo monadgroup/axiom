@@ -16,16 +16,20 @@ Runtime::Runtime() : _context(jit.dataLayout()), _mainSchematic(this), _module("
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
     libModule->setDataLayout(jit.dataLayout());
     _context.buildFunctions(libModule.get());
-    jit.addModule(std::move(libModule));
 
     _outputGlobal = new llvm::GlobalVariable(
-        _module, _context.numType()->get(), false, llvm::GlobalVariable::ExternalLinkage,
+        *libModule, _context.numType()->get(), false, llvm::GlobalVariable::ExternalLinkage,
         llvm::ConstantStruct::get(_context.numType()->get(), {
             llvm::ConstantVector::getSplat(2, _context.constFloat(0)),
             llvm::ConstantInt::get(_context.numType()->formType(), (uint64_t) MaximCommon::FormType::LINEAR, false),
             llvm::ConstantInt::get(_context.numType()->activeType(), (uint64_t) false, false)
-        })
+        }), outputName
     );
+
+    jit.addModule(std::move(libModule));
+
+    //compileAndDeploy();
+
 }
 
 void Runtime::compileAndDeploy() {
@@ -83,7 +87,7 @@ void Runtime::compileAndDeploy() {
     auto initFuncPtr = (void (*) ()) jit.getSymbolAddress(initFunc);
     _generateFuncPtr = (void (*) ()) jit.getSymbolAddress(generateFunc);
 
-    _outputPtr = (void*) jit.getSymbolAddress(_outputGlobal);
+    //_outputPtr = (void*) jit.getSymbolAddress(_outputGlobal);
     _globalCtxPtr = (void*) jit.getSymbolAddress(ctxGlobal);
 
     // run the damn thing!

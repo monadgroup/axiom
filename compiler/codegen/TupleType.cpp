@@ -8,7 +8,7 @@
 using namespace MaximCodegen;
 
 TupleType::TupleType(MaximContext *context, std::vector<Type *> types, llvm::StructType *type) : _types(
-    std::move(types)), _type(type), _context(context) {
+    std::move(types)), _type(type), _context(context), _layout(context->dataLayout().getStructLayout(type)) {
 }
 
 std::string TupleType::name() const {

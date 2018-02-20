@@ -19,7 +19,7 @@ namespace MaximRuntime {
 
         MaximCodegen::MaximContext *context() { return &_context; }
 
-        Schematic &mainSchematic() { return _mainSchematic; }
+        RootSchematic &mainSchematic() { return _mainSchematic; }
 
         void compileAndDeploy();
 

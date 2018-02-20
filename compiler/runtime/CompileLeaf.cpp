@@ -50,10 +50,10 @@ void* CompileLeaf::getValuePtr(void *parentCtx) {
 
 void *CompileLeaf::updateCurrentPtr(void *parentCtx) {
     _currentPtr = getValuePtr(parentCtx);
+    assert(_currentPtr);
     return currentPtr();
 }
 
 void* CompileLeaf::currentPtr() const {
-    assert(_currentPtr);
     return _currentPtr;
 }

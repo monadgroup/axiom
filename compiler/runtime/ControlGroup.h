@@ -3,7 +3,7 @@
 #include <set>
 #include <memory>
 
-#include "codegen/Instantiable.h"
+#include "../codegen/Instantiable.h"
 #include "../common/ControlType.h"
 #include "CompileLeaf.h"
 #include "Schematic.h"

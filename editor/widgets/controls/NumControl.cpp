@@ -126,6 +126,8 @@ void NumControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     }
 
     ControlItem::paint(painter, option, widget);
+
+    control->doRuntimeUpdate();
 }
 
 QPainterPath NumControl::shape() const {

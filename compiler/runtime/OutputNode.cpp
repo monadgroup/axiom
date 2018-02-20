@@ -16,6 +16,8 @@ void OutputNode::compile() {
     auto ptr = inst()->addInstantiable(&_control);
     auto outputNum = inst()->builder().CreateLoad(ptr);
     inst()->builder().CreateStore(outputNum, runtime()->outputPtr(module()));
+
+    inst()->complete();
 }
 
 void OutputNode::remove() {

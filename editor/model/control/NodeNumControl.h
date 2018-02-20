@@ -37,7 +37,7 @@ namespace AxiomModel {
 
         bool isResizable() const override { return true; }
 
-        std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
+        void doRuntimeUpdate() override;
 
     public slots:
 

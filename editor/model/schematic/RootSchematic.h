@@ -5,13 +5,17 @@
 
 #include "Schematic.h"
 
+namespace MaximRuntime {
+    class RootSchematic;
+}
+
 namespace AxiomModel {
 
     class RootSchematic : public Schematic {
     Q_OBJECT
 
     public:
-        explicit RootSchematic(MaximRuntime::Schematic *runtime);
+        explicit RootSchematic(MaximRuntime::RootSchematic *runtime);
 
         QString name() override;
     };

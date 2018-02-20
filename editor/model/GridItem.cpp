@@ -15,6 +15,8 @@ bool GridItem::isDragAvailable(QPoint delta) {
 }
 
 void GridItem::setSize(QSize size) {
+    if (!isResizable()) return;
+
     if (size != m_size) {
         if (size.width() < 1 || size.height() < 1 || !parentSurface->grid.isRectAvailable(m_pos, size, this)) return;
 
@@ -27,6 +29,8 @@ void GridItem::setSize(QSize size) {
 }
 
 void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
+    if (!isResizable()) return;
+
     auto newSize = QSize(bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y());
     if (newSize.width() < 1 || newSize.height() < 1) return;
     if (topLeft == m_pos && newSize == m_size) return;

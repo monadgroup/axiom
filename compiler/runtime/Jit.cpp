@@ -72,7 +72,6 @@ Jit::Jit()
 Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
     auto k = executionSession.allocateVModule();
     _debugNames.emplace(k, m->getName().str());
-    std::cout << "Deploying module " << m->getName().str() << std::endl;
 
     auto result = compileLayer.addModule(k, std::move(m));
     return k;
