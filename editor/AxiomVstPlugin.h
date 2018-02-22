@@ -7,8 +7,8 @@
 
 class AxiomVstPlugin : public AudioEffectX {
 public:
-    AxiomModel::Project project;
     MaximRuntime::Runtime runtime;
+    AxiomModel::Project project;
 
     explicit AxiomVstPlugin(audioMasterCallback audioMaster);
 

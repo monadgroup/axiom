@@ -15,7 +15,8 @@ class AxiomApplication : public QApplication {
 Q_OBJECT
 
 public:
-    static AxiomApplication *main;
+    static AxiomApplication main;
 
-    AxiomApplication(int argc, char *argv[]);
+    AxiomApplication();
+
 };

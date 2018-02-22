@@ -7,8 +7,6 @@
 #include "resources/resource.h"
 #include "AxiomVstEditor.h"
 
-bool hasInitialized = false;
-
 AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
     return new AxiomVstPlugin(audioMaster);
 }
@@ -25,11 +23,7 @@ AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
 }
 
 void AxiomVstPlugin::open() {
-    if (hasInitialized) return;
-    hasInitialized = true;
 
-    auto mainApp = new AxiomApplication(1, new char*[1]);
-    AxiomApplication::main = mainApp;
 }
 
 void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) {

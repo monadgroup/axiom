@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "CompileUnit.h"
 
 namespace MaximRuntime {

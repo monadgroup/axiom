@@ -17,6 +17,6 @@ void AxiomVstEditor::close() {
 }
 
 void AxiomVstEditor::idle() {
-    AxiomApplication::main->processEvents();
-    AxiomApplication::main->sendPostedEvents(&window);
+    AxiomApplication::main.processEvents();
+    AxiomApplication::main.sendPostedEvents(&window);
 }

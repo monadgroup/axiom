@@ -6,9 +6,12 @@
 #include "util.h"
 #include "editor/model/node/CustomNode.h"
 
-AxiomApplication *AxiomApplication::main = nullptr;
+AxiomApplication AxiomApplication::main;
 
-AxiomApplication::AxiomApplication(int argc, char **argv) : QApplication(argc, argv) {
+int argc = 1;
+char **argv = new char*[1];
+
+AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     // initialize LLVM
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
