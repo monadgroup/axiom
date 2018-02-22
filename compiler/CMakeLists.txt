@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4.3)
-project(axiom_compiler)
+project(axiom)
 
 find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
