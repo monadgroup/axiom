@@ -54,9 +54,16 @@ MainWindow::MainWindow() {
     connect(aboutAction, &QAction::triggered,
             this, &MainWindow::showAbout);
     helpMenu->addAction(aboutAction);
+}
 
-    // docking for testing
-    auto canvasDock = new SchematicPanel(this, &AxiomApplication::project->root);
+void MainWindow::closeProject() {
+    // todo
+}
+
+void MainWindow::loadProject(AxiomModel::Project *project) {
+    closeProject();
+
+    auto canvasDock = new SchematicPanel(this, &project->root);
     canvasDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::TopDockWidgetArea, canvasDock);
 

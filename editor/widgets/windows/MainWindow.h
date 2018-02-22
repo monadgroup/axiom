@@ -3,6 +3,7 @@
 #include <QtWidgets/QMainWindow>
 
 namespace AxiomModel {
+    class Project;
     class Schematic;
 }
 
@@ -17,6 +18,10 @@ namespace AxiomGui {
         MainWindow();
 
     public slots:
+
+        void closeProject();
+
+        void loadProject(AxiomModel::Project *project);
 
         void showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic *schematic, bool split);
 

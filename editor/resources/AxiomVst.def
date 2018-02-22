@@ -1,0 +1,4 @@
+LIBRARY AXIOMVST
+EXPORTS
+VSTPluginMain
+main=VSTPluginMain

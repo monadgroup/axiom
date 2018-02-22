@@ -23,7 +23,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-set(SOURCE_FILES main.cpp util.cpp AxiomApplication.cpp
+set(SOURCE_FILES util.cpp AxiomApplication.cpp AxiomVstPlugin.cpp AxiomVstEditor.cpp
         model/Library.cpp model/LibraryEntry.cpp model/Project.cpp model/GridSurface.cpp model/GridItem.cpp
         model/connection/ConnectionSink.cpp model/connection/NumConnectionSink.cpp model/connection/MidiConnectionSink.cpp model/connection/ConnectionWire.cpp
         model/node/Node.cpp model/node/CustomNode.cpp model/node/ModuleNode.cpp model/node/OutputNode.cpp model/node/JunctionNode.cpp model/node/NodeSurface.cpp
@@ -40,19 +40,19 @@ set(SOURCE_FILES main.cpp util.cpp AxiomApplication.cpp
         widgets/connection/WireItem.cpp
         layouts/FlowLayout.cpp)
 
-set(RES_FILES resources/axiom.rc resources/res.qrc)
+set(RES_FILES resources/axiom.rc resources/res.qrc resources/AxiomVst.def)
 
-include_directories(../)
-include_directories(${LLVM_INCLUDE_DIRS})
+include_directories(../ ${LLVM_INCLUDE_DIRS} ../vendor/vst)
 add_definitions(${LLVM_DEFINITIONS})
 
-add_executable(axiom_editor WIN32 ${SOURCE_FILES} ${RES_FILES})
+add_library(axiom_editor SHARED ${SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_editor Qt5::Widgets)
 
 add_subdirectory(../compiler compiler)
 target_link_libraries(axiom_editor axiom_compiler)
 
 add_subdirectory(../vendor/vst vendor/vst)
+target_link_libraries(axiom_editor vst_sdk)
 
 llvm_map_components_to_libnames(llvm_libs support core irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
 target_link_libraries(axiom_editor ${llvm_libs})
