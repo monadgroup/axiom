@@ -27,6 +27,7 @@
 #include "functions/AmplitudeFunction.h"
 #include "functions/HoldFunction.h"
 #include "functions/AccumFunction.h"
+#include "functions/SineOscFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -78,6 +79,7 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout
     registerFunction(NoiseFunction::create(this));
     registerFunction(ActiveFunction::create(this));
     registerFunction(WithActiveFunction::create(this));
+    registerFunction(SineOscFunction::create(this));
     registerFunction(NextFunction::create(this));
     registerFunction(DelayFunction::create(this));
     registerFunction(AmplitudeFunction::create(this));

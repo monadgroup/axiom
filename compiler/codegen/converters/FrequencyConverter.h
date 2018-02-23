@@ -13,6 +13,7 @@ namespace MaximCodegen {
     private:
         llvm::Value *fromControl(Builder &b, llvm::Value *val, llvm::Module *module);
         llvm::Value *fromSeconds(Builder &b, llvm::Value *val, llvm::Module *module);
+        llvm::Value *fromNote(Builder &b, llvm::Value *val, llvm::Module *module);
     };
 
 }
