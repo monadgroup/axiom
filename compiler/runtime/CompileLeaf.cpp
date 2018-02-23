@@ -38,7 +38,7 @@ void CompileLeaf::updateGetter(llvm::Module *module) {
 
 void CompileLeaf::deploy() {
     if (getValueFunction) {
-        _getValuePtr = (void *(*)(void *)) _runtime->jit.getSymbolAddress(getValueFunction);
+        _getValuePtr = (void *(*)(void *)) _runtime->jit()->getSymbolAddress(getValueFunction);
         assert(_getValuePtr);
     }
 }

@@ -68,7 +68,7 @@ namespace AxiomGui {
     private:
         float m_hoverState = 0;
         bool isDragging = false;
-        AxiomModel::NumValue beforeDragVal;
+        MaximRuntime::NumValue beforeDragVal;
         QPointF mouseStartPoint;
 
         QRectF getPlugBounds() const;
@@ -87,13 +87,13 @@ namespace AxiomGui {
 
         void paintToggle(QPainter *painter);
 
-        QString valueAsString(AxiomModel::NumValue num);
+        QString valueAsString(MaximRuntime::NumValue num);
 
-        AxiomModel::NumValue stringAsValue(const QString &str, AxiomModel::NumValue oldNum);
+        MaximRuntime::NumValue stringAsValue(const QString &str, MaximRuntime::NumValue oldNum);
 
-        AxiomModel::NumValue getCVal() const;
+        MaximRuntime::NumValue getCVal() const;
 
-        void setCVal(AxiomModel::NumValue v) const;
+        void setCVal(MaximRuntime::NumValue v) const;
     };
 
 }

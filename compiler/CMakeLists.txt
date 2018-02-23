@@ -25,7 +25,7 @@ set(SOURCE_FILES util.h
         codegen/operators/NumOperator.cpp codegen/operators/NumFloatOperator.cpp codegen/operators/NumIntrinsicOperator.cpp codegen/operators/NumIntOperator.cpp codegen/operators/NumComparisonOperator.cpp codegen/operators/NumLogicalOperator.cpp
         codegen/converters/LinearConverter.cpp codegen/converters/BeatsConverter.cpp codegen/converters/ControlConverter.cpp codegen/converters/DbConverter.cpp
         codegen/controls/NumberControl.cpp
-        runtime/CompileLeaf.cpp runtime/CompileUnit.cpp runtime/Schematic.cpp runtime/RootSchematic.cpp runtime/ControlGroup.cpp runtime/Control.cpp runtime/HardControl.cpp runtime/SoftControl.cpp runtime/OutputControl.cpp runtime/Runtime.cpp runtime/Node.cpp runtime/CustomNode.cpp runtime/GroupNode.cpp runtime/OutputNode.cpp runtime/Jit.cpp)
+        runtime/CompileLeaf.cpp runtime/CompileUnit.cpp runtime/Schematic.cpp runtime/RootSchematic.cpp runtime/ControlGroup.cpp runtime/Control.cpp runtime/HardControl.cpp runtime/SoftControl.cpp runtime/OutputControl.cpp runtime/Runtime.cpp runtime/Node.cpp runtime/CustomNode.cpp runtime/GroupNode.cpp runtime/OutputNode.cpp runtime/Jit.cpp runtime/ValueReader.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

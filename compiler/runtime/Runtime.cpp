@@ -1,6 +1,8 @@
 #include "Runtime.h"
 
 #include "ControlGroup.h"
+#include "OutputNode.h"
+#include "OutputControl.h"
 #include "../codegen/Operator.h"
 #include "../codegen/Converter.h"
 #include "../codegen/Function.h"
@@ -12,27 +14,16 @@ static const std::string generateFuncName = "generate";
 static const std::string globalCtxName = "globalCtx";
 static const std::string outputName = "output";
 
-Runtime::Runtime() : _context(jit.dataLayout()), _mainSchematic(this), _module("controller", _context.llvm()) {
+Runtime::Runtime() : _context(_jit.dataLayout()), _reader(&_context), _mainSchematic(this), _module("controller", _context.llvm()) {
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
-    libModule->setDataLayout(jit.dataLayout());
+    libModule->setDataLayout(_jit.dataLayout());
     _context.buildFunctions(libModule.get());
-
-    _outputGlobal = new llvm::GlobalVariable(
-        *libModule, _context.numType()->get(), false, llvm::GlobalVariable::ExternalLinkage,
-        llvm::ConstantStruct::get(_context.numType()->get(), {
-            llvm::ConstantVector::getSplat(2, _context.constFloat(0)),
-            llvm::ConstantInt::get(_context.numType()->formType(), (uint64_t) MaximCommon::FormType::LINEAR, false),
-            llvm::ConstantInt::get(_context.numType()->activeType(), (uint64_t) false, false)
-        }), outputName
-    );
-
-    jit.addModule(std::move(libModule));
-
-    //compileAndDeploy();
-
+    _jit.addModule(std::move(libModule));
 }
 
 void Runtime::compileAndDeploy() {
+    lock();
+
     if (_mainSchematic.needsCompile()) {
         _mainSchematic.compile();
         _mainSchematic.updateGetter(_mainSchematic.module());
@@ -79,31 +70,42 @@ void Runtime::compileAndDeploy() {
     b.CreateRetVoid();
 
     // deploy the new module to the JIT
-    if (_isDeployed) jit.removeModule(_deployKey);
-    _deployKey = jit.addModule(_module);
+    if (_isDeployed) _jit.removeModule(_deployKey);
+    _deployKey = _jit.addModule(_module);
     _isDeployed = true;
 
     // update pointers for things that need to be accessed
-    auto initFuncPtr = (void (*) ()) jit.getSymbolAddress(initFunc);
-    _generateFuncPtr = (void (*) ()) jit.getSymbolAddress(generateFunc);
-
-    //_outputPtr = (void*) jit.getSymbolAddress(_outputGlobal);
-    _globalCtxPtr = (void*) jit.getSymbolAddress(ctxGlobal);
+    auto initFuncPtr = (void (*) ()) _jit.getSymbolAddress(initFunc);
+    _generateFuncPtr = (void (*) ()) _jit.getSymbolAddress(generateFunc);
+    assert(initFuncPtr);
+    assert(_generateFuncPtr);
 
     // run the damn thing!
     initFuncPtr();
 
-    _mainSchematic.updateCurrentPtr(_globalCtxPtr);
+    // note: address of ctxGlobal _can_ be null, if it's empty - this isn't a problem, since there should be
+    // nothing trying to read it
+    _mainSchematic.updateCurrentPtr((void*) _jit.getSymbolAddress(ctxGlobal));
+
+    unlock();
 }
 
 void Runtime::generate() {
-    _generateFuncPtr();
+    if (_generateFuncPtr) _generateFuncPtr();
 }
 
-llvm::GlobalVariable* Runtime::outputPtr(llvm::Module *module) {
-    if (auto val = module->getGlobalVariable(outputName)) {
-        return val;
+void Runtime::fillBuffer(float **buffer, size_t size) {
+    lock();
+
+    auto outputPtr = _mainSchematic.output.control()->group()->currentPtr();
+    assert(outputPtr);
+
+    for (size_t i = 0; i < size; i++) {
+        generate();
+        auto outputNum = _reader.readNum(outputPtr);
+        buffer[0][i] = outputNum.left;
+        buffer[1][i] = outputNum.right;
     }
 
-    return new llvm::GlobalVariable(*module, context()->numType()->get(), false, llvm::GlobalVariable::ExternalLinkage, nullptr, outputName);
+    unlock();
 }

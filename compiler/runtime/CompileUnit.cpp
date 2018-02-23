@@ -11,7 +11,7 @@ CompileUnit::CompileUnit(Runtime *runtime)
 }
 
 CompileUnit::~CompileUnit() {
-    if (_isDeployed) runtime()->jit.removeModule(_deployKey);
+    if (_isDeployed) runtime()->jit()->removeModule(_deployKey);
 }
 
 void CompileUnit::scheduleCompile() {
@@ -30,8 +30,8 @@ void CompileUnit::compile() {
 }
 
 void CompileUnit::deploy() {
-    if (_isDeployed) runtime()->jit.removeModule(_deployKey);
-    _deployKey = runtime()->jit.addModule(_module);
+    if (_isDeployed) runtime()->jit()->removeModule(_deployKey);
+    _deployKey = runtime()->jit()->addModule(_module);
     _isDeployed = true;
     _needsDeploy = false;
 

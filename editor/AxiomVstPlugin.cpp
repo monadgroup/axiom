@@ -17,7 +17,7 @@ AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
     programsAreChunks();
     canProcessReplacing();
     setNumInputs(0);
-    setNumOutputs(0);
+    setNumOutputs(2);
     setUniqueID(0x41584F4D); // 'AXOM'
     setEditor(new AxiomVstEditor(this));
 }
@@ -27,7 +27,7 @@ void AxiomVstPlugin::open() {
 }
 
 void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) {
-    // todo
+    runtime.fillBuffer(outputs, (size_t) sampleFrames);
 }
 
 VstInt32 AxiomVstPlugin::processEvents(VstEvents *ev) {

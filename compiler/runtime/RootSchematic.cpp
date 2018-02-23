@@ -2,7 +2,7 @@
 
 using namespace MaximRuntime;
 
-RootSchematic::RootSchematic(Runtime *runtime) : Schematic(runtime, nullptr, 0) {
+RootSchematic::RootSchematic(Runtime *runtime) : Schematic(runtime, nullptr, 0), output(this) {
 
 }
 

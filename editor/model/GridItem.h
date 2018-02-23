@@ -34,6 +34,8 @@ namespace AxiomModel {
 
     public slots:
 
+        virtual void doRuntimeUpdate() {}
+
         void setPos(QPoint pos, bool updateGrid = true, bool checkPositions = true);
 
         void setSize(QSize size);

@@ -50,6 +50,8 @@ namespace AxiomModel {
 
     public slots:
 
+        void doRuntimeUpdate() override;
+
         void setName(const QString &name);
 
         void setCorners(QPoint topLeft, QPoint bottomRight) override;

@@ -47,7 +47,8 @@ void CustomNode::compile() {
         // update control list
         updateControls();
 
-        inst()->addInstantiable(&_node);
+        auto ptr = inst()->addInstantiable(&_node);
+        MaximCodegen::CreateCall(inst()->builder(), _node.generateFunc(module()), {ptr}, "");
         inst()->complete();
     } catch (const MaximCommon::CompileError &err) {
         _errorLog.errors.push_back(err);

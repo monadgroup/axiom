@@ -29,7 +29,7 @@ namespace AxiomModel {
 
         NumConnectionSink *sink() override { return &m_sink; }
 
-        NumValue value() const { return m_sink.value(); }
+        MaximRuntime::NumValue value() const { return m_sink.value(); }
 
         Mode mode() const { return m_mode; }
 
@@ -37,11 +37,11 @@ namespace AxiomModel {
 
         bool isResizable() const override { return true; }
 
-        void doRuntimeUpdate() override;
-
     public slots:
 
-        void setValue(NumValue value);
+        void doRuntimeUpdate() override;
+
+        void setValue(MaximRuntime::NumValue value);
 
         void setMode(Mode mode);
 
@@ -49,7 +49,7 @@ namespace AxiomModel {
 
     signals:
 
-        void valueChanged(NumValue newValue);
+        void valueChanged(MaximRuntime::NumValue newValue);
 
         void modeChanged(Mode newMode);
 

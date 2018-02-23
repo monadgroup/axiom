@@ -19,22 +19,10 @@ NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoin
 }
 
 void NodeNumControl::doRuntimeUpdate() {
-    auto ptr = (uint8_t*) runtime()->group()->currentPtr();
-    auto layout = runtime()->node()->runtime()->context()->numType()->layout();
-
-    auto vecPtr = (float*)(ptr + layout->getElementOffset(0));
-    auto leftNum  = *(vecPtr + 0);
-    auto rightNum = *(vecPtr + 1);
-    auto form = *(ptr + layout->getElementOffset(1));
-    auto active = *(ptr + layout->getElementOffset(2));
-
-    std::cout << leftNum << "," << rightNum << " " << (int32_t) form << " " << (int32_t) active << std::endl;
-    std::cout << "First offset: " << layout->getElementOffset(0) << ", second offset: " << layout->getElementOffset(1) << ", third offset: " << layout->getElementOffset(2) << std::endl;
-
-    setValue({ leftNum, rightNum, (MaximCommon::FormType) form, (bool) active });
+    setValue(runtime()->node()->runtime()->reader()->readNum(runtime()->group()->currentPtr()));
 }
 
-void NodeNumControl::setValue(NumValue value) {
+void NodeNumControl::setValue(MaximRuntime::NumValue value) {
     m_sink.setValue(value);
 }
 

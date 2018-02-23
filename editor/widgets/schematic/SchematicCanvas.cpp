@@ -61,6 +61,12 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
             });
     connect(schematic, &Schematic::wireAdded,
             this, &SchematicCanvas::addWire);
+
+    // start runtime update timer
+    auto timer = new QTimer(this);
+    connect(timer, &QTimer::timeout,
+            this, &SchematicCanvas::doRuntimeUpdate);
+    timer->start(33);
 }
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
@@ -176,6 +182,10 @@ void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {
     auto item = new WireItem(wire);
     item->setZValue(wireZVal);
     addItem(item);
+}
+
+void SchematicCanvas::doRuntimeUpdate() {
+    schematic->doRuntimeUpdate();
 }
 
 void SchematicCanvas::drawBackground(QPainter *painter, const QRectF &rect) {

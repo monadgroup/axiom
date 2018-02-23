@@ -5,6 +5,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QPointF>
+#include <QtCore/QTimer>
 
 #include "../connection/ConnectionWire.h"
 #include "../GridSurface.h"

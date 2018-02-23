@@ -33,6 +33,12 @@ void GridSurface::cloneTo(GridSurface *surface) const {
     }
 }
 
+void GridSurface::doRuntimeUpdate() {
+    for (const auto &item : m_items) {
+        item->doRuntimeUpdate();
+    }
+}
+
 void GridSurface::deleteSelectedItems() {
     while (!m_selectedItems.empty()) {
         m_selectedItems[0]->remove();

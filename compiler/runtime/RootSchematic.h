@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Schematic.h"
+#include "OutputNode.h"
 
 namespace MaximRuntime {
 
@@ -9,6 +10,8 @@ namespace MaximRuntime {
         explicit RootSchematic(Runtime *runtime);
 
         void *getValuePtr(void *parentCtx) override;
+
+        OutputNode output;
 
     };
 

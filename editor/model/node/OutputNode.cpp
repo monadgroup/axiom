@@ -6,11 +6,13 @@
 #include "../control/NodeOutputControl.h"
 #include "compiler/runtime/OutputNode.h"
 
+#include "../schematic/RootSchematic.h"
+
 using namespace AxiomModel;
 
-OutputNode::OutputNode(Schematic *parent, QPoint pos)
-    : Node(parent, "Output", Type::OUTPUT, pos, QSize(1, 1)), _runtime(parent->runtime()) {
-    surface.addItem(std::make_unique<NodeOutputControl>(this, _runtime.control()));
+OutputNode::OutputNode(RootSchematic *parent, MaximRuntime::OutputNode *runtime, QPoint pos)
+    : Node(parent, "Output", Type::OUTPUT, pos, QSize(1, 1)), _runtime(runtime) {
+    surface.addItem(std::make_unique<NodeOutputControl>(this, runtime->control()));
 }
 
 std::unique_ptr<GridItem> OutputNode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {

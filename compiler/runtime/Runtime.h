@@ -2,8 +2,10 @@
 
 #include <memory>
 #include <vector>
+#include <QtCore/QMutex>
 
 #include "Jit.h"
+#include "ValueReader.h"
 #include "../codegen/MaximContext.h"
 #include "RootSchematic.h"
 
@@ -12,12 +14,16 @@ namespace MaximRuntime {
     class ControlGroup;
 
     class Runtime {
-    public:
-        Jit jit;
+    private:
 
+    public:
         Runtime();
 
         MaximCodegen::MaximContext *context() { return &_context; }
+
+        Jit *jit() { return &_jit; }
+
+        ValueReader *reader() { return &_reader; }
 
         RootSchematic &mainSchematic() { return _mainSchematic; }
 
@@ -25,19 +31,21 @@ namespace MaximRuntime {
 
         void generate();
 
-        llvm::GlobalVariable *outputPtr(llvm::Module *module);
+        void fillBuffer(float **buffer, size_t size);
 
-        void *output() const { return _outputPtr; }
+        void lock() { _mutex.lock(); }
 
-        void *globalCtx() const { return _globalCtxPtr; }
+        void unlock() { _mutex.unlock(); }
+
+        bool tryLock(int timeout = 0) { return _mutex.tryLock(timeout); }
 
     private:
+        QMutex _mutex;
+        Jit _jit;
         MaximCodegen::MaximContext _context;
+        ValueReader _reader;
         RootSchematic _mainSchematic;
         llvm::Module _module;
-        llvm::GlobalVariable *_outputGlobal;
-        void *_outputPtr = nullptr;
-        void *_globalCtxPtr = nullptr;
 
         bool _isDeployed = false;
         Jit::ModuleKey _deployKey;

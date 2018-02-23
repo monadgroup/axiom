@@ -11,6 +11,10 @@ Node::Node(Schematic *parent, QString name, Type type, QPoint pos, QSize size)
             &surface, &NodeSurface::deselectAll);
 }
 
+void Node::doRuntimeUpdate() {
+    surface.doRuntimeUpdate();
+}
+
 void Node::setName(const QString &name) {
     if (name != m_name) {
         m_name = name;

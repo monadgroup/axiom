@@ -126,8 +126,6 @@ void NumControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     }
 
     ControlItem::paint(painter, option, widget);
-
-    control->doRuntimeUpdate();
 }
 
 QPainterPath NumControl::shape() const {
@@ -585,7 +583,7 @@ void NumControl::paintToggle(QPainter *painter) {
     painter->drawEllipse(lightPos, lightRadius, lightRadius);
 }
 
-QString NumControl::valueAsString(AxiomModel::NumValue num) {
+QString NumControl::valueAsString(MaximRuntime::NumValue num) {
     switch (control->channel()) {
         case NodeNumControl::Channel::LEFT: return QString::number(num.left);
         case NodeNumControl::Channel::RIGHT: return QString::number(num.right);
@@ -596,7 +594,7 @@ QString NumControl::valueAsString(AxiomModel::NumValue num) {
     }
 }
 
-AxiomModel::NumValue NumControl::stringAsValue(const QString &str, AxiomModel::NumValue oldNum) {
+MaximRuntime::NumValue NumControl::stringAsValue(const QString &str, MaximRuntime::NumValue oldNum) {
     auto commaIndex = str.indexOf(',');
     auto leftStr = commaIndex >= 0 ? str.left(commaIndex) : str;
     auto rightStr = commaIndex >= 0 ? str.mid(commaIndex + 1) : str;
@@ -612,7 +610,7 @@ AxiomModel::NumValue NumControl::stringAsValue(const QString &str, AxiomModel::N
     }
 }
 
-AxiomModel::NumValue NumControl::getCVal() const {
+MaximRuntime::NumValue NumControl::getCVal() const {
     auto v = control->value();
     switch (control->channel()) {
         case NodeNumControl::Channel::LEFT: return v.withLR(v.left, v.left);
@@ -621,7 +619,7 @@ AxiomModel::NumValue NumControl::getCVal() const {
     }
 }
 
-void NumControl::setCVal(AxiomModel::NumValue v) const {
+void NumControl::setCVal(MaximRuntime::NumValue v) const {
     switch (control->channel()) {
         case NodeNumControl::Channel::LEFT: control->setValue(control->value().withL(v.left));
         case NodeNumControl::Channel::RIGHT: control->setValue(control->value().withR(v.right));

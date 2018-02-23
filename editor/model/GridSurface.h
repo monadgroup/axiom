@@ -33,6 +33,8 @@ namespace AxiomModel {
 
     public slots:
 
+        virtual void doRuntimeUpdate();
+
         void deleteSelectedItems();
 
         void selectAll();
