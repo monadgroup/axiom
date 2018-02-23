@@ -37,7 +37,9 @@
 #include "converters/BeatsConverter.h"
 #include "converters/ControlConverter.h"
 #include "converters/DbConverter.h"
+#include "converters/FrequencyConverter.h"
 #include "converters/LinearConverter.h"
+#include "converters/SecondsConverter.h"
 
 using namespace MaximCodegen;
 
@@ -113,7 +115,9 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout
     registerConverter(BeatsConverter::create(this));
     registerConverter(ControlConverter::create(this));
     registerConverter(DbConverter::create(this));
+    registerConverter(FrequencyConverter::create(this));
     registerConverter(LinearConverter::create(this));
+    registerConverter(SecondsConverter::create(this));
 }
 
 llvm::Value* MaximContext::beatsPerSecond() const {

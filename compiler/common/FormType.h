@@ -8,6 +8,7 @@ namespace MaximCommon {
         LINEAR,
         OSCILLATOR,
         CONTROL,
+        FREQUENCY,
         NOTE,
         DB,
         Q,

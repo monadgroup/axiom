@@ -172,7 +172,7 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     if (nameToken.content == "lin") formType = FormType::LINEAR;
     else if (nameToken.content == "osc") formType = FormType::OSCILLATOR;
     else if (nameToken.content == "control") formType = FormType::CONTROL;
-    else if (nameToken.content == "freq") formType = FormType::SECONDS;
+    else if (nameToken.content == "freq") formType = FormType::FREQUENCY;
     else if (nameToken.content == "note") formType = FormType::NOTE;
     else if (nameToken.content == "db") formType = FormType::DB;
     else if (nameToken.content == "q") formType = FormType::Q;
@@ -239,7 +239,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
         auto didMatchForm = true;
         auto formStart = didMatchMul ? 1u : 0u;
-        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->type = FormType::SECONDS;
+        if (!postMulText.compare(formStart, postMulText.npos, "HZ")) valueForm->type = FormType::FREQUENCY;
         else if (!postMulText.compare(formStart, postMulText.npos, "DB")) valueForm->type = FormType::DB;
         else if (!postMulText.compare(formStart, postMulText.npos, "Q")) valueForm->type = FormType::Q;
         else if (!postMulText.compare(formStart, postMulText.npos, "S")) valueForm->type = FormType::SECONDS;

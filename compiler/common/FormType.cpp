@@ -12,6 +12,8 @@ std::string MaximCommon::formType2String(FormType type) {
             return "osc";
         case FormType::CONTROL:
             return "control";
+        case FormType::FREQUENCY:
+            return "freq";
         case FormType::NOTE:
             return "note";
         case FormType::DB:

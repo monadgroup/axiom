@@ -6,6 +6,7 @@ using namespace MaximCodegen;
 
 ControlConverter::ControlConverter(MaximContext *context) : Converter(context, MaximCommon::FormType::CONTROL) {
     converters.emplace(MaximCommon::FormType::OSCILLATOR, (FormConverter)&MaximCodegen::ControlConverter::fromOscillator);
+    converters.emplace(MaximCommon::FormType::FREQUENCY, (FormConverter)&MaximCodegen::ControlConverter::fromFrequency);
     converters.emplace(MaximCommon::FormType::NOTE, (FormConverter)&MaximCodegen::ControlConverter::fromNote);
     converters.emplace(MaximCommon::FormType::DB, (FormConverter)&MaximCodegen::ControlConverter::fromDb);
     converters.emplace(MaximCommon::FormType::Q, (FormConverter)&MaximCodegen::ControlConverter::fromQ);
@@ -20,6 +21,16 @@ std::unique_ptr<ControlConverter> ControlConverter::create(MaximContext *context
 llvm::Value* ControlConverter::fromOscillator(Builder &b, llvm::Value *val, llvm::Module *module) {
     auto a = b.CreateFAdd(val, llvm::ConstantVector::getSplat(2, context()->constFloat(1)));
     return b.CreateFDiv(a, llvm::ConstantVector::getSplat(2, context()->constFloat(2)));
+}
+
+llvm::Value* ControlConverter::fromFrequency(Builder &b, llvm::Value *val, llvm::Module *module) {
+    auto logFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::log, context()->numType()->vecType());
+
+    auto baseVal = llvm::ConstantVector::getSplat(2, context()->constFloat(20000));
+    auto logBase = CreateCall(b, logFunc, {baseVal}, "logbase");
+    auto logInput = CreateCall(b, logFunc, {val}, "loginput");
+
+    return b.CreateFDiv(logInput, logBase);
 }
 
 llvm::Value* ControlConverter::fromNote(Builder &b, llvm::Value *val, llvm::Module *module) {

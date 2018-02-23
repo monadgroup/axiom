@@ -4,11 +4,11 @@
 
 namespace MaximCodegen {
 
-    class BeatsConverter : public Converter {
+    class FrequencyConverter : public Converter {
     public:
-        explicit BeatsConverter(MaximContext *context);
+        explicit FrequencyConverter(MaximContext *context);
 
-        static std::unique_ptr<BeatsConverter> create(MaximContext *context);
+        static std::unique_ptr<FrequencyConverter> create(MaximContext *context);
 
     private:
         llvm::Value *fromControl(Builder &b, llvm::Value *val, llvm::Module *module);
