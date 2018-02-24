@@ -35,11 +35,13 @@ namespace MaximRuntime {
         }
     };
 
-    class ValueReader {
+    class ValueOperator {
     public:
-        ValueReader(MaximCodegen::MaximContext *context);
+        explicit ValueOperator(MaximCodegen::MaximContext *context);
 
         NumValue readNum(void *ptr);
+
+        void writeNum(void *ptr, NumValue value);
 
     private:
         MaximCodegen::MaximContext *_context;

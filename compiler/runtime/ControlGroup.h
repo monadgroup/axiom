@@ -7,6 +7,7 @@
 #include "../common/ControlType.h"
 #include "CompileLeaf.h"
 #include "Schematic.h"
+#include "ValueOperator.h"
 
 namespace MaximRuntime {
 
@@ -37,6 +38,10 @@ namespace MaximRuntime {
         void initializeVal(MaximCodegen::MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, MaximCodegen::InstantiableFunction *parent, MaximCodegen::Builder &b) override;
 
         llvm::Type *type(MaximCodegen::MaximContext *ctx) const override;
+
+        NumValue getNumValue() const;
+
+        void setNumValue(NumValue value) const;
 
     private:
 

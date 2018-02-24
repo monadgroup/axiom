@@ -2,7 +2,7 @@
 
 #include "ConnectionSink.h"
 #include "compiler/common/FormType.h"
-#include "compiler/runtime/ValueReader.h"
+#include "compiler/runtime/ValueOperator.h"
 
 namespace AxiomModel {
 

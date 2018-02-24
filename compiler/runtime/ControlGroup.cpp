@@ -3,6 +3,7 @@
 #include "Schematic.h"
 #include "Node.h"
 #include "Control.h"
+#include "Runtime.h"
 #include "codegen/MaximContext.h"
 #include "codegen/Control.h"
 
@@ -89,6 +90,14 @@ llvm::Type* ControlGroup::type(MaximCodegen::MaximContext *ctx) const {
         case MaximCommon::ControlType::NUMBER: return ctx->numType()->get();
         default: assert(false); throw;
     }
+}
+
+NumValue ControlGroup::getNumValue() const {
+    return _schematic->runtime()->op()->readNum(currentPtr());
+}
+
+void ControlGroup::setNumValue(NumValue value) const {
+    _schematic->runtime()->op()->writeNum(currentPtr(), value);
 }
 
 void ControlGroup::setSchematic(Schematic *newSchematic) {

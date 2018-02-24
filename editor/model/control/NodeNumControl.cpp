@@ -19,11 +19,12 @@ NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoin
 }
 
 void NodeNumControl::doRuntimeUpdate() {
-    setValue(runtime()->node()->runtime()->reader()->readNum(runtime()->group()->currentPtr()));
+    setValue(runtime()->group()->getNumValue(), false);
 }
 
-void NodeNumControl::setValue(MaximRuntime::NumValue value) {
+void NodeNumControl::setValue(MaximRuntime::NumValue value, bool setRuntime) {
     m_sink.setValue(value);
+    if (setRuntime) runtime()->group()->setNumValue(value);
 }
 
 void NodeNumControl::setMode(Mode mode) {

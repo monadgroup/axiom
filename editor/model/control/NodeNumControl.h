@@ -41,7 +41,7 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override;
 
-        void setValue(MaximRuntime::NumValue value);
+        void setValue(MaximRuntime::NumValue value, bool setRuntime = true);
 
         void setMode(Mode mode);
 

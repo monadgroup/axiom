@@ -14,7 +14,7 @@ static const std::string generateFuncName = "generate";
 static const std::string globalCtxName = "globalCtx";
 static const std::string outputName = "output";
 
-Runtime::Runtime() : _context(_jit.dataLayout()), _reader(&_context), _mainSchematic(this), _module("controller", _context.llvm()) {
+Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context), _mainSchematic(this), _module("controller", _context.llvm()) {
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
     libModule->setDataLayout(_jit.dataLayout());
     _context.buildFunctions(libModule.get());
@@ -102,7 +102,7 @@ void Runtime::fillBuffer(float **buffer, size_t size) {
 
     for (size_t i = 0; i < size; i++) {
         generate();
-        auto outputNum = _reader.readNum(outputPtr);
+        auto outputNum = _op.readNum(outputPtr);
         buffer[0][i] = outputNum.left;
         buffer[1][i] = outputNum.right;
     }

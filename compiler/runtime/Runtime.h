@@ -5,7 +5,7 @@
 #include <QtCore/QMutex>
 
 #include "Jit.h"
-#include "ValueReader.h"
+#include "ValueOperator.h"
 #include "../codegen/MaximContext.h"
 #include "RootSchematic.h"
 
@@ -23,7 +23,7 @@ namespace MaximRuntime {
 
         Jit *jit() { return &_jit; }
 
-        ValueReader *reader() { return &_reader; }
+        ValueOperator *op() { return &_op; }
 
         RootSchematic &mainSchematic() { return _mainSchematic; }
 
@@ -43,7 +43,7 @@ namespace MaximRuntime {
         QMutex _mutex;
         Jit _jit;
         MaximCodegen::MaximContext _context;
-        ValueReader _reader;
+        ValueOperator _op;
         RootSchematic _mainSchematic;
         llvm::Module _module;
 
