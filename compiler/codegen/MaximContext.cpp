@@ -32,6 +32,8 @@
 #include "functions/SawOscFunction.h"
 #include "functions/TriOscFunction.h"
 #include "functions/RmpOscFunction.h"
+#include "functions/MixFunction.h"
+#include "functions/SequenceFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -80,6 +82,8 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout
     registerFunction(VectorShuffleFunction::create(this, "right", {1, 1}));
     registerFunction(VectorShuffleFunction::create(this, "swap", {1, 0}));
     registerFunction(CombineFunction::create(this));
+    registerFunction(MixFunction::create(this));
+    registerFunction(SequenceFunction::create(this));
     registerFunction(NoiseFunction::create(this));
     registerFunction(ActiveFunction::create(this));
     registerFunction(WithActiveFunction::create(this));

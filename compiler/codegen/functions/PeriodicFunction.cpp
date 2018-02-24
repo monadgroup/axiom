@@ -19,6 +19,8 @@ std::unique_ptr<Value> PeriodicFunction::generate(Builder &b, std::vector<std::u
                                                   llvm::Function *func, llvm::Module *module) {
     auto freqVal = dynamic_cast<Num*>(params[0].get());
     auto phaseOffsetVal = dynamic_cast<Num*>(params[1].get());
+    assert(freqVal && phaseOffsetVal);
+
     auto phaseVec = b.CreateLoad(funcContext, "phase");
 
     // offset phase and store new value
