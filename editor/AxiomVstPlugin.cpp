@@ -3,6 +3,10 @@
 #include "resources/resource.h"
 #include "AxiomVstEditor.h"
 
+#include "compiler/codegen/Operator.h"
+#include "compiler/codegen/Converter.h"
+#include "compiler/codegen/Function.h"
+
 AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
     return new AxiomVstPlugin(audioMaster);
 }
