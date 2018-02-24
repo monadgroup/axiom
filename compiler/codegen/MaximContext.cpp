@@ -27,7 +27,11 @@
 #include "functions/AmplitudeFunction.h"
 #include "functions/HoldFunction.h"
 #include "functions/AccumFunction.h"
-#include "functions/SineOscFunction.h"
+#include "functions/SinOscFunction.h"
+#include "functions/SqrOscFunction.h"
+#include "functions/SawOscFunction.h"
+#include "functions/TriOscFunction.h"
+#include "functions/RmpOscFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -79,12 +83,18 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout
     registerFunction(NoiseFunction::create(this));
     registerFunction(ActiveFunction::create(this));
     registerFunction(WithActiveFunction::create(this));
-    registerFunction(SineOscFunction::create(this));
     registerFunction(NextFunction::create(this));
     registerFunction(DelayFunction::create(this));
     registerFunction(AmplitudeFunction::create(this));
     registerFunction(HoldFunction::create(this));
     registerFunction(AccumFunction::create(this));
+
+    // oscillators
+    registerFunction(SinOscFunction::create(this));
+    registerFunction(SqrOscFunction::create(this));
+    registerFunction(SawOscFunction::create(this));
+    registerFunction(TriOscFunction::create(this));
+    registerFunction(RmpOscFunction::create(this));
 
     // hot paths for when only two parameters are provided to min/max
     registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::minnum, "min", 2));
@@ -99,7 +109,7 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::SUBTRACT, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FSub));
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MULTIPLY, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FMul));
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::DIVIDE, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FDiv));
-    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MODULO, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FMul));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MODULO, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FRem));
     registerOperator(NumIntrinsicOperator::create(this, MaximCommon::OperatorType::POWER, ActiveMode::FIRST_INPUT, llvm::Intrinsic::ID::pow));
     registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_AND, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::And, true));
     registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_OR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Or, true));

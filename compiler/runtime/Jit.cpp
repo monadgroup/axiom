@@ -50,6 +50,8 @@ llvm::JITSymbol getSymbol(std::string name) {
         return llvm::JITSymbol((uint64_t)&::fmaxf, llvm::JITSymbolFlags::Exported);
     } else if (name == "fminf") {
         return llvm::JITSymbol((uint64_t)&::fminf, llvm::JITSymbolFlags::Exported);
+    } else if (name == "fmodf") {
+        return llvm::JITSymbol((uint64_t)&::fmodf, llvm::JITSymbolFlags::Exported);
     }
 
     return nullptr;

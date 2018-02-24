@@ -5,11 +5,9 @@
 
 namespace MaximCodegen {
 
-    class SineOscFunction : public Function {
+    class PeriodicFunction : public Function {
     public:
-        explicit SineOscFunction(MaximContext *context);
-
-        static std::unique_ptr<SineOscFunction> create(MaximContext *context);
+        explicit PeriodicFunction(MaximContext *context, std::string name);
 
     protected:
         std::unique_ptr<Value> generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg, llvm::Value *funcContext, llvm::Function *func, llvm::Module *module) override;
@@ -17,6 +15,8 @@ namespace MaximCodegen {
         std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) override;
 
         std::unique_ptr<Instantiable> generateCall(std::vector<std::unique_ptr<Value>> args) override;
+
+        virtual llvm::Value *nextValue(llvm::Value *period, Builder &b, llvm::Module *module) = 0;
 
     private:
         class FunctionCall : public Instantiable {
