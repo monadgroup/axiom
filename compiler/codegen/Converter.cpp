@@ -65,7 +65,9 @@ std::unique_ptr<Num> Converter::call(Node *node, std::unique_ptr<Num> value, Sou
 }
 
 llvm::Function* Converter::createFuncForModule(llvm::Module *module) {
-    auto funcType = llvm::FunctionType::get(context()->numType()->get(), {context()->numType()->get()}, false);
     auto funcName = "maximconverter." + MaximCommon::formType2String(toType());
+    if (auto func = module->getFunction(funcName)) return func;
+
+    auto funcType = llvm::FunctionType::get(context()->numType()->get(), {context()->numType()->get()}, false);
     return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, module);
 }

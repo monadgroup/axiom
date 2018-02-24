@@ -24,7 +24,7 @@ void NodeNumControl::doRuntimeUpdate() {
 
 void NodeNumControl::setValue(MaximRuntime::NumValue value, bool setRuntime) {
     m_sink.setValue(value);
-    if (setRuntime) runtime()->group()->setNumValue(value);
+    if (setRuntime) runtime()->group()->setNumValue(m_sink.value());
 }
 
 void NodeNumControl::setMode(Mode mode) {
