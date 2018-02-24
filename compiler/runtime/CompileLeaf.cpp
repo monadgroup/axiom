@@ -32,8 +32,6 @@ void CompileLeaf::updateGetter(llvm::Module *module) {
 
     auto gep = b.CreateStructGEP(parentContextType, getValueFunction->arg_begin(), (unsigned int) selfIndex);
     b.CreateRet(gep);
-
-    getValueFunction->print(llvm::errs(), nullptr);
 }
 
 void CompileLeaf::deploy() {

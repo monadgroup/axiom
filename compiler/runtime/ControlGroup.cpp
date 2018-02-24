@@ -59,7 +59,7 @@ llvm::Constant* ControlGroup::getInitialVal(MaximCodegen::MaximContext *ctx) {
     switch (type()) {
         case MaximCommon::ControlType::NUMBER:
             return llvm::ConstantStruct::get(ctx->numType()->get(), {
-                llvm::ConstantVector::get({ctx->constFloat(0.8), ctx->constFloat(0.2)}),
+                llvm::ConstantVector::get({ctx->constFloat(0), ctx->constFloat(0)}),
                 llvm::ConstantInt::get(ctx->numType()->formType(), (uint64_t) MaximCommon::FormType::CONTROL, false),
                 llvm::ConstantInt::get(ctx->numType()->activeType(), (uint64_t) true, false)
             });

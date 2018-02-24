@@ -23,7 +23,7 @@ std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRu
 
     switch (runtime->type()) {
         case MaximCommon::ControlType::NUMBER:
-            newSize = QSize(1, 1);
+            newSize = QSize(2, 2);
             break;
         default: assert(false);
     }

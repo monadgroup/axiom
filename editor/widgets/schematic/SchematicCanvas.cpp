@@ -66,7 +66,7 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
     auto timer = new QTimer(this);
     connect(timer, &QTimer::timeout,
             this, &SchematicCanvas::doRuntimeUpdate);
-    timer->start(33);
+    timer->start(16);
 }
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
