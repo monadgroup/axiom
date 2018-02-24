@@ -1,9 +1,5 @@
 #include "Function.h"
 
-#include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/Value.h>
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/Function.h>
 #include <sstream>
 
 #include "MaximContext.h"
@@ -109,7 +105,8 @@ Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos
 
     // either call inline with constant folding, or generate call
     auto result = computeConst ? callConst(node, std::move(args), std::move(varargs), node->module())
-                               : callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos, node->module());
+                               : callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos,
+                                              node->module());
     return result->withSource(startPos, endPos);
 }
 
@@ -124,7 +121,8 @@ std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::uniq
 }
 
 std::unique_ptr<Instantiable> Function::generateCall(std::vector<std::unique_ptr<Value>> args) {
-    assert(false); throw;
+    assert(false);
+    throw;
 }
 
 Parameter *Function::getParameter(size_t index) {
@@ -175,7 +173,8 @@ std::unique_ptr<Value> Function::callConst(Node *node, std::vector<std::unique_p
     }
 
     // evaluate function inline and let constant folding do the rest
-    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr, node->generateFunc(module), module);
+    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr, node->generateFunc(module),
+                         module);
 }
 
 std::unique_ptr<Value> Function::callNonConst(Node *node,
@@ -220,7 +219,7 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
     return _returnType->createInstance(result, startPos, endPos);
 }
 
-llvm::Function* Function::createFuncForModule(llvm::Module *module) {
+llvm::Function *Function::createFuncForModule(llvm::Module *module) {
     if (auto func = module->getFunction(_mangledName)) return func;
 
     auto funcType = llvm::FunctionType::get(_returnType->get(), _paramTypes, false);

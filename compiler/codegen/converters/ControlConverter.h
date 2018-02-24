@@ -12,11 +12,17 @@ namespace MaximCodegen {
 
     private:
         llvm::Value *fromOscillator(Builder &b, llvm::Value *val, llvm::Module *module);
+
         llvm::Value *fromFrequency(Builder &b, llvm::Value *val, llvm::Module *module);
+
         llvm::Value *fromNote(Builder &b, llvm::Value *val, llvm::Module *module);
+
         llvm::Value *fromDb(Builder &b, llvm::Value *val, llvm::Module *module);
+
         llvm::Value *fromQ(Builder &b, llvm::Value *val, llvm::Module *module);
+
         llvm::Value *fromSeconds(Builder &b, llvm::Value *val, llvm::Module *module);
+
         llvm::Value *fromBeats(Builder &b, llvm::Value *val, llvm::Module *module);
     };
 

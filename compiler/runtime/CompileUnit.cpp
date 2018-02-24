@@ -6,7 +6,8 @@
 using namespace MaximRuntime;
 
 CompileUnit::CompileUnit(Runtime *runtime)
-    : CompileLeaf(runtime), _module("compileunit", runtime->context()->llvm()), _instFunc(runtime->context(), &_module) {
+    : CompileLeaf(runtime), _module("compileunit", runtime->context()->llvm()),
+      _instFunc(runtime->context(), &_module) {
     _module.setDataLayout(runtime->context()->dataLayout());
 }
 

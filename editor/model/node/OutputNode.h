@@ -14,7 +14,7 @@ namespace AxiomModel {
     class RootSchematic;
 
     class OutputNode : public Node {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         OutputNode(RootSchematic *parent, MaximRuntime::OutputNode *runtime, QPoint pos);

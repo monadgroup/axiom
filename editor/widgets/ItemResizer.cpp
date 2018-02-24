@@ -7,7 +7,7 @@
 using namespace AxiomGui;
 
 ItemResizer::ItemResizer(Direction dir, QSizeF minSize, float marginSize)
-        : dir(dir), minSize(minSize), marginSize(marginSize) {
+    : dir(dir), minSize(minSize), marginSize(marginSize) {
     setAcceptedMouseButtons(Qt::LeftButton);
 
     switch (dir) {

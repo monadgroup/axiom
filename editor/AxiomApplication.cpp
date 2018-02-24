@@ -9,7 +9,7 @@
 AxiomApplication AxiomApplication::main;
 
 int argc = 1;
-char **argv = new char*[1];
+char **argv = new char *[1];
 
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     // initialize LLVM

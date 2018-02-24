@@ -5,14 +5,15 @@
 
 using namespace MaximCodegen;
 
-llvm::Value* MaximCodegen::CreateCall(Builder &b, llvm::Function *f, llvm::ArrayRef<llvm::Value *> operands, const llvm::Twine &name) {
+llvm::Value *MaximCodegen::CreateCall(Builder &b, llvm::Function *f, llvm::ArrayRef<llvm::Value *> operands,
+                                      const llvm::Twine &name) {
     auto callInst = llvm::CallInst::Create(f->getFunctionType(), f, operands);
     llvm::ImmutableCallSite site(callInst);
     if (!llvm::canConstantFoldCallTo(site, f)) {
         return b.Insert(callInst, name);
     }
 
-    std::vector<llvm::Constant*> constOperands;
+    std::vector<llvm::Constant *> constOperands;
     constOperands.reserve(operands.size());
 
     for (const auto &operand : operands) {

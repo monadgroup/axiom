@@ -19,9 +19,10 @@ std::unique_ptr<SequenceFunction> SequenceFunction::create(MaximContext *context
 std::unique_ptr<Value> SequenceFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                   std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                                   llvm::Function *func, llvm::Module *module) {
-    auto floorFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::floor, {context()->numType()->vecType()});
+    auto floorFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::floor,
+                                                     {context()->numType()->vecType()});
 
-    auto indexNum = dynamic_cast<Num*>(params[0].get());
+    auto indexNum = dynamic_cast<Num *>(params[0].get());
     assert(indexNum);
 
     auto countSplat = b.CreateVectorSplat(2, vararg->count(b), "countsplat");
@@ -45,8 +46,8 @@ std::unique_ptr<Value> SequenceFunction::generate(Builder &b, std::vector<std::u
 
     auto leftVal = vararg->atIndex(leftIndex, b);
     auto rightVal = vararg->atIndex(rightIndex, b);
-    auto leftNum = dynamic_cast<Num*>(leftVal.get());
-    auto rightNum = dynamic_cast<Num*>(rightVal.get());
+    auto leftNum = dynamic_cast<Num *>(leftVal.get());
+    auto rightNum = dynamic_cast<Num *>(rightVal.get());
     assert(leftNum && rightNum);
 
     auto resultVec = b.CreateShuffleVector(
@@ -58,7 +59,7 @@ std::unique_ptr<Value> SequenceFunction::generate(Builder &b, std::vector<std::u
     active = b.CreateOr(active, indexNum->active(b), "active");
 
     auto firstVal = vararg->atIndex((uint64_t) 0, b);
-    auto firstNum = dynamic_cast<Num*>(firstVal.get());
+    auto firstNum = dynamic_cast<Num *>(firstVal.get());
     assert(firstNum);
 
     auto undefPos = SourcePos(-1, -1);

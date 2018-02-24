@@ -8,7 +8,8 @@ using namespace MaximCodegen;
 
 VectorIntrinsicFunction::VectorIntrinsicFunction(MaximContext *context, llvm::Intrinsic::ID id, std::string name,
                                                  size_t paramCount)
-    : Function(context, std::move(name), context->numType(), std::vector<Parameter>(paramCount, Parameter(context->numType(), false, false)), nullptr, nullptr),
+    : Function(context, std::move(name), context->numType(),
+               std::vector<Parameter>(paramCount, Parameter(context->numType(), false, false)), nullptr, nullptr),
       id(id) {
 
 }
@@ -25,12 +26,12 @@ std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector
 
     llvm::Value *isActive = context()->constInt(1, 0, false);
 
-    std::vector<llvm::Value*> llParams;
+    std::vector<llvm::Value *> llParams;
     llParams.reserve(params.size());
 
     Num *firstParam = nullptr;
     for (const auto &param : params) {
-        auto numParam = dynamic_cast<Num*>(param.get());
+        auto numParam = dynamic_cast<Num *>(param.get());
         assert(numParam);
         if (!firstParam) firstParam = numParam;
         llParams.push_back(numParam->vec(b));
@@ -41,5 +42,5 @@ std::unique_ptr<Value> VectorIntrinsicFunction::generate(Builder &b, std::vector
     auto res = CreateCall(b, intrinsic, llParams, "intrinsic.result");
 
     SourcePos undefPos(-1, -1);
-    return  firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
+    return firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
 }

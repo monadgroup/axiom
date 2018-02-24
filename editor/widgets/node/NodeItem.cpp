@@ -86,7 +86,7 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
         }
     }
 
-    if (auto customNode = dynamic_cast<CustomNode*>(node)) {
+    if (auto customNode = dynamic_cast<CustomNode *>(node)) {
         auto panel = new CustomNodePanel(customNode);
         panel->setParentItem(this);
         panel->setFlag(QGraphicsItem::ItemStacksBehindParent);
@@ -106,8 +106,8 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(can
 QRectF NodeItem::boundingRect() const {
     auto drawBr = drawBoundingRect();
     return {
-            drawBr.topLeft() - QPointF(0, textOffset),
-            drawBr.size() + QSizeF(0, textOffset)
+        drawBr.topLeft() - QPointF(0, textOffset),
+        drawBr.size() + QSizeF(0, textOffset)
     };
 }
 
@@ -151,8 +151,8 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     painter->setPen(QPen(QColor(100, 100, 100)));
     auto br = boundingRect();
     auto textBound = QRectF(
-            br.topLeft(),
-            QSizeF(br.width(), textOffset)
+        br.topLeft(),
+        QSizeF(br.width(), textOffset)
     );
     painter->drawText(textBound, Qt::AlignLeft | Qt::AlignTop, node->name());
 }
@@ -182,8 +182,8 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
     emit node->draggedTo(QPoint(
-            qRound((float) mouseDelta.x() / SchematicCanvas::nodeGridSize.width()),
-            qRound((float) mouseDelta.y() / SchematicCanvas::nodeGridSize.height())
+        qRound((float) mouseDelta.x() / SchematicCanvas::nodeGridSize.width()),
+        qRound((float) mouseDelta.y() / SchematicCanvas::nodeGridSize.height())
     ));
 
     event->accept();
@@ -201,9 +201,9 @@ void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         canvas->panel->window->showSchematic(
-                canvas->panel,
-                moduleNode->schematic.get(),
-                false
+            canvas->panel,
+            moduleNode->schematic.get(),
+            false
         );
     } else {
         event->accept();
@@ -237,9 +237,9 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == groupAction) {
         auto groupedNode = node->parentSchematic->groupSelection();
         canvas->panel->window->showSchematic(
-                canvas->panel,
-                groupedNode->schematic.get(),
-                true
+            canvas->panel,
+            groupedNode->schematic.get(),
+            true
         );
     } else if (selectedAction == savePresetAction) {
         // todo: save as preset
@@ -282,11 +282,11 @@ void NodeItem::remove() {
 
 void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     node->setCorners(QPoint(
-            qRound(topLeft.x() / SchematicCanvas::nodeGridSize.width()),
-            qRound(topLeft.y() / SchematicCanvas::nodeGridSize.height())
+        qRound(topLeft.x() / SchematicCanvas::nodeGridSize.width()),
+        qRound(topLeft.y() / SchematicCanvas::nodeGridSize.height())
     ), QPoint(
-            qRound(bottomRight.x() / SchematicCanvas::nodeGridSize.width()),
-            qRound(bottomRight.y() / SchematicCanvas::nodeGridSize.height())
+        qRound(bottomRight.x() / SchematicCanvas::nodeGridSize.width()),
+        qRound(bottomRight.y() / SchematicCanvas::nodeGridSize.height())
     ));
 }
 
@@ -304,7 +304,7 @@ void NodeItem::triggerGeometryChange() {
 
 QRectF NodeItem::drawBoundingRect() const {
     return {
-            QPointF(0, 0),
-            SchematicCanvas::nodeRealSize(node->size())
+        QPointF(0, 0),
+        SchematicCanvas::nodeRealSize(node->size())
     };
 }

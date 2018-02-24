@@ -71,36 +71,36 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
 
 QPoint SchematicCanvas::nodeRealPos(const QPoint &p) {
     return {
-            p.x() * SchematicCanvas::nodeGridSize.width(),
-            p.y() * SchematicCanvas::nodeGridSize.height()
+        p.x() * SchematicCanvas::nodeGridSize.width(),
+        p.y() * SchematicCanvas::nodeGridSize.height()
     };
 }
 
 QSize SchematicCanvas::nodeRealSize(const QSize &s) {
     return {
-            s.width() * SchematicCanvas::nodeGridSize.width(),
-            s.height() * SchematicCanvas::nodeGridSize.height()
+        s.width() * SchematicCanvas::nodeGridSize.width(),
+        s.height() * SchematicCanvas::nodeGridSize.height()
     };
 }
 
 QPoint SchematicCanvas::controlRealPos(const QPoint &p) {
     return {
-            p.x() * SchematicCanvas::controlGridSize.width(),
-            p.y() * SchematicCanvas::controlGridSize.height()
+        p.x() * SchematicCanvas::controlGridSize.width(),
+        p.y() * SchematicCanvas::controlGridSize.height()
     };
 }
 
 QPointF SchematicCanvas::controlRealPos(const QPointF &p) {
     return {
-            p.x() * SchematicCanvas::controlGridSize.width(),
-            p.y() * SchematicCanvas::controlGridSize.height()
+        p.x() * SchematicCanvas::controlGridSize.width(),
+        p.y() * SchematicCanvas::controlGridSize.height()
     };
 }
 
 QSize SchematicCanvas::controlRealSize(const QSize &s) {
     return {
-            s.width() * SchematicCanvas::controlGridSize.width(),
-            s.height() * SchematicCanvas::controlGridSize.height()
+        s.width() * SchematicCanvas::controlGridSize.width(),
+        s.height() * SchematicCanvas::controlGridSize.height()
     };
 }
 
@@ -125,14 +125,14 @@ void SchematicCanvas::updateConnecting(QPointF mousePos) {
         connectionSink->setPos(connectable->sink()->pos(), connectable->sink()->subPos());
     } else {
         connectionSink->setPos(
-                QPoint(
-                        (int) (mousePos.x() / SchematicCanvas::nodeGridSize.width()),
-                        (int) (mousePos.y() / SchematicCanvas::nodeGridSize.height())
-                ),
-                QPointF(
-                        mousePos.x() / SchematicCanvas::controlGridSize.width(),
-                        mousePos.y() / SchematicCanvas::controlGridSize.height()
-                )
+            QPoint(
+                (int) (mousePos.x() / SchematicCanvas::nodeGridSize.width()),
+                (int) (mousePos.y() / SchematicCanvas::nodeGridSize.height())
+            ),
+            QPointF(
+                mousePos.x() / SchematicCanvas::controlGridSize.width(),
+                mousePos.y() / SchematicCanvas::controlGridSize.height()
+            )
         );
     }
 }
@@ -168,8 +168,8 @@ void SchematicCanvas::addNode(AxiomModel::Node *node) {
 void SchematicCanvas::newNode(QPointF scenePos, QString name) {
     auto defaultSize = QSize(3, 2);
     auto targetPos = QPoint(
-            qRound((float) scenePos.x() / SchematicCanvas::nodeGridSize.width()),
-            qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height())
+        qRound((float) scenePos.x() / SchematicCanvas::nodeGridSize.width()),
+        qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height())
     );
 
     auto newNode = std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);

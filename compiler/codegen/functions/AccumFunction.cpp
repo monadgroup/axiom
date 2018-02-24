@@ -20,9 +20,9 @@ std::unique_ptr<AccumFunction> AccumFunction::create(MaximContext *context) {
 std::unique_ptr<Value> AccumFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                                llvm::Function *func, llvm::Module *module) {
-    auto xVal = dynamic_cast<Num*>(params[0].get());
-    auto gateVal = dynamic_cast<Num*>(params[1].get());
-    auto baseVal = dynamic_cast<Num*>(params[2].get());
+    auto xVal = dynamic_cast<Num *>(params[0].get());
+    auto gateVal = dynamic_cast<Num *>(params[1].get());
+    auto baseVal = dynamic_cast<Num *>(params[2].get());
 
     auto accumVec = b.CreateLoad(funcContext, "accum");
     auto incrementedVec = b.CreateFAdd(accumVec, xVal->vec(b), "accum.incr");
@@ -72,10 +72,10 @@ std::unique_ptr<Instantiable> AccumFunction::generateCall(std::vector<std::uniqu
     return std::make_unique<FunctionCall>();
 }
 
-llvm::Constant* AccumFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
+llvm::Constant *AccumFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
     return llvm::ConstantVector::getSplat(2, ctx->constFloat(0));
 }
 
-llvm::Type* AccumFunction::FunctionCall::type(MaximContext *ctx) const {
+llvm::Type *AccumFunction::FunctionCall::type(MaximContext *ctx) const {
     return ctx->numType()->vecType();
 }

@@ -4,6 +4,7 @@
 
 namespace AxiomModel {
     class Project;
+
     class Schematic;
 }
 

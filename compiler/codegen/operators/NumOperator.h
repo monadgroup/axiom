@@ -11,7 +11,9 @@ namespace MaximCodegen {
     public:
         NumOperator(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode);
 
-        std::unique_ptr<Value> call(Node *node, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos, SourcePos endPos) override;
+        std::unique_ptr<Value>
+        call(Node *node, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos,
+             SourcePos endPos) override;
 
         virtual std::unique_ptr<Num> call(Node *node, Num *leftNum, Num *rightNum) = 0;
 

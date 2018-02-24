@@ -16,7 +16,8 @@ Node::Node(MaximContext *ctx, llvm::Module *module) : InstantiableFunction(ctx, 
     auto undefPos = SourcePos(-1, -1);
     setVariable("PI", Num::create(ctx, M_PI, M_PI, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     setVariable("E", Num::create(ctx, M_E, M_E, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
-    setVariable("INFINITY", Num::create(ctx, FP_INFINITE, FP_INFINITE, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+    setVariable("INFINITY",
+                Num::create(ctx, FP_INFINITE, FP_INFINITE, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
 }
 
 void Node::generateCode(MaximAst::Block *block) {
@@ -65,12 +66,12 @@ void Node::setControl(Builder &b, MaximAst::ControlExpression *expr,
 }
 
 void Node::setAssignable(Builder &b, MaximAst::AssignableExpression *assignable, std::unique_ptr<Value> value) {
-    if (auto var = dynamic_cast<MaximAst::VariableExpression*>(assignable)) {
+    if (auto var = dynamic_cast<MaximAst::VariableExpression *>(assignable)) {
         setVariable(var->name, std::move(value));
         return;
     }
 
-    auto controlExpr = dynamic_cast<MaximAst::ControlExpression*>(assignable);
+    auto controlExpr = dynamic_cast<MaximAst::ControlExpression *>(assignable);
     assert(controlExpr);
     setControl(b, controlExpr, std::move(value));
 }
@@ -98,7 +99,10 @@ Node::ControlValue &Node::getControl(std::string name, MaximCommon::ControlType 
 
 std::unique_ptr<Control> Node::createControl(MaximCommon::ControlType type) {
     switch (type) {
-        case MaximCommon::ControlType::NUMBER: return NumberControl::create(ctx());
-        default: assert(false); throw;
+        case MaximCommon::ControlType::NUMBER:
+            return NumberControl::create(ctx());
+        default:
+            assert(false);
+            throw;
     }
 }

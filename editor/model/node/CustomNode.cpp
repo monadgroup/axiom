@@ -8,8 +8,8 @@
 using namespace AxiomModel;
 
 CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
-        : Node(parent, std::move(name), Type::CUSTOM, pos, size),
-          _runtime(parent->runtime()) {
+    : Node(parent, std::move(name), Type::CUSTOM, pos, size),
+      _runtime(parent->runtime()) {
     connect(&_runtime, &MaximRuntime::CustomNode::controlAdded,
             this, &CustomNode::controlAdded);
 

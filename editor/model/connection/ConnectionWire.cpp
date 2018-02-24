@@ -7,7 +7,7 @@
 using namespace AxiomModel;
 
 ConnectionWire::ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, ConnectionSink *sinkB)
-        : surface(surface), sinkA(sinkA), sinkB(sinkB), type(sinkA->type) {
+    : surface(surface), sinkA(sinkA), sinkB(sinkB), type(sinkA->type) {
     assert(sinkA->type == sinkB->type);
 
     connect(surface, &GridSurface::gridChanged,

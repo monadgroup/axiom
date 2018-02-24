@@ -6,12 +6,15 @@
 
 using namespace MaximCodegen;
 
-NumIntrinsicOperator::NumIntrinsicOperator(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id)
+NumIntrinsicOperator::NumIntrinsicOperator(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode,
+                                           llvm::Intrinsic::ID id)
     : NumOperator(context, type, activeMode), _id(id) {
 
 }
 
-std::unique_ptr<NumIntrinsicOperator> NumIntrinsicOperator::create(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id) {
+std::unique_ptr<NumIntrinsicOperator>
+NumIntrinsicOperator::create(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode,
+                             llvm::Intrinsic::ID id) {
     return std::make_unique<NumIntrinsicOperator>(context, type, activeMode, id);
 }
 

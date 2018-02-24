@@ -19,8 +19,8 @@ FloatingValueEditor::FloatingValueEditor(QString initialValue, QPointF scenePos)
     editor->setFocus();
 
     setPos(QPointF(
-            scenePos.x() + 30,
-            scenePos.y()
+        scenePos.x() + 30,
+        scenePos.y()
     ));
     setZValue(100);
 }

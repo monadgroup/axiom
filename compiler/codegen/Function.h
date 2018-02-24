@@ -121,7 +121,7 @@ namespace MaximCodegen {
 
         MaximContext *_context;
         Type *_returnType;
-        std::vector<llvm::Type*> _paramTypes;
+        std::vector<llvm::Type *> _paramTypes;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _vararg;
         llvm::Type *_vaType;
@@ -146,11 +146,13 @@ namespace MaximCodegen {
                               SourcePos startPos, SourcePos endPos);
 
         std::unique_ptr<Value>
-        callConst(Node *node, std::vector<std::unique_ptr<Value>> args, std::vector<std::unique_ptr<Value>> varargs, llvm::Module *module);
+        callConst(Node *node, std::vector<std::unique_ptr<Value>> args, std::vector<std::unique_ptr<Value>> varargs,
+                  llvm::Module *module);
 
         std::unique_ptr<Value>
         callNonConst(Node *node, std::vector<std::unique_ptr<Value>> allArgs, std::vector<std::unique_ptr<Value>> args,
-                     const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos, SourcePos endPos, llvm::Module *module);
+                     const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos, SourcePos endPos,
+                     llvm::Module *module);
 
         llvm::Function *createFuncForModule(llvm::Module *module);
     };

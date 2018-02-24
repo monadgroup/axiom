@@ -14,7 +14,7 @@ std::unique_ptr<InstantiableFunction> InstantiableFunction::create(MaximContext 
     return std::make_unique<InstantiableFunction>(ctx, module);
 }
 
-llvm::Function* InstantiableFunction::generateFunc(llvm::Module *module) {
+llvm::Function *InstantiableFunction::generateFunc(llvm::Module *module) {
     auto funcName = "generate." + std::to_string(id());
     auto existingFunc = module->getFunction(funcName);
     if (existingFunc) return existingFunc;
@@ -23,7 +23,7 @@ llvm::Function* InstantiableFunction::generateFunc(llvm::Module *module) {
     return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, module);
 }
 
-llvm::Function* InstantiableFunction::initializeFunc(llvm::Module *module) {
+llvm::Function *InstantiableFunction::initializeFunc(llvm::Module *module) {
     auto funcName = "initialize." + std::to_string(id());
     auto existingFunc = module->getFunction(funcName);
     if (existingFunc) return existingFunc;
@@ -32,13 +32,13 @@ llvm::Function* InstantiableFunction::initializeFunc(llvm::Module *module) {
     return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcName, module);
 }
 
-llvm::Value* InstantiableFunction::addInstantiable(std::unique_ptr<Instantiable> inst) {
+llvm::Value *InstantiableFunction::addInstantiable(std::unique_ptr<Instantiable> inst) {
     auto instPtr = inst.get();
     _ownedInstantiables.push_back(std::move(inst));
     return addInstantiable(instPtr);
 }
 
-llvm::Value* InstantiableFunction::addInstantiable(Instantiable *inst) {
+llvm::Value *InstantiableFunction::addInstantiable(Instantiable *inst) {
     auto index = _instantiables.size();
     _instTypes.push_back(inst->type(ctx()));
     _instantiables.push_back(inst);
@@ -49,8 +49,8 @@ llvm::Value* InstantiableFunction::addInstantiable(Instantiable *inst) {
     return _builder.CreateStructGEP(currentType, typedCtx, (unsigned int) index, "inst");
 }
 
-llvm::Value* InstantiableFunction::getInitializePointer(Instantiable *inst) {
-    std::vector<llvm::Value*> indexList;
+llvm::Value *InstantiableFunction::getInitializePointer(Instantiable *inst) {
+    std::vector<llvm::Value *> indexList;
     indexList.push_back(_ctx->constInt(64, 0, false));
     assert(getInstIndex(inst, indexList));
 
@@ -59,8 +59,8 @@ llvm::Value* InstantiableFunction::getInitializePointer(Instantiable *inst) {
     return _initBuilder.CreateGEP(typedCtx, indexList, "inst");
 }
 
-llvm::Value* InstantiableFunction::getGeneratePointer(Instantiable *inst) {
-    std::vector<llvm::Value*> indexList;
+llvm::Value *InstantiableFunction::getGeneratePointer(Instantiable *inst) {
+    std::vector<llvm::Value *> indexList;
     indexList.push_back(_ctx->constInt(64, 0, false));
     assert(getInstIndex(inst, indexList));
 
@@ -103,8 +103,8 @@ void InstantiableFunction::reset() {
     _initBuilder.SetInsertPoint(initBlock);
 }
 
-llvm::Constant* InstantiableFunction::getInitialVal(MaximContext *ctx) {
-    std::vector<llvm::Constant*> instValues;
+llvm::Constant *InstantiableFunction::getInitialVal(MaximContext *ctx) {
+    std::vector<llvm::Constant *> instValues;
     for (const auto &inst : _instantiables) {
         instValues.push_back(inst->getInitialVal(ctx));
     }
@@ -112,15 +112,16 @@ llvm::Constant* InstantiableFunction::getInitialVal(MaximContext *ctx) {
     return llvm::ConstantStruct::get(type(ctx), instValues);
 }
 
-llvm::StructType* InstantiableFunction::type(MaximContext *ctx) const {
+llvm::StructType *InstantiableFunction::type(MaximContext *ctx) const {
     return llvm::StructType::get(ctx->llvm(), _instTypes);
 }
 
-void InstantiableFunction::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) {
+void InstantiableFunction::initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr,
+                                         InstantiableFunction *func, Builder &b) {
     CreateCall(b, initializeFunc(module), {ptr}, "");
 }
 
-bool InstantiableFunction::getInstIndex(Instantiable *inst, std::vector<llvm::Value*> &indexes) {
+bool InstantiableFunction::getInstIndex(Instantiable *inst, std::vector<llvm::Value *> &indexes) {
     for (size_t i = 0; i < _instantiables.size(); i++) {
         if (_instantiables[i] == inst) {
             indexes.push_back(_ctx->constInt(32, i, false));
@@ -128,11 +129,11 @@ bool InstantiableFunction::getInstIndex(Instantiable *inst, std::vector<llvm::Va
         }
     }
 
-    std::vector<llvm::Value*> beforeIndexes(indexes);
+    std::vector<llvm::Value *> beforeIndexes(indexes);
 
     for (size_t i = 0; i < _instantiables.size(); i++) {
         auto indexedInst = _instantiables[i];
-        if (auto indexedInstFunc = dynamic_cast<InstantiableFunction*>(indexedInst)) {
+        if (auto indexedInstFunc = dynamic_cast<InstantiableFunction *>(indexedInst)) {
             indexes = beforeIndexes;
             indexes.push_back(_ctx->constInt(32, i, false));
             if (indexedInstFunc->getInstIndex(inst, indexes)) return true;

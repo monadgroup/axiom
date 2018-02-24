@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 NumFloatOperator::NumFloatOperator(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode,
-                                         llvm::Instruction::BinaryOps op)
+                                   llvm::Instruction::BinaryOps op)
     : NumOperator(context, type, activeMode), _op(op) {
 }
 

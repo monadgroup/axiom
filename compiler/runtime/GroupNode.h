@@ -10,7 +10,7 @@ namespace MaximRuntime {
     class SoftControl;
 
     class GroupNode : public QObject, public Node {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         explicit GroupNode(Schematic *parent);

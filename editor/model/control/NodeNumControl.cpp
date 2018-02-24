@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iomanip>
 #include "NodeNumControl.h"
 
 #include "../node/NodeSurface.h"
@@ -11,7 +10,7 @@
 using namespace AxiomModel;
 
 NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-        : NodeControl(node, runtime, pos, size), m_sink(runtime) {
+    : NodeControl(node, runtime, pos, size), m_sink(runtime) {
     initSink();
 
     connect(&m_sink, &NumConnectionSink::valueChanged,

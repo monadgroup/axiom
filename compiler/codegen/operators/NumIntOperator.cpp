@@ -24,12 +24,16 @@ std::unique_ptr<Num> NumIntOperator::call(Node *node, Num *numLeft, Num *numRigh
 
     auto operatedInt = b.CreateBinOp(
         _op,
-        _isSigned ? b.CreateFPToSI(numLeft->vec(b), intVec, "left.int") : b.CreateFPToUI(numLeft->vec(b), intVec, "left.int"),
-        _isSigned ? b.CreateFPToSI(numRight->vec(b), intVec, "right.int") : b.CreateFPToUI(numRight->vec(b), intVec, "right.int"),
+        _isSigned ? b.CreateFPToSI(numLeft->vec(b), intVec, "left.int") : b.CreateFPToUI(numLeft->vec(b), intVec,
+                                                                                         "left.int"),
+        _isSigned ? b.CreateFPToSI(numRight->vec(b), intVec, "right.int") : b.CreateFPToUI(numRight->vec(b), intVec,
+                                                                                           "right.int"),
         "op.ivec"
     );
     auto isActive = getActive(b, numLeft, numRight);
-    auto operatedFloat = _isSigned ? b.CreateSIToFP(operatedInt, floatVec, "op.vec") : b.CreateUIToFP(operatedInt, floatVec, "op.vec");
+    auto operatedFloat = _isSigned ? b.CreateSIToFP(operatedInt, floatVec, "op.vec") : b.CreateUIToFP(operatedInt,
+                                                                                                      floatVec,
+                                                                                                      "op.vec");
 
     auto undefPos = SourcePos(-1, -1);
     return numLeft->withVec(b, operatedFloat, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);

@@ -12,7 +12,7 @@ namespace AxiomModel {
     class OutputNode;
 
     class NodeOutputControl : public NodeControl {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
 

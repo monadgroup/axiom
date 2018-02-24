@@ -67,14 +67,15 @@ struct ControlUpdateVal {
     bool isUsed;
     bool isNew;
 
-    ControlUpdateVal(std::unique_ptr<HardControl> control, bool isUsed, bool isNew) : control(std::move(control)), isUsed(isUsed), isNew(isNew) { }
+    ControlUpdateVal(std::unique_ptr<HardControl> control, bool isUsed, bool isNew) : control(std::move(control)),
+                                                                                      isUsed(isUsed), isNew(isNew) {}
 };
 
 void CustomNode::updateControls() {
     // create index of controls that currently exist, to find which are no longer used
     std::unordered_map<MaximCodegen::ControlKey, ControlUpdateVal> currentControls;
     for (auto &control : _controls) {
-        MaximCodegen::ControlKey key { control->name(), control->type() };
+        MaximCodegen::ControlKey key{control->name(), control->type()};
         ControlUpdateVal updateVal(std::move(control), false, false);
         currentControls.emplace(key, std::move(updateVal));
     }
@@ -99,7 +100,7 @@ void CustomNode::updateControls() {
         }
     }
 
-    std::vector<HardControl*> newControls;
+    std::vector<HardControl *> newControls;
 
     // update controls list, remove old controls
     for (auto &control : currentControls) {

@@ -18,7 +18,8 @@ void CompileLeaf::updateGetter(llvm::Module *module) {
     auto selfContextType = inst()->type(_runtime->context());
     auto parentContextType = parentInt->type(_runtime->context());
     getValueFunction = llvm::Function::Create(
-        llvm::FunctionType::get(llvm::PointerType::get(selfContextType, 0), {llvm::PointerType::get(parentContextType, 0)}, false),
+        llvm::FunctionType::get(llvm::PointerType::get(selfContextType, 0),
+                                {llvm::PointerType::get(parentContextType, 0)}, false),
         llvm::Function::LinkageTypes::ExternalLinkage, "getvalue." + std::to_string(inst()->id()), module
     );
     auto getValueBlock = llvm::BasicBlock::Create(_runtime->context()->llvm(), "entry", getValueFunction);
@@ -41,7 +42,7 @@ void CompileLeaf::deploy() {
     }
 }
 
-void* CompileLeaf::getValuePtr(void *parentCtx) {
+void *CompileLeaf::getValuePtr(void *parentCtx) {
     if (_getValuePtr == nullptr || parentCtx == nullptr) return nullptr;
     return _getValuePtr(parentCtx);
 }
@@ -52,6 +53,6 @@ void *CompileLeaf::updateCurrentPtr(void *parentCtx) {
     return currentPtr();
 }
 
-void* CompileLeaf::currentPtr() const {
+void *CompileLeaf::currentPtr() const {
     return _currentPtr;
 }

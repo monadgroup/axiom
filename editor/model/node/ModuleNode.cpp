@@ -6,8 +6,8 @@
 using namespace AxiomModel;
 
 ModuleNode::ModuleNode(Schematic *parent, QString name, QPoint pos, QSize size)
-        : Node(parent, std::move(name), Type::GROUP, pos, size),
-          schematic(std::make_unique<ModuleSchematic>(this)), _runtime(parent->runtime()) {
+    : Node(parent, std::move(name), Type::GROUP, pos, size),
+      schematic(std::make_unique<ModuleSchematic>(this)), _runtime(parent->runtime()) {
     connect(this, &ModuleNode::removed,
             schematic.get(), &ModuleSchematic::removed);
 

@@ -44,7 +44,7 @@ static QRectF flip(QRectF a, bool yes) {
 }
 
 NumControl::NumControl(NodeNumControl *control, SchematicCanvas *canvas)
-        : ControlItem(control, canvas), control(control) {
+    : ControlItem(control, canvas), control(control) {
     setAcceptHoverEvents(true);
 
     connect(control, &NodeNumControl::valueChanged,
@@ -83,25 +83,25 @@ QRectF NumControl::aspectBoundingRect() const {
     auto bound = drawBoundingRect();
     if (bound.size().width() > bound.size().height()) {
         return {
-                QPointF(
-                        bound.topLeft().x() + bound.size().width() / 2 - bound.size().height() / 2,
-                        bound.topLeft().y()
-                ),
-                QSizeF(
-                        bound.size().height(),
-                        bound.size().height()
-                )
+            QPointF(
+                bound.topLeft().x() + bound.size().width() / 2 - bound.size().height() / 2,
+                bound.topLeft().y()
+            ),
+            QSizeF(
+                bound.size().height(),
+                bound.size().height()
+            )
         };
     } else {
         return {
-                QPointF(
-                        bound.topLeft().x(),
-                        bound.topLeft().y() + bound.size().height() / 2 - bound.size().width() / 2
-                ),
-                QSizeF(
-                        bound.size().width(),
-                        bound.size().width()
-                )
+            QPointF(
+                bound.topLeft().x(),
+                bound.topLeft().y() + bound.size().height() / 2 - bound.size().width() / 2
+            ),
+            QSizeF(
+                bound.size().width(),
+                bound.size().width()
+            )
         };
     }
 }
@@ -161,11 +161,16 @@ void NumControl::setHoverState(float newHoverState) {
 
 QRectF NumControl::useBoundingRect() const {
     switch (control->mode()) {
-        case NodeNumControl::Mode::PLUG: return getPlugBounds();
-        case NodeNumControl::Mode::KNOB: return getKnobBounds();
-        case NodeNumControl::Mode::SLIDER_H: return getSliderBounds(false);
-        case NodeNumControl::Mode::SLIDER_V: return getSliderBounds(true);
-        case NodeNumControl::Mode::TOGGLE: return getToggleBounds();
+        case NodeNumControl::Mode::PLUG:
+            return getPlugBounds();
+        case NodeNumControl::Mode::KNOB:
+            return getKnobBounds();
+        case NodeNumControl::Mode::SLIDER_H:
+            return getSliderBounds(false);
+        case NodeNumControl::Mode::SLIDER_V:
+            return getSliderBounds(true);
+        case NodeNumControl::Mode::TOGGLE:
+            return getToggleBounds();
     }
 }
 
@@ -379,7 +384,7 @@ void NumControl::paintKnob(QPainter *painter) {
     auto scaledThickness = (0.06f + 0.04f * m_hoverState) * aspectWidth;
     auto outerBr = getKnobBounds();
     auto ringBr = outerBr.marginsRemoved(
-            QMarginsF(scaledThickness / 2, scaledThickness / 2, scaledThickness / 2, scaledThickness / 2));
+        QMarginsF(scaledThickness / 2, scaledThickness / 2, scaledThickness / 2, scaledThickness / 2));
 
     auto startAngle = 240 * 16;
     auto completeAngle = -300 * 16;
@@ -397,9 +402,10 @@ void NumControl::paintKnob(QPainter *painter) {
     painter->setPen(Qt::NoPen);
     if (!control->sink()->connections().empty()) {
         auto activeBorderThickness = 0.02 * aspectWidth;
-        painter->setBrush(QBrush(AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
+        painter->setBrush(QBrush(
+            AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
         painter->drawEllipse(outerBr.marginsAdded(
-                QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
+            QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
     }
 
     painter->setBrush(QBrush(QColor(30, 30, 30)));
@@ -424,8 +430,8 @@ void NumControl::paintKnob(QPainter *painter) {
 
         auto markerAngle = startAngle / 2880. * M_PI + markerVal * completeAngle / 2880. * M_PI;
         auto markerP = centerP + QPointF(
-                outerBr.width() / 2 * std::cos(markerAngle),
-                -outerBr.height() / 2 * std::sin(markerAngle)
+            outerBr.width() / 2 * std::cos(markerAngle),
+            -outerBr.height() / 2 * std::sin(markerAngle)
         );
         painter->drawLine((centerP + 2 * markerP) / 3, (centerP + 10 * markerP) / 11);
     }
@@ -443,7 +449,7 @@ void NumControl::paintKnob(QPainter *painter) {
     pen.setColor(darkerCurrent);
     painter->setPen(pen);
     painter->drawArc(ringBr, startAngle + completeAngle * minVal,
-                             completeAngle * maxVal - completeAngle * minVal);
+                     completeAngle * maxVal - completeAngle * minVal);
 
     // draw min ring
     pen.setColor(currentColor);
@@ -468,11 +474,12 @@ void NumControl::paintSlider(QPainter *painter, bool vertical) {
     painter->setPen(Qt::NoPen);
     if (!control->sink()->connections().empty()) {
         auto activeBorderThickness = 0.04 * br.height();
-        painter->setBrush(QBrush(AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
+        painter->setBrush(QBrush(
+            AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
         painter->drawRect(flip(
-                br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness,
-                                          activeBorderThickness)),
-                vertical
+            br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness,
+                                      activeBorderThickness)),
+            vertical
         ));
     }
 
@@ -499,8 +506,8 @@ void NumControl::paintSlider(QPainter *painter, bool vertical) {
         if (i % 2 == 0) shiftAmt = 2;
         if (i == 0 || i == markerCount || i == markerCount / 2) shiftAmt = 1.5;
         painter->drawLine(
-                flip(QPointF(markerX, br.y() + 1), vertical),
-                flip(QPointF(markerX, br.y() + br.height() / shiftAmt), vertical)
+            flip(QPointF(markerX, br.y() + 1), vertical),
+            flip(QPointF(markerX, br.y() + br.height() / shiftAmt), vertical)
         );
     }
 
@@ -518,8 +525,8 @@ void NumControl::paintSlider(QPainter *painter, bool vertical) {
     pen.setCapStyle(Qt::FlatCap);
     painter->setPen(pen);
     painter->drawLine(
-            flip(maxPos, vertical),
-            flip(rightPos, vertical)
+        flip(maxPos, vertical),
+        flip(rightPos, vertical)
     );
 
     // draw max bar
@@ -534,8 +541,8 @@ void NumControl::paintSlider(QPainter *painter, bool vertical) {
     pen.setColor(currentColor);
     painter->setPen(pen);
     painter->drawLine(
-            flip(leftPos, vertical),
-            flip(minPos, vertical)
+        flip(leftPos, vertical),
+        flip(minPos, vertical)
     );
 }
 
@@ -570,7 +577,8 @@ void NumControl::paintToggle(QPainter *painter) {
 
     painter->setPen(Qt::NoPen);
 
-    auto activeAlpha = QColor(CommonColors::controlActive.red(), CommonColors::controlActive.green(), CommonColors::controlActive.blue(), (int) (brightness * 255));
+    auto activeAlpha = QColor(CommonColors::controlActive.red(), CommonColors::controlActive.green(),
+                              CommonColors::controlActive.blue(), (int) (brightness * 255));
     auto glowRadius = lightRadius * 2;
     QRadialGradient gradient(lightPos, glowRadius);
     gradient.setColorAt(0, activeAlpha);
@@ -585,8 +593,10 @@ void NumControl::paintToggle(QPainter *painter) {
 
 QString NumControl::valueAsString(MaximRuntime::NumValue num) {
     switch (control->channel()) {
-        case NodeNumControl::Channel::LEFT: return QString::number(num.left);
-        case NodeNumControl::Channel::RIGHT: return QString::number(num.right);
+        case NodeNumControl::Channel::LEFT:
+            return QString::number(num.left);
+        case NodeNumControl::Channel::RIGHT:
+            return QString::number(num.right);
         case NodeNumControl::Channel::BOTH: {
             if (num.left == num.right) return QString::number(num.left);
             else return QString::number(num.left) + ", " + QString::number(num.right);
@@ -604,25 +614,34 @@ MaximRuntime::NumValue NumControl::stringAsValue(const QString &str, MaximRuntim
     if (!AxiomUtil::strToFloat(str, rightNum)) rightNum = oldNum.right;
 
     switch (control->channel()) {
-        case NodeNumControl::Channel::LEFT: return oldNum.withL(leftNum);
-        case NodeNumControl::Channel::RIGHT: return oldNum.withR(rightNum);
-        case NodeNumControl::Channel::BOTH: return oldNum.withLR(leftNum, rightNum);
+        case NodeNumControl::Channel::LEFT:
+            return oldNum.withL(leftNum);
+        case NodeNumControl::Channel::RIGHT:
+            return oldNum.withR(rightNum);
+        case NodeNumControl::Channel::BOTH:
+            return oldNum.withLR(leftNum, rightNum);
     }
 }
 
 MaximRuntime::NumValue NumControl::getCVal() const {
     auto v = control->value();
     switch (control->channel()) {
-        case NodeNumControl::Channel::LEFT: return v.withLR(v.left, v.left);
-        case NodeNumControl::Channel::RIGHT: return v.withLR(v.right, v.right);
-        case NodeNumControl::Channel::BOTH: return v;
+        case NodeNumControl::Channel::LEFT:
+            return v.withLR(v.left, v.left);
+        case NodeNumControl::Channel::RIGHT:
+            return v.withLR(v.right, v.right);
+        case NodeNumControl::Channel::BOTH:
+            return v;
     }
 }
 
 void NumControl::setCVal(MaximRuntime::NumValue v) const {
     switch (control->channel()) {
-        case NodeNumControl::Channel::LEFT: control->setValue(control->value().withL(v.left));
-        case NodeNumControl::Channel::RIGHT: control->setValue(control->value().withR(v.right));
-        case NodeNumControl::Channel::BOTH: control->setValue(control->value().withLR(v.left, v.right));
+        case NodeNumControl::Channel::LEFT:
+            control->setValue(control->value().withL(v.left));
+        case NodeNumControl::Channel::RIGHT:
+            control->setValue(control->value().withR(v.right));
+        case NodeNumControl::Channel::BOTH:
+            control->setValue(control->value().withLR(v.left, v.right));
     }
 }

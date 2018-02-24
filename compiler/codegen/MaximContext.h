@@ -26,7 +26,8 @@ namespace MaximCodegen {
 }
 
 namespace std {
-    template<> struct hash<MaximCodegen::OperatorKey> {
+    template<>
+    struct hash<MaximCodegen::OperatorKey> {
         size_t operator()(const MaximCodegen::OperatorKey &x) const {
             return (size_t) x.type ^ ((size_t) x.leftType) ^ ((size_t) x.rightType);
         }
@@ -153,7 +154,8 @@ namespace MaximCodegen {
         std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);
 
         MaximCommon::CompileError
-        typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos, SourcePos endPos) const;
+        typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos,
+                         SourcePos endPos) const;
 
         Operator *alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType, SourcePos startPos,
                                     SourcePos endPos);

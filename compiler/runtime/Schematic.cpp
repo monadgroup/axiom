@@ -68,7 +68,7 @@ void Schematic::removeNode(Node *node) {
     scheduleCompile();
 }
 
-void* Schematic::updateCurrentPtr(void *parentCtx) {
+void *Schematic::updateCurrentPtr(void *parentCtx) {
     auto ptr = CompileLeaf::updateCurrentPtr(parentCtx);
 
     for (const auto &node : _nodes) {

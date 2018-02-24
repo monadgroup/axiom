@@ -8,7 +8,7 @@
 using namespace AxiomGui;
 
 SchematicPanel::SchematicPanel(MainWindow *window, AxiomModel::Schematic *schematic)
-        : DockPanel(schematic->name()), window(window) {
+    : DockPanel(schematic->name()), window(window) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/SchematicPanel.qss"));
 
     connect(schematic, &AxiomModel::Schematic::removed,

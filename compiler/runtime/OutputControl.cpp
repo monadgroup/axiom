@@ -9,10 +9,10 @@ OutputControl::OutputControl(OutputNode *node) : Control(node, "output", MaximCo
 
 }
 
-llvm::Constant* OutputControl::getInitialVal(MaximCodegen::MaximContext *ctx) {
+llvm::Constant *OutputControl::getInitialVal(MaximCodegen::MaximContext *ctx) {
     return llvm::UndefValue::get(type(ctx));
 }
 
-llvm::Type* OutputControl::type(MaximCodegen::MaximContext *ctx) const {
+llvm::Type *OutputControl::type(MaximCodegen::MaximContext *ctx) const {
     return llvm::PointerType::get(ctx->numType()->get(), 0);
 }

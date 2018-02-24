@@ -10,7 +10,9 @@
 
 namespace MaximAst {
     class AssignableExpression;
+
     class ControlExpression;
+
     class Block;
 }
 
@@ -26,10 +28,11 @@ namespace MaximCodegen {
 }
 
 namespace std {
-    template<> struct hash<MaximCodegen::ControlKey> {
+    template<>
+    struct hash<MaximCodegen::ControlKey> {
         size_t operator()(const MaximCodegen::ControlKey &x) const {
             std::hash<std::string> h;
-            return h(x.name) ^ (size_t)x.type;
+            return h(x.name) ^ (size_t) x.type;
         }
     };
 }
@@ -73,6 +76,7 @@ namespace MaximCodegen {
         std::unordered_map<ControlKey, ControlValue> _controls;
 
         ControlValue &getControl(std::string name, MaximCommon::ControlType type, Builder &b);
+
         std::unique_ptr<Control> createControl(MaximCommon::ControlType type);
     };
 

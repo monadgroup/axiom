@@ -30,7 +30,7 @@ namespace MaximRuntime {
 
         void *updateCurrentPtr(void *parentCtx) override;
 
-        std::set<Node*> &nodes() { return _nodes; }
+        std::set<Node *> &nodes() { return _nodes; }
 
         void addControlGroup(std::unique_ptr<ControlGroup> group);
 
@@ -41,7 +41,7 @@ namespace MaximRuntime {
 
         CompileUnit *_parentUnit;
 
-        std::set<Node*> _nodes;
+        std::set<Node *> _nodes;
 
         std::vector<std::unique_ptr<ControlGroup>> _controlGroups;
     };

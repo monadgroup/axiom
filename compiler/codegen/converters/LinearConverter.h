@@ -12,7 +12,8 @@ namespace MaximCodegen {
 
         void generate(llvm::Module *module) override;
 
-        std::unique_ptr<Num> call(Node *node, std::unique_ptr<Num> value, SourcePos startPos, SourcePos endPos) override;
+        std::unique_ptr<Num>
+        call(Node *node, std::unique_ptr<Num> value, SourcePos startPos, SourcePos endPos) override;
     };
 
 }

@@ -1,7 +1,5 @@
 #include "MaximContext.h"
 
-#include <llvm/IR/Constants.h>
-
 #include "Num.h"
 #include "Midi.h"
 #include "Tuple.h"
@@ -109,23 +107,42 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout
     registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::maxnum, "max"));
 
     /// REGISTER OPERATORS
-    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::ADD, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FAdd));
-    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::SUBTRACT, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::FSub));
-    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MULTIPLY, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FMul));
-    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::DIVIDE, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FDiv));
-    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MODULO, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::FRem));
-    registerOperator(NumIntrinsicOperator::create(this, MaximCommon::OperatorType::POWER, ActiveMode::FIRST_INPUT, llvm::Intrinsic::ID::pow));
-    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_AND, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::And, true));
-    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_OR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Or, true));
-    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_XOR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Xor, true));
-    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_EQUAL, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OEQ));
-    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_NOT_EQUAL, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_ONE));
-    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_GT, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OGT));
-    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LT, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OLT));
-    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_GTE, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OGE));
-    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LTE, ActiveMode::ANY_INPUT, llvm::CmpInst::Predicate::FCMP_OLE));
-    registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_AND, ActiveMode::ALL_INPUTS, llvm::Instruction::BinaryOps::And));
-    registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_OR, ActiveMode::ANY_INPUT, llvm::Instruction::BinaryOps::Or));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::ADD, ActiveMode::ANY_INPUT,
+                                              llvm::Instruction::BinaryOps::FAdd));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::SUBTRACT, ActiveMode::ANY_INPUT,
+                                              llvm::Instruction::BinaryOps::FSub));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MULTIPLY, ActiveMode::ALL_INPUTS,
+                                              llvm::Instruction::BinaryOps::FMul));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::DIVIDE, ActiveMode::ALL_INPUTS,
+                                              llvm::Instruction::BinaryOps::FDiv));
+    registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::MODULO, ActiveMode::ALL_INPUTS,
+                                              llvm::Instruction::BinaryOps::FRem));
+    registerOperator(NumIntrinsicOperator::create(this, MaximCommon::OperatorType::POWER, ActiveMode::FIRST_INPUT,
+                                                  llvm::Intrinsic::ID::pow));
+    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_AND, ActiveMode::ANY_INPUT,
+                                            llvm::Instruction::BinaryOps::And, true));
+    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_OR, ActiveMode::ANY_INPUT,
+                                            llvm::Instruction::BinaryOps::Or, true));
+    registerOperator(NumIntOperator::create(this, MaximCommon::OperatorType::BITWISE_XOR, ActiveMode::ANY_INPUT,
+                                            llvm::Instruction::BinaryOps::Xor, true));
+    registerOperator(
+        NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_EQUAL, ActiveMode::ANY_INPUT,
+                                      llvm::CmpInst::Predicate::FCMP_OEQ));
+    registerOperator(
+        NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_NOT_EQUAL, ActiveMode::ANY_INPUT,
+                                      llvm::CmpInst::Predicate::FCMP_ONE));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_GT, ActiveMode::ANY_INPUT,
+                                                   llvm::CmpInst::Predicate::FCMP_OGT));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LT, ActiveMode::ANY_INPUT,
+                                                   llvm::CmpInst::Predicate::FCMP_OLT));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_GTE, ActiveMode::ANY_INPUT,
+                                                   llvm::CmpInst::Predicate::FCMP_OGE));
+    registerOperator(NumComparisonOperator::create(this, MaximCommon::OperatorType::LOGICAL_LTE, ActiveMode::ANY_INPUT,
+                                                   llvm::CmpInst::Predicate::FCMP_OLE));
+    registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_AND, ActiveMode::ALL_INPUTS,
+                                                llvm::Instruction::BinaryOps::And));
+    registerOperator(NumLogicalOperator::create(this, MaximCommon::OperatorType::LOGICAL_OR, ActiveMode::ANY_INPUT,
+                                                llvm::Instruction::BinaryOps::Or));
 
     /// REGISTER CONVERTERS
     registerConverter(BeatsConverter::create(this));
@@ -136,11 +153,11 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout
     registerConverter(SecondsConverter::create(this));
 }
 
-llvm::Value* MaximContext::beatsPerSecond() const {
+llvm::Value *MaximContext::beatsPerSecond() const {
     return llvm::UndefValue::get(llvm::PointerType::get(numType()->vecType(), 0));
 }
 
-llvm::Type* MaximContext::voidPointerType() {
+llvm::Type *MaximContext::voidPointerType() {
     return llvm::PointerType::get(llvm::Type::getInt1Ty(_llvm), 0);
 }
 
@@ -203,7 +220,7 @@ TupleType *MaximContext::getTupleType(const std::vector<Type *> &types) {
     }
 }
 
-ArrayType* MaximContext::getArrayType(Type *baseType) {
+ArrayType *MaximContext::getArrayType(Type *baseType) {
     auto arrayType = llvm::ArrayType::get(baseType->get(), ArrayType::arraySize);
     auto mapIndex = arrayTypeMap.find(arrayType);
 
@@ -327,7 +344,8 @@ MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<
 
     auto func = getFunction(name, types);
     if (!func) {
-        throw MaximCommon::CompileError("WHAT IS THIS?\?!?! " + name + " is def not a valid function :(", startPos, endPos);
+        throw MaximCommon::CompileError("WHAT IS THIS?\?!?! " + name + " is def not a valid function :(", startPos,
+                                        endPos);
     }
     return func->call(node, std::move(values), startPos, endPos);
 }
@@ -358,10 +376,10 @@ void MaximContext::buildFunctions(llvm::Module *module) {
 }
 
 uint64_t MaximContext::secondsToSamples(float seconds) {
-    return (uint64_t)(seconds * sampleRate);
+    return (uint64_t) (seconds * sampleRate);
 }
 
-llvm::Value* MaximContext::secondsToSamples(llvm::Value *seconds, Builder &b) {
+llvm::Value *MaximContext::secondsToSamples(llvm::Value *seconds, Builder &b) {
     llvm::Constant *sampleRateConst = constFloat(sampleRate);
     llvm::Type *castType = llvm::Type::getInt64Ty(_llvm);
     if (seconds->getType()->isVectorTy()) {
@@ -382,8 +400,9 @@ std::vector<std::unique_ptr<Function>> &MaximContext::getOrCreateFunctionList(st
     }
 }
 
-MaximCommon::CompileError MaximContext::typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos,
-                                            SourcePos endPos) const {
+MaximCommon::CompileError
+MaximContext::typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos,
+                               SourcePos endPos) const {
     return MaximCommon::CompileError(
         "Oyyyy m80, I need a " + expectedType->name() + " here, not this bad boi " + receivedType->name(), startPos,
         endPos);
@@ -394,7 +413,8 @@ MaximContext::alwaysGetOperator(MaximCommon::OperatorType type, Type *leftType, 
                                 SourcePos endPos) {
     auto op = getOperator(type, leftType, rightType);
     if (!op) {
-        throw MaximCommon::CompileError("WHAT IS THIS?\?!?! This operator doesn't work on these types of values.", startPos, endPos);
+        throw MaximCommon::CompileError("WHAT IS THIS?\?!?! This operator doesn't work on these types of values.",
+                                        startPos, endPos);
     }
     return op;
 }

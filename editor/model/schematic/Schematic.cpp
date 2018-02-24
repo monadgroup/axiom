@@ -52,7 +52,7 @@ ModuleNode *Schematic::groupSelection() {
     // calculate center point for all items
     for (const auto &gridItem : selectedItems()) {
         summedPoints =
-                summedPoints + gridItem->pos() + QPoint(gridItem->size().width() / 2, gridItem->size().height() / 2);
+            summedPoints + gridItem->pos() + QPoint(gridItem->size().width() / 2, gridItem->size().height() / 2);
     }
     QPoint centerPoint = summedPoints / selectedItems().size();
 

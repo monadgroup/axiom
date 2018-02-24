@@ -1,10 +1,7 @@
 #include "OutputNode.h"
 
-#include <cassert>
-
 #include "../schematic/Schematic.h"
 #include "../control/NodeOutputControl.h"
-#include "compiler/runtime/OutputNode.h"
 
 #include "../schematic/RootSchematic.h"
 

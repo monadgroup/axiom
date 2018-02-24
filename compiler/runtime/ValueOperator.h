@@ -23,15 +23,15 @@ namespace MaximRuntime {
         }
 
         NumValue withLR(float l, float r) const {
-            return { l, r, form, active };
+            return {l, r, form, active};
         }
 
         NumValue withL(float l) const {
-            return { l, right, form, active };
+            return {l, right, form, active};
         }
 
         NumValue withR(float r) const {
-            return { left, r, form, active };
+            return {left, r, form, active};
         }
     };
 

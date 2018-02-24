@@ -28,7 +28,8 @@ namespace MaximCodegen {
 
         llvm::Constant *getInitialVal(MaximContext *ctx) override;
 
-        void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) override;
+        void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func,
+                           Builder &b) override;
 
     protected:
         MaximContext *context() const { return _context; }

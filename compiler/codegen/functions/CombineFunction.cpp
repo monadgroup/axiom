@@ -19,8 +19,8 @@ std::unique_ptr<CombineFunction> CombineFunction::create(MaximContext *context) 
 std::unique_ptr<Value> CombineFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                  std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                                  llvm::Function *func, llvm::Module *module) {
-    auto leftNum = dynamic_cast<Num*>(params[0].get());
-    auto rightNum = dynamic_cast<Num*>(params[1].get());
+    auto leftNum = dynamic_cast<Num *>(params[0].get());
+    auto rightNum = dynamic_cast<Num *>(params[1].get());
     assert(leftNum && rightNum);
 
     auto newVec = b.CreateShuffleVector(

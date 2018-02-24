@@ -1,8 +1,6 @@
 #include "Runtime.h"
 
 #include "ControlGroup.h"
-#include "OutputNode.h"
-#include "OutputControl.h"
 #include "../codegen/Operator.h"
 #include "../codegen/Converter.h"
 #include "../codegen/Function.h"
@@ -14,7 +12,8 @@ static const std::string generateFuncName = "generate";
 static const std::string globalCtxName = "globalCtx";
 static const std::string outputName = "output";
 
-Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context), _mainSchematic(this), _module("controller", _context.llvm()) {
+Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context), _mainSchematic(this),
+                     _module("controller", _context.llvm()) {
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
     libModule->setDataLayout(_jit.dataLayout());
     _context.buildFunctions(libModule.get());
@@ -75,8 +74,8 @@ void Runtime::compileAndDeploy() {
     _isDeployed = true;
 
     // update pointers for things that need to be accessed
-    auto initFuncPtr = (void (*) ()) _jit.getSymbolAddress(initFunc);
-    _generateFuncPtr = (void (*) ()) _jit.getSymbolAddress(generateFunc);
+    auto initFuncPtr = (void (*)()) _jit.getSymbolAddress(initFunc);
+    _generateFuncPtr = (void (*)()) _jit.getSymbolAddress(generateFunc);
     assert(initFuncPtr);
     assert(_generateFuncPtr);
 
@@ -85,7 +84,7 @@ void Runtime::compileAndDeploy() {
 
     // note: address of ctxGlobal _can_ be null, if it's empty - this isn't a problem, since there should be
     // nothing trying to read it
-    _mainSchematic.updateCurrentPtr((void*) _jit.getSymbolAddress(ctxGlobal));
+    _mainSchematic.updateCurrentPtr((void *) _jit.getSymbolAddress(ctxGlobal));
 
     unlock();
 }

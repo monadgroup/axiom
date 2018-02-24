@@ -1,9 +1,5 @@
 #include "PanFunction.h"
 
-#include <llvm/IR/Intrinsics.h>
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/Instruction.h>
-
 #include "../MaximContext.h"
 #include "../Num.h"
 
@@ -24,11 +20,13 @@ std::unique_ptr<PanFunction> PanFunction::create(MaximContext *context) {
 std::unique_ptr<Value> PanFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                              std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                              llvm::Function *func, llvm::Module *module) {
-    auto minIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::minnum, {context()->numType()->vecType()});
-    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::maxnum, {context()->numType()->vecType()});
+    auto minIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::minnum,
+                                                        {context()->numType()->vecType()});
+    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::maxnum,
+                                                        {context()->numType()->vecType()});
 
-    auto xNum = dynamic_cast<Num*>(params[0].get());
-    auto panNum = dynamic_cast<Num*>(params[1].get());
+    auto xNum = dynamic_cast<Num *>(params[0].get());
+    auto panNum = dynamic_cast<Num *>(params[1].get());
     assert(xNum && panNum);
 
     auto zeroFloat = context()->constFloat(0);
@@ -53,7 +51,8 @@ std::unique_ptr<Value> PanFunction::generate(Builder &b, std::vector<std::unique
     );
 
     // put values back into vector
-    auto amplitudeVec = b.CreateInsertElement(llvm::UndefValue::get(context()->numType()->vecType()), leftAmplitude, (uint64_t) 0, "amplitude");
+    auto amplitudeVec = b.CreateInsertElement(llvm::UndefValue::get(context()->numType()->vecType()), leftAmplitude,
+                                              (uint64_t) 0, "amplitude");
     amplitudeVec = b.CreateInsertElement(amplitudeVec, rightAmplitude, (uint64_t) 1, "amplitude");
 
     // clamp to [0, 1] range

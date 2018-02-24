@@ -46,7 +46,7 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
 }
 
 QRectF CustomNodePanel::boundingRect() const {
-    QRectF rect = { QPointF(0, 0), SchematicCanvas::nodeRealSize(node->size()) + QSizeF(1, node->panelHeight()) };
+    QRectF rect = {QPointF(0, 0), SchematicCanvas::nodeRealSize(node->size()) + QSizeF(1, node->panelHeight())};
     return rect.marginsAdded(QMarginsF(5, 5, 5, 5));
 }
 
@@ -94,7 +94,7 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
         } else if (event->type() == QEvent::FocusIn) {
             node->parentSurface->deselectAll();
         } else if (event->type() == QEvent::KeyPress) {
-            auto keyEvent = (QKeyEvent*) event;
+            auto keyEvent = (QKeyEvent *) event;
             if (keyEvent->key() == Qt::Key_Escape) {
                 node->setPanelOpen(false);
             }

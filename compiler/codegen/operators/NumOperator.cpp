@@ -9,9 +9,11 @@ NumOperator::NumOperator(MaximContext *context, MaximCommon::OperatorType type, 
     : Operator(context, type, context->numType(), context->numType()), _activeMode(activeMode) {
 }
 
-std::unique_ptr<Value> NumOperator::call(Node *node, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos, SourcePos endPos) {
-    auto leftNum = dynamic_cast<Num*>(left.get());
-    auto rightNum = dynamic_cast<Num*>(right.get());
+std::unique_ptr<Value>
+NumOperator::call(Node *node, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos,
+                  SourcePos endPos) {
+    auto leftNum = dynamic_cast<Num *>(left.get());
+    auto rightNum = dynamic_cast<Num *>(right.get());
     assert(leftNum && rightNum);
 
     return call(node, leftNum, rightNum)->withSource(startPos, endPos);

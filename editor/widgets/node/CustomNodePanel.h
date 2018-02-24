@@ -3,6 +3,7 @@
 #include <QtWidgets/QGraphicsObject>
 
 class QGraphicsProxyWidget;
+
 class QTextEdit;
 
 namespace AxiomModel {
@@ -14,7 +15,7 @@ namespace AxiomModel {
 namespace AxiomGui {
 
     class CustomNodePanel : public QGraphicsObject {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
 

@@ -10,7 +10,7 @@
 using namespace AxiomModel;
 
 NodeControl::NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-        : GridItem(&node->surface, pos, size), node(node), _runtime(runtime) {
+    : GridItem(&node->surface, pos, size), node(node), _runtime(runtime) {
 
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });
@@ -25,7 +25,8 @@ std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRu
         case MaximCommon::ControlType::NUMBER:
             newSize = QSize(2, 2);
             break;
-        default: assert(false);
+        default:
+            assert(false);
     }
 
     auto newPos = node->surface.grid.findNearestAvailable(QPoint(0, 0), newSize);
@@ -33,7 +34,9 @@ std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRu
     switch (runtime->type()) {
         case MaximCommon::ControlType::NUMBER:
             return std::make_unique<NodeNumControl>(node, runtime, newPos, newSize);
-        default: assert(false); throw;
+        default:
+            assert(false);
+            throw;
     }
 }
 

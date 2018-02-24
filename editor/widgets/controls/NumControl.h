@@ -14,10 +14,10 @@ namespace AxiomGui {
     class NumControl : public ControlItem {
     Q_OBJECT
         Q_PROPERTY(float hoverState
-                           READ
-                                   hoverState
-                           WRITE
-                           setHoverState)
+                       READ
+                           hoverState
+                       WRITE
+                       setHoverState)
 
     public:
         AxiomModel::NodeNumControl *control;

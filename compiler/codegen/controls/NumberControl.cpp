@@ -12,7 +12,7 @@ std::unique_ptr<NumberControl> NumberControl::create(MaximContext *context) {
     return std::make_unique<NumberControl>(context);
 }
 
-llvm::Type* NumberControl::type(MaximContext *ctx) const {
+llvm::Type *NumberControl::type(MaximContext *ctx) const {
     return llvm::PointerType::get(ctx->numType()->get(), 0);
 }
 
@@ -28,5 +28,6 @@ void NumberControl::setProperty(Builder &b, std::string name, std::unique_ptr<Va
 std::unique_ptr<Value> NumberControl::getProperty(Builder &b, std::string name, llvm::Value *ptr) {
     auto undefPos = SourcePos(-1, -1);
     auto numVal = Num::create(context(), b.CreateLoad(b.CreateLoad(ptr, "ptr"), "control"), undefPos, undefPos);
-    return numVal->withForm(b, MaximCommon::FormType::CONTROL, undefPos, undefPos)->withActive(b, true, undefPos, undefPos);
+    return numVal->withForm(b, MaximCommon::FormType::CONTROL, undefPos, undefPos)->withActive(b, true, undefPos,
+                                                                                               undefPos);
 }

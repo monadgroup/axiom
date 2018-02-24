@@ -1,8 +1,5 @@
 #include "ToDegFunction.h"
 
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/Instruction.h>
-
 #include "../MaximContext.h"
 #include "../Num.h"
 
@@ -20,10 +17,10 @@ std::unique_ptr<ToDegFunction> ToDegFunction::create(MaximContext *context) {
 std::unique_ptr<Value> ToDegFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                                llvm::Function *func, llvm::Module *module) {
-    auto numArg = dynamic_cast<Num*>(params[0].get());
+    auto numArg = dynamic_cast<Num *>(params[0].get());
     assert(numArg);
 
-    auto multConst = context()->constFloat(180.f / (float)M_PI);
+    auto multConst = context()->constFloat(180.f / (float) M_PI);
     auto multVec = llvm::ConstantVector::get({multConst, multConst});
     auto newVec = b.CreateBinOp(
         llvm::Instruction::BinaryOps::FMul,

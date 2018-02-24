@@ -8,7 +8,7 @@
 namespace MaximRuntime {
 
     class CustomNode : public QObject, public Node {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         explicit CustomNode(Schematic *parent);

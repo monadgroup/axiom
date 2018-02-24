@@ -1,7 +1,5 @@
 #include "Midi.h"
 
-#include <llvm/IR/Constants.h>
-
 #include "MaximContext.h"
 
 using namespace MaximCodegen;

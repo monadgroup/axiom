@@ -9,7 +9,8 @@
 
 using namespace MaximCodegen;
 
-static std::unique_ptr<Num> visitSinglePostfix(Node *node, MaximAst::PostfixExpression *expr, MaximAst::AssignableExpression *assignable) {
+static std::unique_ptr<Num>
+visitSinglePostfix(Node *node, MaximAst::PostfixExpression *expr, MaximAst::AssignableExpression *assignable) {
     auto num = node->ctx()->assertNum(visitExpression(node, assignable));
     auto numVec = num->vec(node->builder());
 
@@ -18,10 +19,12 @@ static std::unique_ptr<Num> visitSinglePostfix(Node *node, MaximAst::PostfixExpr
 
     switch (expr->type) {
         case MaximAst::PostfixExpression::Type::INCREMENT:
-            numVec = node->builder().CreateBinOp(llvm::Instruction::BinaryOps::FAdd, numVec, constOneVec, "incremented");
+            numVec = node->builder().CreateBinOp(llvm::Instruction::BinaryOps::FAdd, numVec, constOneVec,
+                                                 "incremented");
             break;
         case MaximAst::PostfixExpression::Type::DECREMENT:
-            numVec = node->builder().CreateBinOp(llvm::Instruction::BinaryOps::FSub, numVec, constOneVec, "decremented");
+            numVec = node->builder().CreateBinOp(llvm::Instruction::BinaryOps::FSub, numVec, constOneVec,
+                                                 "decremented");
             break;
     }
 

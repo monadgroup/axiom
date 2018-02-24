@@ -1,13 +1,11 @@
 #include "Control.h"
 
-#include <cassert>
 #include <unordered_set>
 #include <queue>
 #include <memory>
 
 #include "ControlGroup.h"
 #include "Runtime.h"
-#include "Node.h"
 
 using namespace MaximRuntime;
 
@@ -38,8 +36,8 @@ void Control::disconnectFrom(Control *other) {
 
     // breadth-first search connections to find the two new groups
     // alternatively: the controls are still connected indirectly, so they're still in the same group
-    std::unordered_set<Control*> visitedControls;
-    std::queue<Control*> visitQueue;
+    std::unordered_set<Control *> visitedControls;
+    std::queue<Control *> visitQueue;
 
     auto newGroup = std::make_unique<ControlGroup>(_type, _group->parentUnit());
     auto newGroupPtr = newGroup.get();
@@ -77,7 +75,7 @@ void Control::setGroup(ControlGroup *newGroup) {
 }
 
 void Control::remove() {
-    auto connections = std::set<Control*>(_connections);
+    auto connections = std::set<Control *>(_connections);
     for (const auto &connectedNode : connections) {
         disconnectFrom(connectedNode);
     }

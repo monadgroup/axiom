@@ -22,9 +22,9 @@ std::unique_ptr<Value> HoldFunction::generate(Builder &b, std::vector<std::uniqu
                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                               llvm::Function *func, llvm::Module *module) {
     auto contextType = getContextType(context());
-    auto xVal = dynamic_cast<Num*>(params[0].get());
-    auto gateVal = dynamic_cast<Num*>(params[1].get());
-    auto elseVal = dynamic_cast<Num*>(params[2].get());
+    auto xVal = dynamic_cast<Num *>(params[0].get());
+    auto gateVal = dynamic_cast<Num *>(params[1].get());
+    auto elseVal = dynamic_cast<Num *>(params[2].get());
     assert(xVal && gateVal && elseVal);
 
     auto valPtr = b.CreateStructGEP(contextType, funcContext, 0, "val.ptr");
@@ -93,20 +93,20 @@ std::unique_ptr<Instantiable> HoldFunction::generateCall(std::vector<std::unique
     return std::make_unique<FunctionCall>();
 }
 
-llvm::StructType* HoldFunction::getContextType(MaximContext *ctx) {
+llvm::StructType *HoldFunction::getContextType(MaximContext *ctx) {
     return llvm::StructType::get(ctx->llvm(), {
         ctx->numType()->vecType(),                                   // stored value
         llvm::VectorType::get(llvm::Type::getInt1Ty(ctx->llvm()), 2) // last gate value
     });
 }
 
-llvm::Constant* HoldFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
+llvm::Constant *HoldFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
     return llvm::ConstantStruct::get(getContextType(ctx), {
         llvm::UndefValue::get(ctx->numType()->vecType()),
         llvm::ConstantVector::getSplat(2, ctx->constInt(1, 0, false))
     });
 }
 
-llvm::Type* HoldFunction::FunctionCall::type(MaximContext *ctx) const {
+llvm::Type *HoldFunction::FunctionCall::type(MaximContext *ctx) const {
     return getContextType(ctx);
 }

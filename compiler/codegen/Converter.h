@@ -25,7 +25,7 @@ namespace MaximCodegen {
         virtual std::unique_ptr<Num> call(Node *node, std::unique_ptr<Num> value, SourcePos startPos, SourcePos endPos);
 
     protected:
-        using FormConverter = llvm::Value* (Converter::*)(Builder &b, llvm::Value *val, llvm::Module *module);
+        using FormConverter = llvm::Value *(Converter::*)(Builder &b, llvm::Value *val, llvm::Module *module);
 
         MaximContext *context() const { return _context; }
 

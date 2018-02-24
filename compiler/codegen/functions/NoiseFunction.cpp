@@ -1,8 +1,5 @@
 #include "NoiseFunction.h"
 
-#include <llvm/IR/Function.h>
-#include <llvm/IR/Constants.h>
-
 #include "../MaximContext.h"
 #include "../Num.h"
 
@@ -29,8 +26,8 @@ std::unique_ptr<Value> NoiseFunction::generate(Builder &b, std::vector<std::uniq
         "rand", module
     );
 
-    auto minNum = dynamic_cast<Num*>(params[0].get());
-    auto maxNum = dynamic_cast<Num*>(params[1].get());
+    auto minNum = dynamic_cast<Num *>(params[0].get());
+    auto maxNum = dynamic_cast<Num *>(params[1].get());
     assert(minNum && maxNum);
 
     auto minVec = minNum->vec(b);
@@ -40,7 +37,8 @@ std::unique_ptr<Value> NoiseFunction::generate(Builder &b, std::vector<std::uniq
 
     auto leftRand = CreateCall(b, randFunc, {}, "rand.left");
     auto rightRand = CreateCall(b, randFunc, {}, "rand.right");
-    auto randVec = b.CreateInsertElement(llvm::UndefValue::get(llvm::VectorType::get(randType, 2)), leftRand, (uint64_t) 0, "rand");
+    auto randVec = b.CreateInsertElement(llvm::UndefValue::get(llvm::VectorType::get(randType, 2)), leftRand,
+                                         (uint64_t) 0, "rand");
     randVec = b.CreateInsertElement(randVec, rightRand, (uint64_t) 1, "rand");
     auto randFloatVec = b.CreateSIToFP(randVec, context()->numType()->vecType(), "rand.float");
 

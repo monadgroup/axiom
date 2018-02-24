@@ -47,7 +47,7 @@ AboutWindow::AboutWindow() : QDialog(nullptr,
     mainLayout->addWidget(contribLabel, 4, 0);
     mainLayout->addWidget(new QLabel(tr("PoroCYon")), 4, 1);
     auto couldBeYouLabel = new QLabel(
-            tr("You could be here too! Help out by contributing to the project on Github: github.com/monadgroup/axiom"));
+        tr("You could be here too! Help out by contributing to the project on Github: github.com/monadgroup/axiom"));
     couldBeYouLabel->setWordWrap(true);
     couldBeYouLabel->setObjectName("about-none");
     mainLayout->addWidget(couldBeYouLabel, 5, 1);

@@ -6,6 +6,7 @@ namespace MaximCodegen {
 
     using Builder = llvm::IRBuilder<>;
 
-    llvm::Value *CreateCall(Builder &b, llvm::Function *f, llvm::ArrayRef<llvm::Value *> operands, const llvm::Twine &name);
+    llvm::Value *
+    CreateCall(Builder &b, llvm::Function *f, llvm::ArrayRef<llvm::Value *> operands, const llvm::Twine &name);
 
 }

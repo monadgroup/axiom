@@ -27,7 +27,7 @@ namespace AxiomModel {
         QPoint maxRect;
 
         Grid(QPoint minRect = QPoint(INT_MIN, INT_MIN), QPoint maxRect = QPoint(INT_MAX, INT_MAX))
-                : minRect(minRect), maxRect(maxRect) {}
+            : minRect(minRect), maxRect(maxRect) {}
 
         bool isInsideRect(QPoint pos) const {
             return pos.x() >= minRect.x() && pos.y() >= minRect.y() && pos.x() <= maxRect.x() && pos.y() <= maxRect.y();

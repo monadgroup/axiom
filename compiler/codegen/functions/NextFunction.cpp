@@ -18,7 +18,7 @@ std::unique_ptr<NextFunction> NextFunction::create(MaximContext *context) {
 std::unique_ptr<Value> NextFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                               llvm::Function *func, llvm::Module *module) {
-    auto paramVal = dynamic_cast<Num*>(params[0].get());
+    auto paramVal = dynamic_cast<Num *>(params[0].get());
     assert(paramVal);
 
     auto undefPos = SourcePos(-1, -1);
@@ -32,7 +32,7 @@ std::unique_ptr<Instantiable> NextFunction::generateCall(std::vector<std::unique
     return std::make_unique<FunctionCall>();
 }
 
-llvm::Constant* NextFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
+llvm::Constant *NextFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
     return llvm::ConstantStruct::get(ctx->numType()->get(), {
         llvm::ConstantVector::get({ctx->constFloat(0), ctx->constFloat(0)}),
         llvm::ConstantInt::get(ctx->numType()->formType(), (uint64_t) MaximCommon::FormType::LINEAR, false),
@@ -40,6 +40,6 @@ llvm::Constant* NextFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
     });
 }
 
-llvm::Type* NextFunction::FunctionCall::type(MaximContext *ctx) const {
+llvm::Type *NextFunction::FunctionCall::type(MaximContext *ctx) const {
     return ctx->numType()->get();
 }

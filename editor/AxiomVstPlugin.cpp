@@ -1,9 +1,5 @@
 #include "AxiomVstPlugin.h"
 
-#include "compiler/codegen/Operator.h"
-#include "compiler/codegen/Converter.h"
-#include "compiler/codegen/Function.h"
-
 #include "resources/resource.h"
 #include "AxiomVstEditor.h"
 
@@ -97,7 +93,8 @@ VstPlugCategory AxiomVstPlugin::getPlugCategory() {
 }
 
 VstInt32 AxiomVstPlugin::canDo(char *text) {
-    return text == "sendVstEvents" || text == "sendVstMidiEvent" || text == "receiveVstEvents" || text == "receiveVstMidiEvent";
+    return text == "sendVstEvents" || text == "sendVstMidiEvent" || text == "receiveVstEvents" ||
+           text == "receiveVstMidiEvent";
 }
 
 VstInt32 AxiomVstPlugin::getNumMidiInputChannels() {

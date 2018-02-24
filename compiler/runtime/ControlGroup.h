@@ -23,7 +23,7 @@ namespace MaximRuntime {
 
         Schematic *parentUnit() const override { return _schematic; }
 
-        std::set<Control*> &controls() { return _controls; }
+        std::set<Control *> &controls() { return _controls; }
 
         void absorb(ControlGroup *other);
 
@@ -35,7 +35,8 @@ namespace MaximRuntime {
 
         llvm::Constant *getInitialVal(MaximCodegen::MaximContext *ctx) override;
 
-        void initializeVal(MaximCodegen::MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, MaximCodegen::InstantiableFunction *parent, MaximCodegen::Builder &b) override;
+        void initializeVal(MaximCodegen::MaximContext *ctx, llvm::Module *module, llvm::Value *ptr,
+                           MaximCodegen::InstantiableFunction *parent, MaximCodegen::Builder &b) override;
 
         llvm::Type *type(MaximCodegen::MaximContext *ctx) const override;
 
@@ -49,7 +50,7 @@ namespace MaximRuntime {
 
         Schematic *_schematic;
 
-        std::set<Control*> _controls;
+        std::set<Control *> _controls;
 
         llvm::GlobalVariable *_global = nullptr;
 

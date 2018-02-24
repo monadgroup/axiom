@@ -36,13 +36,14 @@ namespace MaximCodegen {
 
         llvm::Constant *getInitialVal(MaximContext *ctx) override;
 
-        void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func, Builder &b) override;
+        void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func,
+                           Builder &b) override;
 
         llvm::StructType *type(MaximContext *ctx) const override;
 
-        std::vector<Instantiable*> &instantiables() { return _instantiables; }
+        std::vector<Instantiable *> &instantiables() { return _instantiables; }
 
-        bool getInstIndex(Instantiable *inst, std::vector<llvm::Value*> &indexes);
+        bool getInstIndex(Instantiable *inst, std::vector<llvm::Value *> &indexes);
 
     private:
         MaximContext *_ctx;
@@ -52,10 +53,10 @@ namespace MaximCodegen {
 
         llvm::Function *_generateFunc = nullptr;
         llvm::Function *_initializeFunc = nullptr;
-        std::vector<llvm::Type*> _instTypes;
+        std::vector<llvm::Type *> _instTypes;
 
         std::vector<std::unique_ptr<Instantiable>> _ownedInstantiables;
-        std::vector<Instantiable*> _instantiables;
+        std::vector<Instantiable *> _instantiables;
     };
 
 }

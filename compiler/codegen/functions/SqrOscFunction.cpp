@@ -13,8 +13,9 @@ std::unique_ptr<SqrOscFunction> SqrOscFunction::create(MaximContext *context) {
     return std::make_unique<SqrOscFunction>(context);
 }
 
-llvm::Value* SqrOscFunction::nextValue(llvm::Value *period, Builder &b, llvm::Module *module) {
-    auto floorFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::floor, {context()->numType()->vecType()});
+llvm::Value *SqrOscFunction::nextValue(llvm::Value *period, Builder &b, llvm::Module *module) {
+    auto floorFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::floor,
+                                                     {context()->numType()->vecType()});
 
     auto normalPeriod = llvm::ConstantVector::getSplat(2, context()->constFloat(2));
     auto inputVal = b.CreateFMul(period, normalPeriod, "inputval");

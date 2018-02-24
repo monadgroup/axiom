@@ -8,7 +8,7 @@ namespace MaximRuntime {
 
     class SoftControl : public Control {
     public:
-        Q_OBJECT
+    Q_OBJECT
 
         SoftControl(GroupNode *node, Control *linkedControl);
 

@@ -1,8 +1,5 @@
 #include "NumLogicalOperator.h"
 
-#include <llvm/IR/InstrTypes.h>
-#include <llvm/IR/Constants.h>
-
 #include "../MaximContext.h"
 #include "../Num.h"
 #include "../Node.h"

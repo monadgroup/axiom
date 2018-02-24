@@ -9,6 +9,7 @@
 
 #include "../connection/ConnectionWire.h"
 #include "../GridSurface.h"
+
 namespace MaximRuntime {
 
     class Schematic;

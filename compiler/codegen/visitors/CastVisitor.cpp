@@ -12,7 +12,8 @@ std::unique_ptr<Value> MaximCodegen::visitCast(Node *node, MaximAst::CastExpress
     auto subexprVal = node->ctx()->assertNum(visitExpression(node, expr->expr.get()));
 
     if (expr->isConvert) {
-        return node->ctx()->callConverter(expr->target->type, std::move(subexprVal), node, expr->startPos, expr->endPos);
+        return node->ctx()->callConverter(expr->target->type, std::move(subexprVal), node, expr->startPos,
+                                          expr->endPos);
     } else {
         return subexprVal->withForm(node->builder(), expr->target->type, expr->startPos, expr->endPos);
     }

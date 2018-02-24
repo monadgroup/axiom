@@ -1,9 +1,5 @@
 #include "VectorIntrinsicFoldFunction.h"
 
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/InstrTypes.h>
-
 #include "../MaximContext.h"
 #include "../Num.h"
 
@@ -17,7 +13,8 @@ VectorIntrinsicFoldFunction::VectorIntrinsicFoldFunction(MaximContext *context, 
 }
 
 std::unique_ptr<VectorIntrinsicFoldFunction> VectorIntrinsicFoldFunction::create(MaximContext *context,
-                                                                             llvm::Intrinsic::ID id, std::string name) {
+                                                                                 llvm::Intrinsic::ID id,
+                                                                                 std::string name) {
     return std::make_unique<VectorIntrinsicFoldFunction>(context, id, name);
 }
 
@@ -28,7 +25,7 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::ve
     auto intrinsic = llvm::Intrinsic::getDeclaration(module, _id, {context()->numType()->vecType()});
     auto varCount = vararg->count(b);
     auto firstVal = vararg->atIndex((uint64_t) 0, b);
-    auto firstNum = dynamic_cast<Num*>(firstVal.get());
+    auto firstNum = dynamic_cast<Num *>(firstVal.get());
     assert(firstNum);
 
     auto vecPtr = b.CreateAlloca(context()->numType()->vecType(), nullptr, "accum.vecptr");
@@ -66,7 +63,7 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::ve
     b.CreateStore(incrementedIndex, indexPtr);
     auto lastVec = b.CreateLoad(vecPtr, "lastvec");
     auto nextVal = vararg->atIndex(incrementedIndex, b);
-    auto nextNum = dynamic_cast<Num*>(nextVal.get());
+    auto nextNum = dynamic_cast<Num *>(nextVal.get());
     assert(nextNum);
     auto nextVec = nextNum->vec(b);
 
@@ -95,7 +92,7 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generateConst(Builder &b,
                                                                   llvm::Module *module) {
     auto intrinsic = llvm::Intrinsic::getDeclaration(module, _id, {context()->numType()->vecType()});
     auto firstVal = vararg->atIndex(0);
-    auto firstNum = dynamic_cast<Num*>(firstVal.get());
+    auto firstNum = dynamic_cast<Num *>(firstVal.get());
     assert(firstNum);
 
     auto currentVec = firstNum->vec(b);
@@ -103,7 +100,7 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generateConst(Builder &b,
 
     for (size_t i = 1; i < vararg->count(); i++) {
         auto nextVal = vararg->atIndex(i);
-        auto nextNum = dynamic_cast<Num*>(nextVal.get());
+        auto nextNum = dynamic_cast<Num *>(nextVal.get());
         assert(nextNum);
         auto nextVec = nextNum->vec(b);
         auto nextActive = nextNum->active(b);

@@ -55,7 +55,8 @@ std::unique_ptr<Num> Converter::call(Node *node, std::unique_ptr<Num> value, Sou
             auto vecVal = constVal->getAggregateElement((unsigned int) 0);
             auto converterFunc = formConverter->second;
             auto newVec = (this->*converterFunc)(node->builder(), vecVal, node->module());
-            return value->withVec(node->builder(), newVec, startPos, endPos)->withForm(node->builder(), _toType, startPos, endPos);
+            return value->withVec(node->builder(), newVec, startPos, endPos)->withForm(node->builder(), _toType,
+                                                                                       startPos, endPos);
         }
     } else {
         // otherwise call the generated function
@@ -64,7 +65,7 @@ std::unique_ptr<Num> Converter::call(Node *node, std::unique_ptr<Num> value, Sou
     }
 }
 
-llvm::Function* Converter::createFuncForModule(llvm::Module *module) {
+llvm::Function *Converter::createFuncForModule(llvm::Module *module) {
     auto funcName = "maximconverter." + MaximCommon::formType2String(toType());
     if (auto func = module->getFunction(funcName)) return func;
 

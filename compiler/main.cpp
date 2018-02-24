@@ -75,7 +75,8 @@ void parseAndCompile(MaximContext *ctx, llvm::Module *mainModule) {
     Builder mainBuilder(funcBlock);
     auto ctxType = node.type(ctx);
     auto ctxConst = node.getInitialVal(ctx);
-    auto ctxGlobal = new llvm::GlobalVariable(nodeModule, ctxType, false, llvm::GlobalValue::LinkageTypes::InternalLinkage, ctxConst, "ctx");
+    auto ctxGlobal = new llvm::GlobalVariable(nodeModule, ctxType, false,
+                                              llvm::GlobalValue::LinkageTypes::InternalLinkage, ctxConst, "ctx");
     node.initializeVal(ctx, &nodeModule, ctxGlobal, mainBuilder);
     mainBuilder.CreateRetVoid();
 

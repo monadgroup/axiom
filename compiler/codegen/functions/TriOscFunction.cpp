@@ -13,8 +13,9 @@ std::unique_ptr<TriOscFunction> TriOscFunction::create(MaximContext *context) {
     return std::make_unique<TriOscFunction>(context);
 }
 
-llvm::Value* TriOscFunction::nextValue(llvm::Value *period, Builder &b, llvm::Module *module) {
-    auto absFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::fabs, {context()->numType()->vecType()});
+llvm::Value *TriOscFunction::nextValue(llvm::Value *period, Builder &b, llvm::Module *module) {
+    auto absFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::fabs,
+                                                   {context()->numType()->vecType()});
 
     auto normalPeriod = llvm::ConstantVector::getSplat(2, context()->constFloat(4));
     auto inputVal = b.CreateFMul(period, normalPeriod, "inputval");

@@ -1,7 +1,5 @@
 #include "ClampFunction.h"
 
-#include <llvm/IR/Intrinsics.h>
-
 #include "../MaximContext.h"
 #include "../Num.h"
 
@@ -23,12 +21,14 @@ std::unique_ptr<ClampFunction> ClampFunction::create(MaximContext *context) {
 std::unique_ptr<Value> ClampFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                                std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                                llvm::Function *func, llvm::Module *module) {
-    auto minIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::minnum, {context()->numType()->vecType()});
-    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::maxnum, {context()->numType()->vecType()});
+    auto minIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::minnum,
+                                                        {context()->numType()->vecType()});
+    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::maxnum,
+                                                        {context()->numType()->vecType()});
 
-    auto xNum = dynamic_cast<Num*>(params[0].get());
-    auto minNum = dynamic_cast<Num*>(params[1].get());
-    auto maxNum = dynamic_cast<Num*>(params[2].get());
+    auto xNum = dynamic_cast<Num *>(params[0].get());
+    auto minNum = dynamic_cast<Num *>(params[1].get());
+    auto maxNum = dynamic_cast<Num *>(params[2].get());
     assert(xNum && minNum && maxNum);
 
     auto currentVec = xNum->vec(b);

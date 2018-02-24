@@ -1,10 +1,8 @@
 #include "ControlGroup.h"
 
-#include "Schematic.h"
 #include "Node.h"
 #include "Control.h"
 #include "Runtime.h"
-#include "codegen/MaximContext.h"
 #include "codegen/Control.h"
 
 using namespace MaximRuntime;
@@ -15,7 +13,7 @@ ControlGroup::ControlGroup(MaximCommon::ControlType type, Schematic *initialSche
 }
 
 void ControlGroup::absorb(ControlGroup *other) {
-    auto otherControls = std::set<Control*>(other->controls());
+    auto otherControls = std::set<Control *>(other->controls());
     for (const auto &control : otherControls) {
         control->setGroup(this);
     }
@@ -56,7 +54,7 @@ void ControlGroup::removeControl(Control *control) {
     }
 }
 
-llvm::Constant* ControlGroup::getInitialVal(MaximCodegen::MaximContext *ctx) {
+llvm::Constant *ControlGroup::getInitialVal(MaximCodegen::MaximContext *ctx) {
     switch (type()) {
         case MaximCommon::ControlType::NUMBER:
             return llvm::ConstantStruct::get(ctx->numType()->get(), {
@@ -64,7 +62,9 @@ llvm::Constant* ControlGroup::getInitialVal(MaximCodegen::MaximContext *ctx) {
                 llvm::ConstantInt::get(ctx->numType()->formType(), (uint64_t) MaximCommon::FormType::CONTROL, false),
                 llvm::ConstantInt::get(ctx->numType()->activeType(), (uint64_t) true, false)
             });
-        default: assert(false); throw;
+        default:
+            assert(false);
+            throw;
     }
 }
 
@@ -85,10 +85,13 @@ void ControlGroup::initializeVal(MaximCodegen::MaximContext *ctx, llvm::Module *
     }
 }
 
-llvm::Type* ControlGroup::type(MaximCodegen::MaximContext *ctx) const {
+llvm::Type *ControlGroup::type(MaximCodegen::MaximContext *ctx) const {
     switch (type()) {
-        case MaximCommon::ControlType::NUMBER: return ctx->numType()->get();
-        default: assert(false); throw;
+        case MaximCommon::ControlType::NUMBER:
+            return ctx->numType()->get();
+        default:
+            assert(false);
+            throw;
     }
 }
 

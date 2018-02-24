@@ -28,8 +28,8 @@ ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : contro
 
     // create resize items
     ItemResizer::Direction directions[] = {
-            ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
-            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
+        ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
+        ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
     };
     for (auto i = 0; i < 8; i++) {
         auto resizer = new ItemResizer(directions[i], SchematicCanvas::controlGridSize);
@@ -90,8 +90,8 @@ AxiomModel::ConnectionSink *ControlItem::sink() {
 
 QRectF ControlItem::drawBoundingRect() const {
     return {
-            QPoint(0, 0),
-            SchematicCanvas::controlRealSize(control->size())
+        QPoint(0, 0),
+        SchematicCanvas::controlRealSize(control->size())
     };
 }
 
@@ -123,8 +123,8 @@ void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
         auto mouseDelta = event->screenPos() - mouseStartPoint;
         emit control->draggedTo(QPoint(
-                qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
-                qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
+            qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
+            qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
         ));
     } else {
         event->ignore();
@@ -176,11 +176,11 @@ void ControlItem::remove() {
 
 void ControlItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     control->setCorners(QPoint(
-            qRound(topLeft.x() / SchematicCanvas::controlGridSize.width()),
-            qRound(topLeft.y() / SchematicCanvas::controlGridSize.height())
+        qRound(topLeft.x() / SchematicCanvas::controlGridSize.width()),
+        qRound(topLeft.y() / SchematicCanvas::controlGridSize.height())
     ), QPoint(
-            qRound(bottomRight.x() / SchematicCanvas::controlGridSize.width()),
-            qRound(bottomRight.y() / SchematicCanvas::controlGridSize.height())
+        qRound(bottomRight.x() / SchematicCanvas::controlGridSize.width()),
+        qRound(bottomRight.y() / SchematicCanvas::controlGridSize.height())
     ));
 }
 

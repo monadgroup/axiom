@@ -1,8 +1,5 @@
 #include "ScalarExternalFunction.h"
 
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/Function.h>
-
 #include "../MaximContext.h"
 #include "../Num.h"
 
@@ -10,7 +7,8 @@ using namespace MaximCodegen;
 
 ScalarExternalFunction::ScalarExternalFunction(MaximContext *context, std::string externalName, std::string name,
                                                size_t paramCount)
-    : Function(context, std::move(name), context->numType(), std::vector<Parameter>(paramCount, Parameter(context->numType(), false, false)), nullptr, nullptr),
+    : Function(context, std::move(name), context->numType(),
+               std::vector<Parameter>(paramCount, Parameter(context->numType(), false, false)), nullptr, nullptr),
       _externalName(std::move(externalName)) {
 }
 
@@ -24,19 +22,19 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<
                                                         llvm::Function *func, llvm::Module *module) {
     auto floatTy = llvm::Type::getFloatTy(context()->llvm());
     auto extFunc = llvm::Function::Create(
-        llvm::FunctionType::get(floatTy, std::vector<llvm::Type*>(params.size(), floatTy), false),
+        llvm::FunctionType::get(floatTy, std::vector<llvm::Type *>(params.size(), floatTy), false),
         llvm::Function::ExternalLinkage,
         _externalName, module
     );
 
     llvm::Value *isActive = context()->constInt(1, 0, false);
 
-    std::vector<llvm::Value*> llVecs;
+    std::vector<llvm::Value *> llVecs;
     llVecs.reserve(params.size());
 
     Num *firstParam = nullptr;
     for (const auto &param : params) {
-        auto numParam = dynamic_cast<Num*>(param.get());
+        auto numParam = dynamic_cast<Num *>(param.get());
         assert(numParam);
         if (!firstParam) firstParam = numParam;
         llVecs.push_back(numParam->vec(b));
@@ -47,7 +45,7 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(Builder &b, std::vector<
     auto numElements = context()->numType()->vecType()->getVectorNumElements();
     llvm::Value *res = llvm::UndefValue::get(context()->numType()->vecType());
     for (size_t i = 0; i < numElements; i++) {
-        std::vector<llvm::Value*> llValues;
+        std::vector<llvm::Value *> llValues;
         llValues.reserve(llVecs.size());
         for (auto &llVec : llVecs) {
             llValues.push_back(b.CreateExtractElement(llVec, i, "vec.temp"));

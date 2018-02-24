@@ -6,7 +6,7 @@
 namespace AxiomGui {
 
     class SyntaxHighlighter : public QSyntaxHighlighter {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         explicit SyntaxHighlighter(QTextDocument *parent);

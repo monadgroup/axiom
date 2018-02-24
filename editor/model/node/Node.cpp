@@ -6,7 +6,7 @@
 using namespace AxiomModel;
 
 Node::Node(Schematic *parent, QString name, Type type, QPoint pos, QSize size)
-        : GridItem(parent, pos, size), parentSchematic(parent), m_name(std::move(name)), type(type), surface(this) {
+    : GridItem(parent, pos, size), parentSchematic(parent), m_name(std::move(name)), type(type), surface(this) {
     connect(this, &Node::deselected,
             &surface, &NodeSurface::deselectAll);
 }
@@ -48,7 +48,7 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     for (auto &item : surface.items()) {
         auto itemTopLeft = pos() + NodeSurface::nodeSurfaceToSchematicFloor(item->pos());
         auto itemBottomRight = pos() + NodeSurface::nodeSurfaceToSchematicCeil(
-                item->pos() + QPoint(item->size().width(), item->size().height()));
+            item->pos() + QPoint(item->size().width(), item->size().height()));
 
         controlsTopLeft.setX(qMin(controlsTopLeft.x(), itemTopLeft.x()));
         controlsTopLeft.setY(qMin(controlsTopLeft.y(), itemTopLeft.y()));
@@ -75,8 +75,8 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     // move controls to remain in same schematic-space position,
     // except when topLeft > controlsTopLeft or bottomRight < controlsBottomRight
     auto controlsShift = QPoint(
-            qMax(0, topLeft.x() - controlsTopLeft.x()) + qMin(0, bottomRight.x() - controlsBottomRight.x()),
-            qMax(0, topLeft.y() - controlsTopLeft.y()) + qMin(0, bottomRight.y() - controlsBottomRight.y())
+        qMax(0, topLeft.x() - controlsTopLeft.x()) + qMin(0, bottomRight.x() - controlsBottomRight.x()),
+        qMax(0, topLeft.y() - controlsTopLeft.y()) + qMin(0, bottomRight.y() - controlsBottomRight.y())
     );
     auto delta = NodeSurface::schematicToNodeSurface(initialPos - pos() + controlsShift);
     for (auto &item : surface.items()) {

@@ -21,9 +21,9 @@ std::unique_ptr<MixFunction> MixFunction::create(MaximContext *context) {
 std::unique_ptr<Value> MixFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
                                              std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
                                              llvm::Function *func, llvm::Module *module) {
-    auto numA = dynamic_cast<Num*>(params[0].get());
-    auto numB = dynamic_cast<Num*>(params[1].get());
-    auto mixNum = dynamic_cast<Num*>(params[2].get());
+    auto numA = dynamic_cast<Num *>(params[0].get());
+    auto numB = dynamic_cast<Num *>(params[1].get());
+    auto mixNum = dynamic_cast<Num *>(params[2].get());
     assert(numA && numB && mixNum);
 
     auto vecA = numA->vec(b);
