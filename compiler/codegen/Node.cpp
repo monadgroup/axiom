@@ -13,12 +13,7 @@
 using namespace MaximCodegen;
 
 Node::Node(MaximContext *ctx, llvm::Module *module) : InstantiableFunction(ctx, module) {
-    auto undefPos = SourcePos(-1, -1);
-    setVariable("PI", Num::create(ctx, M_PI, M_PI, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
-    setVariable("E", Num::create(ctx, M_E, M_E, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
-    setVariable("INFINITY",
-                Num::create(ctx, FP_INFINITE, FP_INFINITE, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
-    setVariable("SAMPLERATE", Num::create(ctx, ctx->sampleRate, ctx->sampleRate, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+
 }
 
 void Node::generateCode(MaximAst::Block *block) {
@@ -80,6 +75,12 @@ void Node::setAssignable(Builder &b, MaximAst::AssignableExpression *assignable,
 void Node::reset() {
     _variables.clear();
     _controls.clear();
+    auto undefPos = SourcePos(-1, -1);
+    setVariable("PI", Num::create(ctx(), M_PI, M_PI, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+    setVariable("E", Num::create(ctx(), M_E, M_E, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+    setVariable("INFINITY",
+                Num::create(ctx(), FP_INFINITE, FP_INFINITE, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+    setVariable("SAMPLERATE", Num::create(ctx(), ctx()->sampleRate, ctx()->sampleRate, MaximCommon::FormType::FREQUENCY, true, undefPos, undefPos));
     InstantiableFunction::reset();
 }
 
