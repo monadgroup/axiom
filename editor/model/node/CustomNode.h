@@ -29,7 +29,11 @@ namespace AxiomModel {
 
         void codeChanged(QString newCode);
 
+        void parseFailed(const MaximRuntime::ErrorLog &log);
+
         void compileFailed(const MaximRuntime::ErrorLog &log);
+
+        void parseSucceeded();
 
         void compileSucceeded();
 

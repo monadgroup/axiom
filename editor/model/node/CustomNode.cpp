@@ -33,20 +33,24 @@ void CustomNode::setCode(const QString &code) {
         m_code = code;
         emit codeChanged(code);
 
-        recompile();
+        _runtime.setCode(code.toStdString());
+        if (!_runtime.errorLog().errors.empty()) {
+            emit parseFailed(_runtime.errorLog());
+        } else {
+            emit parseSucceeded();
+        }
     }
 }
 
 void CustomNode::recompile() {
-    _runtime.setCode(m_code.toStdString());
+    _runtime.compile();
     _runtime.runtime()->compileAndDeploy();
 
     if (!_runtime.errorLog().errors.empty()) {
         emit compileFailed(_runtime.errorLog());
-        return;
+    } else {
+        emit compileSucceeded();
     }
-
-    emit compileSucceeded();
 }
 
 void CustomNode::controlAdded(MaximRuntime::HardControl *control) {

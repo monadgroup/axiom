@@ -9,7 +9,7 @@
 using namespace MaximRuntime;
 
 CustomNode::CustomNode(Schematic *parent) : Node(parent), _node(parent->runtime()->context(), module()) {
-
+    setCode("");
 }
 
 CustomNode::~CustomNode() = default;
@@ -17,7 +17,18 @@ CustomNode::~CustomNode() = default;
 void CustomNode::setCode(const std::string &code) {
     if (code != _code) {
         _code = code;
-        scheduleCompile();
+
+        _errorLog.errors.clear();
+
+        try {
+            auto stream = std::make_unique<MaximParser::TokenStream>(_code);
+            MaximParser::Parser parser(std::move(stream));
+            _ast = std::move(parser.parse());
+
+            scheduleCompile();
+        } catch (const MaximCommon::CompileError &err) {
+            _errorLog.errors.push_back(err);
+        }
     }
 }
 
@@ -30,18 +41,16 @@ void CustomNode::remove() {
 }
 
 void CustomNode::compile() {
+    assert(_ast);
+
     inst()->reset();
 
     _errorLog.errors.clear();
 
     try {
-        auto stream = std::make_unique<MaximParser::TokenStream>(_code);
-        MaximParser::Parser parser(std::move(stream));
-
-        // parse and generate code
-        auto block = parser.parse();
+        // generate code
         _node.reset();
-        _node.generateCode(block.get());
+        _node.generateCode(_ast.get());
         _node.complete();
 
         // update control list
@@ -49,7 +58,6 @@ void CustomNode::compile() {
 
         auto ptr = inst()->addInstantiable(&_node);
         MaximCodegen::CreateCall(inst()->builder(), _node.generateFunc(module()), {ptr}, "");
-        inst()->complete();
     } catch (const MaximCommon::CompileError &err) {
         _errorLog.errors.push_back(err);
 
@@ -59,6 +67,7 @@ void CustomNode::compile() {
         cancelDeploy();
     }
 
+    inst()->complete();
     CompileUnit::compile();
 }
 

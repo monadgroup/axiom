@@ -1,10 +1,11 @@
 #pragma once
 
 #include <QtWidgets/QGraphicsObject>
+#include <QtWidgets/QTextEdit>
+
+#include "compiler/runtime/ErrorLog.h"
 
 class QGraphicsProxyWidget;
-
-class QTextEdit;
 
 namespace AxiomModel {
 
@@ -33,6 +34,10 @@ namespace AxiomGui {
 
         void setOpen(bool open);
 
+        void setError(const MaximRuntime::ErrorLog &log);
+
+        void clearError();
+
         void triggerUpdate();
 
         void triggerGeometryChange();
@@ -47,8 +52,14 @@ namespace AxiomGui {
 
         QGraphicsProxyWidget *textProxy;
         QTextEdit *textEditor;
+        bool hasErrors = false;
+        bool showingErrors = false;
 
         bool eventFilter(QObject *object, QEvent *event) override;
+
+        void controlTextChanged();
+
+        static void moveCursor(QTextCursor &cursor, SourcePos pos, QTextCursor::MoveMode mode);
 
     };
 

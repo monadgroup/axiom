@@ -33,7 +33,9 @@ namespace MaximRuntime {
 
     private:
 
-        std::string _code = "";
+        std::string _code = "<>";
+
+        std::unique_ptr<MaximAst::Block> _ast;
 
         std::vector<std::unique_ptr<HardControl>> _controls;
 

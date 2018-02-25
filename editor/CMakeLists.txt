@@ -51,5 +51,5 @@ add_subdirectory(../vendor/vst vendor/vst)
 llvm_map_components_to_libnames(llvm_libs support core irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
 target_link_libraries(axiom_editor axiom_compiler Qt5::Widgets vst_sdk ${llvm_libs} -static-libgcc -static-libstdc++ -static)
 
-add_executable(axiom_standalone main.cpp ${RES_FILES})
-target_link_libraries(axiom_standalone axiom_editor)
+add_executable(axiom_standalone main.cpp ${SOURCE_FILES} ${RES_FILES})
+target_link_libraries(axiom_standalone axiom_compiler Qt5::Widgets vst_sdk ${llvm_libs} -static-libgcc -static-libstdc++ -static)
