@@ -18,6 +18,7 @@ Node::Node(MaximContext *ctx, llvm::Module *module) : InstantiableFunction(ctx, 
     setVariable("E", Num::create(ctx, M_E, M_E, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     setVariable("INFINITY",
                 Num::create(ctx, FP_INFINITE, FP_INFINITE, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+    setVariable("SAMPLERATE", Num::create(ctx, ctx->sampleRate, ctx->sampleRate, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
 }
 
 void Node::generateCode(MaximAst::Block *block) {
