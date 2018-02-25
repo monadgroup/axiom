@@ -8,7 +8,7 @@
 #include "../ast/ControlExpression.h"
 #include "../ast/Block.h"
 
-#include "controls/NumberControl.h"
+#include "controls/NumControl.h"
 
 using namespace MaximCodegen;
 
@@ -102,7 +102,7 @@ Node::ControlValue &Node::getControl(std::string name, MaximCommon::ControlType 
 std::unique_ptr<Control> Node::createControl(MaximCommon::ControlType type) {
     switch (type) {
         case MaximCommon::ControlType::NUMBER:
-            return NumberControl::create(ctx());
+            return NumControl::create(ctx());
         default:
             assert(false);
             throw;

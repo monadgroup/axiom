@@ -7,7 +7,7 @@ namespace MaximCommon {
     enum class ControlType {
         NUMBER,
         GRAPH,
-        KEYS,
+        MIDI,
         ROLL,
 
         NUM_EXTRACT,

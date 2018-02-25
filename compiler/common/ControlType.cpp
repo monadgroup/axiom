@@ -10,8 +10,8 @@ std::string MaximCommon::controlType2String(ControlType type) {
             return "num";
         case ControlType::GRAPH:
             return "graph";
-        case ControlType::KEYS:
-            return "keys";
+        case ControlType::MIDI:
+            return "midi";
         case ControlType::ROLL:
             return "roll";
         case ControlType::NUM_EXTRACT:

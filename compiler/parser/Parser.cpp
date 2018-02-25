@@ -304,7 +304,7 @@ std::unique_ptr<MaximAst::AssignableExpression> Parser::parseControlExpression(s
     ControlType controlType;
     if (typeToken.content == "num") controlType = ControlType::NUMBER;
     else if (typeToken.content == "graph") controlType = ControlType::GRAPH;
-    else if (typeToken.content == "keys") controlType = ControlType::KEYS;
+    else if (typeToken.content == "midi") controlType = ControlType::MIDI;
     else if (typeToken.content == "roll") controlType = ControlType::ROLL;
     else if (typeToken.content == "num[]") controlType = ControlType::NUM_EXTRACT;
     else if (typeToken.content == "midi[]") controlType = ControlType::MIDI_EXTRACT;

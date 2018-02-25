@@ -4,11 +4,11 @@
 
 namespace MaximCodegen {
 
-    class NumberControl : public Control {
+    class NumControl : public Control {
     public:
-        explicit NumberControl(MaximContext *context);
+        explicit NumControl(MaximContext *context);
 
-        static std::unique_ptr<NumberControl> create(MaximContext *context);
+        static std::unique_ptr<NumControl> create(MaximContext *context);
 
         llvm::Type *type(MaximContext *ctx) const override;
 
