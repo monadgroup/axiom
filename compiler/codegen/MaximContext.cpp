@@ -204,6 +204,21 @@ Tuple *MaximContext::assertTuple(Value *val, TupleType *type) {
     throw typeAssertFailed(type, val->type(), val->startPos, val->endPos);
 }
 
+std::unique_ptr<Array> MaximContext::assertArray(std::unique_ptr<Value> val, ArrayType *type) {
+    auto res = assertArray(val.get(), type);
+    val.release();
+    return std::unique_ptr<Array>(res);
+}
+
+Array* MaximContext::assertArray(Value *val, ArrayType *type) {
+    if (val->type() == type) {
+        if (auto res = dynamic_cast<Array *>(val)) {
+            return res;
+        }
+    }
+    throw typeAssertFailed(type, val->type(), val->startPos, val->endPos);
+}
+
 TupleType *MaximContext::getTupleType(const std::vector<Type *> &types) {
     std::vector<llvm::Type *> llTypes;
     llTypes.reserve(types.size());

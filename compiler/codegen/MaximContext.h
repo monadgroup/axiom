@@ -56,6 +56,8 @@ namespace MaximCodegen {
 
     class Tuple;
 
+    class Array;
+
     class Operator;
 
     class Function;
@@ -100,6 +102,10 @@ namespace MaximCodegen {
         std::unique_ptr<Tuple> assertTuple(std::unique_ptr<Value> val, TupleType *type);
 
         Tuple *assertTuple(Value *val, TupleType *type);
+
+        std::unique_ptr<Array> assertArray(std::unique_ptr<Value> val, ArrayType *type);
+
+        Array *assertArray(Value *val, ArrayType *type);
 
         TupleType *getTupleType(const std::vector<Type *> &types);
 

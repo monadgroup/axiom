@@ -9,6 +9,8 @@
 #include "../ast/Block.h"
 
 #include "controls/NumControl.h"
+#include "controls/MidiControl.h"
+#include "controls/ExtractControl.h"
 
 using namespace MaximCodegen;
 
@@ -103,6 +105,12 @@ std::unique_ptr<Control> Node::createControl(MaximCommon::ControlType type) {
     switch (type) {
         case MaximCommon::ControlType::NUMBER:
             return NumControl::create(ctx());
+        case MaximCommon::ControlType::MIDI:
+            return MidiControl::create(ctx());
+        case MaximCommon::ControlType::NUM_EXTRACT:
+            return ExtractControl::create(ctx(), MaximCommon::ControlType::NUM_EXTRACT, ctx()->numType());
+        case MaximCommon::ControlType::MIDI_EXTRACT:
+            return ExtractControl::create(ctx(), MaximCommon::ControlType::MIDI_EXTRACT, ctx()->midiType());
         default:
             assert(false);
             throw;
