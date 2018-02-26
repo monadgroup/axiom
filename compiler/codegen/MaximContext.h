@@ -60,7 +60,7 @@ namespace MaximCodegen {
 
     class Operator;
 
-    class Function;
+    class FunctionCall;
 
     class Converter;
 
@@ -113,11 +113,15 @@ namespace MaximCodegen {
 
         llvm::Constant *constFloat(float num);
 
+        llvm::Constant *constFloatVec(float num);
+
+        llvm::Constant *constFloatVec(float left, float right);
+
         llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned);
 
         void registerOperator(std::unique_ptr<Operator> op);
 
-        void registerFunction(std::unique_ptr<Function> func);
+        void registerFunction(std::unique_ptr<FunctionCall> func);
 
         void registerConverter(std::unique_ptr<Converter> con);
 
@@ -127,7 +131,7 @@ namespace MaximCodegen {
         callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal, std::unique_ptr<Value> rightVal,
                      Node *node, SourcePos startPos, SourcePos endPos);
 
-        Function *getFunction(std::string name, std::vector<Type *> types);
+        FunctionCall *getFunction(std::string name, std::vector<Type *> types);
 
         std::unique_ptr<Value>
         callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, Node *node,
@@ -154,10 +158,10 @@ namespace MaximCodegen {
         std::unordered_map<llvm::StructType *, TupleType> tupleTypeMap;
         std::unordered_map<llvm::ArrayType *, ArrayType> arrayTypeMap;
         std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
-        std::unordered_map<std::string, std::vector<std::unique_ptr<Function>>> functionMap;
+        std::unordered_map<std::string, std::vector<std::unique_ptr<FunctionCall>>> functionMap;
         std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> converterMap;
 
-        std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);
+        std::vector<std::unique_ptr<FunctionCall>> &getOrCreateFunctionList(std::string name);
 
         MaximCommon::CompileError
         typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos,

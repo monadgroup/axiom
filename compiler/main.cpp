@@ -16,7 +16,7 @@
 #include "codegen/Value.h"
 #include "codegen/Operator.h"
 #include "codegen/Converter.h"
-#include "codegen/Function.h"
+#include "FunctionCall.h"
 #include "codegen/Num.h"
 
 using namespace MaximParser;

@@ -4,7 +4,7 @@
 #include "Midi.h"
 #include "Tuple.h"
 #include "Array.h"
-#include "Function.h"
+#include "FunctionCall.h"
 #include "Operator.h"
 #include "Converter.h"
 #include "Node.h"
@@ -251,6 +251,14 @@ llvm::Constant *MaximContext::constFloat(float num) {
     return llvm::ConstantFP::get(llvm::Type::getFloatTy(_llvm), num);
 }
 
+llvm::Constant* MaximContext::constFloatVec(float num) {
+    return llvm::ConstantVector::getSplat(2, constFloat(num));
+}
+
+llvm::Constant* MaximContext::constFloatVec(float left, float right) {
+    return llvm::ConstantVector::get({ constFloat(left), constFloat(right) });
+}
+
 llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool isSigned) {
     return llvm::ConstantInt::get(llvm::Type::getIntNTy(_llvm, numBits), val, isSigned);
 }
@@ -260,7 +268,7 @@ void MaximContext::registerOperator(std::unique_ptr<Operator> op) {
     operatorMap.emplace(key, std::move(op));
 }
 
-void MaximContext::registerFunction(std::unique_ptr<Function> func) {
+void MaximContext::registerFunction(std::unique_ptr<FunctionCall> func) {
     getOrCreateFunctionList(func->name()).push_back(std::move(func));
 }
 
@@ -336,7 +344,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
     }
 }
 
-Function *MaximContext::getFunction(std::string name, std::vector<Type *> types) {
+FunctionCall *MaximContext::getFunction(std::string name, std::vector<Type *> types) {
     auto pos = functionMap.find(name);
     if (pos == functionMap.end() || pos->second.empty()) return nullptr;
 
@@ -407,10 +415,10 @@ llvm::Value *MaximContext::secondsToSamples(llvm::Value *seconds, Builder &b) {
     return b.CreateFPToUI(floatResult, castType, "samplerate.int64");
 }
 
-std::vector<std::unique_ptr<Function>> &MaximContext::getOrCreateFunctionList(std::string name) {
+std::vector<std::unique_ptr<FunctionCall>> &MaximContext::getOrCreateFunctionList(std::string name) {
     auto pos = functionMap.find(name);
     if (pos == functionMap.end()) {
-        return functionMap.emplace(name, std::vector<std::unique_ptr<Function>>{}).first->second;
+        return functionMap.emplace(name, std::vector<std::unique_ptr<FunctionCall>>{}).first->second;
     } else {
         return pos->second;
     }
