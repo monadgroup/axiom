@@ -3,6 +3,7 @@
 #include "Num.h"
 #include "Midi.h"
 #include "Tuple.h"
+#include "Array.h"
 #include "Function.h"
 #include "Operator.h"
 #include "Converter.h"
