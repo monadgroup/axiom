@@ -8,10 +8,12 @@ namespace MaximAst {
 
 namespace MaximCodegen {
 
-    class Node;
+    class ComposableModuleClassMethod;
+
+    class Scope;
 
     class Value;
 
-    std::unique_ptr<Value> visitCast(Node *node, MaximAst::CastExpression *expr);
+    std::unique_ptr<Value> visitCast(ComposableModuleClassMethod *method, Scope *scope, MaximAst::CastExpression *expr);
 
 }

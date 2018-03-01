@@ -1,18 +1,19 @@
 #include "MathVisitor.h"
 
 #include "../../ast/MathExpression.h"
-#include "../Node.h"
+#include "../ComposableModuleClassMethod.h"
+#include "../ComposableModuleClass.h"
 #include "../Value.h"
 #include "../MaximContext.h"
 #include "ExpressionVisitor.h"
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitMath(Node *node, MaximAst::MathExpression *expr) {
-    return node->ctx()->callOperator(
+std::unique_ptr<Value> MaximCodegen::visitMath(ComposableModuleClassMethod *method, Scope *scope, MaximAst::MathExpression *expr) {
+    return method->moduleClass()->ctx()->callOperator(
         expr->type,
-        visitExpression(node, expr->left.get()),
-        visitExpression(node, expr->right.get()),
-        node, expr->startPos, expr->endPos
+        visitExpression(method, scope, expr->left.get()),
+        visitExpression(method, scope, expr->right.get()),
+        method, expr->startPos, expr->endPos
     );
 }

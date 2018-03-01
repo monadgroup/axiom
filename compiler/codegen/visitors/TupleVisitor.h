@@ -8,10 +8,12 @@ namespace MaximAst {
 
 namespace MaximCodegen {
 
-    class Node;
+    class ComposableModuleClassMethod;
+
+    class Scope;
 
     class Value;
 
-    std::unique_ptr<Value> visitTuple(Node *node, MaximAst::TupleExpression *expr);
+    std::unique_ptr<Value> visitTuple(ComposableModuleClassMethod *method, Scope *scope, MaximAst::TupleExpression *expr);
 
 }

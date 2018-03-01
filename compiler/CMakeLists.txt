@@ -23,7 +23,10 @@ set(SOURCE_FILES util.h
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-add_library(axiom_compiler ${SOURCE_FILES})
+#add_library(axiom_compiler ${SOURCE_FILES})
+add_executable(axiom_compiler_test ${SOURCE_FILES} main.cpp)
 add_subdirectory(codegen)
-target_link_libraries(axiom_compiler Qt5::Widgets maxim_codegen)
-set_target_properties(axiom_compiler PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(axiom_compiler_test Qt5::Widgets maxim_codegen)
+set_target_properties(axiom_compiler_test PROPERTIES LINKER_LANGUAGE CXX)
+
+add_library(axiom_compiler )

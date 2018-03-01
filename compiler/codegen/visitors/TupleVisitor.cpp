@@ -4,16 +4,17 @@
 
 #include "../../ast/TupleExpression.h"
 #include "../Tuple.h"
-#include "../Node.h"
+#include "../ComposableModuleClass.h"
+#include "../ComposableModuleClassMethod.h"
 #include "ExpressionVisitor.h"
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitTuple(Node *node, MaximAst::TupleExpression *expr) {
+std::unique_ptr<Value> MaximCodegen::visitTuple(ComposableModuleClassMethod *method, Scope *scope, MaximAst::TupleExpression *expr) {
     Tuple::Storage values;
     values.reserve(expr->expressions.size());
     for (const auto &subExpr : expr->expressions) {
-        values.push_back(visitExpression(node, subExpr.get()));
+        values.push_back(visitExpression(method, scope, subExpr.get()));
     }
-    return Tuple::create(node->ctx(), std::move(values), node->builder(), expr->startPos, expr->endPos);
+    return Tuple::create(method->moduleClass()->ctx(), std::move(values), method->builder(), expr->startPos, expr->endPos);
 }

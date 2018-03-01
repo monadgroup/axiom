@@ -2,11 +2,12 @@
 
 #include "../../ast/NoteExpression.h"
 #include "../Num.h"
-#include "../Node.h"
+#include "../ComposableModuleClass.h"
+#include "../ComposableModuleClassMethod.h"
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitNote(Node *node, MaximAst::NoteExpression *expr) {
-    return Num::create(node->ctx(), expr->note, expr->note, MaximCommon::FormType::NOTE, true, expr->startPos,
-                       expr->endPos);
+std::unique_ptr<Value> MaximCodegen::visitNote(ComposableModuleClassMethod *method, Scope *scope, MaximAst::NoteExpression *expr) {
+    return Num::create(method->moduleClass()->ctx(), expr->note, expr->note, MaximCommon::FormType::NOTE, true,
+                       expr->startPos, expr->endPos);
 }

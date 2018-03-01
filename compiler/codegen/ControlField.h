@@ -12,6 +12,8 @@ namespace MaximCodegen {
     public:
         ControlField(Control *control, const std::string &name, Type *type);
 
+        Type *type() const { return _type; }
+
         ControlFieldClassMethod *constructor() override { return &_constructor; }
 
         ControlFieldClassMethod *getValue() { return &_getValue; }
@@ -23,6 +25,7 @@ namespace MaximCodegen {
         void doComplete() override;
 
     private:
+        Type *_type;
 
         ControlFieldClassMethod _constructor;
         ControlFieldClassMethod _getValue;

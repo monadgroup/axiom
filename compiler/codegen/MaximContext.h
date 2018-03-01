@@ -6,6 +6,7 @@
 #include "../common/FormType.h"
 #include "../common/OperatorType.h"
 #include "../common/CompileError.h"
+#include "../common/ControlType.h"
 #include "../SourcePos.h"
 #include "NumType.h"
 #include "MidiType.h"
@@ -63,6 +64,8 @@ namespace MaximCodegen {
     class Function;
 
     class Converter;
+
+    class Control;
 
     class ModuleClassMethod;
 
@@ -127,6 +130,8 @@ namespace MaximCodegen {
 
         void registerConverter(std::unique_ptr<Converter> con);
 
+        void registerControl(std::unique_ptr<Control> con);
+
         Operator *getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType);
 
         std::unique_ptr<Value>
@@ -143,6 +148,8 @@ namespace MaximCodegen {
 
         std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, ModuleClassMethod *method,
                                            SourcePos startPos, SourcePos endPos);
+
+        Control *getControl(MaximCommon::ControlType type);
 
         uint64_t secondsToSamples(float seconds);
 
@@ -161,6 +168,7 @@ namespace MaximCodegen {
         std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
         std::unordered_map<std::string, std::vector<std::unique_ptr<Function>>> functionMap;
         std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> converterMap;
+        std::unordered_map<MaximCommon::ControlType, std::unique_ptr<Control>> controlMap;
 
         std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);
 

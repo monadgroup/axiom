@@ -9,6 +9,7 @@ set(SOURCE_FILES
         ModuleClass.cpp ComposableModuleClass.cpp
         ModuleClassMethod.cpp ComposableModuleClassMethod.cpp Function.cpp
         Control.cpp ControlField.cpp ControlFieldClassMethod.cpp
+        Scope.cpp
         Array.cpp ArrayType.cpp
         Midi.cpp MidiType.cpp
         Num.cpp NumType.cpp

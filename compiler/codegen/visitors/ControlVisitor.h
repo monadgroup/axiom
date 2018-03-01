@@ -8,10 +8,12 @@ namespace MaximAst {
 
 namespace MaximCodegen {
 
-    class Node;
+    class ComposableModuleClassMethod;
+
+    class Scope;
 
     class Value;
 
-    std::unique_ptr<Value> visitControl(Node *node, MaximAst::ControlExpression *expr);
+    std::unique_ptr<Value> visitControl(ComposableModuleClassMethod *method, Scope *scope, MaximAst::ControlExpression *expr);
 
 }

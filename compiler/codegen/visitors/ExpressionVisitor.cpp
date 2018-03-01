@@ -32,19 +32,19 @@
 using namespace MaximCodegen;
 using namespace MaximAst;
 
-std::unique_ptr<Value> MaximCodegen::visitExpression(Node *node, MaximAst::Expression *expr) {
-    if (auto assign = dynamic_cast<AssignExpression *>(expr)) return visitAssign(node, assign);
-    if (auto call = dynamic_cast<CallExpression *>(expr)) return visitCall(node, call);
-    if (auto cast = dynamic_cast<CastExpression *>(expr)) return visitCast(node, cast);
-    if (auto control = dynamic_cast<ControlExpression *>(expr)) return visitControl(node, control);
-    if (auto lvalue = dynamic_cast<LValueExpression *>(expr)) return visitLValue(node, lvalue);
-    if (auto math = dynamic_cast<MathExpression *>(expr)) return visitMath(node, math);
-    if (auto note = dynamic_cast<NoteExpression *>(expr)) return visitNote(node, note);
-    if (auto number = dynamic_cast<NumberExpression *>(expr)) return visitNumber(node, number);
-    if (auto postfix = dynamic_cast<PostfixExpression *>(expr)) return visitPostfix(node, postfix);
-    if (auto tuple = dynamic_cast<TupleExpression *>(expr)) return visitTuple(node, tuple);
-    if (auto unary = dynamic_cast<UnaryExpression *>(expr)) return visitUnary(node, unary);
-    if (auto variable = dynamic_cast<VariableExpression *>(expr)) return visitVariable(node, variable);
+std::unique_ptr<Value> MaximCodegen::visitExpression(ComposableModuleClassMethod *method, Scope *scope, MaximAst::Expression *expr) {
+    if (auto assign = dynamic_cast<AssignExpression *>(expr)) return visitAssign(method, scope, assign);
+    if (auto call = dynamic_cast<CallExpression *>(expr)) return visitCall(method, scope, call);
+    if (auto cast = dynamic_cast<CastExpression *>(expr)) return visitCast(method, scope, cast);
+    if (auto control = dynamic_cast<ControlExpression *>(expr)) return visitControl(method, scope, control);
+    if (auto lvalue = dynamic_cast<LValueExpression *>(expr)) return visitLValue(method, scope, lvalue);
+    if (auto math = dynamic_cast<MathExpression *>(expr)) return visitMath(method, scope, math);
+    if (auto note = dynamic_cast<NoteExpression *>(expr)) return visitNote(method, scope, note);
+    if (auto number = dynamic_cast<NumberExpression *>(expr)) return visitNumber(method, scope, number);
+    if (auto postfix = dynamic_cast<PostfixExpression *>(expr)) return visitPostfix(method, scope, postfix);
+    if (auto tuple = dynamic_cast<TupleExpression *>(expr)) return visitTuple(method, scope, tuple);
+    if (auto unary = dynamic_cast<UnaryExpression *>(expr)) return visitUnary(method, scope, unary);
+    if (auto variable = dynamic_cast<VariableExpression *>(expr)) return visitVariable(method, scope, variable);
 
     assert(false);
     throw;

@@ -1,10 +1,11 @@
 #include "ControlVisitor.h"
 
-#include "../Node.h"
+#include "../Scope.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Value.h"
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitControl(Node *node, MaximAst::ControlExpression *expr) {
-    return node->getControl(node->builder(), expr);
+std::unique_ptr<Value> MaximCodegen::visitControl(ComposableModuleClassMethod *method, Scope *scope, MaximAst::ControlExpression *expr) {
+    return scope->getControl(method, expr);
 }

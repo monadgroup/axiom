@@ -2,19 +2,20 @@
 
 #include "../../ast/CastExpression.h"
 #include "../Num.h"
-#include "../Node.h"
+#include "../ComposableModuleClassMethod.h"
+#include "../ComposableModuleClass.h"
 #include "../MaximContext.h"
 #include "ExpressionVisitor.h"
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitCast(Node *node, MaximAst::CastExpression *expr) {
-    auto subexprVal = node->ctx()->assertNum(visitExpression(node, expr->expr.get()));
+std::unique_ptr<Value> MaximCodegen::visitCast(ComposableModuleClassMethod *method, Scope *scope, MaximAst::CastExpression *expr) {
+    auto subexprVal = method->moduleClass()->ctx()->assertNum(visitExpression(method, scope, expr->expr.get()));
 
     if (expr->isConvert) {
-        return node->ctx()->callConverter(expr->target->type, std::move(subexprVal), node, expr->startPos,
-                                          expr->endPos);
+        return method->moduleClass()->ctx()->callConverter(expr->target->type, std::move(subexprVal), method,
+                                                           expr->startPos, expr->endPos);
     } else {
-        return subexprVal->withForm(node->builder(), expr->target->type, expr->startPos, expr->endPos);
+        return subexprVal->withForm(method->builder(), expr->target->type, expr->startPos, expr->endPos);
     }
 }

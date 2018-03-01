@@ -6,6 +6,7 @@
 #include "Array.h"
 #include "Operator.h"
 //#include "Converter.h"
+#include "Control.h"
 
 #include "ComposableModuleClassMethod.h"
 
@@ -278,6 +279,10 @@ void MaximContext::registerConverter(std::unique_ptr<Converter> con) {
     //converterMap.emplace(con->toType(), std::move(con));
 }
 
+void MaximContext::registerControl(std::unique_ptr<Control> con) {
+    controlMap.emplace(con->type(), std::move(con));
+}
+
 Operator *MaximContext::getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType) {
     OperatorKey key = {type, leftType, rightType};
     auto op = operatorMap.find(key);
@@ -391,6 +396,12 @@ std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType,
 
     return con->call(node, std::move(value), startPos, endPos);*/
     assert(false);
+}
+
+Control* MaximContext::getControl(MaximCommon::ControlType type) {
+    auto pos = controlMap.find(type);
+    if (pos == controlMap.end()) return nullptr;
+    return pos->second.get();
 }
 
 uint64_t MaximContext::secondsToSamples(float seconds) {
