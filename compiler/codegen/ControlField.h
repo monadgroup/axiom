@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ModuleClass.h"
+#include "ControlFieldClassMethod.h"
 
 namespace MaximCodegen {
 
@@ -12,17 +12,21 @@ namespace MaximCodegen {
     public:
         ControlField(Control *control, const std::string &name, Type *type);
 
-        ModuleClassMethod *constructor() override { return &_constructor; }
+        ControlFieldClassMethod *constructor() override { return &_constructor; }
 
-        ModuleClassMethod *getValue() { return &_getValue; }
+        ControlFieldClassMethod *getValue() { return &_getValue; }
 
-        ModuleClassMethod *setValue() { return &_setValue; }
+        ControlFieldClassMethod *setValue() { return &_setValue; }
+
+    protected:
+
+        void doComplete() override;
 
     private:
 
-        ModuleClassMethod _constructor;
-        ModuleClassMethod _getValue;
-        ModuleClassMethod _setValue;
+        ControlFieldClassMethod _constructor;
+        ControlFieldClassMethod _getValue;
+        ControlFieldClassMethod _setValue;
     };
 
 }

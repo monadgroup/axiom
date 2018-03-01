@@ -1,34 +1,35 @@
 #include "SequenceFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-SequenceFunction::SequenceFunction(MaximContext *context)
-    : Function(context, "sequence", context->numType(),
-               {Parameter(context->numType(), false, false)},
-               Parameter::create(context->numType(), false, false), nullptr) {
+SequenceFunction::SequenceFunction(MaximContext *ctx, llvm::Module *module)
+    : Function(ctx, module, "sequence", ctx->numType(),
+               {Parameter(ctx->numType(), false, false)},
+               Parameter::create(ctx->numType(), false, false), nullptr) {
 
 }
 
-std::unique_ptr<SequenceFunction> SequenceFunction::create(MaximContext *context) {
-    return std::make_unique<SequenceFunction>(context);
+std::unique_ptr<SequenceFunction> SequenceFunction::create(MaximContext *ctx, llvm::Module *module) {
+    return std::make_unique<SequenceFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> SequenceFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                                  std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                                  llvm::Function *func, llvm::Module *module) {
-    auto floorFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::floor,
-                                                     {context()->numType()->vecType()});
+std::unique_ptr<Value> SequenceFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+    auto floorFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::floor,
+                                                     {ctx()->numType()->vecType()});
 
     auto indexNum = dynamic_cast<Num *>(params[0].get());
     assert(indexNum);
 
+    auto &b = method->builder();
+
     auto countSplat = b.CreateVectorSplat(2, vararg->count(b), "countsplat");
     auto countFloat = b.CreateUIToFP(
         countSplat,
-        context()->numType()->vecType(),
+        ctx()->numType()->vecType(),
         "countfloat"
     );
 

@@ -1,25 +1,26 @@
 #include "AmplitudeFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-AmplitudeFunction::AmplitudeFunction(MaximContext *context)
-    : Function(context, "amplitude", context->numType(), {Parameter(context->numType(), false, false)}, nullptr,
-               context->numType()->vecType()) {
-    b0 = 1 - std::exp(-1 / (0.05f * context->sampleRate));
+AmplitudeFunction::AmplitudeFunction(MaximContext *ctx, llvm::Module *module)
+    : Function(ctx, module, "amplitude", ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr, false) {
+    b0 = 1 - std::exp(-1 / (0.05f * ctx->sampleRate));
 }
 
-std::unique_ptr<AmplitudeFunction> AmplitudeFunction::create(MaximContext *context) {
-    return std::make_unique<AmplitudeFunction>(context);
+std::unique_ptr<AmplitudeFunction> AmplitudeFunction::create(MaximContext *ctx, llvm::Module *module) {
+    return std::make_unique<AmplitudeFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> AmplitudeFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                                   std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                                   llvm::Function *func, llvm::Module *module) {
-    auto absIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::fabs,
-                                                        {context()->numType()->vecType()});
+std::unique_ptr<Value> AmplitudeFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+    auto absIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::fabs,
+                                                        {ctx()->numType()->vecType()});
+
+    auto &b = method->builder();
+    auto funcContext = method->getEntryPointer(addEntry(ctx()->constFloatVec(0)), "ctx");
 
     auto paramVal = dynamic_cast<Num *>(params[0].get());
     assert(paramVal);
@@ -29,7 +30,7 @@ std::unique_ptr<Value> AmplitudeFunction::generate(Builder &b, std::vector<std::
     auto inputDiff = b.CreateBinOp(llvm::Instruction::BinaryOps::FSub, absInput, currentEstimate, "inputdiff");
     auto inputMul = b.CreateBinOp(
         llvm::Instruction::BinaryOps::FMul,
-        llvm::ConstantVector::getSplat(2, context()->constFloat(b0)),
+        llvm::ConstantVector::getSplat(2, ctx()->constFloat(b0)),
         inputDiff, "inputmul"
     );
     auto newEstimate = b.CreateBinOp(llvm::Instruction::BinaryOps::FAdd, currentEstimate, inputMul, "newest");
@@ -38,16 +39,4 @@ std::unique_ptr<Value> AmplitudeFunction::generate(Builder &b, std::vector<std::
     auto undefPos = SourcePos(-1, -1);
     return paramVal->withVec(b, newEstimate, undefPos, undefPos)->withForm(b, MaximCommon::FormType::LINEAR, undefPos,
                                                                            undefPos);
-}
-
-std::unique_ptr<Instantiable> AmplitudeFunction::generateCall(std::vector<std::unique_ptr<Value>> args) {
-    return std::make_unique<FunctionCall>();
-}
-
-llvm::Constant *AmplitudeFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
-    return llvm::ConstantVector::getSplat(2, ctx->constFloat(0));
-}
-
-llvm::Type *AmplitudeFunction::FunctionCall::type(MaximContext *ctx) const {
-    return ctx->numType()->vecType();
 }

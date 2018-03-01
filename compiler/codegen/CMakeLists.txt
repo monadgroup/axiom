@@ -8,7 +8,7 @@ set(SOURCE_FILES
         Operator.cpp Value.cpp Builder.cpp MaximContext.cpp
         ModuleClass.cpp ComposableModuleClass.cpp
         ModuleClassMethod.cpp ComposableModuleClassMethod.cpp Function.cpp
-        Control.cpp ControlField.cpp
+        Control.cpp ControlField.cpp ControlFieldClassMethod.cpp
         Array.cpp ArrayType.cpp
         Midi.cpp MidiType.cpp
         Num.cpp NumType.cpp
@@ -20,6 +20,7 @@ add_definitions(${LLVM_DEFINITIONS})
 add_library(maxim_codegen ${SOURCE_FILES})
 
 add_subdirectory(controls)
+add_subdirectory(functions)
 add_subdirectory(operators)
 add_subdirectory(visitors)
-target_link_libraries(maxim_codegen maxim_codegen_controls maxim_codegen_operators maxim_codegen_visitors)
+target_link_libraries(maxim_codegen maxim_codegen_controls maxim_codegen_functions maxim_codegen_operators maxim_codegen_visitors)

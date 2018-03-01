@@ -10,13 +10,13 @@ NumOperator::NumOperator(MaximContext *context, MaximCommon::OperatorType type, 
 }
 
 std::unique_ptr<Value>
-NumOperator::call(Node *node, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos,
+NumOperator::call(ModuleClassMethod *method, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos,
                   SourcePos endPos) {
     auto leftNum = dynamic_cast<Num *>(left.get());
     auto rightNum = dynamic_cast<Num *>(right.get());
     assert(leftNum && rightNum);
 
-    return call(node, leftNum, rightNum)->withSource(startPos, endPos);
+    return call(method, leftNum, rightNum)->withSource(startPos, endPos);
 }
 
 llvm::Value *NumOperator::getActive(Builder &b, Num *left, Num *right) {

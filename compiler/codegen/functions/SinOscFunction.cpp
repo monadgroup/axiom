@@ -1,24 +1,30 @@
 #include "SinOscFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-SinOscFunction::SinOscFunction(MaximContext *context) : PeriodicFunction(context, "sinOsc") {
+SinOscFunction::SinOscFunction(MaximContext *ctx, llvm::Module *module) : PeriodicFunction(ctx, module, "sinOsc") {
 
 }
 
-std::unique_ptr<SinOscFunction> SinOscFunction::create(MaximContext *context) {
-    return std::make_unique<SinOscFunction>(context);
+std::unique_ptr<SinOscFunction> SinOscFunction::create(MaximContext *ctx, llvm::Module *module) {
+    return std::make_unique<SinOscFunction>(ctx, module);
 }
 
-llvm::Value *SinOscFunction::nextValue(llvm::Value *period, Builder &b, llvm::Module *module) {
-    auto sinFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::sin, {context()->numType()->vecType()});
+llvm::Value *SinOscFunction::nextValue(ComposableModuleClassMethod *method, llvm::Value *period) {
+    auto sinFunc = llvm::Intrinsic::getDeclaration(
+        method->moduleClass()->module(),
+        llvm::Intrinsic::ID::sin, {ctx()->numType()->vecType()}
+    );
+
+    auto &b = method->builder();
 
     auto sinPeriod = b.CreateFMul(
         period,
-        llvm::ConstantVector::getSplat(2, context()->constFloat(M_PI * 2)),
+        ctx()->constFloatVec(M_PI * 2),
         "sinperiod"
     );
     return CreateCall(b, sinFunc, {sinPeriod}, "result");

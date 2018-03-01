@@ -6,12 +6,12 @@ namespace MaximCodegen {
 
     class SawOscFunction : public PeriodicFunction {
     public:
-        explicit SawOscFunction(MaximContext *context);
+        explicit SawOscFunction(MaximContext *ctx, llvm::Module *module);
 
-        static std::unique_ptr<SawOscFunction> create(MaximContext *context);
+        static std::unique_ptr<SawOscFunction> create(MaximContext *ctx, llvm::Module *module);
 
     protected:
-        llvm::Value *nextValue(llvm::Value *period, Builder &b, llvm::Module *module) override;
+        llvm::Value *nextValue(ComposableModuleClassMethod *method, llvm::Value *period) override;
     };
 
 }

@@ -1,30 +1,31 @@
 #include "MixFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-MixFunction::MixFunction(MaximContext *context)
-    : Function(context, "mix", context->numType(),
-               {Parameter(context->numType(), false, false),
-                Parameter(context->numType(), false, false),
-                Parameter(context->numType(), false, false)},
-               nullptr, nullptr) {
+MixFunction::MixFunction(MaximContext *ctx, llvm::Module *module)
+    : Function(ctx, module, "mix", ctx->numType(),
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false)},
+               nullptr) {
 
 }
 
-std::unique_ptr<MixFunction> MixFunction::create(MaximContext *context) {
-    return std::make_unique<MixFunction>(context);
+std::unique_ptr<MixFunction> MixFunction::create(MaximContext *ctx, llvm::Module *module) {
+    return std::make_unique<MixFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> MixFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                             std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                             llvm::Function *func, llvm::Module *module) {
+std::unique_ptr<Value> MixFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
     auto numA = dynamic_cast<Num *>(params[0].get());
     auto numB = dynamic_cast<Num *>(params[1].get());
     auto mixNum = dynamic_cast<Num *>(params[2].get());
     assert(numA && numB && mixNum);
+
+    auto &b = method->builder();
 
     auto vecA = numA->vec(b);
     auto vecB = numB->vec(b);

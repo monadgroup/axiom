@@ -1,82 +1,60 @@
 #include "Function.h"
 
-#include <sstream>
-
-#include "MaximContext.h"
+#include "Type.h"
 #include "Value.h"
-#include "Node.h"
+#include "MaximContext.h"
+#include "ComposableModuleClassMethod.h"
 
 using namespace MaximCodegen;
 
-Function::Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
-                   std::unique_ptr<Parameter> vararg, llvm::Type *contextType, bool isPure)
-    : _context(context), _returnType(returnType), _parameters(std::move(parameters)),
-      _vararg(std::move(vararg)), _contextType(contextType), _name(name), _isPure(isPure) {
-
-    // calculate argument requirements
+Function::Function(MaximContext *ctx, llvm::Module *module, const std::string &name, Type *returnType,
+                   std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg, bool isPure)
+    : ComposableModuleClass(ctx, module, name), _returnType(returnType), _parameters(std::move(parameters)),
+      _vararg(std::move(vararg)), _isPure(isPure) {
+    // calculate argument size constraints
     _allArguments = _parameters.size() + (_vararg ? 1 : 0);
     _minArguments = _allArguments;
     _maxArguments = _vararg ? -1 : (int) _parameters.size();
 
-    _paramTypes.reserve(_allArguments);
 
+    std::vector<llvm::Type *> paramTypes;
+    paramTypes.reserve(_allArguments);
     for (const auto &param : _parameters) {
-        _paramTypes.push_back(param.type->get());
+        paramTypes.push_back(param.type->get());
         if (param.optional) _minArguments--;
     }
 
     if (_vararg) {
-        _vaType = llvm::StructType::get(context->llvm(), {
-            llvm::Type::getInt8Ty(context->llvm()),
+        _vaType = llvm::StructType::get(ctx->llvm(), {
+            llvm::Type::getInt8Ty(ctx->llvm()),
             llvm::PointerType::get(_vararg->type->get(), 0)
         });
-        _vaIndex = _paramTypes.size();
-        _paramTypes.push_back(_vaType);
-    }
-    if (_contextType) {
-        _contextIndex = _paramTypes.size();
-        _paramTypes.push_back(llvm::PointerType::get(_contextType, 0));
+        _vaIndex = paramTypes.size();
+        paramTypes.push_back(_vaType);
     }
 
-    // mangle name
-    std::stringstream mangledName;
-    mangledName << "maxim." << name;
-    for (const auto &param : _parameters) {
-        mangledName << "." << param.type->name();
-    }
-    if (_vararg) {
-        mangledName << "_" << _vararg->type->name();
-    }
-    _mangledName = mangledName.str();
-}
-
-void Function::generate(llvm::Module *module) {
-    auto func = createFuncForModule(module);
+    _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call", returnType->get(), paramTypes);
 
     // prettify arguments to pass into generate method
     std::vector<std::unique_ptr<Value>> genArgs;
     genArgs.reserve(_parameters.size());
     for (size_t i = 0; i < _parameters.size(); i++) {
-        auto argVal = func->arg_begin() + i;
+        auto argVal = _callMethod->arg(i);
         auto argType = _parameters[i].type;
         genArgs.push_back(argType->createInstance(argVal, SourcePos(-1, -1), SourcePos(-1, -1)));
     }
 
     std::unique_ptr<VarArg> genVarArg;
-    if (_vararg) genVarArg = std::make_unique<DynVarArg>(_context, func->arg_begin() + _vaIndex, _vararg->type);
-
-    llvm::Value *genContext = nullptr;
-    if (_contextType) genContext = func->arg_begin() + _contextIndex;
-
-    auto funcBlock = llvm::BasicBlock::Create(_context->llvm(), "entry", func);
-    Builder builder(funcBlock);
-    auto res = generate(builder, std::move(genArgs), std::move(genVarArg), genContext, func, module);
-    builder.CreateRet(res->get());
+    if (_vararg) genVarArg = std::make_unique<DynVarArg>(ctx, _callMethod->arg(_vaIndex), _vararg->type);
+    generate(_callMethod.get(), genArgs, std::move(genVarArg));
 }
 
-std::unique_ptr<Value>
-Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos,
-               SourcePos endPos) {
+bool Function::acceptsParameters(const std::vector<Type *> &types) {
+    return validateCount(types.size(), false) && validateTypes(types);
+}
+
+std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> values,
+                                      llvm::Value *context, SourcePos startPos, SourcePos endPos) {
     // validate and map arguments - first validation can do without optional values, second can't
     validateAndThrow(values, false, true, startPos, endPos);
     auto mappedArgs = mapArguments(std::move(values));
@@ -104,28 +82,24 @@ Function::call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos
     }
 
     // either call inline with constant folding, or generate call
-    auto result = computeConst ? callConst(node, std::move(args), std::move(varargs), node->module())
-                               : callNonConst(node, std::move(mappedArgs), std::move(args), varargs, startPos, endPos,
-                                              node->module());
-    return result->withSource(startPos, endPos);
+    if (computeConst) {
+        return callConst(method, args, varargs, startPos, endPos);
+    } else {
+        return callNonConst(method, mappedArgs, args, varargs, startPos, endPos);
+    }
 }
 
-std::unique_ptr<Value> Function::generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                               std::unique_ptr<ConstVarArg> vararg, llvm::Value *context,
-                                               llvm::Function *func, llvm::Module *module) {
-    return generate(b, std::move(params), std::move(vararg), context, func, module);
+std::unique_ptr<Value> Function::generateConst(ComposableModuleClassMethod *method,
+                                               const std::vector<std::unique_ptr<Value>> &params,
+                                               std::unique_ptr<ConstVarArg> vararg) {
+    return generate(method, params, std::move(vararg));
 }
 
 std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
     return providedArgs;
 }
 
-std::unique_ptr<Instantiable> Function::generateCall(std::vector<std::unique_ptr<Value>> args) {
-    assert(false);
-    throw;
-}
-
-Parameter *Function::getParameter(size_t index) {
+Parameter* Function::getParameter(size_t index) {
     if (index < _parameters.size()) return &_parameters[index];
     assert(_vararg);
     return _vararg.get();
@@ -154,7 +128,7 @@ void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args,
         auto providedArg = args[i].get();
         auto param = getParameter(i);
 
-        _context->assertType(providedArg, param->type);
+        ctx()->assertType(providedArg, param->type);
         if (requireConst && param->requireConst && !llvm::isa<llvm::Constant>(providedArg->get())) {
             throw MaximCommon::CompileError(
                 "I constantly insist that constant values must be passed into constant parameters, and yet they constantly aren't constant.",
@@ -164,24 +138,23 @@ void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args,
     }
 }
 
-std::unique_ptr<Value> Function::callConst(Node *node, std::vector<std::unique_ptr<Value>> args,
-                                           std::vector<std::unique_ptr<Value>> varargs, llvm::Module *module) {
+std::unique_ptr<Value> Function::callConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &args,
+                                           std::vector<std::unique_ptr<Value>> varargs, SourcePos startPos, SourcePos endPos) {
     std::unique_ptr<ConstVarArg> vararg;
     if (_vararg) {
         assert(!varargs.empty());
-        vararg = std::make_unique<ConstVarArg>(_context, std::move(varargs));
+        vararg = std::make_unique<ConstVarArg>(ctx(), std::move(varargs));
     }
 
     // evaluate function inline and let constant folding do the rest
-    return generateConst(node->builder(), std::move(args), std::move(vararg), nullptr, node->generateFunc(module),
-                         module);
+    return generateConst(method, args, std::move(vararg))->withSource(startPos, endPos);
 }
 
-std::unique_ptr<Value> Function::callNonConst(Node *node,
-                                              std::vector<std::unique_ptr<Value>> allArgs,
-                                              std::vector<std::unique_ptr<Value>> args,
-                                              const std::vector<std::unique_ptr<Value>> &varargs,
-                                              SourcePos startPos, SourcePos endPos, llvm::Module *module) {
+std::unique_ptr<Value> Function::callNonConst(ComposableModuleClassMethod *method,
+                                              const std::vector<std::unique_ptr<Value>> &allArgs,
+                                              const std::vector<std::unique_ptr<Value>> &args,
+                                              const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos,
+                                              SourcePos endPos) {
     std::vector<llvm::Value *> values;
     values.reserve(args.size());
     for (const auto &arg : args) {
@@ -192,55 +165,45 @@ std::unique_ptr<Value> Function::callNonConst(Node *node,
     if (_vararg) {
         assert(!varargs.empty());
         auto vaType = _vararg->type->get();
-        auto countVal = _context->constInt(8, varargs.size(), false);
-        auto vaStruct = node->builder().CreateInsertValue(
+        auto countVal = ctx()->constInt(8, varargs.size(), false);
+        auto vaStruct = method->builder().CreateInsertValue(
             llvm::UndefValue::get(_vaType),
             countVal, {0}, "va.withsize"
         );
-        auto vaArray = node->builder().CreateAlloca(vaType, countVal, "va.arr");
+        auto vaArray = method->builder().CreateAlloca(vaType, countVal, "va.arr");
         for (size_t i = 0; i < varargs.size(); i++) {
-            auto storePos = node->builder().CreateGEP(vaType, vaArray, {
-                _context->constInt(32, i, false)
-            }, "va.arr.itemptr");
-            node->builder().CreateStore(varargs[i]->get(), storePos);
+            auto storePos = method->builder().CreateConstGEP1_64(vaArray, i, "va.arr.itemptr");
+            method->builder().CreateStore(varargs[i]->get(), storePos);
         }
-        values.push_back(node->builder().CreateInsertValue(vaStruct, vaArray, {1}, "va"));
+        values.push_back(method->builder().CreateInsertValue(vaStruct, vaArray, {1}, "va"));
     }
 
-    // create context in the parent node
-    if (_contextType) {
-        auto inst = generateCall(std::move(allArgs));
-        auto contextPtr = node->addInstantiable(std::move(inst));
-        assert(contextPtr->getType()->isPointerTy() && contextPtr->getType()->getPointerElementType() == _contextType);
-        values.push_back(contextPtr);
-    }
-
-    auto result = CreateCall(node->builder(), createFuncForModule(module), values, "result");
+    auto entryIndex = method->moduleClass()->addEntry(this);
+    auto result = method->callInto(entryIndex, values, _callMethod.get(), "callresult");
     return _returnType->createInstance(result, startPos, endPos);
 }
 
-llvm::Function *Function::createFuncForModule(llvm::Module *module) {
-    if (auto func = module->getFunction(_mangledName)) return func;
-
-    auto funcType = llvm::FunctionType::get(_returnType->get(), _paramTypes, false);
-    return llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, _mangledName, module);
-}
-
 Parameter::Parameter(Type *type, bool requireConst, bool optional)
-    : type(type), requireConst(requireConst), optional(optional) {}
+    : type(type), requireConst(requireConst), optional(optional) {
+
+}
 
 std::unique_ptr<Parameter> Parameter::create(Type *type, bool requireConst, bool optional) {
     return std::make_unique<Parameter>(type, requireConst, optional);
 }
 
-VarArg::VarArg(MaximContext *context) : context(context) {}
+VarArg::VarArg(MaximContext *context) : context(context) {
+
+}
 
 std::unique_ptr<Value> VarArg::atIndex(uint64_t index, Builder &b) {
     return atIndex(context->constInt(8, index, false), b);
 }
 
 ConstVarArg::ConstVarArg(MaximContext *context, std::vector<std::unique_ptr<Value>> vals)
-    : VarArg(context), vals(std::move(vals)) {}
+    : VarArg(context), vals(std::move(vals)) {
+
+}
 
 std::unique_ptr<Value> ConstVarArg::atIndex(llvm::Value *index, Builder &b) {
     auto constVal = llvm::dyn_cast<llvm::ConstantInt>(index);
@@ -253,7 +216,7 @@ std::unique_ptr<Value> ConstVarArg::atIndex(size_t index) {
     return vals[index]->clone();
 }
 
-llvm::Value *ConstVarArg::count(Builder &b) {
+llvm::Value* ConstVarArg::count(Builder &b) {
     return context->constInt(8, vals.size(), false);
 }
 
@@ -262,7 +225,9 @@ size_t ConstVarArg::count() const {
 }
 
 Function::DynVarArg::DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type)
-    : VarArg(context), argStruct(argStruct), type(type) {}
+    : VarArg(context), argStruct(argStruct), type(type) {
+
+}
 
 std::unique_ptr<Value> Function::DynVarArg::atIndex(llvm::Value *index, Builder &b) {
     auto valPtr = b.CreateExtractValue(argStruct, {1}, "va.ptr");
@@ -270,6 +235,6 @@ std::unique_ptr<Value> Function::DynVarArg::atIndex(llvm::Value *index, Builder 
     return type->createInstance(b.CreateLoad(ptr, "va.element"), SourcePos(-1, -1), SourcePos(-1, -1));
 }
 
-llvm::Value *Function::DynVarArg::count(Builder &b) {
-    return b.CreateExtractValue(argStruct, {0}, "va.count");
+llvm::Value* Function::DynVarArg::count(Builder &b) {
+    return b.CreateExtractElement(argStruct, {(uint64_t) 0}, "va.count");
 }

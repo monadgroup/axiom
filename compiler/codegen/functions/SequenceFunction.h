@@ -7,14 +7,13 @@ namespace MaximCodegen {
 
     class SequenceFunction : public Function {
     public:
-        explicit SequenceFunction(MaximContext *context);
+        explicit SequenceFunction(MaximContext *ctx, llvm::Module *module);
 
-        static std::unique_ptr<SequenceFunction> create(MaximContext *context);
+        static std::unique_ptr<SequenceFunction> create(MaximContext *ctx, llvm::Module *module);
 
     protected:
         std::unique_ptr<Value>
-        generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                 llvm::Value *funcContext, llvm::Function *func, llvm::Module *module) override;
+        generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) override;
     };
 
 }

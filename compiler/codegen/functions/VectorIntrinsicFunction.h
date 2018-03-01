@@ -8,15 +8,13 @@ namespace MaximCodegen {
 
     class VectorIntrinsicFunction : public Function {
     public:
-        VectorIntrinsicFunction(MaximContext *context, llvm::Intrinsic::ID id, std::string name, size_t paramCount);
+        VectorIntrinsicFunction(MaximContext *ctx, llvm::Module *module, llvm::Intrinsic::ID id, std::string name, size_t paramCount);
 
         static std::unique_ptr<VectorIntrinsicFunction>
-        create(MaximContext *context, llvm::Intrinsic::ID id, std::string name, size_t paramCount);
+        create(MaximContext *ctx, llvm::Module *module, llvm::Intrinsic::ID id, std::string name, size_t paramCount);
 
     protected:
-        std::unique_ptr<Value>
-        generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                 llvm::Value *context, llvm::Function *func, llvm::Module *module) override;
+        std::unique_ptr<Value> generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) override;
 
     private:
         llvm::Intrinsic::ID id;

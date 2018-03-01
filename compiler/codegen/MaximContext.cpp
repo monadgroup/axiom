@@ -4,10 +4,10 @@
 #include "Midi.h"
 #include "Tuple.h"
 #include "Array.h"
-#include "FunctionCall.h"
 #include "Operator.h"
-#include "Converter.h"
-#include "Node.h"
+//#include "Converter.h"
+
+#include "ComposableModuleClassMethod.h"
 
 #include "functions/VectorIntrinsicFunction.h"
 #include "functions/ScalarExternalFunction.h"
@@ -22,7 +22,6 @@
 #include "functions/ActiveFunction.h"
 #include "functions/WithActiveFunction.h"
 #include "functions/NextFunction.h"
-#include "functions/DelayFunction.h"
 #include "functions/AmplitudeFunction.h"
 #include "functions/HoldFunction.h"
 #include "functions/AccumFunction.h"
@@ -40,72 +39,75 @@
 #include "operators/NumComparisonOperator.h"
 #include "operators/NumLogicalOperator.h"
 
+/*
 #include "converters/BeatsConverter.h"
 #include "converters/ControlConverter.h"
 #include "converters/DbConverter.h"
 #include "converters/FrequencyConverter.h"
 #include "converters/LinearConverter.h"
 #include "converters/SecondsConverter.h"
+ */
 
 using namespace MaximCodegen;
 
 // todo: remove dataLayout from MaximContext as it's only used in the runtime library
-MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout), _numType(this), _midiType(this) {
+MaximContext::MaximContext(llvm::Module *libModule, llvm::DataLayout dataLayout)
+    : _libModule(libModule), _dataLayout(std::move(dataLayout)), _numType(this), _midiType(this) {
     /// REGISTER FUNCTIONS
     // functions that map directly to a built-in LLVM vector intrinsic
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::cos, "cos", 1));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sin, "sin", 1));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log, "log", 1));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log2, "log2", 1));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::log10, "log10", 1));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::sqrt, "sqrt", 1));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::ceil, "ceil", 1));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::floor, "floor", 1));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::fabs, "abs", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::cos, "cos", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::sin, "sin", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::log, "log", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::log2, "log2", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::log10, "log10", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::sqrt, "sqrt", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::ceil, "ceil", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::floor, "floor", 1));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::fabs, "abs", 1));
 
     // functions that map directly to an external scalar function
-    registerFunction(ScalarExternalFunction::create(this, "tanf", "tan", 1));
-    registerFunction(ScalarExternalFunction::create(this, "acosf", "acos", 1));
-    registerFunction(ScalarExternalFunction::create(this, "asinf", "asin", 1));
-    registerFunction(ScalarExternalFunction::create(this, "atanf", "atan", 1));
-    registerFunction(ScalarExternalFunction::create(this, "atan2f", "atan2", 2));
-    registerFunction(ScalarExternalFunction::create(this, "logbf", "logb", 1));
-    registerFunction(ScalarExternalFunction::create(this, "hypotf", "hypot", 2));
+    registerFunction(ScalarExternalFunction::create(this, libModule, "tanf", "tan", 1));
+    registerFunction(ScalarExternalFunction::create(this, libModule, "acosf", "acos", 1));
+    registerFunction(ScalarExternalFunction::create(this, libModule, "asinf", "asin", 1));
+    registerFunction(ScalarExternalFunction::create(this, libModule, "atanf", "atan", 1));
+    registerFunction(ScalarExternalFunction::create(this, libModule, "atan2f", "atan2", 2));
+    registerFunction(ScalarExternalFunction::create(this, libModule, "logbf", "logb", 1));
+    registerFunction(ScalarExternalFunction::create(this, libModule, "hypotf", "hypot", 2));
 
     // other functions
-    registerFunction(ToRadFunction::create(this));
-    registerFunction(ToDegFunction::create(this));
-    registerFunction(ClampFunction::create(this));
-    registerFunction(PanFunction::create(this));
-    registerFunction(VectorShuffleFunction::create(this, "left", {0, 0}));
-    registerFunction(VectorShuffleFunction::create(this, "right", {1, 1}));
-    registerFunction(VectorShuffleFunction::create(this, "swap", {1, 0}));
-    registerFunction(CombineFunction::create(this));
-    registerFunction(MixFunction::create(this));
-    registerFunction(SequenceFunction::create(this));
-    registerFunction(NoiseFunction::create(this));
-    registerFunction(ActiveFunction::create(this));
-    registerFunction(WithActiveFunction::create(this));
-    registerFunction(NextFunction::create(this));
-    registerFunction(DelayFunction::create(this));
-    registerFunction(AmplitudeFunction::create(this));
-    registerFunction(HoldFunction::create(this));
-    registerFunction(AccumFunction::create(this));
+    registerFunction(ToRadFunction::create(this, libModule));
+    registerFunction(ToDegFunction::create(this, libModule));
+    registerFunction(ClampFunction::create(this, libModule));
+    registerFunction(PanFunction::create(this, libModule));
+    registerFunction(VectorShuffleFunction::create(this, libModule, "left", {0, 0}));
+    registerFunction(VectorShuffleFunction::create(this, libModule, "right", {1, 1}));
+    registerFunction(VectorShuffleFunction::create(this, libModule, "swap", {1, 0}));
+    registerFunction(CombineFunction::create(this, libModule));
+    registerFunction(MixFunction::create(this, libModule));
+    registerFunction(SequenceFunction::create(this, libModule));
+    registerFunction(NoiseFunction::create(this, libModule));
+    registerFunction(ActiveFunction::create(this, libModule));
+    registerFunction(WithActiveFunction::create(this, libModule));
+    registerFunction(NextFunction::create(this, libModule));
+    //registerFunction(DelayFunction::create(this, libModule));
+    registerFunction(AmplitudeFunction::create(this, libModule));
+    registerFunction(HoldFunction::create(this, libModule));
+    registerFunction(AccumFunction::create(this, libModule));
 
     // oscillators
-    registerFunction(SinOscFunction::create(this));
-    registerFunction(SqrOscFunction::create(this));
-    registerFunction(SawOscFunction::create(this));
-    registerFunction(TriOscFunction::create(this));
-    registerFunction(RmpOscFunction::create(this));
+    registerFunction(SinOscFunction::create(this, libModule));
+    registerFunction(SqrOscFunction::create(this, libModule));
+    registerFunction(SawOscFunction::create(this, libModule));
+    registerFunction(TriOscFunction::create(this, libModule));
+    registerFunction(RmpOscFunction::create(this, libModule));
 
     // hot paths for when only two parameters are provided to min/max
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::minnum, "min", 2));
-    registerFunction(VectorIntrinsicFunction::create(this, llvm::Intrinsic::ID::maxnum, "max", 2));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::minnum, "min", 2));
+    registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::maxnum, "max", 2));
 
     // variadic versions of min/max
-    registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::minnum, "min"));
-    registerFunction(VectorIntrinsicFoldFunction::create(this, llvm::Intrinsic::ID::maxnum, "max"));
+    registerFunction(VectorIntrinsicFoldFunction::create(this, libModule, llvm::Intrinsic::ID::minnum, "min"));
+    registerFunction(VectorIntrinsicFoldFunction::create(this, libModule, llvm::Intrinsic::ID::maxnum, "max"));
 
     /// REGISTER OPERATORS
     registerOperator(NumFloatOperator::create(this, MaximCommon::OperatorType::ADD, ActiveMode::ANY_INPUT,
@@ -146,12 +148,12 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout) : _dataLayout(dataLayout
                                                 llvm::Instruction::BinaryOps::Or));
 
     /// REGISTER CONVERTERS
-    registerConverter(BeatsConverter::create(this));
+    /*registerConverter(BeatsConverter::create(this));
     registerConverter(ControlConverter::create(this));
     registerConverter(DbConverter::create(this));
     registerConverter(FrequencyConverter::create(this));
     registerConverter(LinearConverter::create(this));
-    registerConverter(SecondsConverter::create(this));
+    registerConverter(SecondsConverter::create(this));*/
 }
 
 llvm::Value *MaximContext::beatsPerSecond() const {
@@ -268,12 +270,12 @@ void MaximContext::registerOperator(std::unique_ptr<Operator> op) {
     operatorMap.emplace(key, std::move(op));
 }
 
-void MaximContext::registerFunction(std::unique_ptr<FunctionCall> func) {
+void MaximContext::registerFunction(std::unique_ptr<Function> func) {
     getOrCreateFunctionList(func->name()).push_back(std::move(func));
 }
 
 void MaximContext::registerConverter(std::unique_ptr<Converter> con) {
-    converterMap.emplace(con->toType(), std::move(con));
+    //converterMap.emplace(con->toType(), std::move(con));
 }
 
 Operator *MaximContext::getOperator(MaximCommon::OperatorType type, Type *leftType, Type *rightType) {
@@ -284,9 +286,9 @@ Operator *MaximContext::getOperator(MaximCommon::OperatorType type, Type *leftTy
 }
 
 std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal,
-                                                  std::unique_ptr<Value> rightVal, Node *node, SourcePos startPos,
-                                                  SourcePos endPos) {
-    auto &b = node->builder();
+                                                  std::unique_ptr<Value> rightVal, ModuleClassMethod *method,
+                                                  SourcePos startPos, SourcePos endPos) {
+    auto &b = method->builder();
     auto leftTuple = dynamic_cast<Tuple *>(leftVal.get());
     auto rightTuple = dynamic_cast<Tuple *>(rightVal.get());
 
@@ -309,7 +311,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
             auto leftTupleVal = leftTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto rightTupleVal = rightTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftTupleVal->type(), rightTupleVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(node, std::move(leftTupleVal), std::move(rightTupleVal), startPos, endPos));
+            resultVals.push_back(op->call(method, std::move(leftTupleVal), std::move(rightTupleVal), startPos, endPos));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
@@ -321,7 +323,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
         for (size_t i = 0; i < leftSize; i++) {
             auto leftTupleVal = leftTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftTupleVal->type(), rightVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(node, std::move(leftTupleVal), rightVal->clone(), startPos, endPos));
+            resultVals.push_back(op->call(method, std::move(leftTupleVal), rightVal->clone(), startPos, endPos));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
@@ -333,18 +335,18 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
         for (size_t i = 0; i < rightSize; i++) {
             auto rightTupleVal = rightTuple->atIndex(i, b, SourcePos(-1, -1), SourcePos(-1, -1));
             auto op = alwaysGetOperator(type, leftVal->type(), rightTupleVal->type(), startPos, endPos);
-            resultVals.push_back(op->call(node, leftVal->clone(), std::move(rightTupleVal), startPos, endPos));
+            resultVals.push_back(op->call(method, leftVal->clone(), std::move(rightTupleVal), startPos, endPos));
         }
 
         return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
     } else {
         // if neither are tuples, operate normally
         auto op = alwaysGetOperator(type, leftVal->type(), rightVal->type(), startPos, endPos);
-        return op->call(node, std::move(leftVal), std::move(rightVal), startPos, endPos);
+        return op->call(method, std::move(leftVal), std::move(rightVal), startPos, endPos);
     }
 }
 
-FunctionCall *MaximContext::getFunction(std::string name, std::vector<Type *> types) {
+Function *MaximContext::getFunction(std::string name, std::vector<Type *> types) {
     auto pos = functionMap.find(name);
     if (pos == functionMap.end() || pos->second.empty()) return nullptr;
 
@@ -358,8 +360,8 @@ FunctionCall *MaximContext::getFunction(std::string name, std::vector<Type *> ty
 }
 
 std::unique_ptr<Value>
-MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, Node *node,
-                           SourcePos startPos, SourcePos endPos) {
+MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values,
+                           ComposableModuleClassMethod *method, SourcePos startPos, SourcePos endPos) {
     std::vector<Type *> types;
     types.reserve(values.size());
     for (const auto &val : values) {
@@ -371,7 +373,9 @@ MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<
         throw MaximCommon::CompileError("WHAT IS THIS?\?!?! " + name + " is def not a valid function :(", startPos,
                                         endPos);
     }
-    return func->call(node, std::move(values), startPos, endPos);
+
+    auto funcContext = method->getEntryPointer(method->moduleClass()->addEntry(func), "funcCtx");
+    return func->call(method, std::move(values), funcContext, startPos, endPos);
 }
 
 Converter *MaximContext::getConverter(MaximCommon::FormType destType) {
@@ -380,23 +384,13 @@ Converter *MaximContext::getConverter(MaximCommon::FormType destType) {
     return pos->second.get();
 }
 
-std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, Node *node,
-                                                 SourcePos startPos, SourcePos endPos) {
-    auto con = getConverter(destType);
+std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value,
+                                                 ModuleClassMethod *method, SourcePos startPos, SourcePos endPos) {
+    /*auto con = getConverter(destType);
     assert(con);
 
-    return con->call(node, std::move(value), startPos, endPos);
-}
-
-void MaximContext::buildFunctions(llvm::Module *module) {
-    for (const auto &pair : functionMap) {
-        for (const auto &overload : pair.second) {
-            overload->generate(module);
-        }
-    }
-    for (const auto &pair : converterMap) {
-        pair.second->generate(module);
-    }
+    return con->call(node, std::move(value), startPos, endPos);*/
+    assert(false);
 }
 
 uint64_t MaximContext::secondsToSamples(float seconds) {
@@ -415,10 +409,10 @@ llvm::Value *MaximContext::secondsToSamples(llvm::Value *seconds, Builder &b) {
     return b.CreateFPToUI(floatResult, castType, "samplerate.int64");
 }
 
-std::vector<std::unique_ptr<FunctionCall>> &MaximContext::getOrCreateFunctionList(std::string name) {
+std::vector<std::unique_ptr<Function>> &MaximContext::getOrCreateFunctionList(std::string name) {
     auto pos = functionMap.find(name);
     if (pos == functionMap.end()) {
-        return functionMap.emplace(name, std::vector<std::unique_ptr<FunctionCall>>{}).first->second;
+        return functionMap.emplace(name, std::vector<std::unique_ptr<Function>>{}).first->second;
     } else {
         return pos->second;
     }

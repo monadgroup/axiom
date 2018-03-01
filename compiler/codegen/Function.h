@@ -1,31 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <llvm/ADT/ArrayRef.h>
-
-#include "Builder.h"
+#include "ComposableModuleClass.h"
 #include "../SourcePos.h"
-
-namespace llvm {
-    class Type;
-
-    class Constant;
-
-    class Module;
-}
 
 namespace MaximCodegen {
 
-    class Node;
-
-    class Value;
-
-    class MaximContext;
-
     class Type;
 
-    class Instantiable;
+    class Value;
 
     class Parameter {
     public:
@@ -67,44 +49,28 @@ namespace MaximCodegen {
         size_t count() const;
     };
 
-    class Function {
+    class Function : public ComposableModuleClass {
     public:
-        Function(MaximContext *context, std::string name, Type *returnType, std::vector<Parameter> parameters,
-                 std::unique_ptr<Parameter> vararg, llvm::Type *contextType, bool isPure = true);
-
-        std::string name() const { return _name; }
+        Function(MaximContext *ctx, llvm::Module *module, const std::string &name, Type *returnType,
+                 std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg, bool isPure = true);
 
         Type *returnType() const { return _returnType; }
 
-        bool isPure() const { return _isPure && !_contextType; }
+        bool isPure() const { return _isPure; }
 
-        std::vector<Parameter> const &parameters() const { return _parameters; }
+        const std::vector<Parameter> &parameters() const { return _parameters; }
 
-        void generate(llvm::Module *module);
+        bool acceptsParameters(const std::vector<Type*> &types);
 
-        bool acceptsParameters(const std::vector<Type *> &types) {
-            return validateCount(types.size(), false) && validateTypes(types);
-        }
-
-        std::unique_ptr<Value>
-        call(Node *node, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);
-
-    protected:
-        MaximContext *context() const { return _context; }
-
-        llvm::Type *contextType() const { return _contextType; }
+        std::unique_ptr<Value> call(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> values, llvm::Value *context, SourcePos startPos, SourcePos endPos);
 
         virtual std::unique_ptr<Value>
-        generate(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<VarArg> vararg,
-                 llvm::Value *funcContext, llvm::Function *func, llvm::Module *module) = 0;
+        generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) = 0;
 
         virtual std::unique_ptr<Value>
-        generateConst(Builder &b, std::vector<std::unique_ptr<Value>> params, std::unique_ptr<ConstVarArg> vararg,
-                      llvm::Value *funcContext, llvm::Function *func, llvm::Module *module);
+        generateConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<ConstVarArg> vararg);
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
-
-        virtual std::unique_ptr<Instantiable> generateCall(std::vector<std::unique_ptr<Value>> args);
 
     private:
         class DynVarArg : public VarArg {
@@ -119,22 +85,18 @@ namespace MaximCodegen {
             llvm::Value *count(Builder &b) override;
         };
 
-        MaximContext *_context;
         Type *_returnType;
-        std::vector<llvm::Type *> _paramTypes;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _vararg;
-        llvm::Type *_vaType;
-        llvm::Type *_contextType;
-        std::string _name;
-        std::string _mangledName;
         bool _isPure;
 
+        llvm::Type *_vaType;
         size_t _vaIndex = 0;
-        size_t _contextIndex = 0;
         size_t _allArguments;
         size_t _minArguments;
         int _maxArguments;
+
+        std::unique_ptr<ComposableModuleClassMethod> _callMethod;
 
         Parameter *getParameter(size_t index);
 
@@ -146,15 +108,13 @@ namespace MaximCodegen {
                               SourcePos startPos, SourcePos endPos);
 
         std::unique_ptr<Value>
-        callConst(Node *node, std::vector<std::unique_ptr<Value>> args, std::vector<std::unique_ptr<Value>> varargs,
-                  llvm::Module *module);
+        callConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &args,
+                  std::vector<std::unique_ptr<Value>> varargs, SourcePos startPos, SourcePos endPos);
 
         std::unique_ptr<Value>
-        callNonConst(Node *node, std::vector<std::unique_ptr<Value>> allArgs, std::vector<std::unique_ptr<Value>> args,
-                     const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos, SourcePos endPos,
-                     llvm::Module *module);
-
-        llvm::Function *createFuncForModule(llvm::Module *module);
+        callNonConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &allArgs,
+                     const std::vector<std::unique_ptr<Value>> &args,
+                     const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos, SourcePos endPos);
     };
 
 }

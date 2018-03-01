@@ -1,45 +1,48 @@
 #include "VectorIntrinsicFoldFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-VectorIntrinsicFoldFunction::VectorIntrinsicFoldFunction(MaximContext *context, llvm::Intrinsic::ID id,
-                                                         std::string name)
-    : Function(context,
-               std::move(name), context->numType(), {}, Parameter::create(context->numType(), false, false), nullptr),
+VectorIntrinsicFoldFunction::VectorIntrinsicFoldFunction(MaximContext *ctx, llvm::Module *module,
+                                                         llvm::Intrinsic::ID id, std::string name)
+    : Function(ctx, module, std::move(name), ctx->numType(), {}, Parameter::create(ctx->numType(), false, false)),
       _id(id) {
+
 }
 
-std::unique_ptr<VectorIntrinsicFoldFunction> VectorIntrinsicFoldFunction::create(MaximContext *context,
+std::unique_ptr<VectorIntrinsicFoldFunction> VectorIntrinsicFoldFunction::create(MaximContext *ctx,
+                                                                                 llvm::Module *module,
                                                                                  llvm::Intrinsic::ID id,
                                                                                  std::string name) {
-    return std::make_unique<VectorIntrinsicFoldFunction>(context, id, name);
+    return std::make_unique<VectorIntrinsicFoldFunction>(ctx, module, id, name);
 }
 
-std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                                             std::unique_ptr<VarArg> vararg,
-                                                             llvm::Value *funcContext, llvm::Function *func,
-                                                             llvm::Module *module) {
-    auto intrinsic = llvm::Intrinsic::getDeclaration(module, _id, {context()->numType()->vecType()});
+std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(ComposableModuleClassMethod *method,
+                                                             const std::vector<std::unique_ptr<Value>> &params,
+                                                             std::unique_ptr<VarArg> vararg) {
+    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), _id, {ctx()->numType()->vecType()});
+    auto &b = method->builder();
+
     auto varCount = vararg->count(b);
     auto firstVal = vararg->atIndex((uint64_t) 0, b);
     auto firstNum = dynamic_cast<Num *>(firstVal.get());
     assert(firstNum);
 
-    auto vecPtr = b.CreateAlloca(context()->numType()->vecType(), nullptr, "accum.vecptr");
+    auto vecPtr = b.CreateAlloca(ctx()->numType()->vecType(), nullptr, "accum.vecptr");
     b.CreateStore(firstNum->vec(b), vecPtr);
-    auto activePtr = b.CreateAlloca(context()->numType()->activeType(), nullptr, "accum.activeptr");
+    auto activePtr = b.CreateAlloca(ctx()->numType()->activeType(), nullptr, "accum.activeptr");
     b.CreateStore(firstNum->active(b), activePtr);
 
-    auto indexType = llvm::Type::getInt8Ty(context()->llvm());
+    auto indexType = llvm::Type::getInt8Ty(ctx()->llvm());
     auto indexPtr = b.CreateAlloca(indexType, nullptr, "accum.indexptr");
     b.CreateStore(llvm::ConstantInt::get(indexType, 0, false), indexPtr);
 
-    auto loopCheckBlock = llvm::BasicBlock::Create(context()->llvm(), "loop.check", func);
-    auto loopContinueBlock = llvm::BasicBlock::Create(context()->llvm(), "loop.continue", func);
-    auto finishBlock = llvm::BasicBlock::Create(context()->llvm(), "finish", func);
+    auto loopCheckBlock = llvm::BasicBlock::Create(ctx()->llvm(), "loop.check", func);
+    auto loopContinueBlock = llvm::BasicBlock::Create(ctx()->llvm(), "loop.continue", func);
+    auto finishBlock = llvm::BasicBlock::Create(ctx()->llvm(), "finish", func);
 
     b.CreateBr(loopCheckBlock);
     b.SetInsertPoint(loopCheckBlock);
@@ -85,12 +88,12 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(Builder &b, std::ve
     return firstNum->withVec(b, finalVec, undefPos, undefPos)->withActive(b, finalActive, undefPos, undefPos);
 }
 
-std::unique_ptr<Value> VectorIntrinsicFoldFunction::generateConst(Builder &b,
-                                                                  std::vector<std::unique_ptr<Value>> params,
-                                                                  std::unique_ptr<ConstVarArg> vararg,
-                                                                  llvm::Value *funcContext, llvm::Function *func,
-                                                                  llvm::Module *module) {
-    auto intrinsic = llvm::Intrinsic::getDeclaration(module, _id, {context()->numType()->vecType()});
+std::unique_ptr<Value> VectorIntrinsicFoldFunction::generateConst(ComposableModuleClassMethod *method,
+                                                                  const std::vector<std::unique_ptr<Value>> &params,
+                                                                  std::unique_ptr<ConstVarArg> vararg) {
+    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), _id, {ctx()->numType()->vecType()});
+    auto &b = method->builder();
+
     auto firstVal = vararg->atIndex(0);
     auto firstNum = dynamic_cast<Num *>(firstVal.get());
     assert(firstNum);

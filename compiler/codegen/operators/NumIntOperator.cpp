@@ -2,7 +2,7 @@
 
 #include "../MaximContext.h"
 #include "../Num.h"
-#include "../Node.h"
+#include "../ModuleClassMethod.h"
 
 using namespace MaximCodegen;
 
@@ -17,8 +17,8 @@ std::unique_ptr<NumIntOperator> NumIntOperator::create(MaximContext *context, Ma
     return std::make_unique<NumIntOperator>(context, type, activeMode, op, isSigned);
 }
 
-std::unique_ptr<Num> NumIntOperator::call(Node *node, Num *numLeft, Num *numRight) {
-    auto &b = node->builder();
+std::unique_ptr<Num> NumIntOperator::call(ModuleClassMethod *method, Num *numLeft, Num *numRight) {
+    auto &b = method->builder();
     auto floatVec = context()->numType()->vecType();
     auto intVec = llvm::VectorType::get(llvm::Type::getInt32Ty(context()->llvm()), floatVec->getVectorNumElements());
 

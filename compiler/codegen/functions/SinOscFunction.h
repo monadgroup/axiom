@@ -6,12 +6,12 @@ namespace MaximCodegen {
 
     class SinOscFunction : public PeriodicFunction {
     public:
-        explicit SinOscFunction(MaximContext *context);
+        explicit SinOscFunction(MaximContext *ctx, llvm::Module *module);
 
-        static std::unique_ptr<SinOscFunction> create(MaximContext *context);
+        static std::unique_ptr<SinOscFunction> create(MaximContext *ctx, llvm::Module *module);
 
     protected:
-        llvm::Value *nextValue(llvm::Value *period, Builder &b, llvm::Module *module) override;
+        llvm::Value *nextValue(ComposableModuleClassMethod *method, llvm::Value *period) override;
     };
 
 }

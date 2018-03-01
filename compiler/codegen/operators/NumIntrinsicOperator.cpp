@@ -2,7 +2,8 @@
 
 #include "../MaximContext.h"
 #include "../Num.h"
-#include "../Node.h"
+#include "../ModuleClassMethod.h"
+#include "../ModuleClass.h"
 
 using namespace MaximCodegen;
 
@@ -18,9 +19,9 @@ NumIntrinsicOperator::create(MaximContext *context, MaximCommon::OperatorType ty
     return std::make_unique<NumIntrinsicOperator>(context, type, activeMode, id);
 }
 
-std::unique_ptr<Num> NumIntrinsicOperator::call(Node *node, Num *numLeft, Num *numRight) {
-    auto &b = node->builder();
-    auto powIntrinsic = llvm::Intrinsic::getDeclaration(node->module(), _id, context()->numType()->vecType());
+std::unique_ptr<Num> NumIntrinsicOperator::call(ModuleClassMethod *method, Num *numLeft, Num *numRight) {
+    auto &b = method->builder();
+    auto powIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), _id, context()->numType()->vecType());
     auto operatedVal = CreateCall(b, powIntrinsic, {
         numLeft->vec(b),
         numRight->vec(b)

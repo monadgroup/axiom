@@ -10,14 +10,14 @@ namespace MaximCodegen {
 
     class MaximContext;
 
-    class Node;
+    class ModuleClassMethod;
 
     class Operator {
     public:
         Operator(MaximContext *context, MaximCommon::OperatorType type, Type *leftType, Type *rightType);
 
         virtual std::unique_ptr<Value>
-        call(Node *node, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos,
+        call(ModuleClassMethod *method, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos,
              SourcePos endPos) = 0;
 
         MaximCommon::OperatorType type() const { return _type; }

@@ -20,7 +20,9 @@ namespace MaximCodegen {
 
         Builder &builder() { return _builder; }
 
-        llvm::Value *contextPtr() const { return _contextPtr; }
+        virtual llvm::Value *contextPtr() const { return _contextPtr; }
+
+        llvm::Value *arg(size_t index) const;
 
         llvm::Value *call(Builder &b, std::vector<llvm::Value *> args, llvm::Value *context, llvm::Module *module,
                           const llvm::Twine &resultName) const;

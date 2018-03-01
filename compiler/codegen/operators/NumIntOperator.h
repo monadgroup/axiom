@@ -15,7 +15,7 @@ namespace MaximCodegen {
         create(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode,
                llvm::Instruction::BinaryOps op, bool isSigned);
 
-        std::unique_ptr<Num> call(Node *node, Num *numLeft, Num *numRight) override;
+        std::unique_ptr<Num> call(ModuleClassMethod *method, Num *numLeft, Num *numRight) override;
 
     private:
         llvm::Instruction::BinaryOps _op;

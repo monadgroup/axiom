@@ -1,43 +1,41 @@
 #include "PanFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-PanFunction::PanFunction(MaximContext *context)
-    : Function(context, "pan", context->numType(),
-               {Parameter(context->numType(), false, false),
-                Parameter(context->numType(), false, false)},
-               nullptr, nullptr) {
+PanFunction::PanFunction(MaximContext *ctx, llvm::Module *module)
+    : Function(ctx, module, "pan", ctx->numType(),
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false)},
+               nullptr) {
 
 }
 
-std::unique_ptr<PanFunction> PanFunction::create(MaximContext *context) {
-    return std::make_unique<PanFunction>(context);
+std::unique_ptr<PanFunction> PanFunction::create(MaximContext *ctx, llvm::Module *module) {
+    return std::make_unique<PanFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> PanFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                             std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                             llvm::Function *func, llvm::Module *module) {
-    auto minIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::minnum,
-                                                        {context()->numType()->vecType()});
-    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::maxnum,
-                                                        {context()->numType()->vecType()});
+std::unique_ptr<Value> PanFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+    auto minIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum,
+                                                        {ctx()->numType()->vecType()});
+    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum,
+                                                        {ctx()->numType()->vecType()});
 
     auto xNum = dynamic_cast<Num *>(params[0].get());
     auto panNum = dynamic_cast<Num *>(params[1].get());
     assert(xNum && panNum);
 
-    auto zeroFloat = context()->constFloat(0);
-    auto oneFloat = context()->constFloat(1);
+    auto &b = method->builder();
 
     auto panVec = panNum->vec(b);
 
     // left amplitude = 1 - pan
     auto leftAmplitude = b.CreateBinOp(
         llvm::Instruction::BinaryOps::FSub,
-        oneFloat,
+        ctx()->constFloat(1),
         b.CreateExtractElement(panVec, (uint64_t) 0, "pan.left"),
         "amplitude.left"
     );
@@ -45,25 +43,25 @@ std::unique_ptr<Value> PanFunction::generate(Builder &b, std::vector<std::unique
     // right amplitude = 1 + pan
     auto rightAmplitude = b.CreateBinOp(
         llvm::Instruction::BinaryOps::FAdd,
-        oneFloat,
+        ctx()->constFloat(1),
         b.CreateExtractElement(panVec, (uint64_t) 1, "pan.right"),
         "amplitude.right"
     );
 
     // put values back into vector
-    auto amplitudeVec = b.CreateInsertElement(llvm::UndefValue::get(context()->numType()->vecType()), leftAmplitude,
+    auto amplitudeVec = b.CreateInsertElement(llvm::UndefValue::get(ctx()->numType()->vecType()), leftAmplitude,
                                               (uint64_t) 0, "amplitude");
     amplitudeVec = b.CreateInsertElement(amplitudeVec, rightAmplitude, (uint64_t) 1, "amplitude");
 
     // clamp to [0, 1] range
     amplitudeVec = CreateCall(
         b, maxIntrinsic,
-        {amplitudeVec, llvm::ConstantVector::get({zeroFloat, zeroFloat})},
+        {amplitudeVec, ctx()->constFloatVec(0)},
         "amplitude.maxed"
     );
     amplitudeVec = CreateCall(
         b, minIntrinsic,
-        {amplitudeVec, llvm::ConstantVector::get({oneFloat, oneFloat})},
+        {amplitudeVec, ctx()->constFloatVec(1)},
         "amplitude.clamped"
     );
 

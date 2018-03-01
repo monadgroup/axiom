@@ -12,10 +12,14 @@ ComposableModuleClassMethod::ComposableModuleClassMethod(ComposableModuleClass *
 
 }
 
+llvm::Value* ComposableModuleClassMethod::getEntryPointer(size_t index, const llvm::Twine &name) {
+    return moduleClass()->getEntryPointer(builder(), index, contextPtr(), name);
+}
+
 llvm::Value* ComposableModuleClassMethod::callInto(size_t index, const std::vector<llvm::Value *> &args,
                                                    const ModuleClassMethod *internalMethod,
                                                    const llvm::Twine &resultName) {
     auto indexStr = std::to_string(index);
-    auto itemPtr = moduleClass()->getEntryPointer(builder(), index, contextPtr(), "intoptr." + indexStr);
+    auto itemPtr = getEntryPointer(index, "intoptr." + indexStr);
     return internalMethod->call(builder(), args, itemPtr, moduleClass()->module(), resultName);
 }

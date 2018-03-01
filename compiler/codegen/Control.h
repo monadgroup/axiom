@@ -1,42 +1,36 @@
 #pragma once
 
-#include "../common/ControlType.h"
-#include "../common/ControlDirection.h"
-#include "Instantiable.h"
+#include <unordered_map>
+
+#include "ComposableModuleClass.h"
+#include "ControlField.h"
 
 namespace MaximCodegen {
 
-    class MaximContext;
+    class Type;
 
-    class Value;
-
-    class Control : public Instantiable {
+    class Control : public ModuleClass {
     public:
-        MaximCommon::ControlDirection direction = MaximCommon::ControlDirection::NONE;
+        Control(MaximContext *ctx, llvm::Module *module, llvm::Type *storageType, const std::string &name);
 
-        Control(MaximContext *context, MaximCommon::ControlType type);
+        ControlField *addField(const std::string &name, Type *type);
 
-        MaximCommon::ControlType type() const { return _type; }
+        llvm::Constant *initializeVal() override;
 
-        virtual bool validateProperty(std::string name) = 0;
+        llvm::Type *storageType() override;
 
-        virtual void setProperty(Builder &b, std::string name, std::unique_ptr<Value> val, llvm::Value *ptr) = 0;
-
-        virtual std::unique_ptr<Value> getProperty(Builder &b, std::string name, llvm::Value *ptr) = 0;
-
-        llvm::Type *type(MaximContext *ctx) const override = 0;
-
-        llvm::Constant *getInitialVal(MaximContext *ctx) override;
-
-        void initializeVal(MaximContext *ctx, llvm::Module *module, llvm::Value *ptr, InstantiableFunction *func,
-                           Builder &b) override;
+        ModuleClassMethod *constructor() override { return &_constructor; }
 
     protected:
-        MaximContext *context() const { return _context; }
+
+        void doComplete() override;
 
     private:
-        MaximContext *_context;
-        MaximCommon::ControlType _type;
+        std::unordered_map<std::string, ControlField> _fields;
+        llvm::Type *_storageType;
+
+        ModuleClassMethod _constructor;
+
     };
 
 }

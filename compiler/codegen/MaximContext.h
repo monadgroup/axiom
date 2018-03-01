@@ -60,15 +60,17 @@ namespace MaximCodegen {
 
     class Operator;
 
-    class FunctionCall;
+    class Function;
 
     class Converter;
 
-    class Node;
+    class ModuleClassMethod;
+
+    class ComposableModuleClassMethod;
 
     class MaximContext {
     public:
-        explicit MaximContext(llvm::DataLayout dataLayout);
+        explicit MaximContext(llvm::Module *libModule, llvm::DataLayout dataLayout);
 
         uint64_t sampleRate = 44100;
 
@@ -121,7 +123,7 @@ namespace MaximCodegen {
 
         void registerOperator(std::unique_ptr<Operator> op);
 
-        void registerFunction(std::unique_ptr<FunctionCall> func);
+        void registerFunction(std::unique_ptr<Function> func);
 
         void registerConverter(std::unique_ptr<Converter> con);
 
@@ -129,20 +131,18 @@ namespace MaximCodegen {
 
         std::unique_ptr<Value>
         callOperator(MaximCommon::OperatorType type, std::unique_ptr<Value> leftVal, std::unique_ptr<Value> rightVal,
-                     Node *node, SourcePos startPos, SourcePos endPos);
+                     ModuleClassMethod *method, SourcePos startPos, SourcePos endPos);
 
-        FunctionCall *getFunction(std::string name, std::vector<Type *> types);
+        Function *getFunction(std::string name, std::vector<Type *> types);
 
         std::unique_ptr<Value>
-        callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, Node *node,
+        callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, ComposableModuleClassMethod *method,
                      SourcePos startPos, SourcePos endPos);
 
         Converter *getConverter(MaximCommon::FormType destType);
 
-        std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, Node *node,
+        std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, ModuleClassMethod *method,
                                            SourcePos startPos, SourcePos endPos);
-
-        void buildFunctions(llvm::Module *module);
 
         uint64_t secondsToSamples(float seconds);
 
@@ -150,6 +150,7 @@ namespace MaximCodegen {
 
     private:
         llvm::LLVMContext _llvm;
+        llvm::Module *_libModule;
         llvm::DataLayout _dataLayout;
 
         NumType _numType;
@@ -158,10 +159,10 @@ namespace MaximCodegen {
         std::unordered_map<llvm::StructType *, TupleType> tupleTypeMap;
         std::unordered_map<llvm::ArrayType *, ArrayType> arrayTypeMap;
         std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
-        std::unordered_map<std::string, std::vector<std::unique_ptr<FunctionCall>>> functionMap;
+        std::unordered_map<std::string, std::vector<std::unique_ptr<Function>>> functionMap;
         std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> converterMap;
 
-        std::vector<std::unique_ptr<FunctionCall>> &getOrCreateFunctionList(std::string name);
+        std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);
 
         MaximCommon::CompileError
         typeAssertFailed(const Type *expectedType, const Type *receivedType, SourcePos startPos,

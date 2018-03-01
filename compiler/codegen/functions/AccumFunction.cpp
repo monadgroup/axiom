@@ -1,28 +1,30 @@
 #include "AccumFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-AccumFunction::AccumFunction(MaximContext *context)
-    : Function(context, "accum", context->numType(),
-               {Parameter(context->numType(), false, false),
-                Parameter(context->numType(), false, false),
-                Parameter(context->numType(), false, true)},
-               nullptr, context->numType()->vecType()) {
+AccumFunction::AccumFunction(MaximContext *ctx, llvm::Module *module)
+    : Function(ctx, module, "accum", ctx->numType(),
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, true)},
+               nullptr, false) {
 }
 
-std::unique_ptr<AccumFunction> AccumFunction::create(MaximContext *context) {
-    return std::make_unique<AccumFunction>(context);
+std::unique_ptr<AccumFunction> AccumFunction::create(MaximContext *ctx, llvm::Module *module) {
+    return std::make_unique<AccumFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> AccumFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                               std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                               llvm::Function *func, llvm::Module *module) {
+std::unique_ptr<Value> AccumFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
     auto xVal = dynamic_cast<Num *>(params[0].get());
     auto gateVal = dynamic_cast<Num *>(params[1].get());
     auto baseVal = dynamic_cast<Num *>(params[2].get());
+
+    auto &b = method->builder();
+    auto funcContext = method->getEntryPointer(addEntry(ctx()->constFloatVec(0)), "ctx");
 
     auto accumVec = b.CreateLoad(funcContext, "accum");
     auto incrementedVec = b.CreateFAdd(accumVec, xVal->vec(b), "accum.incr");
@@ -30,16 +32,16 @@ std::unique_ptr<Value> AccumFunction::generate(Builder &b, std::vector<std::uniq
     auto gateBool = b.CreateFCmp(
         llvm::CmpInst::Predicate::FCMP_ONE,
         gateVal->vec(b),
-        llvm::ConstantVector::getSplat(2, context()->constFloat(0)),
+        ctx()->constFloatVec(0),
         "gatebool"
     );
     auto floatGate = b.CreateUIToFP(
         gateBool,
-        context()->numType()->vecType(),
+        ctx()->numType()->vecType(),
         "gatefloat"
     );
     auto invGate = b.CreateFSub(
-        llvm::ConstantVector::getSplat(2, context()->constFloat(1)),
+        ctx()->constFloatVec(1),
         floatGate,
         "gatefloat.invert"
     );
@@ -63,19 +65,7 @@ std::unique_ptr<Value> AccumFunction::generate(Builder &b, std::vector<std::uniq
 std::vector<std::unique_ptr<Value>> AccumFunction::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
     if (providedArgs.size() < 3) {
         auto undefPos = SourcePos(-1, -1);
-        providedArgs.push_back(Num::create(context(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(Num::create(ctx(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     }
     return providedArgs;
-}
-
-std::unique_ptr<Instantiable> AccumFunction::generateCall(std::vector<std::unique_ptr<Value>> args) {
-    return std::make_unique<FunctionCall>();
-}
-
-llvm::Constant *AccumFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
-    return llvm::ConstantVector::getSplat(2, ctx->constFloat(0));
-}
-
-llvm::Type *AccumFunction::FunctionCall::type(MaximContext *ctx) const {
-    return ctx->numType()->vecType();
 }

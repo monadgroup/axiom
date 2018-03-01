@@ -1,34 +1,37 @@
 #include "TriOscFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-TriOscFunction::TriOscFunction(MaximContext *context) : PeriodicFunction(context, "triOsc") {
+TriOscFunction::TriOscFunction(MaximContext *ctx, llvm::Module *module) : PeriodicFunction(ctx, module, "triOsc") {
 
 }
 
-std::unique_ptr<TriOscFunction> TriOscFunction::create(MaximContext *context) {
-    return std::make_unique<TriOscFunction>(context);
+std::unique_ptr<TriOscFunction> TriOscFunction::create(MaximContext *ctx, llvm::Module *module) {
+    return std::make_unique<TriOscFunction>(ctx, module);
 }
 
-llvm::Value *TriOscFunction::nextValue(llvm::Value *period, Builder &b, llvm::Module *module) {
-    auto absFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::ID::fabs,
-                                                   {context()->numType()->vecType()});
+llvm::Value *TriOscFunction::nextValue(ComposableModuleClassMethod *method, llvm::Value *period) {
+    auto absFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::fabs,
+                                                   {ctx()->numType()->vecType()});
 
-    auto normalPeriod = llvm::ConstantVector::getSplat(2, context()->constFloat(4));
+    auto &b = method->builder();
+
+    auto normalPeriod = llvm::ConstantVector::getSplat(2, ctx()->constFloat(4));
     auto inputVal = b.CreateFMul(period, normalPeriod, "inputval");
     auto modInput = b.CreateFRem(inputVal, normalPeriod, "inputmod");
     auto subInput = b.CreateFSub(
         modInput,
-        llvm::ConstantVector::getSplat(2, context()->constFloat(2)),
+        llvm::ConstantVector::getSplat(2, ctx()->constFloat(2)),
         "inputsub"
     );
     auto normalized = CreateCall(b, absFunc, {subInput}, "normalized");
     return b.CreateFSub(
         normalized,
-        llvm::ConstantVector::getSplat(2, context()->constFloat(1)),
+        llvm::ConstantVector::getSplat(2, ctx()->constFloat(1)),
         "result"
     );
 }

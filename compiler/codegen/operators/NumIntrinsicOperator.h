@@ -18,7 +18,7 @@ namespace MaximCodegen {
         static std::unique_ptr<NumIntrinsicOperator>
         create(MaximContext *context, MaximCommon::OperatorType type, ActiveMode activeMode, llvm::Intrinsic::ID id);
 
-        std::unique_ptr<Num> call(Node *node, Num *numLeft, Num *numRight) override;
+        std::unique_ptr<Num> call(ModuleClassMethod *method, Num *numLeft, Num *numRight) override;
 
     private:
         llvm::Intrinsic::ID _id;

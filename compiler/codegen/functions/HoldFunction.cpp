@@ -1,38 +1,43 @@
 #include "HoldFunction.h"
 
 #include "../MaximContext.h"
+#include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
 using namespace MaximCodegen;
 
-HoldFunction::HoldFunction(MaximContext *context)
-    : Function(context, "hold", context->numType(),
-               {Parameter(context->numType(), false, false),
-                Parameter(context->numType(), false, false),
-                Parameter(context->numType(), false, true)},
-               nullptr, getContextType(context)) {
+HoldFunction::HoldFunction(MaximContext *ctx, llvm::Module *module)
+    : Function(ctx, module, "hold", ctx->numType(),
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, true)},
+               nullptr, false) {
 
 }
 
-std::unique_ptr<HoldFunction> HoldFunction::create(MaximContext *context) {
-    return std::make_unique<HoldFunction>(context);
+std::unique_ptr<HoldFunction> HoldFunction::create(MaximContext *ctx, llvm::Module *module) {
+    return std::make_unique<HoldFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> HoldFunction::generate(Builder &b, std::vector<std::unique_ptr<Value>> params,
-                                              std::unique_ptr<VarArg> vararg, llvm::Value *funcContext,
-                                              llvm::Function *func, llvm::Module *module) {
-    auto contextType = getContextType(context());
+std::unique_ptr<Value> HoldFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
     auto xVal = dynamic_cast<Num *>(params[0].get());
     auto gateVal = dynamic_cast<Num *>(params[1].get());
     auto elseVal = dynamic_cast<Num *>(params[2].get());
     assert(xVal && gateVal && elseVal);
+
+    auto &b = method->builder();
+    auto contextType = llvm::StructType::get(ctx()->llvm(), {
+        ctx()->numType()->vecType(),                                   // stored value
+        llvm::VectorType::get(llvm::Type::getInt1Ty(ctx()->llvm()), 2) // last gate value
+    });
+    auto funcContext = method->getEntryPointer(addEntry(contextType), "ctx");
 
     auto valPtr = b.CreateStructGEP(contextType, funcContext, 0, "val.ptr");
     auto gatePtr = b.CreateStructGEP(contextType, funcContext, 1, "gate.ptr");
 
     auto gateBool = b.CreateFCmp(
         llvm::CmpInst::Predicate::FCMP_ONE,
-        gateVal->vec(b), llvm::ConstantVector::getSplat(2, context()->constFloat(0)),
+        gateVal->vec(b), llvm::ConstantVector::getSplat(2, ctx()->constFloat(0)),
         "gatebool"
     );
 
@@ -40,11 +45,11 @@ std::unique_ptr<Value> HoldFunction::generate(Builder &b, std::vector<std::uniqu
     b.CreateStore(gateBool, gatePtr);
     auto isRising = b.CreateUIToFP(
         b.CreateICmp(llvm::CmpInst::Predicate::ICMP_UGT, gateBool, lastGate, "isrising"),
-        context()->numType()->vecType(),
+        ctx()->numType()->vecType(),
         "isrising.float"
     );
     auto invRising = b.CreateFSub(
-        llvm::ConstantVector::getSplat(2, context()->constFloat(1)),
+        llvm::ConstantVector::getSplat(2, ctx()->constFloat(1)),
         isRising,
         "isrising.invert"
     );
@@ -57,9 +62,9 @@ std::unique_ptr<Value> HoldFunction::generate(Builder &b, std::vector<std::uniqu
     auto newVal = b.CreateFAdd(currentContrib, lastContrib, "newval");
     b.CreateStore(newVal, valPtr);
 
-    auto gateFloat = b.CreateUIToFP(gateBool, context()->numType()->vecType(), "gate.float");
+    auto gateFloat = b.CreateUIToFP(gateBool, ctx()->numType()->vecType(), "gate.float");
     auto invGate = b.CreateFSub(
-        llvm::ConstantVector::getSplat(2, context()->constFloat(1)),
+        llvm::ConstantVector::getSplat(2, ctx()->constFloat(1)),
         gateFloat,
         "gate.invert"
     );
@@ -84,29 +89,7 @@ std::unique_ptr<Value> HoldFunction::generate(Builder &b, std::vector<std::uniqu
 std::vector<std::unique_ptr<Value>> HoldFunction::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
     if (providedArgs.size() < 3) {
         auto undefPos = SourcePos(-1, -1);
-        providedArgs.push_back(Num::create(context(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(Num::create(ctx(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     }
     return providedArgs;
-}
-
-std::unique_ptr<Instantiable> HoldFunction::generateCall(std::vector<std::unique_ptr<Value>> args) {
-    return std::make_unique<FunctionCall>();
-}
-
-llvm::StructType *HoldFunction::getContextType(MaximContext *ctx) {
-    return llvm::StructType::get(ctx->llvm(), {
-        ctx->numType()->vecType(),                                   // stored value
-        llvm::VectorType::get(llvm::Type::getInt1Ty(ctx->llvm()), 2) // last gate value
-    });
-}
-
-llvm::Constant *HoldFunction::FunctionCall::getInitialVal(MaximContext *ctx) {
-    return llvm::ConstantStruct::get(getContextType(ctx), {
-        llvm::UndefValue::get(ctx->numType()->vecType()),
-        llvm::ConstantVector::getSplat(2, ctx->constInt(1, 0, false))
-    });
-}
-
-llvm::Type *HoldFunction::FunctionCall::type(MaximContext *ctx) const {
-    return getContextType(ctx);
 }

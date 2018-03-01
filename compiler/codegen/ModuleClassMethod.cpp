@@ -30,6 +30,10 @@ llvm::Function* ModuleClassMethod::get(llvm::Module *module) const {
     );
 }
 
+llvm::Value* ModuleClassMethod::arg(size_t index) const {
+    return get(_moduleClass->module())->arg_begin() + index;
+}
+
 llvm::Value* ModuleClassMethod::call(Builder &b, std::vector<llvm::Value *> args, llvm::Value *context,
                                      llvm::Module *module, const llvm::Twine &resultName) const {
     args.push_back(context);

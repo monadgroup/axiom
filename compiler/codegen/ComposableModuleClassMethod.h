@@ -12,6 +12,8 @@ namespace MaximCodegen {
 
         ComposableModuleClass *moduleClass() const override { return _composableModuleClass; }
 
+        llvm::Value *getEntryPointer(size_t index, const llvm::Twine &name);
+
         llvm::Value *callInto(size_t index, const std::vector<llvm::Value*> &args, const ModuleClassMethod *internalMethod, const llvm::Twine &resultName);
 
     private:
