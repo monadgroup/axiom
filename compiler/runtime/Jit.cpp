@@ -4,11 +4,12 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
+#include <llvm/Support/DynamicLibrary.h>
 #include <iostream>
 
 using namespace MaximRuntime;
 
-llvm::JITSymbol getSymbol(std::string name) {
+llvm::JITSymbol getSymbol(const std::string &name) {
     // this doesn't seem to portably find math functions
     if (auto symAddr = llvm::RTDyldMemoryManager::getSymbolAddressInProcess(name)) {
         return llvm::JITSymbol(symAddr, llvm::JITSymbolFlags::Exported);
@@ -60,48 +61,30 @@ llvm::JITSymbol getSymbol(std::string name) {
 Jit::Jit()
     : targetMachine(llvm::EngineBuilder().selectTarget()),
       _dataLayout(targetMachine->createDataLayout()),
-      executionSession(symbolPool),
-      resolver(llvm::orc::createLegacyLookupResolver(
-          [this](const std::string &name) -> llvm::JITSymbol {
-              if (auto sym = compileLayer.findSymbol(name, false)) return sym;
-              else if (auto err = sym.takeError()) return std::move(err);
-
-              if (auto sym = getSymbol(name)) return sym;
-              if (name.length() > 2 && name[0] == '_') {
-                  if (auto sym = getSymbol(name.substr(1))) return sym;
-              }
-
-              return nullptr;
-          },
-          [](llvm::Error err) { llvm::cantFail(std::move(err), "lookupFlags failed"); }
-      )),
-      objectLayer(executionSession, [this](llvm::orc::VModuleKey) {
-          return llvm::orc::RTDyldObjectLinkingLayer::Resources {
-              std::make_shared<llvm::SectionMemoryManager>(), resolver
-          };
-      }),
+      objectLayer([]() { return std::make_shared<llvm::SectionMemoryManager>(); }),
       compileLayer(objectLayer, llvm::orc::SimpleCompiler(*targetMachine)) {
-
+    llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }
 
 Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
-    auto k = executionSession.allocateVModule();
-    _debugNames.emplace(k, m->getName().str());
-    std::cout << "Adding module " << m->getName().str() << std::endl;
+    auto resolver = llvm::orc::createLambdaResolver(
+        [&](const std::string &name) {
+            if (auto sym = compileLayer.findSymbol(name, false)) return sym;
+            return llvm::JITSymbol(nullptr);
+        },
+        [](const std::string &name) {
+            return getSymbol(name);
+        }
+    );
 
-    auto result = compileLayer.addModule(k, std::move(m));
-    return k;
+    return llvm::cantFail(compileLayer.addModule(std::move(m), std::move(resolver)));
 }
 
 Jit::ModuleKey Jit::addModule(const llvm::Module &m) {
-    return addModule(llvm::CloneModule(m));
+    return addModule(llvm::CloneModule(&m));
 }
 
 void Jit::removeModule(ModuleKey k) {
-    auto keyIndex = _debugNames.find(k);
-    assert(keyIndex != _debugNames.end());
-    std::cout << "Removing module " << keyIndex->second << std::endl;
-
     llvm::cantFail(compileLayer.removeModule(k));
 }
 

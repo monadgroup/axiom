@@ -56,7 +56,7 @@ void parseAndCompile(MaximContext *ctx, llvm::Module *mainModule) {
     generateFunc.builder().CreateRetVoid();
     node.complete();
 
-    llvm::Linker::linkModules(nodeModule, llvm::CloneModule(*mainModule));
+    llvm::Linker::linkModules(nodeModule, llvm::CloneModule(mainModule));
     nodeModule.print(llvm::errs(), nullptr);
 }
 

@@ -14,8 +14,12 @@ namespace llvm {
 namespace MaximRuntime {
 
     class Jit {
+    private:
+        using ObjectLayer = llvm::orc::RTDyldObjectLinkingLayer;
+        using CompileLayer = llvm::orc::IRCompileLayer<ObjectLayer, llvm::orc::SimpleCompiler>;
+
     public:
-        using ModuleKey = llvm::orc::VModuleKey;
+        using ModuleKey = CompileLayer::ModuleHandleT;
 
         Jit();
 
@@ -38,14 +42,9 @@ namespace MaximRuntime {
     private:
         llvm::TargetMachine *targetMachine;
         const llvm::DataLayout _dataLayout;
-        llvm::orc::SymbolStringPool symbolPool;
-        llvm::orc::ExecutionSession executionSession;
-        std::shared_ptr<llvm::orc::SymbolResolver> resolver;
-        llvm::orc::RTDyldObjectLinkingLayer objectLayer;
-        llvm::orc::IRCompileLayer<decltype(objectLayer), llvm::orc::SimpleCompiler> compileLayer;
+        ObjectLayer objectLayer;
+        CompileLayer compileLayer;
         llvm::Mangler mangler;
-
-        std::unordered_map<ModuleKey, std::string> _debugNames;
     };
 
 }
