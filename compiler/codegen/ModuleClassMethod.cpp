@@ -10,7 +10,7 @@ ModuleClassMethod::ModuleClassMethod(ModuleClass *moduleClass, std::string name,
       _returnType(returnType ? returnType : llvm::Type::getVoidTy(moduleClass->ctx()->llvm())),
       _paramTypes(std::move(paramTypes)) {
     auto storageType = moduleClass->storageType();
-    _paramTypes.push_back(storageType);
+    _paramTypes.push_back(llvm::PointerType::get(storageType, 0));
 
     auto func = get(moduleClass->module());
     _entryBlock = llvm::BasicBlock::Create(moduleClass->ctx()->llvm(), "entry", func);

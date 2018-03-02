@@ -7,7 +7,7 @@ using namespace MaximCodegen;
 size_t ModuleClass::_nextIndex = 0;
 
 ModuleClass::ModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name)
-    : _index(_nextIndex++), _ctx(ctx), _module(module), _name(name + "." + std::to_string(_index)) {
+    : _index(_nextIndex++), _ctx(ctx), _module(module), _name(name) {
 
 }
 
@@ -26,7 +26,7 @@ void ModuleClass::complete() {
 }
 
 std::string ModuleClass::mangleMethodName(const std::string &name) {
-    return "maximclass." + _name + "." + name;
+    return "maximclass." + _name + "." + std::to_string(_index) + "." + name;
 }
 
 

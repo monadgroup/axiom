@@ -384,8 +384,7 @@ MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<
                                         endPos);
     }
 
-    auto funcContext = method->getEntryPointer(method->moduleClass()->addEntry(func), "funcCtx");
-    return func->call(method, std::move(values), funcContext, startPos, endPos);
+    return func->call(method, std::move(values), startPos, endPos);
 }
 
 /*Converter *MaximContext::getConverter(MaximCommon::FormType destType) {

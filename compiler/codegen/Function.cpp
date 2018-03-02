@@ -47,8 +47,13 @@ void Function::generate() {
     }
 
     std::unique_ptr<VarArg> genVarArg;
-    if (_vararg) genVarArg = std::make_unique<DynVarArg>(ctx(), _callMethod->arg(_vaIndex), _vararg->type);
-    generate(_callMethod.get(), genArgs, std::move(genVarArg));
+    if (_vararg) {
+        genVarArg = std::make_unique<DynVarArg>(ctx(), _callMethod->arg(_vaIndex), _vararg->type);
+    }
+    auto result = generate(_callMethod.get(), genArgs, std::move(genVarArg));
+    _callMethod->builder().CreateRet(result->get());
+
+    complete();
 }
 
 bool Function::acceptsParameters(const std::vector<Type *> &types) {
@@ -56,7 +61,7 @@ bool Function::acceptsParameters(const std::vector<Type *> &types) {
 }
 
 std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> values,
-                                      llvm::Value *context, SourcePos startPos, SourcePos endPos) {
+                                      SourcePos startPos, SourcePos endPos) {
     // validate and map arguments - first validation can do without optional values, second can't
     validateAndThrow(values, false, true, startPos, endPos);
     auto mappedArgs = mapArguments(std::move(values));
@@ -232,11 +237,11 @@ Function::DynVarArg::DynVarArg(MaximContext *context, llvm::Value *argStruct, Ty
 }
 
 std::unique_ptr<Value> Function::DynVarArg::atIndex(llvm::Value *index, Builder &b) {
-    auto valPtr = b.CreateExtractValue(argStruct, {1}, "va.ptr");
+    auto valPtr = b.CreateExtractValue(argStruct, 1, "va.ptr");
     auto ptr = b.CreateGEP(type->get(), valPtr, {index}, "va.elementptr");
     return type->createInstance(b.CreateLoad(ptr, "va.element"), SourcePos(-1, -1), SourcePos(-1, -1));
 }
 
 llvm::Value* Function::DynVarArg::count(Builder &b) {
-    return b.CreateExtractElement(argStruct, {(uint64_t) 0}, "va.count");
+    return b.CreateExtractValue(argStruct, (uint64_t) 0, "va.count");
 }

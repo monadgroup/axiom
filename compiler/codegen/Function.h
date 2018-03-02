@@ -64,7 +64,7 @@ namespace MaximCodegen {
 
         bool acceptsParameters(const std::vector<Type*> &types);
 
-        std::unique_ptr<Value> call(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> values, llvm::Value *context, SourcePos startPos, SourcePos endPos);
+        std::unique_ptr<Value> call(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);
 
         virtual std::unique_ptr<Value>
         generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) = 0;
