@@ -9,6 +9,7 @@ set(SOURCE_FILES
         ModuleClass.cpp ComposableModuleClass.cpp
         ModuleClassMethod.cpp ComposableModuleClassMethod.cpp Function.cpp
         Control.cpp ControlField.cpp ControlFieldClassMethod.cpp
+        Converter.cpp
         Scope.cpp
         Array.cpp ArrayType.cpp
         Midi.cpp MidiType.cpp
@@ -22,5 +23,6 @@ add_library(maxim_codegen ${SOURCE_FILES})
 
 add_subdirectory(controls)
 add_subdirectory(functions)
+add_subdirectory(converters)
 add_subdirectory(operators)
 add_subdirectory(visitors)

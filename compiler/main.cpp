@@ -21,6 +21,7 @@
 #include "codegen/Operator.h"
 #include "codegen/Function.h"
 #include "codegen/Control.h"
+#include "codegen/Converter.h"
 
 using namespace MaximParser;
 using namespace MaximCodegen;

@@ -5,7 +5,7 @@
 #include "Tuple.h"
 #include "Array.h"
 #include "Operator.h"
-//#include "Converter.h"
+#include "Converter.h"
 #include "Control.h"
 
 #include "ComposableModuleClassMethod.h"
@@ -40,14 +40,13 @@
 #include "operators/NumComparisonOperator.h"
 #include "operators/NumLogicalOperator.h"
 
-/*
 #include "converters/BeatsConverter.h"
 #include "converters/ControlConverter.h"
 #include "converters/DbConverter.h"
 #include "converters/FrequencyConverter.h"
 #include "converters/LinearConverter.h"
 #include "converters/SecondsConverter.h"
- */
+
 
 using namespace MaximCodegen;
 
@@ -262,12 +261,12 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
                                                 llvm::Instruction::BinaryOps::Or));
 
     /// REGISTER CONVERTERS
-    /*registerConverter(BeatsConverter::create(this));
-    registerConverter(ControlConverter::create(this));
-    registerConverter(DbConverter::create(this));
-    registerConverter(FrequencyConverter::create(this));
-    registerConverter(LinearConverter::create(this));
-    registerConverter(SecondsConverter::create(this));*/
+    registerConverter(BeatsConverter::create(this, libModule));
+    registerConverter(ControlConverter::create(this, libModule));
+    registerConverter(DbConverter::create(this, libModule));
+    registerConverter(FrequencyConverter::create(this, libModule));
+    registerConverter(LinearConverter::create(this, libModule));
+    registerConverter(SecondsConverter::create(this, libModule));
 }
 
 void MaximContext::registerOperator(std::unique_ptr<Operator> op) {
@@ -280,9 +279,10 @@ void MaximContext::registerFunction(std::unique_ptr<Function> func) {
     getOrCreateFunctionList(func->name()).push_back(std::move(func));
 }
 
-/*void MaximContext::registerConverter(std::unique_ptr<Converter> con) {
+void MaximContext::registerConverter(std::unique_ptr<Converter> con) {
+    con->generate();
     converterMap.emplace(con->toType(), std::move(con));
-}*/
+}
 
 void MaximContext::registerControl(std::unique_ptr<Control> con) {
     controlMap.emplace(con->type(), std::move(con));
@@ -387,19 +387,18 @@ MaximContext::callFunction(const std::string &name, std::vector<std::unique_ptr<
     return func->call(method, std::move(values), startPos, endPos);
 }
 
-/*Converter *MaximContext::getConverter(MaximCommon::FormType destType) {
+Converter *MaximContext::getConverter(MaximCommon::FormType destType) {
     auto pos = converterMap.find(destType);
     if (pos == converterMap.end()) return nullptr;
     return pos->second.get();
-}*/
+}
 
 std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value,
-                                                 ModuleClassMethod *method, SourcePos startPos, SourcePos endPos) {
-    /*auto con = getConverter(destType);
+                                                 ComposableModuleClassMethod *method, SourcePos startPos, SourcePos endPos) {
+    auto con = getConverter(destType);
     assert(con);
 
-    return con->call(node, std::move(value), startPos, endPos);*/
-    assert(false);
+    return con->call(method, std::move(value), startPos, endPos);
 }
 
 Control* MaximContext::getControl(MaximCommon::ControlType type) {
