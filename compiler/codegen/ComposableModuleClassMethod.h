@@ -1,10 +1,9 @@
 #pragma once
 
 #include "ModuleClassMethod.h"
+#include "ComposableModuleClass.h"
 
 namespace MaximCodegen {
-
-    class ComposableModuleClass : public ModuleClass;
 
     class ComposableModuleClassMethod : public ModuleClassMethod {
     public:

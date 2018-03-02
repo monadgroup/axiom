@@ -63,7 +63,7 @@ namespace MaximCodegen {
 
     class Function;
 
-    class Converter;
+    //class Converter;
 
     class Control;
 
@@ -73,7 +73,7 @@ namespace MaximCodegen {
 
     class MaximContext {
     public:
-        explicit MaximContext(llvm::Module *libModule, llvm::DataLayout dataLayout);
+        explicit MaximContext(llvm::DataLayout dataLayout);
 
         uint64_t sampleRate = 44100;
 
@@ -124,11 +124,13 @@ namespace MaximCodegen {
 
         llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned);
 
+        void setLibModule(llvm::Module *libModule);
+
         void registerOperator(std::unique_ptr<Operator> op);
 
         void registerFunction(std::unique_ptr<Function> func);
 
-        void registerConverter(std::unique_ptr<Converter> con);
+        //void registerConverter(std::unique_ptr<Converter> con);
 
         void registerControl(std::unique_ptr<Control> con);
 
@@ -144,7 +146,7 @@ namespace MaximCodegen {
         callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, ComposableModuleClassMethod *method,
                      SourcePos startPos, SourcePos endPos);
 
-        Converter *getConverter(MaximCommon::FormType destType);
+        //Converter *getConverter(MaximCommon::FormType destType);
 
         std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, ModuleClassMethod *method,
                                            SourcePos startPos, SourcePos endPos);
@@ -157,7 +159,6 @@ namespace MaximCodegen {
 
     private:
         llvm::LLVMContext _llvm;
-        llvm::Module *_libModule;
         llvm::DataLayout _dataLayout;
 
         NumType _numType;
@@ -167,7 +168,7 @@ namespace MaximCodegen {
         std::unordered_map<llvm::ArrayType *, ArrayType> arrayTypeMap;
         std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
         std::unordered_map<std::string, std::vector<std::unique_ptr<Function>>> functionMap;
-        std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> converterMap;
+        //std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> converterMap;
         std::unordered_map<MaximCommon::ControlType, std::unique_ptr<Control>> controlMap;
 
         std::vector<std::unique_ptr<Function>> &getOrCreateFunctionList(std::string name);

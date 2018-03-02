@@ -17,7 +17,7 @@ ControlField* Control::addField(const std::string &name, Type *type) {
     return field;
 }
 
-ControlField* Control::getField(const std::string &name) const {
+ControlField* Control::getField(const std::string &name) {
     auto index = _fields.find(name);
     if (index != _fields.end()) return &index->second;
     else return nullptr;
@@ -32,7 +32,7 @@ llvm::Type* Control::storageType() {
 }
 
 void Control::doComplete() {
-    for (const auto &pair : _fields) {
+    for (auto &pair : _fields) {
         pair.second.complete();
     }
 

@@ -10,7 +10,7 @@ namespace MaximCodegen {
     public:
         ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name);
 
-        ComposableModuleClassMethod *constructor() const override { return _constructor.get(); }
+        ModuleClassMethod *constructor() override;
 
         llvm::Constant *initializeVal() override;
 

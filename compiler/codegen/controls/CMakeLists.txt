@@ -1,13 +1,6 @@
 cmake_minimum_required(VERSION 3.4.3)
-project(axiom)
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 set(SOURCE_FILES
-        ScalarControl.cpp)
+        "${CMAKE_CURRENT_SOURCE_DIR}/ScalarControl.cpp")
 
-include_directories(${LLVM_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
-
-add_library(maxim_codegen_controls ${SOURCE_FILES})
+target_sources(maxim_codegen PRIVATE ${SOURCE_FILES})

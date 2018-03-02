@@ -34,7 +34,9 @@ Function::Function(MaximContext *ctx, llvm::Module *module, const std::string &n
     }
 
     _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call", returnType->get(), paramTypes);
+}
 
+void Function::generate() {
     // prettify arguments to pass into generate method
     std::vector<std::unique_ptr<Value>> genArgs;
     genArgs.reserve(_parameters.size());
@@ -45,7 +47,7 @@ Function::Function(MaximContext *ctx, llvm::Module *module, const std::string &n
     }
 
     std::unique_ptr<VarArg> genVarArg;
-    if (_vararg) genVarArg = std::make_unique<DynVarArg>(ctx, _callMethod->arg(_vaIndex), _vararg->type);
+    if (_vararg) genVarArg = std::make_unique<DynVarArg>(ctx(), _callMethod->arg(_vaIndex), _vararg->type);
     generate(_callMethod.get(), genArgs, std::move(genVarArg));
 }
 
@@ -83,7 +85,7 @@ std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::
 
     // either call inline with constant folding, or generate call
     if (computeConst) {
-        return callConst(method, args, varargs, startPos, endPos);
+        return callConst(method, args, std::move(varargs), startPos, endPos);
     } else {
         return callNonConst(method, mappedArgs, args, varargs, startPos, endPos);
     }

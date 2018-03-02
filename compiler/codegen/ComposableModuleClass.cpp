@@ -10,6 +10,10 @@ ComposableModuleClass::ComposableModuleClass(MaximContext *ctx, llvm::Module *mo
     _constructor = std::make_unique<ComposableModuleClassMethod>(this, "constructor");
 }
 
+ModuleClassMethod* ComposableModuleClass::constructor() {
+    return _constructor.get();
+}
+
 llvm::Constant* ComposableModuleClass::initializeVal() {
     return llvm::ConstantStruct::get(storageType(), _defaultDict);
 }
@@ -35,7 +39,7 @@ size_t ComposableModuleClass::addEntry(llvm::Constant *initValue) {
 
 size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass) {
     auto index = addEntry(moduleClass->initializeVal());
-    constructor()->callInto(index, {}, moduleClass->constructor(), "");
+    _constructor->callInto(index, {}, moduleClass->constructor(), "");
     return index;
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Function.h"
-#include "../Instantiable.h"
 
 namespace MaximCodegen {
 

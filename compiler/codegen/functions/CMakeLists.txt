@@ -1,37 +1,30 @@
 cmake_minimum_required(VERSION 3.4.3)
-project(axiom)
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 set(SOURCE_FILES
-        AccumFunction.cpp
-        ActiveFunction.cpp
-        AmplitudeFunction.cpp
-        ClampFunction.cpp
-        CombineFunction.cpp
-        #DelayFunction.cpp
-        HoldFunction.cpp
-        MixFunction.cpp
-        NextFunction.cpp
-        NoiseFunction.cpp
-        PanFunction.cpp
-        PeriodicFunction.cpp
-        RmpOscFunction.cpp
-        SawOscFunction.cpp
-        ScalarExternalFunction.cpp
-        SequenceFunction.cpp
-        SinOscFunction.cpp
-        SqrOscFunction.cpp
-        ToDegFunction.cpp
-        ToRadFunction.cpp
-        TriOscFunction.cpp
-        VectorIntrinsicFoldFunction.cpp
-        VectorIntrinsicFunction.cpp
-        VectorShuffleFunction.cpp
-        WithActiveFunction.cpp)
+        "${CMAKE_CURRENT_SOURCE_DIR}/AccumFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ActiveFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/AmplitudeFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ClampFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CombineFunction.cpp"
+       #"${CMAKE_CURRENT_SOURCE_DIR}/DelayFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/HoldFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/MixFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/NextFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/NoiseFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/PanFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/PeriodicFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/RmpOscFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SawOscFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ScalarExternalFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SequenceFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SinOscFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SqrOscFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ToDegFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ToRadFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/TriOscFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/VectorIntrinsicFoldFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/VectorIntrinsicFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/VectorShuffleFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/WithActiveFunction.cpp")
 
-include_directories(${LLVM_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
-
-add_library(maxim_codegen_functions ${SOURCE_FILES})
+target_sources(maxim_codegen PRIVATE ${SOURCE_FILES})

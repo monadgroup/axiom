@@ -18,7 +18,7 @@ namespace MaximCodegen {
 
         ControlField *addField(const std::string &name, Type *type);
 
-        ControlField *getField(const std::string &name) const;
+        ControlField *getField(const std::string &name);
 
         llvm::Constant *initializeVal() override;
 

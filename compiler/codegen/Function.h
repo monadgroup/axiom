@@ -54,6 +54,8 @@ namespace MaximCodegen {
         Function(MaximContext *ctx, llvm::Module *module, const std::string &name, Type *returnType,
                  std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg, bool isPure = true);
 
+        void generate();
+
         Type *returnType() const { return _returnType; }
 
         bool isPure() const { return _isPure; }

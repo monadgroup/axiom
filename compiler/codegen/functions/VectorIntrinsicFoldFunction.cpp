@@ -40,6 +40,7 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(ComposableModuleCla
     auto indexPtr = b.CreateAlloca(indexType, nullptr, "accum.indexptr");
     b.CreateStore(llvm::ConstantInt::get(indexType, 0, false), indexPtr);
 
+    auto func = method->get(method->moduleClass()->module());
     auto loopCheckBlock = llvm::BasicBlock::Create(ctx()->llvm(), "loop.check", func);
     auto loopContinueBlock = llvm::BasicBlock::Create(ctx()->llvm(), "loop.continue", func);
     auto finishBlock = llvm::BasicBlock::Create(ctx()->llvm(), "finish", func);

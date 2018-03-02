@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ModuleClass.h"
 #include "ControlFieldClassMethod.h"
 
 namespace MaximCodegen {
