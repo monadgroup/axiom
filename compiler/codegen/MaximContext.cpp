@@ -47,6 +47,8 @@
 #include "converters/LinearConverter.h"
 #include "converters/SecondsConverter.h"
 
+#include "controls/ScalarControl.h"
+
 
 using namespace MaximCodegen;
 
@@ -267,6 +269,12 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerConverter(FrequencyConverter::create(this, libModule));
     registerConverter(LinearConverter::create(this, libModule));
     registerConverter(SecondsConverter::create(this, libModule));
+
+    /// REGISTER CONTROLS
+    registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::NUMBER, numType(), "num"));
+    registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::MIDI, midiType(), "midi"));
+    registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::NUM_EXTRACT, getArrayType(numType()), "numextract"));
+    registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::MIDI_EXTRACT, getArrayType(midiType()), "midiextract"));
 }
 
 void MaximContext::registerOperator(std::unique_ptr<Operator> op) {

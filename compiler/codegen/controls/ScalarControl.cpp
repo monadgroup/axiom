@@ -9,10 +9,12 @@ ScalarControl::ScalarControl(MaximContext *ctx, llvm::Module *module, MaximCommo
     auto valueField = addField("value", storageType);
 
     auto getMethod = valueField->getValue();
-    getMethod->builder().CreateRet(getMethod->builder().CreateLoad(getMethod->contextPtr(), "value"));
+    getMethod->builder().CreateRet(getMethod->builder().CreateLoad(getMethod->groupPtr(), "value"));
 
     auto setMethod = valueField->setValue();
-    setMethod->builder().CreateStore(setMethod->arg(0), setMethod->contextPtr());
+    setMethod->builder().CreateStore(setMethod->arg(0), setMethod->groupPtr());
+
+    complete();
 }
 
 std::unique_ptr<ScalarControl> ScalarControl::create(MaximContext *ctx, llvm::Module *module,

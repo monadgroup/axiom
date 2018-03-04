@@ -9,9 +9,11 @@ namespace MaximCodegen {
 
     class Type;
 
-    class ControlField : public ModuleClass {
+    class ControlField : public UndefInitializedModuleClass {
     public:
         ControlField(Control *control, const std::string &name, Type *type);
+
+        ControlField(ControlField &&oldField) = delete;
 
         Type *type() const { return _type; }
 
@@ -21,11 +23,14 @@ namespace MaximCodegen {
 
         ControlFieldClassMethod *setValue() { return &_setValue; }
 
+        llvm::Type *storageType() override;
+
     protected:
 
         void doComplete() override;
 
     private:
+        Control *_control;
         Type *_type;
 
         ControlFieldClassMethod _constructor;

@@ -11,14 +11,6 @@ ModuleClass::ModuleClass(MaximContext *ctx, llvm::Module *module, const std::str
 
 }
 
-llvm::Constant* ModuleClass::initializeVal() {
-    return llvm::ConstantAggregateZero::get(storageType());
-}
-
-llvm::Type* ModuleClass::storageType() {
-    return initializeVal()->getType();
-}
-
 void ModuleClass::complete() {
     if (_completed) return;
     doComplete();
@@ -32,4 +24,34 @@ std::string ModuleClass::mangleMethodName(const std::string &name) {
 
 void ModuleClass::doComplete() {
     constructor()->builder().CreateRetVoid();
+}
+
+ZeroInitializedModuleClass::ZeroInitializedModuleClass(MaximContext *ctx, llvm::Module *module,
+                                                       const std::string &name)
+    : ModuleClass(ctx, module, name) {
+
+}
+
+llvm::Constant* ZeroInitializedModuleClass::initializeVal() {
+    return llvm::ConstantAggregateZero::get(storageType());
+}
+
+UndefInitializedModuleClass::UndefInitializedModuleClass(MaximContext *ctx, llvm::Module *module,
+                                                       const std::string &name)
+    : ModuleClass(ctx, module, name) {
+
+}
+
+llvm::Constant* UndefInitializedModuleClass::initializeVal() {
+    return llvm::UndefValue::get(storageType());
+}
+
+TypeInferencedModuleClass::TypeInferencedModuleClass(MaximContext *ctx, llvm::Module *module,
+                                                     const std::string &name)
+    : ModuleClass(ctx, module, name) {
+
+}
+
+llvm::Type* TypeInferencedModuleClass::storageType() {
+    return initializeVal()->getType();
 }

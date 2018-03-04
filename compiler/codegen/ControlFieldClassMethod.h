@@ -10,10 +10,10 @@ namespace MaximCodegen {
     public:
         ControlFieldClassMethod(ControlField *controlField, std::string name, llvm::Type *returnType = nullptr, std::vector<llvm::Type*> paramTypes = {});
 
-        llvm::Value *contextPtr() const override { return _contextLoadedPtr; }
+        llvm::Value *groupPtr() const { return _groupPtr; }
 
     private:
-        llvm::Value *_contextLoadedPtr;
+        llvm::Value *_groupPtr;
     };
 
 }
