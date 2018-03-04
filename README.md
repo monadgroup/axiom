@@ -1,5 +1,7 @@
 # Axiom
 
+![A basic sine-wave Axiom synth](axiom.png)
+
 Axiom is a node-based realtime synthesizer, designed for size-constrained environments such as PC intros in the demoscene. It is currently developed by MONAD, but is entirely open source -- feel free to use and contribute!
 
 Features:
