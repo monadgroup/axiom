@@ -8,11 +8,9 @@ namespace MaximRuntime {
     public:
         explicit Node(Surface *parent);
 
-        RuntimeUnit *parentUnit() override { return _parent; }
+        Surface *surface() const { return _surface; }
 
         std::set<Control*> &controls() { return _controls; }
-
-        virtual std::vector<Control*, Control*> internallyLinkedControls();
 
     private:
         Surface *_parent;

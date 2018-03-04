@@ -18,15 +18,13 @@ namespace MaximRuntime {
     public:
         RuntimeUnit(Runtime *runtime, llvm::Module *module);
 
-        virtual RuntimeUnit *parentUnit() = 0;
-
         Runtime *runtime() const { return _runtime; }
 
         llvm::Module *module() { return _module; }
 
         void updateGetter(llvm::Module *module);
 
-        virtual MaximCodegen::ModuleClass *compile();
+        MaximCodegen::ModuleClass *compile();
 
         bool needsCompile() const { return _needsCompile; }
 
@@ -37,6 +35,10 @@ namespace MaximRuntime {
         void *updateCurrentPtr(void *parentCtx);
 
         void *currentPtr() const;
+
+    protected:
+
+        virtual MaximCodegen::ModuleClass *doCompile() = 0;
 
     private:
         Runtime *_runtime;

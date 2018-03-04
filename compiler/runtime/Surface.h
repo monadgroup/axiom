@@ -2,7 +2,7 @@
 
 #include <set>
 
-#include "RuntimeUnit.h"
+#include "ModuleRuntimeUnit.h"
 #include "../codegen/ComposableModuleClassMethod.h"
 
 namespace MaximRuntime {
@@ -13,15 +13,13 @@ namespace MaximRuntime {
 
     class ControlGroup;
 
-    class Surface : RuntimeUnit {
+    class Surface : ModuleRuntimeUnit {
     public:
         Surface(Runtime *runtime, size_t depth);
 
         size_t depth() const { return _depth; }
 
-        void scheduleGraphUpdate() { _needsGraphUpdate = true; }
-
-        MaximCodegen::ComposableModuleClass *compile() override;
+        void scheduleGraphUpdate();
 
         void addNode(Node *node);
 
@@ -31,14 +29,19 @@ namespace MaximRuntime {
 
         std::unique_ptr<ControlGroup> removeControlGroup(ControlGroup *group);
 
+    protected:
+
+        MaximCodegen::ModuleClass *doCompile() override;
+
     private:
-        llvm::Module _module;
         std::unique_ptr<MaximCodegen::ComposableModuleClass> _class;
 
         size_t _depth;
         bool _needsGraphUpdate = false;
 
         std::set<Node *> _nodes;
+
+        std::vector<std::unique_ptr<ControlGroup>> _controlGroups;
     };
 
 }

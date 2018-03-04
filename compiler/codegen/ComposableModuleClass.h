@@ -12,6 +12,8 @@ namespace MaximCodegen {
 
         ModuleClassMethod *constructor() override;
 
+        ComposableModuleClassMethod *cconstructor() const { return _constructor.get(); }
+
         llvm::Constant *initializeVal() override;
 
         llvm::StructType *storageType() override;

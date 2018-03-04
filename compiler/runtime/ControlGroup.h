@@ -3,7 +3,10 @@
 #include <set>
 
 #include "RuntimeUnit.h"
-#include "../common/ControlType.h"
+
+namespace MaximCodegen {
+    class Control;
+}
 
 namespace MaximRuntime {
 
@@ -13,9 +16,9 @@ namespace MaximRuntime {
 
     class ControlGroup : public RuntimeUnit {
     public:
-        ControlGroup(Surface *surface, MaximCommon::ControlType type);
+        ControlGroup(Surface *surface, MaximCodegen::Control *type);
 
-        MaximCommon::ControlType type() const { return _type; }
+        MaximCodegen::Control *type() const { return _type; }
 
         Surface *surface() const { return _surface; }
 
@@ -27,9 +30,19 @@ namespace MaximRuntime {
 
         void removeControl(Control *control);
 
+        bool exposed() const;
+
+        bool writtenTo() const;
+
+        bool readFrom() const;
+
+        bool extracted() const;
+
+        void setExtracted(bool extracted);
+
     private:
 
-        MaximCommon::ControlType _type;
+        MaximCodegen::Control *_type;
         Surface *_surface;
         std::set<Control*> _controls;
     };

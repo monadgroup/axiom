@@ -5,7 +5,7 @@
 
 using namespace MaximRuntime;
 
-ControlGroup::ControlGroup(Surface *surface, MaximCommon::ControlType type)
+ControlGroup::ControlGroup(Surface *surface, MaximCodegen::Control *type)
     : RuntimeUnit(surface->runtime(), surface->module()), _type(type), _surface(surface) {
 
 }

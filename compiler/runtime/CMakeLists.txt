@@ -4,9 +4,14 @@ project(axiom)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
+set(CMAKE_AUTOMOCC ON)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
 set(SOURCE_FILES
+        Control.cpp
         ControlGroup.cpp
         Jit.cpp
+        ModuleRuntimeUnit.cpp
         Surface.cpp
         RuntimeUnit.cpp
         ValueOperator.cpp)
