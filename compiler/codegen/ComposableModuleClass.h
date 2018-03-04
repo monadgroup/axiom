@@ -8,7 +8,7 @@ namespace MaximCodegen {
 
     class ComposableModuleClass : public ModuleClass {
     public:
-        ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name);
+        ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name, const std::vector<llvm::Type*> &constructorParams = {});
 
         ModuleClassMethod *constructor() override;
 
@@ -20,7 +20,7 @@ namespace MaximCodegen {
 
         size_t addEntry(llvm::Constant *initValue);
 
-        size_t addEntry(ModuleClass *moduleClass);
+        size_t addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value*> &constructorParams = {});
 
         llvm::Value *getEntryPointer(Builder &b, size_t index, llvm::Value *context, const llvm::Twine &resultName);
 

@@ -19,6 +19,7 @@ std::unique_ptr<Value> Scope::getVariable(const std::string &name, SourcePos sta
 
 std::unique_ptr<Value> Scope::getControl(ComposableModuleClassMethod *method, MaximAst::ControlExpression *expr) {
     auto &controlDat = getControl(expr->name, expr->type, method);
+    controlDat.isReadFrom = true;
     auto field = controlDat.control->getField(expr->prop);
     if (!field) {
         throw MaximCommon::CompileError(
@@ -72,6 +73,6 @@ ControlInstance& Scope::getControl(const std::string &name, MaximCommon::Control
 
     auto control = method->moduleClass()->ctx()->getControl(type);
     auto instId = method->moduleClass()->addEntry(control);
-    auto newPos = _controls.emplace(key, ControlInstance { control, false, instId });
+    auto newPos = _controls.emplace(key, ControlInstance { control, false, false, instId });
     return newPos.first->second;
 }

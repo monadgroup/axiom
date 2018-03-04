@@ -30,6 +30,7 @@ namespace MaximCodegen {
 
     struct ControlInstance {
         Control *control;
+        bool isReadFrom;
         bool isWrittenTo;
         uint64_t instId;
     };

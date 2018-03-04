@@ -5,9 +5,9 @@
 
 using namespace MaximCodegen;
 
-ComposableModuleClass::ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name)
+ComposableModuleClass::ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name, const std::vector<llvm::Type*> &constructorParams)
     : ModuleClass(ctx, module, name) {
-    _constructor = std::make_unique<ComposableModuleClassMethod>(this, "constructor");
+    _constructor = std::make_unique<ComposableModuleClassMethod>(this, "constructor", nullptr, constructorParams);
 }
 
 ModuleClassMethod* ComposableModuleClass::constructor() {
@@ -37,9 +37,9 @@ size_t ComposableModuleClass::addEntry(llvm::Constant *initValue) {
     return index;
 }
 
-size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass) {
+size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value*> &constructorParams) {
     auto index = addEntry(moduleClass->initializeVal());
-    _constructor->callInto(index, {}, moduleClass->constructor(), "");
+    _constructor->callInto(index, constructorParams, moduleClass->constructor(), "");
     return index;
 }
 
