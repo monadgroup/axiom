@@ -44,7 +44,7 @@ void CustomNode::setCode(const QString &code) {
 }
 
 void CustomNode::recompile() {
-    _runtime.compile();
+    _runtime.scheduleCompile();
     _runtime.runtime()->compile();
 
     if (!_runtime.errorLog().errors.empty()) {

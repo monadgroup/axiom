@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Runtime.h"
 
 #include "GeneratableModuleClass.h"
@@ -40,8 +41,8 @@ void Runtime::compile() {
     // note: we could just call the surface methods and pass in the context,
     //       but this could break in case ModuleClassMethod ever changes how
     //       it passes in arguments
-    auto initFunc = createForwardFunc(module.get(), initFuncName, ctxGlobal, mainClass->constructor());
-    auto generateFunc = createForwardFunc(module.get(), generateFuncName, ctxGlobal, mainClass->generate());
+    createForwardFunc(module.get(), initFuncName, ctxGlobal, mainClass->constructor());
+    createForwardFunc(module.get(), generateFuncName, ctxGlobal, mainClass->generate());
 
     // deploy the new module to the JIT
     if (_isDeployed) _jit.removeModule(_deployKey);
@@ -59,8 +60,6 @@ void Runtime::compile() {
 
     // initialize it
     initFuncPtr();
-
-    // todo: handle accessors through the chain
 
     unlock();
 }
