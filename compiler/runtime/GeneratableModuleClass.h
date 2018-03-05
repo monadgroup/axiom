@@ -13,6 +13,10 @@ namespace MaximRuntime {
 
         MaximCodegen::ComposableModuleClassMethod *generate() { return &_generate; }
 
+    protected:
+
+        void doComplete() override;
+
     private:
 
         MaximCodegen::ComposableModuleClassMethod _generate;

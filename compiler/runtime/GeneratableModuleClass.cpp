@@ -8,3 +8,9 @@ GeneratableModuleClass::GeneratableModuleClass(MaximCodegen::MaximContext *ctx, 
     : ComposableModuleClass(ctx, module, name, constructorParams), _generate(this, "generate") {
 
 }
+
+void GeneratableModuleClass::doComplete() {
+    _generate.builder().CreateRetVoid();
+
+    ComposableModuleClass::doComplete();
+}

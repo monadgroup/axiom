@@ -162,37 +162,44 @@ GeneratableModuleClass* Surface::compile() {
 
     // instantiate nodes in their orders - extracted nodes are created multiple times
     // control values are also assigned
-    for (size_t i = inverseExecutionOrder.size() - 1; i >= 0; i--) {
-        auto node = inverseExecutionOrder[i];
-        auto nodeClass = nodeClasses.find(node)->second;
+    if (!inverseExecutionOrder.empty()) {
+        for (size_t i = inverseExecutionOrder.size() - 1; i >= 0; i--) {
+            auto node = inverseExecutionOrder[i];
+            auto nodeClass = nodeClasses.find(node)->second;
 
-        // instantiate the node n times
-        // todo: this loop should probably be in IR, add array entry to the class
-        auto isExtracted = extractedNodes.find(node) != extractedNodes.end();
-        auto loopSize = isExtracted ? MaximCodegen::ArrayType::arraySize : 1;
+            // instantiate the node n times
+            // todo: this loop should probably be in IR, add array entry to the class
+            auto isExtracted = extractedNodes.find(node) != extractedNodes.end();
+            auto loopSize = isExtracted ? MaximCodegen::ArrayType::arraySize : 1;
 
-        for (unsigned int instN = 0; instN < loopSize; instN++) {
-            auto entryIndex = _class->addEntry(nodeClass); // todo: GroupNodes will need ControlGroups passed into their constructor
-            _class->generate()->callInto(entryIndex, {}, nodeClass->generate(), "");
-            auto entryPtr = _class->cconstructor()->getEntryPointer(entryIndex, "nodeinst");
+            for (unsigned int instN = 0; instN < loopSize; instN++) {
+                auto entryIndex = _class->addEntry(
+                    nodeClass); // todo: GroupNodes will need ControlGroups passed into their constructor
+                _class->generate()->callInto(entryIndex, {}, nodeClass->generate(), "");
+                auto entryPtr = _class->cconstructor()->getEntryPointer(entryIndex, "nodeinst");
 
-            // setup control values in constructor
-            for (const auto &control : *node) {
-                auto hardControl = dynamic_cast<HardControl*>(control.get());
-                if (!hardControl) continue;
+                // setup control values in constructor
+                for (const auto &control : *node) {
+                    auto hardControl = dynamic_cast<HardControl *>(control.get());
+                    if (!hardControl) continue;
 
-                auto controlIndex = hardControl->instance()->instId;
-                auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), controlIndex, entryPtr, "controlinst");
+                    auto controlIndex = hardControl->instance()->instId;
+                    auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), controlIndex,
+                                                                 entryPtr, "controlinst");
 
-                auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
-                auto indexPtr = hardControl->group()->extracted()
-                                ? _class->constructor()->builder().CreateConstGEP2_32(hardControl->group()->type()->storageType(), groupPtr, 0, instN)
-                                : groupPtr;
+                    auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
+                    auto indexPtr = hardControl->group()->extracted()
+                                    ? _class->constructor()->builder().CreateConstGEP2_32(
+                            hardControl->group()->type()->storageType(), groupPtr, 0, instN)
+                                    : groupPtr;
 
-                _class->constructor()->builder().CreateStore(indexPtr, controlPtr);
+                    _class->constructor()->builder().CreateStore(indexPtr, controlPtr);
+                }
             }
         }
     }
+
+    _class->complete();
 
     deploy();
     return _class.get();
