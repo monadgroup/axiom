@@ -14,11 +14,19 @@ namespace MaximCodegen {
 
     class MidiType : public Type {
     public:
+        static constexpr size_t maxEvents = 32;
+
         explicit MidiType(MaximContext *context);
 
         llvm::StructType *get() const override { return _type; }
 
-        llvm::Type *eventType() const { return _eventType; }
+        llvm::Type *countType() const { return _countType; }
+
+        llvm::ArrayType *arrayType() const { return _arrayType; }
+
+        llvm::StructType *eventType() const { return _eventType; }
+
+        llvm::Type *typeType() const { return _typeType; }
 
         llvm::Type *channelType() const { return _channelType; }
 
@@ -37,7 +45,13 @@ namespace MaximCodegen {
 
         llvm::StructType *_type;
 
-        llvm::Type *_eventType;
+        llvm::Type *_countType;
+
+        llvm::ArrayType *_arrayType;
+
+        llvm::StructType *_eventType;
+
+        llvm::Type *_typeType;
 
         llvm::Type *_channelType;
 
