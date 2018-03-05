@@ -22,6 +22,7 @@
 #include "functions/NoiseFunction.h"
 #include "functions/ActiveFunction.h"
 #include "functions/WithActiveFunction.h"
+#include "functions/DelayFunction.h"
 #include "functions/NextFunction.h"
 #include "functions/AmplitudeFunction.h"
 #include "functions/HoldFunction.h"
@@ -204,7 +205,7 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerFunction(ActiveFunction::create(this, libModule));
     registerFunction(WithActiveFunction::create(this, libModule));
     registerFunction(NextFunction::create(this, libModule));
-    //registerFunction(DelayFunction::create(this, libModule));
+    registerFunction(DelayFunction::create(this, libModule));
     registerFunction(AmplitudeFunction::create(this, libModule));
     registerFunction(HoldFunction::create(this, libModule));
     registerFunction(AccumFunction::create(this, libModule));

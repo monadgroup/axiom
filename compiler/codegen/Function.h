@@ -74,6 +74,8 @@ namespace MaximCodegen {
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
 
+        virtual void sampleArguments(ComposableModuleClassMethod *method, size_t index, const std::vector<std::unique_ptr<Value>> &args, const std::vector<std::unique_ptr<Value>> &varargs);
+
     private:
         class DynVarArg : public VarArg {
         public:

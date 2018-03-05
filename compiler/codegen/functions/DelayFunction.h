@@ -1,15 +1,14 @@
 #pragma once
 
 #include "../Function.h"
-#include "../Instantiable.h"
 
 namespace MaximCodegen {
 
     class DelayFunction : public Function {
     public:
-        explicit DelayFunction(MaximContext *context);
+        explicit DelayFunction(MaximContext *ctx, llvm::Module *module);
 
-        static std::unique_ptr<DelayFunction> create(MaximContext *context);
+        static std::unique_ptr<DelayFunction> create(MaximContext *ctx, llvm::Module *module);
 
     protected:
         std::unique_ptr<Value>
@@ -17,10 +16,12 @@ namespace MaximCodegen {
 
         std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) override;
 
-    private:
-        //static llvm::StructType *getChannelType(MaximContext *ctx);
+        void sampleArguments(ComposableModuleClassMethod *method, size_t index, const std::vector<std::unique_ptr<Value>> &args, const std::vector<std::unique_ptr<Value>> &varargs) override;
 
-        //static llvm::StructType *getContextType(MaximContext *ctx);
+    private:
+        llvm::StructType *getChannelType();
+
+        llvm::StructType *getContextType();
     };
 
 }

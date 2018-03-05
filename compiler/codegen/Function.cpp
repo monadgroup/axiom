@@ -106,6 +106,12 @@ std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::uniq
     return providedArgs;
 }
 
+void Function::sampleArguments(ComposableModuleClassMethod *method, size_t index,
+                               const std::vector<std::unique_ptr<Value>> &args,
+                               const std::vector<std::unique_ptr<Value>> &varargs) {
+
+}
+
 Parameter* Function::getParameter(size_t index) {
     if (index < _parameters.size()) return &_parameters[index];
     assert(_vararg);
@@ -186,6 +192,7 @@ std::unique_ptr<Value> Function::callNonConst(ComposableModuleClassMethod *metho
     }
 
     auto entryIndex = method->moduleClass()->addEntry(this);
+    sampleArguments(method, entryIndex, args, varargs);
     auto result = method->callInto(entryIndex, values, _callMethod.get(), "callresult");
     return _returnType->createInstance(result, startPos, endPos);
 }
