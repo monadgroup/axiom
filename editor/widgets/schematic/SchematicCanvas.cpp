@@ -175,7 +175,7 @@ void SchematicCanvas::newNode(QPointF scenePos, QString name) {
     auto newNode = std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
     schematic->addItem(std::move(newNode));
 
-    schematic->runtime()->runtime()->compileAndDeploy();
+    schematic->runtime()->runtime()->compile();
 }
 
 void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {

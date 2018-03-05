@@ -16,7 +16,7 @@ CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
     connect(this, &CustomNode::removed,
             [this]() {
                 _runtime.remove();
-                _runtime.runtime()->compileAndDeploy();
+                _runtime.runtime()->compile();
             });
 }
 
@@ -44,7 +44,7 @@ void CustomNode::setCode(const QString &code) {
 
 void CustomNode::recompile() {
     _runtime.compile();
-    _runtime.runtime()->compileAndDeploy();
+    _runtime.runtime()->compile();
 
     if (!_runtime.errorLog().errors.empty()) {
         emit compileFailed(_runtime.errorLog());

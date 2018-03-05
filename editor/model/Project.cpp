@@ -4,7 +4,7 @@
 
 using namespace AxiomModel;
 
-Project::Project(MaximRuntime::Runtime *runtime) : _runtime(runtime), root(&runtime->mainSchematic()) {
+Project::Project(MaximRuntime::Runtime *runtime) : _runtime(runtime), root(&runtime->mainSurface()) {
 
 }
 

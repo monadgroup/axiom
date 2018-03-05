@@ -13,7 +13,7 @@
 
 using namespace AxiomModel;
 
-Schematic::Schematic(MaximRuntime::Schematic *runtime) : _runtime(runtime) {
+Schematic::Schematic(MaximRuntime::Surface *runtime) : _runtime(runtime) {
 
 }
 
@@ -145,7 +145,7 @@ ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *s
 
     if (sinkA->runtime() && sinkB->runtime()) {
         sinkA->runtime()->connectTo(sinkB->runtime());
-        _runtime->runtime()->compileAndDeploy();
+        _runtime->runtime()->compile();
     }
 
     auto wire = std::make_unique<ConnectionWire>(this, sinkA, sinkB);

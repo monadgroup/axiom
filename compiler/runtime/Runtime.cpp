@@ -13,7 +13,7 @@ static const std::string initFuncName = "init";
 static const std::string generateFuncName = "generate";
 static const std::string globalCtxName = "globalCtx";
 
-Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context), _mainSurface(this, 0),
+Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context), _mainSurface(this),
                      _module("controller", _context.llvm()) {
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
     libModule->setDataLayout(_jit.dataLayout());

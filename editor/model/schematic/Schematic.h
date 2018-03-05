@@ -12,7 +12,7 @@
 
 namespace MaximRuntime {
 
-    class Schematic;
+    class Surface;
 
 }
 
@@ -24,11 +24,11 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        explicit Schematic(MaximRuntime::Schematic *runtime);
+        explicit Schematic(MaximRuntime::Surface *runtime);
 
         virtual QString name() = 0;
 
-        MaximRuntime::Schematic *runtime() { return _runtime; }
+        MaximRuntime::Surface *runtime() { return _runtime; }
 
         QPointF pan() const { return m_pan; }
 
@@ -65,7 +65,7 @@ namespace AxiomModel {
     private:
         std::vector<std::unique_ptr<ConnectionWire>> m_wires;
         QPointF m_pan;
-        MaximRuntime::Schematic *_runtime;
+        MaximRuntime::Surface *_runtime;
     };
 
 }

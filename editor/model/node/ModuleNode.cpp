@@ -14,7 +14,7 @@ ModuleNode::ModuleNode(Schematic *parent, QString name, QPoint pos, QSize size)
     connect(this, &ModuleNode::removed,
             [this]() {
                 _runtime.remove();
-                _runtime.runtime()->compileAndDeploy();
+                _runtime.runtime()->compile();
             });
 }
 

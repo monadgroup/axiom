@@ -18,8 +18,8 @@ std::string MaximCommon::controlType2String(ControlType type) {
             return "num[]";
         case ControlType::MIDI_EXTRACT:
             return "midi[]";
+        default:
+            assert(false);
+            throw;
     }
-
-    assert(false);
-    throw;
 }

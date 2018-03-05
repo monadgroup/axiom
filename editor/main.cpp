@@ -5,6 +5,9 @@
 #include "compiler/codegen/Operator.h"
 #include "compiler/codegen/Converter.h"
 #include "compiler/codegen/Function.h"
+#include "compiler/codegen/Control.h"
+#include "compiler/runtime/GeneratableModuleClass.h"
+#include "compiler/runtime/ControlGroup.h"
 
 int main(int argc, char *argv[]) {
     MaximRuntime::Runtime runtime;

@@ -4,7 +4,7 @@
 
 #include "Jit.h"
 #include "ValueOperator.h"
-#include "Surface.h"
+#include "RootSurface.h"
 #include "../codegen/MaximContext.h"
 
 namespace MaximCodegen {
@@ -23,7 +23,7 @@ namespace MaximRuntime {
 
         ValueOperator &op() { return _op; }
 
-        Surface &mainSurface() { return _mainSurface; }
+        RootSurface &mainSurface() { return _mainSurface; }
 
         void compile();
 
@@ -42,7 +42,7 @@ namespace MaximRuntime {
         Jit _jit;
         MaximCodegen::MaximContext _context;
         ValueOperator _op;
-        Surface _mainSurface;
+        RootSurface _mainSurface;
         llvm::Module _module;
 
         bool _isDeployed = false;

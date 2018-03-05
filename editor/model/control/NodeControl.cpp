@@ -6,6 +6,7 @@
 #include "../node/Node.h"
 #include "../connection/ConnectionWire.h"
 #include "compiler/runtime/Control.h"
+#include "compiler/codegen/Control.h"
 
 using namespace AxiomModel;
 
@@ -21,7 +22,7 @@ NodeControl::NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos,
 std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRuntime::Control *runtime) {
     QSize newSize;
 
-    switch (runtime->type()) {
+    switch (runtime->type()->type()) {
         case MaximCommon::ControlType::NUMBER:
             newSize = QSize(2, 2);
             break;
@@ -31,7 +32,7 @@ std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRu
 
     auto newPos = node->surface.grid.findNearestAvailable(QPoint(0, 0), newSize);
 
-    switch (runtime->type()) {
+    switch (runtime->type()->type()) {
         case MaximCommon::ControlType::NUMBER:
             return std::make_unique<NodeNumControl>(node, runtime, newPos, newSize);
         default:
