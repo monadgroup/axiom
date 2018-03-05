@@ -8,7 +8,8 @@ using namespace MaximCodegen;
 
 VectorIntrinsicFunction::VectorIntrinsicFunction(MaximContext *ctx, llvm::Module *module, llvm::Intrinsic::ID id,
                                                  std::string name, size_t paramCount)
-    : Function(ctx, module, std::move(name), ctx->numType(), std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false, false)), nullptr),
+    : Function(ctx, module, std::move(name), ctx->numType(),
+               std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false, false)), nullptr),
       id(id) {
 
 }
@@ -22,17 +23,18 @@ std::unique_ptr<VectorIntrinsicFunction> VectorIntrinsicFunction::create(MaximCo
 std::unique_ptr<Value> VectorIntrinsicFunction::generate(ComposableModuleClassMethod *method,
                                                          const std::vector<std::unique_ptr<Value>> &params,
                                                          std::unique_ptr<VarArg> vararg) {
-    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), id, {ctx()->numType()->vecType()});
+    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), id,
+                                                     {ctx()->numType()->vecType()});
     auto &b = method->builder();
 
     llvm::Value *isActive = ctx()->constInt(1, 0, false);
 
-    std::vector<llvm::Value*> llParams;
+    std::vector<llvm::Value *> llParams;
     llParams.reserve(params.size());
 
     Num *firstParam = nullptr;
     for (const auto &param : params) {
-        auto numParam = dynamic_cast<Num*>(param.get());
+        auto numParam = dynamic_cast<Num *>(param.get());
         assert(numParam);
         if (!firstParam) firstParam = numParam;
         llParams.push_back(numParam->vec(b));

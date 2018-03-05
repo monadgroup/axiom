@@ -13,7 +13,7 @@ OutputNode::OutputNode(Surface *surface) : Node(surface) {
     deploy();
 }
 
-GeneratableModuleClass* OutputNode::compile() {
+GeneratableModuleClass *OutputNode::compile() {
     return _moduleClass.get();
 }
 

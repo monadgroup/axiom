@@ -49,7 +49,8 @@ namespace MaximRuntime {
 
         void (*_generateFuncPtr)() = nullptr;
 
-        llvm::Function *createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx, MaximCodegen::ModuleClassMethod *method);
+        llvm::Function *createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,
+                                          MaximCodegen::ModuleClassMethod *method);
     };
 
 }

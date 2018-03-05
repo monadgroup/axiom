@@ -4,7 +4,8 @@
 
 using namespace MaximCodegen;
 
-ScalarControl::ScalarControl(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, Type *storageType, const std::string &name)
+ScalarControl::ScalarControl(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, Type *storageType,
+                             const std::string &name)
     : Control(ctx, module, type, storageType->get(), name + "control") {
     auto valueField = addField("value", storageType);
 

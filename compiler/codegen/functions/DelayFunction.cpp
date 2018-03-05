@@ -19,7 +19,9 @@ std::unique_ptr<DelayFunction> DelayFunction::create(MaximContext *ctx, llvm::Mo
     return std::make_unique<DelayFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> DelayFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+DelayFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                        std::unique_ptr<VarArg> vararg) {
     auto minIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum,
                                                         {ctx()->numType()->vecType()});
     auto maxIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum,
@@ -164,10 +166,13 @@ void DelayFunction::sampleArguments(ComposableModuleClassMethod *method, size_t 
     );
 
     // get a ptr vector to the first item in each array, to put into the context
-    auto leftFirstPtr = b.CreateGEP(leftGlobalVariable, {ctx()->constInt(64, 0, false), ctx()->constInt(32, 0, false)}, "delayleft.ptr");
-    auto rightFirstPtr = b.CreateGEP(rightGlobalVariable, {ctx()->constInt(64, 0, false), ctx()->constInt(32, 0, false)}, "delayright.ptr");
+    auto leftFirstPtr = b.CreateGEP(leftGlobalVariable, {ctx()->constInt(64, 0, false), ctx()->constInt(32, 0, false)},
+                                    "delayleft.ptr");
+    auto rightFirstPtr = b.CreateGEP(rightGlobalVariable,
+                                     {ctx()->constInt(64, 0, false), ctx()->constInt(32, 0, false)}, "delayright.ptr");
 
-    auto ptrVec = b.CreateInsertElement(llvm::UndefValue::get(llvm::VectorType::get(channelPtrType, 2)), leftFirstPtr, (uint64_t) 0, "delay.ptr.tmp");
+    auto ptrVec = b.CreateInsertElement(llvm::UndefValue::get(llvm::VectorType::get(channelPtrType, 2)), leftFirstPtr,
+                                        (uint64_t) 0, "delay.ptr.tmp");
     ptrVec = b.CreateInsertElement(ptrVec, rightFirstPtr, 1, "delay.ptr");
 
     // store the ptr vec into the context object

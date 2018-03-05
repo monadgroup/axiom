@@ -11,7 +11,7 @@ Converter::Converter(MaximContext *ctx, llvm::Module *module, MaximCommon::FormT
 
     _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call",
                                                                 ctx->numType()->get(),
-                                                                std::vector<llvm::Type*>{ctx->numType()->get()});
+                                                                std::vector<llvm::Type *>{ctx->numType()->get()});
 }
 
 void Converter::generate() {

@@ -19,7 +19,9 @@ std::unique_ptr<MixFunction> MixFunction::create(MaximContext *ctx, llvm::Module
     return std::make_unique<MixFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> MixFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+MixFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                      std::unique_ptr<VarArg> vararg) {
     auto numA = dynamic_cast<Num *>(params[0].get());
     auto numB = dynamic_cast<Num *>(params[1].get());
     auto mixNum = dynamic_cast<Num *>(params[2].get());

@@ -9,7 +9,8 @@ namespace MaximRuntime {
 
     class GeneratableModuleClass : public MaximCodegen::ComposableModuleClass {
     public:
-        GeneratableModuleClass(MaximCodegen::MaximContext *ctx, llvm::Module *module, const std::string &name, const std::vector<llvm::Type*> &constructorParams = {});
+        GeneratableModuleClass(MaximCodegen::MaximContext *ctx, llvm::Module *module, const std::string &name,
+                               const std::vector<llvm::Type *> &constructorParams = {});
 
         MaximCodegen::ComposableModuleClassMethod *generate() { return &_generate; }
 

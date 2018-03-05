@@ -18,7 +18,7 @@ namespace MaximRuntime {
 
         bool readFrom() const override { return true; }
 
-        std::vector<Control*> internallyLinkedControls() override { return {}; }
+        std::vector<Control *> internallyLinkedControls() override { return {}; }
     };
 
 }

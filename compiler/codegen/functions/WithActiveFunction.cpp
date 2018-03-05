@@ -16,7 +16,9 @@ std::unique_ptr<WithActiveFunction> WithActiveFunction::create(MaximContext *ctx
     return std::make_unique<WithActiveFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> WithActiveFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+WithActiveFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                             std::unique_ptr<VarArg> vararg) {
     auto xNum = dynamic_cast<Num *>(params[0].get());
     auto activeNum = dynamic_cast<Num *>(params[1].get());
     assert(xNum && activeNum);

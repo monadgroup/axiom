@@ -14,6 +14,7 @@ namespace MaximCodegen {
 
     class Value;
 
-    std::unique_ptr<Value> visitPostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::PostfixExpression *expr);
+    std::unique_ptr<Value>
+    visitPostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::PostfixExpression *expr);
 
 }

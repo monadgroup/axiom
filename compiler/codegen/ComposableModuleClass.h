@@ -8,7 +8,8 @@ namespace MaximCodegen {
 
     class ComposableModuleClass : public ModuleClass {
     public:
-        ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name, const std::vector<llvm::Type*> &constructorParams = {});
+        ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name,
+                              const std::vector<llvm::Type *> &constructorParams = {});
 
         ModuleClassMethod *constructor() override;
 
@@ -24,7 +25,7 @@ namespace MaximCodegen {
 
         size_t addEntry(llvm::Constant *initValue);
 
-        size_t addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value*> &constructorParams = {});
+        size_t addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams = {});
 
         llvm::Value *getEntryPointer(Builder &b, size_t index, llvm::Value *context, const llvm::Twine &resultName);
 
@@ -33,9 +34,9 @@ namespace MaximCodegen {
         void doComplete() override;
 
     private:
-        std::vector<llvm::Type*> _typeDict;
-        std::vector<llvm::Constant*> _defaultDict;
-        std::vector<ModuleClass*> _moduleClasses;
+        std::vector<llvm::Type *> _typeDict;
+        std::vector<llvm::Constant *> _defaultDict;
+        std::vector<ModuleClass *> _moduleClasses;
 
         std::unique_ptr<ComposableModuleClassMethod> _constructor;
     };

@@ -15,7 +15,9 @@ std::unique_ptr<ToRadFunction> ToRadFunction::create(MaximContext *ctx, llvm::Mo
     return std::make_unique<ToRadFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> ToRadFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+ToRadFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                        std::unique_ptr<VarArg> vararg) {
     auto numArg = dynamic_cast<Num *>(params[0].get());
     assert(numArg);
 

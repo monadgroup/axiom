@@ -18,7 +18,7 @@ namespace MaximRuntime {
     class ControlGroup;
 
     class Control : public QObject {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         explicit Control(Node *node);
@@ -41,11 +41,11 @@ namespace MaximRuntime {
 
         void disconnectFrom(Control *other);
 
-        virtual std::vector<Control*> internallyLinkedControls() = 0;
+        virtual std::vector<Control *> internallyLinkedControls() = 0;
 
         bool exposed() const;
 
-        std::set<Control*> &connections() { return _connections; }
+        std::set<Control *> &connections() { return _connections; }
 
     public slots:
 

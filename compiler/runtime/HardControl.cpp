@@ -1,7 +1,6 @@
 #include "HardControl.h"
 
 #include "../codegen/Control.h"
-#include "../codegen/Scope.h"
 
 using namespace MaximRuntime;
 
@@ -27,7 +26,7 @@ bool HardControl::readFrom() const {
     return _instance.isReadFrom;
 }
 
-std::vector<Control*> HardControl::internallyLinkedControls() {
+std::vector<Control *> HardControl::internallyLinkedControls() {
     // hard controls can't be internally linked
     return {};
 }

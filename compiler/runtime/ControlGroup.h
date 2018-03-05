@@ -26,7 +26,7 @@ namespace MaximRuntime {
 
         Surface *surface() const { return _surface; }
 
-        std::set<Control*> &controls() { return _controls; }
+        std::set<Control *> &controls() { return _controls; }
 
         MaximCodegen::ModuleClass *compile();
 
@@ -54,7 +54,7 @@ namespace MaximRuntime {
 
         MaximCodegen::Control *_type;
         Surface *_surface;
-        std::set<Control*> _controls;
+        std::set<Control *> _controls;
 
         MaximCodegen::BasicZeroModuleClass _compileResult;
 

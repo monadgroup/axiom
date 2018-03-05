@@ -1,11 +1,9 @@
 #include <iostream>
 #include "CustomNode.h"
 
-#include "Control.h"
 #include "Surface.h"
 #include "Runtime.h"
 #include "GeneratableModuleClass.h"
-#include "HardControl.h"
 #include "../parser/TokenStream.h"
 #include "../parser/Parser.h"
 #include "../ast/Block.h"
@@ -32,7 +30,8 @@ void CustomNode::setCode(const std::string &code) {
 
             scheduleCompile();
         } catch (const MaximCommon::CompileError &err) {
-            std::cerr << "Error on parse: " << err.start.line << ":" << err.start.column << " -> " << err.end.line << ":" << err.end.column << " :: " << err.message << std::endl;
+            std::cerr << "Error on parse: " << err.start.line << ":" << err.start.column << " -> " << err.end.line
+                      << ":" << err.end.column << " :: " << err.message << std::endl;
 
             _errorLog.errors.push_back(err);
         }
@@ -47,7 +46,7 @@ void CustomNode::remove() {
     Node::remove();
 }
 
-GeneratableModuleClass* CustomNode::compile() {
+GeneratableModuleClass *CustomNode::compile() {
     assert(_ast);
 
     auto oldModule = reset();
@@ -70,7 +69,8 @@ GeneratableModuleClass* CustomNode::compile() {
     } catch (const MaximCommon::CompileError &err) {
         _errorLog.errors.push_back(err);
 
-        std::cerr << "Error on compile: " << err.start.line << ":" << err.start.column << " -> " << err.end.line << ":" << err.end.column << " :: " << err.message << std::endl;
+        std::cerr << "Error on compile: " << err.start.line << ":" << err.start.column << " -> " << err.end.line << ":"
+                  << err.end.column << " :: " << err.message << std::endl;
 
         // revert to old moduleClass and module so we're not running half-generated code
         _moduleClass = std::move(oldModuleClass);

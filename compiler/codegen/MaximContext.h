@@ -143,13 +143,15 @@ namespace MaximCodegen {
         Function *getFunction(std::string name, std::vector<Type *> types);
 
         std::unique_ptr<Value>
-        callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values, ComposableModuleClassMethod *method,
+        callFunction(const std::string &name, std::vector<std::unique_ptr<Value>> values,
+                     ComposableModuleClassMethod *method,
                      SourcePos startPos, SourcePos endPos);
 
         Converter *getConverter(MaximCommon::FormType destType);
 
-        std::unique_ptr<Num> callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, ComposableModuleClassMethod *method,
-                                           SourcePos startPos, SourcePos endPos);
+        std::unique_ptr<Num>
+        callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value, ComposableModuleClassMethod *method,
+                      SourcePos startPos, SourcePos endPos);
 
         Control *getControl(MaximCommon::ControlType type);
 

@@ -5,14 +5,10 @@
 #include <iostream>
 
 #include "Runtime.h"
-#include "Node.h"
-#include "Control.h"
 #include "HardControl.h"
 #include "ControlGroup.h"
 #include "GeneratableModuleClass.h"
-#include "../codegen/MaximContext.h"
 #include "../codegen/Control.h"
-#include "../codegen/Scope.h"
 
 using namespace MaximRuntime;
 
@@ -25,13 +21,13 @@ void Surface::scheduleGraphUpdate() {
     _needsGraphUpdate = true;
 }
 
-GeneratableModuleClass* Surface::compile() {
+GeneratableModuleClass *Surface::compile() {
     if (!_needsGraphUpdate) return _class.get();
 
     reset();
 
     // compile all children
-    std::unordered_map<Node*, GeneratableModuleClass *> nodeClasses;
+    std::unordered_map<Node *, GeneratableModuleClass *> nodeClasses;
     for (const auto &node : _nodes) {
         nodeClasses.emplace(node, node->compile());
     }
@@ -52,9 +48,9 @@ GeneratableModuleClass* Surface::compile() {
 
     /// EXTRACTOR HANDLING
     // floodfill to find extracted nodes
-    std::unordered_set<Node*> extractedNodes;
-    std::unordered_set<Control*> visitedControls;
-    std::queue<Control*> controlQueue;
+    std::unordered_set<Node *> extractedNodes;
+    std::unordered_set<Control *> visitedControls;
+    std::queue<Control *> controlQueue;
 
     // step 1: find extractor controls
     for (const auto &node : _nodes) {
@@ -142,7 +138,8 @@ GeneratableModuleClass* Surface::compile() {
                 // only propagate to the node if it writes to the group - other nodes won't affect output
                 // (although they'll still be included in the final list by the check after this one)
                 if (!connectedControl->writtenTo() ||
-                    visitedNodes.find(connectedControl->node()) != visitedNodes.end()) continue;
+                    visitedNodes.find(connectedControl->node()) != visitedNodes.end())
+                    continue;
 
                 visitedNodes.emplace(connectedControl->node());
                 nodeQueue.emplace(connectedControl->node());
@@ -244,7 +241,7 @@ void Surface::pullGetterMethod() {
     }
 }
 
-void* Surface::updateCurrentPtr(void *parentCtx) {
+void *Surface::updateCurrentPtr(void *parentCtx) {
     auto selfPtr = RuntimeUnit::updateCurrentPtr(parentCtx);
 
     for (const auto &group : _controlGroups) {

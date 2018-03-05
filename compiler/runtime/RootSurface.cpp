@@ -9,6 +9,6 @@ RootSurface::RootSurface(Runtime *runtime) : Surface(runtime, 0), output(this) {
 
 }
 
-void* RootSurface::getValuePtr(void *parentCtx) {
+void *RootSurface::getValuePtr(void *parentCtx) {
     return parentCtx;
 }

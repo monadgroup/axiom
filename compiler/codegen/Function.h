@@ -62,19 +62,25 @@ namespace MaximCodegen {
 
         const std::vector<Parameter> &parameters() const { return _parameters; }
 
-        bool acceptsParameters(const std::vector<Type*> &types);
+        bool acceptsParameters(const std::vector<Type *> &types);
 
-        std::unique_ptr<Value> call(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> values, SourcePos startPos, SourcePos endPos);
+        std::unique_ptr<Value>
+        call(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> values, SourcePos startPos,
+             SourcePos endPos);
 
         virtual std::unique_ptr<Value>
-        generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) = 0;
+        generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                 std::unique_ptr<VarArg> vararg) = 0;
 
         virtual std::unique_ptr<Value>
-        generateConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<ConstVarArg> vararg);
+        generateConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                      std::unique_ptr<ConstVarArg> vararg);
 
         virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
 
-        virtual void sampleArguments(ComposableModuleClassMethod *method, size_t index, const std::vector<std::unique_ptr<Value>> &args, const std::vector<std::unique_ptr<Value>> &varargs);
+        virtual void sampleArguments(ComposableModuleClassMethod *method, size_t index,
+                                     const std::vector<std::unique_ptr<Value>> &args,
+                                     const std::vector<std::unique_ptr<Value>> &varargs);
 
     private:
         class DynVarArg : public VarArg {

@@ -13,7 +13,8 @@ namespace MaximRuntime {
     public:
         HardControl(Node *node, const std::string &name, const MaximCodegen::ControlInstance &instance);
 
-        static std::unique_ptr<HardControl> create(Node *node, const std::string &name, const MaximCodegen::ControlInstance &instance);
+        static std::unique_ptr<HardControl>
+        create(Node *node, const std::string &name, const MaximCodegen::ControlInstance &instance);
 
         std::string name() const override { return _name; }
 
@@ -23,7 +24,7 @@ namespace MaximRuntime {
 
         bool readFrom() const override;
 
-        std::vector<Control*> internallyLinkedControls() override;
+        std::vector<Control *> internallyLinkedControls() override;
 
         const MaximCodegen::ControlInstance &instance() const { return _instance; }
 

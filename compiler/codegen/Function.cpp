@@ -112,7 +112,7 @@ void Function::sampleArguments(ComposableModuleClassMethod *method, size_t index
 
 }
 
-Parameter* Function::getParameter(size_t index) {
+Parameter *Function::getParameter(size_t index) {
     if (index < _parameters.size()) return &_parameters[index];
     assert(_vararg);
     return _vararg.get();
@@ -151,8 +151,9 @@ void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args,
     }
 }
 
-std::unique_ptr<Value> Function::callConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &args,
-                                           std::vector<std::unique_ptr<Value>> varargs, SourcePos startPos, SourcePos endPos) {
+std::unique_ptr<Value>
+Function::callConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &args,
+                    std::vector<std::unique_ptr<Value>> varargs, SourcePos startPos, SourcePos endPos) {
     std::unique_ptr<ConstVarArg> vararg;
     if (_vararg) {
         assert(!varargs.empty());
@@ -230,7 +231,7 @@ std::unique_ptr<Value> ConstVarArg::atIndex(size_t index) {
     return vals[index]->clone();
 }
 
-llvm::Value* ConstVarArg::count(Builder &b) {
+llvm::Value *ConstVarArg::count(Builder &b) {
     return context->constInt(8, vals.size(), false);
 }
 
@@ -249,6 +250,6 @@ std::unique_ptr<Value> Function::DynVarArg::atIndex(llvm::Value *index, Builder 
     return type->createInstance(b.CreateLoad(ptr, "va.element"), SourcePos(-1, -1), SourcePos(-1, -1));
 }
 
-llvm::Value* Function::DynVarArg::count(Builder &b) {
+llvm::Value *Function::DynVarArg::count(Builder &b) {
     return b.CreateExtractValue(argStruct, (uint64_t) 0, "va.count");
 }

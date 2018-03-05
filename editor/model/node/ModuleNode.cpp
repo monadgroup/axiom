@@ -1,6 +1,5 @@
 #include "ModuleNode.h"
 
-#include "compiler/runtime/SoftControl.h"
 #include "compiler/runtime/Runtime.h"
 
 using namespace AxiomModel;

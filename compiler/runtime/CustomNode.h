@@ -14,7 +14,7 @@ namespace MaximAst {
 namespace MaximRuntime {
 
     class CustomNode : public QObject, public Node {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         explicit CustomNode(Surface *surface);
@@ -29,9 +29,11 @@ namespace MaximRuntime {
 
         void remove() override;
 
-        const std::unique_ptr<Control> *begin() const override { return (const std::unique_ptr<Control> *) _controls.begin().base(); }
+        const std::unique_ptr<Control> *
+        begin() const override { return (const std::unique_ptr<Control> *) _controls.begin().base(); }
 
-        const std::unique_ptr<Control> *end() const override { return (const std::unique_ptr<Control> *) _controls.end().base(); }
+        const std::unique_ptr<Control> *
+        end() const override { return (const std::unique_ptr<Control> *) _controls.end().base(); }
 
         const ErrorLog &errorLog() const { return _errorLog; }
 

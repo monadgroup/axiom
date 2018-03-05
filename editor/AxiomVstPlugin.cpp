@@ -2,13 +2,12 @@
 
 #include "resources/resource.h"
 #include "AxiomVstEditor.h"
-
-#include "compiler/codegen/Operator.h"
-#include "compiler/codegen/Converter.h"
-#include "compiler/codegen/Function.h"
-#include "compiler/codegen/Control.h"
 #include "compiler/runtime/GeneratableModuleClass.h"
 #include "compiler/runtime/ControlGroup.h"
+#include "compiler/codegen/Operator.h"
+#include "compiler/codegen/Converter.h"
+#include "compiler/codegen/Control.h"
+#include "compiler/codegen/Function.h"
 
 AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
     return new AxiomVstPlugin(audioMaster);
@@ -30,6 +29,9 @@ void AxiomVstPlugin::open() {
 }
 
 void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) {
+    // while there are events to be distributed,
+    // fill buffer up until next event pos, then stuff events into input
+
     runtime.fillBuffer(outputs, (size_t) sampleFrames);
 }
 

@@ -17,7 +17,9 @@ std::unique_ptr<SequenceFunction> SequenceFunction::create(MaximContext *ctx, ll
     return std::make_unique<SequenceFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> SequenceFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+SequenceFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                           std::unique_ptr<VarArg> vararg) {
     auto floorFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::floor,
                                                      {ctx()->numType()->vecType()});
 

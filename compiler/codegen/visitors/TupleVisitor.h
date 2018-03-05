@@ -14,6 +14,7 @@ namespace MaximCodegen {
 
     class Value;
 
-    std::unique_ptr<Value> visitTuple(ComposableModuleClassMethod *method, Scope *scope, MaximAst::TupleExpression *expr);
+    std::unique_ptr<Value>
+    visitTuple(ComposableModuleClassMethod *method, Scope *scope, MaximAst::TupleExpression *expr);
 
 }

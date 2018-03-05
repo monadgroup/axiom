@@ -12,7 +12,7 @@ ControlField::ControlField(Control *control, const std::string &name, Type *type
 
 }
 
-llvm::Type* ControlField::storageType() {
+llvm::Type *ControlField::storageType() {
     return _control->storageType();
 }
 

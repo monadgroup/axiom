@@ -10,7 +10,8 @@ NumOperator::NumOperator(MaximContext *context, MaximCommon::OperatorType type, 
 }
 
 std::unique_ptr<Value>
-NumOperator::call(ModuleClassMethod *method, std::unique_ptr<Value> left, std::unique_ptr<Value> right, SourcePos startPos,
+NumOperator::call(ModuleClassMethod *method, std::unique_ptr<Value> left, std::unique_ptr<Value> right,
+                  SourcePos startPos,
                   SourcePos endPos) {
     auto leftNum = dynamic_cast<Num *>(left.get());
     auto rightNum = dynamic_cast<Num *>(right.get());

@@ -5,7 +5,8 @@
 
 using namespace MaximCodegen;
 
-FrequencyConverter::FrequencyConverter(MaximContext *ctx, llvm::Module *module) : Converter(ctx, module, MaximCommon::FormType::FREQUENCY) {
+FrequencyConverter::FrequencyConverter(MaximContext *ctx, llvm::Module *module) : Converter(ctx, module,
+                                                                                            MaximCommon::FormType::FREQUENCY) {
     converters.emplace(MaximCommon::FormType::CONTROL, (FormConverter) & MaximCodegen::FrequencyConverter::fromControl);
     converters.emplace(MaximCommon::FormType::SECONDS, (FormConverter) & MaximCodegen::FrequencyConverter::fromSeconds);
     converters.emplace(MaximCommon::FormType::NOTE, (FormConverter) & MaximCodegen::FrequencyConverter::fromNote);

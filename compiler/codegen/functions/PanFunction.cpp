@@ -18,7 +18,9 @@ std::unique_ptr<PanFunction> PanFunction::create(MaximContext *ctx, llvm::Module
     return std::make_unique<PanFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> PanFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+PanFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                      std::unique_ptr<VarArg> vararg) {
     auto minIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum,
                                                         {ctx()->numType()->vecType()});
     auto maxIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum,

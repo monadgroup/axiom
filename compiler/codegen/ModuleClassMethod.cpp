@@ -5,7 +5,8 @@
 
 using namespace MaximCodegen;
 
-ModuleClassMethod::ModuleClassMethod(ModuleClass *moduleClass, std::string name, llvm::Type *returnType, std::vector<llvm::Type*> paramTypes)
+ModuleClassMethod::ModuleClassMethod(ModuleClass *moduleClass, std::string name, llvm::Type *returnType,
+                                     std::vector<llvm::Type *> paramTypes)
     : _moduleClass(moduleClass), _name(moduleClass->mangleMethodName(name)), _builder(moduleClass->ctx()->llvm()),
       _returnType(returnType ? returnType : llvm::Type::getVoidTy(moduleClass->ctx()->llvm())),
       _paramTypes(std::move(paramTypes)) {
@@ -18,7 +19,7 @@ ModuleClassMethod::ModuleClassMethod(ModuleClass *moduleClass, std::string name,
     _contextPtr = func->arg_begin() + _paramTypes.size() - 1;
 }
 
-llvm::Function* ModuleClassMethod::get(llvm::Module *module) const {
+llvm::Function *ModuleClassMethod::get(llvm::Module *module) const {
     if (auto func = module->getFunction(_name)) {
         return func;
     }
@@ -30,11 +31,11 @@ llvm::Function* ModuleClassMethod::get(llvm::Module *module) const {
     );
 }
 
-llvm::Value* ModuleClassMethod::arg(size_t index) const {
+llvm::Value *ModuleClassMethod::arg(size_t index) const {
     return get(_moduleClass->module())->arg_begin() + index;
 }
 
-llvm::Value* ModuleClassMethod::call(Builder &b, std::vector<llvm::Value *> args, llvm::Value *context,
+llvm::Value *ModuleClassMethod::call(Builder &b, std::vector<llvm::Value *> args, llvm::Value *context,
                                      llvm::Module *module, const llvm::Twine &resultName) const {
     args.push_back(context);
     auto func = get(module);

@@ -32,7 +32,8 @@
 using namespace MaximCodegen;
 using namespace MaximAst;
 
-std::unique_ptr<Value> MaximCodegen::visitExpression(ComposableModuleClassMethod *method, Scope *scope, MaximAst::Expression *expr) {
+std::unique_ptr<Value>
+MaximCodegen::visitExpression(ComposableModuleClassMethod *method, Scope *scope, MaximAst::Expression *expr) {
     if (auto assign = dynamic_cast<AssignExpression *>(expr)) return visitAssign(method, scope, assign);
     if (auto call = dynamic_cast<CallExpression *>(expr)) return visitCall(method, scope, call);
     if (auto cast = dynamic_cast<CastExpression *>(expr)) return visitCast(method, scope, cast);

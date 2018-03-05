@@ -8,7 +8,8 @@ using namespace MaximCodegen;
 
 ScalarExternalFunction::ScalarExternalFunction(MaximContext *ctx, llvm::Module *module, std::string externalName,
                                                std::string name, size_t paramCount)
-    : Function(ctx, module, std::move(name), ctx->numType(), std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false, false)), nullptr),
+    : Function(ctx, module, std::move(name), ctx->numType(),
+               std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false, false)), nullptr),
       _externalName(std::move(externalName)) {
 
 }
@@ -24,7 +25,7 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(ComposableModuleClassMet
                                                         std::unique_ptr<VarArg> vararg) {
     auto floatTy = llvm::Type::getFloatTy(ctx()->llvm());
     auto extFunc = llvm::Function::Create(
-        llvm::FunctionType::get(floatTy, std::vector<llvm::Type*>(params.size(), floatTy), false),
+        llvm::FunctionType::get(floatTy, std::vector<llvm::Type *>(params.size(), floatTy), false),
         llvm::Function::ExternalLinkage,
         _externalName, method->moduleClass()->module()
     );
@@ -37,7 +38,7 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(ComposableModuleClassMet
 
     Num *firstParam = nullptr;
     for (const auto &param : params) {
-        auto numParam = dynamic_cast<Num*>(param.get());
+        auto numParam = dynamic_cast<Num *>(param.get());
         assert(numParam);
         if (!firstParam) firstParam = numParam;
         llVecs.push_back(numParam->vec(b));

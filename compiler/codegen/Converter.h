@@ -16,7 +16,8 @@ namespace MaximCodegen {
 
         MaximCommon::FormType toType() const { return _toType; }
 
-        std::unique_ptr<Num> call(ComposableModuleClassMethod *method, std::unique_ptr<Num> value, SourcePos startPos, SourcePos endPos);
+        std::unique_ptr<Num>
+        call(ComposableModuleClassMethod *method, std::unique_ptr<Num> value, SourcePos startPos, SourcePos endPos);
 
     protected:
         using FormConverter = llvm::Value *(Converter::*)(ComposableModuleClassMethod *method, llvm::Value *val);

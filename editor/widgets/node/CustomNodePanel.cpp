@@ -1,8 +1,6 @@
 #include "CustomNodePanel.h"
 
 #include <QtWidgets/QGraphicsProxyWidget>
-#include <QtWidgets/QTextEdit>
-#include <sstream>
 
 #include "editor/model/node/CustomNode.h"
 #include "editor/widgets/CommonColors.h"

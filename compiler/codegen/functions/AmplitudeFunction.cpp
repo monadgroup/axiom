@@ -15,7 +15,9 @@ std::unique_ptr<AmplitudeFunction> AmplitudeFunction::create(MaximContext *ctx, 
     return std::make_unique<AmplitudeFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> AmplitudeFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+AmplitudeFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                            std::unique_ptr<VarArg> vararg) {
     auto absIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::fabs,
                                                         {ctx()->numType()->vecType()});
 

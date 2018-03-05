@@ -81,7 +81,7 @@ void Control::disconnectFrom(Control *other) {
 }
 
 void Control::remove() {
-    auto connections = std::set<Control*>(_connections);
+    auto connections = std::set<Control *>(_connections);
     for (const auto &connectedNode : connections) {
         disconnectFrom(connectedNode);
     }

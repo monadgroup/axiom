@@ -17,7 +17,9 @@ std::unique_ptr<NoiseFunction> NoiseFunction::create(MaximContext *ctx, llvm::Mo
     return std::make_unique<NoiseFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> NoiseFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+NoiseFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                        std::unique_ptr<VarArg> vararg) {
     auto randType = llvm::Type::getInt32Ty(ctx()->llvm());
     auto randFunc = llvm::Function::Create(
         llvm::FunctionType::get(randType, {}, false),

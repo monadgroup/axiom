@@ -5,27 +5,29 @@
 
 using namespace MaximCodegen;
 
-ComposableModuleClass::ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name, const std::vector<llvm::Type*> &constructorParams)
+ComposableModuleClass::ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name,
+                                             const std::vector<llvm::Type *> &constructorParams)
     : ModuleClass(ctx, module, name) {
     _constructor = std::make_unique<ComposableModuleClassMethod>(this, "constructor", nullptr, constructorParams);
 }
 
-ModuleClassMethod* ComposableModuleClass::constructor() {
+ModuleClassMethod *ComposableModuleClass::constructor() {
     return _constructor.get();
 }
 
 std::unique_ptr<ComposableModuleClassMethod> ComposableModuleClass::entryAccessor(size_t index) {
     assert(index < _typeDict.size());
-    auto method = std::make_unique<ComposableModuleClassMethod>(this, name() + "entry." + std::to_string(index), llvm::PointerType::get(_typeDict[index], 0));
+    auto method = std::make_unique<ComposableModuleClassMethod>(this, name() + "entry." + std::to_string(index),
+                                                                llvm::PointerType::get(_typeDict[index], 0));
     method->builder().CreateRet(method->getEntryPointer(index, "entry"));
     return method;
 }
 
-llvm::Constant* ComposableModuleClass::initializeVal() {
+llvm::Constant *ComposableModuleClass::initializeVal() {
     return llvm::ConstantStruct::get(storageType(), _defaultDict);
 }
 
-llvm::StructType* ComposableModuleClass::storageType() {
+llvm::StructType *ComposableModuleClass::storageType() {
     return llvm::StructType::get(ctx()->llvm(), _typeDict);
 }
 
@@ -44,7 +46,7 @@ size_t ComposableModuleClass::addEntry(llvm::Constant *initValue) {
     return index;
 }
 
-size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value*> &constructorParams) {
+size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams) {
     auto index = addEntry(moduleClass->initializeVal());
     auto moduleConstructor = moduleClass->constructor();
     if (moduleConstructor) {
@@ -53,7 +55,7 @@ size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vect
     return index;
 }
 
-llvm::Value* ComposableModuleClass::getEntryPointer(Builder &b, size_t index, llvm::Value *context,
+llvm::Value *ComposableModuleClass::getEntryPointer(Builder &b, size_t index, llvm::Value *context,
                                                     const llvm::Twine &resultName) {
     auto type = storageType();
     auto castedVal = b.CreateBitCast(context, llvm::PointerType::get(type, 0));

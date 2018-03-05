@@ -9,7 +9,6 @@
 #include "../control/NodeControl.h"
 #include "editor/AxiomApplication.h"
 #include "compiler/runtime/Runtime.h"
-#include "compiler/runtime/SoftControl.h"
 
 using namespace AxiomModel;
 

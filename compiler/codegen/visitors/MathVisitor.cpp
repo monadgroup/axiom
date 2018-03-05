@@ -2,14 +2,14 @@
 
 #include "../../ast/MathExpression.h"
 #include "../ComposableModuleClassMethod.h"
-#include "../ComposableModuleClass.h"
 #include "../Value.h"
 #include "../MaximContext.h"
 #include "ExpressionVisitor.h"
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitMath(ComposableModuleClassMethod *method, Scope *scope, MaximAst::MathExpression *expr) {
+std::unique_ptr<Value>
+MaximCodegen::visitMath(ComposableModuleClassMethod *method, Scope *scope, MaximAst::MathExpression *expr) {
     return method->moduleClass()->ctx()->callOperator(
         expr->type,
         visitExpression(method, scope, expr->left.get()),

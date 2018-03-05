@@ -17,7 +17,9 @@ std::unique_ptr<CombineFunction> CombineFunction::create(MaximContext *ctx, llvm
     return std::make_unique<CombineFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> CombineFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+CombineFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                          std::unique_ptr<VarArg> vararg) {
     auto leftNum = dynamic_cast<Num *>(params[0].get());
     auto rightNum = dynamic_cast<Num *>(params[1].get());
     assert(leftNum && rightNum);

@@ -13,7 +13,9 @@ PeriodicFunction::PeriodicFunction(MaximContext *ctx, llvm::Module *module, std:
 
 }
 
-std::unique_ptr<Value> PeriodicFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+PeriodicFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                           std::unique_ptr<VarArg> vararg) {
     auto freqVal = dynamic_cast<Num *>(params[0].get());
     auto phaseOffsetVal = dynamic_cast<Num *>(params[1].get());
     assert(freqVal && phaseOffsetVal);

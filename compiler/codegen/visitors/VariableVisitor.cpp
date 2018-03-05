@@ -7,7 +7,8 @@
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitVariable(ComposableModuleClassMethod *method, Scope *scope, MaximAst::VariableExpression *expr) {
+std::unique_ptr<Value>
+MaximCodegen::visitVariable(ComposableModuleClassMethod *method, Scope *scope, MaximAst::VariableExpression *expr) {
     auto val = scope->getVariable(expr->name, expr->startPos, expr->endPos);
     if (!val) {
         throw MaximCommon::CompileError(

@@ -11,20 +11,20 @@ Control::Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlTy
 
 }
 
-ControlField* Control::addField(const std::string &name, Type *type) {
+ControlField *Control::addField(const std::string &name, Type *type) {
     auto index = _fields.emplace(name, std::make_unique<ControlField>(this, name, type));
     auto field = index.first->second.get();
     field->constructor()->call(constructor()->builder(), {}, constructor()->contextPtr(), module(), "");
     return field;
 }
 
-ControlField* Control::getField(const std::string &name) {
+ControlField *Control::getField(const std::string &name) {
     auto index = _fields.find(name);
     if (index != _fields.end()) return index->second.get();
     else return nullptr;
 }
 
-llvm::Type* Control::storageType() {
+llvm::Type *Control::storageType() {
     return llvm::PointerType::get(_storageType, 0);
 }
 

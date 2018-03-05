@@ -34,17 +34,17 @@ ZeroInitializedModuleClass::ZeroInitializedModuleClass(MaximContext *ctx, llvm::
 
 }
 
-llvm::Constant* ZeroInitializedModuleClass::initializeVal() {
+llvm::Constant *ZeroInitializedModuleClass::initializeVal() {
     return llvm::ConstantAggregateZero::get(storageType());
 }
 
 UndefInitializedModuleClass::UndefInitializedModuleClass(MaximContext *ctx, llvm::Module *module,
-                                                       const std::string &name)
+                                                         const std::string &name)
     : ModuleClass(ctx, module, name) {
 
 }
 
-llvm::Constant* UndefInitializedModuleClass::initializeVal() {
+llvm::Constant *UndefInitializedModuleClass::initializeVal() {
     return llvm::UndefValue::get(storageType());
 }
 
@@ -54,7 +54,7 @@ TypeInferencedModuleClass::TypeInferencedModuleClass(MaximContext *ctx, llvm::Mo
 
 }
 
-llvm::Type* TypeInferencedModuleClass::storageType() {
+llvm::Type *TypeInferencedModuleClass::storageType() {
     return initializeVal()->getType();
 }
 

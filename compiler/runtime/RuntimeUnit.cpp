@@ -23,17 +23,17 @@ void RuntimeUnit::pullGetterMethod() {
     }
 }
 
-void* RuntimeUnit::getValuePtr(void *parentCtx) {
+void *RuntimeUnit::getValuePtr(void *parentCtx) {
     if (!_getValueCb || !parentCtx) return nullptr;
     return _getValueCb(parentCtx);
 }
 
-void* RuntimeUnit::updateCurrentPtr(void *parentCtx) {
+void *RuntimeUnit::updateCurrentPtr(void *parentCtx) {
     _currentPtr = getValuePtr(parentCtx);
     assert(_currentPtr);
     return _currentPtr;
 }
 
-void* RuntimeUnit::currentPtr() const {
+void *RuntimeUnit::currentPtr() const {
     return _currentPtr;
 }

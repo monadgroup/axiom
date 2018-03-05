@@ -5,8 +5,6 @@
 #include "Control.h"
 #include "ComposableModuleClassMethod.h"
 #include "MaximContext.h"
-#include "Type.h"
-#include "../common/CompileError.h"
 #include "../ast/ControlExpression.h"
 
 using namespace MaximCodegen;
@@ -56,10 +54,10 @@ void Scope::setControl(ComposableModuleClassMethod *method, MaximAst::ControlExp
 
 void Scope::setAssignable(ComposableModuleClassMethod *method, MaximAst::AssignableExpression *assignable,
                           std::unique_ptr<Value> value) {
-    if (auto var = dynamic_cast<MaximAst::VariableExpression*>(assignable)) {
+    if (auto var = dynamic_cast<MaximAst::VariableExpression *>(assignable)) {
         setVariable(var->name, std::move(value));
     } else {
-        auto controlExpr = dynamic_cast<MaximAst::ControlExpression*>(assignable);
+        auto controlExpr = dynamic_cast<MaximAst::ControlExpression *>(assignable);
         assert(controlExpr);
         setControl(method, controlExpr, std::move(value));
     }
@@ -70,14 +68,14 @@ void Scope::clear() {
     _controls.clear();
 }
 
-ControlInstance& Scope::getControl(const std::string &name, MaximCommon::ControlType type,
+ControlInstance &Scope::getControl(const std::string &name, MaximCommon::ControlType type,
                                    ComposableModuleClassMethod *method) {
-    ControlKey key = { name, type };
+    ControlKey key = {name, type};
     auto pos = _controls.find(key);
     if (pos != _controls.end()) return pos->second;
 
     auto control = method->moduleClass()->ctx()->getControl(type);
     auto instId = method->moduleClass()->addEntry(control);
-    auto newPos = _controls.emplace(key, ControlInstance { control, false, false, instId });
+    auto newPos = _controls.emplace(key, ControlInstance {control, false, false, instId});
     return newPos.first->second;
 }

@@ -6,6 +6,7 @@
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitControl(ComposableModuleClassMethod *method, Scope *scope, MaximAst::ControlExpression *expr) {
+std::unique_ptr<Value>
+MaximCodegen::visitControl(ComposableModuleClassMethod *method, Scope *scope, MaximAst::ControlExpression *expr) {
     return scope->getControl(method, expr);
 }

@@ -8,7 +8,8 @@ namespace MaximCodegen {
 
     class ModuleClassMethod {
     public:
-        ModuleClassMethod(ModuleClass *moduleClass, std::string name, llvm::Type *returnType = nullptr, std::vector<llvm::Type*> paramTypes = {});
+        ModuleClassMethod(ModuleClass *moduleClass, std::string name, llvm::Type *returnType = nullptr,
+                          std::vector<llvm::Type *> paramTypes = {});
 
         virtual ModuleClass *moduleClass() const { return _moduleClass; }
 
@@ -33,7 +34,7 @@ namespace MaximCodegen {
         llvm::BasicBlock *_entryBlock;
         Builder _builder;
         llvm::Type *_returnType;
-        std::vector<llvm::Type*> _paramTypes;
+        std::vector<llvm::Type *> _paramTypes;
         llvm::Value *_contextPtr;
     };
 

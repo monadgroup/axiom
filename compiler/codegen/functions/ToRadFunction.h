@@ -12,7 +12,8 @@ namespace MaximCodegen {
 
     protected:
         std::unique_ptr<Value>
-        generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) override;
+        generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                 std::unique_ptr<VarArg> vararg) override;
     };
 
 }

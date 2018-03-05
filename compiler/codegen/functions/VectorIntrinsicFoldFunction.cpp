@@ -23,7 +23,8 @@ std::unique_ptr<VectorIntrinsicFoldFunction> VectorIntrinsicFoldFunction::create
 std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(ComposableModuleClassMethod *method,
                                                              const std::vector<std::unique_ptr<Value>> &params,
                                                              std::unique_ptr<VarArg> vararg) {
-    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), _id, {ctx()->numType()->vecType()});
+    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), _id,
+                                                     {ctx()->numType()->vecType()});
     auto &b = method->builder();
 
     auto varCount = vararg->count(b);
@@ -92,7 +93,8 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(ComposableModuleCla
 std::unique_ptr<Value> VectorIntrinsicFoldFunction::generateConst(ComposableModuleClassMethod *method,
                                                                   const std::vector<std::unique_ptr<Value>> &params,
                                                                   std::unique_ptr<ConstVarArg> vararg) {
-    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), _id, {ctx()->numType()->vecType()});
+    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), _id,
+                                                     {ctx()->numType()->vecType()});
     auto &b = method->builder();
 
     auto firstVal = vararg->atIndex(0);

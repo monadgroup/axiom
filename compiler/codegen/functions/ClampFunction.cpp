@@ -19,7 +19,9 @@ std::unique_ptr<ClampFunction> ClampFunction::create(MaximContext *ctx, llvm::Mo
     return std::make_unique<ClampFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> ClampFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+ClampFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                        std::unique_ptr<VarArg> vararg) {
     auto minIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum,
                                                         {ctx()->numType()->vecType()});
     auto maxIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum,

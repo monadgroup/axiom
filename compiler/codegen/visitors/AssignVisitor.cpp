@@ -2,7 +2,6 @@
 
 #include "../../ast/AssignExpression.h"
 #include "../ComposableModuleClassMethod.h"
-#include "../ComposableModuleClass.h"
 #include "../Scope.h"
 #include "../MaximContext.h"
 #include "../Operator.h"
@@ -11,7 +10,8 @@
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitAssign(ComposableModuleClassMethod *method, Scope *scope, MaximAst::AssignExpression *expr) {
+std::unique_ptr<Value>
+MaximCodegen::visitAssign(ComposableModuleClassMethod *method, Scope *scope, MaximAst::AssignExpression *expr) {
     std::unique_ptr<Value> rightVal;
     if (expr->type == MaximCommon::OperatorType::IDENTITY) rightVal = visitExpression(method, scope, expr->right.get());
     else {
@@ -58,7 +58,8 @@ std::unique_ptr<Value> MaximCodegen::visitAssign(ComposableModuleClassMethod *me
         for (size_t i = 0; i < expr->left->assignments.size(); i++) {
             rightVals.push_back(rightVal->clone());
         }
-        return Tuple::create(method->moduleClass()->ctx(), std::move(rightVals), method->builder(), expr->startPos, expr->endPos);
+        return Tuple::create(method->moduleClass()->ctx(), std::move(rightVals), method->builder(), expr->startPos,
+                             expr->endPos);
     }
 
     return rightVal;

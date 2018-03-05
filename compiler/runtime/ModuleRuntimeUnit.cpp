@@ -1,7 +1,6 @@
 #include "ModuleRuntimeUnit.h"
 
 #include "Runtime.h"
-#include "../codegen/MaximContext.h"
 
 using namespace MaximRuntime;
 

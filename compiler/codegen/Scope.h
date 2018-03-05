@@ -60,9 +60,11 @@ namespace MaximCodegen {
 
         void setVariable(std::string name, std::unique_ptr<Value> value);
 
-        void setControl(ComposableModuleClassMethod *method, MaximAst::ControlExpression *expr, std::unique_ptr<Value> value);
+        void setControl(ComposableModuleClassMethod *method, MaximAst::ControlExpression *expr,
+                        std::unique_ptr<Value> value);
 
-        void setAssignable(ComposableModuleClassMethod *method, MaximAst::AssignableExpression *assignable, std::unique_ptr<Value> value);
+        void setAssignable(ComposableModuleClassMethod *method, MaximAst::AssignableExpression *assignable,
+                           std::unique_ptr<Value> value);
 
         const std::unordered_map<ControlKey, ControlInstance> &controls() const { return _controls; };
 
@@ -72,7 +74,8 @@ namespace MaximCodegen {
         std::unordered_map<std::string, std::unique_ptr<Value>> _variables;
         std::unordered_map<ControlKey, ControlInstance> _controls;
 
-        ControlInstance &getControl(const std::string &name, MaximCommon::ControlType type, ComposableModuleClassMethod *method);
+        ControlInstance &
+        getControl(const std::string &name, MaximCommon::ControlType type, ComposableModuleClassMethod *method);
     };
 
 }

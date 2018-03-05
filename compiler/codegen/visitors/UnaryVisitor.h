@@ -14,6 +14,7 @@ namespace MaximCodegen {
 
     class Value;
 
-    std::unique_ptr<Value> visitUnary(ComposableModuleClassMethod *method, Scope *scope, MaximAst::UnaryExpression *expr);
+    std::unique_ptr<Value>
+    visitUnary(ComposableModuleClassMethod *method, Scope *scope, MaximAst::UnaryExpression *expr);
 
 }

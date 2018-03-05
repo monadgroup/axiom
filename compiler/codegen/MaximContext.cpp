@@ -116,7 +116,7 @@ std::unique_ptr<Array> MaximContext::assertArray(std::unique_ptr<Value> val, Arr
     return std::unique_ptr<Array>(res);
 }
 
-Array* MaximContext::assertArray(Value *val, ArrayType *type) {
+Array *MaximContext::assertArray(Value *val, ArrayType *type) {
     if (val->type() == type) {
         if (auto res = dynamic_cast<Array *>(val)) {
             return res;
@@ -156,12 +156,12 @@ llvm::Constant *MaximContext::constFloat(float num) {
     return llvm::ConstantFP::get(llvm::Type::getFloatTy(_llvm), num);
 }
 
-llvm::Constant* MaximContext::constFloatVec(float num) {
+llvm::Constant *MaximContext::constFloatVec(float num) {
     return llvm::ConstantVector::getSplat(2, constFloat(num));
 }
 
-llvm::Constant* MaximContext::constFloatVec(float left, float right) {
-    return llvm::ConstantVector::get({ constFloat(left), constFloat(right) });
+llvm::Constant *MaximContext::constFloatVec(float left, float right) {
+    return llvm::ConstantVector::get({constFloat(left), constFloat(right)});
 }
 
 llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool isSigned) {
@@ -274,8 +274,12 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     /// REGISTER CONTROLS
     registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::NUMBER, numType(), "num"));
     registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::MIDI, midiType(), "midi"));
-    registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::NUM_EXTRACT, getArrayType(numType()), "numextract"));
-    registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::MIDI_EXTRACT, getArrayType(midiType()), "midiextract"));
+    registerControl(
+        ScalarControl::create(this, libModule, MaximCommon::ControlType::NUM_EXTRACT, getArrayType(numType()),
+                              "numextract"));
+    registerControl(
+        ScalarControl::create(this, libModule, MaximCommon::ControlType::MIDI_EXTRACT, getArrayType(midiType()),
+                              "midiextract"));
 }
 
 void MaximContext::registerOperator(std::unique_ptr<Operator> op) {
@@ -403,14 +407,15 @@ Converter *MaximContext::getConverter(MaximCommon::FormType destType) {
 }
 
 std::unique_ptr<Num> MaximContext::callConverter(MaximCommon::FormType destType, std::unique_ptr<Num> value,
-                                                 ComposableModuleClassMethod *method, SourcePos startPos, SourcePos endPos) {
+                                                 ComposableModuleClassMethod *method, SourcePos startPos,
+                                                 SourcePos endPos) {
     auto con = getConverter(destType);
     assert(con);
 
     return con->call(method, std::move(value), startPos, endPos);
 }
 
-Control* MaximContext::getControl(MaximCommon::ControlType type) {
+Control *MaximContext::getControl(MaximCommon::ControlType type) {
     auto pos = controlMap.find(type);
     if (pos == controlMap.end()) return nullptr;
     return pos->second.get();

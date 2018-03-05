@@ -84,7 +84,7 @@ void Runtime::fillBuffer(float **buffer, size_t size) {
     unlock();
 }
 
-llvm::Function* Runtime::createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,
+llvm::Function *Runtime::createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,
                                            MaximCodegen::ModuleClassMethod *method) {
     auto func = llvm::Function::Create(
         llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {}),

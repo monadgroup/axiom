@@ -14,6 +14,7 @@ namespace MaximCodegen {
 
     class Value;
 
-    std::unique_ptr<Value> visitControl(ComposableModuleClassMethod *method, Scope *scope, MaximAst::ControlExpression *expr);
+    std::unique_ptr<Value>
+    visitControl(ComposableModuleClassMethod *method, Scope *scope, MaximAst::ControlExpression *expr);
 
 }

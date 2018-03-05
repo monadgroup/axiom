@@ -2,7 +2,6 @@
 
 #include "../../ast/PostfixExpression.h"
 #include "../ComposableModuleClassMethod.h"
-#include "../ComposableModuleClass.h"
 #include "../Scope.h"
 #include "../MaximContext.h"
 #include "../Num.h"
@@ -12,7 +11,8 @@
 using namespace MaximCodegen;
 
 static std::unique_ptr<Num>
-visitSinglePostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::PostfixExpression *expr, MaximAst::AssignableExpression *assignable) {
+visitSinglePostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::PostfixExpression *expr,
+                   MaximAst::AssignableExpression *assignable) {
     auto num = method->moduleClass()->ctx()->assertNum(visitExpression(method, scope, assignable));
     auto numVec = num->vec(method->builder());
 
@@ -21,11 +21,11 @@ visitSinglePostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::
     switch (expr->type) {
         case MaximAst::PostfixExpression::Type::INCREMENT:
             numVec = method->builder().CreateBinOp(llvm::Instruction::BinaryOps::FAdd, numVec, constOneVec,
-                                                 "incremented");
+                                                   "incremented");
             break;
         case MaximAst::PostfixExpression::Type::DECREMENT:
             numVec = method->builder().CreateBinOp(llvm::Instruction::BinaryOps::FSub, numVec, constOneVec,
-                                                 "decremented");
+                                                   "decremented");
             break;
     }
 
@@ -35,7 +35,8 @@ visitSinglePostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::
     return num;
 }
 
-std::unique_ptr<Value> MaximCodegen::visitPostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::PostfixExpression *expr) {
+std::unique_ptr<Value>
+MaximCodegen::visitPostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::PostfixExpression *expr) {
     std::vector<std::unique_ptr<Value>> tupleVals;
     tupleVals.reserve(expr->left->assignments.size());
 
@@ -44,5 +45,7 @@ std::unique_ptr<Value> MaximCodegen::visitPostfix(ComposableModuleClassMethod *m
     }
 
     if (tupleVals.size() == 1) return std::move(tupleVals[0]);
-    else return Tuple::create(method->moduleClass()->ctx(), std::move(tupleVals), method->builder(), expr->startPos, expr->endPos);
+    else
+        return Tuple::create(method->moduleClass()->ctx(), std::move(tupleVals), method->builder(), expr->startPos,
+                             expr->endPos);
 }

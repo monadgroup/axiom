@@ -3,13 +3,13 @@
 #include "../../ast/CastExpression.h"
 #include "../Num.h"
 #include "../ComposableModuleClassMethod.h"
-#include "../ComposableModuleClass.h"
 #include "../MaximContext.h"
 #include "ExpressionVisitor.h"
 
 using namespace MaximCodegen;
 
-std::unique_ptr<Value> MaximCodegen::visitCast(ComposableModuleClassMethod *method, Scope *scope, MaximAst::CastExpression *expr) {
+std::unique_ptr<Value>
+MaximCodegen::visitCast(ComposableModuleClassMethod *method, Scope *scope, MaximAst::CastExpression *expr) {
     auto subexprVal = method->moduleClass()->ctx()->assertNum(visitExpression(method, scope, expr->expr.get()));
 
     if (expr->isConvert) {

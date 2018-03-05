@@ -14,11 +14,20 @@ namespace MaximRuntime {
     public:
         explicit GroupNode(Surface *surface);
 
-        GeneratableModuleClass *compile() override { assert(false); throw; }
+        GeneratableModuleClass *compile() override {
+            assert(false);
+            throw;
+        }
 
-        const std::unique_ptr<Control> *begin() const override { assert(false); throw; }
+        const std::unique_ptr<Control> *begin() const override {
+            assert(false);
+            throw;
+        }
 
-        const std::unique_ptr<Control> *end() const override { assert(false); throw; }
+        const std::unique_ptr<Control> *end() const override {
+            assert(false);
+            throw;
+        }
 
         Surface *subsurface() const { return nullptr; }
     };

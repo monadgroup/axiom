@@ -3,21 +3,21 @@
 #include "Surface.h"
 #include "Control.h"
 #include "Runtime.h"
-#include "../codegen/MaximContext.h"
 #include "../codegen/Control.h"
 
 using namespace MaximRuntime;
 
 ControlGroup::ControlGroup(Surface *surface, MaximCodegen::Control *type)
-    : RuntimeUnit(surface->runtime()), _type(type), _surface(surface), _compileResult(surface->runtime()->ctx(), surface->module(), "controlgroup", nullptr) {
+    : RuntimeUnit(surface->runtime()), _type(type), _surface(surface),
+      _compileResult(surface->runtime()->ctx(), surface->module(), "controlgroup", nullptr) {
 
 }
 
-llvm::Module* ControlGroup::module() {
+llvm::Module *ControlGroup::module() {
     return surface()->module();
 }
 
-MaximCodegen::ModuleClass* ControlGroup::compile() {
+MaximCodegen::ModuleClass *ControlGroup::compile() {
     auto storeType = type()->underlyingType();
     if (extracted()) {
         _compileResult.setStorageType(llvm::ArrayType::get(storeType, MaximCodegen::ArrayType::arraySize));
@@ -29,7 +29,7 @@ MaximCodegen::ModuleClass* ControlGroup::compile() {
 }
 
 void ControlGroup::absorb(ControlGroup *other) {
-    auto otherControls = std::set<Control*>(other->controls());
+    auto otherControls = std::set<Control *>(other->controls());
     for (const auto &control : otherControls) {
         control->setGroup(this);
     }

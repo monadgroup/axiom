@@ -18,7 +18,9 @@ std::unique_ptr<AccumFunction> AccumFunction::create(MaximContext *ctx, llvm::Mo
     return std::make_unique<AccumFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> AccumFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+AccumFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                        std::unique_ptr<VarArg> vararg) {
     auto xVal = dynamic_cast<Num *>(params[0].get());
     auto gateVal = dynamic_cast<Num *>(params[1].get());
     auto baseVal = dynamic_cast<Num *>(params[2].get());

@@ -4,11 +4,13 @@
 
 namespace llvm {
     class Module;
+
     class Function;
 }
 
 namespace MaximCodegen {
     class ModuleClass;
+
     class ComposableModuleClassMethod;
 }
 

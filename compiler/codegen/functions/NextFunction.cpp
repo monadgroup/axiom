@@ -16,7 +16,9 @@ std::unique_ptr<NextFunction> NextFunction::create(MaximContext *ctx, llvm::Modu
     return std::make_unique<NextFunction>(ctx, module);
 }
 
-std::unique_ptr<Value> NextFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params, std::unique_ptr<VarArg> vararg) {
+std::unique_ptr<Value>
+NextFunction::generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
+                       std::unique_ptr<VarArg> vararg) {
     auto paramVal = dynamic_cast<Num *>(params[0].get());
     assert(paramVal);
 
