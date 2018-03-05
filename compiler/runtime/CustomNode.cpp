@@ -1,3 +1,4 @@
+#include <iostream>
 #include "CustomNode.h"
 
 #include "Control.h"
@@ -31,6 +32,8 @@ void CustomNode::setCode(const std::string &code) {
 
             scheduleCompile();
         } catch (const MaximCommon::CompileError &err) {
+            std::cerr << "Error on parse: " << err.start.line << ":" << err.start.column << " -> " << err.end.line << ":" << err.end.column << " :: " << err.message << std::endl;
+
             _errorLog.errors.push_back(err);
         }
     }
@@ -66,6 +69,8 @@ GeneratableModuleClass* CustomNode::compile() {
         deploy();
     } catch (const MaximCommon::CompileError &err) {
         _errorLog.errors.push_back(err);
+
+        std::cerr << "Error on compile: " << err.start.line << ":" << err.start.column << " -> " << err.end.line << ":" << err.end.column << " :: " << err.message << std::endl;
 
         // revert to old moduleClass and module so we're not running half-generated code
         _moduleClass = std::move(oldModuleClass);

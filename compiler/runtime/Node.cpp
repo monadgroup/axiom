@@ -4,7 +4,7 @@
 
 using namespace MaximRuntime;
 
-Node::Node(Surface *surface) : ModuleRuntimeUnit(surface->runtime(), "node") {
+Node::Node(Surface *surface) : ModuleRuntimeUnit(surface->runtime(), "node"), _surface(surface) {
 
 }
 

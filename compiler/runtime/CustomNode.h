@@ -35,6 +35,8 @@ namespace MaximRuntime {
 
         const ErrorLog &errorLog() const { return _errorLog; }
 
+        ErrorLog &errorLog() { return _errorLog; }
+
     signals:
 
         void controlAdded(HardControl *control);

@@ -36,6 +36,7 @@ void CustomNode::setCode(const QString &code) {
         _runtime.setCode(code.toStdString());
         if (!_runtime.errorLog().errors.empty()) {
             emit parseFailed(_runtime.errorLog());
+            _runtime.errorLog().errors.clear();
         } else {
             emit parseSucceeded();
         }
@@ -48,6 +49,7 @@ void CustomNode::recompile() {
 
     if (!_runtime.errorLog().errors.empty()) {
         emit compileFailed(_runtime.errorLog());
+        _runtime.errorLog().errors.clear();
     } else {
         emit compileSucceeded();
     }
