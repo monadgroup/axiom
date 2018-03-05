@@ -42,7 +42,6 @@ namespace MaximRuntime {
         Jit _jit;
         MaximCodegen::MaximContext _context;
         ValueOperator _op;
-        llvm::Module _module;
         std::unique_ptr<RootSurface> _mainSurface;
 
         bool _isDeployed = false;
@@ -50,7 +49,7 @@ namespace MaximRuntime {
 
         void (*_generateFuncPtr)() = nullptr;
 
-        llvm::Function *createForwardFunc(std::string name, llvm::Value *ctx, MaximCodegen::ModuleClassMethod *method);
+        llvm::Function *createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx, MaximCodegen::ModuleClassMethod *method);
     };
 
 }

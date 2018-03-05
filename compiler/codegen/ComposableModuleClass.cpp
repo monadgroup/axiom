@@ -14,6 +14,13 @@ ModuleClassMethod* ComposableModuleClass::constructor() {
     return _constructor.get();
 }
 
+std::unique_ptr<ComposableModuleClassMethod> ComposableModuleClass::entryAccessor(size_t index) {
+    assert(index < _typeDict.size());
+    auto method = std::make_unique<ComposableModuleClassMethod>(this, name() + "entry." + std::to_string(index), llvm::PointerType::get(_typeDict[index], 0));
+    method->builder().CreateRet(method->getEntryPointer(index, "entry"));
+    return method;
+}
+
 llvm::Constant* ComposableModuleClass::initializeVal() {
     return llvm::ConstantStruct::get(storageType(), _defaultDict);
 }

@@ -3,6 +3,7 @@
 #include <set>
 
 #include "RuntimeUnit.h"
+#include "ValueOperator.h"
 #include "../codegen/ModuleClass.h"
 
 namespace MaximCodegen {
@@ -44,6 +45,10 @@ namespace MaximRuntime {
         bool extracted() const { return _extracted; }
 
         void setExtracted(bool extracted) { _extracted = extracted; }
+
+        NumValue getNumValue() const;
+
+        void setNumValue(const NumValue &value) const;
 
     private:
 

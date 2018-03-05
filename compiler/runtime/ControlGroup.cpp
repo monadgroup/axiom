@@ -71,3 +71,11 @@ bool ControlGroup::readFrom() const {
     }
     return false;
 }
+
+NumValue ControlGroup::getNumValue() const {
+    return _surface->runtime()->op().readNum(currentPtr());
+}
+
+void ControlGroup::setNumValue(const NumValue &value) const {
+    _surface->runtime()->op().writeNum(currentPtr(), value);
+}

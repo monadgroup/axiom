@@ -9,6 +9,7 @@ namespace llvm {
 
 namespace MaximCodegen {
     class ModuleClass;
+    class ComposableModuleClassMethod;
 }
 
 namespace MaximRuntime {
@@ -19,26 +20,32 @@ namespace MaximRuntime {
     public:
         explicit RuntimeUnit(Runtime *runtime);
 
+        virtual ~RuntimeUnit();
+
         Runtime *runtime() const { return _runtime; }
 
         virtual llvm::Module *module() = 0;
 
-        /*void updateGetter(llvm::Module *module);
+        void setGetterMethod(std::unique_ptr<MaximCodegen::ComposableModuleClassMethod> method);
 
-        void *getValuePtr(void *parentCtx);
+        virtual void pullGetterMethod();
 
-        void *updateCurrentPtr(void *parentCtx);
+        virtual void *getValuePtr(void *parentCtx);
 
-        void *currentPtr() const;*/
+        virtual void *updateCurrentPtr(void *parentCtx);
+
+        void *currentPtr() const;
 
     private:
         Runtime *_runtime;
 
-        /*llvm::Function *getValueFunction = nullptr;
+        std::unique_ptr<MaximCodegen::ComposableModuleClassMethod> _method;
 
-        void *(*_getValuePtr)(void *) = nullptr;
+        using GetValueCb = void *(*)(void *);
 
-        void *_currentPtr = nullptr;*/
+        GetValueCb _getValueCb = nullptr;
+
+        void *_currentPtr = nullptr;
     };
 
 }

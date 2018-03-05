@@ -9,6 +9,8 @@ using namespace MaximRuntime;
 OutputNode::OutputNode(Surface *surface) : Node(surface) {
     _control = std::make_unique<OutputControl>(this);
     _moduleClass = std::make_unique<GeneratableModuleClass>(surface->runtime()->ctx(), module(), "outputnode");
+    _moduleClass->complete();
+    deploy();
 }
 
 GeneratableModuleClass* OutputNode::compile() {

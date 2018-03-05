@@ -26,7 +26,6 @@ void Surface::scheduleGraphUpdate() {
 }
 
 GeneratableModuleClass* Surface::compile() {
-    std::cout << "Recompiling surface: needs update? " << _needsGraphUpdate << std::endl;
     if (!_needsGraphUpdate) return _class.get();
 
     reset();
@@ -107,6 +106,7 @@ GeneratableModuleClass* Surface::compile() {
     for (const auto &ownedGroup : ownedGroups) {
         auto groupIndex = _class->addEntry(ownedGroup->compile());
         groupConstructorPtrs.emplace(ownedGroup, _class->cconstructor()->getEntryPointer(groupIndex, "group"));
+        ownedGroup->setGetterMethod(_class->entryAccessor(groupIndex));
     }
     for (size_t i = 0; i < exposedGroups.size(); i++) {
         groupConstructorPtrs.emplace(exposedGroups[i], _class->cconstructor()->arg(i));
@@ -164,46 +164,45 @@ GeneratableModuleClass* Surface::compile() {
 
     // instantiate nodes in their orders - extracted nodes are created multiple times
     // control values are also assigned
-    if (!inverseExecutionOrder.empty()) {
-        for (size_t i = inverseExecutionOrder.size() - 1; i >= 0; i--) {
-            auto node = inverseExecutionOrder[i];
-            auto nodeClass = nodeClasses.find(node)->second;
+    for (ssize_t i = inverseExecutionOrder.size() - 1; i >= 0; i--) {
+        auto node = inverseExecutionOrder[i];
+        auto nodeClass = nodeClasses.find(node)->second;
 
-            // instantiate the node n times
-            // todo: this loop should probably be in IR, add array entry to the class
-            auto isExtracted = extractedNodes.find(node) != extractedNodes.end();
-            auto loopSize = isExtracted ? MaximCodegen::ArrayType::arraySize : 1;
+        // instantiate the node n times
+        // todo: this loop should probably be in IR, add array entry to the class
+        auto isExtracted = extractedNodes.find(node) != extractedNodes.end();
+        auto loopSize = isExtracted ? MaximCodegen::ArrayType::arraySize : 1;
 
-            for (unsigned int instN = 0; instN < loopSize; instN++) {
-                auto entryIndex = _class->addEntry(
-                    nodeClass); // todo: GroupNodes will need ControlGroups passed into their constructor
-                _class->generate()->callInto(entryIndex, {}, nodeClass->generate(), "");
-                auto entryPtr = _class->cconstructor()->getEntryPointer(entryIndex, "nodeinst");
+        for (unsigned int instN = 0; instN < loopSize; instN++) {
+            auto entryIndex = _class->addEntry(
+                nodeClass); // todo: GroupNodes will need ControlGroups passed into their constructor
+            _class->generate()->callInto(entryIndex, {}, nodeClass->generate(), "");
+            auto entryPtr = _class->cconstructor()->getEntryPointer(entryIndex, "nodeinst");
 
-                // setup control values in constructor
-                for (const auto &control : *node) {
-                    auto hardControl = dynamic_cast<HardControl *>(control.get());
-                    if (!hardControl) continue;
+            // setup control values in constructor
+            for (const auto &control : *node) {
+                auto hardControl = dynamic_cast<HardControl *>(control.get());
+                if (!hardControl) continue;
 
-                    auto controlIndex = hardControl->instance()->instId;
-                    auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), controlIndex,
-                                                                 entryPtr, "controlinst");
+                auto controlIndex = hardControl->instance().instId;
+                auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), controlIndex,
+                                                             entryPtr, "controlinst");
 
-                    auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
-                    auto indexPtr = hardControl->group()->extracted()
-                                    ? _class->constructor()->builder().CreateConstGEP2_32(
-                            hardControl->group()->type()->storageType(), groupPtr, 0, instN)
-                                    : groupPtr;
+                auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
+                auto indexPtr = hardControl->group()->extracted()
+                                ? _class->constructor()->builder().CreateConstGEP2_32(
+                        hardControl->group()->type()->storageType(), groupPtr, 0, instN)
+                                : groupPtr;
 
-                    _class->constructor()->builder().CreateStore(indexPtr, controlPtr);
-                }
+                _class->constructor()->builder().CreateStore(indexPtr, controlPtr);
             }
         }
     }
 
     _class->complete();
-
     deploy();
+    pullGetterMethod();
+
     return _class.get();
 }
 
@@ -235,4 +234,22 @@ std::unique_ptr<ControlGroup> Surface::removeControlGroup(ControlGroup *group) {
 
     assert(false);
     throw;
+}
+
+void Surface::pullGetterMethod() {
+    RuntimeUnit::pullGetterMethod();
+
+    for (const auto &group : _controlGroups) {
+        group->pullGetterMethod();
+    }
+}
+
+void* Surface::updateCurrentPtr(void *parentCtx) {
+    auto selfPtr = RuntimeUnit::updateCurrentPtr(parentCtx);
+
+    for (const auto &group : _controlGroups) {
+        group->updateCurrentPtr(selfPtr);
+    }
+
+    return selfPtr;
 }

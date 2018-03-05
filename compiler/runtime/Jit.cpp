@@ -81,7 +81,6 @@ Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
 }
 
 Jit::ModuleKey Jit::addModule(const llvm::Module &m) {
-    //m.print(llvm::errs(), nullptr);
     return addModule(llvm::CloneModule(&m));
 }
 

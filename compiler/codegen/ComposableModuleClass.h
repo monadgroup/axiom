@@ -14,6 +14,8 @@ namespace MaximCodegen {
 
         ComposableModuleClassMethod *cconstructor() const { return _constructor.get(); }
 
+        std::unique_ptr<ComposableModuleClassMethod> entryAccessor(size_t index);
+
         llvm::Constant *initializeVal() override;
 
         llvm::StructType *storageType() override;

@@ -107,7 +107,7 @@ void CustomNode::updateControls() {
 
         if (pair == currentControls.end()) {
             // it's a new control
-            auto genControl = HardControl::create(this, newControl.first.name, &newControl.second);
+            auto genControl = HardControl::create(this, newControl.first.name, newControl.second);
 
             currentControls.emplace(
                 newControl.first,
@@ -116,7 +116,7 @@ void CustomNode::updateControls() {
         } else {
             // it's an old control
             pair->second.isUsed = true;
-            pair->second.control->setInstance(&newControl.second);
+            pair->second.control->setInstance(newControl.second);
         }
     }
 

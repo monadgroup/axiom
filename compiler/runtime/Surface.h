@@ -33,6 +33,10 @@ namespace MaximRuntime {
 
         std::unique_ptr<ControlGroup> removeControlGroup(ControlGroup *group);
 
+        void pullGetterMethod() override;
+
+        void *updateCurrentPtr(void *parentCtx) override;
+
     private:
         std::unique_ptr<GeneratableModuleClass> _class;
 

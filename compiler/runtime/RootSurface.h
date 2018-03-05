@@ -9,6 +9,8 @@ namespace MaximRuntime {
     public:
         explicit RootSurface(Runtime *runtime);
 
+        void *getValuePtr(void *parentCtx) override;
+
         OutputNode output;
     };
 

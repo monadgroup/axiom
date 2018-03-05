@@ -41,7 +41,7 @@ namespace MaximRuntime {
 
         NumValue readNum(void *ptr);
 
-        void writeNum(void *ptr, NumValue value);
+        void writeNum(void *ptr, const NumValue &value);
 
     private:
         MaximCodegen::MaximContext *_context;

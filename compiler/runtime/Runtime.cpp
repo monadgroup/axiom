@@ -13,8 +13,7 @@ static const std::string initFuncName = "init";
 static const std::string generateFuncName = "generate";
 static const std::string globalCtxName = "globalCtx";
 
-Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context),
-                     _module("controller", _context.llvm()) {
+Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
     libModule->setDataLayout(_jit.dataLayout());
     _context.setLibModule(libModule.get());
@@ -29,19 +28,11 @@ void Runtime::compile() {
 
     auto mainClass = _mainSurface->compile();
 
-    if (auto oldInitFunc = _module.getFunction(initFuncName)) {
-        oldInitFunc->removeFromParent();
-    }
-    if (auto oldGenerateFunc = _module.getFunction(generateFuncName)) {
-        oldGenerateFunc->removeFromParent();
-    }
-    if (auto oldGlobalCtx = _module.getGlobalVariable(globalCtxName)) {
-        oldGlobalCtx->removeFromParent();
-    }
+    auto module = std::make_unique<llvm::Module>("controller", _context.llvm());
 
     // create global variable for all storage
     auto ctxGlobal = new llvm::GlobalVariable(
-        _module, mainClass->storageType(), false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+        *module, mainClass->storageType(), false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
         mainClass->initializeVal(), globalCtxName
     );
 
@@ -49,18 +40,22 @@ void Runtime::compile() {
     // note: we could just call the surface methods and pass in the context,
     //       but this could break in case ModuleClassMethod ever changes how
     //       it passes in arguments
-    auto initFunc = createForwardFunc("init", ctxGlobal, mainClass->constructor());
-    auto generateFunc = createForwardFunc("generate", ctxGlobal, mainClass->generate());
+    auto initFunc = createForwardFunc(module.get(), initFuncName, ctxGlobal, mainClass->constructor());
+    auto generateFunc = createForwardFunc(module.get(), generateFuncName, ctxGlobal, mainClass->generate());
 
     // deploy the new module to the JIT
     if (_isDeployed) _jit.removeModule(_deployKey);
-    _deployKey = _jit.addModule(_module);
+    _deployKey = _jit.addModule(std::move(module));
     _isDeployed = true;
 
     // update pointers for things that need to be accessed
-    auto initFuncPtr = (void (*)()) _jit.getSymbolAddress(initFunc);
-    _generateFuncPtr = (void (*)()) _jit.getSymbolAddress(generateFunc);
-    assert(initFuncPtr && _generateFuncPtr);
+    auto ctxGlobalPtr = (void *) _jit.getSymbolAddress(globalCtxName);
+    auto initFuncPtr = (void (*)()) _jit.getSymbolAddress(initFuncName);
+    _generateFuncPtr = (void (*)()) _jit.getSymbolAddress(generateFuncName);
+    assert(ctxGlobalPtr && initFuncPtr && _generateFuncPtr);
+
+    // propagate new pointers
+    _mainSurface->updateCurrentPtr(ctxGlobalPtr);
 
     // initialize it
     initFuncPtr();
@@ -77,20 +72,28 @@ void Runtime::generate() {
 void Runtime::fillBuffer(float **buffer, size_t size) {
     lock();
 
-    // todo
+    auto outputPtr = _mainSurface->output.control()->group()->currentPtr();
+    assert(outputPtr);
+
+    for (size_t i = 0; i < size; i++) {
+        generate();
+        auto outputNum = _op.readNum(outputPtr);
+        buffer[0][i] = outputNum.left;
+        buffer[1][i] = outputNum.right;
+    }
 
     unlock();
 }
 
-llvm::Function* Runtime::createForwardFunc(std::string name, llvm::Value *ctx,
+llvm::Function* Runtime::createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,
                                            MaximCodegen::ModuleClassMethod *method) {
     auto func = llvm::Function::Create(
         llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {}),
-        llvm::Function::LinkageTypes::ExternalLinkage, name, &_module
+        llvm::Function::LinkageTypes::ExternalLinkage, name, module
     );
     auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", func);
     MaximCodegen::Builder b(block);
-    method->call(b, {}, ctx, &_module, "");
+    method->call(b, {}, ctx, module, "");
     b.CreateRetVoid();
     return func;
 }

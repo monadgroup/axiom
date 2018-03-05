@@ -22,7 +22,7 @@ NumValue ValueOperator::readNum(void *ptr) {
     };
 }
 
-void ValueOperator::writeNum(void *ptr, NumValue value) {
+void ValueOperator::writeNum(void *ptr, const NumValue &value) {
     auto bytePtr = (uint8_t *) ptr;
     auto vecPtr = (float *) (bytePtr + numValOffset);
     *(vecPtr + 0) = value.left;
