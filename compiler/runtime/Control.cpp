@@ -3,6 +3,7 @@
 #include <cassert>
 #include <unordered_set>
 #include <queue>
+#include <iostream>
 
 #include "Node.h"
 #include "ControlGroup.h"

@@ -23,7 +23,7 @@ namespace MaximRuntime {
 
         ValueOperator &op() { return _op; }
 
-        RootSurface &mainSurface() { return _mainSurface; }
+        RootSurface *mainSurface() { return _mainSurface.get(); }
 
         void compile();
 
@@ -42,8 +42,8 @@ namespace MaximRuntime {
         Jit _jit;
         MaximCodegen::MaximContext _context;
         ValueOperator _op;
-        RootSurface _mainSurface;
         llvm::Module _module;
+        std::unique_ptr<RootSurface> _mainSurface;
 
         bool _isDeployed = false;
         Jit::ModuleKey _deployKey;

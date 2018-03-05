@@ -2,6 +2,7 @@
 
 #include <unordered_set>
 #include <queue>
+#include <iostream>
 
 #include "Runtime.h"
 #include "Node.h"
@@ -25,6 +26,7 @@ void Surface::scheduleGraphUpdate() {
 }
 
 GeneratableModuleClass* Surface::compile() {
+    std::cout << "Recompiling surface: needs update? " << _needsGraphUpdate << std::endl;
     if (!_needsGraphUpdate) return _class.get();
 
     reset();

@@ -13,18 +13,21 @@ static const std::string initFuncName = "init";
 static const std::string generateFuncName = "generate";
 static const std::string globalCtxName = "globalCtx";
 
-Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context), _mainSurface(this),
+Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context),
                      _module("controller", _context.llvm()) {
     auto libModule = std::make_unique<llvm::Module>("lib", _context.llvm());
     libModule->setDataLayout(_jit.dataLayout());
     _context.setLibModule(libModule.get());
     _jit.addModule(std::move(libModule));
+
+    // this must go after `setLibModule` as compilation reads from there
+    _mainSurface = std::make_unique<RootSurface>(this);
 }
 
 void Runtime::compile() {
     lock();
 
-    auto mainClass = _mainSurface.compile();
+    auto mainClass = _mainSurface->compile();
 
     if (auto oldInitFunc = _module.getFunction(initFuncName)) {
         oldInitFunc->removeFromParent();
