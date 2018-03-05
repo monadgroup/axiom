@@ -7,14 +7,18 @@
 #include "Node.h"
 #include "ControlGroup.h"
 #include "Surface.h"
+#include "../codegen/Scope.h"
 
 using namespace MaximRuntime;
 
-Control::Control(Node *node, const std::string &name, MaximCommon::ControlType type)
-    : _node(node), _name(name), _type(type) {
-    auto newGroup = std::make_unique<ControlGroup>(node->surface(), _type);
+Control::Control(Node *node)
+    : _node(node) {
+}
+
+void Control::finish() {
+    auto newGroup = std::make_unique<ControlGroup>(_node->surface(), type());
     auto newGroupPtr = newGroup.get();
-    node->surface()->addControlGroup(std::move(newGroup));
+    _node->surface()->addControlGroup(std::move(newGroup));
     setGroup(newGroupPtr);
 }
 
@@ -46,7 +50,7 @@ void Control::disconnectFrom(Control *other) {
     std::unordered_set<Control *> visitedControls;
     std::queue<Control *> visitQueue;
 
-    auto newGroup = std::make_unique<ControlGroup>(_group->surface(), _type);
+    auto newGroup = std::make_unique<ControlGroup>(_group->surface(), type());
     auto newGroupPtr = newGroup.get();
     _group->surface()->addControlGroup(std::move(newGroup));
 
@@ -86,8 +90,7 @@ void Control::remove() {
     emit cleanup();
 }
 
-std::vector<Control*> Control::internallyLinkedControls() {
-    // only SoftControls have have internal links, so we return an empty list here
-    // and let them override this method
-    return {};
+bool Control::exposed() const {
+    // todo
+    return false;
 }

@@ -22,6 +22,8 @@ namespace MaximCodegen {
 
         llvm::Type *storageType() override;
 
+        llvm::Type *underlyingType() { return _storageType; }
+
         ModuleClassMethod *constructor() override { return &_constructor; }
 
     protected:

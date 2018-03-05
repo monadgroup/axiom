@@ -1,5 +1,16 @@
 #pragma once
 
+#include <QtCore/QMutex>
+
+#include "Jit.h"
+#include "ValueOperator.h"
+#include "Surface.h"
+#include "../codegen/MaximContext.h"
+
+namespace MaximCodegen {
+    class MaximContext;
+};
+
 namespace MaximRuntime {
 
     class Runtime {
@@ -8,11 +19,11 @@ namespace MaximRuntime {
 
         MaximCodegen::MaximContext *ctx() { return &_context; }
 
-        Jit &jit() { return &_jit; }
+        Jit &jit() { return _jit; }
 
-        ValueOperator &op() { return &_op; }
+        ValueOperator &op() { return _op; }
 
-        RootSchematic &mainSchematic() { return _mainSchematic; }
+        Surface &mainSurface() { return _mainSurface; }
 
         void compile();
 
@@ -31,13 +42,15 @@ namespace MaximRuntime {
         Jit _jit;
         MaximCodegen::MaximContext _context;
         ValueOperator _op;
-        RootSchematic _mainSchematic;
+        Surface _mainSurface;
         llvm::Module _module;
 
         bool _isDeployed = false;
         Jit::ModuleKey _deployKey;
 
         void (*_generateFuncPtr)() = nullptr;
+
+        llvm::Function *createForwardFunc(std::string name, llvm::Value *ctx, MaximCodegen::ModuleClassMethod *method);
     };
 
 }

@@ -64,6 +64,10 @@ namespace MaximCodegen {
 
         void setAssignable(ComposableModuleClassMethod *method, MaximAst::AssignableExpression *assignable, std::unique_ptr<Value> value);
 
+        const std::unordered_map<ControlKey, ControlInstance> &controls() const { return _controls; };
+
+        void clear();
+
     private:
         std::unordered_map<std::string, std::unique_ptr<Value>> _variables;
         std::unordered_map<ControlKey, ControlInstance> _controls;

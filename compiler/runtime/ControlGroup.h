@@ -3,6 +3,7 @@
 #include <set>
 
 #include "RuntimeUnit.h"
+#include "../codegen/ModuleClass.h"
 
 namespace MaximCodegen {
     class Control;
@@ -18,11 +19,15 @@ namespace MaximRuntime {
     public:
         ControlGroup(Surface *surface, MaximCodegen::Control *type);
 
+        llvm::Module *module() override;
+
         MaximCodegen::Control *type() const { return _type; }
 
         Surface *surface() const { return _surface; }
 
         std::set<Control*> &controls() { return _controls; }
+
+        MaximCodegen::ModuleClass *compile();
 
         void absorb(ControlGroup *other);
 
@@ -36,15 +41,19 @@ namespace MaximRuntime {
 
         bool readFrom() const;
 
-        bool extracted() const;
+        bool extracted() const { return _extracted; }
 
-        void setExtracted(bool extracted);
+        void setExtracted(bool extracted) { _extracted = extracted; }
 
     private:
 
         MaximCodegen::Control *_type;
         Surface *_surface;
         std::set<Control*> _controls;
+
+        MaximCodegen::BasicZeroModuleClass _compileResult;
+
+        bool _extracted = false;
     };
 
 }

@@ -1,20 +1,40 @@
 #pragma once
 
-#include "RuntimeUnit.h"
+#include <set>
+
+#include "ModuleRuntimeUnit.h"
 
 namespace MaximRuntime {
 
-    class Node : public RuntimeUnit {
+    class GeneratableModuleClass;
+
+    class Surface;
+
+    class Control;
+
+    class Node : public ModuleRuntimeUnit {
     public:
-        explicit Node(Surface *parent);
+        explicit Node(Surface *surface);
+
+        virtual GeneratableModuleClass *compile() = 0;
+
+        virtual void remove();
 
         Surface *surface() const { return _surface; }
 
-        std::set<Control*> &controls() { return _controls; }
+        virtual const std::unique_ptr<Control> *begin() const = 0;
+
+        virtual const std::unique_ptr<Control> *end() const = 0;
+
+        void scheduleCompile();
+
+        bool needsCompile() const { return _needsCompile; }
 
     private:
-        Surface *_parent;
-        std::set<Control*> _controls;
+
+        Surface *_surface;
+
+        bool _needsCompile = false;
     };
 
 }

@@ -6,7 +6,9 @@
 #include "Runtime.h"
 #include "Node.h"
 #include "Control.h"
+#include "HardControl.h"
 #include "ControlGroup.h"
+#include "GeneratableModuleClass.h"
 #include "../codegen/MaximContext.h"
 #include "../codegen/Control.h"
 #include "../codegen/Scope.h"
@@ -20,46 +22,15 @@ Surface::Surface(Runtime *runtime, size_t depth)
 
 void Surface::scheduleGraphUpdate() {
     _needsGraphUpdate = true;
-    scheduleCompile();
 }
 
-void Surface::addNode(Node *node) {
-    _nodes.emplace(node);
-    scheduleGraphUpdate();
-}
-
-void Surface::removeNode(Node *node) {
-    _nodes.erase(node);
-    scheduleGraphUpdate();
-}
-
-void Surface::addControlGroup(std::unique_ptr<ControlGroup> group) {
-    _controlGroups.push_back(std::move(group));
-    scheduleGraphUpdate();
-}
-
-std::unique_ptr<ControlGroup> Surface::removeControlGroup(ControlGroup *group) {
-    scheduleGraphUpdate();
-
-    for (auto i = _controlGroups.begin(); i < _controlGroups.end(); i++) {
-        if (i->get() == group) {
-            auto movedGroup = std::move(*i);
-            _controlGroups.erase(i);
-            return movedGroup;
-        }
-    }
-
-    assert(false);
-    throw;
-}
-
-MaximCodegen::ModuleClass* Surface::doCompile() {
+GeneratableModuleClass* Surface::compile() {
     if (!_needsGraphUpdate) return _class.get();
 
     reset();
 
     // compile all children
-    std::unordered_map<Node*, MaximCodegen::ComposableModuleClass *> nodeClasses;
+    std::unordered_map<Node*, GeneratableModuleClass *> nodeClasses;
     for (const auto &node : _nodes) {
         nodeClasses.emplace(node, node->compile());
     }
@@ -86,10 +57,10 @@ MaximCodegen::ModuleClass* Surface::doCompile() {
 
     // step 1: find extractor controls
     for (const auto &node : _nodes) {
-        for (const auto &control : node->controls()) {
-            if ((uint32_t) control->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) {
-                controlQueue.emplace(control);
-                visitedControls.emplace(control);
+        for (const auto &control : *node) {
+            if ((uint32_t) control->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) {
+                controlQueue.emplace(control.get());
+                visitedControls.emplace(control.get());
             }
         }
     }
@@ -101,8 +72,8 @@ MaximCodegen::ModuleClass* Surface::doCompile() {
 
         // find any connections that read and aren't extractors
         for (const auto &connectedControl : nextControl->connections()) {
-            if (!connectedControl->codeReadsFrom()) continue;
-            if ((uint32_t) connectedControl->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
+            if (!connectedControl->readFrom()) continue;
+            if ((uint32_t) connectedControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
             if (visitedControls.find(connectedControl) != visitedControls.end()) continue;
 
             extractedNodes.emplace(connectedControl->node());
@@ -116,7 +87,7 @@ MaximCodegen::ModuleClass* Surface::doCompile() {
         // a group is only extracted if _all_ writers are extracted
         bool isExtracted = true;
         for (const auto &control : group->controls()) {
-            if (!control->codeWritesTo()) continue;
+            if (!control->writtenTo()) continue;
             if (extractedNodes.find(control->node()) == extractedNodes.end()) {
                 isExtracted = false;
                 break;
@@ -127,8 +98,7 @@ MaximCodegen::ModuleClass* Surface::doCompile() {
     }
 
     // generate constructor, assign control ptrs from context & passed in parameters
-    _class = std::make_unique<MaximCodegen::ComposableModuleClass>(runtime()->ctx(), module(), "surface", exposedParamTypes);
-    //MaximCodegen::ComposableModuleClassMethod generateMethod(_class.get(), "generate");
+    _class = std::make_unique<GeneratableModuleClass>(runtime()->ctx(), module(), "surface", exposedParamTypes);
 
     std::unordered_map<ControlGroup *, llvm::Value *> groupConstructorPtrs;
 
@@ -165,11 +135,11 @@ MaximCodegen::ModuleClass* Surface::doCompile() {
 
         inverseExecutionOrder.push_back(nextNode);
 
-        for (const auto &control : nextNode->controls()) {
+        for (const auto &control : *nextNode) {
             for (const auto &connectedControl : control->connections()) {
                 // only propagate to the node if it writes to the group - other nodes won't affect output
                 // (although they'll still be included in the final list by the check after this one)
-                if (!connectedControl->codeWritesTo() ||
+                if (!connectedControl->writtenTo() ||
                     visitedNodes.find(connectedControl->node()) != visitedNodes.end()) continue;
 
                 visitedNodes.emplace(connectedControl->node());
@@ -203,17 +173,20 @@ MaximCodegen::ModuleClass* Surface::doCompile() {
 
         for (unsigned int instN = 0; instN < loopSize; instN++) {
             auto entryIndex = _class->addEntry(nodeClass); // todo: GroupNodes will need ControlGroups passed into their constructor
-            // todo: callInto node generate function
+            _class->generate()->callInto(entryIndex, {}, nodeClass->generate(), "");
             auto entryPtr = _class->cconstructor()->getEntryPointer(entryIndex, "nodeinst");
 
             // setup control values in constructor
-            for (const auto &control : node->controls()) {
-                auto controlIndex = control->instance()->instId;
+            for (const auto &control : *node) {
+                auto hardControl = dynamic_cast<HardControl*>(control.get());
+                if (!hardControl) continue;
+
+                auto controlIndex = hardControl->instance()->instId;
                 auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), controlIndex, entryPtr, "controlinst");
 
-                auto groupPtr = groupConstructorPtrs.find(control->group())->second;
-                auto indexPtr = control->group()->extracted()
-                                ? _class->constructor()->builder().CreateConstGEP2_32(control->group()->type()->storageType(), groupPtr, 0, instN)
+                auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
+                auto indexPtr = hardControl->group()->extracted()
+                                ? _class->constructor()->builder().CreateConstGEP2_32(hardControl->group()->type()->storageType(), groupPtr, 0, instN)
                                 : groupPtr;
 
                 _class->constructor()->builder().CreateStore(indexPtr, controlPtr);
@@ -223,4 +196,34 @@ MaximCodegen::ModuleClass* Surface::doCompile() {
 
     deploy();
     return _class.get();
+}
+
+void Surface::addNode(Node *node) {
+    _nodes.emplace(node);
+    scheduleGraphUpdate();
+}
+
+void Surface::removeNode(Node *node) {
+    _nodes.erase(node);
+    scheduleGraphUpdate();
+}
+
+void Surface::addControlGroup(std::unique_ptr<ControlGroup> group) {
+    _controlGroups.push_back(std::move(group));
+    scheduleGraphUpdate();
+}
+
+std::unique_ptr<ControlGroup> Surface::removeControlGroup(ControlGroup *group) {
+    scheduleGraphUpdate();
+
+    for (auto i = _controlGroups.begin(); i < _controlGroups.end(); i++) {
+        if (i->get() == group) {
+            auto movedGroup = std::move(*i);
+            _controlGroups.erase(i);
+            return movedGroup;
+        }
+    }
+
+    assert(false);
+    throw;
 }

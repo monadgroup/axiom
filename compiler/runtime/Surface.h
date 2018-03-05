@@ -13,13 +13,17 @@ namespace MaximRuntime {
 
     class ControlGroup;
 
-    class Surface : ModuleRuntimeUnit {
+    class GeneratableModuleClass;
+
+    class Surface : public ModuleRuntimeUnit {
     public:
         Surface(Runtime *runtime, size_t depth);
 
         size_t depth() const { return _depth; }
 
         void scheduleGraphUpdate();
+
+        GeneratableModuleClass *compile();
 
         void addNode(Node *node);
 
@@ -29,12 +33,8 @@ namespace MaximRuntime {
 
         std::unique_ptr<ControlGroup> removeControlGroup(ControlGroup *group);
 
-    protected:
-
-        MaximCodegen::ModuleClass *doCompile() override;
-
     private:
-        std::unique_ptr<MaximCodegen::ComposableModuleClass> _class;
+        std::unique_ptr<GeneratableModuleClass> _class;
 
         size_t _depth;
         bool _needsGraphUpdate = false;

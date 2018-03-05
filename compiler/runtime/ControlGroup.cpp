@@ -2,12 +2,30 @@
 
 #include "Surface.h"
 #include "Control.h"
+#include "Runtime.h"
+#include "../codegen/MaximContext.h"
+#include "../codegen/Control.h"
 
 using namespace MaximRuntime;
 
 ControlGroup::ControlGroup(Surface *surface, MaximCodegen::Control *type)
-    : RuntimeUnit(surface->runtime(), surface->module()), _type(type), _surface(surface) {
+    : RuntimeUnit(surface->runtime()), _type(type), _surface(surface), _compileResult(surface->runtime()->ctx(), surface->module(), "controlgroup", nullptr) {
 
+}
+
+llvm::Module* ControlGroup::module() {
+    return surface()->module();
+}
+
+MaximCodegen::ModuleClass* ControlGroup::compile() {
+    auto storeType = type()->underlyingType();
+    if (extracted()) {
+        _compileResult.setStorageType(llvm::ArrayType::get(storeType, MaximCodegen::ArrayType::arraySize));
+    } else {
+        _compileResult.setStorageType(storeType);
+    }
+
+    return &_compileResult;
 }
 
 void ControlGroup::absorb(ControlGroup *other) {
@@ -31,4 +49,25 @@ void ControlGroup::removeControl(Control *control) {
         _surface->removeControlGroup(this);
         return;
     }
+}
+
+bool ControlGroup::exposed() const {
+    for (const auto &control : _controls) {
+        if (control->exposed()) return true;
+    }
+    return false;
+}
+
+bool ControlGroup::writtenTo() const {
+    for (const auto &control : _controls) {
+        if (control->writtenTo()) return true;
+    }
+    return false;
+}
+
+bool ControlGroup::readFrom() const {
+    for (const auto &control : _controls) {
+        if (control->readFrom()) return true;
+    }
+    return false;
 }

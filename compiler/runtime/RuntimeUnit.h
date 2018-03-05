@@ -4,6 +4,7 @@
 
 namespace llvm {
     class Module;
+    class Function;
 }
 
 namespace MaximCodegen {
@@ -16,38 +17,28 @@ namespace MaximRuntime {
 
     class RuntimeUnit {
     public:
-        RuntimeUnit(Runtime *runtime, llvm::Module *module);
+        explicit RuntimeUnit(Runtime *runtime);
 
         Runtime *runtime() const { return _runtime; }
 
-        llvm::Module *module() { return _module; }
+        virtual llvm::Module *module() = 0;
 
-        void updateGetter(llvm::Module *module);
-
-        MaximCodegen::ModuleClass *compile();
-
-        bool needsCompile() const { return _needsCompile; }
-
-        void scheduleCompile();
+        /*void updateGetter(llvm::Module *module);
 
         void *getValuePtr(void *parentCtx);
 
         void *updateCurrentPtr(void *parentCtx);
 
-        void *currentPtr() const;
-
-    protected:
-
-        virtual MaximCodegen::ModuleClass *doCompile() = 0;
+        void *currentPtr() const;*/
 
     private:
         Runtime *_runtime;
-        llvm::Module *_module;
-        bool _needsCompile = false;
+
+        /*llvm::Function *getValueFunction = nullptr;
 
         void *(*_getValuePtr)(void *) = nullptr;
 
-        void *_currentPtr = nullptr;
+        void *_currentPtr = nullptr;*/
     };
 
 }

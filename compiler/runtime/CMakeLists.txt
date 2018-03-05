@@ -5,14 +5,20 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 set(CMAKE_AUTOMOCC ON)
+set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(SOURCE_FILES
         Control.cpp
         ControlGroup.cpp
+        CustomNode.cpp
+        GeneratableModuleClass.cpp
         Jit.cpp
         ModuleRuntimeUnit.cpp
+        HardControl.cpp
+        Node.cpp
         Surface.cpp
+        Runtime.cpp
         RuntimeUnit.cpp
         ValueOperator.cpp)
 
@@ -20,3 +26,4 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_library(maxim_runtime ${SOURCE_FILES})
+target_link_libraries(maxim_runtime Qt5::Widgets)

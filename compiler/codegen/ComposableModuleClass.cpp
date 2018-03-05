@@ -39,7 +39,10 @@ size_t ComposableModuleClass::addEntry(llvm::Constant *initValue) {
 
 size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value*> &constructorParams) {
     auto index = addEntry(moduleClass->initializeVal());
-    _constructor->callInto(index, constructorParams, moduleClass->constructor(), "");
+    auto moduleConstructor = moduleClass->constructor();
+    if (moduleConstructor) {
+        _constructor->callInto(index, constructorParams, moduleConstructor, "");
+    }
     return index;
 }
 

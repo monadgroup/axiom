@@ -21,9 +21,11 @@ std::string ModuleClass::mangleMethodName(const std::string &name) {
     return "maximclass." + _name + "." + std::to_string(_index) + "." + name;
 }
 
-
 void ModuleClass::doComplete() {
-    constructor()->builder().CreateRetVoid();
+    auto constructorMethod = constructor();
+    if (constructorMethod) {
+        constructorMethod->builder().CreateRetVoid();
+    }
 }
 
 ZeroInitializedModuleClass::ZeroInitializedModuleClass(MaximContext *ctx, llvm::Module *module,
@@ -55,3 +57,10 @@ TypeInferencedModuleClass::TypeInferencedModuleClass(MaximContext *ctx, llvm::Mo
 llvm::Type* TypeInferencedModuleClass::storageType() {
     return initializeVal()->getType();
 }
+
+BasicZeroModuleClass::BasicZeroModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name,
+                                           llvm::Type *type)
+    : ZeroInitializedModuleClass(ctx, module, name), _storageType(type) {
+
+}
+

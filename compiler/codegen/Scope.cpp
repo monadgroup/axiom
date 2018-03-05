@@ -65,6 +65,11 @@ void Scope::setAssignable(ComposableModuleClassMethod *method, MaximAst::Assigna
     }
 }
 
+void Scope::clear() {
+    _variables.clear();
+    _controls.clear();
+}
+
 ControlInstance& Scope::getControl(const std::string &name, MaximCommon::ControlType type,
                                    ComposableModuleClassMethod *method) {
     ControlKey key = { name, type };

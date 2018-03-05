@@ -6,10 +6,9 @@
 #include <set>
 
 #include "RuntimeUnit.h"
-#include "../common/ControlType.h"
 
 namespace MaximCodegen {
-    class ControlInstance;
+    class Control;
 }
 
 namespace MaximRuntime {
@@ -22,17 +21,19 @@ namespace MaximRuntime {
         Q_OBJECT
 
     public:
-        Control(Node *node, const std::string &name, MaximCommon::ControlType type);
+        explicit Control(Node *node);
 
         Node *node() const { return _node; }
 
-        std::string name() const { return _name; }
+        virtual std::string name() const = 0;
 
-        MaximCommon::ControlType type() const { return _type; }
+        virtual MaximCodegen::Control *type() const = 0;
+
+        virtual bool writtenTo() const = 0;
+
+        virtual bool readFrom() const = 0;
 
         ControlGroup *group() const { return _group; }
-
-        MaximCodegen::ControlInstance *instance() const;
 
         void setGroup(ControlGroup *group);
 
@@ -40,13 +41,9 @@ namespace MaximRuntime {
 
         void disconnectFrom(Control *other);
 
-        virtual std::vector<Control*> internallyLinkedControls();
+        virtual std::vector<Control*> internallyLinkedControls() = 0;
 
         bool exposed() const;
-
-        virtual bool codeWritesTo() = 0;
-
-        virtual bool codeReadsFrom() = 0;
 
         std::set<Control*> &connections() { return _connections; }
 
@@ -60,13 +57,13 @@ namespace MaximRuntime {
 
         void cleanup();
 
+    protected:
+
+        void finish();
+
     private:
 
         Node *_node;
-
-        std::string _name;
-
-        MaximCommon::ControlType _type;
 
         ControlGroup *_group = nullptr;
 

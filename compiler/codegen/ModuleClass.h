@@ -25,7 +25,7 @@ namespace MaximCodegen {
 
         virtual llvm::Type *storageType() = 0;
 
-        virtual ModuleClassMethod *constructor() = 0;
+        virtual ModuleClassMethod *constructor() { return nullptr; }
 
         bool completed() const { return _completed; }
 
@@ -66,6 +66,18 @@ namespace MaximCodegen {
         TypeInferencedModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name);
 
         llvm::Type *storageType() override;
+    };
+
+    class BasicZeroModuleClass : public ZeroInitializedModuleClass {
+    public:
+        BasicZeroModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name, llvm::Type *type);
+
+        void setStorageType(llvm::Type *type) { _storageType = type; }
+
+        llvm::Type *storageType() { return _storageType; }
+
+    private:
+        llvm::Type *_storageType;
     };
 
 }
