@@ -19,8 +19,8 @@ set(SOURCE_FILES
         ModuleRuntimeUnit.cpp
         HardControl.cpp
         Node.cpp
-        OutputControl.cpp
-        OutputNode.cpp
+        IOControl.cpp
+        IONode.cpp
         RootSurface.cpp
         Surface.cpp
         Runtime.cpp

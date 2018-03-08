@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Surface.h"
-#include "OutputNode.h"
+#include "IONode.h"
 
 namespace MaximRuntime {
 
@@ -11,7 +11,8 @@ namespace MaximRuntime {
 
         void *getValuePtr(void *parentCtx) override;
 
-        OutputNode output;
+        IONode input;
+        IONode output;
     };
 
 }

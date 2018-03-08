@@ -4,16 +4,16 @@
 #include "../CommonColors.h"
 
 namespace AxiomModel {
-    class NodeOutputControl;
+    class NodeIOControl;
 }
 
 namespace AxiomGui {
 
-    class OutputControl : public ControlItem {
+    class IOControl : public ControlItem {
     public:
-        AxiomModel::NodeOutputControl *control;
+        AxiomModel::NodeIOControl *control;
 
-        OutputControl(AxiomModel::NodeOutputControl *control, SchematicCanvas *canvas);
+        IOControl(AxiomModel::NodeIOControl *control, SchematicCanvas *canvas);
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
@@ -32,6 +32,8 @@ namespace AxiomGui {
     private:
 
         QImage _image;
+
+        static QString getImagePath(AxiomModel::NodeIOControl *control);
     };
 
 }

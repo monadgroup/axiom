@@ -16,6 +16,7 @@
         <file>icons/expand_active_12.png</file>
         <file>icons/collapse_12.png</file>
         <file>icons/collapse_active_12.png</file>
-        <file>icons/output.png</file>
+        <file>icons/midi-io.png</file>
+        <file>icons/num-io.png</file>
     </qresource>
 </RCC>

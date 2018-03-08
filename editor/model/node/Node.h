@@ -25,7 +25,7 @@ namespace AxiomModel {
         enum class Type {
             CUSTOM,
             GROUP,
-            OUTPUT
+            IO
         };
         Type type;
 
@@ -46,7 +46,7 @@ namespace AxiomModel {
 
         bool isResizable() const override { return true; }
 
-        virtual bool isDeletable() const { return true; }
+        bool isDeletable() const override { return true; }
 
     public slots:
 

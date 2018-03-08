@@ -12,10 +12,10 @@
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeNumControl.h"
 #include "editor/model/control/NodeMidiControl.h"
-#include "editor/model/control/NodeOutputControl.h"
+#include "editor/model/control/NodeIOControl.h"
 #include "../controls/NumControl.h"
 #include "../controls/MidiControl.h"
-#include "../controls/OutputControl.h"
+#include "editor/widgets/controls/IOControl.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
 #include "../FloatingValueEditor.h"
@@ -117,7 +117,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     QColor darkColor, lightColor, outlineColor;
     switch (node->type) {
-        case Node::Type::OUTPUT:
+        case Node::Type::IO:
         case Node::Type::CUSTOM:
             darkColor = CommonColors::customNodeNormal;
             lightColor = CommonColors::customNodeActive;
@@ -266,8 +266,8 @@ void NodeItem::addControl(NodeControl *control) {
         item = new NumControl(numControl, canvas);
     } else if (auto midiControl = dynamic_cast<NodeMidiControl *>(control)) {
         item = new MidiControl(midiControl, canvas);
-    } else if (auto outputControl = dynamic_cast<NodeOutputControl *>(control)) {
-        item = new OutputControl(outputControl, canvas);
+    } else if (auto outputControl = dynamic_cast<NodeIOControl *>(control)) {
+        item = new IOControl(outputControl, canvas);
     }
 
     assert(item);

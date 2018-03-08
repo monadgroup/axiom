@@ -1,19 +1,19 @@
 #pragma once
 
 #include "Node.h"
-#include "OutputControl.h"
+#include "IOControl.h"
 
 namespace MaximRuntime {
 
-    class OutputNode : public Node {
+    class IONode : public Node {
     public:
-        explicit OutputNode(Surface *surface);
+        explicit IONode(Surface *surface, MaximCommon::ControlType type, bool isRead, bool isWrite);
 
         GeneratableModuleClass *compile() override;
 
         void remove() override;
 
-        OutputControl *control() { return _control.get(); }
+        IOControl *control() { return _control.get(); }
 
         const std::unique_ptr<Control> *begin() const override { return (std::unique_ptr<Control> *) &_control; }
 
@@ -23,7 +23,7 @@ namespace MaximRuntime {
 
         std::unique_ptr<GeneratableModuleClass> _moduleClass;
 
-        std::unique_ptr<OutputControl> _control;
+        std::unique_ptr<IOControl> _control;
     };
 
 }

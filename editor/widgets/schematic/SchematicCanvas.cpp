@@ -110,6 +110,7 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
     isConnecting = true;
     connectionSink = std::make_unique<ConnectionSink>(control->sink()->type, nullptr);
     connectionSink->setPos(control->sink()->pos(), control->sink()->subPos());
+    connectionSink->setActive(true);
     connectionWire = schematic->connectSinks(control->sink(), connectionSink.get());
     assert(connectionWire != nullptr);
 

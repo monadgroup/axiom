@@ -40,10 +40,14 @@ void GridSurface::doRuntimeUpdate() {
 }
 
 void GridSurface::deleteSelectedItems() {
-    while (!m_selectedItems.empty()) {
-        m_selectedItems[0]->remove();
+    auto avoidedCount = 0;
+    while (m_selectedItems.size() > avoidedCount) {
+        auto &currentItem = m_selectedItems[avoidedCount];
+        if (currentItem->isDeletable()) currentItem->remove();
+        else avoidedCount++;
     }
-    emit hasSelectionChanged(false);
+
+    if (!avoidedCount) emit hasSelectionChanged(false);
 }
 
 void GridSurface::selectAll() {

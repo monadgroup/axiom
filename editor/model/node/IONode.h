@@ -2,22 +2,22 @@
 
 #include <QtCore/QObject>
 
-#include "compiler/runtime/OutputNode.h"
+#include "compiler/runtime/IONode.h"
 #include "Node.h"
 
 namespace MaximRuntime {
-    class OutputNode;
+    class IONode;
 }
 
 namespace AxiomModel {
 
     class RootSchematic;
 
-    class OutputNode : public Node {
+    class IONode : public Node {
     Q_OBJECT
 
     public:
-        OutputNode(RootSchematic *parent, MaximRuntime::OutputNode *runtime, QPoint pos);
+        IONode(RootSchematic *parent, MaximRuntime::IONode *runtime, const QString &name, QPoint pos);
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 
@@ -25,11 +25,11 @@ namespace AxiomModel {
 
         bool isDeletable() const override { return false; }
 
-        MaximRuntime::OutputNode *runtime() override { return _runtime; }
+        MaximRuntime::IONode *runtime() override { return _runtime; }
 
     private:
 
-        MaximRuntime::OutputNode *_runtime;
+        MaximRuntime::IONode *_runtime;
     };
 
 }
