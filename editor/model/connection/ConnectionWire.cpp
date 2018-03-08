@@ -37,6 +37,7 @@ ConnectionWire::ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, Conn
     sinkB->addWire(this);
 
     updateRoute();
+    updateActive();
 }
 
 void ConnectionWire::remove() {
