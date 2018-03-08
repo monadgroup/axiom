@@ -17,7 +17,27 @@ Features:
 
 ## Building
 
-*Coming soon!*
+Axiom is built with CMake. The build process depends on Qt 5.10 and LLVM 5.0.1, so make sure those are installed and setup correctly.
+
+Once Qt and LLVM are installed, go to the directory where you'd like to build Axiom to. Then run the following command:
+
+```
+cmake ../path/to/source
+```
+
+CMake will setup files necessary for building. If this fails, make sure you've got Qt and LLVM installed correctly. Once complete, run the following command from your output directory to build the Axiom VSTi.
+
+```
+cmake --build ./ --target axiom_editor
+```
+
+This will build the Axiom VSTi as a shared library into the current folder. Once complete, follow the instructions for your DAW to install the VST.
+
+Alternatively, you can build the standalone version, as an executable. Currently, the interface is entirely useable in this version, however you won't actually be able to make sounds. To build the standalone version, use the following command:
+
+```
+cmake --build ./ --target axiom_standalone
+```
 
 ## Usage Guide
 
