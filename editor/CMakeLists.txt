@@ -39,7 +39,7 @@ set(SOURCE_FILES util.cpp AxiomApplication.cpp AxiomVstPlugin.cpp AxiomVstEditor
         widgets/schematic/SchematicPanel.cpp widgets/schematic/SchematicView.cpp widgets/schematic/SchematicCanvas.cpp
         widgets/node/NodeItem.cpp widgets/node/CustomNodePanel.cpp widgets/node/SyntaxHighlighter.cpp
         widgets/controls/painters/PlugPainter.cpp widgets/controls/painters/KnobPainter.cpp widgets/controls/painters/SliderPainter.cpp widgets/controls/painters/TogglePainter.cpp
-        widgets/controls/ControlItem.cpp widgets/controls/NumControl.cpp widgets/controls/OutputControl.cpp
+        widgets/controls/ControlItem.cpp widgets/controls/NumControl.cpp widgets/controls/MidiControl.cpp widgets/controls/OutputControl.cpp
         widgets/connection/WireItem.cpp
         layouts/FlowLayout.cpp)
 

@@ -24,6 +24,8 @@ namespace AxiomGui {
 
         QRectF boundingRect() const override;
 
+        QRectF aspectBoundingRect() const;
+
         bool isEditable() const;
 
         AxiomModel::ConnectionSink *sink() override;
@@ -33,6 +35,12 @@ namespace AxiomGui {
         QRectF drawBoundingRect() const;
 
         virtual QRectF useBoundingRect() const = 0;
+
+        virtual QPainterPath controlPath() const = 0;
+
+        virtual QColor outlineNormalColor() const = 0;
+
+        virtual QColor outlineActiveColor() const = 0;
 
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 

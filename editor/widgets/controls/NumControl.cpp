@@ -1,13 +1,11 @@
 #include "NumControl.h"
 
-#include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtCore/QStateMachine>
 #include <QtCore/QSignalTransition>
 #include <QtCore/QPropertyAnimation>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
-#include <cmath>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QWidgetAction>
 
@@ -87,42 +85,8 @@ NumControl::NumControl(NodeNumControl *control, SchematicCanvas *canvas)
     machine->start();
 }
 
-QRectF NumControl::aspectBoundingRect() const {
-    auto bound = drawBoundingRect();
-    if (bound.size().width() > bound.size().height()) {
-        return {
-            QPointF(
-                bound.topLeft().x() + bound.size().width() / 2 - bound.size().height() / 2,
-                bound.topLeft().y()
-            ),
-            QSizeF(
-                bound.size().height(),
-                bound.size().height()
-            )
-        };
-    } else {
-        return {
-            QPointF(
-                bound.topLeft().x(),
-                bound.topLeft().y() + bound.size().height() / 2 - bound.size().width() / 2
-            ),
-            QSizeF(
-                bound.size().width(),
-                bound.size().width()
-            )
-        };
-    }
-}
-
 void NumControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    // draw an outline if we're connected to something
-    if (!control->sink()->connections().empty()) {
-        auto bounds = controlPath();
-        auto activeColor = AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active());
-        painter->setPen(QPen(activeColor, 3));
-        painter->setBrush(QBrush(activeColor));
-        painter->drawPath(bounds);
-    }
+    ControlItem::paint(painter, option, widget);
 
     switch (control->mode()) {
         case NodeNumControl::Mode::PLUG:
@@ -141,8 +105,6 @@ void NumControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
             togglePainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal());
             break;
     }
-
-    ControlItem::paint(painter, option, widget);
 }
 
 QPainterPath NumControl::shape() const {
@@ -172,9 +134,33 @@ QRectF NumControl::useBoundingRect() const {
     }
 }
 
+QPainterPath NumControl::controlPath() const {
+    QPainterPath path;
+    switch (control->mode()) {
+        case NodeNumControl::Mode::PLUG:
+            plugPainter.shape(path, aspectBoundingRect());
+            break;
+        case NodeNumControl::Mode::KNOB:
+            knobPainter.shape(path, aspectBoundingRect());
+            break;
+        case NodeNumControl::Mode::SLIDER_H:
+            sliderPainter.shape(path, drawBoundingRect(), false);
+            break;
+        case NodeNumControl::Mode::SLIDER_V:
+            sliderPainter.shape(path, drawBoundingRect(), true);
+            break;
+        case NodeNumControl::Mode::TOGGLE:
+            togglePainter.shape(path, drawBoundingRect());
+            break;
+    }
+    return path;
+}
+
 void NumControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mousePressEvent(event);
-    if (event->isAccepted() || event->button() != Qt::LeftButton) return;
+    if (event->isAccepted() || event->button() != Qt::LeftButton || control->mode() == NodeNumControl::Mode::PLUG) {
+        return;
+    }
 
     event->accept();
 
@@ -247,6 +233,10 @@ void NumControl::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 }
 
 void NumControl::wheelEvent(QGraphicsSceneWheelEvent *event) {
+    if (control->mode() == NodeNumControl::Mode::TOGGLE || control->mode() == NodeNumControl::Mode::PLUG) {
+        return;
+    }
+
     auto delta = event->delta() / 1200.f;
     auto cVal = getCVal();
     setCVal(cVal.withLR(
@@ -373,26 +363,4 @@ void NumControl::setCVal(MaximRuntime::NumValue v) const {
         case NodeNumControl::Channel::BOTH:
             control->setValue(control->value().withLR(v.left, v.right));
     }
-}
-
-QPainterPath NumControl::controlPath() const {
-    QPainterPath path;
-    switch (control->mode()) {
-        case NodeNumControl::Mode::PLUG:
-            plugPainter.shape(path, aspectBoundingRect());
-            break;
-        case NodeNumControl::Mode::KNOB:
-            knobPainter.shape(path, aspectBoundingRect());
-            break;
-        case NodeNumControl::Mode::SLIDER_H:
-            sliderPainter.shape(path, drawBoundingRect(), false);
-            break;
-        case NodeNumControl::Mode::SLIDER_V:
-            sliderPainter.shape(path, drawBoundingRect(), true);
-            break;
-        case NodeNumControl::Mode::TOGGLE:
-            togglePainter.shape(path, drawBoundingRect());
-            break;
-    }
-    return path;
 }

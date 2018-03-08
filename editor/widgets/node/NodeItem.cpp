@@ -11,13 +11,14 @@
 #include "editor/model/node/ModuleNode.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeNumControl.h"
+#include "editor/model/control/NodeMidiControl.h"
 #include "editor/model/control/NodeOutputControl.h"
-#include "editor/widgets/controls/NumControl.h"
-#include "editor/widgets/controls/OutputControl.h"
+#include "../controls/NumControl.h"
+#include "../controls/MidiControl.h"
+#include "../controls/OutputControl.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
 #include "../FloatingValueEditor.h"
-#include "../CommonColors.h"
 #include "CustomNodePanel.h"
 
 using namespace AxiomGui;
@@ -263,6 +264,8 @@ void NodeItem::addControl(NodeControl *control) {
 
     if (auto numControl = dynamic_cast<NodeNumControl *>(control)) {
         item = new NumControl(numControl, canvas);
+    } else if (auto midiControl = dynamic_cast<NodeMidiControl *>(control)) {
+        item = new MidiControl(midiControl, canvas);
     } else if (auto outputControl = dynamic_cast<NodeOutputControl *>(control)) {
         item = new OutputControl(outputControl, canvas);
     }

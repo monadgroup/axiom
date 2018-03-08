@@ -1,5 +1,6 @@
 #pragma once
 
+#include <editor/widgets/CommonColors.h>
 #include "ControlItem.h"
 #include "editor/model/connection/NumConnectionSink.h"
 
@@ -29,8 +30,6 @@ namespace AxiomGui {
 
         NumControl(AxiomModel::NodeNumControl *control, SchematicCanvas *canvas);
 
-        QRectF aspectBoundingRect() const;
-
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
         QPainterPath shape() const override;
@@ -49,6 +48,12 @@ namespace AxiomGui {
 
     protected:
         QRectF useBoundingRect() const override;
+
+        QPainterPath controlPath() const override;
+
+        QColor outlineNormalColor() const override { return CommonColors::numWireNormal; }
+
+        QColor outlineActiveColor() const override { return CommonColors::numWireActive; }
 
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
@@ -88,8 +93,6 @@ namespace AxiomGui {
         MaximRuntime::NumValue getCVal() const;
 
         void setCVal(MaximRuntime::NumValue v) const;
-
-        QPainterPath controlPath() const;
     };
 
 }

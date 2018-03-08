@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ControlItem.h"
+#include "../CommonColors.h"
 
 namespace AxiomModel {
     class NodeOutputControl;
@@ -20,7 +21,13 @@ namespace AxiomGui {
 
     protected:
 
-        virtual QRectF useBoundingRect() const { return {}; }
+        QRectF useBoundingRect() const override { return {}; }
+
+        QPainterPath controlPath() const override { return shape(); }
+
+        QColor outlineNormalColor() const override { return CommonColors::numWireNormal; }
+
+        QColor outlineActiveColor() const override { return CommonColors::numWireActive; }
 
     private:
 

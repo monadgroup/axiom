@@ -2,6 +2,9 @@
 
 #include "ControlItem.h"
 #include "editor/model/connection/MidiConnectionSink.h"
+#include "../CommonColors.h"
+
+#include "painters/PlugPainter.h"
 
 namespace AxiomModel {
     class NodeMidiControl;
@@ -19,8 +22,6 @@ namespace AxiomGui {
         AxiomModel::NodeMidiControl *control;
 
         MidiControl(AxiomModel::NodeMidiControl *control, SchematicCanvas *canvas);
-
-        QRectF aspectBoundingRect() const;
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
@@ -42,11 +43,17 @@ namespace AxiomGui {
 
         QRectF useBoundingRect() const override;
 
+        QPainterPath controlPath() const override;
+
+        QColor outlineNormalColor() const override { return CommonColors::midiWireNormal; }
+
+        QColor outlineActiveColor() const override { return CommonColors::midiWireActive; }
+
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
-        void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+        /*void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 
-        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;*/
 
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
@@ -54,7 +61,7 @@ namespace AxiomGui {
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
-        void wheelEvent(QGraphicsSceneWheelEvent *event) override;
+        //void wheelEvent(QGraphicsSceneWheelEvent *event) override;
 
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
@@ -64,11 +71,8 @@ namespace AxiomGui {
         float beforeDragVal;
         QPointF mouseStartPoint;
 
-        QRectF getPlugBounds() const;
+        PlugPainter plugPainter;
 
-        QRectF getPianoBounds() const;
-
-        void paintPlug(QPainter *painter);
     };
 
 }

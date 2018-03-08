@@ -6,6 +6,7 @@
 
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeControl.h"
+#include "editor/util.h"
 #include "../ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
 
@@ -68,7 +69,43 @@ QRectF ControlItem::boundingRect() const {
     return br;
 }
 
+QRectF ControlItem::aspectBoundingRect() const {
+    auto bound = drawBoundingRect();
+    if (bound.size().width() > bound.size().height()) {
+        return {
+            QPointF(
+                bound.topLeft().x() + bound.size().width() / 2 - bound.size().height() / 2,
+                bound.topLeft().y()
+            ),
+            QSizeF(
+                bound.size().height(),
+                bound.size().height()
+            )
+        };
+    } else {
+        return {
+            QPointF(
+                bound.topLeft().x(),
+                bound.topLeft().y() + bound.size().height() / 2 - bound.size().width() / 2
+            ),
+            QSizeF(
+                bound.size().width(),
+                bound.size().width()
+            )
+        };
+    }
+}
+
 void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    // draw an outline if we're connected to something
+    if (!control->sink()->connections().empty()) {
+        auto bounds = controlPath();
+        auto activeColor = AxiomUtil::mixColor(outlineNormalColor(), outlineActiveColor(), control->sink()->active());
+        painter->setPen(QPen(activeColor, 3));
+        painter->setBrush(QBrush(activeColor));
+        painter->drawPath(bounds);
+    }
+
     if (!control->showName()) return;
 
     auto br = boundingRect();
