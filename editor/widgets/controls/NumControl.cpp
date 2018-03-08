@@ -43,6 +43,14 @@ static QRectF flip(QRectF a, bool yes) {
     return a;
 }
 
+static std::vector<std::pair<QString, NodeNumControl::Mode>> modes = {
+    std::make_pair("&Plug", NodeNumControl::Mode::PLUG),
+    std::make_pair("&Knob", NodeNumControl::Mode::KNOB),
+    std::make_pair("&Horizontal Slider", NodeNumControl::Mode::SLIDER_H),
+    std::make_pair("&Vertical Slider", NodeNumControl::Mode::SLIDER_V),
+    std::make_pair("&Toggle Button", NodeNumControl::Mode::TOGGLE)
+};
+
 NumControl::NumControl(NodeNumControl *control, SchematicCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
     setAcceptHoverEvents(true);
@@ -269,11 +277,16 @@ void NumControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto clearAction = menu.addAction(tr("C&lear Connections"));
 
     auto modeMenu = menu.addMenu(tr("&Display as..."));
-    auto plugModeAction = modeMenu->addAction(tr("&Plug"));
-    auto knobModeAction = modeMenu->addAction(tr("&Knob"));
-    auto hSliderModeAction = modeMenu->addAction(tr("&Horizontal Slider"));
-    auto vSliderModeAction = modeMenu->addAction(tr("&Vertical Slider"));
-    auto toggleModeAction = modeMenu->addAction(tr("&Toggle Button"));
+    for (const auto &modePair : modes) {
+        auto action = modeMenu->addAction(modePair.first);
+        action->setCheckable(true);
+        action->setChecked(control->mode() == modePair.second);
+
+        connect(action, &QAction::triggered,
+                [this, modePair]() {
+                    control->setMode(modePair.second);
+                });
+    }
 
     menu.addSeparator();
     auto setValAction = menu.addAction(tr("&Set Value..."));
@@ -293,16 +306,6 @@ void NumControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
     if (selectedAction == clearAction) {
         control->sink()->clearConnections();
-    } else if (selectedAction == plugModeAction) {
-        control->setMode(NodeNumControl::Mode::PLUG);
-    } else if (selectedAction == knobModeAction) {
-        control->setMode(NodeNumControl::Mode::KNOB);
-    } else if (selectedAction == hSliderModeAction) {
-        control->setMode(NodeNumControl::Mode::SLIDER_H);
-    } else if (selectedAction == vSliderModeAction) {
-        control->setMode(NodeNumControl::Mode::SLIDER_V);
-    } else if (selectedAction == toggleModeAction) {
-        control->setMode(NodeNumControl::Mode::TOGGLE);
     } else if (selectedAction == setValAction) {
         auto editor = new FloatingValueEditor(valueAsString(getCVal()), event->scenePos());
         scene()->addItem(editor);

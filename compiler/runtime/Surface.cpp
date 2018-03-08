@@ -82,12 +82,15 @@ GeneratableModuleClass *Surface::compile() {
     // step 3: mark control groups as extracted if necessary
     for (const auto &group : _controlGroups) {
         // a group is only extracted if _all_ writers are extracted
-        bool isExtracted = true;
-        for (const auto &control : group->controls()) {
-            if (!control->writtenTo()) continue;
-            if (extractedNodes.find(control->node()) == extractedNodes.end()) {
-                isExtracted = false;
-                break;
+        // if there are no writers, the group is not extracted
+        bool isExtracted = group->writtenTo();
+        if (isExtracted) {
+            for (const auto &control : group->controls()) {
+                if (!control->writtenTo()) continue;
+                if (extractedNodes.find(control->node()) == extractedNodes.end()) {
+                    isExtracted = false;
+                    break;
+                }
             }
         }
 
