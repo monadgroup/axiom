@@ -36,6 +36,8 @@ namespace MaximCodegen {
 
         const llvm::StructLayout *layout() const { return _layout; }
 
+        const llvm::StructLayout *eventLayout() const { return _eventLayout; }
+
         std::string name() const override { return "midi"; }
 
         std::unique_ptr<Value> createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) override;
@@ -60,6 +62,8 @@ namespace MaximCodegen {
         llvm::Type *_paramType;
 
         const llvm::StructLayout *_layout;
+
+        const llvm::StructLayout *_eventLayout;
     };
 
 }

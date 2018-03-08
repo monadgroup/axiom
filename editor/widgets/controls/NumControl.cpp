@@ -115,21 +115,30 @@ QRectF NumControl::aspectBoundingRect() const {
 }
 
 void NumControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    // draw an outline if we're connected to something
+    if (!control->sink()->connections().empty()) {
+        auto bounds = controlPath();
+        auto activeColor = AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active());
+        painter->setPen(QPen(activeColor, 3));
+        painter->setBrush(QBrush(activeColor));
+        painter->drawPath(bounds);
+    }
+
     switch (control->mode()) {
         case NodeNumControl::Mode::PLUG:
-            paintPlug(painter);
+            plugPainter.paint(painter, aspectBoundingRect(), m_hoverState);
             break;
         case NodeNumControl::Mode::KNOB:
-            paintKnob(painter);
+            knobPainter.paint(painter, aspectBoundingRect(), m_hoverState, getCVal());
             break;
         case NodeNumControl::Mode::SLIDER_H:
-            paintSlider(painter, false);
+            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), false);
             break;
         case NodeNumControl::Mode::SLIDER_V:
-            paintSlider(painter, true);
+            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), true);
             break;
         case NodeNumControl::Mode::TOGGLE:
-            paintToggle(painter);
+            togglePainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal());
             break;
     }
 
@@ -138,26 +147,7 @@ void NumControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
 QPainterPath NumControl::shape() const {
     if (control->isSelected()) return QGraphicsItem::shape();
-
-    QPainterPath path;
-    switch (control->mode()) {
-        case NodeNumControl::Mode::PLUG:
-            path.addEllipse(getPlugBounds());
-            break;
-        case NodeNumControl::Mode::KNOB:
-            path.addEllipse(getKnobBounds());
-            break;
-        case NodeNumControl::Mode::SLIDER_H:
-            path.addRect(getSliderBounds(false));
-            break;
-        case NodeNumControl::Mode::SLIDER_V:
-            path.addRect(getSliderBounds(true));
-            break;
-        case NodeNumControl::Mode::TOGGLE:
-            path.addRect(getToggleBounds());
-            break;
-    }
-    return path;
+    return controlPath();
 }
 
 void NumControl::setHoverState(float newHoverState) {
@@ -170,15 +160,15 @@ void NumControl::setHoverState(float newHoverState) {
 QRectF NumControl::useBoundingRect() const {
     switch (control->mode()) {
         case NodeNumControl::Mode::PLUG:
-            return getPlugBounds();
+            return plugPainter.getBounds(aspectBoundingRect());
         case NodeNumControl::Mode::KNOB:
-            return getKnobBounds();
+            return knobPainter.getBounds(aspectBoundingRect());
         case NodeNumControl::Mode::SLIDER_H:
-            return getSliderBounds(false);
+            return sliderPainter.getBounds(drawBoundingRect(), false);
         case NodeNumControl::Mode::SLIDER_V:
-            return getSliderBounds(true);
+            return sliderPainter.getBounds(drawBoundingRect(), true);
         case NodeNumControl::Mode::TOGGLE:
-            return getToggleBounds();
+            return togglePainter.getBounds(drawBoundingRect());
     }
 }
 
@@ -330,270 +320,6 @@ void NumControl::setValue(QString value) {
     setCVal(stringAsValue(value, getCVal()));
 }
 
-QRectF NumControl::getPlugBounds() const {
-    auto br = aspectBoundingRect();
-    auto scaledMargin = 0.1f * br.width();
-    return br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
-}
-
-QRectF NumControl::getKnobBounds() const {
-    auto br = aspectBoundingRect();
-    auto scaledMargin = 0.1f * br.width();
-    return br.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
-}
-
-QRectF NumControl::getSliderBounds(bool vertical) const {
-    auto br = flip(drawBoundingRect(), vertical);
-    auto scaledMargin = 0.1f * br.height();
-    auto barHeight = br.height() / 2;
-    auto barY = br.center().y() - barHeight / 2;
-    return flip(QRectF(QPointF(br.x() + scaledMargin,
-                               barY),
-                       QSizeF(br.width() - scaledMargin * 2,
-                              barHeight)), vertical);
-}
-
-QRectF NumControl::getToggleBounds() const {
-    auto br = drawBoundingRect();
-    auto hMargin = 0.1f * br.width();
-    auto vMargin = 0.1f * br.height();
-    return br.marginsRemoved(QMarginsF(hMargin, vMargin, hMargin, vMargin));
-}
-
-void NumControl::paintPlug(QPainter *painter) {
-    auto scaledBorder = 0.06f * aspectBoundingRect().width();
-    auto externBr = getPlugBounds();
-
-    auto marginF = QMarginsF(scaledBorder / 2, scaledBorder / 2, scaledBorder / 2, scaledBorder / 2);
-
-    auto baseColor = QColor(45, 45, 45);
-    auto activeColor = QColor(60, 60, 60);
-    auto connectedActiveColor = CommonColors::numWireActive;
-    auto connectedColor = CommonColors::numWireNormal;
-
-    if (!control->sink()->connections().empty()) {
-        painter->setPen(Qt::NoPen);
-        painter->setBrush(QBrush(AxiomUtil::mixColor(connectedColor, connectedActiveColor, control->sink()->active())));
-        painter->drawEllipse(externBr.marginsAdded(marginF));
-    }
-
-    painter->setPen(QPen(QColor(0, 0, 0), scaledBorder));
-    painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, m_hoverState)));
-    painter->drawEllipse(externBr.marginsRemoved(marginF));
-}
-
-void NumControl::paintKnob(QPainter *painter) {
-    auto aspectWidth = aspectBoundingRect().width();
-    auto scaledThickness = (0.06f + 0.04f * m_hoverState) * aspectWidth;
-    auto outerBr = getKnobBounds();
-    auto ringBr = outerBr.marginsRemoved(
-        QMarginsF(scaledThickness / 2, scaledThickness / 2, scaledThickness / 2, scaledThickness / 2));
-
-    auto startAngle = 240 * 16;
-    auto completeAngle = -300 * 16;
-
-    auto cv = getCVal();
-    auto minVal = std::min(cv.left, cv.right);
-    auto maxVal = std::max(cv.left, cv.right);
-
-    auto baseColor = QColor(141, 141, 141);
-    auto activeColor = CommonColors::controlActive;
-    auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, m_hoverState);
-    auto darkerCurrent = currentColor.darker();
-
-    // draw background
-    painter->setPen(Qt::NoPen);
-    if (!control->sink()->connections().empty()) {
-        auto activeBorderThickness = 0.02 * aspectWidth;
-        painter->setBrush(QBrush(
-            AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
-        painter->drawEllipse(outerBr.marginsAdded(
-            QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
-    }
-
-    painter->setBrush(QBrush(QColor(30, 30, 30)));
-    painter->drawEllipse(outerBr);
-
-    // draw markers
-    auto scaledMarkerThickness = 0.02f * aspectWidth;
-    auto centerP = outerBr.center();
-
-    const auto markerCount = 8;
-    auto activeMarkerPen = QPen(QColor(0, 0, 0), scaledMarkerThickness);
-    for (auto i = 0; i <= markerCount; i++) {
-        auto markerVal = (float) i / markerCount;
-        if (markerVal < minVal || (markerVal == 1 && minVal == 1)) {
-            activeMarkerPen.setColor(currentColor);
-        } else if (markerVal < maxVal || (markerVal == 1 && maxVal == 1)) {
-            activeMarkerPen.setColor(darkerCurrent);
-        } else {
-            activeMarkerPen.setColor(QColor(0, 0, 0));
-        }
-        painter->setPen(activeMarkerPen);
-
-        auto markerAngle = startAngle / 2880. * M_PI + markerVal * completeAngle / 2880. * M_PI;
-        auto markerP = centerP + QPointF(
-            outerBr.width() / 2 * std::cos(markerAngle),
-            -outerBr.height() / 2 * std::sin(markerAngle)
-        );
-        painter->drawLine((centerP + 2 * markerP) / 3, (centerP + 10 * markerP) / 11);
-    }
-
-    // draw background ring
-    auto pen = QPen(QColor(0, 0, 0), scaledThickness);
-    pen.setCapStyle(Qt::FlatCap);
-    painter->setPen(pen);
-    painter->setBrush(Qt::NoBrush);
-
-    painter->drawArc(ringBr, startAngle + completeAngle * maxVal,
-                     completeAngle - completeAngle * maxVal);
-
-    // draw max ring
-    pen.setColor(darkerCurrent);
-    painter->setPen(pen);
-    painter->drawArc(ringBr, startAngle + completeAngle * minVal,
-                     completeAngle * maxVal - completeAngle * minVal);
-
-    // draw min ring
-    pen.setColor(currentColor);
-    painter->setPen(pen);
-    painter->drawArc(ringBr, startAngle, completeAngle * minVal);
-}
-
-void NumControl::paintSlider(QPainter *painter, bool vertical) {
-    auto br = flip(getSliderBounds(vertical), vertical);
-    auto scaledThickness = (0.12f + 0.08f * m_hoverState) * br.height();
-
-    auto cv = getCVal();
-    auto minVal = std::min(cv.left, cv.right);
-    auto maxVal = std::max(cv.left, cv.right);
-
-    auto baseColor = QColor(141, 141, 141);
-    auto activeColor = CommonColors::controlActive;
-    auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, m_hoverState);
-    auto darkerCurrent = currentColor.darker();
-
-    // draw background
-    painter->setPen(Qt::NoPen);
-    if (!control->sink()->connections().empty()) {
-        auto activeBorderThickness = 0.04 * br.height();
-        painter->setBrush(QBrush(
-            AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
-        painter->drawRect(flip(
-            br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness,
-                                      activeBorderThickness)),
-            vertical
-        ));
-    }
-
-    painter->setBrush(QBrush(QColor(30, 30, 30)));
-    painter->drawRect(flip(br, vertical));
-
-    // draw markers
-    const auto markerCount = 12;
-    auto activeMarkerPen = QPen(QColor(0, 0, 0), 1);
-    for (auto i = 0; i <= markerCount; i++) {
-        auto markerVal = (float) i / markerCount;
-        if (markerVal < minVal || (markerVal == 1 && minVal == 1)) {
-            activeMarkerPen.setColor(currentColor);
-        } else if (markerVal < maxVal || (markerVal == 1 && maxVal == 1)) {
-            activeMarkerPen.setColor(currentColor);
-        } else {
-            activeMarkerPen.setColor(QColor(0, 0, 0));
-        }
-        painter->setPen(activeMarkerPen);
-
-        auto markerX = br.left() + br.width() * (vertical ? 1 - markerVal : markerVal);
-
-        auto shiftAmt = 2.5;
-        if (i % 2 == 0) shiftAmt = 2;
-        if (i == 0 || i == markerCount || i == markerCount / 2) shiftAmt = 1.5;
-        painter->drawLine(
-            flip(QPointF(markerX, br.y() + 1), vertical),
-            flip(QPointF(markerX, br.y() + br.height() / shiftAmt), vertical)
-        );
-    }
-
-    auto minX = br.left() + br.width() * (vertical ? 1 - minVal : minVal);
-    auto maxX = br.left() + br.width() * (vertical ? 1 - maxVal : maxVal);
-
-    auto posY = br.y() + scaledThickness / 2;
-    auto leftPos = QPointF(vertical ? br.right() : br.left(), posY);
-    auto rightPos = QPointF(vertical ? br.left() : br.right(), posY);
-    auto minPos = QPointF(minX, posY);
-    auto maxPos = QPointF(maxX, posY);
-
-    // draw background bar
-    auto pen = QPen(QColor(0, 0, 0), scaledThickness);
-    pen.setCapStyle(Qt::FlatCap);
-    painter->setPen(pen);
-    painter->drawLine(
-        flip(maxPos, vertical),
-        flip(rightPos, vertical)
-    );
-
-    // draw max bar
-    pen.setColor(darkerCurrent);
-    painter->setPen(pen);
-    painter->drawLine(
-        flip(minPos, vertical),
-        flip(maxPos, vertical)
-    );
-
-    // draw min bar
-    pen.setColor(currentColor);
-    painter->setPen(pen);
-    painter->drawLine(
-        flip(leftPos, vertical),
-        flip(minPos, vertical)
-    );
-}
-
-void NumControl::paintToggle(QPainter *painter) {
-    auto br = getToggleBounds();
-
-    auto scaleFactor = std::hypot(br.right() - br.left(), br.bottom() - br.top());
-    auto borderMargin = QMarginsF(0.02 * br.width(), 0.02 * br.height(), 0.02 * br.width(), 0.02 * br.height());
-
-    auto baseColor = QColor(45, 45, 45);
-    auto activeColor = QColor(60, 60, 60);
-    auto connectedColor = CommonColors::numWireNormal;
-    auto connectedActiveColor = CommonColors::numWireActive;
-
-    auto cv = getCVal();
-    auto brightness = (cv.left + cv.right) / 2;
-
-    // draw background
-    if (!control->sink()->connections().empty()) {
-        painter->setPen(Qt::NoPen);
-        painter->setBrush(QBrush(AxiomUtil::mixColor(connectedColor, connectedActiveColor, control->sink()->active())));
-        painter->drawRect(br.marginsAdded(borderMargin));
-    }
-
-    painter->setPen(QPen(QColor(0, 0, 0), 0.02 * scaleFactor));
-    painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, m_hoverState)));
-    painter->drawRect(br.marginsRemoved(borderMargin));
-
-    // draw light
-    auto lightRadius = 0.05 * scaleFactor;
-    auto lightPos = QPointF(br.left() + br.width() / 2, br.top() + br.height() / 4);
-
-    painter->setPen(Qt::NoPen);
-
-    auto activeAlpha = QColor(CommonColors::controlActive.red(), CommonColors::controlActive.green(),
-                              CommonColors::controlActive.blue(), (int) (brightness * 255));
-    auto glowRadius = lightRadius * 2;
-    QRadialGradient gradient(lightPos, glowRadius);
-    gradient.setColorAt(0, activeAlpha);
-    gradient.setColorAt(1, QColor(activeAlpha.red(), activeAlpha.green(),
-                                  activeAlpha.blue(), 0));
-    painter->setBrush(gradient);
-    painter->drawEllipse(lightPos, glowRadius, glowRadius);
-
-    painter->setBrush(QBrush(AxiomUtil::mixColor(Qt::black, CommonColors::controlActive, brightness)));
-    painter->drawEllipse(lightPos, lightRadius, lightRadius);
-}
-
 QString NumControl::valueAsString(MaximRuntime::NumValue num) {
     switch (control->channel()) {
         case NodeNumControl::Channel::LEFT:
@@ -647,4 +373,26 @@ void NumControl::setCVal(MaximRuntime::NumValue v) const {
         case NodeNumControl::Channel::BOTH:
             control->setValue(control->value().withLR(v.left, v.right));
     }
+}
+
+QPainterPath NumControl::controlPath() const {
+    QPainterPath path;
+    switch (control->mode()) {
+        case NodeNumControl::Mode::PLUG:
+            plugPainter.shape(path, aspectBoundingRect());
+            break;
+        case NodeNumControl::Mode::KNOB:
+            knobPainter.shape(path, aspectBoundingRect());
+            break;
+        case NodeNumControl::Mode::SLIDER_H:
+            sliderPainter.shape(path, drawBoundingRect(), false);
+            break;
+        case NodeNumControl::Mode::SLIDER_V:
+            sliderPainter.shape(path, drawBoundingRect(), true);
+            break;
+        case NodeNumControl::Mode::TOGGLE:
+            togglePainter.shape(path, drawBoundingRect());
+            break;
+    }
+    return path;
 }

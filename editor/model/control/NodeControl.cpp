@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "NodeNumControl.h"
+#include "NodeMidiControl.h"
 #include "../node/Node.h"
 #include "../connection/ConnectionWire.h"
 #include "compiler/runtime/Control.h"
@@ -20,21 +21,11 @@ NodeControl::NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos,
 }
 
 std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRuntime::Control *runtime) {
-    QSize newSize;
-
     switch (runtime->type()->type()) {
         case MaximCommon::ControlType::NUMBER:
-            newSize = QSize(2, 2);
-            break;
-        default:
-            assert(false);
-    }
-
-    auto newPos = node->surface.grid.findNearestAvailable(QPoint(0, 0), newSize);
-
-    switch (runtime->type()->type()) {
-        case MaximCommon::ControlType::NUMBER:
-            return std::make_unique<NodeNumControl>(node, runtime, newPos, newSize);
+            return std::make_unique<NodeNumControl>(node, runtime, QPoint(0, 0), QSize(2, 2));
+        case MaximCommon::ControlType::MIDI:
+            return std::make_unique<NodeMidiControl>(node, runtime, QPoint(0, 0), QSize(1, 1));
         default:
             assert(false);
             throw;

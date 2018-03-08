@@ -11,7 +11,7 @@ namespace AxiomModel {
 
     public:
 
-        NumConnectionSink(MaximRuntime::Control *runtime);
+        explicit NumConnectionSink(MaximRuntime::Control *runtime);
 
         MaximRuntime::NumValue value() const { return m_value; }
 

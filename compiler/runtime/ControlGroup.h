@@ -50,6 +50,12 @@ namespace MaximRuntime {
 
         void setNumValue(const NumValue &value) const;
 
+        MidiValue getMidiValue() const;
+
+        void setMidiValue(const MidiValue &value) const;
+
+        void pushMidiEvent(const MidiEventValue &event) const;
+
     private:
 
         MaximCodegen::Control *_type;

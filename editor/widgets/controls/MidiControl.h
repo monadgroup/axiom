@@ -1,33 +1,24 @@
 #pragma once
 
 #include "ControlItem.h"
-#include "editor/model/connection/NumConnectionSink.h"
-
-#include "painters/KnobPainter.h"
-#include "painters/PlugPainter.h"
-#include "painters/SliderPainter.h"
-#include "painters/TogglePainter.h"
+#include "editor/model/connection/MidiConnectionSink.h"
 
 namespace AxiomModel {
-    class NodeNumControl;
+    class NodeMidiControl;
 }
 
 namespace AxiomGui {
 
     class NodeItem;
 
-    class NumControl : public ControlItem {
-    Q_OBJECT
-        Q_PROPERTY(float hoverState
-                       READ
-                           hoverState
-                       WRITE
-                       setHoverState)
+    class MidiControl : public ControlItem {
+        Q_OBJECT
+        Q_PROPERTY(float hoverState READ hoverState WRITE setHoverState)
 
     public:
-        AxiomModel::NodeNumControl *control;
+        AxiomModel::NodeMidiControl *control;
 
-        NumControl(AxiomModel::NodeNumControl *control, SchematicCanvas *canvas);
+        MidiControl(AxiomModel::NodeMidiControl *control, SchematicCanvas *canvas);
 
         QRectF aspectBoundingRect() const;
 
@@ -48,6 +39,7 @@ namespace AxiomGui {
         void mouseLeave();
 
     protected:
+
         QRectF useBoundingRect() const override;
 
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -66,30 +58,17 @@ namespace AxiomGui {
 
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
-    private slots:
-
-        void setValue(QString value);
-
     private:
         float m_hoverState = 0;
         bool isDragging = false;
-        MaximRuntime::NumValue beforeDragVal;
+        float beforeDragVal;
         QPointF mouseStartPoint;
 
-        KnobPainter knobPainter;
-        PlugPainter plugPainter;
-        SliderPainter sliderPainter;
-        TogglePainter togglePainter;
+        QRectF getPlugBounds() const;
 
-        QString valueAsString(MaximRuntime::NumValue num);
+        QRectF getPianoBounds() const;
 
-        MaximRuntime::NumValue stringAsValue(const QString &str, MaximRuntime::NumValue oldNum);
-
-        MaximRuntime::NumValue getCVal() const;
-
-        void setCVal(MaximRuntime::NumValue v) const;
-
-        QPainterPath controlPath() const;
+        void paintPlug(QPainter *painter);
     };
 
 }

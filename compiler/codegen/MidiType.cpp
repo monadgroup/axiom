@@ -15,12 +15,13 @@ MidiType::MidiType(MaximContext *context) : _context(context) {
     }, "struct.midievent");
 
     _arrayType = llvm::ArrayType::get(_eventType, maxEvents);
-    _countType = llvm::Type::getIntNTy(context->llvm(), 5);
+    _countType = llvm::Type::getInt8Ty(context->llvm());
     _type = llvm::StructType::create(context->llvm(), {
         _countType, _arrayType
     }, "struct.midi");
 
-    _layout = context->dataLayout().getStructLayout(_eventType);
+    _eventLayout = context->dataLayout().getStructLayout(_eventType);
+    _layout = context->dataLayout().getStructLayout(_type);
 }
 
 std::unique_ptr<Value> MidiType::createInstance(llvm::Value *val, SourcePos startPos, SourcePos endPos) {

@@ -79,3 +79,15 @@ NumValue ControlGroup::getNumValue() const {
 void ControlGroup::setNumValue(const NumValue &value) const {
     _surface->runtime()->op().writeNum(currentPtr(), value);
 }
+
+MidiValue ControlGroup::getMidiValue() const {
+    return _surface->runtime()->op().readMidi(currentPtr());
+}
+
+void ControlGroup::setMidiValue(const MidiValue &value) const {
+    _surface->runtime()->op().writeMidi(currentPtr(), value);
+}
+
+void ControlGroup::pushMidiEvent(const MidiEventValue &event) const {
+    _surface->runtime()->op().pushMidiEvent(currentPtr(), event);
+}

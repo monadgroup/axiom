@@ -1,4 +1,3 @@
-#include <iostream>
 #include "NodeNumControl.h"
 
 #include "../node/NodeSurface.h"

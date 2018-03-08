@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ConnectionSink.h"
+#include "compiler/runtime/ValueOperator.h"
 
 namespace AxiomModel {
 
@@ -9,7 +10,21 @@ namespace AxiomModel {
 
     public:
 
-        MidiConnectionSink(MaximRuntime::Control *runtime);
+        explicit MidiConnectionSink(MaximRuntime::Control *runtime);
+
+        MaximRuntime::MidiValue value() const { return m_value; }
+
+    public slots:
+
+        void setValue(MaximRuntime::MidiValue value);
+
+    signals:
+
+        void valueChanged(MaximRuntime::MidiValue newValue);
+
+    private:
+
+        MaximRuntime::MidiValue m_value;
 
     };
 
