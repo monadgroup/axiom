@@ -20,19 +20,19 @@ namespace MaximCodegen {
 
         llvm::StructType *get() const override { return _type; }
 
-        llvm::Type *countType() const { return _countType; }
+        llvm::IntegerType *countType() const { return _countType; }
 
         llvm::ArrayType *arrayType() const { return _arrayType; }
 
         llvm::StructType *eventType() const { return _eventType; }
 
-        llvm::Type *typeType() const { return _typeType; }
+        llvm::IntegerType *typeType() const { return _typeType; }
 
-        llvm::Type *channelType() const { return _channelType; }
+        llvm::IntegerType *channelType() const { return _channelType; }
 
-        llvm::Type *noteType() const { return _noteType; }
+        llvm::IntegerType *noteType() const { return _noteType; }
 
-        llvm::Type *paramType() const { return _paramType; }
+        llvm::IntegerType *paramType() const { return _paramType; }
 
         const llvm::StructLayout *layout() const { return _layout; }
 
@@ -47,19 +47,19 @@ namespace MaximCodegen {
 
         llvm::StructType *_type;
 
-        llvm::Type *_countType;
+        llvm::IntegerType *_countType;
 
         llvm::ArrayType *_arrayType;
 
         llvm::StructType *_eventType;
 
-        llvm::Type *_typeType;
+        llvm::IntegerType *_typeType;
 
-        llvm::Type *_channelType;
+        llvm::IntegerType *_channelType;
 
-        llvm::Type *_noteType;
+        llvm::IntegerType *_noteType;
 
-        llvm::Type *_paramType;
+        llvm::IntegerType *_paramType;
 
         const llvm::StructLayout *_layout;
 

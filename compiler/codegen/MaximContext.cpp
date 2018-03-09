@@ -34,6 +34,7 @@
 #include "functions/RmpOscFunction.h"
 #include "functions/MixFunction.h"
 #include "functions/SequenceFunction.h"
+#include "functions/NoteFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -216,6 +217,9 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerFunction(SawOscFunction::create(this, libModule));
     registerFunction(TriOscFunction::create(this, libModule));
     registerFunction(RmpOscFunction::create(this, libModule));
+
+    // midi operations
+    registerFunction(NoteFunction::create(this, libModule));
 
     // hot paths for when only two parameters are provided to min/max
     registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::minnum, "min", 2));

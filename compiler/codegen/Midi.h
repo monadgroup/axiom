@@ -51,7 +51,7 @@ namespace MaximCodegen {
 
         MidiEvent eventAt(Builder &builder, unsigned index) const;
 
-        MidiEvent eventAt(Builder &builder, llvm::Value *index) const;
+        MidiEvent eventAt(Builder &builder, Builder &allocaBuilder, llvm::Value *index) const;
 
         std::unique_ptr<Midi> withCount(Builder &builder, llvm::Value *count, SourcePos startPos, SourcePos endPos) const;
 
@@ -59,7 +59,7 @@ namespace MaximCodegen {
 
         std::unique_ptr<Midi> withEvent(Builder &builder, unsigned index, const MidiEvent &event, SourcePos startPos, SourcePos endPos) const;
 
-        std::unique_ptr<Midi> withEvent(Builder &builder, llvm::Value *index, const MidiEvent &event, SourcePos startPos, SourcePos endPos) const;
+        std::unique_ptr<Midi> withEvent(Builder &builder, Builder &allocaBuilder, llvm::Value *index, const MidiEvent &event, SourcePos startPos, SourcePos endPos) const;
 
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
 

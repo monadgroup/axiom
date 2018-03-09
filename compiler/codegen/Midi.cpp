@@ -27,9 +27,9 @@ MidiEvent Midi::eventAt(Builder &builder, unsigned index) const {
     );
 }
 
-MidiEvent Midi::eventAt(Builder &builder, llvm::Value *index) const {
+MidiEvent Midi::eventAt(Builder &builder, Builder &allocaBuilder, llvm::Value *index) const {
     auto arr = events(builder);
-    auto arrPtr = builder.CreateAlloca(arr->getType(), nullptr, _get->getName() + ".events");
+    auto arrPtr = allocaBuilder.CreateAlloca(arr->getType(), nullptr, _get->getName() + ".events");
     builder.CreateStore(arr, arrPtr);
     auto eventPtr = builder.CreateGEP(arrPtr, {
         _context->constInt(64, 0, false),
@@ -67,10 +67,10 @@ std::unique_ptr<Midi> Midi::withEvent(Builder &builder, unsigned index, const Mi
     );
 }
 
-std::unique_ptr<Midi> Midi::withEvent(Builder &builder, llvm::Value *index, const MidiEvent &event, SourcePos startPos,
+std::unique_ptr<Midi> Midi::withEvent(Builder &builder, Builder &allocaBuilder, llvm::Value *index, const MidiEvent &event, SourcePos startPos,
                                       SourcePos endPos) const {
     auto arr = events(builder);
-    auto arrPtr = builder.CreateAlloca(arr->getType(), nullptr, _get->getName() + ".events");
+    auto arrPtr = allocaBuilder.CreateAlloca(arr->getType(), nullptr, _get->getName() + ".events");
     builder.CreateStore(arr, arrPtr);
     auto eventPtr = builder.CreateGEP(arrPtr, {
         _context->constInt(64, 0, false),

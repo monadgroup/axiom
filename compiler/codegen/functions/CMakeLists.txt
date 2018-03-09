@@ -11,6 +11,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/MixFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/NextFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/NoiseFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/NoteFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/PanFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/PeriodicFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/RmpOscFunction.cpp"
