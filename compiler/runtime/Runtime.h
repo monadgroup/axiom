@@ -13,8 +13,15 @@ namespace MaximCodegen {
 
 namespace MaximRuntime {
 
+    struct QueuedEvent {
+        int64_t deltaFrames;
+        MidiEventValue event;
+    };
+
     class Runtime {
     public:
+        static constexpr size_t eventQueueSize = 256;
+
         Runtime();
 
         MaximCodegen::MaximContext *ctx() { return &_context; }
@@ -29,7 +36,13 @@ namespace MaximRuntime {
 
         void generate();
 
+        void queueEvent(const QueuedEvent &event);
+
+        void clearEvents();
+
         void fillBuffer(float **buffer, size_t size);
+
+        void fillPartialBuffer(float **buffer, size_t length, const MidiValue &event);
 
         void lock() { _mutex.lock(); }
 
@@ -43,6 +56,8 @@ namespace MaximRuntime {
         MaximCodegen::MaximContext _context;
         ValueOperator _op;
         std::unique_ptr<RootSurface> _mainSurface;
+
+        QueuedEvent _queuedEvents[eventQueueSize];
 
         bool _isDeployed = false;
         Jit::ModuleKey _deployKey;

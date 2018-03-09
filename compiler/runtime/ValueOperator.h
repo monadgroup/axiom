@@ -67,6 +67,13 @@ namespace MaximRuntime {
         bool operator!=(const MidiValue &other) const {
             return !(*this == other);
         }
+
+        void pushEvent(const MidiEventValue &event) {
+            if (count >= MaximCodegen::MidiType::maxEvents - 1) return;
+
+            events[count] = event;
+            count++;
+        }
     };
 
     class ValueOperator {

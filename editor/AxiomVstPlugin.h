@@ -51,4 +51,5 @@ public:
     VstInt32 canDo(char *text) override;
 
     VstInt32 getNumMidiInputChannels() override;
+
 };

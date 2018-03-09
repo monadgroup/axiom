@@ -29,14 +29,60 @@ void AxiomVstPlugin::open() {
 }
 
 void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) {
-    // while there are events to be distributed,
-    // fill buffer up until next event pos, then stuff events into input
-
     runtime.fillBuffer(outputs, (size_t) sampleFrames);
 }
 
 VstInt32 AxiomVstPlugin::processEvents(VstEvents *ev) {
-    // todo
+    for (auto i = 0; i < ev->numEvents; i++) {
+        auto evt = ev->events[i];
+        if (evt->type != kVstMidiType) continue;
+
+        auto midiEvent = (VstMidiEvent*) evt;
+        auto midiStatus = midiEvent->midiData[0];
+        auto midiData1 = midiEvent->midiData[1];
+        auto midiData2 = midiEvent->midiData[2];
+
+        auto eventType = (uint8_t) (midiStatus & 0xF0);
+        auto eventChannel = (uint8_t) (midiStatus & 0x0F);
+
+        MaximRuntime::MidiEventValue event {};
+        event.channel = eventChannel;
+        event.note = (uint8_t) midiData1;
+        event.param = (uint8_t) midiData2;
+
+        switch (eventType) {
+            case 0x80: // note off
+                event.event = MaximCommon::MidiEventType::NOTE_OFF;
+                runtime.queueEvent({ evt->deltaFrames, event });
+                break;
+            case 0x90: // note on
+                event.event = MaximCommon::MidiEventType::NOTE_ON;
+                runtime.queueEvent({ evt->deltaFrames, event });
+                break;
+            case 0xA0: // polyphonic aftertouch
+                event.event = MaximCommon::MidiEventType::POLYPHONIC_AFTERTOUCH;
+                runtime.queueEvent({ evt->deltaFrames, event });
+                break;
+            case 0xB0: // control mode change
+
+                // all notes off
+                if (midiData1 == 0x7B) {
+                    runtime.clearEvents();
+                }
+
+                break;
+            case 0xD0: // channel aftertouch
+                event.event = MaximCommon::MidiEventType::CHANNEL_AFTERTOUCH;
+                event.param = (uint8_t) midiData1;
+                runtime.queueEvent({ evt->deltaFrames, event });
+                break;
+            case 0xE0: // pitch wheel
+                event.event = MaximCommon::MidiEventType::PITCH_WHEEL;
+                runtime.queueEvent({ evt->deltaFrames, event });
+                break;
+            default:;
+        }
+    }
 }
 
 void AxiomVstPlugin::setProgramName(char *name) {

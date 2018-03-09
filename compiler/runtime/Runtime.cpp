@@ -68,17 +68,75 @@ void Runtime::generate() {
     if (_generateFuncPtr) _generateFuncPtr();
 }
 
+void Runtime::queueEvent(const QueuedEvent &event) {
+    for (size_t i = 0; i < eventQueueSize; i++) {
+        if (_queuedEvents[i].deltaFrames >= 0) continue;
+        _queuedEvents[i] = event;
+        break;
+    }
+}
+
+void Runtime::clearEvents() {
+    for (size_t i = 0; i < eventQueueSize; i++) {
+        if (_queuedEvents[i].deltaFrames < 0) continue;
+        _queuedEvents[i].deltaFrames = -1;
+    }
+}
+
 void Runtime::fillBuffer(float **buffer, size_t size) {
+    ssize_t remainingSamples = size;
+
+    float *runningOutputs[2];
+    runningOutputs[0] = buffer[0];
+    runningOutputs[1] = buffer[1];
+
+    while (remainingSamples > 0) {
+        auto samplesToNextEvent = remainingSamples;
+
+        MidiValue triggerEvents {};
+
+        for (size_t i = 0; i < eventQueueSize; i++) {
+            auto &event = _queuedEvents[i];
+            if (event.deltaFrames < 0) break;
+
+            if (!event.deltaFrames) {
+                triggerEvents.pushEvent(event.event);
+            } else if (event.deltaFrames < samplesToNextEvent) {
+                samplesToNextEvent = event.deltaFrames;
+            }
+        }
+
+        fillPartialBuffer(runningOutputs, (size_t) samplesToNextEvent, triggerEvents);
+
+        for (size_t i = 0; i < eventQueueSize; i++) {
+            if (_queuedEvents[i].deltaFrames < 0) break;
+            _queuedEvents[i].deltaFrames -= samplesToNextEvent;
+        }
+
+        runningOutputs[0] += samplesToNextEvent;
+        runningOutputs[1] += samplesToNextEvent;
+        remainingSamples -= samplesToNextEvent;
+    }
+}
+
+void Runtime::fillPartialBuffer(float **buffer, size_t length, const MidiValue &event) {
     lock();
 
+    auto inputPtr = _mainSurface->input.control()->group()->currentPtr();
     auto outputPtr = _mainSurface->output.control()->group()->currentPtr();
-    assert(outputPtr);
+    assert(inputPtr && outputPtr);
 
-    for (size_t i = 0; i < size; i++) {
+    // write midi events for first sample
+    _op.writeMidi(inputPtr, event);
+
+    for (size_t i = 0; i < length; i++) {
         generate();
         auto outputNum = _op.readNum(outputPtr);
         buffer[0][i] = outputNum.left;
         buffer[1][i] = outputNum.right;
+
+        // clear midi events
+        _op.writeMidiCount(inputPtr, 0);
     }
 
     unlock();
