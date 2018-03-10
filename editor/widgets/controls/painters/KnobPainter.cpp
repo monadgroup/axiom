@@ -27,14 +27,6 @@ void KnobPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, flo
 
     // draw background
     painter->setPen(Qt::NoPen);
-    /*if (!control->sink()->connections().empty()) {
-        auto activeBorderThickness = 0.02 * aspectWidth;
-        painter->setBrush(QBrush(
-            AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
-        painter->drawEllipse(outerBr.marginsAdded(
-            QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness, activeBorderThickness)));
-    }*/
-
     painter->setBrush(QBrush(QColor(30, 30, 30)));
     painter->drawEllipse(outerBr);
 

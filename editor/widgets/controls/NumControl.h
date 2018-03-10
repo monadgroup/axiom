@@ -1,7 +1,7 @@
 #pragma once
 
-#include <editor/widgets/CommonColors.h>
 #include "ControlItem.h"
+#include "editor/widgets/CommonColors.h"
 #include "editor/model/connection/NumConnectionSink.h"
 
 #include "painters/KnobPainter.h"
@@ -62,6 +62,7 @@ namespace AxiomGui {
         void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
 
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 

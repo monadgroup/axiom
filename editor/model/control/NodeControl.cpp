@@ -4,6 +4,7 @@
 
 #include "NodeNumControl.h"
 #include "NodeMidiControl.h"
+#include "NodeExtractControl.h"
 #include "../node/Node.h"
 #include "../connection/ConnectionWire.h"
 #include "compiler/runtime/Control.h"
@@ -26,6 +27,10 @@ std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRu
             return std::make_unique<NodeNumControl>(node, runtime, QPoint(0, 0), QSize(2, 2));
         case MaximCommon::ControlType::MIDI:
             return std::make_unique<NodeMidiControl>(node, runtime, QPoint(0, 0), QSize(1, 1));
+        case MaximCommon::ControlType::NUM_EXTRACT:
+            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::NUMBER, QPoint(0, 0), QSize(2, 2));
+        case MaximCommon::ControlType::MIDI_EXTRACT:
+            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::MIDI, QPoint(0, 0), QSize(2, 2));
         default:
             assert(false);
             throw;

@@ -12,10 +12,12 @@
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeNumControl.h"
 #include "editor/model/control/NodeMidiControl.h"
+#include "editor/model/control/NodeExtractControl.h"
 #include "editor/model/control/NodeIOControl.h"
 #include "../controls/NumControl.h"
 #include "../controls/MidiControl.h"
-#include "editor/widgets/controls/IOControl.h"
+#include "../controls/ExtractControl.h"
+#include "../controls/IOControl.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
 #include "../FloatingValueEditor.h"
@@ -266,6 +268,8 @@ void NodeItem::addControl(NodeControl *control) {
         item = new NumControl(numControl, canvas);
     } else if (auto midiControl = dynamic_cast<NodeMidiControl *>(control)) {
         item = new MidiControl(midiControl, canvas);
+    } else if (auto extractControl = dynamic_cast<NodeExtractControl *>(control)) {
+        item = new ExtractControl(extractControl, canvas);
     } else if (auto outputControl = dynamic_cast<NodeIOControl *>(control)) {
         item = new IOControl(outputControl, canvas);
     }
