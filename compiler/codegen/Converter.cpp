@@ -9,18 +9,17 @@ using namespace MaximCodegen;
 Converter::Converter(MaximContext *ctx, llvm::Module *module, MaximCommon::FormType toType)
     : ComposableModuleClass(ctx, module, "converter." + MaximCommon::formType2String(toType)), _toType(toType) {
 
+    auto numPtr = llvm::PointerType::get(ctx->numType()->get(), 0);
     _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call",
                                                                 ctx->numType()->get(),
-                                                                std::vector<llvm::Type *>{ctx->numType()->get()});
+                                                                std::vector<llvm::Type *>{numPtr});
 }
 
 void Converter::generate() {
     auto undefPos = SourcePos(-1, -1);
-    auto numInputPtr = _callMethod->allocaBuilder().CreateAlloca(ctx()->numType()->get(), nullptr, "input");
     auto &b = _callMethod->builder();
-
-    b.CreateStore(_callMethod->arg(0), numInputPtr);
-    auto numInput = Num::create(ctx(), numInputPtr, undefPos, undefPos);
+    auto numInput = Num::create(ctx(), _callMethod->arg(0), undefPos, undefPos);
+    auto resultNum = Num::create(ctx(), numInput->get(), b, _callMethod->allocaBuilder());
 
     auto func = _callMethod->get(_callMethod->moduleClass()->module());
     auto numForm = numInput->form(b);
@@ -40,14 +39,14 @@ void Converter::generate() {
 
         auto convertFunc = pair.second;
         auto newVec = (this->*convertFunc)(_callMethod.get(), numVec);
-        numInput->setVec(b, newVec);
-        numInput->setForm(b, _toType);
-        b.CreateRet(b.CreateLoad(numInput->get(), "conv.deref"));
+        resultNum->setVec(b, newVec);
+        resultNum->setForm(b, _toType);
+        b.CreateRet(b.CreateLoad(resultNum->get(), "conv.deref"));
     }
 
     b.SetInsertPoint(defaultBlock);
-    numInput->setForm(b, _toType);
-    b.CreateRet(b.CreateLoad(numInput->get(), "conv.deref"));
+    resultNum->setForm(b, _toType);
+    b.CreateRet(b.CreateLoad(resultNum->get(), "conv.deref"));
 
     complete();
 }
@@ -61,8 +60,9 @@ std::unique_ptr<Num> Converter::call(ComposableModuleClassMethod *method, std::u
     }
 
     // call the generated function
-    auto regVal = method->builder().CreateLoad(value->get(), "conv.deref");
     auto entryIndex = method->moduleClass()->addEntry(this);
-    auto result = method->callInto(entryIndex, {regVal}, _callMethod.get(), "convertresult");
-    return Num::create(ctx(), result, startPos, endPos);
+    auto result = method->callInto(entryIndex, {value->get()}, _callMethod.get(), "convertresult");
+    auto newNum = Num::create(ctx(), method->allocaBuilder());
+    method->builder().CreateStore(result, newNum->get());
+    return std::move(newNum);
 }

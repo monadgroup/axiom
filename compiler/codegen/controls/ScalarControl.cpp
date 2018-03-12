@@ -1,6 +1,7 @@
 #include "ScalarControl.h"
 
 #include "../Type.h"
+#include "../MaximContext.h"
 
 using namespace MaximCodegen;
 
@@ -10,10 +11,10 @@ ScalarControl::ScalarControl(MaximContext *ctx, llvm::Module *module, MaximCommo
     auto valueField = addField("value", storageType);
 
     auto getMethod = valueField->getValue();
-    getMethod->builder().CreateRet(getMethod->builder().CreateLoad(getMethod->groupPtr(), "value"));
+    getMethod->builder().CreateRet(getMethod->groupPtr());
 
     auto setMethod = valueField->setValue();
-    setMethod->builder().CreateStore(setMethod->arg(0), setMethod->groupPtr());
+    ctx->copyPtr(setMethod->builder(), setMethod->arg(0), setMethod->groupPtr());
 
     complete();
 }

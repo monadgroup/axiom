@@ -9,7 +9,7 @@ using namespace MaximCodegen;
 VectorIntrinsicFunction::VectorIntrinsicFunction(MaximContext *ctx, llvm::Module *module, llvm::Intrinsic::ID id,
                                                  std::string name, size_t paramCount)
     : Function(ctx, module, std::move(name), ctx->numType(),
-               std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false, false)), nullptr),
+               std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false)), nullptr),
       id(id) {
 
 }
@@ -44,7 +44,8 @@ std::unique_ptr<Value> VectorIntrinsicFunction::generate(ComposableModuleClassMe
 
     auto res = CreateCall(b, intrinsic, llParams, "intrinsic.result");
 
-    firstParam->setVec(b, res);
-    firstParam->setActive(b, isActive);
-    return firstParam->clone();
+    auto newNum = Num::create(ctx(), firstParam->get(), b, method->allocaBuilder());
+    newNum->setVec(b, res);
+    newNum->setActive(b, isActive);
+    return std::move(newNum);
 }

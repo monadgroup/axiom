@@ -8,9 +8,9 @@ using namespace MaximCodegen;
 
 HoldFunction::HoldFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "hold", ctx->numType(),
-               {Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, true)},
+               {Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), true)},
                nullptr) {
 
 }
@@ -83,9 +83,10 @@ HoldFunction::generate(ComposableModuleClassMethod *method, const std::vector<st
     );
     activeFlag = b.CreateAnd(gateVal->active(b), activeFlag, "active");
 
-    xVal->setVec(b, resultVec);
-    xVal->setActive(b, activeFlag);
-    return xVal->clone();
+    auto newNum = Num::create(ctx(), xVal->get(), b, method->allocaBuilder());
+    newNum->setVec(b, resultVec);
+    newNum->setActive(b, activeFlag);
+    return std::move(newNum);
 }
 
 std::vector<std::unique_ptr<Value>> HoldFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {

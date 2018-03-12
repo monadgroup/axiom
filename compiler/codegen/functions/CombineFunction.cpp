@@ -8,7 +8,8 @@ using namespace MaximCodegen;
 
 CombineFunction::CombineFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "combine", ctx->numType(),
-               {Parameter(ctx->numType(), false, false), Parameter(ctx->numType(), false, false)},
+               {Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false)},
                nullptr) {
 
 }
@@ -32,6 +33,7 @@ CombineFunction::generate(ComposableModuleClassMethod *method, const std::vector
         "combined"
     );
 
-    leftNum->setVec(b, newVec);
-    return leftNum->clone();
+    auto newNum = Num::create(ctx(), leftNum->get(), b, method->allocaBuilder());
+    newNum->setVec(b, newVec);
+    return std::move(newNum);
 }

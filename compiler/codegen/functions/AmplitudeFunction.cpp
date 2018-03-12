@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 AmplitudeFunction::AmplitudeFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "amplitude", ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr) {
+    : Function(ctx, module, "amplitude", ctx->numType(), {Parameter(ctx->numType(), false)}, nullptr) {
     b0 = 1 - std::exp(-1 / (0.05f * ctx->sampleRate));
 }
 
@@ -38,7 +38,8 @@ AmplitudeFunction::generate(ComposableModuleClassMethod *method, const std::vect
     auto newEstimate = b.CreateBinOp(llvm::Instruction::BinaryOps::FAdd, currentEstimate, inputMul, "newest");
     b.CreateStore(newEstimate, funcContext);
 
-    paramVal->setVec(b, newEstimate);
-    paramVal->setForm(b, MaximCommon::FormType::LINEAR);
-    return paramVal->clone();
+    auto newNum = Num::create(ctx(), paramVal->get(), b, method->allocaBuilder());
+    newNum->setVec(b, newEstimate);
+    newNum->setForm(b, MaximCommon::FormType::LINEAR);
+    return std::move(newNum);
 }

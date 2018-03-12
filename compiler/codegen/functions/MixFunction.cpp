@@ -8,9 +8,9 @@ using namespace MaximCodegen;
 
 MixFunction::MixFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "mix", ctx->numType(),
-               {Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, false)},
+               {Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false)},
                nullptr) {
 
 }
@@ -39,7 +39,8 @@ MixFunction::generate(ComposableModuleClassMethod *method, const std::vector<std
 
     auto active = b.CreateOr(numA->active(b), numB->active(b), "active");
 
-    numA->setVec(b, vecResult);
-    numA->setActive(b, active);
-    return numA->clone();
+    auto newNum = Num::create(ctx(), numA->get(), b, method->allocaBuilder());
+    newNum->setVec(b, vecResult);
+    newNum->setActive(b, active);
+    return std::move(newNum);
 }

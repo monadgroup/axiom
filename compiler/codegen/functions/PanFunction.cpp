@@ -8,8 +8,8 @@ using namespace MaximCodegen;
 
 PanFunction::PanFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "pan", ctx->numType(),
-               {Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, false)},
+               {Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false)},
                nullptr) {
 
 }
@@ -77,6 +77,7 @@ PanFunction::generate(ComposableModuleClassMethod *method, const std::vector<std
         "panned"
     );
 
-    xNum->setVec(b, resultVec);
-    return xNum->clone();
+    auto newNum = Num::create(ctx(), xNum->get(), b, method->allocaBuilder());
+    newNum->setVec(b, resultVec);
+    return std::move(newNum);
 }

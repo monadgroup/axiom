@@ -9,7 +9,7 @@ using namespace MaximCodegen;
 ScalarExternalFunction::ScalarExternalFunction(MaximContext *ctx, llvm::Module *module, std::string externalName,
                                                std::string name, size_t paramCount)
     : Function(ctx, module, std::move(name), ctx->numType(),
-               std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false, false)), nullptr),
+               std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false)), nullptr),
       _externalName(std::move(externalName)) {
 
 }
@@ -59,7 +59,8 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(ComposableModuleClassMet
         res = b.CreateInsertElement(res, singleResult, i, "result");
     }
 
-    firstParam->setVec(b, res);
-    firstParam->setActive(b, isActive);
-    return firstParam->clone();
+    auto newNum = Num::create(ctx(), firstParam->get(), b, method->allocaBuilder());
+    newNum->setVec(b, res);
+    newNum->setActive(b, isActive);
+    return std::move(newNum);
 }

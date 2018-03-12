@@ -22,17 +22,24 @@ namespace MaximCodegen {
 
         Num(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
 
+        Num(MaximContext *context, llvm::Value *clone, Builder &builder, Builder &allocaBuilder, SourcePos startPos,
+            SourcePos endPos);
+
         Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Num>
         create(MaximContext *context, Builder &allocaBuilder, float left, float right, MaximCommon::FormType form,
-               bool active, SourcePos startPos, SourcePos endPos);
+               bool active, SourcePos startPos = SourcePos(-1, -1), SourcePos endPos = SourcePos(-1, -1));
 
         static std::unique_ptr<Num>
-        create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
+        create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos = SourcePos(-1, -1), SourcePos endPos = SourcePos(-1, -1));
 
         static std::unique_ptr<Num>
-        create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
+        create(MaximContext *context, llvm::Value *clone, Builder &builder, Builder &allocaBuilder, SourcePos startPos = SourcePos(-1, -1),
+               SourcePos endPos = SourcePos(-1, -1));
+
+        static std::unique_ptr<Num>
+        create(MaximContext *context, llvm::Value *get, SourcePos startPos = SourcePos(-1, -1), SourcePos endPos = SourcePos(-1, -1));
 
         llvm::Value *get() const override { return _get; }
 

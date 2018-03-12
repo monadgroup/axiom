@@ -55,9 +55,7 @@ void Array::setIndex(llvm::Value *index, Value *val, Builder &builder) {
 
     auto ptr = indexPtr(index, builder);
 
-    // todo: might be better to do a direct memcpy here
-    auto loadedVal = builder.CreateLoad(val->get(), "arraystore");
-    builder.CreateStore(loadedVal, ptr);
+    _context->copyPtr(builder, val->get(), ptr);
 }
 
 std::unique_ptr<Value> Array::atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos) {

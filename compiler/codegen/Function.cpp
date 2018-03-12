@@ -8,9 +8,9 @@
 using namespace MaximCodegen;
 
 Function::Function(MaximContext *ctx, llvm::Module *module, const std::string &name, Type *returnType,
-                   std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg)
+                   std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg, bool returnByRef)
     : ComposableModuleClass(ctx, module, name), _returnType(returnType), _parameters(std::move(parameters)),
-      _vararg(std::move(vararg)) {
+      _vararg(std::move(vararg)), _returnByRef(returnByRef) {
     // calculate argument size constraints
     _allArguments = _parameters.size() + (_vararg ? 1 : 0);
     _minArguments = _allArguments;
@@ -32,7 +32,9 @@ Function::Function(MaximContext *ctx, llvm::Module *module, const std::string &n
         paramTypes.push_back(_vaType);
     }
 
-    _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call", returnType->get(), paramTypes);
+    auto rt = returnType->get();
+    if (returnByRef) rt = llvm::PointerType::get(rt, 0);
+    _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call", rt, paramTypes);
 }
 
 void Function::generate() {
@@ -40,21 +42,12 @@ void Function::generate() {
     std::vector<std::unique_ptr<Value>> genArgs;
     genArgs.reserve(_parameters.size());
     for (size_t i = 0; i < _parameters.size(); i++) {
-        auto argVal = _callMethod->arg(i);
-        auto &param = _parameters[i];
-
-        if (!param.passByRef) {
-            auto ptr = _callMethod->allocaBuilder().CreateAlloca(param.type->get(), nullptr, "func.makeref");
-            _callMethod->builder().CreateStore(argVal, ptr);
-            argVal = ptr;
-        }
-
-        genArgs.push_back(param.type->createInstance(argVal, SourcePos(-1, -1), SourcePos(-1, -1)));
+        genArgs.push_back(_parameters[i].type->createInstance(_callMethod->arg(i), SourcePos(-1, -1), SourcePos(-1, -1)));
     }
 
     std::unique_ptr<VarArg> genVarArg;
     if (_vararg) {
-        genVarArg = std::make_unique<DynVarArg>(ctx(), _callMethod->arg(_vaIndex), _vararg->type, _vararg->passByRef);
+        genVarArg = std::make_unique<DynVarArg>(ctx(), _callMethod->arg(_vaIndex), _vararg->type);
     }
     auto result = generate(_callMethod.get(), genArgs, std::move(genVarArg));
 
@@ -82,13 +75,7 @@ std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::
     for (size_t i = 0; i < _parameters.size(); i++) {
         auto arg = mappedArgs[i].get();
         baseArgs.push_back(arg);
-
-        if (_parameters[i].passByRef) {
-            args.push_back(arg->get());
-        } else {
-            auto loadVal = method->builder().CreateLoad(arg->get(), "func.deref");
-            args.push_back(loadVal);
-        }
+        args.push_back(arg->get());
     }
 
     // create vararg structure
@@ -106,13 +93,7 @@ std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::
             baseVarargs.push_back(vaArg);
 
             auto storePos = method->builder().CreateConstGEP1_64(vaArray, i, "va.arr.itemptr");
-            auto storeVal = vaArg->get();
-            if (!_vararg->passByRef) {
-                // store the actual value, not pointer
-                storeVal = method->builder().CreateLoad(storeVal, "va.deref");
-            }
-
-            method->builder().CreateStore(storeVal, storePos);
+            method->builder().CreateStore(vaArg->get(), storePos);
         }
         args.push_back(method->builder().CreateInsertValue(vaStruct, vaArray, {1}, "va"));
     }
@@ -120,6 +101,11 @@ std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::
     auto entryIndex = method->moduleClass()->addEntry(this);
     sampleArguments(method, entryIndex, baseArgs, baseVarargs);
     auto result = method->callInto(entryIndex, args, _callMethod.get(), "callresult");
+    if (!_returnByRef) {
+        auto ptr = method->allocaBuilder().CreateAlloca(_returnType->get(), nullptr, "callresult.ptr");
+        method->builder().CreateStore(result, ptr);
+        result = ptr;
+    }
     return _returnType->createInstance(result, startPos, endPos);
 }
 
@@ -166,18 +152,17 @@ void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args,
     }
 }
 
-Parameter::Parameter(Type *type, bool passByRef, bool optional)
-    : type(type), passByRef(passByRef), optional(optional) {
+Parameter::Parameter(Type *type, bool optional)
+    : type(type), optional(optional) {
 
 }
 
-std::unique_ptr<Parameter> Parameter::create(Type *type, bool passByRef, bool optional) {
-    return std::make_unique<Parameter>(type, passByRef, optional);
+std::unique_ptr<Parameter> Parameter::create(Type *type, bool optional) {
+    return std::make_unique<Parameter>(type, optional);
 }
 
 llvm::Type* Parameter::getType() const {
-    if (passByRef) return llvm::PointerType::get(type->get(), 0);
-    else return type->get();
+    return llvm::PointerType::get(type->get(), 0);
 }
 
 VarArg::VarArg(MaximContext *context) : context(context) {
@@ -188,19 +173,15 @@ std::unique_ptr<Value> VarArg::atIndex(uint64_t index, Builder &b) {
     return atIndex(context->constInt(8, index, false), b);
 }
 
-Function::DynVarArg::DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type, bool passByRef)
-    : VarArg(context), argStruct(argStruct), type(type), passByRef(passByRef) {
+Function::DynVarArg::DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type)
+    : VarArg(context), argStruct(argStruct), type(type) {
 
 }
 
 std::unique_ptr<Value> Function::DynVarArg::atIndex(llvm::Value *index, Builder &b) {
     auto valPtr = b.CreateExtractValue(argStruct, 1, "va.ptr");
-    auto ptr = b.CreateGEP(type->get(), valPtr, {index}, "va.elementptr");
-    if (passByRef) {
-        // `ptr` is a pointer to a pointer, load to get the actual ptr
-        ptr = b.CreateLoad(ptr, "va.deref");
-    }
-
+    auto elementPtr = b.CreateGEP(llvm::PointerType::get(type->get(), 0), valPtr, {index}, "va.elementptr");
+    auto ptr = b.CreateLoad(elementPtr, "va.deref");
     return type->createInstance(ptr, SourcePos(-1, -1), SourcePos(-1, -1));
 }
 

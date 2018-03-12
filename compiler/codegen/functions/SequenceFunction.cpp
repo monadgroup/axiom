@@ -9,8 +9,8 @@ using namespace MaximCodegen;
 
 SequenceFunction::SequenceFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "sequence", ctx->numType(),
-               {Parameter(ctx->numType(), false, false)},
-               Parameter::create(ctx->numType(), false, false)) {
+               {Parameter(ctx->numType(), false)},
+               Parameter::create(ctx->numType(), false)) {
 
 }
 
@@ -63,7 +63,8 @@ SequenceFunction::generate(ComposableModuleClassMethod *method, const std::vecto
     active = b.CreateOr(active, indexNum->active(b), "active");
 
     auto firstNum = AxiomUtil::strict_unique_cast<Num>(vararg->atIndex((uint64_t) 0, b));
-    firstNum->setVec(b, resultVec);
-    firstNum->setActive(b, active);
-    return std::move(firstNum);
+    auto newNum = Num::create(ctx(), firstNum->get(), b, method->allocaBuilder());
+    newNum->setVec(b, resultVec);
+    newNum->setActive(b, active);
+    return std::move(newNum);
 }

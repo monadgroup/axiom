@@ -169,6 +169,20 @@ llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool 
     return llvm::ConstantInt::get(llvm::Type::getIntNTy(_llvm, numBits), val, isSigned);
 }
 
+void MaximContext::copyPtr(Builder &builder, llvm::Value *src, llvm::Value *dest) {
+    assert(src->getType() == dest->getType());
+
+    auto ptrType = llvm::cast<llvm::PointerType>(src->getType());
+
+    auto paramSizePtr = builder.CreateGEP(
+        llvm::ConstantPointerNull::get(ptrType),
+        constInt(64, 1, false),
+        "paramsize"
+    );
+    auto paramSize = builder.CreatePtrToInt(paramSizePtr, llvm::Type::getInt32Ty(_llvm));
+    builder.CreateMemCpy(dest, src, paramSize, 0);
+}
+
 void MaximContext::setLibModule(llvm::Module *libModule) {
     /// REGISTER FUNCTIONS
     // functions that map directly to a built-in LLVM vector intrinsic

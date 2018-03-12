@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 ToDegFunction::ToDegFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "toDeg", ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr) {
+    : Function(ctx, module, "toDeg", ctx->numType(), {Parameter(ctx->numType(), false)}, nullptr) {
 
 }
 
@@ -32,6 +32,7 @@ ToDegFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
         "mult"
     );
 
-    numArg->setVec(b, newVec);
-    return numArg->clone();
+    auto newNum = Num::create(ctx(), numArg->get(), b, method->allocaBuilder());
+    newNum->setVec(b, newVec);
+    return std::move(newNum);
 }

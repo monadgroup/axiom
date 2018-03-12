@@ -8,9 +8,9 @@ using namespace MaximCodegen;
 
 AccumFunction::AccumFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "accum", ctx->numType(),
-               {Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, true)},
+               {Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), true)},
                nullptr) {
 }
 
@@ -60,9 +60,10 @@ AccumFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
     );
     activeFlag = b.CreateAnd(gateVal->active(b), activeFlag, "active");
 
-    xVal->setVec(b, newAccum);
-    xVal->setActive(b, activeFlag);
-    return xVal->clone();
+    auto result = Num::create(ctx(), xVal->get(), b, method->allocaBuilder());
+    result->setVec(b, newAccum);
+    result->setActive(b, activeFlag);
+    return std::move(result);
 }
 
 std::vector<std::unique_ptr<Value>> AccumFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {

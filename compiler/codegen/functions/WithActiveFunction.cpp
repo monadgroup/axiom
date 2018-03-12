@@ -8,7 +8,8 @@ using namespace MaximCodegen;
 
 WithActiveFunction::WithActiveFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "withActive", ctx->numType(),
-               {Parameter(ctx->numType(), false, false), Parameter(ctx->numType(), false, false)}, nullptr) {
+               {Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false)}, nullptr) {
 
 }
 
@@ -33,6 +34,7 @@ WithActiveFunction::generate(ComposableModuleClassMethod *method, const std::vec
         "active.notzero"
     );
 
-    xNum->setActive(b, activeVal);
-    return xNum->clone();
+    auto newNum = Num::create(ctx(), xNum->get(), b, method->allocaBuilder());
+    newNum->setActive(b, activeVal);
+    return std::move(newNum);
 }

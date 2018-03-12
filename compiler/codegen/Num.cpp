@@ -19,6 +19,12 @@ Num::Num(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, Sour
     _get = allocaBuilder.CreateAlloca(type()->get(), nullptr, "num");
 }
 
+Num::Num(MaximContext *context, llvm::Value *clone, Builder &builder, Builder &allocaBuilder, SourcePos startPos,
+         SourcePos endPos) : Value(startPos, endPos), _context(context) {
+    _get = allocaBuilder.CreateAlloca(type()->get(), nullptr, "num");
+    context->copyPtr(builder, clone, _get);
+}
+
 Num::Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos)
     : Value(startPos, endPos), _get(get), _context(context) {
 }
@@ -31,6 +37,11 @@ Num::create(MaximContext *context, Builder &allocaBuilder, float left, float rig
 
 std::unique_ptr<Num> Num::create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos) {
     return std::make_unique<Num>(context, allocaBuilder, startPos, endPos);
+}
+
+std::unique_ptr<Num> Num::create(MaximContext *context, llvm::Value *clone, Builder &builder, Builder &allocaBuilder,
+                                 SourcePos startPos, SourcePos endPos) {
+    return std::make_unique<Num>(context, clone, builder, allocaBuilder, startPos, endPos);
 }
 
 std::unique_ptr<Num> Num::create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos) {

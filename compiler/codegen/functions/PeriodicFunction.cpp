@@ -8,7 +8,8 @@ using namespace MaximCodegen;
 
 PeriodicFunction::PeriodicFunction(MaximContext *ctx, llvm::Module *module, std::string name)
     : Function(ctx, module, name, ctx->numType(),
-               {Parameter(ctx->numType(), false, false), Parameter(ctx->numType(), false, true)},
+               {Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), true)},
                nullptr) {
 
 }
@@ -43,8 +44,7 @@ PeriodicFunction::generate(ComposableModuleClassMethod *method, const std::vecto
 
     // create result number
     auto isActive = b.CreateOr(freqVal->active(b), phaseOffsetVal->active(b), "active");
-    auto undefPos = SourcePos(-1, -1);
-    auto newNum = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
+    auto newNum = Num::create(ctx(), method->allocaBuilder());
     newNum->setVec(b, resultVec);
     newNum->setForm(b, MaximCommon::FormType::OSCILLATOR);
     newNum->setActive(b, isActive);

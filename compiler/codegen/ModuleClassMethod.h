@@ -36,6 +36,7 @@ namespace MaximCodegen {
         llvm::BasicBlock *_entryBlock;
         Builder _allocaBuilder;
         Builder _builder;
+        llvm::Type *_funcStorageType;
         llvm::Type *_returnType;
         std::vector<llvm::Type *> _paramTypes;
         llvm::Value *_contextPtr;

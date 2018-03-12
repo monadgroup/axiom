@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 ActiveFunction::ActiveFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "active", ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr) {
+    : Function(ctx, module, "active", ctx->numType(), {Parameter(ctx->numType(), false)}, nullptr) {
 
 }
 
@@ -28,8 +28,7 @@ ActiveFunction::generate(ComposableModuleClassMethod *method, const std::vector<
                                            (uint64_t) 0, "active.vec");
     activeVec = b.CreateInsertElement(activeVec, activeFloat, (uint64_t) 1, "active.vec");
 
-    auto undefPos = SourcePos(-1, -1);
-    auto newNum = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
+    auto newNum = Num::create(ctx(), method->allocaBuilder());
     newNum->setVec(b, activeVec);
     newNum->setForm(b, MaximCommon::FormType::LINEAR);
     newNum->setActive(b, true);

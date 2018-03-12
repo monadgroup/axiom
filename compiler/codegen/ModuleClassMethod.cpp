@@ -11,8 +11,8 @@ ModuleClassMethod::ModuleClassMethod(ModuleClass *moduleClass, std::string name,
       _builder(moduleClass->ctx()->llvm()),
       _returnType(returnType ? returnType : llvm::Type::getVoidTy(moduleClass->ctx()->llvm())),
       _paramTypes(std::move(paramTypes)) {
-    auto storageType = moduleClass->storageType();
-    _paramTypes.push_back(llvm::PointerType::get(storageType, 0));
+    _funcStorageType = llvm::PointerType::get(moduleClass->storageType(), 0);
+    _paramTypes.push_back(_funcStorageType);
 
     auto func = get(moduleClass->module());
     auto allocaBlock = llvm::BasicBlock::Create(moduleClass->ctx()->llvm(), "alloca", func);
@@ -44,7 +44,7 @@ llvm::Value *ModuleClassMethod::arg(size_t index) const {
 
 llvm::Value *ModuleClassMethod::call(Builder &b, std::vector<llvm::Value *> args, llvm::Value *context,
                                      llvm::Module *module, const llvm::Twine &resultName) const {
-    args.push_back(context);
+    args.push_back(b.CreatePointerCast(context, _funcStorageType, "castctx"));
     auto func = get(module);
     return CreateCall(b, func, args, resultName);
 }

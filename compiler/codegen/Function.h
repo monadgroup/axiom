@@ -12,12 +12,11 @@ namespace MaximCodegen {
     class Parameter {
     public:
         Type *type;
-        bool passByRef;
         bool optional;
 
-        Parameter(Type *type, bool passByRef, bool optional);
+        Parameter(Type *type, bool optional);
 
-        static std::unique_ptr<Parameter> create(Type *type, bool passByRef, bool optional);
+        static std::unique_ptr<Parameter> create(Type *type, bool optional);
 
         llvm::Type *getType() const;
     };
@@ -39,7 +38,7 @@ namespace MaximCodegen {
     class Function : public ComposableModuleClass {
     public:
         Function(MaximContext *ctx, llvm::Module *module, const std::string &name, Type *returnType,
-                 std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg);
+                 std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg, bool returnByRef = false);
 
         void generate();
 
@@ -68,9 +67,8 @@ namespace MaximCodegen {
         public:
             llvm::Value *argStruct;
             Type *type;
-            bool passByRef;
 
-            DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type, bool passByRef);
+            DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type);
 
             std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &b) override;
 
@@ -80,6 +78,7 @@ namespace MaximCodegen {
         Type *_returnType;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _vararg;
+        bool _returnByRef;
 
         llvm::Type *_vaType;
         size_t _vaIndex = 0;

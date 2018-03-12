@@ -8,9 +8,9 @@ using namespace MaximCodegen;
 
 ClampFunction::ClampFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "clamp", ctx->numType(),
-               {Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, false),
-                Parameter(ctx->numType(), false, false)},
+               {Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false),
+                Parameter(ctx->numType(), false)},
                nullptr) {
 
 }
@@ -38,6 +38,7 @@ ClampFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
     currentVec = CreateCall(b, maxIntrinsic, {currentVec, minNum->vec(b)}, "maxed");
     currentVec = CreateCall(b, minIntrinsic, {currentVec, maxNum->vec(b)}, "clamped");
 
-    xNum->setVec(b, currentVec);
-    return xNum->clone();
+    auto newNum = Num::create(ctx(), xNum->get(), b, method->allocaBuilder());
+    newNum->setVec(b, currentVec);
+    return std::move(newNum);
 }

@@ -8,7 +8,8 @@ using namespace MaximCodegen;
 
 NoiseFunction::NoiseFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "noise", ctx->numType(),
-               {Parameter(ctx->numType(), false, true), Parameter(ctx->numType(), false, true)},
+               {Parameter(ctx->numType(), true),
+                Parameter(ctx->numType(), true)},
                nullptr) {
 
 }
@@ -56,8 +57,7 @@ NoiseFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
     auto randVal = b.CreateBinOp(llvm::Instruction::BinaryOps::FMul, randNormalized, magnitude, "rand.result");
     randVal = b.CreateBinOp(llvm::Instruction::BinaryOps::FAdd, randVal, minVec, "rand.result");
 
-    auto undefPos = SourcePos(-1, -1);
-    auto numResult = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
+    auto numResult = Num::create(ctx(), method->allocaBuilder());
     numResult->setVec(b, randVal);
     numResult->setForm(b, MaximCommon::FormType::LINEAR);
     numResult->setActive(b, true);

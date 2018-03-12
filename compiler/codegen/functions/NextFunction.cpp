@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 NextFunction::NextFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "next", ctx->numType(), {Parameter(ctx->numType(), false, false)},
+    : Function(ctx, module, "next", ctx->numType(), {Parameter(ctx->numType(), false)},
                nullptr) {
 
 }
@@ -25,8 +25,7 @@ NextFunction::generate(ComposableModuleClassMethod *method, const std::vector<st
     auto &b = method->builder();
     auto funcContext = method->getEntryPointer(addEntry(ctx()->numType()->get()), "ctx");
 
-    auto undefPos = SourcePos(-1, -1);
-    auto returnVal = Num::create(ctx(), funcContext, undefPos, undefPos);
+    auto returnVal = Num::create(ctx(), funcContext, b, method->allocaBuilder());
     b.CreateStore(b.CreateLoad(paramVal->get(), "param.deref"), funcContext);
     return std::move(returnVal);
 }

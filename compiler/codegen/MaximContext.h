@@ -124,6 +124,8 @@ namespace MaximCodegen {
 
         llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned);
 
+        void copyPtr(Builder &builder, llvm::Value *src, llvm::Value *dest);
+
         void setLibModule(llvm::Module *libModule);
 
         void registerOperator(std::unique_ptr<Operator> op);

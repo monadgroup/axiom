@@ -8,7 +8,7 @@ using namespace MaximCodegen;
 
 VectorIntrinsicFoldFunction::VectorIntrinsicFoldFunction(MaximContext *ctx, llvm::Module *module,
                                                          llvm::Intrinsic::ID id, std::string name)
-    : Function(ctx, module, std::move(name), ctx->numType(), {}, Parameter::create(ctx->numType(), false, false)),
+    : Function(ctx, module, std::move(name), ctx->numType(), {}, Parameter::create(ctx->numType(), false)),
       _id(id) {
 
 }
@@ -86,7 +86,8 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(ComposableModuleCla
 
     auto finalVec = b.CreateLoad(vecPtr, "finalvec");
     auto finalActive = b.CreateLoad(activePtr, "finalactive");
-    firstNum->setVec(b, finalVec);
-    firstNum->setActive(b, finalActive);
-    return firstNum->clone();
+    auto newNum = Num::create(ctx(), firstNum->get(), b, method->allocaBuilder());
+    newNum->setVec(b, finalVec);
+    newNum->setActive(b, finalActive);
+    return std::move(newNum);
 }

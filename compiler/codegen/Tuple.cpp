@@ -43,10 +43,7 @@ void Tuple::setIndex(size_t index, Value *val, Builder &builder) const {
     assert(_type->types()[index] == val->type());
 
     auto ptr = indexPtr(index, builder);
-
-    // todo: might be better to do a direct memcpy here
-    auto loadedVal = builder.CreateLoad(val->get(), "arraystore");
-    builder.CreateStore(loadedVal, ptr);
+    _context->copyPtr(builder, val->get(), ptr);
 }
 
 std::unique_ptr<Value> Tuple::atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos) const {
