@@ -77,8 +77,8 @@ Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
         }
     );
 
-    std::cout << m->getName().str() << std::endl;
-    m->print(llvm::errs(), nullptr);
+    //std::cout << m->getName().str() << std::endl;
+    //m->print(llvm::errs(), nullptr);
 
     return llvm::cantFail(compileLayer.addModule(std::move(m), std::move(resolver)));
 }

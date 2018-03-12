@@ -189,10 +189,15 @@ GeneratableModuleClass *Surface::compile() {
                                                              entryPtr, "controlinst");
 
                 auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
-                auto indexPtr = hardControl->group()->extracted()
-                                ? _class->constructor()->builder().CreateConstGEP2_32(
-                        hardControl->group()->type()->storageType(), groupPtr, 0, instN)
-                                : groupPtr;
+
+                auto indexPtr = groupPtr;
+                if (hardControl->group()->extracted()) {
+                    indexPtr = _class->constructor()->builder().CreateStructGEP(
+                        hardControl->group()->type()->storageType(),
+                        groupPtr,
+                        instN
+                    );
+                }
 
                 _class->constructor()->builder().CreateStore(indexPtr, controlPtr);
             }
