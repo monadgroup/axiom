@@ -9,7 +9,7 @@ using namespace MaximCodegen;
 NoiseFunction::NoiseFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "noise", ctx->numType(),
                {Parameter(ctx->numType(), false, true), Parameter(ctx->numType(), false, true)},
-               nullptr, false) {
+               nullptr) {
 
 }
 
@@ -57,19 +57,20 @@ NoiseFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
     randVal = b.CreateBinOp(llvm::Instruction::BinaryOps::FAdd, randVal, minVec, "rand.result");
 
     auto undefPos = SourcePos(-1, -1);
-    auto numResult = Num::create(ctx(), llvm::UndefValue::get(ctx()->numType()->get()), undefPos, undefPos);
-    numResult = numResult->withVec(b, randVal, undefPos, undefPos);
-    numResult = numResult->withForm(b, MaximCommon::FormType::LINEAR, undefPos, undefPos);
-    return numResult->withActive(b, true, undefPos, undefPos);
+    auto numResult = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
+    numResult->setVec(b, randVal);
+    numResult->setForm(b, MaximCommon::FormType::LINEAR);
+    numResult->setActive(b, true);
+    return std::move(numResult);
 }
 
-std::vector<std::unique_ptr<Value>> NoiseFunction::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
+std::vector<std::unique_ptr<Value>> NoiseFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
     auto undefPos = SourcePos(-1, -1);
     if (providedArgs.empty()) {
-        providedArgs.push_back(Num::create(ctx(), -1, -1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(Num::create(ctx(), method->allocaBuilder(), -1, -1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     }
     if (providedArgs.size() < 2) {
-        providedArgs.push_back(Num::create(ctx(), 1, 1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(Num::create(ctx(), method->allocaBuilder(), 1, 1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     }
     return providedArgs;
 }

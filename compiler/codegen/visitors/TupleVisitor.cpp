@@ -17,6 +17,6 @@ MaximCodegen::visitTuple(ComposableModuleClassMethod *method, Scope *scope, Maxi
     for (const auto &subExpr : expr->expressions) {
         values.push_back(visitExpression(method, scope, subExpr.get()));
     }
-    return Tuple::create(method->moduleClass()->ctx(), std::move(values), method->builder(), expr->startPos,
-                         expr->endPos);
+    return Tuple::create(method->moduleClass()->ctx(), std::move(values), method->builder(), method->allocaBuilder(),
+                         expr->startPos, expr->endPos);
 }

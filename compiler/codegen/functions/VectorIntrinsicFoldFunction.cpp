@@ -86,34 +86,7 @@ std::unique_ptr<Value> VectorIntrinsicFoldFunction::generate(ComposableModuleCla
 
     auto finalVec = b.CreateLoad(vecPtr, "finalvec");
     auto finalActive = b.CreateLoad(activePtr, "finalactive");
-    auto undefPos = SourcePos(-1, -1);
-    return firstNum->withVec(b, finalVec, undefPos, undefPos)->withActive(b, finalActive, undefPos, undefPos);
-}
-
-std::unique_ptr<Value> VectorIntrinsicFoldFunction::generateConst(ComposableModuleClassMethod *method,
-                                                                  const std::vector<std::unique_ptr<Value>> &params,
-                                                                  std::unique_ptr<ConstVarArg> vararg) {
-    auto intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), _id,
-                                                     {ctx()->numType()->vecType()});
-    auto &b = method->builder();
-
-    auto firstVal = vararg->atIndex(0);
-    auto firstNum = dynamic_cast<Num *>(firstVal.get());
-    assert(firstNum);
-
-    auto currentVec = firstNum->vec(b);
-    auto currentActive = firstNum->active(b);
-
-    for (size_t i = 1; i < vararg->count(); i++) {
-        auto nextVal = vararg->atIndex(i);
-        auto nextNum = dynamic_cast<Num *>(nextVal.get());
-        assert(nextNum);
-        auto nextVec = nextNum->vec(b);
-        auto nextActive = nextNum->active(b);
-        currentVec = CreateCall(b, intrinsic, {currentVec, nextVec}, "storevec");
-        currentActive = b.CreateOr(currentActive, nextActive, "storeactive");
-    }
-
-    auto undefPos = SourcePos(-1, -1);
-    return firstNum->withVec(b, currentVec, undefPos, undefPos)->withActive(b, currentActive, undefPos, undefPos);
+    firstNum->setVec(b, finalVec);
+    firstNum->setActive(b, finalActive);
+    return firstNum->clone();
 }

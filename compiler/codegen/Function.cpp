@@ -8,26 +8,25 @@
 using namespace MaximCodegen;
 
 Function::Function(MaximContext *ctx, llvm::Module *module, const std::string &name, Type *returnType,
-                   std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg, bool isPure)
+                   std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg)
     : ComposableModuleClass(ctx, module, name), _returnType(returnType), _parameters(std::move(parameters)),
-      _vararg(std::move(vararg)), _isPure(isPure) {
+      _vararg(std::move(vararg)) {
     // calculate argument size constraints
     _allArguments = _parameters.size() + (_vararg ? 1 : 0);
     _minArguments = _allArguments;
     _maxArguments = _vararg ? -1 : (int) _parameters.size();
 
-
     std::vector<llvm::Type *> paramTypes;
     paramTypes.reserve(_allArguments);
     for (const auto &param : _parameters) {
-        paramTypes.push_back(param.type->get());
+        paramTypes.push_back(param.getType());
         if (param.optional) _minArguments--;
     }
 
     if (_vararg) {
         _vaType = llvm::StructType::get(ctx->llvm(), {
             llvm::Type::getInt8Ty(ctx->llvm()),
-            llvm::PointerType::get(_vararg->type->get(), 0)
+            llvm::PointerType::get(_vararg->getType(), 0)
         });
         _vaIndex = paramTypes.size();
         paramTypes.push_back(_vaType);
@@ -42,16 +41,26 @@ void Function::generate() {
     genArgs.reserve(_parameters.size());
     for (size_t i = 0; i < _parameters.size(); i++) {
         auto argVal = _callMethod->arg(i);
-        auto argType = _parameters[i].type;
-        genArgs.push_back(argType->createInstance(argVal, SourcePos(-1, -1), SourcePos(-1, -1)));
+        auto &param = _parameters[i];
+
+        if (!param.passByRef) {
+            auto ptr = _callMethod->allocaBuilder().CreateAlloca(param.type->get(), nullptr, "func.makeref");
+            _callMethod->builder().CreateStore(argVal, ptr);
+            argVal = ptr;
+        }
+
+        genArgs.push_back(param.type->createInstance(argVal, SourcePos(-1, -1), SourcePos(-1, -1)));
     }
 
     std::unique_ptr<VarArg> genVarArg;
     if (_vararg) {
-        genVarArg = std::make_unique<DynVarArg>(ctx(), _callMethod->arg(_vaIndex), _vararg->type);
+        genVarArg = std::make_unique<DynVarArg>(ctx(), _callMethod->arg(_vaIndex), _vararg->type, _vararg->passByRef);
     }
     auto result = generate(_callMethod.get(), genArgs, std::move(genVarArg));
-    _callMethod->builder().CreateRet(result->get());
+
+    // todo: allow function to return a reference
+    auto loadedResult = _callMethod->builder().CreateLoad(result->get(), "func.deref");
+    _callMethod->builder().CreateRet(loadedResult);
 
     complete();
 }
@@ -63,52 +72,64 @@ bool Function::acceptsParameters(const std::vector<Type *> &types) {
 std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> values,
                                       SourcePos startPos, SourcePos endPos) {
     // validate and map arguments - first validation can do without optional values, second can't
-    validateAndThrow(values, false, true, startPos, endPos);
-    auto mappedArgs = mapArguments(std::move(values));
-    validateAndThrow(mappedArgs, true, true, startPos, endPos);
+    validateAndThrow(values, false, startPos, endPos);
+    auto mappedArgs = mapArguments(method, std::move(values));
+    validateAndThrow(mappedArgs, true, startPos, endPos);
 
-    // figure out if we can constant-fold this function
-    auto computeConst = isPure();
-    if (computeConst) {
-        for (const auto &val : mappedArgs) {
-            if (!llvm::isa<llvm::Constant>(val->get())) {
-                computeConst = false;
-                break;
-            }
+    std::vector<llvm::Value *> args;
+    std::vector<Value *> baseArgs;
+    std::vector<Value *> baseVarargs;
+    for (size_t i = 0; i < _parameters.size(); i++) {
+        auto arg = mappedArgs[i].get();
+        baseArgs.push_back(arg);
+
+        if (_parameters[i].passByRef) {
+            args.push_back(arg->get());
+        } else {
+            auto loadVal = method->builder().CreateLoad(arg->get(), "func.deref");
+            args.push_back(loadVal);
         }
     }
 
-    // prepare argument vectors for call
-    std::vector<std::unique_ptr<Value>> args;
-    std::vector<std::unique_ptr<Value>> varargs;
-    for (size_t i = 0; i < _parameters.size(); i++) {
-        args.push_back(mappedArgs[i]->clone());
-    }
-    for (size_t i = args.size(); i < mappedArgs.size(); i++) {
-        varargs.push_back(mappedArgs[i]->clone());
+    // create vararg structure
+    if (_vararg) {
+        auto vaCount = mappedArgs.size() - _parameters.size();
+        auto vaType = _vararg->getType();
+        auto countVal = ctx()->constInt(8, vaCount, false);
+        auto vaStruct = method->builder().CreateInsertValue(
+            llvm::UndefValue::get(_vaType),
+            countVal, {0}, "va.withsize"
+        );
+        auto vaArray = method->builder().CreateAlloca(vaType, countVal, "va.arr");
+        for (size_t i = 0; i < vaCount; i++) {
+            auto vaArg = mappedArgs[_parameters.size() + i].get();
+            baseVarargs.push_back(vaArg);
+
+            auto storePos = method->builder().CreateConstGEP1_64(vaArray, i, "va.arr.itemptr");
+            auto storeVal = vaArg->get();
+            if (!_vararg->passByRef) {
+                // store the actual value, not pointer
+                storeVal = method->builder().CreateLoad(storeVal, "va.deref");
+            }
+
+            method->builder().CreateStore(storeVal, storePos);
+        }
+        args.push_back(method->builder().CreateInsertValue(vaStruct, vaArray, {1}, "va"));
     }
 
-    // either call inline with constant folding, or generate call
-    if (computeConst) {
-        return callConst(method, args, std::move(varargs), startPos, endPos);
-    } else {
-        return callNonConst(method, mappedArgs, args, varargs, startPos, endPos);
-    }
+    auto entryIndex = method->moduleClass()->addEntry(this);
+    sampleArguments(method, entryIndex, baseArgs, baseVarargs);
+    auto result = method->callInto(entryIndex, args, _callMethod.get(), "callresult");
+    return _returnType->createInstance(result, startPos, endPos);
 }
 
-std::unique_ptr<Value> Function::generateConst(ComposableModuleClassMethod *method,
-                                               const std::vector<std::unique_ptr<Value>> &params,
-                                               std::unique_ptr<ConstVarArg> vararg) {
-    return generate(method, params, std::move(vararg));
-}
-
-std::vector<std::unique_ptr<Value>> Function::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
+std::vector<std::unique_ptr<Value>> Function::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
     return providedArgs;
 }
 
 void Function::sampleArguments(ComposableModuleClassMethod *method, size_t index,
-                               const std::vector<std::unique_ptr<Value>> &args,
-                               const std::vector<std::unique_ptr<Value>> &varargs) {
+                               const std::vector<Value*> &args,
+                               const std::vector<Value*> &varargs) {
 
 }
 
@@ -132,7 +153,7 @@ bool Function::validateTypes(const std::vector<Type *> &types) {
 }
 
 void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional,
-                                bool requireConst, SourcePos startPos, SourcePos endPos) {
+                                SourcePos startPos, SourcePos endPos) {
     if (!validateCount(args.size(), requireOptional)) {
         throw MaximCommon::CompileError("Eyy! That's the wrong number of arguments my dude.", startPos, endPos);
     }
@@ -142,69 +163,21 @@ void Function::validateAndThrow(const std::vector<std::unique_ptr<Value>> &args,
         auto param = getParameter(i);
 
         ctx()->assertType(providedArg, param->type);
-        if (requireConst && param->requireConst && !llvm::isa<llvm::Constant>(providedArg->get())) {
-            throw MaximCommon::CompileError(
-                "I constantly insist that constant values must be passed into constant parameters, and yet they constantly aren't constant.",
-                providedArg->startPos, providedArg->endPos
-            );
-        }
     }
 }
 
-std::unique_ptr<Value>
-Function::callConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &args,
-                    std::vector<std::unique_ptr<Value>> varargs, SourcePos startPos, SourcePos endPos) {
-    std::unique_ptr<ConstVarArg> vararg;
-    if (_vararg) {
-        assert(!varargs.empty());
-        vararg = std::make_unique<ConstVarArg>(ctx(), std::move(varargs));
-    }
-
-    // evaluate function inline and let constant folding do the rest
-    return generateConst(method, args, std::move(vararg))->withSource(startPos, endPos);
-}
-
-std::unique_ptr<Value> Function::callNonConst(ComposableModuleClassMethod *method,
-                                              const std::vector<std::unique_ptr<Value>> &allArgs,
-                                              const std::vector<std::unique_ptr<Value>> &args,
-                                              const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos,
-                                              SourcePos endPos) {
-    std::vector<llvm::Value *> values;
-    values.reserve(args.size());
-    for (const auto &arg : args) {
-        values.push_back(arg->get());
-    }
-
-    // create vararg structure
-    if (_vararg) {
-        assert(!varargs.empty());
-        auto vaType = _vararg->type->get();
-        auto countVal = ctx()->constInt(8, varargs.size(), false);
-        auto vaStruct = method->builder().CreateInsertValue(
-            llvm::UndefValue::get(_vaType),
-            countVal, {0}, "va.withsize"
-        );
-        auto vaArray = method->builder().CreateAlloca(vaType, countVal, "va.arr");
-        for (size_t i = 0; i < varargs.size(); i++) {
-            auto storePos = method->builder().CreateConstGEP1_64(vaArray, i, "va.arr.itemptr");
-            method->builder().CreateStore(varargs[i]->get(), storePos);
-        }
-        values.push_back(method->builder().CreateInsertValue(vaStruct, vaArray, {1}, "va"));
-    }
-
-    auto entryIndex = method->moduleClass()->addEntry(this);
-    sampleArguments(method, entryIndex, args, varargs);
-    auto result = method->callInto(entryIndex, values, _callMethod.get(), "callresult");
-    return _returnType->createInstance(result, startPos, endPos);
-}
-
-Parameter::Parameter(Type *type, bool requireConst, bool optional)
-    : type(type), requireConst(requireConst), optional(optional) {
+Parameter::Parameter(Type *type, bool passByRef, bool optional)
+    : type(type), passByRef(passByRef), optional(optional) {
 
 }
 
-std::unique_ptr<Parameter> Parameter::create(Type *type, bool requireConst, bool optional) {
-    return std::make_unique<Parameter>(type, requireConst, optional);
+std::unique_ptr<Parameter> Parameter::create(Type *type, bool passByRef, bool optional) {
+    return std::make_unique<Parameter>(type, passByRef, optional);
+}
+
+llvm::Type* Parameter::getType() const {
+    if (passByRef) return llvm::PointerType::get(type->get(), 0);
+    else return type->get();
 }
 
 VarArg::VarArg(MaximContext *context) : context(context) {
@@ -215,39 +188,20 @@ std::unique_ptr<Value> VarArg::atIndex(uint64_t index, Builder &b) {
     return atIndex(context->constInt(8, index, false), b);
 }
 
-ConstVarArg::ConstVarArg(MaximContext *context, std::vector<std::unique_ptr<Value>> vals)
-    : VarArg(context), vals(std::move(vals)) {
-
-}
-
-std::unique_ptr<Value> ConstVarArg::atIndex(llvm::Value *index, Builder &b) {
-    auto constVal = llvm::dyn_cast<llvm::ConstantInt>(index);
-    assert(constVal);
-
-    return vals[constVal->getZExtValue()]->clone();
-}
-
-std::unique_ptr<Value> ConstVarArg::atIndex(size_t index) {
-    return vals[index]->clone();
-}
-
-llvm::Value *ConstVarArg::count(Builder &b) {
-    return context->constInt(8, vals.size(), false);
-}
-
-size_t ConstVarArg::count() const {
-    return vals.size();
-}
-
-Function::DynVarArg::DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type)
-    : VarArg(context), argStruct(argStruct), type(type) {
+Function::DynVarArg::DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type, bool passByRef)
+    : VarArg(context), argStruct(argStruct), type(type), passByRef(passByRef) {
 
 }
 
 std::unique_ptr<Value> Function::DynVarArg::atIndex(llvm::Value *index, Builder &b) {
     auto valPtr = b.CreateExtractValue(argStruct, 1, "va.ptr");
     auto ptr = b.CreateGEP(type->get(), valPtr, {index}, "va.elementptr");
-    return type->createInstance(b.CreateLoad(ptr, "va.element"), SourcePos(-1, -1), SourcePos(-1, -1));
+    if (passByRef) {
+        // `ptr` is a pointer to a pointer, load to get the actual ptr
+        ptr = b.CreateLoad(ptr, "va.deref");
+    }
+
+    return type->createInstance(ptr, SourcePos(-1, -1), SourcePos(-1, -1));
 }
 
 llvm::Value *Function::DynVarArg::count(Builder &b) {

@@ -11,7 +11,7 @@ HoldFunction::HoldFunction(MaximContext *ctx, llvm::Module *module)
                {Parameter(ctx->numType(), false, false),
                 Parameter(ctx->numType(), false, false),
                 Parameter(ctx->numType(), false, true)},
-               nullptr, false) {
+               nullptr) {
 
 }
 
@@ -83,15 +83,15 @@ HoldFunction::generate(ComposableModuleClassMethod *method, const std::vector<st
     );
     activeFlag = b.CreateAnd(gateVal->active(b), activeFlag, "active");
 
-    auto undefPos = SourcePos(-1, -1);
-    return xVal->withVec(b, resultVec, undefPos, undefPos)->withActive(b, activeFlag, undefPos, undefPos);
-
+    xVal->setVec(b, resultVec);
+    xVal->setActive(b, activeFlag);
+    return xVal->clone();
 }
 
-std::vector<std::unique_ptr<Value>> HoldFunction::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
+std::vector<std::unique_ptr<Value>> HoldFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
     if (providedArgs.size() < 3) {
         auto undefPos = SourcePos(-1, -1);
-        providedArgs.push_back(Num::create(ctx(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(Num::create(ctx(), method->allocaBuilder(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     }
     return providedArgs;
 }

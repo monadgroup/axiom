@@ -16,9 +16,11 @@ Converter::Converter(MaximContext *ctx, llvm::Module *module, MaximCommon::FormT
 
 void Converter::generate() {
     auto undefPos = SourcePos(-1, -1);
-    auto numInput = Num::create(ctx(), _callMethod->arg(0), undefPos, undefPos);
-
+    auto numInputPtr = _callMethod->allocaBuilder().CreateAlloca(ctx()->numType()->get(), nullptr, "input");
     auto &b = _callMethod->builder();
+
+    b.CreateStore(_callMethod->arg(0), numInputPtr);
+    auto numInput = Num::create(ctx(), numInputPtr, undefPos, undefPos);
 
     auto func = _callMethod->get(_callMethod->moduleClass()->module());
     auto numForm = numInput->form(b);
@@ -38,13 +40,14 @@ void Converter::generate() {
 
         auto convertFunc = pair.second;
         auto newVec = (this->*convertFunc)(_callMethod.get(), numVec);
-        auto newNum = numInput->withVec(b, newVec, undefPos, undefPos)->withForm(b, _toType, undefPos, undefPos);
-        b.CreateRet(newNum->get());
+        numInput->setVec(b, newVec);
+        numInput->setForm(b, _toType);
+        b.CreateRet(b.CreateLoad(numInput->get(), "conv.deref"));
     }
 
     b.SetInsertPoint(defaultBlock);
-    auto defaultNum = numInput->withForm(b, _toType, undefPos, undefPos);
-    b.CreateRet(defaultNum->get());
+    numInput->setForm(b, _toType);
+    b.CreateRet(b.CreateLoad(numInput->get(), "conv.deref"));
 
     complete();
 }
@@ -53,28 +56,13 @@ std::unique_ptr<Num> Converter::call(ComposableModuleClassMethod *method, std::u
                                      SourcePos startPos, SourcePos endPos) {
     // hot path if there aren't any converters, just return the input with the target form
     if (converters.empty()) {
-        return value->withForm(method->builder(), _toType, startPos, endPos);
+        value->setForm(method->builder(), _toType);
+        return std::move(value);
     }
 
-    // if the input is constant, constant-fold the converter
-    auto realVal = value->get();
-    if (auto constVal = llvm::dyn_cast<llvm::Constant>(realVal)) {
-        auto formVal = llvm::cast<llvm::ConstantInt>(constVal->getAggregateElement(1))->getZExtValue();
-        auto formConverter = converters.find((MaximCommon::FormType) formVal);
-
-        if (formConverter == converters.end()) {
-            return value->withForm(method->builder(), _toType, startPos, endPos);
-        } else {
-            auto vecVal = constVal->getAggregateElement((unsigned int) 0);
-            auto converterFunc = formConverter->second;
-            auto newVec = (this->*converterFunc)(method, vecVal);
-            return value->withVec(method->builder(), newVec, startPos, endPos)->withForm(method->builder(), _toType,
-                                                                                         startPos, endPos);
-        }
-    }
-
-    // otherwise call the generated function
+    // call the generated function
+    auto regVal = method->builder().CreateLoad(value->get(), "conv.deref");
     auto entryIndex = method->moduleClass()->addEntry(this);
-    auto result = method->callInto(entryIndex, {realVal}, _callMethod.get(), "convertresult");
+    auto result = method->callInto(entryIndex, {regVal}, _callMethod.get(), "convertresult");
     return Num::create(ctx(), result, startPos, endPos);
 }

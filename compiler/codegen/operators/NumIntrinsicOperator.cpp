@@ -30,5 +30,9 @@ std::unique_ptr<Num> NumIntrinsicOperator::call(ModuleClassMethod *method, Num *
     auto isActive = getActive(b, numLeft, numRight);
 
     auto undefPos = SourcePos(-1, -1);
-    return numLeft->withVec(b, operatedVal, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
+    auto newNum = Num::create(context(), method->allocaBuilder(), undefPos, undefPos);
+    newNum->setVec(b, operatedVal);
+    newNum->setForm(b, numLeft->form(b));
+    newNum->setActive(b, isActive);
+    return newNum;
 }

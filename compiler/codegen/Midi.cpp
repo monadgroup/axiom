@@ -13,72 +13,48 @@ std::unique_ptr<Midi> Midi::create(MaximContext *context, llvm::Value *get, Sour
     return std::make_unique<Midi>(context, get, startPos, endPos);
 }
 
+llvm::Value* Midi::countPtr(Builder &builder) const {
+    return builder.CreateStructGEP(type()->get(), _get, 0, _get->getName() + ".count.ptr");
+}
+
+llvm::Value* Midi::eventsPtr(Builder &builder) const {
+    return builder.CreateStructGEP(type()->get(), _get, 1, _get->getName() + ".events.ptr");
+}
+
+llvm::Value* Midi::eventPtr(Builder &builder, size_t index) const {
+    return eventPtr(builder, _context->constInt(32, index, false));
+}
+
+llvm::Value* Midi::eventPtr(Builder &builder, llvm::Value *index) const {
+    return builder.CreateGEP(
+        _get,
+        {
+            _context->constInt(64, 0, false),
+            _context->constInt(32, 1, false),
+            index
+        },
+        _get->getName() + ".event.ptr"
+    );
+}
+
 llvm::Value* Midi::count(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {0}, _get->getName() + ".count");
+    return builder.CreateLoad(countPtr(builder), _get->getName() + ".count");
 }
 
-llvm::Value* Midi::events(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {1}, _get->getName() + ".array");
+MidiEvent Midi::eventAt(Builder &builder, size_t index) const {
+    return eventAt(builder, _context->constInt(32, index, false));
 }
 
-MidiEvent Midi::eventAt(Builder &builder, unsigned index) const {
-    return MidiEvent(
-        builder.CreateExtractValue(_get, {1, index}, _get->getName() + ".event" + std::to_string(index))
-    );
+MidiEvent Midi::eventAt(Builder &builder, llvm::Value *index) const {
+    return MidiEvent(eventPtr(builder, index), type()->eventType());
 }
 
-MidiEvent Midi::eventAt(Builder &builder, Builder &allocaBuilder, llvm::Value *index) const {
-    auto arr = events(builder);
-    auto arrPtr = allocaBuilder.CreateAlloca(arr->getType(), nullptr, _get->getName() + ".events");
-    builder.CreateStore(arr, arrPtr);
-    auto eventPtr = builder.CreateGEP(arrPtr, {
-        _context->constInt(64, 0, false),
-        index
-    }, _get->getName() + ".event.ptr");
-
-    return MidiEvent(
-        builder.CreateLoad(eventPtr, _get->getName() + ".event")
-    );
+void Midi::setCount(Builder &builder, uint64_t count) const {
+    setCount(builder, llvm::ConstantInt::get(type()->countType(), count, false));
 }
 
-std::unique_ptr<Midi> Midi::withCount(Builder &builder, llvm::Value *count, SourcePos startPos, SourcePos endPos) const {
-    return create(
-        _context,
-        builder.CreateInsertValue(_get, count, {0}, _get->getName() + ".new_count"),
-        startPos, endPos
-    );
-}
-
-std::unique_ptr<Midi> Midi::withEvents(Builder &builder, llvm::Value *events, SourcePos startPos,
-                                       SourcePos endPos) const {
-    return create(
-        _context,
-        builder.CreateInsertValue(_get, events, {1}, _get->getName() + ".new_events"),
-        startPos, endPos
-    );
-}
-
-std::unique_ptr<Midi> Midi::withEvent(Builder &builder, unsigned index, const MidiEvent &event, SourcePos startPos,
-                                      SourcePos endPos) const {
-    return create(
-        _context,
-        builder.CreateInsertValue(_get, event.get(), {1, index}, _get->getName() + ".new_event" + std::to_string(index)),
-        startPos, endPos
-    );
-}
-
-std::unique_ptr<Midi> Midi::withEvent(Builder &builder, Builder &allocaBuilder, llvm::Value *index, const MidiEvent &event, SourcePos startPos,
-                                      SourcePos endPos) const {
-    auto arr = events(builder);
-    auto arrPtr = allocaBuilder.CreateAlloca(arr->getType(), nullptr, _get->getName() + ".events");
-    builder.CreateStore(arr, arrPtr);
-    auto eventPtr = builder.CreateGEP(arrPtr, {
-        _context->constInt(64, 0, false),
-        index
-    }, _get->getName() + ".event.ptr");
-    builder.CreateStore(event.get(), eventPtr);
-
-    return withEvents(builder, builder.CreateLoad(eventPtr, _get->getName() + ".events.new"), startPos, endPos);
+void Midi::setCount(Builder &builder, llvm::Value *count) const {
+    builder.CreateStore(count, countPtr(builder));
 }
 
 std::unique_ptr<Value> Midi::withSource(SourcePos startPos, SourcePos endPos) const {
@@ -89,37 +65,37 @@ MidiType* Midi::type() const {
     return _context->midiType();
 }
 
-MidiEvent::MidiEvent(llvm::Value *get) : _get(get) {
+MidiEvent::MidiEvent(llvm::Value *get, llvm::Type *type) : _get(get), _type(type) {
+}
+
+llvm::Value* MidiEvent::typePtr(Builder &builder) const {
+    return builder.CreateStructGEP(_type, _get, 0, _get->getName() + ".type.ptr");
+}
+
+llvm::Value* MidiEvent::channelPtr(Builder &builder) const {
+    return builder.CreateStructGEP(_type, _get, 1, _get->getName() + ".channel.ptr");
+}
+
+llvm::Value* MidiEvent::notePtr(Builder &builder) const {
+    return builder.CreateStructGEP(_type, _get, 2, _get->getName() + ".note.ptr");
+}
+
+llvm::Value* MidiEvent::paramPtr(Builder &builder) const {
+    return builder.CreateStructGEP(_type, _get, 3, _get->getName() + ".param.ptr");
 }
 
 llvm::Value* MidiEvent::type(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {0}, _get->getName() + ".type");
+    return builder.CreateLoad(typePtr(builder), _get->getName() + ".type");
 }
 
 llvm::Value* MidiEvent::channel(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {1}, _get->getName() + ".channel");
+    return builder.CreateLoad(channelPtr(builder), _get->getName() + ".channel");
 }
 
 llvm::Value* MidiEvent::note(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {2}, _get->getName() + ".note");
+    return builder.CreateLoad(notePtr(builder), _get->getName() + ".note");
 }
 
 llvm::Value* MidiEvent::param(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {3}, _get->getName() + ".param");
-}
-
-MidiEvent MidiEvent::withType(Builder &builder, llvm::Value *type) const {
-    return MidiEvent(builder.CreateInsertValue(_get, type, {0}, _get->getName() + ".new_type"));
-}
-
-MidiEvent MidiEvent::withChannel(Builder &builder, llvm::Value *channel) const {
-    return MidiEvent(builder.CreateInsertValue(_get, channel, {1}, _get->getName() + ".new_channel"));
-}
-
-MidiEvent MidiEvent::withNote(Builder &builder, llvm::Value *note) const {
-    return MidiEvent(builder.CreateInsertValue(_get, note, {2}, _get->getName() + ".new_note"));
-}
-
-MidiEvent MidiEvent::withParam(Builder &builder, llvm::Value *param) const {
-    return MidiEvent(builder.CreateInsertValue(_get, param, {3}, _get->getName() + ".new_param"));
+    return builder.CreateLoad(paramPtr(builder), _get->getName() + ".param");
 }

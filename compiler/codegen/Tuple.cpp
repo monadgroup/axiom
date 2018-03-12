@@ -4,7 +4,7 @@
 
 using namespace MaximCodegen;
 
-Tuple::Tuple(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos)
+Tuple::Tuple(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos)
     : Value(startPos, endPos), _context(context) {
 
     std::vector<Type *> types;
@@ -14,9 +14,9 @@ Tuple::Tuple(MaximContext *context, Storage values, Builder &builder, SourcePos 
     }
     _type = context->getTupleType(types);
 
-    _get = llvm::UndefValue::get(_type->get());
+    _get = allocaBuilder.CreateAlloca(_type->get(), nullptr, "tuple");
     for (size_t i = 0; i < values.size(); i++) {
-        _get = builder.CreateInsertValue(_get, values[i]->get(), {(unsigned int) i}, "tuple");
+        setIndex(i, values[i].get(), builder);
     }
 }
 
@@ -24,9 +24,9 @@ Tuple::Tuple(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos
     : Value(startPos, endPos), _type(type), _get(get), _context(context) {
 }
 
-std::unique_ptr<Tuple> Tuple::create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos,
-                                     SourcePos endPos) {
-    return std::make_unique<Tuple>(context, std::move(values), builder, startPos, endPos);
+std::unique_ptr<Tuple> Tuple::create(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder,
+                                     SourcePos startPos, SourcePos endPos) {
+    return std::make_unique<Tuple>(context, std::move(values), builder, allocaBuilder, startPos, endPos);
 }
 
 std::unique_ptr<Tuple> Tuple::create(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos,
@@ -34,21 +34,28 @@ std::unique_ptr<Tuple> Tuple::create(MaximContext *context, TupleType *type, llv
     return std::make_unique<Tuple>(context, type, get, startPos, endPos);
 }
 
+llvm::Value* Tuple::indexPtr(size_t index, Builder &builder) const {
+    return builder.CreateStructGEP(_type->get(), _get, (unsigned int) index, "tupleitem.ptr");
+}
+
+void Tuple::setIndex(size_t index, Value *val, Builder &builder) const {
+    assert(index < _type->types().size());
+    assert(_type->types()[index] == val->type());
+
+    auto ptr = indexPtr(index, builder);
+
+    // todo: might be better to do a direct memcpy here
+    auto loadedVal = builder.CreateLoad(val->get(), "arraystore");
+    builder.CreateStore(loadedVal, ptr);
+}
+
 std::unique_ptr<Value> Tuple::atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos) const {
     assert(index < _type->types().size());
-    auto extracted = builder.CreateExtractValue(_get, {(unsigned int) index}, "tuple.extract");
-    return _type->types()[index]->createInstance(extracted, startPos, endPos);
+
+    auto ptr = indexPtr(index, builder);
+    return _type->types()[index]->createInstance(ptr, startPos, endPos);
 }
 
 std::unique_ptr<Value> Tuple::withSource(SourcePos startPos, SourcePos endPos) const {
     return Tuple::create(_context, _type, _get, startPos, endPos);
-}
-
-std::unique_ptr<Tuple> Tuple::withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, SourcePos startPos,
-                                        SourcePos endPos) const {
-    assert(index < _type->types().size());
-    assert(_type->types()[index] == val->type());
-
-    auto inserted = builder.CreateInsertValue(_get, val->get(), {(unsigned int) index}, "tuple.insert");
-    return Tuple::create(_context, _type, inserted, startPos, endPos);
 }

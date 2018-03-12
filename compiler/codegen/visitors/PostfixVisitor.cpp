@@ -29,7 +29,10 @@ visitSinglePostfix(ComposableModuleClassMethod *method, Scope *scope, MaximAst::
             break;
     }
 
-    auto newNum = num->withVec(method->builder(), numVec, expr->startPos, expr->endPos);
+    auto newNum = Num::create(method->moduleClass()->ctx(), method->allocaBuilder(), expr->startPos, expr->endPos);
+    newNum->setVec(method->builder(), numVec);
+    newNum->setForm(method->builder(), num->form(method->builder()));
+    newNum->setActive(method->builder(), num->active(method->builder()));
     scope->setAssignable(method, assignable, std::move(newNum));
 
     return num;
@@ -46,6 +49,6 @@ MaximCodegen::visitPostfix(ComposableModuleClassMethod *method, Scope *scope, Ma
 
     if (tupleVals.size() == 1) return std::move(tupleVals[0]);
     else
-        return Tuple::create(method->moduleClass()->ctx(), std::move(tupleVals), method->builder(), expr->startPos,
-                             expr->endPos);
+        return Tuple::create(method->moduleClass()->ctx(), std::move(tupleVals), method->builder(),
+                             method->allocaBuilder(), expr->startPos, expr->endPos);
 }

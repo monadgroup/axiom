@@ -3,6 +3,7 @@
 #include "../MaximContext.h"
 #include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
+#include "../../util.h"
 
 using namespace MaximCodegen;
 
@@ -61,10 +62,8 @@ SequenceFunction::generate(ComposableModuleClassMethod *method, const std::vecto
     auto active = b.CreateOr(leftNum->active(b), rightNum->active(b), "active");
     active = b.CreateOr(active, indexNum->active(b), "active");
 
-    auto firstVal = vararg->atIndex((uint64_t) 0, b);
-    auto firstNum = dynamic_cast<Num *>(firstVal.get());
-    assert(firstNum);
-
-    auto undefPos = SourcePos(-1, -1);
-    return firstNum->withVec(b, resultVec, undefPos, undefPos)->withActive(b, active, undefPos, undefPos);
+    auto firstNum = AxiomUtil::strict_unique_cast<Num>(vararg->atIndex((uint64_t) 0, b));
+    firstNum->setVec(b, resultVec);
+    firstNum->setActive(b, active);
+    return std::move(firstNum);
 }

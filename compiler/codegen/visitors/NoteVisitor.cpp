@@ -9,6 +9,6 @@ using namespace MaximCodegen;
 
 std::unique_ptr<Value>
 MaximCodegen::visitNote(ComposableModuleClassMethod *method, Scope *scope, MaximAst::NoteExpression *expr) {
-    return Num::create(method->moduleClass()->ctx(), expr->note, expr->note, MaximCommon::FormType::NOTE, true,
-                       expr->startPos, expr->endPos);
+    return Num::create(method->moduleClass()->ctx(), method->allocaBuilder(), expr->note, expr->note,
+                       MaximCommon::FormType::NOTE, true, expr->startPos, expr->endPos);
 }

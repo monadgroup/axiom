@@ -30,7 +30,7 @@ void Control::setGroup(ControlGroup *group) {
 }
 
 void Control::connectTo(Control *other) {
-    assert(other->type() == type());
+    //assert(other->type() == type());
 
     if (other->group() == _group) return;
 

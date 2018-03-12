@@ -38,6 +38,6 @@ ClampFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
     currentVec = CreateCall(b, maxIntrinsic, {currentVec, minNum->vec(b)}, "maxed");
     currentVec = CreateCall(b, minIntrinsic, {currentVec, maxNum->vec(b)}, "clamped");
 
-    auto undefPos = SourcePos(-1, -1);
-    return xNum->withVec(b, currentVec, undefPos, undefPos);
+    xNum->setVec(b, currentVec);
+    return xNum->clone();
 }

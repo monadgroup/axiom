@@ -22,7 +22,7 @@
 #include "functions/NoiseFunction.h"
 #include "functions/ActiveFunction.h"
 #include "functions/WithActiveFunction.h"
-#include "functions/DelayFunction.h"
+//#include "functions/DelayFunction.h"
 #include "functions/NextFunction.h"
 #include "functions/AmplitudeFunction.h"
 #include "functions/HoldFunction.h"
@@ -206,7 +206,7 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerFunction(ActiveFunction::create(this, libModule));
     registerFunction(WithActiveFunction::create(this, libModule));
     registerFunction(NextFunction::create(this, libModule));
-    registerFunction(DelayFunction::create(this, libModule));
+    //registerFunction(DelayFunction::create(this, libModule));
     registerFunction(AmplitudeFunction::create(this, libModule));
     registerFunction(HoldFunction::create(this, libModule));
     registerFunction(AccumFunction::create(this, libModule));
@@ -341,7 +341,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
             resultVals.push_back(op->call(method, std::move(leftTupleVal), std::move(rightTupleVal), startPos, endPos));
         }
 
-        return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
+        return Tuple::create(this, std::move(resultVals), b, method->allocaBuilder(), startPos, endPos);
     } else if (leftTuple) {
         // if left is a tuple, splat right and operate piece-wise
         std::vector<std::unique_ptr<Value>> resultVals;
@@ -353,7 +353,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
             resultVals.push_back(op->call(method, std::move(leftTupleVal), rightVal->clone(), startPos, endPos));
         }
 
-        return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
+        return Tuple::create(this, std::move(resultVals), b, method->allocaBuilder(), startPos, endPos);
     } else if (rightTuple) {
         // if right is a tuple, splat left and operate piece-wise
         std::vector<std::unique_ptr<Value>> resultVals;
@@ -365,7 +365,7 @@ std::unique_ptr<Value> MaximContext::callOperator(MaximCommon::OperatorType type
             resultVals.push_back(op->call(method, leftVal->clone(), std::move(rightTupleVal), startPos, endPos));
         }
 
-        return Tuple::create(this, std::move(resultVals), b, startPos, endPos);
+        return Tuple::create(this, std::move(resultVals), b, method->allocaBuilder(), startPos, endPos);
     } else {
         // if neither are tuples, operate normally
         auto op = alwaysGetOperator(type, leftVal->type(), rightVal->type(), startPos, endPos);

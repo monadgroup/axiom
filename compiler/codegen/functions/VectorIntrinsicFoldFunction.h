@@ -18,10 +18,6 @@ namespace MaximCodegen {
         generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
                  std::unique_ptr<VarArg> vararg) override;
 
-        std::unique_ptr<Value>
-        generateConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
-                      std::unique_ptr<ConstVarArg> vararg) override;
-
     private:
         llvm::Intrinsic::ID _id;
     };

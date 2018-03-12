@@ -16,24 +16,37 @@ namespace MaximCodegen {
     public:
         using Storage = std::vector<std::unique_ptr<Value>>;
 
-        Array(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
+        Array(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos,
+              SourcePos endPos);
 
         Array(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Array>
-        create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
+        create(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos,
+               SourcePos endPos);
 
         static std::unique_ptr<Array>
         create(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
-        std::unique_ptr<Value> atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos) const;
+        llvm::Value *indexPtr(size_t index, Builder &builder);
+
+        llvm::Value *indexPtr(llvm::Value *index, Builder &builder);
+
+        void setIndex(size_t index, Value *val, Builder &builder);
+
+        void setIndex(llvm::Value *index, Value *val, Builder &builder);
+
+        std::unique_ptr<Value> atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos);
 
         llvm::Value *get() const override { return _get; }
 
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
 
-        std::unique_ptr<Array> withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, SourcePos startPos,
-                                         SourcePos endPos) const;
+        /*std::unique_ptr<Array> withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, Builder &allocaBuilder,
+                                         SourcePos startPos, SourcePos endPos) const;
+
+        std::unique_ptr<Array> withIndex(llvm::Value *index, std::unique_ptr<Value> val, Builder &builder, Builder &allocaBuilder,
+                                         SourcePos startPos, SourcePos endPos) const;*/
 
         ArrayType *type() const override { return _type; }
 

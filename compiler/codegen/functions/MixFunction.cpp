@@ -39,6 +39,7 @@ MixFunction::generate(ComposableModuleClassMethod *method, const std::vector<std
 
     auto active = b.CreateOr(numA->active(b), numB->active(b), "active");
 
-    auto undefPos = SourcePos(-1, -1);
-    return numA->withVec(b, vecResult, undefPos, undefPos)->withActive(b, active, undefPos, undefPos);
+    numA->setVec(b, vecResult);
+    numA->setActive(b, active);
+    return numA->clone();
 }

@@ -13,14 +13,19 @@ static std::unique_ptr<Num>
 visitSingleUnary(ComposableModuleClassMethod *method, Scope *scope, MaximAst::UnaryExpression *expr,
                  std::unique_ptr<Value> val) {
     auto num = method->moduleClass()->ctx()->assertNum(std::move(val));
+    if (expr->type == MaximAst::UnaryExpression::Type::POSITIVE) return std::move(num);
+
+    auto newNum = Num::create(method->moduleClass()->ctx(), method->allocaBuilder(), expr->startPos, expr->endPos);
+    newNum->setForm(method->builder(), num->form(method->builder()));
+    newNum->setActive(method->builder(), num->active(method->builder()));
 
     switch (expr->type) {
-        case MaximAst::UnaryExpression::Type::POSITIVE:
-            return std::move(num);
+        case MaximAst::UnaryExpression::Type::POSITIVE: assert(false && "is the world broken?");
         case MaximAst::UnaryExpression::Type::NEGATIVE: {
             auto numVec = num->vec(method->builder());
             auto negVec = method->builder().CreateFNeg(numVec, "negative");
-            return num->withVec(method->builder(), negVec, expr->startPos, expr->endPos);
+            newNum->setVec(method->builder(), negVec);
+            break;
         }
         case MaximAst::UnaryExpression::Type::NOT: {
             auto numVec = num->vec(method->builder());
@@ -30,12 +35,12 @@ visitSingleUnary(ComposableModuleClassMethod *method, Scope *scope, MaximAst::Un
                                                               "equalzero");
             auto compareFloat = method->builder().CreateUIToFP(compareResult,
                                                                method->moduleClass()->ctx()->numType()->vecType());
-            return num->withVec(method->builder(), compareFloat, expr->startPos, expr->endPos);
+            newNum->setVec(method->builder(), compareFloat);
+            break;
         }
     }
 
-    assert(false);
-    throw;
+    return std::move(newNum);
 }
 
 std::unique_ptr<Value>
@@ -50,8 +55,8 @@ MaximCodegen::visitUnary(ComposableModuleClassMethod *method, Scope *scope, Maxi
                 visitSingleUnary(method, scope, expr,
                                  tuple->atIndex(i, method->builder(), expr->startPos, expr->endPos)));
         }
-        return Tuple::create(method->moduleClass()->ctx(), std::move(tupleVals), method->builder(), expr->startPos,
-                             expr->endPos);
+        return Tuple::create(method->moduleClass()->ctx(), std::move(tupleVals), method->builder(),
+                             method->allocaBuilder(), expr->startPos, expr->endPos);
     }
 
     return visitSingleUnary(method, scope, expr, std::move(exprVal));

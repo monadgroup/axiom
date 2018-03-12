@@ -16,6 +16,10 @@ MaximCodegen::visitCast(ComposableModuleClassMethod *method, Scope *scope, Maxim
         return method->moduleClass()->ctx()->callConverter(expr->target->type, std::move(subexprVal), method,
                                                            expr->startPos, expr->endPos);
     } else {
-        return subexprVal->withForm(method->builder(), expr->target->type, expr->startPos, expr->endPos);
+        auto newNum = Num::create(method->moduleClass()->ctx(), method->allocaBuilder(), expr->startPos, expr->endPos);
+        newNum->setVec(method->builder(), subexprVal->vec(method->builder()));
+        newNum->setForm(method->builder(), expr->target->type);
+        newNum->setActive(method->builder(), subexprVal->active(method->builder()));
+        return std::move(newNum);
     }
 }

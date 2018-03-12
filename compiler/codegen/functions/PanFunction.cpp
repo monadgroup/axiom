@@ -34,6 +34,8 @@ PanFunction::generate(ComposableModuleClassMethod *method, const std::vector<std
 
     auto panVec = panNum->vec(b);
 
+    // todo: use sqr() instead of this method for proper values
+
     // left amplitude = 1 - pan
     auto leftAmplitude = b.CreateBinOp(
         llvm::Instruction::BinaryOps::FSub,
@@ -75,6 +77,6 @@ PanFunction::generate(ComposableModuleClassMethod *method, const std::vector<std
         "panned"
     );
 
-    auto undefPos = SourcePos(-1, -1);
-    return xNum->withVec(b, resultVec, undefPos, undefPos);
+    xNum->setVec(b, resultVec);
+    return xNum->clone();
 }

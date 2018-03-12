@@ -33,6 +33,6 @@ WithActiveFunction::generate(ComposableModuleClassMethod *method, const std::vec
         "active.notzero"
     );
 
-    auto undefPos = SourcePos(-1, -1);
-    return xNum->withActive(b, activeVal, undefPos, undefPos);
+    xNum->setActive(b, activeVal);
+    return xNum->clone();
 }

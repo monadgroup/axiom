@@ -9,7 +9,7 @@ using namespace MaximCodegen;
 PeriodicFunction::PeriodicFunction(MaximContext *ctx, llvm::Module *module, std::string name)
     : Function(ctx, module, name, ctx->numType(),
                {Parameter(ctx->numType(), false, false), Parameter(ctx->numType(), false, true)},
-               nullptr, false) {
+               nullptr) {
 
 }
 
@@ -44,16 +44,17 @@ PeriodicFunction::generate(ComposableModuleClassMethod *method, const std::vecto
     // create result number
     auto isActive = b.CreateOr(freqVal->active(b), phaseOffsetVal->active(b), "active");
     auto undefPos = SourcePos(-1, -1);
-    auto newNum = Num::create(ctx(), llvm::UndefValue::get(ctx()->numType()->get()), undefPos, undefPos);
-    return newNum->withVec(b, resultVec, undefPos, undefPos)
-        ->withForm(b, MaximCommon::FormType::OSCILLATOR, undefPos, undefPos)
-        ->withActive(b, isActive, undefPos, undefPos);
+    auto newNum = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
+    newNum->setVec(b, resultVec);
+    newNum->setForm(b, MaximCommon::FormType::OSCILLATOR);
+    newNum->setActive(b, isActive);
+    return std::move(newNum);
 }
 
-std::vector<std::unique_ptr<Value>> PeriodicFunction::mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) {
+std::vector<std::unique_ptr<Value>> PeriodicFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
     if (providedArgs.size() < 2) {
         auto undefPos = SourcePos(-1, -1);
-        providedArgs.push_back(Num::create(ctx(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(Num::create(ctx(), method->allocaBuilder(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     }
     return providedArgs;
 }

@@ -59,6 +59,7 @@ std::unique_ptr<Value> ScalarExternalFunction::generate(ComposableModuleClassMet
         res = b.CreateInsertElement(res, singleResult, i, "result");
     }
 
-    SourcePos undefPos(-1, -1);
-    return firstParam->withVec(b, res, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
+    firstParam->setVec(b, res);
+    firstParam->setActive(b, isActive);
+    return firstParam->clone();
 }

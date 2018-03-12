@@ -17,19 +17,30 @@ namespace MaximCodegen {
 
     class Num : public Value {
     public:
-        Num(MaximContext *context, float left, float right, MaximCommon::FormType form, bool active,
-            SourcePos startPos, SourcePos endPos);
+        Num(MaximContext *context, Builder &allocaBuilder, float left, float right, MaximCommon::FormType form,
+            bool active, SourcePos startPos, SourcePos endPos);
+
+        Num(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
 
         Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Num>
-        create(MaximContext *context, float left, float right, MaximCommon::FormType form, bool active,
-               SourcePos startPos, SourcePos endPos);
+        create(MaximContext *context, Builder &allocaBuilder, float left, float right, MaximCommon::FormType form,
+               bool active, SourcePos startPos, SourcePos endPos);
+
+        static std::unique_ptr<Num>
+        create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Num>
         create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         llvm::Value *get() const override { return _get; }
+
+        llvm::Value *vecPtr(Builder &builder) const;
+
+        llvm::Value *formPtr(Builder &builder) const;
+
+        llvm::Value *activePtr(Builder &builder) const;
 
         llvm::Value *vec(Builder &builder) const;
 
@@ -37,21 +48,17 @@ namespace MaximCodegen {
 
         llvm::Value *active(Builder &builder) const;
 
-        std::unique_ptr<Num> withVec(Builder &builder, llvm::Value *newVec, SourcePos startPos, SourcePos endPos) const;
+        void setVec(Builder &builder, float left, float right) const;
 
-        std::unique_ptr<Num>
-        withVec(Builder &builder, float left, float right, SourcePos startPos, SourcePos endPos) const;
+        void setVec(Builder &builder, llvm::Value *value) const;
 
-        std::unique_ptr<Num>
-        withForm(Builder &builder, llvm::Value *newForm, SourcePos startPos, SourcePos endPos) const;
+        void setForm(Builder &builder, MaximCommon::FormType form) const;
 
-        std::unique_ptr<Num>
-        withForm(Builder &builder, MaximCommon::FormType form, SourcePos startPos, SourcePos endPos) const;
+        void setForm(Builder &builder, llvm::Value *value) const;
 
-        std::unique_ptr<Num>
-        withActive(Builder &builder, llvm::Value *newActive, SourcePos startPos, SourcePos endPos) const;
+        void setActive(Builder &builder, bool active) const;
 
-        std::unique_ptr<Num> withActive(Builder &builder, bool active, SourcePos startPos, SourcePos endPos) const;
+        void setActive(Builder &builder, llvm::Value *value) const;
 
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
 

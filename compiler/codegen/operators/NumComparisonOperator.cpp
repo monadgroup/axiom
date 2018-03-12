@@ -25,5 +25,9 @@ std::unique_ptr<Num> NumComparisonOperator::call(ModuleClassMethod *method, Num 
     auto operatedVal = b.CreateUIToFP(operatedInt, context()->numType()->vecType(), "op.vec");
 
     auto undefPos = SourcePos(-1, -1);
-    return numLeft->withVec(b, operatedVal, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
+    auto newNum = Num::create(context(), method->allocaBuilder(), undefPos, undefPos);
+    newNum->setVec(b, operatedVal);
+    newNum->setForm(b, numLeft->form(b));
+    newNum->setActive(b, isActive);
+    return std::move(newNum);
 }

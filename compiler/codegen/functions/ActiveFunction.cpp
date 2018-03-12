@@ -29,8 +29,9 @@ ActiveFunction::generate(ComposableModuleClassMethod *method, const std::vector<
     activeVec = b.CreateInsertElement(activeVec, activeFloat, (uint64_t) 1, "active.vec");
 
     auto undefPos = SourcePos(-1, -1);
-    auto newNum = Num::create(ctx(), llvm::UndefValue::get(ctx()->numType()->get()), undefPos, undefPos);
-    newNum = newNum->withVec(b, activeVec, undefPos, undefPos);
-    newNum = newNum->withForm(b, MaximCommon::FormType::LINEAR, undefPos, undefPos);
-    return newNum->withActive(b, true, undefPos, undefPos);
+    auto newNum = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
+    newNum->setVec(b, activeVec);
+    newNum->setForm(b, MaximCommon::FormType::LINEAR);
+    newNum->setActive(b, true);
+    return std::move(newNum);
 }

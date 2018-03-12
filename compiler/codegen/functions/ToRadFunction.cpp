@@ -32,6 +32,6 @@ ToRadFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
         "mult"
     );
 
-    auto undefPos = SourcePos(-1, -1);
-    return numArg->withVec(b, newVec, undefPos, undefPos);
+    numArg->setVec(b, newVec);
+    return numArg->clone();
 }

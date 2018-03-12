@@ -12,12 +12,14 @@ namespace MaximCodegen {
     class Parameter {
     public:
         Type *type;
-        bool requireConst;
+        bool passByRef;
         bool optional;
 
-        Parameter(Type *type, bool requireConst, bool optional);
+        Parameter(Type *type, bool passByRef, bool optional);
 
-        static std::unique_ptr<Parameter> create(Type *type, bool requireConst, bool optional);
+        static std::unique_ptr<Parameter> create(Type *type, bool passByRef, bool optional);
+
+        llvm::Type *getType() const;
     };
 
     class VarArg {
@@ -34,31 +36,14 @@ namespace MaximCodegen {
         MaximContext *context;
     };
 
-    class ConstVarArg : public VarArg {
-    public:
-        std::vector<std::unique_ptr<Value>> vals;
-
-        ConstVarArg(MaximContext *context, std::vector<std::unique_ptr<Value>> vals);
-
-        std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &b) override;
-
-        std::unique_ptr<Value> atIndex(size_t index);
-
-        llvm::Value *count(Builder &b) override;
-
-        size_t count() const;
-    };
-
     class Function : public ComposableModuleClass {
     public:
         Function(MaximContext *ctx, llvm::Module *module, const std::string &name, Type *returnType,
-                 std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg, bool isPure = true);
+                 std::vector<Parameter> parameters, std::unique_ptr<Parameter> vararg);
 
         void generate();
 
         Type *returnType() const { return _returnType; }
-
-        bool isPure() const { return _isPure; }
 
         const std::vector<Parameter> &parameters() const { return _parameters; }
 
@@ -72,23 +57,20 @@ namespace MaximCodegen {
         generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
                  std::unique_ptr<VarArg> vararg) = 0;
 
-        virtual std::unique_ptr<Value>
-        generateConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
-                      std::unique_ptr<ConstVarArg> vararg);
-
-        virtual std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs);
+        virtual std::vector<std::unique_ptr<Value>> mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs);
 
         virtual void sampleArguments(ComposableModuleClassMethod *method, size_t index,
-                                     const std::vector<std::unique_ptr<Value>> &args,
-                                     const std::vector<std::unique_ptr<Value>> &varargs);
+                                     const std::vector<Value*> &args,
+                                     const std::vector<Value*> &varargs);
 
     private:
         class DynVarArg : public VarArg {
         public:
             llvm::Value *argStruct;
             Type *type;
+            bool passByRef;
 
-            DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type);
+            DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type, bool passByRef);
 
             std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &b) override;
 
@@ -98,7 +80,6 @@ namespace MaximCodegen {
         Type *_returnType;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _vararg;
-        bool _isPure;
 
         llvm::Type *_vaType;
         size_t _vaIndex = 0;
@@ -114,17 +95,8 @@ namespace MaximCodegen {
 
         bool validateTypes(const std::vector<Type *> &types);
 
-        void validateAndThrow(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional, bool requireConst,
+        void validateAndThrow(const std::vector<std::unique_ptr<Value>> &args, bool requireOptional,
                               SourcePos startPos, SourcePos endPos);
-
-        std::unique_ptr<Value>
-        callConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &args,
-                  std::vector<std::unique_ptr<Value>> varargs, SourcePos startPos, SourcePos endPos);
-
-        std::unique_ptr<Value>
-        callNonConst(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &allArgs,
-                     const std::vector<std::unique_ptr<Value>> &args,
-                     const std::vector<std::unique_ptr<Value>> &varargs, SourcePos startPos, SourcePos endPos);
     };
 
 }

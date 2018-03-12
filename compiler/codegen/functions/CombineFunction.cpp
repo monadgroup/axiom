@@ -32,6 +32,6 @@ CombineFunction::generate(ComposableModuleClassMethod *method, const std::vector
         "combined"
     );
 
-    auto undefPos = SourcePos(-1, -1);
-    return leftNum->withVec(b, newVec, undefPos, undefPos);
+    leftNum->setVec(b, newVec);
+    return leftNum->clone();
 }

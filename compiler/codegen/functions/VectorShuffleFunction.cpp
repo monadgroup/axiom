@@ -3,6 +3,7 @@
 #include "../MaximContext.h"
 #include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
+#include "../../util.h"
 
 using namespace MaximCodegen;
 
@@ -32,6 +33,6 @@ std::unique_ptr<Value> VectorShuffleFunction::generate(ComposableModuleClassMeth
         _shuffle, "shuffled"
     );
 
-    auto undefPos = SourcePos(-1, -1);
-    return xNum->withVec(b, newVec, undefPos, undefPos);
+    xNum->setVec(b, newVec);
+    return xNum->clone();
 }

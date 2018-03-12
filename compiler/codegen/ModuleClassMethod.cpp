@@ -7,14 +7,21 @@ using namespace MaximCodegen;
 
 ModuleClassMethod::ModuleClassMethod(ModuleClass *moduleClass, std::string name, llvm::Type *returnType,
                                      std::vector<llvm::Type *> paramTypes)
-    : _moduleClass(moduleClass), _name(moduleClass->mangleMethodName(name)), _builder(moduleClass->ctx()->llvm()),
+    : _moduleClass(moduleClass), _name(moduleClass->mangleMethodName(name)), _allocaBuilder(moduleClass->ctx()->llvm()),
+      _builder(moduleClass->ctx()->llvm()),
       _returnType(returnType ? returnType : llvm::Type::getVoidTy(moduleClass->ctx()->llvm())),
       _paramTypes(std::move(paramTypes)) {
     auto storageType = moduleClass->storageType();
     _paramTypes.push_back(llvm::PointerType::get(storageType, 0));
 
     auto func = get(moduleClass->module());
+    auto allocaBlock = llvm::BasicBlock::Create(moduleClass->ctx()->llvm(), "alloca", func);
     _entryBlock = llvm::BasicBlock::Create(moduleClass->ctx()->llvm(), "entry", func);
+
+    _allocaBuilder.SetInsertPoint(allocaBlock);
+    auto allocaEntryBr = _allocaBuilder.CreateBr(_entryBlock);
+    _allocaBuilder.SetInsertPoint(allocaEntryBr);
+
     _builder.SetInsertPoint(_entryBlock);
     _contextPtr = func->arg_begin() + _paramTypes.size() - 1;
 }

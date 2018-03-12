@@ -19,24 +19,25 @@ namespace MaximCodegen {
     public:
         using Storage = std::vector<std::unique_ptr<Value>>;
 
-        Tuple(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
+        Tuple(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
 
         Tuple(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Tuple>
-        create(MaximContext *context, Storage values, Builder &builder, SourcePos startPos, SourcePos endPos);
+        create(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Tuple>
         create(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
+        llvm::Value *get() const { return _get; }
+
+        llvm::Value *indexPtr(size_t index, Builder &builder) const;
+
+        void setIndex(size_t index, Value *val, Builder &builder) const;
+
         std::unique_ptr<Value> atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos) const;
 
-        llvm::Value *get() const override { return _get; }
-
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
-
-        std::unique_ptr<Tuple> withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder, SourcePos startPos,
-                                         SourcePos endPos) const;
 
         TupleType *type() const override { return _type; }
 

@@ -4,14 +4,19 @@
 
 using namespace MaximCodegen;
 
-Num::Num(MaximContext *context, float left, float right, MaximCommon::FormType form, bool active,
-         SourcePos startPos, SourcePos endPos) : Value(startPos, endPos), _context(context) {
-    _get = llvm::ConstantStruct::get(type()->get(), {
-        llvm::ConstantVector::get({context->constFloat(left), context->constFloat(right)}),
+Num::Num(MaximContext *context, Builder &allocaBuilder, float left, float right, MaximCommon::FormType form,
+         bool active, SourcePos startPos, SourcePos endPos) : Value(startPos, endPos), _context(context) {
+    _get = allocaBuilder.CreateAlloca(type()->get(), nullptr, "num");
+    allocaBuilder.CreateStore(llvm::ConstantStruct::get(type()->get(), {
+        context->constFloatVec(left, right),
         llvm::ConstantInt::get(type()->formType(), (uint64_t) form, false),
         llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false)
-    });
-    _get->setName("num");
+    }), _get);
+}
+
+Num::Num(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos)
+    : Value(startPos, endPos), _context(context) {
+    _get = allocaBuilder.CreateAlloca(type()->get(), nullptr, "num");
 }
 
 Num::Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos)
@@ -19,74 +24,65 @@ Num::Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos 
 }
 
 std::unique_ptr<Num>
-Num::create(MaximContext *context, float left, float right, MaximCommon::FormType form, bool active,
-            SourcePos startPos, SourcePos endPos) {
-    return std::make_unique<Num>(context, left, right, form, active, startPos, endPos);
+Num::create(MaximContext *context, Builder &allocaBuilder, float left, float right, MaximCommon::FormType form,
+            bool active, SourcePos startPos, SourcePos endPos) {
+    return std::make_unique<Num>(context, allocaBuilder, left, right, form, active, startPos, endPos);
+}
+
+std::unique_ptr<Num> Num::create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos) {
+    return std::make_unique<Num>(context, allocaBuilder, startPos, endPos);
 }
 
 std::unique_ptr<Num> Num::create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos) {
     return std::make_unique<Num>(context, get, startPos, endPos);
 }
 
-llvm::Value *Num::vec(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {0}, _get->getName() + ".vec");
+llvm::Value* Num::vecPtr(Builder &builder) const {
+    return builder.CreateStructGEP(type()->get(), _get, 0, _get->getName() + ".vec.ptr");
 }
 
-llvm::Value *Num::form(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {1}, _get->getName() + ".form");
+llvm::Value* Num::formPtr(Builder &builder) const {
+    return builder.CreateStructGEP(type()->get(), _get, 1, _get->getName() + ".form.ptr");
 }
 
-llvm::Value *Num::active(Builder &builder) const {
-    return builder.CreateExtractValue(_get, {2}, _get->getName() + ".active");
+llvm::Value* Num::activePtr(Builder &builder) const {
+    return builder.CreateStructGEP(type()->get(), _get, 2, _get->getName() + ".active.ptr");
 }
 
-std::unique_ptr<Num> Num::withVec(Builder &builder, llvm::Value *newVec, SourcePos startPos, SourcePos endPos) const {
-    return Num::create(
-        _context,
-        builder.CreateInsertValue(_get, newVec, {0}, _get->getName() + ".new_vec"),
-        startPos, endPos
-    );
+llvm::Value* Num::vec(Builder &builder) const {
+    return builder.CreateLoad(vecPtr(builder), _get->getName() + ".vec");
 }
 
-std::unique_ptr<Num> Num::withVec(Builder &builder, float left, float right, SourcePos startPos,
-                                  SourcePos endPos) const {
-    return withVec(
-        builder, llvm::ConstantVector::get({_context->constFloat(left), _context->constFloat(right)}),
-        startPos, endPos
-    );
+llvm::Value* Num::form(Builder &builder) const {
+    return builder.CreateLoad(formPtr(builder), _get->getName() + ".form");
 }
 
-std::unique_ptr<Num> Num::withForm(Builder &builder, llvm::Value *newForm, SourcePos startPos,
-                                   SourcePos endPos) const {
-    return Num::create(
-        _context,
-        builder.CreateInsertValue(_get, newForm, {1}, _get->getName() + ".new_form"),
-        startPos, endPos
-    );
+llvm::Value* Num::active(Builder &builder) const {
+    return builder.CreateLoad(activePtr(builder), _get->getName() + ".active");
 }
 
-std::unique_ptr<Num> Num::withForm(Builder &builder, MaximCommon::FormType form, SourcePos startPos,
-                                   SourcePos endPos) const {
-    return withForm(
-        builder, llvm::ConstantInt::get(type()->formType(), (uint64_t) form, false),
-        startPos, endPos
-    );
+void Num::setVec(Builder &builder, float left, float right) const {
+    setVec(builder, _context->constFloatVec(left, right));
 }
 
-std::unique_ptr<Num> Num::withActive(Builder &builder, llvm::Value *newActive, SourcePos startPos,
-                                     SourcePos endPos) const {
-    return Num::create(
-        _context,
-        builder.CreateInsertValue(_get, newActive, {2}, _get->getName() + ".new_active"),
-        startPos, endPos
-    );
+void Num::setVec(Builder &builder, llvm::Value *value) const {
+    builder.CreateStore(value, vecPtr(builder));
 }
 
-std::unique_ptr<Num> Num::withActive(Builder &builder, bool active, SourcePos startPos, SourcePos endPos) const {
-    return withActive(
-        builder, llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false),
-        startPos, endPos
-    );
+void Num::setForm(Builder &builder, MaximCommon::FormType form) const {
+    setForm(builder, llvm::ConstantInt::get(type()->formType(), (uint64_t) form, false));
+}
+
+void Num::setForm(Builder &builder, llvm::Value *value) const {
+    builder.CreateStore(value, formPtr(builder));
+}
+
+void Num::setActive(Builder &builder, bool active) const {
+    setActive(builder, llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false));
+}
+
+void Num::setActive(Builder &builder, llvm::Value *value) const {
+    builder.CreateStore(value, activePtr(builder));
 }
 
 std::unique_ptr<Value> Num::withSource(SourcePos startPos, SourcePos endPos) const {

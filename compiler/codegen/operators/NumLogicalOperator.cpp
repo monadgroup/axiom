@@ -31,5 +31,9 @@ std::unique_ptr<Num> NumLogicalOperator::call(ModuleClassMethod *method, Num *nu
     auto operatedFloat = b.CreateUIToFP(operatedInt, context()->numType()->vecType(), "op.vec");
 
     auto undefPos = SourcePos(-1, -1);
-    return numLeft->withVec(b, operatedFloat, undefPos, undefPos)->withActive(b, isActive, undefPos, undefPos);
+    auto newNum = Num::create(context(), method->allocaBuilder(), undefPos, undefPos);
+    newNum->setVec(b, operatedFloat);
+    newNum->setForm(b, numLeft->form(b));
+    newNum->setActive(b, isActive);
+    return std::move(newNum);
 }

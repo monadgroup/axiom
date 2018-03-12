@@ -19,6 +19,8 @@ namespace MaximCodegen {
 
         llvm::BasicBlock *entryBlock() { return _entryBlock; }
 
+        Builder &allocaBuilder() { return _allocaBuilder; }
+
         Builder &builder() { return _builder; }
 
         virtual llvm::Value *contextPtr() const { return _contextPtr; }
@@ -32,6 +34,7 @@ namespace MaximCodegen {
         ModuleClass *_moduleClass;
         std::string _name;
         llvm::BasicBlock *_entryBlock;
+        Builder _allocaBuilder;
         Builder _builder;
         llvm::Type *_returnType;
         std::vector<llvm::Type *> _paramTypes;
