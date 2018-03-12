@@ -48,7 +48,7 @@ set(RES_FILES resources/axiom.rc resources/res.qrc resources/AxiomVst.def)
 include_directories(../ ${LLVM_INCLUDE_DIRS} ../vendor/vst)
 add_definitions(${LLVM_DEFINITIONS})
 
-llvm_map_components_to_libnames(llvm_libs support core irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
+llvm_map_components_to_libnames(llvm_libs support core ipo irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
 set(LINK_LIBS maxim_runtime maxim_codegen maxim_common vst_sdk Qt5::Widgets ${llvm_libs})
 
 add_subdirectory(../compiler compiler)
