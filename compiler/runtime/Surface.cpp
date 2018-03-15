@@ -81,16 +81,18 @@ GeneratableModuleClass *Surface::compile() {
 
     // step 3: mark control groups as extracted if necessary
     for (const auto &group : _controlGroups) {
-        // a group is only extracted if _all_ writers are extracted
+        // a group is only extracted if _all_ writers are extracted or the group has an extractor control
         // if there are no writers, the group is not extracted
         bool isExtracted = group->writtenTo();
-        if (isExtracted) {
-            for (const auto &control : group->controls()) {
-                if (!control->writtenTo()) continue;
-                if (extractedNodes.find(control->node()) == extractedNodes.end()) {
-                    isExtracted = false;
-                    break;
-                }
+        for (const auto &control : group->controls()) {
+            if ((uint32_t) control->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) {
+                isExtracted = true;
+                break;
+            }
+            if (!control->writtenTo()) continue;
+            if (extractedNodes.find(control->node()) == extractedNodes.end()) {
+                isExtracted = false;
+                break;
             }
         }
 
@@ -169,11 +171,128 @@ GeneratableModuleClass *Surface::compile() {
         auto nodeClass = nodeClasses.find(node)->second;
 
         // instantiate the node n times
-        // todo: this loop should probably be in IR, add array entry to the class
         auto isExtracted = extractedNodes.find(node) != extractedNodes.end();
         auto loopSize = isExtracted ? MaximCodegen::ArrayType::arraySize : 1;
 
-        for (unsigned int instN = 0; instN < loopSize; instN++) {
+        auto entryIndex = _class->addEntry(llvm::ConstantArray::get(
+            llvm::ArrayType::get(nodeClass->storageType(), loopSize),
+            std::vector<llvm::Constant*>(loopSize, nodeClass->initializeVal())
+        ));
+
+        // todo: these two loops really should be refactored
+
+        // CONSTRUCTOR LOOP
+        {
+            auto &b = _class->constructor()->builder();
+            auto entryArrPtr = _class->cconstructor()->getEntryPointer(entryIndex, "entryarr");
+            auto indexPtr = _class->constructor()->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
+            b.CreateStore(runtime()->ctx()->constInt(8, 0, false), indexPtr);
+
+            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck", _class->constructor()->get(module()));
+            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun", _class->constructor()->get(module()));
+            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend", _class->constructor()->get(module()));
+
+            b.CreateBr(loopCheckBlock);
+            b.SetInsertPoint(loopCheckBlock);
+
+            auto currentIndex = b.CreateLoad(indexPtr, "currentindex");
+            auto cond = b.CreateICmpULT(currentIndex, runtime()->ctx()->constInt(8, loopSize, false), "loopcond");
+            b.CreateCondBr(cond, loopRunBlock, loopEndBlock);
+
+            b.SetInsertPoint(loopRunBlock);
+            auto entryPtr = b.CreateGEP(entryArrPtr, {
+                runtime()->ctx()->constInt(64, 0, false),
+                currentIndex
+            }, "entry.ptr");
+
+            // todo: GroupNodes will need ControlGroups passed into their constructor
+            nodeClass->constructor()->call(b, {}, entryPtr, module(), "");
+
+            for (const auto &control : *node) {
+                auto hardControl = dynamic_cast<HardControl *>(control.get());
+                if (!hardControl) continue;
+
+                auto controlIndex = hardControl->instance().instId;
+                auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), controlIndex,
+                                                             entryPtr, "controlinst");
+
+                auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
+                auto groupIndexPtr = groupPtr;
+
+                // get the pointer for the specific index we're at if this is control is in an extracted group
+                // AND it's not an extractor control (since these get access to the entire array)
+                if (hardControl->group()->extracted() && !((uint32_t)hardControl->type()->type() & (uint32_t)MaximCommon::ControlType::EXTRACT)) {
+                    // each item in the array is a {bool, value}, we only want the value
+                    groupIndexPtr = _class->constructor()->builder().CreateGEP(
+                        groupPtr,
+                        {
+                            runtime()->ctx()->constInt(64, 0, false),
+                            currentIndex,
+                            runtime()->ctx()->constInt(32, 1, false)
+                        }
+                    );
+                }
+
+                _class->constructor()->builder().CreateStore(groupIndexPtr, controlPtr);
+            }
+
+            auto incrIndex = b.CreateAdd(
+                currentIndex,
+                runtime()->ctx()->constInt(8, 1, false),
+                "incr"
+            );
+            b.CreateStore(incrIndex, indexPtr);
+            b.CreateBr(loopCheckBlock);
+
+            b.SetInsertPoint(loopEndBlock);
+        }
+
+        // GENERATE LOOP
+        {
+            auto &b = _class->generate()->builder();
+            auto entryArrPtr = _class->generate()->getEntryPointer(entryIndex, "entryarr");
+            auto indexPtr = _class->generate()->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
+            b.CreateStore(runtime()->ctx()->constInt(8, 0, false), indexPtr);
+
+            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck", _class->generate()->get(module()));
+            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun", _class->generate()->get(module()));
+            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend", _class->generate()->get(module()));
+
+            b.CreateBr(loopCheckBlock);
+            b.SetInsertPoint(loopCheckBlock);
+
+            auto currentIndex = b.CreateLoad(indexPtr, "currentindex");
+            auto cond = b.CreateICmpULT(currentIndex, runtime()->ctx()->constInt(8, loopSize, false), "loopcond");
+            b.CreateCondBr(cond, loopRunBlock, loopEndBlock);
+
+            b.SetInsertPoint(loopRunBlock);
+            auto entryPtr = b.CreateGEP(entryArrPtr, {
+                runtime()->ctx()->constInt(64, 0, false),
+                currentIndex
+            }, "entry.ptr");
+
+            // todo: only call generate if the current voice is active
+            // voice activeness is determined by the `active` flags in all inputs to this node's
+            // extractor field (if it's in one, otherwise it's always active).
+            // this will need to be calculated when doing the extractor field search.
+
+            nodeClass->generate()->call(b, {}, entryPtr, module(), "");
+
+            auto incrIndex = b.CreateAdd(
+                currentIndex,
+                runtime()->ctx()->constInt(8, 1, false),
+                "incr"
+            );
+            b.CreateStore(incrIndex, indexPtr);
+            b.CreateBr(loopCheckBlock);
+
+            b.SetInsertPoint(loopEndBlock);
+        }
+
+        //auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck");
+        //auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun");
+
+        /*for (unsigned int instN = 0; instN < loopSize; instN++) {
             auto entryIndex = _class->addEntry(
                 nodeClass); // todo: GroupNodes will need ControlGroups passed into their constructor
             _class->generate()->callInto(entryIndex, {}, nodeClass->generate(), "");
@@ -201,7 +320,7 @@ GeneratableModuleClass *Surface::compile() {
 
                 _class->constructor()->builder().CreateStore(indexPtr, controlPtr);
             }
-        }
+        }*/
     }
 
     _class->complete();

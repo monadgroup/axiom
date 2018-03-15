@@ -12,9 +12,15 @@ namespace MaximCodegen {
     public:
         static constexpr size_t arraySize = 32;
 
-        ArrayType(MaximContext *context, Type *baseType, llvm::ArrayType *type);
+        ArrayType(MaximContext *context, Type *baseType);
 
         llvm::ArrayType *get() const override { return _type; }
+
+        llvm::IntegerType *itemEnabledType() const { return _itemEnabledType; }
+
+        llvm::Type *itemValType() const { return _itemValType; }
+
+        llvm::StructType *itemType() const { return _itemType; }
 
         Type *baseType() const { return _baseType; }
 
@@ -26,6 +32,12 @@ namespace MaximCodegen {
         Type *_baseType;
 
         llvm::ArrayType *_type;
+
+        llvm::IntegerType *_itemEnabledType;
+
+        llvm::Type *_itemValType;
+
+        llvm::StructType *_itemType;
 
         MaximContext *_context;
     };

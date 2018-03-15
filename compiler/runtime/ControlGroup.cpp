@@ -1,3 +1,4 @@
+#include <iostream>
 #include "ControlGroup.h"
 
 #include "Surface.h"
@@ -20,7 +21,10 @@ llvm::Module *ControlGroup::module() {
 MaximCodegen::ModuleClass *ControlGroup::compile() {
     auto storeType = type()->underlyingType();
     if (extracted()) {
-        _compileResult.setStorageType(llvm::ArrayType::get(storeType, MaximCodegen::ArrayType::arraySize));
+        _compileResult.setStorageType(llvm::ArrayType::get(llvm::StructType::get(_surface->runtime()->ctx()->llvm(), {
+            llvm::Type::getInt1Ty(_surface->runtime()->ctx()->llvm()),
+            storeType
+        }, false), MaximCodegen::ArrayType::arraySize));
     } else {
         _compileResult.setStorageType(storeType);
     }

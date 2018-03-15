@@ -6,7 +6,7 @@
 using namespace MaximCodegen;
 
 ControlField::ControlField(Control *control, const std::string &name, Type *type)
-    : UndefInitializedModuleClass(control->ctx(), control->module(), name), _control(control), _type(type),
+    : UndefInitializedModuleClass(control->ctx(), control->module(), control->name() + "." + name), _control(control), _type(type),
       _constructor(this, "constructor"), _getValue(this, "getValue", llvm::PointerType::get(type->get(), 0)),
       _setValue(this, "setValue", nullptr, {llvm::PointerType::get(type->get(), 0)}) {
 

@@ -50,6 +50,7 @@
 #include "converters/SecondsConverter.h"
 
 #include "controls/ScalarControl.h"
+#include "controls/ExtractControl.h"
 
 
 using namespace MaximCodegen;
@@ -143,11 +144,10 @@ TupleType *MaximContext::getTupleType(const std::vector<Type *> &types) {
 }
 
 ArrayType *MaximContext::getArrayType(Type *baseType) {
-    auto arrayType = llvm::ArrayType::get(baseType->get(), ArrayType::arraySize);
-    auto mapIndex = arrayTypeMap.find(arrayType);
+    auto mapIndex = arrayTypeMap.find(baseType->get());
 
     if (mapIndex == arrayTypeMap.end()) {
-        return &arrayTypeMap.emplace(arrayType, ArrayType(this, baseType, arrayType)).first->second;
+        return &arrayTypeMap.emplace(baseType->get(), ArrayType(this, baseType)).first->second;
     } else {
         return &mapIndex->second;
     }
@@ -292,12 +292,9 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     /// REGISTER CONTROLS
     registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::NUMBER, numType(), "num"));
     registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::MIDI, midiType(), "midi"));
-    registerControl(
-        ScalarControl::create(this, libModule, MaximCommon::ControlType::NUM_EXTRACT, getArrayType(numType()),
-                              "numextract"));
-    registerControl(
-        ScalarControl::create(this, libModule, MaximCommon::ControlType::MIDI_EXTRACT, getArrayType(midiType()),
-                              "midiextract"));
+
+    registerControl(ExtractControl::create(this, libModule, MaximCommon::ControlType::NUM_EXTRACT, numType(), "numextract"));
+    registerControl(ExtractControl::create(this, libModule, MaximCommon::ControlType::MIDI_EXTRACT, midiType(), "midi"));
 }
 
 void MaximContext::registerOperator(std::unique_ptr<Operator> op) {

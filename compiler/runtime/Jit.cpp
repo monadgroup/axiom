@@ -86,8 +86,7 @@ Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
         }
     );
 
-    //std::cout << m->getName().str() << std::endl;
-    //m->print(llvm::errs(), nullptr);
+    m->print(llvm::errs(), nullptr);
 
     return llvm::cantFail(optimizeLayer.addModule(std::move(m), std::move(resolver)));
 }
@@ -151,8 +150,6 @@ std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> 
         fpm.run(f);
     }
     mpm.run(*m);
-
-    //m->print(llvm::errs(), nullptr);
 
     return m;
 }

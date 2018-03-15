@@ -4,30 +4,8 @@
 
 using namespace MaximCodegen;
 
-Array::Array(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos)
-    : Value(startPos, endPos), _context(context) {
-    assert(!values.empty());
-
-    auto baseType = values[0]->type();
-    for (size_t i = 1; i < values.size(); i++) {
-        assert(values[i]->type() == baseType);
-    }
-
-    _type = context->getArrayType(baseType);
-
-    _get = allocaBuilder.CreateAlloca(_type->get(), nullptr, "array");
-    for (size_t i = 0; i < values.size(); i++) {
-        setIndex(i, values[i].get(), builder);
-    }
-}
-
 Array::Array(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos)
     : Value(startPos, endPos), _type(type), _get(get), _context(context) {
-}
-
-std::unique_ptr<Array> Array::create(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder,
-                                     SourcePos startPos, SourcePos endPos) {
-    return std::make_unique<Array>(context, std::move(values), builder, allocaBuilder, startPos, endPos);
 }
 
 std::unique_ptr<Array> Array::create(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos startPos,
@@ -46,36 +24,36 @@ llvm::Value* Array::indexPtr(llvm::Value *index, Builder &builder) {
     }, "arrayitem.ptr");
 }
 
-void Array::setIndex(size_t index, Value *val, Builder &builder) {
-    setIndex(_context->constInt(32, index, false), val, builder);
+ArrayItem Array::atIndex(size_t index, Builder &builder) {
+    return atIndex(_context->constInt(32, index, false), builder);
 }
 
-void Array::setIndex(llvm::Value *index, Value *val, Builder &builder) {
-    assert(val->type() == _type->baseType());
-
-    auto ptr = indexPtr(index, builder);
-
-    _context->copyPtr(builder, val->get(), ptr);
-}
-
-std::unique_ptr<Value> Array::atIndex(size_t index, Builder &builder, SourcePos startPos, SourcePos endPos) {
-    auto ptr = indexPtr(index, builder);
-    return _type->baseType()->createInstance(ptr, startPos, endPos);
+ArrayItem Array::atIndex(llvm::Value *index, Builder &builder) {
+    return ArrayItem(
+        indexPtr(index, builder),
+        type()->itemType(),
+        type()->baseType()
+    );
 }
 
 std::unique_ptr<Value> Array::withSource(SourcePos startPos, SourcePos endPos) const {
     return Array::create(_context, _type, _get, startPos, endPos);
 }
 
-/*std::unique_ptr<Array> Array::withIndex(size_t index, std::unique_ptr<Value> val, Builder &builder,
-                                        Builder &allocaBuilder, SourcePos startPos, SourcePos endPos) const {
-    return withIndex(_context->constInt(32, index, false), std::move(val), builder, allocaBuilder, startPos, endPos);
+ArrayItem::ArrayItem(llvm::Value *get, llvm::Type *type, Type *itemType)
+    : _get(get), _type(type), _itemType(itemType) {
+
 }
 
-std::unique_ptr<Array> Array::withIndex(llvm::Value *index, std::unique_ptr<Value> val, Builder &builder,
-                                        Builder &allocaBuilder, SourcePos startPos, SourcePos endPos) const {
-    auto newGet = allocaBuilder.CreateAlloca(_type->get(), nullptr, "array");
-    auto newArray = Array::create(_context, _type, newGet, startPos, endPos);
-    newArray->setIndex(index, val.get(), builder);
-    return newArray;
-}*/
+llvm::Value* ArrayItem::enabledPtr(Builder &builder) const {
+    return builder.CreateStructGEP(_type, _get, 0, _get->getName() + ".enabled.ptr");
+}
+
+llvm::Value* ArrayItem::enabled(Builder &builder) const {
+    return builder.CreateLoad(enabledPtr(builder), _get->getName() + ".enabled");
+}
+
+std::unique_ptr<Value> ArrayItem::value(Builder &builder, SourcePos startPos, SourcePos endPos) const {
+    auto ptr = builder.CreateStructGEP(_type, _get, 1, _get->getName() + ".value.ptr");
+    return _itemType->createInstance(ptr, startPos, endPos);
+}

@@ -5,9 +5,9 @@
 using namespace MaximCodegen;
 
 Control::Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, llvm::Type *storageType,
-                 const std::string &name)
+                 llvm::Type *underlyingType, const std::string &name)
     : UndefInitializedModuleClass(ctx, module, name), _type(type), _storageType(storageType),
-      _constructor(this, "constructor") {
+      _underlyingType(underlyingType), _constructor(this, "constructor") {
 
 }
 

@@ -13,7 +13,7 @@ namespace MaximCodegen {
     class Control : public UndefInitializedModuleClass {
     public:
         Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, llvm::Type *storageType,
-                const std::string &name);
+                llvm::Type *underlyingType, const std::string &name);
 
         MaximCommon::ControlType type() const { return _type; }
 
@@ -23,7 +23,7 @@ namespace MaximCodegen {
 
         llvm::Type *storageType() override;
 
-        llvm::Type *underlyingType() { return _storageType; }
+        llvm::Type *underlyingType() { return _underlyingType; }
 
         ModuleClassMethod *constructor() override { return &_constructor; }
 
@@ -35,6 +35,7 @@ namespace MaximCodegen {
         std::unordered_map<std::string, std::unique_ptr<ControlField>> _fields;
         MaximCommon::ControlType _type;
         llvm::Type *_storageType;
+        llvm::Type *_underlyingType;
 
         ModuleClassMethod _constructor;
 

@@ -1,12 +1,19 @@
 #include "ArrayType.h"
 
 #include "Array.h"
+#include "MaximContext.h"
 
 using namespace MaximCodegen;
 
-ArrayType::ArrayType(MaximContext *context, Type *baseType, llvm::ArrayType *type)
-    : _baseType(baseType), _type(type), _context(context) {
-
+ArrayType::ArrayType(MaximContext *context, Type *baseType)
+    : _baseType(baseType), _context(context) {
+    _itemEnabledType = llvm::Type::getInt1Ty(context->llvm());
+    _itemValType = baseType->get();
+    _itemType = llvm::StructType::get(context->llvm(), {
+        _itemEnabledType,
+        _itemValType
+    });
+    _type = llvm::ArrayType::get(_itemType, arraySize);
 }
 
 std::string ArrayType::name() const {
