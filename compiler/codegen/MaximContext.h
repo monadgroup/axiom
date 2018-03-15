@@ -126,6 +126,8 @@ namespace MaximCodegen {
 
         void copyPtr(Builder &builder, llvm::Value *src, llvm::Value *dest);
 
+        void clearPtr(Builder &builder, llvm::Value *src);
+
         void setLibModule(llvm::Module *libModule);
 
         void registerOperator(std::unique_ptr<Operator> op);

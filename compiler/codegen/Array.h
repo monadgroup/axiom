@@ -36,8 +36,13 @@ namespace MaximCodegen {
 
         Array(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
+        Array(MaximContext *context, ArrayType *type, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
+
         static std::unique_ptr<Array>
         create(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
+
+        static std::unique_ptr<Array>
+        create(MaximContext *context, ArrayType *type, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
 
         llvm::Value *indexPtr(size_t index, Builder &builder);
 

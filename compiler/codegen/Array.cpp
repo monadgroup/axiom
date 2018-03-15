@@ -8,9 +8,19 @@ Array::Array(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos
     : Value(startPos, endPos), _type(type), _get(get), _context(context) {
 }
 
+Array::Array(MaximContext *context, ArrayType *type, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos)
+    : Value(startPos, endPos), _type(type), _context(context) {
+    _get = allocaBuilder.CreateAlloca(type->get(), nullptr, "array");
+}
+
 std::unique_ptr<Array> Array::create(MaximContext *context, ArrayType *type, llvm::Value *get, SourcePos startPos,
                                      SourcePos endPos) {
     return std::make_unique<Array>(context, type, get, startPos, endPos);
+}
+
+std::unique_ptr<Array> Array::create(MaximContext *context, ArrayType *type, Builder &allocaBuilder, SourcePos startPos,
+                                     SourcePos endPos) {
+    return std::make_unique<Array>(context, type, allocaBuilder, startPos, endPos);
 }
 
 llvm::Value* Array::indexPtr(size_t index, Builder &builder) {

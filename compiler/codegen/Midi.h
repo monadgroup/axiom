@@ -42,7 +42,13 @@ namespace MaximCodegen {
     public:
         Midi(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
+        Midi(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
+
         static std::unique_ptr<Midi> create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
+
+        static std::unique_ptr<Midi> create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
+
+        static void initialize(llvm::Module *module, MaximContext *ctx);
 
         llvm::Value *get() const override { return _get; }
 
@@ -64,9 +70,13 @@ namespace MaximCodegen {
 
         void setCount(Builder &builder, llvm::Value *count) const;
 
+        void pushEvent(Builder &builder, const MidiEvent &event, llvm::Module *module) const;
+
         std::unique_ptr<Value> withSource(SourcePos startPos, SourcePos endPos) const override;
 
         MidiType *type() const override;
+
+        static llvm::Function *pushEventFunc(llvm::Module *module, MaximContext *ctx);
 
     private:
         llvm::Value *_get;

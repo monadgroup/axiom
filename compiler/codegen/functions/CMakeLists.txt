@@ -26,6 +26,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/VectorIntrinsicFoldFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/VectorIntrinsicFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/VectorShuffleFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/VoicesFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/WithActiveFunction.cpp")
 
 target_sources(maxim_codegen PRIVATE ${SOURCE_FILES})

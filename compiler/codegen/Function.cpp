@@ -33,8 +33,10 @@ Function::Function(MaximContext *ctx, llvm::Module *module, const std::string &n
     }
 
     auto rt = returnType->get();
-    if (returnByRef) rt = llvm::PointerType::get(rt, 0);
-    _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call", rt, paramTypes);
+    // to prevent LLVM generating big FCA code blocks, we return a number with the size of the return type,
+    // and bitcast it later when it's a pointer
+    _warpedReturnType = llvm::IntegerType::get(ctx->llvm(), (unsigned int) ctx->dataLayout().getTypeAllocSize(rt));
+    _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call", _warpedReturnType, paramTypes);
 }
 
 void Function::generate() {
@@ -52,7 +54,8 @@ void Function::generate() {
     auto result = generate(_callMethod.get(), genArgs, std::move(genVarArg));
 
     // todo: allow function to return a reference
-    auto loadedResult = _callMethod->builder().CreateLoad(result->get(), "func.deref");
+    auto returnCast = _callMethod->builder().CreateBitCast(result->get(), llvm::PointerType::get(_warpedReturnType, 0), result->get()->getName() + ".warped");
+    auto loadedResult = _callMethod->builder().CreateLoad(returnCast, "func.deref");
     _callMethod->builder().CreateRet(loadedResult);
 
     complete();
@@ -100,13 +103,13 @@ std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::
 
     auto entryIndex = method->moduleClass()->addEntry(this);
     sampleArguments(method, entryIndex, baseArgs, baseVarargs);
+
     auto result = method->callInto(entryIndex, args, _callMethod.get(), "callresult");
-    if (!_returnByRef) {
-        auto ptr = method->allocaBuilder().CreateAlloca(_returnType->get(), nullptr, "callresult.ptr");
-        method->builder().CreateStore(result, ptr);
-        result = ptr;
-    }
-    return _returnType->createInstance(result, startPos, endPos);
+    auto ptr = method->allocaBuilder().CreateAlloca(_warpedReturnType, nullptr, "callresult.ptr");
+    method->builder().CreateStore(result, ptr);
+    auto unwarpedPtr = method->builder().CreateBitCast(ptr, llvm::PointerType::get(_returnType->get(), 0), "unwarped");
+
+    return _returnType->createInstance(unwarpedPtr, startPos, endPos);
 }
 
 std::vector<std::unique_ptr<Value>> Function::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {

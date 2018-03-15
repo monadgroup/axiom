@@ -35,6 +35,7 @@
 #include "functions/MixFunction.h"
 #include "functions/SequenceFunction.h"
 #include "functions/NoteFunction.h"
+#include "functions/VoicesFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -183,7 +184,23 @@ void MaximContext::copyPtr(Builder &builder, llvm::Value *src, llvm::Value *dest
     builder.CreateMemCpy(dest, src, paramSize, 0);
 }
 
+void MaximContext::clearPtr(Builder &builder, llvm::Value *src) {
+    auto ptrType = llvm::cast<llvm::PointerType>(src->getType());
+
+    auto paramSizePtr = builder.CreateGEP(
+        llvm::ConstantPointerNull::get(ptrType),
+        constInt(64, 1, false),
+        "paramsize"
+    );
+    auto paramSize = builder.CreatePtrToInt(paramSizePtr, llvm::Type::getInt32Ty(_llvm));
+    auto byteParam = builder.CreateBitCast(src, llvm::PointerType::get(llvm::Type::getInt8Ty(_llvm), 0));
+    builder.CreateMemSet(byteParam, constInt(8, 0, false), paramSize, 0);
+}
+
 void MaximContext::setLibModule(llvm::Module *libModule) {
+    /// SETUP TYPES
+    Midi::initialize(libModule, this);
+
     /// REGISTER FUNCTIONS
     // functions that map directly to a built-in LLVM vector intrinsic
     registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::cos, "cos", 1));
@@ -234,6 +251,7 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
 
     // midi operations
     registerFunction(NoteFunction::create(this, libModule));
+    registerFunction(VoicesFunction::create(this, libModule));
 
     // hot paths for when only two parameters are provided to min/max
     registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::minnum, "min", 2));

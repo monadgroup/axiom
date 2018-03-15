@@ -76,6 +76,7 @@ namespace MaximCodegen {
         };
 
         Type *_returnType;
+        llvm::Type *_warpedReturnType;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _vararg;
         bool _returnByRef;

@@ -15,8 +15,6 @@ ExtractControl::ExtractControl(MaximContext *ctx, llvm::Module *module, MaximCom
     getMethod->builder().CreateRet(getMethod->groupPtr());
 
     auto setMethod = valueField->setValue();
-    setMethod->arg(0)->print(llvm::errs(), true);
-    setMethod->groupPtr()->print(llvm::errs(), true);
     ctx->copyPtr(setMethod->builder(), setMethod->arg(0), setMethod->groupPtr());
 
     complete();

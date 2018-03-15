@@ -9,8 +9,49 @@ Midi::Midi(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePo
 
 }
 
+Midi::Midi(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos)
+    : Value(startPos, endPos), _context(context) {
+    _get = allocaBuilder.CreateAlloca(type()->get(), nullptr, "midi");
+}
+
 std::unique_ptr<Midi> Midi::create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos) {
     return std::make_unique<Midi>(context, get, startPos, endPos);
+}
+
+std::unique_ptr<Midi> Midi::create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos,
+                                   SourcePos endPos) {
+    return std::make_unique<Midi>(context, allocaBuilder, startPos, endPos);
+}
+
+void Midi::initialize(llvm::Module *module, MaximContext *ctx) {
+    auto func = pushEventFunc(module, ctx);
+    auto entryBlock = llvm::BasicBlock::Create(ctx->llvm(), "entry", func);
+    auto canPushBlock = llvm::BasicBlock::Create(ctx->llvm(), "canpush", func);
+    auto endBlock = llvm::BasicBlock::Create(ctx->llvm(), "end", func);
+    Builder b(entryBlock);
+
+    auto undefPos = SourcePos(-1, -1);
+    Midi currentMidi(ctx, func->arg_begin(), undefPos, undefPos);
+    auto currentCount = currentMidi.count(b);
+    auto canPushCond = b.CreateICmpULT(
+        currentCount,
+        llvm::ConstantInt::get(ctx->midiType()->countType(), MidiType::maxEvents, false),
+        "canpushcond"
+    );
+    b.CreateCondBr(canPushCond, canPushBlock, endBlock);
+    b.SetInsertPoint(canPushBlock);
+
+    ctx->copyPtr(b, func->arg_begin() + 1, currentMidi.eventPtr(b, currentCount));
+    auto newCount = b.CreateAdd(
+        currentCount,
+        llvm::ConstantInt::get(ctx->midiType()->countType(), 1, false),
+        "newcount"
+    );
+    currentMidi.setCount(b, newCount);
+    b.CreateBr(endBlock);
+
+    b.SetInsertPoint(endBlock);
+    b.CreateRetVoid();
 }
 
 llvm::Value* Midi::countPtr(Builder &builder) const {
@@ -57,12 +98,32 @@ void Midi::setCount(Builder &builder, llvm::Value *count) const {
     builder.CreateStore(count, countPtr(builder));
 }
 
+void Midi::pushEvent(Builder &builder, const MidiEvent &event, llvm::Module *module) const {
+    CreateCall(builder, pushEventFunc(module, _context), {_get, event.get()}, "");
+}
+
 std::unique_ptr<Value> Midi::withSource(SourcePos startPos, SourcePos endPos) const {
     return create(_context, _get, startPos, endPos);
 }
 
 MidiType* Midi::type() const {
     return _context->midiType();
+}
+
+llvm::Function* Midi::pushEventFunc(llvm::Module *module, MaximContext *ctx) {
+    auto funcName = "maxim.midi.pushEvent";
+    if (auto func = module->getFunction(funcName)) {
+        return func;
+    }
+
+    return llvm::Function::Create(
+        llvm::FunctionType::get(llvm::Type::getVoidTy(ctx->llvm()), {
+            llvm::PointerType::get(ctx->midiType()->get(), 0),
+            llvm::PointerType::get(ctx->midiType()->eventType(), 0)
+        }, false),
+        llvm::Function::LinkageTypes::ExternalLinkage,
+        funcName, module
+    );
 }
 
 MidiEvent::MidiEvent(llvm::Value *get, llvm::Type *type) : _get(get), _type(type) {

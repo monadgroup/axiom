@@ -26,8 +26,14 @@ Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
 
 void Runtime::compile() {
     lock();
+    std::cout << "Beginning compile..." << std::endl;
+    auto startClock = std::clock();
 
+    std::cerr << "  Beginning codegen..." << std::endl;
+    auto codegenClock = std::clock();
     auto mainClass = _mainSurface->compile();
+    auto codegenEndClock = (std::clock() - codegenClock) / (double)(CLOCKS_PER_SEC / 1000);
+    std::cerr << "  Finished codegen in " << codegenEndClock << " ms" << std::endl;
 
     auto module = std::make_unique<llvm::Module>("controller", _context.llvm());
 
@@ -60,6 +66,9 @@ void Runtime::compile() {
 
     // initialize it
     initFuncPtr();
+
+    auto endClock = (std::clock() - startClock) / (double)(CLOCKS_PER_SEC / 1000);
+    std::cout << "Finished compile in " << endClock << " ms" << std::endl;
 
     unlock();
 }
