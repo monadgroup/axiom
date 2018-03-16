@@ -12,9 +12,9 @@ using namespace MaximCodegen;
 
 VoicesFunction::VoicesFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "voices", ctx->getArrayType(ctx->midiType()),
-               {Parameter(ctx->midiType(), false),
-                Parameter(ctx->getArrayType(ctx->numType()), false)},
-               nullptr) {
+               {Parameter(ctx->midiType(), true, false),
+                Parameter(ctx->getArrayType(ctx->numType()), true, false)},
+               nullptr, true) {
 }
 
 std::unique_ptr<VoicesFunction> VoicesFunction::create(MaximContext *context, llvm::Module *module) {

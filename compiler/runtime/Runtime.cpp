@@ -55,6 +55,8 @@ void Runtime::compile() {
     _deployKey = _jit.addModule(std::move(module));
     _isDeployed = true;
 
+    _mainSurface->pullGetterMethod();
+
     // update pointers for things that need to be accessed
     auto ctxGlobalPtr = (void *) _jit.getSymbolAddress(globalCtxName);
     auto initFuncPtr = (void (*)()) _jit.getSymbolAddress(initFuncName);

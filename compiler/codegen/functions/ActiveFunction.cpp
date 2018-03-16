@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 ActiveFunction::ActiveFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "active", ctx->numType(), {Parameter(ctx->numType(), false)}, nullptr) {
+    : Function(ctx, module, "active", ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr) {
 
 }
 

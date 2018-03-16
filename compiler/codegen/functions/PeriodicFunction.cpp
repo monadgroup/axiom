@@ -8,8 +8,8 @@ using namespace MaximCodegen;
 
 PeriodicFunction::PeriodicFunction(MaximContext *ctx, llvm::Module *module, std::string name)
     : Function(ctx, module, name, ctx->numType(),
-               {Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), true)},
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, true)},
                nullptr) {
 
 }

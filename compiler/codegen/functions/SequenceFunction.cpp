@@ -9,8 +9,8 @@ using namespace MaximCodegen;
 
 SequenceFunction::SequenceFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "sequence", ctx->numType(),
-               {Parameter(ctx->numType(), false)},
-               Parameter::create(ctx->numType(), false)) {
+               {Parameter(ctx->numType(), false, false)},
+               Parameter::create(ctx->numType(), false, false)) {
 
 }
 

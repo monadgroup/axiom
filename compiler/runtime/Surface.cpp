@@ -325,7 +325,7 @@ GeneratableModuleClass *Surface::compile() {
 
     _class->complete();
     deploy();
-    pullGetterMethod();
+    //pullGetterMethod();
 
     return _class.get();
 }

@@ -8,8 +8,8 @@ using namespace MaximCodegen;
 
 CombineFunction::CombineFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "combine", ctx->numType(),
-               {Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), false)},
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false)},
                nullptr) {
 
 }

@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 ToRadFunction::ToRadFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "toRad", ctx->numType(), {Parameter(ctx->numType(), false)}, nullptr) {
+    : Function(ctx, module, "toRad", ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr) {
 
 }
 

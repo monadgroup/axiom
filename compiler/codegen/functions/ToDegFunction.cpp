@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 ToDegFunction::ToDegFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "toDeg", ctx->numType(), {Parameter(ctx->numType(), false)}, nullptr) {
+    : Function(ctx, module, "toDeg", ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr) {
 
 }
 

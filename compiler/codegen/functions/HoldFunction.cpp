@@ -8,9 +8,9 @@ using namespace MaximCodegen;
 
 HoldFunction::HoldFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "hold", ctx->numType(),
-               {Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), true)},
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, true)},
                nullptr) {
 
 }

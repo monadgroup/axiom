@@ -8,9 +8,9 @@ using namespace MaximCodegen;
 
 ClampFunction::ClampFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "clamp", ctx->numType(),
-               {Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), false)},
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false)},
                nullptr) {
 
 }

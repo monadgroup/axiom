@@ -8,9 +8,9 @@ using namespace MaximCodegen;
 
 MixFunction::MixFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "mix", ctx->numType(),
-               {Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), false)},
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false)},
                nullptr) {
 
 }

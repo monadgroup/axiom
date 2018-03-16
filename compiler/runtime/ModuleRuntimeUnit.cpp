@@ -7,6 +7,7 @@ using namespace MaximRuntime;
 ModuleRuntimeUnit::ModuleRuntimeUnit(Runtime *runtime, const std::string &name)
     : RuntimeUnit(runtime) {
     _module = std::make_unique<llvm::Module>(name, runtime->ctx()->llvm());
+    _module->setDataLayout(runtime->ctx()->dataLayout());
 }
 
 std::unique_ptr<llvm::Module> ModuleRuntimeUnit::reset() {

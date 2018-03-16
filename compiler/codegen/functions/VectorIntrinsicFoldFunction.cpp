@@ -8,7 +8,7 @@ using namespace MaximCodegen;
 
 VectorIntrinsicFoldFunction::VectorIntrinsicFoldFunction(MaximContext *ctx, llvm::Module *module,
                                                          llvm::Intrinsic::ID id, std::string name)
-    : Function(ctx, module, std::move(name), ctx->numType(), {}, Parameter::create(ctx->numType(), false)),
+    : Function(ctx, module, std::move(name), ctx->numType(), {}, Parameter::create(ctx->numType(), false, false)),
       _id(id) {
 
 }

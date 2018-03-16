@@ -9,7 +9,7 @@ using namespace MaximCodegen;
 
 VectorShuffleFunction::VectorShuffleFunction(MaximContext *ctx, llvm::Module *module, std::string name,
                                              llvm::ArrayRef<uint32_t> shuffle)
-    : Function(ctx, module, std::move(name), ctx->numType(), {Parameter(ctx->numType(), false)}, nullptr),
+    : Function(ctx, module, std::move(name), ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr),
       _shuffle(std::move(shuffle)) {
 
 }

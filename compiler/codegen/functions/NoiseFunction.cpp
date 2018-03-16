@@ -8,8 +8,8 @@ using namespace MaximCodegen;
 
 NoiseFunction::NoiseFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "noise", ctx->numType(),
-               {Parameter(ctx->numType(), true),
-                Parameter(ctx->numType(), true)},
+               {Parameter(ctx->numType(), false, true),
+                Parameter(ctx->numType(), false, true)},
                nullptr) {
 
 }

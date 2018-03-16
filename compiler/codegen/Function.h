@@ -12,11 +12,12 @@ namespace MaximCodegen {
     class Parameter {
     public:
         Type *type;
+        bool passByRef;
         bool optional;
 
-        Parameter(Type *type, bool optional);
+        Parameter(Type *type, bool passByRef, bool optional);
 
-        static std::unique_ptr<Parameter> create(Type *type, bool optional);
+        static std::unique_ptr<Parameter> create(Type *type, bool passByRef, bool optional);
 
         llvm::Type *getType() const;
     };
@@ -67,8 +68,9 @@ namespace MaximCodegen {
         public:
             llvm::Value *argStruct;
             Type *type;
+            bool passByRef;
 
-            DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type);
+            DynVarArg(MaximContext *context, llvm::Value *argStruct, Type *type, bool passByRef);
 
             std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &b) override;
 
@@ -76,7 +78,7 @@ namespace MaximCodegen {
         };
 
         Type *_returnType;
-        llvm::Type *_warpedReturnType;
+        //llvm::Type *_warpedReturnType;
         std::vector<Parameter> _parameters;
         std::unique_ptr<Parameter> _vararg;
         bool _returnByRef;

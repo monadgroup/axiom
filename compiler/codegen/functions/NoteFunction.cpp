@@ -9,7 +9,7 @@
 using namespace MaximCodegen;
 
 NoteFunction::NoteFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "note", ctx->getTupleType({ctx->numType(), ctx->numType(), ctx->numType()}), {Parameter(ctx->midiType(), false)},
+    : Function(ctx, module, "note", ctx->getTupleType({ctx->numType(), ctx->numType(), ctx->numType()}), {Parameter(ctx->midiType(), true, false)},
                nullptr) {
 
 }

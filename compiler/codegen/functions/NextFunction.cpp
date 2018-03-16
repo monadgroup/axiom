@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 NextFunction::NextFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "next", ctx->numType(), {Parameter(ctx->numType(), false)},
+    : Function(ctx, module, "next", ctx->numType(), {Parameter(ctx->numType(), false, false)},
                nullptr) {
 
 }

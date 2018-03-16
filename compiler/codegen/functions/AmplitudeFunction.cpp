@@ -7,7 +7,7 @@
 using namespace MaximCodegen;
 
 AmplitudeFunction::AmplitudeFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "amplitude", ctx->numType(), {Parameter(ctx->numType(), false)}, nullptr) {
+    : Function(ctx, module, "amplitude", ctx->numType(), {Parameter(ctx->numType(), false, false)}, nullptr) {
     b0 = 1 - std::exp(-1 / (0.05f * ctx->sampleRate));
 }
 

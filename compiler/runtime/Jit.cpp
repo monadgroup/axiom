@@ -157,6 +157,8 @@ std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> 
     mpm.run(*m);
     auto endClock = (std::clock() - startClock) / (double)(CLOCKS_PER_SEC / 1000);
     std::cerr << "      >> Optimized in " << endClock << " ms" << std::endl;
+    
+    m->print(llvm::errs(), nullptr);
 
     return m;
 }

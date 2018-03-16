@@ -8,8 +8,8 @@ using namespace MaximCodegen;
 
 PanFunction::PanFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "pan", ctx->numType(),
-               {Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), false)},
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false)},
                nullptr) {
 
 }

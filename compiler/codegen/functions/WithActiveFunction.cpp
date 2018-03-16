@@ -8,8 +8,8 @@ using namespace MaximCodegen;
 
 WithActiveFunction::WithActiveFunction(MaximContext *ctx, llvm::Module *module)
     : Function(ctx, module, "withActive", ctx->numType(),
-               {Parameter(ctx->numType(), false),
-                Parameter(ctx->numType(), false)}, nullptr) {
+               {Parameter(ctx->numType(), false, false),
+                Parameter(ctx->numType(), false, false)}, nullptr) {
 
 }
 

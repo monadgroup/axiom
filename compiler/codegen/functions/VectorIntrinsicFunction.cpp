@@ -9,7 +9,7 @@ using namespace MaximCodegen;
 VectorIntrinsicFunction::VectorIntrinsicFunction(MaximContext *ctx, llvm::Module *module, llvm::Intrinsic::ID id,
                                                  std::string name, size_t paramCount)
     : Function(ctx, module, std::move(name), ctx->numType(),
-               std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false)), nullptr),
+               std::vector<Parameter>(paramCount, Parameter(ctx->numType(), false, false)), nullptr),
       id(id) {
 
 }
