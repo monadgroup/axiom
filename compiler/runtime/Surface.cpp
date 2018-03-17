@@ -228,7 +228,6 @@ GeneratableModuleClass *Surface::compile() {
                         {
                             runtime()->ctx()->constInt(64, 0, false),
                             currentIndex,
-                            runtime()->ctx()->constInt(32, 1, false)
                         }
                     );
                 }
@@ -256,6 +255,8 @@ GeneratableModuleClass *Surface::compile() {
 
             auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck", _class->generate()->get(module()));
             auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun", _class->generate()->get(module()));
+            auto generateBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "generate", _class->generate()->get(module()));
+            auto generateEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "generateend", _class->generate()->get(module()));
             auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend", _class->generate()->get(module()));
 
             b.CreateBr(loopCheckBlock);
@@ -276,7 +277,35 @@ GeneratableModuleClass *Surface::compile() {
             // extractor field (if it's in one, otherwise it's always active).
             // this will need to be calculated when doing the extractor field search.
 
+            // only generate if any inputs are active, or there are no inputs
+            auto hasControls = node->begin() != node->end();
+            llvm::Value *shouldGenerate = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()), (uint64_t) !hasControls, false);
+            for (const auto &control : *node) {
+                // todo: make this work for group nodes!
+                auto hardControl = dynamic_cast<HardControl *>(control.get());
+                if (!hardControl || !hardControl->readFrom()) continue;
+
+                auto controlPtr = nodeClass->getEntryPointer(b, hardControl->instance().instId, entryPtr, "controlinst");
+
+                // array types are always active
+                llvm::Value *controlActive = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()), 1, false);
+                auto loadedPtr = b.CreateLoad(controlPtr);
+                if (loadedPtr->getType()->getPointerElementType()->isStructTy()) {
+                    controlActive = b.CreateLoad(b.CreateGEP(
+                        loadedPtr,
+                        {
+                            runtime()->ctx()->constInt(64, 0, false),
+                            runtime()->ctx()->constInt(32, 0, false)
+                        }
+                    ), "inputactive");
+                }
+                shouldGenerate = b.CreateOr(shouldGenerate, controlActive, "shouldgenerate");
+            }
+            b.CreateCondBr(shouldGenerate, generateBlock, generateEndBlock);
+            b.SetInsertPoint(generateBlock);
             nodeClass->generate()->call(b, {}, entryPtr, module(), "");
+            b.CreateBr(generateEndBlock);
+            b.SetInsertPoint(generateEndBlock);
 
             auto incrIndex = b.CreateAdd(
                 currentIndex,
@@ -288,44 +317,10 @@ GeneratableModuleClass *Surface::compile() {
 
             b.SetInsertPoint(loopEndBlock);
         }
-
-        //auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck");
-        //auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun");
-
-        /*for (unsigned int instN = 0; instN < loopSize; instN++) {
-            auto entryIndex = _class->addEntry(
-                nodeClass); // todo: GroupNodes will need ControlGroups passed into their constructor
-            _class->generate()->callInto(entryIndex, {}, nodeClass->generate(), "");
-            auto entryPtr = _class->cconstructor()->getEntryPointer(entryIndex, "nodeinst");
-
-            // setup control values in constructor
-            for (const auto &control : *node) {
-                auto hardControl = dynamic_cast<HardControl *>(control.get());
-                if (!hardControl) continue;
-
-                auto controlIndex = hardControl->instance().instId;
-                auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), controlIndex,
-                                                             entryPtr, "controlinst");
-
-                auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
-
-                auto indexPtr = groupPtr;
-                if (hardControl->group()->extracted()) {
-                    indexPtr = _class->constructor()->builder().CreateStructGEP(
-                        hardControl->group()->type()->storageType(),
-                        groupPtr,
-                        instN
-                    );
-                }
-
-                _class->constructor()->builder().CreateStore(indexPtr, controlPtr);
-            }
-        }*/
     }
 
     _class->complete();
     deploy();
-    //pullGetterMethod();
 
     return _class.get();
 }

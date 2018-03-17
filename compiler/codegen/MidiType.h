@@ -20,6 +20,8 @@ namespace MaximCodegen {
 
         llvm::StructType *get() const override { return _type; }
 
+        llvm::IntegerType *activeType() const { return _activeType; }
+
         llvm::IntegerType *countType() const { return _countType; }
 
         llvm::ArrayType *arrayType() const { return _arrayType; }
@@ -46,6 +48,8 @@ namespace MaximCodegen {
         MaximContext *_context;
 
         llvm::StructType *_type;
+
+        llvm::IntegerType *_activeType;
 
         llvm::IntegerType *_countType;
 

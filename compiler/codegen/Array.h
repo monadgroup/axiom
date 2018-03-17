@@ -12,24 +12,6 @@ namespace MaximCodegen {
 
     class MaximContext;
 
-    class ArrayItem {
-    public:
-        explicit ArrayItem(llvm::Value *get, llvm::Type *type, Type *itemType);
-
-        llvm::Value *get() const { return _get; }
-
-        llvm::Value *enabledPtr(Builder &builder) const;
-
-        llvm::Value *enabled(Builder &builder) const;
-
-        std::unique_ptr<Value> value(Builder &builder, SourcePos startPos, SourcePos endPos) const;
-
-    private:
-        llvm::Value *_get;
-        llvm::Type *_type;
-        Type *_itemType;
-    };
-
     class Array : public Value {
     public:
         using Storage = std::vector<std::unique_ptr<Value>>;
@@ -48,9 +30,9 @@ namespace MaximCodegen {
 
         llvm::Value *indexPtr(llvm::Value *index, Builder &builder);
 
-        ArrayItem atIndex(size_t index, Builder &builder);
+        std::unique_ptr<Value> atIndex(size_t index, Builder &builder);
 
-        ArrayItem atIndex(llvm::Value *index, Builder &builder);
+        std::unique_ptr<Value> atIndex(llvm::Value *index, Builder &builder);
 
         llvm::Value *get() const override { return _get; }
 

@@ -105,6 +105,7 @@ void Runtime::fillBuffer(float **buffer, size_t size) {
         auto samplesToNextEvent = remainingSamples;
 
         MidiValue triggerEvents {};
+        triggerEvents.active = true;
 
         for (size_t i = 0; i < eventQueueSize; i++) {
             auto &event = _queuedEvents[i];

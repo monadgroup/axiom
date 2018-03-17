@@ -16,11 +16,7 @@ namespace MaximCodegen {
 
         llvm::ArrayType *get() const override { return _type; }
 
-        llvm::IntegerType *itemEnabledType() const { return _itemEnabledType; }
-
-        llvm::Type *itemValType() const { return _itemValType; }
-
-        llvm::StructType *itemType() const { return _itemType; }
+        llvm::Type *itemType() const { return _itemType; }
 
         Type *baseType() const { return _baseType; }
 
@@ -33,11 +29,7 @@ namespace MaximCodegen {
 
         llvm::ArrayType *_type;
 
-        llvm::IntegerType *_itemEnabledType;
-
-        llvm::Type *_itemValType;
-
-        llvm::StructType *_itemType;
+        llvm::Type *_itemType;
 
         MaximContext *_context;
     };

@@ -8,9 +8,9 @@ Num::Num(MaximContext *context, Builder &allocaBuilder, float left, float right,
          bool active, SourcePos startPos, SourcePos endPos) : Value(startPos, endPos), _context(context) {
     _get = allocaBuilder.CreateAlloca(type()->get(), nullptr, "num");
     allocaBuilder.CreateStore(llvm::ConstantStruct::get(type()->get(), {
+        llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false),
         context->constFloatVec(left, right),
-        llvm::ConstantInt::get(type()->formType(), (uint64_t) form, false),
-        llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false)
+        llvm::ConstantInt::get(type()->formType(), (uint64_t) form, false)
     }), _get);
 }
 
@@ -22,7 +22,7 @@ Num::Num(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, Sour
 Num::Num(MaximContext *context, llvm::Value *clone, Builder &builder, Builder &allocaBuilder, SourcePos startPos,
          SourcePos endPos) : Value(startPos, endPos), _context(context) {
     _get = allocaBuilder.CreateAlloca(type()->get(), nullptr, "num");
-    context->copyPtr(builder, clone, _get);
+    builder.CreateStore(builder.CreateLoad(clone, "clonecopy"), _get);
 }
 
 Num::Num(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos)
@@ -49,15 +49,15 @@ std::unique_ptr<Num> Num::create(MaximContext *context, llvm::Value *get, Source
 }
 
 llvm::Value* Num::vecPtr(Builder &builder) const {
-    return builder.CreateStructGEP(type()->get(), _get, 0, _get->getName() + ".vec.ptr");
+    return builder.CreateStructGEP(type()->get(), _get, 1, _get->getName() + ".vec.ptr");
 }
 
 llvm::Value* Num::formPtr(Builder &builder) const {
-    return builder.CreateStructGEP(type()->get(), _get, 1, _get->getName() + ".form.ptr");
+    return builder.CreateStructGEP(type()->get(), _get, 2, _get->getName() + ".form.ptr");
 }
 
 llvm::Value* Num::activePtr(Builder &builder) const {
-    return builder.CreateStructGEP(type()->get(), _get, 2, _get->getName() + ".active.ptr");
+    return builder.CreateStructGEP(type()->get(), _get, 0, _get->getName() + ".active.ptr");
 }
 
 llvm::Value* Num::vec(Builder &builder) const {

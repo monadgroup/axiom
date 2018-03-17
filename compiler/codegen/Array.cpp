@@ -34,36 +34,14 @@ llvm::Value* Array::indexPtr(llvm::Value *index, Builder &builder) {
     }, "arrayitem.ptr");
 }
 
-ArrayItem Array::atIndex(size_t index, Builder &builder) {
+std::unique_ptr<Value> Array::atIndex(size_t index, Builder &builder) {
     return atIndex(_context->constInt(32, index, false), builder);
 }
 
-ArrayItem Array::atIndex(llvm::Value *index, Builder &builder) {
-    return ArrayItem(
-        indexPtr(index, builder),
-        type()->itemType(),
-        type()->baseType()
-    );
+std::unique_ptr<Value> Array::atIndex(llvm::Value *index, Builder &builder) {
+    return _type->baseType()->createInstance(indexPtr(index, builder), startPos, endPos);
 }
 
 std::unique_ptr<Value> Array::withSource(SourcePos startPos, SourcePos endPos) const {
     return Array::create(_context, _type, _get, startPos, endPos);
-}
-
-ArrayItem::ArrayItem(llvm::Value *get, llvm::Type *type, Type *itemType)
-    : _get(get), _type(type), _itemType(itemType) {
-
-}
-
-llvm::Value* ArrayItem::enabledPtr(Builder &builder) const {
-    return builder.CreateStructGEP(_type, _get, 0, _get->getName() + ".enabled.ptr");
-}
-
-llvm::Value* ArrayItem::enabled(Builder &builder) const {
-    return builder.CreateLoad(enabledPtr(builder), _get->getName() + ".enabled");
-}
-
-std::unique_ptr<Value> ArrayItem::value(Builder &builder, SourcePos startPos, SourcePos endPos) const {
-    auto ptr = builder.CreateStructGEP(_type, _get, 1, _get->getName() + ".value.ptr");
-    return _itemType->createInstance(ptr, startPos, endPos);
 }

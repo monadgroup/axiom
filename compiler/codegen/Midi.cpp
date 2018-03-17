@@ -54,12 +54,16 @@ void Midi::initialize(llvm::Module *module, MaximContext *ctx) {
     b.CreateRetVoid();
 }
 
+llvm::Value* Midi::activePtr(Builder &builder) const {
+    return builder.CreateStructGEP(type()->get(), _get, 0, _get->getName() + ".active.ptr");
+}
+
 llvm::Value* Midi::countPtr(Builder &builder) const {
-    return builder.CreateStructGEP(type()->get(), _get, 0, _get->getName() + ".count.ptr");
+    return builder.CreateStructGEP(type()->get(), _get, 1, _get->getName() + ".count.ptr");
 }
 
 llvm::Value* Midi::eventsPtr(Builder &builder) const {
-    return builder.CreateStructGEP(type()->get(), _get, 1, _get->getName() + ".events.ptr");
+    return builder.CreateStructGEP(type()->get(), _get, 2, _get->getName() + ".events.ptr");
 }
 
 llvm::Value* Midi::eventPtr(Builder &builder, size_t index) const {
@@ -71,11 +75,15 @@ llvm::Value* Midi::eventPtr(Builder &builder, llvm::Value *index) const {
         _get,
         {
             _context->constInt(64, 0, false),
-            _context->constInt(32, 1, false),
+            _context->constInt(32, 2, false),
             index
         },
         _get->getName() + ".event.ptr"
     );
+}
+
+llvm::Value* Midi::active(Builder &builder) {
+    return builder.CreateLoad(activePtr(builder), _get->getName() + ".active");
 }
 
 llvm::Value* Midi::count(Builder &builder) const {
@@ -88,6 +96,14 @@ MidiEvent Midi::eventAt(Builder &builder, size_t index) const {
 
 MidiEvent Midi::eventAt(Builder &builder, llvm::Value *index) const {
     return MidiEvent(eventPtr(builder, index), type()->eventType());
+}
+
+void Midi::setActive(Builder &builder, bool active) const {
+    setActive(builder, llvm::ConstantInt::get(type()->activeType(), (uint64_t) active, false));
+}
+
+void Midi::setActive(Builder &builder, llvm::Value *active) const {
+    builder.CreateStore(active, activePtr(builder));
 }
 
 void Midi::setCount(Builder &builder, uint64_t count) const {

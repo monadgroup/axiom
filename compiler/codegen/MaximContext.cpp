@@ -36,6 +36,7 @@
 #include "functions/SequenceFunction.h"
 #include "functions/NoteFunction.h"
 #include "functions/VoicesFunction.h"
+#include "functions/MixdownFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -241,6 +242,7 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerFunction(AmplitudeFunction::create(this, libModule));
     registerFunction(HoldFunction::create(this, libModule));
     registerFunction(AccumFunction::create(this, libModule));
+    registerFunction(MixdownFunction::create(this, libModule));
 
     // oscillators
     registerFunction(SinOscFunction::create(this, libModule));

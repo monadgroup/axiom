@@ -21,10 +21,7 @@ llvm::Module *ControlGroup::module() {
 MaximCodegen::ModuleClass *ControlGroup::compile() {
     auto storeType = type()->underlyingType();
     if (extracted()) {
-        _compileResult.setStorageType(llvm::ArrayType::get(llvm::StructType::get(_surface->runtime()->ctx()->llvm(), {
-            llvm::Type::getInt1Ty(_surface->runtime()->ctx()->llvm()),
-            storeType
-        }, false), MaximCodegen::ArrayType::arraySize));
+        _compileResult.setStorageType(llvm::ArrayType::get(storeType, MaximCodegen::ArrayType::arraySize));
     } else {
         _compileResult.setStorageType(storeType);
     }
@@ -94,4 +91,15 @@ void ControlGroup::setMidiValue(const MidiValue &value) const {
 
 void ControlGroup::pushMidiEvent(const MidiEventValue &event) const {
     _surface->runtime()->op().pushMidiEvent(currentPtr(), event);
+}
+
+uint32_t ControlGroup::getActiveFlags() const {
+    if (_type->type() == MaximCommon::ControlType::NUMBER || _type->type() == MaximCommon::ControlType::NUM_EXTRACT) {
+        return _surface->runtime()->op().readNumArrayActiveFlags(currentPtr());
+    } else if (_type->type() == MaximCommon::ControlType::MIDI || _type->type() == MaximCommon::ControlType::MIDI_EXTRACT) {
+        return _surface->runtime()->op().readMidiArrayActiveFlags(currentPtr());
+    } else {
+        assert(false);
+        return 0;
+    }
 }

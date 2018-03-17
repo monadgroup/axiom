@@ -7,12 +7,7 @@ using namespace MaximCodegen;
 
 ArrayType::ArrayType(MaximContext *context, Type *baseType)
     : _baseType(baseType), _context(context) {
-    _itemEnabledType = llvm::Type::getInt1Ty(context->llvm());
-    _itemValType = baseType->get();
-    _itemType = llvm::StructType::get(context->llvm(), {
-        _itemEnabledType,
-        _itemValType
-    });
+    _itemType = baseType->get();
     _type = llvm::ArrayType::get(_itemType, arraySize);
 }
 

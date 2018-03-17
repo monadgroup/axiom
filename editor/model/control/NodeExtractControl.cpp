@@ -1,5 +1,8 @@
 #include "NodeExtractControl.h"
 
+#include "compiler/runtime/Control.h"
+#include "compiler/runtime/ControlGroup.h"
+
 using namespace AxiomModel;
 
 NodeExtractControl::NodeExtractControl(Node *node, MaximRuntime::Control *runtime, ConnectionSink::Type baseType,
@@ -12,5 +15,5 @@ NodeExtractControl::NodeExtractControl(Node *node, MaximRuntime::Control *runtim
 }
 
 void NodeExtractControl::doRuntimeUpdate() {
-    // todo
+    m_sink.setActiveSlots(runtime()->group()->getActiveFlags());
 }

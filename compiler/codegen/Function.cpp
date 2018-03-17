@@ -129,7 +129,7 @@ std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::
 
     auto entryIndex = method->moduleClass()->addEntry(this);
     sampleArguments(method, entryIndex, baseArgs, baseVarargs);
-    auto result = method->callInto(entryIndex, args, _callMethod.get(), "func.deref");
+    auto result = method->callInto(entryIndex, args, _callMethod.get(), _returnByRef ? "" : "func.deref");
 
     if (!_returnByRef) {
         method->builder().CreateStore(result, retAlloca);

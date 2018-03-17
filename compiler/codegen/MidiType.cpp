@@ -16,8 +16,9 @@ MidiType::MidiType(MaximContext *context) : _context(context) {
 
     _arrayType = llvm::ArrayType::get(_eventType, maxEvents);
     _countType = llvm::Type::getInt8Ty(context->llvm());
+    _activeType = llvm::Type::getInt1Ty(context->llvm());
     _type = llvm::StructType::create(context->llvm(), {
-        _countType, _arrayType
+        _activeType, _countType, _arrayType
     }, "struct.midi");
 
     _eventLayout = context->dataLayout().getStructLayout(_eventType);

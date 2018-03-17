@@ -37,16 +37,21 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
     auto undefPos = SourcePos(-1, -1);
     auto result = Array::create(ctx(), ctx()->getArrayType(ctx()->midiType()), method->allocaBuilder(), undefPos, undefPos);
     // todo: we might not need this, probly shouldn't have it cause performance
-    ctx()->clearPtr(b, result->get());
+    //ctx()->clearPtr(b, result->get());
 
+    auto initIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "initindex.ptr");
     auto eventIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "eventindex.ptr");
     auto innerIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "innerindex.ptr");
 
+    b.CreateStore(ctx()->constInt(8, 0, false), initIndexPtr);
     b.CreateStore(ctx()->constInt(8, 0, false), eventIndexPtr);
 
     auto eventCount = inputVal->count(b);
 
     auto func = method->get(method->moduleClass()->module());
+    auto initLoopCheckBlock = llvm::BasicBlock::Create(ctx()->llvm(), "initloopcheck", func);
+    auto initLoopRunBlock = llvm::BasicBlock::Create(ctx()->llvm(), "initlooprun", func);
+
     auto eventLoopCheckBlock = llvm::BasicBlock::Create(ctx()->llvm(), "loopcheck", func);
     auto eventLoopRunBlock = llvm::BasicBlock::Create(ctx()->llvm(), "looprun", func);
     auto eventLoopFinishBlock = llvm::BasicBlock::Create(ctx()->llvm(), "loopfinish", func);
@@ -59,11 +64,28 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
     auto noteElseLoopRunBlock = llvm::BasicBlock::Create(ctx()->llvm(), "noteelselooprun", func);
     auto noteElseAssignBlock = llvm::BasicBlock::Create(ctx()->llvm(), "noteelseassignblock", func);
 
-    b.CreateBr(eventLoopCheckBlock);
+    b.CreateBr(initLoopCheckBlock);
+    b.SetInsertPoint(initLoopCheckBlock);
+    auto currentInitIndex = b.CreateLoad(initIndexPtr);
+    auto initCond = b.CreateICmpULT(currentInitIndex, ctx()->constInt(8, ArrayType::arraySize, false), "initcond");
+    b.CreateCondBr(initCond, initLoopRunBlock, eventLoopCheckBlock);
+
+    b.SetInsertPoint(initLoopRunBlock);
+
+    auto incrementedInitIndex = b.CreateAdd(currentInitIndex, ctx()->constInt(8, 1, false), "nextinitindex");
+    b.CreateStore(incrementedInitIndex, initIndexPtr);
+    auto initLastActive = AxiomUtil::strict_unique_cast<Num>(lastActiveVal->atIndex(currentInitIndex, b));
+    auto initMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentInitIndex, b));
+
+    initMidi->setCount(b, (uint64_t) 0);
+    auto initActiveVal = b.CreateExtractElement(initLastActive->vec(b), (uint64_t) 0, "initactiveval");
+    auto activeCond = b.CreateFCmpONE(initActiveVal, ctx()->constFloat(0), "activecond");
+    initMidi->setActive(b, activeCond);
+    b.CreateBr(initLoopCheckBlock);
+
     b.SetInsertPoint(eventLoopCheckBlock);
 
     auto currentEventIndex = b.CreateLoad(eventIndexPtr);
-    // todo: shouldn't compare against maxEvents, but instead against current number of events!
     auto eventCond = b.CreateICmpULT(currentEventIndex, eventCount, "eventcond");
     b.CreateCondBr(eventCond, eventLoopRunBlock, eventLoopFinishBlock);
     b.SetInsertPoint(eventLoopRunBlock);
@@ -92,7 +114,7 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
         b.CreateStore(incrementedActiveIndex, innerIndexPtr);
 
         auto activeNum = AxiomUtil::strict_unique_cast<Num>(
-            lastActiveVal->atIndex(currentActiveIndex, b).value(b, undefPos, undefPos));
+            lastActiveVal->atIndex(currentActiveIndex, b));
         auto activeVal = b.CreateExtractElement(activeNum->vec(b), (uint64_t) 0, "activeval");
         auto notActiveCond = b.CreateFCmpOEQ(activeVal, ctx()->constFloat(0), "notactivecond");
         b.CreateCondBr(notActiveCond, noteOnAssignBlock, noteOnLoopCheckBlock);
@@ -103,7 +125,8 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
             currentActiveIndex
         }, "noteassign.ptr");
         b.CreateStore(currentEvent.note(b), assignNotePtr);
-        auto targetMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentActiveIndex, b).value(b, undefPos, undefPos));
+        auto targetMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentActiveIndex, b));
+        targetMidi->setActive(b, true);
         targetMidi->pushEvent(b, currentEvent, method->moduleClass()->module());
         b.CreateBr(eventLoopCheckBlock); // break back to event loop
     }
@@ -120,7 +143,7 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
         b.CreateStore(incrementedNoteIndex, innerIndexPtr);
 
         auto activeNum = AxiomUtil::strict_unique_cast<Num>(
-            lastActiveVal->atIndex(currentNoteIndex, b).value(b, undefPos, undefPos));
+            lastActiveVal->atIndex(currentNoteIndex, b));
         auto activeVal = b.CreateExtractElement(activeNum->vec(b), (uint64_t) 0, "activeval");
         auto activeCond = b.CreateFCmpONE(activeVal, ctx()->constFloat(0), "activecond");
 
@@ -143,12 +166,11 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
             "channelpitchweelcond"
         );
         auto isChannelEventCond = b.CreateOr(channelAftertouchCond, channelPitchwheelCond, "channeleventcond");
-
         auto branchCond = b.CreateAnd(activeCond, b.CreateOr(notesEqualCond, isChannelEventCond, "matchescond"), "queuecond");
 
         b.CreateCondBr(branchCond, noteElseAssignBlock, noteElseLoopCheckBlock);
         b.SetInsertPoint(noteElseAssignBlock);
-        auto targetMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentNoteIndex, b).value(b, undefPos, undefPos));
+        auto targetMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentNoteIndex, b));
         targetMidi->pushEvent(b, currentEvent, method->moduleClass()->module());
         b.CreateBr(noteElseLoopCheckBlock);
     }

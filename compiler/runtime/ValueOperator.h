@@ -11,10 +11,10 @@ namespace MaximCodegen {
 namespace MaximRuntime {
 
     struct NumValue {
+        bool active = false;
         float left = 0;
         float right = 0;
         MaximCommon::FormType form = MaximCommon::FormType::LINEAR;
-        bool active = false;
 
         bool operator==(const NumValue &other) const {
             return left == other.left && right == other.right && form == other.form && active == other.active;
@@ -25,15 +25,15 @@ namespace MaximRuntime {
         }
 
         NumValue withLR(float l, float r) const {
-            return {l, r, form, active};
+            return {active, l, r, form};
         }
 
         NumValue withL(float l) const {
-            return {l, right, form, active};
+            return {active, l, right, form};
         }
 
         NumValue withR(float r) const {
-            return {left, r, form, active};
+            return {active, left, r, form};
         }
     };
 
@@ -53,6 +53,7 @@ namespace MaximRuntime {
     };
 
     struct MidiValue {
+        bool active = false;
         uint8_t count;
         MidiEventValue events[MaximCodegen::MidiType::maxEvents];
 
@@ -80,9 +81,17 @@ namespace MaximRuntime {
     public:
         explicit ValueOperator(MaximCodegen::MaximContext *context);
 
+        uint32_t readArrayActiveFlags(void *ptr, size_t stride);
+
+        uint32_t readNumArrayActiveFlags(void *ptr);
+
+        uint32_t readMidiArrayActiveFlags(void *ptr);
+
         NumValue readNum(void *ptr);
 
         void writeNum(void *ptr, const NumValue &value);
+
+        bool readMidiActive(void *ptr);
 
         uint8_t readMidiCount(void *ptr);
 
@@ -91,6 +100,8 @@ namespace MaximRuntime {
         MidiEventValue readMidiEvent(void *ptr, uint8_t index);
 
         MidiValue readMidi(void *ptr);
+
+        void writeMidiActive(void *ptr, bool active);
 
         void writeMidiCount(void *ptr, uint8_t value);
 
@@ -103,12 +114,15 @@ namespace MaximRuntime {
     private:
         MaximCodegen::MaximContext *_context;
 
+        uint64_t numActiveOffset;
         uint64_t numValOffset;
         uint64_t numFormOffset;
-        uint64_t numActiveOffset;
+        uint64_t numStride;
 
+        uint64_t midiActiveOffset;
         uint64_t midiCountOffset;
         uint64_t midiArrayOffset;
+        uint64_t midiStride;
         uint64_t midiEventSize;
         uint64_t midiEventTypeOffset;
         uint64_t midiEventChannelOffset;

@@ -52,6 +52,8 @@ namespace MaximCodegen {
 
         llvm::Value *get() const override { return _get; }
 
+        llvm::Value *activePtr(Builder &builder) const;
+
         llvm::Value *countPtr(Builder &builder) const;
 
         llvm::Value *eventsPtr(Builder &builder) const;
@@ -60,11 +62,17 @@ namespace MaximCodegen {
 
         llvm::Value *eventPtr(Builder &builder, llvm::Value *index) const;
 
+        llvm::Value *active(Builder &builder);
+
         llvm::Value *count(Builder &builder) const;
 
         MidiEvent eventAt(Builder &builder, size_t index) const;
 
         MidiEvent eventAt(Builder &builder, llvm::Value *index) const;
+
+        void setActive(Builder &builder, bool active) const;
+
+        void setActive(Builder &builder, llvm::Value *active) const;
 
         void setCount(Builder &builder, uint64_t count) const;
 

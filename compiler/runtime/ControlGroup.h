@@ -56,6 +56,8 @@ namespace MaximRuntime {
 
         void pushMidiEvent(const MidiEventValue &event) const;
 
+        uint32_t getActiveFlags() const;
+
     private:
 
         MaximCodegen::Control *_type;
