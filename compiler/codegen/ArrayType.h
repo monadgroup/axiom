@@ -10,7 +10,7 @@ namespace MaximCodegen {
 
     class ArrayType : public Type {
     public:
-        static constexpr size_t arraySize = 32;
+        static constexpr size_t arraySize = 16;
 
         ArrayType(MaximContext *context, Type *baseType);
 

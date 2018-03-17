@@ -8,7 +8,7 @@ namespace AxiomModel {
         Q_OBJECT
 
     public:
-        using ActiveSlotFlags = uint32_t;
+        using ActiveSlotFlags = uint16_t;
 
         explicit ExtractConnectionSink(MaximRuntime::Control *runtime, Type baseType);
 

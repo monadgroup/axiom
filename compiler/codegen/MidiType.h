@@ -14,7 +14,7 @@ namespace MaximCodegen {
 
     class MidiType : public Type {
     public:
-        static constexpr size_t maxEvents = 32;
+        static constexpr size_t maxEvents = 16;
 
         explicit MidiType(MaximContext *context);
 
