@@ -25,22 +25,22 @@ ValueOperator::ValueOperator(MaximCodegen::MaximContext *context) : _context(con
     midiEventParamOffset = midiEventLayout->getElementOffset(3);
 }
 
-uint32_t ValueOperator::readArrayActiveFlags(void *ptr, size_t stride) {
+uint32_t ValueOperator::readArrayActiveFlags(void *ptr, size_t stride, size_t offset) {
     auto bytePtr = (uint8_t *) ptr;
     uint32_t result = 0;
     for (size_t i = 0; i < MaximCodegen::ArrayType::arraySize; i++) {
-        auto isActive = (bool) *(bytePtr + i * stride);
+        auto isActive = (bool) *(bytePtr + i * stride + offset);
         result |= isActive << i;
     }
     return result;
 }
 
 uint32_t ValueOperator::readNumArrayActiveFlags(void *ptr) {
-    return readArrayActiveFlags(ptr, numStride);
+    return readArrayActiveFlags(ptr, numStride, numActiveOffset);
 }
 
 uint32_t ValueOperator::readMidiArrayActiveFlags(void *ptr) {
-    return readArrayActiveFlags(ptr, midiStride);
+    return readArrayActiveFlags(ptr, midiStride, midiActiveOffset);
 }
 
 NumValue ValueOperator::readNum(void *ptr) {

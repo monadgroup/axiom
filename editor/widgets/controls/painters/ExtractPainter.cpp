@@ -1,6 +1,8 @@
 #include "ExtractPainter.h"
 
 #include <math.h>
+#include <iostream>
+#include <bitset>
 
 #include "editor/util.h"
 
@@ -27,8 +29,8 @@ void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, 
 
     const auto markerCount = sizeof(activeFlags) * CHAR_BIT;
     auto activeMarkerPen = QPen(QColor(0, 0, 0), scaledMarkerThickness);
-    for (auto i = 0; i < markerCount; i++) {
-        if (activeFlags & (1 << markerCount)) {
+    for (AxiomModel::ExtractConnectionSink::ActiveSlotFlags i = 0; i < markerCount; i++) {
+        if (activeFlags & (1 << i)) {
             activeMarkerPen.setColor(currentColor);
         } else {
             activeMarkerPen.setColor(QColor(0, 0, 0));

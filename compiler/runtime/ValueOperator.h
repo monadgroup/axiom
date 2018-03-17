@@ -81,7 +81,7 @@ namespace MaximRuntime {
     public:
         explicit ValueOperator(MaximCodegen::MaximContext *context);
 
-        uint32_t readArrayActiveFlags(void *ptr, size_t stride);
+        uint32_t readArrayActiveFlags(void *ptr, size_t stride, size_t offset);
 
         uint32_t readNumArrayActiveFlags(void *ptr);
 
