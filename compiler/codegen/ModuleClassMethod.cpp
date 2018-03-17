@@ -19,20 +19,20 @@ ModuleClassMethod::ModuleClassMethod(ModuleClass *moduleClass, std::string name,
     _entryBlock = llvm::BasicBlock::Create(moduleClass->ctx()->llvm(), "entry", func);
 
     llvm::FastMathFlags mathFlags;
-    mathFlags.setNoNaNs();
-    mathFlags.setNoInfs();
-    mathFlags.setNoSignedZeros();
-    mathFlags.setAllowReciprocal();
-    mathFlags.setAllowContract(true);
-    mathFlags.setUnsafeAlgebra();
+    //mathFlags.setNoNaNs();
+    //mathFlags.setNoInfs();
+    //mathFlags.setNoSignedZeros();
+    //mathFlags.setAllowReciprocal();
+    //mathFlags.setAllowContract(true);
+    //mathFlags.setUnsafeAlgebra();
 
     _allocaBuilder.SetInsertPoint(allocaBlock);
-    _allocaBuilder.setFastMathFlags(mathFlags);
+    //_allocaBuilder.setFastMathFlags(mathFlags);
     auto allocaEntryBr = _allocaBuilder.CreateBr(_entryBlock);
     _allocaBuilder.SetInsertPoint(allocaEntryBr);
 
     _builder.SetInsertPoint(_entryBlock);
-    _builder.setFastMathFlags(mathFlags);
+    //_builder.setFastMathFlags(mathFlags);
     _contextPtr = func->arg_begin() + _paramTypes.size() - 1;
 }
 
@@ -46,7 +46,7 @@ llvm::Function *ModuleClassMethod::get(llvm::Module *module) const {
         llvm::Function::LinkageTypes::ExternalLinkage,
         _name, module
     );
-    func->addFnAttr("denormal-fp-math", "positive-zero");
+    //func->addFnAttr("denormal-fp-math", "positive-zero");
     return func;
 }
 

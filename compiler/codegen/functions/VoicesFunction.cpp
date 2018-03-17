@@ -36,8 +36,6 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
 
     auto undefPos = SourcePos(-1, -1);
     auto result = Array::create(ctx(), ctx()->getArrayType(ctx()->midiType()), method->allocaBuilder(), undefPos, undefPos);
-    // todo: we might not need this, probly shouldn't have it cause performance
-    //ctx()->clearPtr(b, result->get());
 
     auto initIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "initindex.ptr");
     auto eventIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "eventindex.ptr");
