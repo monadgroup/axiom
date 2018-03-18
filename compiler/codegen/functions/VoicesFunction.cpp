@@ -111,10 +111,8 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
         auto incrementedActiveIndex = b.CreateAdd(currentActiveIndex, ctx()->constInt(8, 1, false), "nextactiveindex");
         b.CreateStore(incrementedActiveIndex, innerIndexPtr);
 
-        auto activeNum = AxiomUtil::strict_unique_cast<Num>(
-            lastActiveVal->atIndex(currentActiveIndex, b));
-        auto activeVal = b.CreateExtractElement(activeNum->vec(b), (uint64_t) 0, "activeval");
-        auto notActiveCond = b.CreateFCmpOEQ(activeVal, ctx()->constFloat(0), "notactivecond");
+        auto targetMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentActiveIndex, b));
+        auto notActiveCond = b.CreateNot(targetMidi->active(b), "notactivecond");
         b.CreateCondBr(notActiveCond, noteOnAssignBlock, noteOnLoopCheckBlock);
         b.SetInsertPoint(noteOnAssignBlock);
 
@@ -123,7 +121,6 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
             currentActiveIndex
         }, "noteassign.ptr");
         b.CreateStore(currentEvent.note(b), assignNotePtr);
-        auto targetMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentActiveIndex, b));
         targetMidi->setActive(b, true);
         targetMidi->pushEvent(b, currentEvent, method->moduleClass()->module());
         b.CreateBr(eventLoopCheckBlock); // break back to event loop
@@ -140,10 +137,8 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
         auto incrementedNoteIndex = b.CreateAdd(currentNoteIndex, ctx()->constInt(8, 1, false), "noteindex");
         b.CreateStore(incrementedNoteIndex, innerIndexPtr);
 
-        auto activeNum = AxiomUtil::strict_unique_cast<Num>(
-            lastActiveVal->atIndex(currentNoteIndex, b));
-        auto activeVal = b.CreateExtractElement(activeNum->vec(b), (uint64_t) 0, "activeval");
-        auto activeCond = b.CreateFCmpONE(activeVal, ctx()->constFloat(0), "activecond");
+        auto targetMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentNoteIndex, b));
+        auto activeCond = targetMidi->active(b);
 
         auto currentNotePtr = b.CreateGEP(currentNotesPtr, {
             ctx()->constInt(64, 0, false),
@@ -168,7 +163,6 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
 
         b.CreateCondBr(branchCond, noteElseAssignBlock, noteElseLoopCheckBlock);
         b.SetInsertPoint(noteElseAssignBlock);
-        auto targetMidi = AxiomUtil::strict_unique_cast<Midi>(result->atIndex(currentNoteIndex, b));
         targetMidi->pushEvent(b, currentEvent, method->moduleClass()->module());
         b.CreateBr(noteElseLoopCheckBlock);
     }
