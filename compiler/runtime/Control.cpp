@@ -61,15 +61,15 @@ void Control::disconnectFrom(Control *other) {
         auto visitControl = visitQueue.front();
         visitQueue.pop();
 
+        // set the controls group to the new one
+        visitControl->setGroup(newGroupPtr);
+
         for (const auto &connectedControl : visitControl->connections()) {
             auto index = visitedControls.find(connectedControl);
             if (index != visitedControls.end()) continue;
 
             visitedControls.emplace(connectedControl);
             visitQueue.push(connectedControl);
-
-            // set the controls group to the new one
-            connectedControl->setGroup(newGroupPtr);
         }
     }
 
