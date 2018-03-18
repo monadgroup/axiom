@@ -37,6 +37,7 @@
 #include "functions/NoteFunction.h"
 #include "functions/VoicesFunction.h"
 #include "functions/MixdownFunction.h"
+#include "functions/ChannelFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -254,6 +255,7 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     // midi operations
     registerFunction(NoteFunction::create(this, libModule));
     registerFunction(VoicesFunction::create(this, libModule));
+    registerFunction(ChannelFunction::create(this, libModule));
 
     // hot paths for when only two parameters are provided to min/max
     registerFunction(VectorIntrinsicFunction::create(this, libModule, llvm::Intrinsic::ID::minnum, "min", 2));

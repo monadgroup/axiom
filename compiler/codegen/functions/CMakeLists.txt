@@ -4,6 +4,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/AccumFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ActiveFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/AmplitudeFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ChannelFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ClampFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CombineFunction.cpp"
         #"${CMAKE_CURRENT_SOURCE_DIR}/DelayFunction.cpp"
