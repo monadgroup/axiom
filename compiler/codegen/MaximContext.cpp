@@ -38,6 +38,7 @@
 #include "functions/VoicesFunction.h"
 #include "functions/MixdownFunction.h"
 #include "functions/ChannelFunction.h"
+#include "functions/SvFilterFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -50,6 +51,7 @@
 #include "converters/DbConverter.h"
 #include "converters/FrequencyConverter.h"
 #include "converters/LinearConverter.h"
+#include "converters/QConverter.h"
 #include "converters/SecondsConverter.h"
 
 #include "controls/ScalarControl.h"
@@ -245,6 +247,9 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerFunction(AccumFunction::create(this, libModule));
     registerFunction(MixdownFunction::create(this, libModule));
 
+    // filters
+    registerFunction(SvFilterFunction::create(this, libModule));
+
     // oscillators
     registerFunction(SinOscFunction::create(this, libModule));
     registerFunction(SqrOscFunction::create(this, libModule));
@@ -309,6 +314,7 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerConverter(DbConverter::create(this, libModule));
     registerConverter(FrequencyConverter::create(this, libModule));
     registerConverter(LinearConverter::create(this, libModule));
+    registerConverter(QConverter::create(this, libModule));
     registerConverter(SecondsConverter::create(this, libModule));
 
     /// REGISTER CONTROLS

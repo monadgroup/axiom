@@ -22,6 +22,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/SequenceFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/SinOscFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/SqrOscFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SvFilterFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ToDegFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ToRadFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/TriOscFunction.cpp"
