@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Node.h"
+#include "Surface.h"
+#include "SoftControl.h"
 
 namespace MaximRuntime {
-
-    class Surface;
 
     class Control;
 
@@ -19,17 +19,17 @@ namespace MaximRuntime {
             throw;
         }
 
-        const std::unique_ptr<Control> *begin() const override {
-            assert(false);
-            throw;
-        }
+        const std::unique_ptr<Control> *begin() const override { return (const std::unique_ptr<Control> *) _controls.begin().base(); }
 
-        const std::unique_ptr<Control> *end() const override {
-            assert(false);
-            throw;
-        }
+        const std::unique_ptr<Control> *end() const override { return (const std::unique_ptr<Control> *) _controls.end().base(); }
 
-        Surface *subsurface() const { return nullptr; }
+        Surface *subsurface() const { return &_subsurface; }
+
+    private:
+
+        Surface _subsurface;
+
+        std::vector<std::unique_ptr<SoftControl>> _controls;
     };
 
 }

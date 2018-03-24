@@ -24,7 +24,7 @@ namespace MaximRuntime {
 
         bool readFrom() const override;
 
-        std::vector<Control *> internallyLinkedControls() override;
+        void addInternallyLinkedControls(std::set<Control *> &controls) override;
 
         const MaximCodegen::ControlInstance &instance() const { return _instance; }
 

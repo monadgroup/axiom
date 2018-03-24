@@ -41,9 +41,9 @@ namespace MaximRuntime {
 
         void disconnectFrom(Control *other);
 
-        virtual std::vector<Control *> internallyLinkedControls() = 0;
+        virtual void addInternallyLinkedControls(std::set<Control *> &controls) = 0;
 
-        bool exposed() const;
+        Control *exposer() const;
 
         std::set<Control *> &connections() { return _connections; }
 

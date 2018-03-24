@@ -124,7 +124,7 @@ GeneratableModuleClass *Surface::compile() {
         if (!group->writtenTo() || !group->exposed()) continue;
 
         for (const auto &control : group->controls()) {
-            if (!control->exposed() || visitedNodes.find(control->node()) != visitedNodes.end()) continue;
+            if (!control->exposer() || visitedNodes.find(control->node()) != visitedNodes.end()) continue;
 
             visitedNodes.emplace(control->node());
             nodeQueue.emplace(control->node());

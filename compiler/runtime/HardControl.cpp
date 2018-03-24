@@ -26,7 +26,6 @@ bool HardControl::readFrom() const {
     return _instance.isReadFrom;
 }
 
-std::vector<Control *> HardControl::internallyLinkedControls() {
+void HardControl::addInternallyLinkedControls(std::set<MaximRuntime::Control *> &controls) {
     // hard controls can't be internally linked
-    return {};
 }

@@ -25,6 +25,7 @@ set(SOURCE_FILES
         Surface.cpp
         Runtime.cpp
         RuntimeUnit.cpp
+        SoftControl.cpp
         ValueOperator.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${QT5_INCLUDE_DIRS})

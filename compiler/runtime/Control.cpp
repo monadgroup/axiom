@@ -91,7 +91,7 @@ void Control::remove() {
     emit cleanup();
 }
 
-bool Control::exposed() const {
+Control *Control::exposer() const {
     // todo
-    return false;
+    return nullptr;
 }

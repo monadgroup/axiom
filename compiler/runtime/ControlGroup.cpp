@@ -54,7 +54,7 @@ void ControlGroup::removeControl(Control *control) {
 
 bool ControlGroup::exposed() const {
     for (const auto &control : _controls) {
-        if (control->exposed()) return true;
+        if (control->exposer()) return true;
     }
     return false;
 }
