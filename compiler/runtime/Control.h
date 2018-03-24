@@ -57,10 +57,6 @@ namespace MaximRuntime {
 
         void cleanup();
 
-    protected:
-
-        void finish();
-
     private:
 
         Node *_node;

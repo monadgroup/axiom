@@ -23,7 +23,7 @@ namespace MaximRuntime {
 
         const std::unique_ptr<Control> *end() const override { return (const std::unique_ptr<Control> *) _controls.end().base(); }
 
-        Surface *subsurface() const { return &_subsurface; }
+        Surface *subsurface() { return &_subsurface; }
 
     private:
 

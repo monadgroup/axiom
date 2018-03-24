@@ -27,13 +27,48 @@ GeneratableModuleClass *Surface::compile() {
     reset();
 
     // compile all children
+    auto nodeCodegenStart = std::clock();
     std::unordered_map<Node *, GeneratableModuleClass *> nodeClasses;
     for (const auto &node : _nodes) {
         nodeClasses.emplace(node, node->compile());
     }
+    auto nodeCodegenTime = std::clock() - nodeCodegenStart;
+    std::cerr << "    Finished node codegen in " << nodeCodegenTime << " ms" << std::endl;
 
     /// CONTROL GROUPING
-    // figure out which groups we own, and which groups are exposed to the parent
+    // walk the graph to find control groups
+    auto controlGroupingStart = std::clock();
+    std::vector<std::unique_ptr<ControlGroup>> newGroups;
+    for (const auto &node : _nodes) {
+        for (const std::unique_ptr<Control> &control : *node) {
+            auto newGroup = std::make_unique<ControlGroup>(this, control->type());
+            auto newGroupPtr = newGroup.get();
+            newGroups.emplace_back(std::move(newGroup));
+            control->setGroup(newGroupPtr);
+        }
+    }
+    _controlGroups = std::move(newGroups);
+
+    for (const auto &node : _nodes) {
+        for (const std::unique_ptr<Control> &control : *node) {
+
+            // first absorb groups from real connections
+            for (const auto &connectedControl : control->connections()) {
+                control->group()->absorb(connectedControl->group());
+            }
+
+            // next absorb groups from internal connections
+            std::set<Control *> internalConnections;
+            control->addInternallyLinkedControls(internalConnections);
+            for (const auto &connectedControl : internalConnections) {
+                control->group()->absorb(connectedControl->group());
+            }
+        }
+    }
+    auto controlGroupingTime = std::clock() - controlGroupingStart;
+    std::cerr << "    Finished control grouping in " << controlGroupingTime << " ms" << std::endl;
+
+    // figure out which groups we own, and which groups are passed in from the parent
     std::vector<ControlGroup *> ownedGroups;
     std::vector<ControlGroup *> exposedGroups;
     std::vector<llvm::Type *> exposedParamTypes;
@@ -48,6 +83,7 @@ GeneratableModuleClass *Surface::compile() {
 
     /// EXTRACTOR HANDLING
     // floodfill to find extracted nodes
+    auto extractorSearchStart = std::clock();
     std::unordered_set<Node *> extractedNodes;
     std::unordered_set<Control *> visitedControls;
     std::queue<Control *> controlQueue;
@@ -98,6 +134,8 @@ GeneratableModuleClass *Surface::compile() {
 
         group->setExtracted(isExtracted);
     }
+    auto extractorSearchTime = std::clock() - extractorSearchStart;
+    std::cerr << "    Finished extractor search in " << extractorSearchTime << " ms" << std::endl;
 
     // generate constructor, assign control ptrs from context & passed in parameters
     _class = std::make_unique<GeneratableModuleClass>(runtime()->ctx(), module(), "surface", exposedParamTypes);
@@ -114,21 +152,18 @@ GeneratableModuleClass *Surface::compile() {
     }
 
     /// NODE WALKING
+    auto nodeOrderStart = std::clock();
     // calculate node execution order, using control read/write to make directed graph
     std::vector<Node *> inverseExecutionOrder;
     std::unordered_set<Node *> visitedNodes;
     std::queue<Node *> nodeQueue;
 
     // step 1: find exposed controls in groups that are written to
-    for (const auto &group : _controlGroups) {
-        if (!group->writtenTo() || !group->exposed()) continue;
-
-        for (const auto &control : group->controls()) {
-            if (!control->exposer() || visitedNodes.find(control->node()) != visitedNodes.end()) continue;
-
-            visitedNodes.emplace(control->node());
-            nodeQueue.emplace(control->node());
-        }
+    std::set<Node *> writtenNodes;
+    addExitNodes(writtenNodes);
+    for (const auto &node : writtenNodes) {
+        visitedNodes.emplace(node);
+        nodeQueue.emplace(node);
     }
 
     // breadth-first search any connected nodes
@@ -163,9 +198,12 @@ GeneratableModuleClass *Surface::compile() {
             }
         }
     }
+    auto nodeOrderTime = std::clock() - nodeOrderStart;
+    std::cerr << "    Finished node order search in " << nodeOrderTime << std::endl;
 
     // instantiate nodes in their orders - extracted nodes are created multiple times
     // control values are also assigned
+    auto nodeInstantiateStart = std::clock();
     for (ssize_t i = inverseExecutionOrder.size() - 1; i >= 0; i--) {
         auto node = inverseExecutionOrder[i];
         auto nodeClass = nodeClasses.find(node)->second;
@@ -272,36 +310,56 @@ GeneratableModuleClass *Surface::compile() {
                 currentIndex
             }, "entry.ptr");
 
-            // todo: only call generate if the current voice is active
-            // voice activeness is determined by the `active` flags in all inputs to this node's
-            // extractor field (if it's in one, otherwise it's always active).
-            // this will need to be calculated when doing the extractor field search.
+            // Current solution to reducing CPU usage for voices:
+            // Nodes that are extracted are only 'executed' if they don't have any inputs (controls read from),
+            // or one of their inputs has its 'active' flag set.
+            // TODO:
+            // This is kinda hacky and can be counter-intuitive in some cases. It would be better to have each item
+            // in an array have an 'active' flag, and an extraction field (ie nodes surrounded by extractors) is only
+            // active if any of the inputs are. The key here is that the _entire field_ is either active or not,
+            // not just individual nodes (which can lead to some counterintuitive results when an active node is fed
+            // with an inactive input in an intermediate state).
+            // But graph traversal is hard, so I'm leaving that to my future self.
 
-            // only generate if any inputs are active, or there are no inputs
-            auto hasControls = node->begin() != node->end();
-            llvm::Value *shouldGenerate = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()), (uint64_t) !hasControls, false);
-            for (const auto &control : *node) {
-                // todo: make this work for group nodes!
-                auto hardControl = dynamic_cast<HardControl *>(control.get());
-                if (!hardControl || !hardControl->readFrom()) continue;
+            llvm::Value *shouldGenerate = nullptr;
+            if (loopSize > 1) {
+                std::vector<llvm::Value *> generateBools;
+                for (const auto &control : *node) {
+                    // todo: make this work for group nodes!
+                    auto hardControl = dynamic_cast<HardControl *>(control.get());
+                    if (!hardControl || !hardControl->readFrom()) continue;
 
-                auto controlPtr = nodeClass->getEntryPointer(b, hardControl->instance().instId, entryPtr, "controlinst");
+                    auto controlPtr = nodeClass->getEntryPointer(b, hardControl->instance().instId, entryPtr, "controlinst");
 
-                // array types are always active
-                llvm::Value *controlActive = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()), 1, false);
-                auto loadedPtr = b.CreateLoad(controlPtr);
-                if (loadedPtr->getType()->getPointerElementType()->isStructTy()) {
-                    controlActive = b.CreateLoad(b.CreateGEP(
-                        loadedPtr,
-                        {
-                            runtime()->ctx()->constInt(64, 0, false),
-                            runtime()->ctx()->constInt(32, 0, false)
-                        }
-                    ), "inputactive");
+                    // array types are always active (because they don't store an active flag...)
+                    llvm::Value *controlActive = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()), 1, false);
+                    auto loadedPtr = b.CreateLoad(controlPtr);
+                    if (loadedPtr->getType()->getPointerElementType()->isStructTy()) {
+                        controlActive = b.CreateLoad(b.CreateGEP(
+                            loadedPtr,
+                            {
+                                runtime()->ctx()->constInt(64, 0, false),
+                                runtime()->ctx()->constInt(32, 0, false)
+                            }
+                        ), "inputactive");
+                    }
+                    generateBools.push_back(controlActive);
                 }
-                shouldGenerate = b.CreateOr(shouldGenerate, controlActive, "shouldgenerate");
+
+                if (!generateBools.empty()) {
+                    shouldGenerate = generateBools[0];
+                    for (size_t generateI = 1; generateI < generateBools.size(); generateI++) {
+                        shouldGenerate = b.CreateOr(shouldGenerate, generateBools[generateI], "shouldgenerate");
+                    }
+                }
             }
-            b.CreateCondBr(shouldGenerate, generateBlock, generateEndBlock);
+
+            if (shouldGenerate) {
+                b.CreateCondBr(shouldGenerate, generateBlock, generateEndBlock);
+            } else {
+                b.CreateBr(generateBlock);
+            }
+
             b.SetInsertPoint(generateBlock);
             nodeClass->generate()->call(b, {}, entryPtr, module(), "");
             b.CreateBr(generateEndBlock);
@@ -318,6 +376,8 @@ GeneratableModuleClass *Surface::compile() {
             b.SetInsertPoint(loopEndBlock);
         }
     }
+    auto nodeInstantiateTime = std::clock() - nodeInstantiateStart;
+    std::cerr << "    Finished node instantiation in " << nodeInstantiateTime << " ms" << std::endl;
 
     _class->complete();
     deploy();
@@ -333,26 +393,6 @@ void Surface::addNode(Node *node) {
 void Surface::removeNode(Node *node) {
     _nodes.erase(node);
     scheduleGraphUpdate();
-}
-
-void Surface::addControlGroup(std::unique_ptr<ControlGroup> group) {
-    _controlGroups.push_back(std::move(group));
-    scheduleGraphUpdate();
-}
-
-std::unique_ptr<ControlGroup> Surface::removeControlGroup(ControlGroup *group) {
-    scheduleGraphUpdate();
-
-    for (auto i = _controlGroups.begin(); i < _controlGroups.end(); i++) {
-        if (i->get() == group) {
-            auto movedGroup = std::move(*i);
-            _controlGroups.erase(i);
-            return movedGroup;
-        }
-    }
-
-    assert(false);
-    throw;
 }
 
 void Surface::pullGetterMethod() {
@@ -371,4 +411,18 @@ void *Surface::updateCurrentPtr(void *parentCtx) {
     }
 
     return selfPtr;
+}
+
+void Surface::addExitNodes(std::set<MaximRuntime::Node *> &queue) {
+    for (const auto &node : _nodes) {
+        auto addNode = false;
+        for (const std::unique_ptr<Control> &control : *node) {
+            if (!control->exposer() || !control->writtenTo()) continue;
+
+            addNode = true;
+            break;
+        }
+
+        if (addNode) queue.emplace(node);
+    }
 }

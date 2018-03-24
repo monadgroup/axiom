@@ -11,6 +11,8 @@ namespace MaximRuntime {
 
         void *getValuePtr(void *parentCtx) override;
 
+        void addExitNodes(std::set<Node *> &queue) override;
+
         IONode input;
         IONode output;
     };

@@ -21,7 +21,7 @@ namespace MaximRuntime {
 
         bool readFrom() const override { return _isRead; }
 
-        std::vector<Control *> internallyLinkedControls() override { return {}; }
+        void addInternallyLinkedControls(std::set<Control *> &controls) override { }
 
     private:
         MaximCommon::ControlType _ioType;

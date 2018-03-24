@@ -14,3 +14,7 @@ RootSurface::RootSurface(Runtime *runtime) : Surface(runtime, 0),
 void *RootSurface::getValuePtr(void *parentCtx) {
     return parentCtx;
 }
+
+void RootSurface::addExitNodes(std::set<MaximRuntime::Node *> &queue) {
+    queue.emplace(&output);
+}

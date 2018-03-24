@@ -3,6 +3,8 @@
 #include <set>
 
 #include "ModuleRuntimeUnit.h"
+#include "ControlGroup.h"
+#include "GeneratableModuleClass.h"
 #include "../codegen/ComposableModuleClassMethod.h"
 
 namespace MaximRuntime {
@@ -29,13 +31,11 @@ namespace MaximRuntime {
 
         void removeNode(Node *node);
 
-        void addControlGroup(std::unique_ptr<ControlGroup> group);
-
-        std::unique_ptr<ControlGroup> removeControlGroup(ControlGroup *group);
-
         void pullGetterMethod() override;
 
         void *updateCurrentPtr(void *parentCtx) override;
+
+        virtual void addExitNodes(std::set<Node *> &queue);
 
     private:
         std::unique_ptr<GeneratableModuleClass> _class;

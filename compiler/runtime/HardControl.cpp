@@ -6,7 +6,6 @@ using namespace MaximRuntime;
 
 HardControl::HardControl(Node *node, const std::string &name, const MaximCodegen::ControlInstance &instance)
     : Control(node), _name(name), _instance(instance) {
-    finish();
 }
 
 std::unique_ptr<HardControl> HardControl::create(Node *node, const std::string &name,

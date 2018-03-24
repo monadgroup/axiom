@@ -30,6 +30,8 @@ MaximCodegen::ModuleClass *ControlGroup::compile() {
 }
 
 void ControlGroup::absorb(ControlGroup *other) {
+    if (other == this) return;
+
     auto otherControls = std::set<Control *>(other->controls());
     for (const auto &control : otherControls) {
         control->setGroup(this);
@@ -41,15 +43,7 @@ void ControlGroup::addControl(Control *control) {
 }
 
 void ControlGroup::removeControl(Control *control) {
-    // remove control from list
     _controls.erase(control);
-
-    // if we're empty, remove self from parent
-    // note: our destructor is called from this!
-    if (_controls.empty()) {
-        _surface->removeControlGroup(this);
-        return;
-    }
 }
 
 bool ControlGroup::exposed() const {
