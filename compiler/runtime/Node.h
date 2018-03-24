@@ -30,11 +30,13 @@ namespace MaximRuntime {
 
         bool needsCompile() const { return _needsCompile; }
 
+    protected:
+
+        bool _needsCompile = false;
+
     private:
 
         Surface *_surface;
-
-        bool _needsCompile = false;
     };
 
 }

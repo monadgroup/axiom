@@ -47,6 +47,9 @@ void CustomNode::remove() {
 }
 
 GeneratableModuleClass *CustomNode::compile() {
+    if (!_needsCompile && _moduleClass) return _moduleClass.get();
+    _needsCompile = false;
+
     assert(_ast);
 
     auto oldModule = reset();
