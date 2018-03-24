@@ -47,7 +47,10 @@ void CustomNode::remove() {
 }
 
 GeneratableModuleClass *CustomNode::compile() {
-    if (!_needsCompile && _moduleClass) return _moduleClass.get();
+    if (!_needsCompile && _moduleClass) {
+        std::cout << "Skipping CustomNode compile, nothing's changed" << std::endl;
+        return _moduleClass.get();
+    }
     _needsCompile = false;
 
     assert(_ast);

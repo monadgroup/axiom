@@ -34,6 +34,18 @@ void Control::disconnectFrom(MaximRuntime::Control *other) {
     _node->surface()->scheduleGraphUpdate();
 }
 
+void Control::setExposer(MaximRuntime::Control *control) {
+    if (control != _exposer) {
+        _exposer = control;
+        emit exposerChanged(control);
+    }
+}
+
+void Control::exposerCleared(MaximRuntime::Control *exposer) {
+    if (_exposer != exposer) return;
+    _exposer = nullptr;
+}
+
 void Control::remove() {
     auto connections = std::set<Control *>(_connections);
     for (const auto &connectedNode : connections) {
@@ -41,11 +53,8 @@ void Control::remove() {
     }
     _group->removeControl(this);
 
+    onRemove();
+
     emit removed();
     emit cleanup();
-}
-
-Control *Control::exposer() const {
-    // todo
-    return nullptr;
 }

@@ -43,9 +43,13 @@ namespace MaximRuntime {
 
         virtual void addInternallyLinkedControls(std::set<Control *> &controls) = 0;
 
-        Control *exposer() const;
+        void setExposer(Control *control);
+
+        Control *exposer() const { return _exposer; }
 
         std::set<Control *> &connections() { return _connections; }
+
+        void exposerCleared(Control *exposer);
 
     public slots:
 
@@ -53,9 +57,15 @@ namespace MaximRuntime {
 
     signals:
 
+        void exposerChanged(Control *newExposer);
+
         void removed();
 
         void cleanup();
+
+    protected:
+
+        virtual void onRemove() {}
 
     private:
 
@@ -64,6 +74,8 @@ namespace MaximRuntime {
         ControlGroup *_group = nullptr;
 
         std::set<Control *> _connections;
+
+        Control *_exposer = nullptr;
     };
 
 }

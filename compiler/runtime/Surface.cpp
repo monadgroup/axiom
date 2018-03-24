@@ -22,7 +22,15 @@ void Surface::scheduleGraphUpdate() {
 }
 
 GeneratableModuleClass *Surface::compile() {
-    if (!_needsGraphUpdate) return _class.get();
+    for (const auto &node : _nodes) {
+        if (node->needsCompile()) _needsGraphUpdate = true;
+    }
+
+    if (!_needsGraphUpdate && _class) {
+        std::cout << "Skipping surface compile, nothing's changed" << std::endl;
+        return _class.get();
+    }
+    _needsGraphUpdate = false;
 
     reset();
 

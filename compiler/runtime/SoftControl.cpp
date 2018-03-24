@@ -7,7 +7,10 @@ using namespace MaximRuntime;
 
 SoftControl::SoftControl(MaximRuntime::GroupNode *node, MaximRuntime::Control *forward)
     : Control(node), _node(node), _forward(forward) {
-
+    connect(forward, &Control::removed,
+            this, &SoftControl::remove);
+    connect(forward, &Control::exposerChanged,
+            this, &SoftControl::remove);
 }
 
 std::unique_ptr<SoftControl> SoftControl::create(MaximRuntime::GroupNode *node, MaximRuntime::Control *forward) {
@@ -48,4 +51,8 @@ void SoftControl::addInternallyLinkedControls(std::set<Control *> &controls) {
             controlQueue.push(connection);
         }
     }
+}
+
+void SoftControl::onRemove() {
+    _forward->exposerCleared(this);
 }

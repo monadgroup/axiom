@@ -75,7 +75,7 @@ namespace AxiomGui {
 
         void addNode(AxiomModel::Node *node);
 
-        void newNode(QPointF scenePos, QString name);
+        void newNode(QPointF scenePos, QString name, bool group);
 
         void addWire(AxiomModel::ConnectionWire *wire);
 

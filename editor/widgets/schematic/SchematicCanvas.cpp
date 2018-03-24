@@ -12,6 +12,7 @@
 #include "editor/AxiomApplication.h"
 #include "editor/model/schematic/Schematic.h"
 #include "editor/model/node/CustomNode.h"
+#include "editor/model/node/ModuleNode.h"
 #include "editor/model/control/NodeNumControl.h"
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
@@ -168,16 +169,16 @@ void SchematicCanvas::addNode(AxiomModel::Node *node) {
     addItem(item);
 }
 
-void SchematicCanvas::newNode(QPointF scenePos, QString name) {
+void SchematicCanvas::newNode(QPointF scenePos, QString name, bool group) {
     auto defaultSize = QSize(3, 2);
     auto targetPos = QPoint(
         qRound((float) scenePos.x() / SchematicCanvas::nodeGridSize.width()),
         qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height())
     );
 
-    auto newNode = std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
+    std::unique_ptr<Node> newNode = group ? (std::unique_ptr<Node>) std::make_unique<ModuleNode>(schematic, name, targetPos, defaultSize)
+                                          : (std::unique_ptr<Node>) std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
     schematic->addItem(std::move(newNode));
-
     schematic->runtime()->runtime()->compile();
 }
 
@@ -277,7 +278,18 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                 addItem(editor);
                 connect(editor, &FloatingValueEditor::valueSubmitted,
                         [this, scenePos](QString value) {
-                            newNode(scenePos, value);
+                            newNode(scenePos, value, false);
+                        });
+            });
+
+    auto newGroupAction = menu.addAction(tr("New Group"));
+    connect(newGroupAction, &QAction::triggered,
+            [this, scenePos]() {
+                auto editor = new FloatingValueEditor("New Group", scenePos);
+                addItem(editor);
+                connect(editor, &FloatingValueEditor::valueSubmitted,
+                        [this, scenePos](QString value) {
+                            newNode(scenePos, value, true);
                         });
             });
 

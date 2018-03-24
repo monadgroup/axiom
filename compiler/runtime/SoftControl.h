@@ -23,6 +23,10 @@ namespace MaximRuntime {
 
         void addInternallyLinkedControls(std::set<Control *> &controls) override;
 
+    protected:
+
+        void onRemove() override;
+
     private:
 
         GroupNode *_node;
