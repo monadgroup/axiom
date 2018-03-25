@@ -3,6 +3,7 @@
 
 #include "GeneratableModuleClass.h"
 #include "SoftControl.h"
+#include "Runtime.h"
 
 using namespace MaximRuntime;
 
@@ -11,11 +12,20 @@ GroupNode::GroupNode(Surface *surface) : Node(surface), _subsurface(surface->run
 }
 
 GeneratableModuleClass* GroupNode::compile() {
-    std::cout << "  << Compiling GroupNode surface" << std::endl;
-    auto result = _subsurface.compile();
-    std::cout << "  << Finished GroupNode surface compile" << std::endl;
+    if (!_class || _subsurface.needsGraphUpdate()) {
+        reset();
 
-    return result;
+        auto subsurfaceClass = _subsurface.compile();
+        _class = std::make_unique<GeneratableModuleClass>(runtime()->ctx(), module(), "groupnode");
+        auto index = _class->addEntry(subsurfaceClass);
+        _class->generate()->callInto(index, {}, subsurfaceClass->generate(), "");
+        _subsurface.setGetterMethod(_class->entryAccessor(index));
+
+        _class->complete();
+        deploy();
+    }
+
+    return _class.get();
 }
 
 void GroupNode::forwardControl(MaximRuntime::Control *control) {
@@ -27,4 +37,15 @@ void GroupNode::forwardControl(MaximRuntime::Control *control) {
     emit controlAdded(newControlPtr);
 
     scheduleCompile();
+}
+
+void GroupNode::pullGetterMethod() {
+    RuntimeUnit::pullGetterMethod();
+    _subsurface.pullGetterMethod();
+}
+
+void* GroupNode::updateCurrentPtr(void *parentCtx) {
+    auto selfPtr = RuntimeUnit::updateCurrentPtr(parentCtx);
+    _subsurface.updateCurrentPtr(selfPtr);
+    return selfPtr;
 }

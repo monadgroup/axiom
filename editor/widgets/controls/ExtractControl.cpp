@@ -5,9 +5,12 @@
 #include <QtCore/QPropertyAnimation>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QMenu>
+#include <editor/model/node/Node.h>
+#include <cassert>
 
 #include "editor/model/control/NodeExtractControl.h"
 #include "editor/model/connection/ConnectionWire.h"
+#include "editor/model/schematic/Schematic.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -125,6 +128,12 @@ void ExtractControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     nameShownAction->setCheckable(true);
     nameShownAction->setChecked(control->showName());
 
+    QAction *exposedAction = nullptr;
+    if (control->node->parentSchematic->canExposeControl()) {
+        // todo: make this checkable
+        exposedAction = menu.addAction(tr("&Expose"));
+    }
+
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == clearAction) {
@@ -133,5 +142,7 @@ void ExtractControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         control->select(true);
     } else if (selectedAction == nameShownAction) {
         control->setShowName(nameShownAction->isChecked());
+    } else if (exposedAction && selectedAction == exposedAction) {
+        control->node->parentSchematic->exposeControl(control);
     }
 }

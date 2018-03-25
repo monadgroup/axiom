@@ -28,6 +28,10 @@ namespace MaximRuntime {
 
         void forwardControl(Control *control);
 
+        void pullGetterMethod() override;
+
+        void *updateCurrentPtr(void *parentCtx) override;
+
     signals:
 
         void controlAdded(SoftControl *control);
@@ -37,6 +41,8 @@ namespace MaximRuntime {
         Surface _subsurface;
 
         std::vector<std::unique_ptr<SoftControl>> _controls;
+
+        std::unique_ptr<GeneratableModuleClass> _class;
     };
 
 }

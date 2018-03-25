@@ -65,6 +65,16 @@ GeneratableModuleClass *Surface::compile() {
             control->setGroup(newGroupPtr);
         }
     }
+
+    // remove any empty groups
+    for (auto i = newGroups.begin(); i < newGroups.end(); i++) {
+        auto &group = *i;
+        if (group->controls().empty()) {
+            newGroups.erase(i);
+            i--;
+        }
+    }
+
     _controlGroups = std::move(newGroups);
 
     for (const auto &node : _nodes) {
@@ -234,6 +244,7 @@ GeneratableModuleClass *Surface::compile() {
             llvm::ArrayType::get(nodeClass->storageType(), loopSize),
             std::vector<llvm::Constant*>(loopSize, nodeClass->initializeVal())
         ));
+        node->setGetterMethod(_class->entryAccessor(entryIndex));
 
         // todo: these two loops really should be refactored
 
@@ -417,6 +428,10 @@ void Surface::pullGetterMethod() {
     for (const auto &group : _controlGroups) {
         group->pullGetterMethod();
     }
+
+    for (const auto &node : _nodes) {
+        node->pullGetterMethod();
+    }
 }
 
 void *Surface::updateCurrentPtr(void *parentCtx) {
@@ -424,6 +439,10 @@ void *Surface::updateCurrentPtr(void *parentCtx) {
 
     for (const auto &group : _controlGroups) {
         group->updateCurrentPtr(selfPtr);
+    }
+
+    for (const auto &node : _nodes) {
+        node->updateCurrentPtr(selfPtr);
     }
 
     return selfPtr;

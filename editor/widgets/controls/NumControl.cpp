@@ -11,6 +11,7 @@
 
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeNumControl.h"
+#include "editor/model/schematic/Schematic.h"
 #include "../node/NodeItem.h"
 #include "../schematic/SchematicCanvas.h"
 #include "editor/util.h"
@@ -282,6 +283,12 @@ void NumControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     nameShownAction->setCheckable(true);
     nameShownAction->setChecked(control->showName());
 
+    QAction *exposedAction = nullptr;
+    if (control->node->parentSchematic->canExposeControl()) {
+        // todo: make this checkable
+        exposedAction = menu.addAction(tr("&Expose"));
+    }
+
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == clearAction) {
@@ -303,6 +310,8 @@ void NumControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         control->select(true);
     } else if (selectedAction == nameShownAction) {
         control->setShowName(nameShownAction->isChecked());
+    } else if (exposedAction && selectedAction ==  exposedAction) {
+        control->node->parentSchematic->exposeControl(control);
     }
 }
 

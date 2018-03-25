@@ -13,6 +13,7 @@
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeMidiControl.h"
 #include "editor/model/connection/ConnectionWire.h"
+#include "editor/model/schematic/Schematic.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -150,6 +151,12 @@ void MidiControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     nameShownAction->setCheckable(true);
     nameShownAction->setChecked(control->showName());
 
+    QAction *exposedAction = nullptr;
+    if (control->node->parentSchematic->canExposeControl()) {
+        // todo: make this checkable
+        exposedAction = menu.addAction(tr("&Expose"));
+    }
+
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == clearAction) {
@@ -158,5 +165,7 @@ void MidiControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         control->select(true);
     } else if (selectedAction == nameShownAction) {
         control->setShowName(nameShownAction->isCheckable());
+    } else if (exposedAction && selectedAction == exposedAction) {
+        control->node->parentSchematic->exposeControl(control);
     }
 }
