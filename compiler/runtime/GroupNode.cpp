@@ -12,20 +12,7 @@ GroupNode::GroupNode(Surface *surface) : Node(surface), _subsurface(surface->run
 }
 
 GeneratableModuleClass* GroupNode::compile() {
-    if (!_class || _subsurface.needsGraphUpdate()) {
-        reset();
-
-        auto subsurfaceClass = _subsurface.compile();
-        _class = std::make_unique<GeneratableModuleClass>(runtime()->ctx(), module(), "groupnode");
-        auto index = _class->addEntry(subsurfaceClass);
-        _class->generate()->callInto(index, {}, subsurfaceClass->generate(), "");
-        _subsurface.setGetterMethod(_class->entryAccessor(index));
-
-        _class->complete();
-        deploy();
-    }
-
-    return _class.get();
+    return _subsurface.compile();
 }
 
 void GroupNode::forwardControl(MaximRuntime::Control *control) {
@@ -36,16 +23,16 @@ void GroupNode::forwardControl(MaximRuntime::Control *control) {
     _controls.push_back(std::move(newControl));
     emit controlAdded(newControlPtr);
 
-    scheduleCompile();
+    control->node()->scheduleCompile();
 }
 
-void GroupNode::pullGetterMethod() {
-    RuntimeUnit::pullGetterMethod();
-    _subsurface.pullGetterMethod();
+void GroupNode::pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method) {
+    RuntimeUnit::pullGetterMethod(method);
+    _subsurface.pullGetterMethod(method ? method : getterMethod());
 }
 
 void* GroupNode::updateCurrentPtr(void *parentCtx) {
     auto selfPtr = RuntimeUnit::updateCurrentPtr(parentCtx);
-    _subsurface.updateCurrentPtr(selfPtr);
+    _subsurface.updateCurrentPtr(parentCtx);
     return selfPtr;
 }

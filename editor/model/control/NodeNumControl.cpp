@@ -17,6 +17,7 @@ NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoin
 }
 
 void NodeNumControl::doRuntimeUpdate() {
+    if (!runtime()->group()) return;
     setValue(runtime()->group()->getNumValue(), false);
 }
 

@@ -28,7 +28,7 @@ namespace MaximRuntime {
 
         void forwardControl(Control *control);
 
-        void pullGetterMethod() override;
+        void pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method = nullptr) override;
 
         void *updateCurrentPtr(void *parentCtx) override;
 
@@ -41,8 +41,6 @@ namespace MaximRuntime {
         Surface _subsurface;
 
         std::vector<std::unique_ptr<SoftControl>> _controls;
-
-        std::unique_ptr<GeneratableModuleClass> _class;
     };
 
 }

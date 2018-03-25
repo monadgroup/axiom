@@ -422,8 +422,8 @@ void Surface::removeNode(Node *node) {
     scheduleGraphUpdate();
 }
 
-void Surface::pullGetterMethod() {
-    RuntimeUnit::pullGetterMethod();
+void Surface::pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method) {
+    RuntimeUnit::pullGetterMethod(method);
 
     for (const auto &group : _controlGroups) {
         group->pullGetterMethod();

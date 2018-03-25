@@ -2,6 +2,7 @@
 
 #include "editor/model/node/ModuleNode.h"
 #include "editor/model/control/NodeControl.h"
+#include "compiler/runtime/Runtime.h"
 
 using namespace AxiomModel;
 
@@ -16,4 +17,5 @@ QString ModuleSchematic::name() {
 
 void ModuleSchematic::exposeControl(AxiomModel::NodeControl *control) {
     node->runtime()->forwardControl(control->runtime());
+    node->runtime()->runtime()->compile();
 }

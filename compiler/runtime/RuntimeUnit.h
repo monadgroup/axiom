@@ -30,7 +30,9 @@ namespace MaximRuntime {
 
         void setGetterMethod(std::unique_ptr<MaximCodegen::ComposableModuleClassMethod> method);
 
-        virtual void pullGetterMethod();
+        MaximCodegen::ComposableModuleClassMethod *getterMethod() const { return _method.get(); }
+
+        virtual void pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method = nullptr);
 
         virtual void *getValuePtr(void *parentCtx);
 

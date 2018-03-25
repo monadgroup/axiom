@@ -16,9 +16,10 @@ void RuntimeUnit::setGetterMethod(std::unique_ptr<MaximCodegen::ComposableModule
     _method = std::move(method);
 }
 
-void RuntimeUnit::pullGetterMethod() {
-    if (_method) {
-        _getValueCb = (GetValueCb) _runtime->jit().getSymbolAddress(_method->name());
+void RuntimeUnit::pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method) {
+    auto mthd = method ? method : _method.get();
+    if (mthd) {
+        _getValueCb = (GetValueCb) _runtime->jit().getSymbolAddress(mthd->name());
         assert(_getValueCb);
     }
 }

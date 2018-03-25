@@ -149,7 +149,7 @@ std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> 
     builder.populateFunctionPassManager(fpm);
     builder.populateModulePassManager(mpm);
 
-    //m->print(llvm::errs(), nullptr);
+    m->print(llvm::errs(), nullptr);
 
     auto startClock = std::clock();
     fpm.doInitialization();
