@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore/QMutex>
+#include <mutex>
 
 #include "Jit.h"
 #include "ValueOperator.h"
@@ -44,14 +45,8 @@ namespace MaximRuntime {
 
         void fillPartialBuffer(float **buffer, size_t length, const MidiValue &event);
 
-        void lock() { _mutex.lock(); }
-
-        void unlock() { _mutex.unlock(); }
-
-        bool tryLock(int timeout = 0) { return _mutex.tryLock(timeout); }
-
     private:
-        QMutex _mutex;
+        std::mutex _mutex;
         Jit _jit;
         MaximCodegen::MaximContext _context;
         ValueOperator _op;

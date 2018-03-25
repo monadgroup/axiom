@@ -21,12 +21,22 @@ void Surface::scheduleGraphUpdate() {
     _needsGraphUpdate = true;
 }
 
-GeneratableModuleClass *Surface::compile() {
-    for (const auto &node : _nodes) {
-        if (node->needsCompile()) _needsGraphUpdate = true;
+bool Surface::needsGraphUpdate() const {
+    if (_needsGraphUpdate || !_class) {
+        std::cout << "Compiling surface because needsGraphUpdate or no class" << std::endl;
+        return true;
     }
+    for (const auto &node : _nodes) {
+        if (node->needsCompile()) {
+            std::cout << "Compiling surface because a node needs it" << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
 
-    if (!_needsGraphUpdate && _class) {
+GeneratableModuleClass *Surface::compile() {
+    if (!needsGraphUpdate()) {
         std::cout << "Skipping surface compile, nothing's changed" << std::endl;
         return _class.get();
     }

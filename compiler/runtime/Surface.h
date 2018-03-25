@@ -25,6 +25,8 @@ namespace MaximRuntime {
 
         void scheduleGraphUpdate();
 
+        bool needsGraphUpdate() const;
+
         GeneratableModuleClass *compile();
 
         void addNode(Node *node);

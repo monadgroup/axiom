@@ -25,7 +25,13 @@ Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
 }
 
 void Runtime::compile() {
-    lock();
+    std::lock_guard<std::mutex> lock(_mutex);
+
+    if (!_mainSurface->needsGraphUpdate()) {
+        std::cout << "Not compiling, no update needed" << std::endl;
+        return;
+    }
+
     std::cout << "Beginning compile..." << std::endl;
     auto startClock = std::clock();
 
@@ -71,8 +77,6 @@ void Runtime::compile() {
 
     auto endClock = (std::clock() - startClock) / (double)(CLOCKS_PER_SEC / 1000);
     std::cout << "Finished compile in " << endClock << " ms" << std::endl;
-
-    unlock();
 }
 
 void Runtime::generate() {
@@ -132,7 +136,7 @@ void Runtime::fillBuffer(float **buffer, size_t size) {
 }
 
 void Runtime::fillPartialBuffer(float **buffer, size_t length, const MidiValue &event) {
-    lock();
+    std::lock_guard<std::mutex> lock(_mutex);
 
     auto inputPtr = _mainSurface->input.control()->group()->currentPtr();
     auto outputPtr = _mainSurface->output.control()->group()->currentPtr();
@@ -150,8 +154,6 @@ void Runtime::fillPartialBuffer(float **buffer, size_t length, const MidiValue &
         // clear midi events
         _op.writeMidiCount(inputPtr, 0);
     }
-
-    unlock();
 }
 
 llvm::Function *Runtime::createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,

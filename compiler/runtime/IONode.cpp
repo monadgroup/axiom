@@ -14,6 +14,7 @@ IONode::IONode(Surface *surface, MaximCommon::ControlType type, bool isRead, boo
 }
 
 GeneratableModuleClass* IONode::compile() {
+    _needsCompile = false;
     return _moduleClass.get();
 }
 
