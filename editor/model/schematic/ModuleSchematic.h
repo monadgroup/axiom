@@ -18,6 +18,10 @@ namespace AxiomModel {
         explicit ModuleSchematic(ModuleNode *node);
 
         QString name() override;
+
+        bool canExposeControl() override { return true; }
+
+        void exposeControl(AxiomModel::NodeControl *control) override;
     };
 
 }

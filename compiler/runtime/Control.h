@@ -43,6 +43,8 @@ namespace MaximRuntime {
 
         virtual void addInternallyLinkedControls(std::set<Control *> &controls) = 0;
 
+        virtual int64_t instanceId() const = 0;
+
         void setExposer(Control *control);
 
         Control *exposer() const { return _exposer; }

@@ -20,6 +20,8 @@ namespace AxiomModel {
 
     class ModuleNode;
 
+    class NodeControl;
+
     class Schematic : public GridSurface {
     Q_OBJECT
 
@@ -39,6 +41,10 @@ namespace AxiomModel {
         virtual void deserialize(QDataStream &stream);
 
         void addWire(std::unique_ptr<ConnectionWire> wire);
+
+        virtual bool canExposeControl() = 0;
+
+        virtual void exposeControl(AxiomModel::NodeControl *control) = 0;
 
     public slots:
 

@@ -23,6 +23,9 @@ namespace MaximRuntime {
 
         void addInternallyLinkedControls(std::set<Control *> &controls) override { }
 
+        // todo: this might be bad, since the control instance doesn't actually exist
+        int64_t instanceId() const override { return -1; }
+
     private:
         MaximCommon::ControlType _ioType;
         MaximCodegen::Control *_type;

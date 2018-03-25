@@ -2,6 +2,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QString>
+#include <cassert>
 
 #include "Schematic.h"
 
@@ -19,6 +20,9 @@ namespace AxiomModel {
 
         QString name() override;
 
+        bool canExposeControl() override { return false; }
+
+        void exposeControl(AxiomModel::NodeControl *control) override { assert(false); }
 
     };
 

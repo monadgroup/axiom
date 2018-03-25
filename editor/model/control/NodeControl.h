@@ -37,13 +37,19 @@ namespace AxiomModel {
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 
+        NodeControl *exposeBase() const { return _exposeBase; }
+
     public slots:
 
         void setShowName(bool showName);
 
+        void setExposeBase(NodeControl *base);
+
     signals:
 
         void showNameChanged(bool newShowName);
+
+        void exposeBaseChanged(NodeControl *newBase);
 
     protected:
 
@@ -52,6 +58,7 @@ namespace AxiomModel {
     private:
 
         bool m_showName = true;
+        NodeControl *_exposeBase = nullptr;
         MaximRuntime::Control *_runtime;
 
     private slots:

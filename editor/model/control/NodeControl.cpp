@@ -5,6 +5,7 @@
 #include "NodeNumControl.h"
 #include "NodeMidiControl.h"
 #include "NodeExtractControl.h"
+#include "../schematic/Schematic.h"
 #include "../node/Node.h"
 #include "../connection/ConnectionWire.h"
 #include "compiler/runtime/Control.h"
@@ -50,6 +51,13 @@ void NodeControl::setShowName(bool showName) {
     if (showName != m_showName) {
         m_showName = showName;
         emit showNameChanged(showName);
+    }
+}
+
+void NodeControl::setExposeBase(AxiomModel::NodeControl *base) {
+    if (node->parentSchematic->canExposeControl() && base != _exposeBase) {
+        _exposeBase = base;
+        emit exposeBaseChanged(base);
     }
 }
 

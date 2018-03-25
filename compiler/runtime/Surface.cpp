@@ -255,19 +255,18 @@ GeneratableModuleClass *Surface::compile() {
             nodeClass->constructor()->call(b, {}, entryPtr, module(), "");
 
             for (const auto &control : *node) {
-                auto hardControl = dynamic_cast<HardControl *>(control.get());
-                if (!hardControl) continue;
+                auto instId = control->instanceId();
+                if (instId < 0) continue;
 
-                auto controlIndex = hardControl->instance().instId;
-                auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), controlIndex,
+                auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), instId,
                                                              entryPtr, "controlinst");
 
-                auto groupPtr = groupConstructorPtrs.find(hardControl->group())->second;
+                auto groupPtr = groupConstructorPtrs.find(control->group())->second;
                 auto groupIndexPtr = groupPtr;
 
                 // get the pointer for the specific index we're at if this is control is in an extracted group
                 // AND it's not an extractor control (since these get access to the entire array)
-                if (hardControl->group()->extracted() && !((uint32_t)hardControl->type()->type() & (uint32_t)MaximCommon::ControlType::EXTRACT)) {
+                if (control->group()->extracted() && !((uint32_t)control->type()->type() & (uint32_t)MaximCommon::ControlType::EXTRACT)) {
                     // each item in the array is a {bool, value}, we only want the value
                     groupIndexPtr = _class->constructor()->builder().CreateGEP(
                         groupPtr,
@@ -333,11 +332,10 @@ GeneratableModuleClass *Surface::compile() {
             if (loopSize > 1) {
                 std::vector<llvm::Value *> generateBools;
                 for (const auto &control : *node) {
-                    // todo: make this work for group nodes!
-                    auto hardControl = dynamic_cast<HardControl *>(control.get());
-                    if (!hardControl || !hardControl->readFrom()) continue;
+                    auto instId = control->instanceId();
+                    if (!control->readFrom() || instId < 0) continue;
 
-                    auto controlPtr = nodeClass->getEntryPointer(b, hardControl->instance().instId, entryPtr, "controlinst");
+                    auto controlPtr = nodeClass->getEntryPointer(b, instId, entryPtr, "controlinst");
 
                     // array types are always active (because they don't store an active flag...)
                     llvm::Value *controlActive = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()), 1, false);

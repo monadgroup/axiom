@@ -24,7 +24,3 @@ bool HardControl::writtenTo() const {
 bool HardControl::readFrom() const {
     return _instance.isReadFrom;
 }
-
-void HardControl::addInternallyLinkedControls(std::set<MaximRuntime::Control *> &controls) {
-    // hard controls can't be internally linked
-}

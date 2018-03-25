@@ -17,9 +17,13 @@ namespace MaximRuntime {
 
         MaximCodegen::Control *type() const override;
 
+        Control *forward() const { return _forward; }
+
         bool writtenTo() const override;
 
         bool readFrom() const override;
+
+        int64_t instanceId() const override;
 
         void addInternallyLinkedControls(std::set<Control *> &controls) override;
 
