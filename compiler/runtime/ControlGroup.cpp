@@ -68,30 +68,30 @@ bool ControlGroup::readFrom() const {
 }
 
 NumValue ControlGroup::getNumValue() const {
-    return _surface->runtime()->op().readNum(*(void**)currentPtr());
+    return _surface->runtime()->op().readNum(currentValuePtr());
 }
 
 void ControlGroup::setNumValue(const NumValue &value) const {
-    _surface->runtime()->op().writeNum(*(void**)currentPtr(), value);
+    _surface->runtime()->op().writeNum(currentValuePtr(), value);
 }
 
 MidiValue ControlGroup::getMidiValue() const {
-    return _surface->runtime()->op().readMidi(currentPtr());
+    return _surface->runtime()->op().readMidi(currentValuePtr());
 }
 
 void ControlGroup::setMidiValue(const MidiValue &value) const {
-    _surface->runtime()->op().writeMidi(currentPtr(), value);
+    _surface->runtime()->op().writeMidi(currentValuePtr(), value);
 }
 
 void ControlGroup::pushMidiEvent(const MidiEventValue &event) const {
-    _surface->runtime()->op().pushMidiEvent(currentPtr(), event);
+    _surface->runtime()->op().pushMidiEvent(currentValuePtr(), event);
 }
 
 uint32_t ControlGroup::getActiveFlags() const {
     if (_type->type() == MaximCommon::ControlType::NUMBER || _type->type() == MaximCommon::ControlType::NUM_EXTRACT) {
-        return _surface->runtime()->op().readNumArrayActiveFlags(currentPtr());
+        return _surface->runtime()->op().readNumArrayActiveFlags(currentValuePtr());
     } else if (_type->type() == MaximCommon::ControlType::MIDI || _type->type() == MaximCommon::ControlType::MIDI_EXTRACT) {
-        return _surface->runtime()->op().readMidiArrayActiveFlags(currentPtr());
+        return _surface->runtime()->op().readMidiArrayActiveFlags(currentValuePtr());
     } else {
         assert(false);
         return 0;

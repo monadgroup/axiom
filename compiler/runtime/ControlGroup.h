@@ -58,6 +58,8 @@ namespace MaximRuntime {
 
         uint32_t getActiveFlags() const;
 
+        void *currentValuePtr() const { return *(void**)currentPtr(); }
+
     private:
 
         MaximCodegen::Control *_type;
