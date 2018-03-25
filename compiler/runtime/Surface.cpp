@@ -282,9 +282,6 @@ GeneratableModuleClass *Surface::compile() {
                 currentIndex
             }, "entry.ptr");
 
-            // todo: GroupNodes will need ControlGroups passed into their constructor
-            nodeClass->constructor()->call(b, {}, entryPtr, module(), "");
-
             for (const auto &control : *node) {
                 auto instId = control->instanceId();
                 if (instId < 0) continue;
@@ -314,6 +311,8 @@ GeneratableModuleClass *Surface::compile() {
 
                 _class->constructor()->builder().CreateStore(groupIndexPtr, controlPtr);
             }
+
+            nodeClass->constructor()->call(b, {}, entryPtr, module(), "");
 
             auto incrIndex = b.CreateAdd(
                 currentIndex,

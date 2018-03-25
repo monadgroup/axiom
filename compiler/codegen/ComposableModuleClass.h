@@ -25,7 +25,7 @@ namespace MaximCodegen {
 
         size_t addEntry(llvm::Constant *initValue);
 
-        size_t addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams = {});
+        size_t addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams = {}, bool callConstructor = true);
 
         llvm::Value *getEntryPointer(Builder &b, size_t index, llvm::Value *context, const llvm::Twine &resultName);
 

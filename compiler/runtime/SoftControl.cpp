@@ -7,6 +7,8 @@ using namespace MaximRuntime;
 
 SoftControl::SoftControl(MaximRuntime::GroupNode *node, MaximRuntime::Control *forward)
     : Control(node), _node(node), _forward(forward) {
+    forward->setExposer(this);
+
     connect(forward, &Control::removed,
             this, &SoftControl::remove);
     connect(forward, &Control::exposerChanged,
