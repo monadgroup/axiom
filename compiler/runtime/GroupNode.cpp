@@ -12,7 +12,22 @@ GroupNode::GroupNode(Surface *surface) : Node(surface), _subsurface(surface->run
 }
 
 GeneratableModuleClass* GroupNode::compile() {
-    return _subsurface.compile();
+    auto result = _subsurface.compile();
+
+    std::string type_str;
+    llvm::raw_string_ostream rso(type_str);
+    result->storageType()->print(rso);
+    //std::cout << "GroupNode type: " << rso.str() << std::endl;
+
+    for (auto &control : _controls) {
+        auto targetGroup = control->forward()->group();
+        auto targetIndex = _subsurface.groupPtrIndexes().find(targetGroup);
+        assert(targetIndex != _subsurface.groupPtrIndexes().end());
+
+        control->setInstanceId(targetIndex->second);
+    }
+
+    return result;
 }
 
 void GroupNode::forwardControl(MaximRuntime::Control *control) {

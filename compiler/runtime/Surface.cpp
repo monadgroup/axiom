@@ -96,17 +96,41 @@ GeneratableModuleClass *Surface::compile() {
     auto controlGroupingTime = std::clock() - controlGroupingStart;
     std::cerr << "    Finished control grouping in " << controlGroupingTime << " ms" << std::endl;
 
-    // figure out which groups we own, and which groups are passed in from the parent
-    std::vector<ControlGroup *> ownedGroups;
-    std::vector<ControlGroup *> exposedGroups;
-    std::vector<llvm::Type *> exposedParamTypes;
+    _class = std::make_unique<GeneratableModuleClass>(runtime()->ctx(), module(), "surface");
+
+    _groupPtrIndexes.clear();
     for (const auto &group : _controlGroups) {
+        // There are two types of groups: those that we own, and those that are exposed (ie are 'owned' by the parent,
+        // we don't instantiate them here).
+        // In the end, we want to have an entry that's a pointer to the group value.
+        // For OWNED groups, we also need to actually store the value. So we create two entries, one for the value and
+        // the other for the pointer. We also add some code to the constructor to set the pointer entry.
+        // For EXPOSED groups, we just add an entry for a pointer to the value. We also record the group and entry index
+        // in the _groupPtrIndexes map, which is used by the parent GroupNode (if there is one) to assign instance
+        // indexes that are then read by whatever surface is above us, and used to assign our pointers to the correct
+        // values.
+        //
+        // It's complicated, I know.
+
+        size_t entryIndex;
+
         if (group->exposed()) {
-            exposedGroups.push_back(group.get());
-            exposedParamTypes.push_back(group->type()->storageType());
+            // just add an entry for a pointer to the group
+            // todo: getting the type like this might break with extraction???
+            entryIndex = _class->addEntry(group->type()->storageType());
         } else {
-            ownedGroups.push_back(group.get());
+            // add an entry for the actual value, and one for a pointer to that value
+            auto realVal = group->compile();
+            auto realIndex = _class->addEntry(realVal);
+            entryIndex = _class->addEntry(llvm::PointerType::get(realVal->storageType(), 0));
+
+            auto valPtr = _class->cconstructor()->getEntryPointer(realIndex, "groupval");
+            auto ptrPtr = _class->cconstructor()->getEntryPointer(entryIndex, "groupptr");
+            _class->constructor()->builder().CreateStore(valPtr, ptrPtr);
         }
+
+        _groupPtrIndexes.emplace(group.get(), entryIndex);
+        group->setGetterMethod(_class->entryAccessor(entryIndex));
     }
 
     /// EXTRACTOR HANDLING
@@ -164,20 +188,6 @@ GeneratableModuleClass *Surface::compile() {
     }
     auto extractorSearchTime = std::clock() - extractorSearchStart;
     std::cerr << "    Finished extractor search in " << extractorSearchTime << " ms" << std::endl;
-
-    // generate constructor, assign control ptrs from context & passed in parameters
-    _class = std::make_unique<GeneratableModuleClass>(runtime()->ctx(), module(), "surface", exposedParamTypes);
-
-    std::unordered_map<ControlGroup *, llvm::Value *> groupConstructorPtrs;
-
-    for (const auto &ownedGroup : ownedGroups) {
-        auto groupIndex = _class->addEntry(ownedGroup->compile());
-        groupConstructorPtrs.emplace(ownedGroup, _class->cconstructor()->getEntryPointer(groupIndex, "group"));
-        ownedGroup->setGetterMethod(_class->entryAccessor(groupIndex));
-    }
-    for (size_t i = 0; i < exposedGroups.size(); i++) {
-        groupConstructorPtrs.emplace(exposedGroups[i], _class->cconstructor()->arg(i));
-    }
 
     /// NODE WALKING
     auto nodeOrderStart = std::clock();
@@ -282,7 +292,11 @@ GeneratableModuleClass *Surface::compile() {
                 auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), instId,
                                                              entryPtr, "controlinst");
 
-                auto groupPtr = groupConstructorPtrs.find(control->group())->second;
+                auto groupPtrIndex = _groupPtrIndexes.find(control->group());
+                assert(groupPtrIndex != _groupPtrIndexes.end());
+
+                auto groupPtrPtr = _class->cconstructor()->getEntryPointer(groupPtrIndex->second, "groupptrptr");
+                llvm::Value *groupPtr = b.CreateLoad(groupPtrPtr, "groupptr");
                 auto groupIndexPtr = groupPtr;
 
                 // get the pointer for the specific index we're at if this is control is in an extracted group

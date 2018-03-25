@@ -33,10 +33,6 @@ bool SoftControl::readFrom() const {
     return _forward->readFrom();
 }
 
-int64_t SoftControl::instanceId() const {
-    return _forward->instanceId();
-}
-
 void SoftControl::addInternallyLinkedControls(std::set<Control *> &controls) {
     auto controlQueue = std::queue<Control *>();
     auto internalConnections = _forward->connections();

@@ -23,7 +23,9 @@ namespace MaximRuntime {
 
         bool readFrom() const override;
 
-        int64_t instanceId() const override;
+        void setInstanceId(int64_t newId) { _instanceId = newId; }
+
+        int64_t instanceId() const { return _instanceId; }
 
         void addInternallyLinkedControls(std::set<Control *> &controls) override;
 
@@ -35,6 +37,8 @@ namespace MaximRuntime {
 
         GroupNode *_node;
         Control *_forward;
+
+        int64_t _instanceId;
     };
 
 }

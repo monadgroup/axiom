@@ -138,8 +138,8 @@ void Runtime::fillBuffer(float **buffer, size_t size) {
 void Runtime::fillPartialBuffer(float **buffer, size_t length, const MidiValue &event) {
     std::lock_guard<std::mutex> lock(_mutex);
 
-    auto inputPtr = _mainSurface->input.control()->group()->currentPtr();
-    auto outputPtr = _mainSurface->output.control()->group()->currentPtr();
+    auto inputPtr = *(void**)_mainSurface->input.control()->group()->currentPtr();
+    auto outputPtr = *(void**)_mainSurface->output.control()->group()->currentPtr();
     assert(inputPtr && outputPtr);
 
     // write midi events for first sample

@@ -37,6 +37,8 @@ namespace MaximRuntime {
 
         void *updateCurrentPtr(void *parentCtx) override;
 
+        std::unordered_map<ControlGroup*, size_t> const &groupPtrIndexes() const { return _groupPtrIndexes; };
+
         virtual void addExitNodes(std::set<Node *> &queue);
 
     private:
@@ -48,6 +50,8 @@ namespace MaximRuntime {
         std::set<Node *> _nodes;
 
         std::vector<std::unique_ptr<ControlGroup>> _controlGroups;
+
+        std::unordered_map<ControlGroup*, size_t> _groupPtrIndexes;
     };
 
 }

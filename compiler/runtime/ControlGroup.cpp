@@ -68,11 +68,11 @@ bool ControlGroup::readFrom() const {
 }
 
 NumValue ControlGroup::getNumValue() const {
-    return _surface->runtime()->op().readNum(currentPtr());
+    return _surface->runtime()->op().readNum(*(void**)currentPtr());
 }
 
 void ControlGroup::setNumValue(const NumValue &value) const {
-    _surface->runtime()->op().writeNum(currentPtr(), value);
+    _surface->runtime()->op().writeNum(*(void**)currentPtr(), value);
 }
 
 MidiValue ControlGroup::getMidiValue() const {
