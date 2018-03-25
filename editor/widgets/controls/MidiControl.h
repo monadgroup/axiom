@@ -51,17 +51,11 @@ namespace AxiomGui {
 
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
-        /*void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
-
-        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;*/
-
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
-
-        //void wheelEvent(QGraphicsSceneWheelEvent *event) override;
 
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 

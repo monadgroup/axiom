@@ -48,6 +48,10 @@ namespace AxiomGui {
 
         QColor outlineActiveColor() const override;
 
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;

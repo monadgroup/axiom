@@ -88,6 +88,18 @@ QColor ExtractControl::outlineActiveColor() const {
     }
 }
 
+void ExtractControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    ControlItem::mousePressEvent(event);
+    event->accept();
+    return;
+}
+
+void ExtractControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    ControlItem::mouseDoubleClickEvent(event);
+    control->sink()->setActive(false);
+    emit mouseLeave();
+}
+
 void ExtractControl::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     if (!isEditable()) return;
 
