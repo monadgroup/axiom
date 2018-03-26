@@ -78,17 +78,24 @@ void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic 
     }
 
     auto newDock = std::make_unique<SchematicPanel>(this, schematic);
+    auto newDockPtr = newDock.get();
     newDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     if (!fromPanel) {
-        addDockWidget(Qt::TopDockWidgetArea, newDock.get());
+        addDockWidget(Qt::TopDockWidgetArea, newDockPtr);
     } else if (split) {
-        splitDockWidget(fromPanel, newDock.get(), Qt::Horizontal);
+        splitDockWidget(fromPanel, newDockPtr, Qt::Horizontal);
     } else {
-        tabifyDockWidget(fromPanel, newDock.get());
-        newDock->raise();
+        tabifyDockWidget(fromPanel, newDockPtr);
+
+        // raise() doesn't seem to work when called synchronously after tabifyDockWidget, so we wait for the next
+        // event loop iteration
+        // fixme: if the dock is removed before this timer finishes, we'll segfault
+        QTimer::singleShot(0, this, [newDockPtr]() {
+            newDockPtr->raise();
+        });
     }
 
-    connect(newDock.get(), &SchematicPanel::closed,
+    connect(newDockPtr, &SchematicPanel::closed,
             [this, schematic]() { removeSchematic(schematic); });
 
     _openPanels.emplace(schematic, std::move(newDock));
