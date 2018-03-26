@@ -28,7 +28,7 @@ ExtractControl::ExtractControl(NodeExtractControl *control, SchematicCanvas *can
     connect(control->sink(), &ConnectionSink::activeChanged,
             this, &ExtractControl::triggerUpdate);
 
-    auto machine = new QStateMachine();
+    auto machine = new QStateMachine(this);
     auto unhoveredState = new QState(machine);
     unhoveredState->assignProperty(this, "hoverState", 0);
     machine->setInitialState(unhoveredState);

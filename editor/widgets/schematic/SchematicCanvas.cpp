@@ -183,7 +183,7 @@ void SchematicCanvas::newNode(QPointF scenePos, QString name, bool group) {
 }
 
 void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {
-    auto item = new WireItem(wire);
+    auto item = new WireItem(this, wire);
     item->setZValue(wireZVal);
     addItem(item);
 }
@@ -264,9 +264,9 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto scenePos = event->scenePos();
 
     QMenu menu;
-    auto contextSearch = new QLineEdit();
+    auto contextSearch = new QLineEdit(&menu);
     contextSearch->setPlaceholderText("Search modules...");
-    auto widgetAction = new QWidgetAction(this);
+    auto widgetAction = new QWidgetAction(&menu);
     widgetAction->setDefaultWidget(contextSearch);
     menu.addAction(widgetAction);
     menu.addSeparator();
@@ -294,8 +294,8 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             });
 
     menu.addSeparator();
-    menu.addAction(new QAction(tr("LFO")));
-    menu.addAction(new QAction(tr("Something else")));
+    menu.addAction(tr("LFO"));
+    menu.addAction(tr("Something else"));
 
     menu.exec(event->screenPos());
 }

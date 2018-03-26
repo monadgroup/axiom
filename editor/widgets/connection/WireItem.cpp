@@ -9,7 +9,7 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-WireItem::WireItem(AxiomModel::ConnectionWire *wire) : wire(wire) {
+WireItem::WireItem(QObject *parent, AxiomModel::ConnectionWire *wire) : QObject(parent), wire(wire) {
     connect(wire, &ConnectionWire::routeChanged,
             this, &WireItem::updateRoute);
     connect(wire, &ConnectionWire::subPosChanged,

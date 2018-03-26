@@ -16,7 +16,7 @@ namespace AxiomGui {
     public:
         AxiomModel::ConnectionWire *wire;
 
-        explicit WireItem(AxiomModel::ConnectionWire *wire);
+        explicit WireItem(QObject *parent, AxiomModel::ConnectionWire *wire);
 
     private slots:
 
