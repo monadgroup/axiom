@@ -11,15 +11,16 @@ SchematicPanel::SchematicPanel(MainWindow *window, AxiomModel::Schematic *schema
     : DockPanel(schematic->name()), window(window) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/SchematicPanel.qss"));
 
-    connect(schematic, &AxiomModel::Schematic::removed,
-            this, &SchematicPanel::remove);
     connect(schematic, &AxiomModel::Schematic::nameChanged,
             this, &SchematicPanel::setWindowTitle);
+    connect(schematic, &AxiomModel::Schematic::cleanup,
+            this, &SchematicPanel::close);
 
-    auto view = new SchematicView(this, schematic);
-    setWidget(view);
+    setWidget(new SchematicView(this, schematic));
+    widget()->setParent(this);
 }
 
-void SchematicPanel::remove() {
-    window->removeDockWidget(this);
+void SchematicPanel::closeEvent(QCloseEvent *event) {
+    DockPanel::closeEvent(event);
+    emit closed();
 }

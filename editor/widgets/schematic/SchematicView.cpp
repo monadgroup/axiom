@@ -13,6 +13,8 @@ using namespace AxiomModel;
 
 SchematicView::SchematicView(SchematicPanel *panel, Schematic *schematic)
     : QGraphicsView(new SchematicCanvas(panel, schematic)), schematic(schematic) {
+    scene()->setParent(this);
+
     scene()->setSceneRect(0, 0, width() * 2, height() * 2);
 
     // set properties

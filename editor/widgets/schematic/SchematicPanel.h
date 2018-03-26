@@ -20,9 +20,13 @@ namespace AxiomGui {
 
         explicit SchematicPanel(MainWindow *window, AxiomModel::Schematic *schematic);
 
-    private slots:
+    signals:
 
-        void remove();
+        void closed();
+
+    protected:
+
+        void closeEvent(QCloseEvent *event) override;
 
     private:
         QGraphicsScene *scene;

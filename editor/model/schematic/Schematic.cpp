@@ -2,7 +2,6 @@
 
 #include <QDataStream>
 #include <cassert>
-#include <iostream>
 
 #include "../node/Node.h"
 #include "../node/ModuleNode.h"
@@ -151,6 +150,15 @@ ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *s
     auto ptr = wire.get();
     addWire(std::move(wire));
     return ptr;
+}
+
+void Schematic::remove() {
+    for (const auto &item : items()) {
+        item->remove();
+    }
+
+    emit removed();
+    emit cleanup();
 }
 
 void Schematic::removeWire(ConnectionWire *wire) {

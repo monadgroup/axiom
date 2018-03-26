@@ -9,6 +9,8 @@ using namespace AxiomModel;
 ModuleSchematic::ModuleSchematic(ModuleNode *node) : Schematic(node->runtime()->subsurface()), node(node) {
     connect(node, &ModuleNode::nameChanged,
             this, &ModuleSchematic::nameChanged);
+    connect(node, &ModuleNode::removed,
+            this, &ModuleSchematic::remove);
 }
 
 QString ModuleSchematic::name() {

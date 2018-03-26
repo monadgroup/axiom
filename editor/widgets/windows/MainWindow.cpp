@@ -63,26 +63,41 @@ void MainWindow::closeProject() {
 void MainWindow::loadProject(AxiomModel::Project *project) {
     closeProject();
 
-    auto canvasDock = new SchematicPanel(this, &project->root);
-    canvasDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-    addDockWidget(Qt::TopDockWidgetArea, canvasDock);
-
     auto moduleBrowser = new ModuleBrowserPanel();
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
+
+    showSchematic(nullptr, &project->root, false);
 }
 
 void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic *schematic, bool split) {
-    auto canvasDock = new SchematicPanel(this, schematic);
-    canvasDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-    if (split) {
-        splitDockWidget(fromPanel, canvasDock, Qt::Horizontal);
-    } else {
-        tabifyDockWidget(fromPanel, canvasDock);
-        canvasDock->setFocus();
+    auto openPanel = _openPanels.find(schematic);
+    if (openPanel != _openPanels.end()) {
+        openPanel->second->raise();
+        return;
     }
+
+    auto newDock = std::make_unique<SchematicPanel>(this, schematic);
+    newDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    if (!fromPanel) {
+        addDockWidget(Qt::TopDockWidgetArea, newDock.get());
+    } else if (split) {
+        splitDockWidget(fromPanel, newDock.get(), Qt::Horizontal);
+    } else {
+        tabifyDockWidget(fromPanel, newDock.get());
+        newDock->raise();
+    }
+
+    connect(newDock.get(), &SchematicPanel::closed,
+            [this, schematic]() { removeSchematic(schematic); });
+
+    _openPanels.emplace(schematic, std::move(newDock));
 }
 
 void MainWindow::showAbout() {
     AboutWindow().exec();
+}
+
+void MainWindow::removeSchematic(AxiomModel::Schematic *schematic) {
+    _openPanels.erase(schematic);
 }

@@ -64,6 +64,12 @@ namespace AxiomModel {
 
         void removed();
 
+        void cleanup();
+
+    protected slots:
+
+        void remove();
+
     private slots:
 
         void removeWire(ConnectionWire *wire);
