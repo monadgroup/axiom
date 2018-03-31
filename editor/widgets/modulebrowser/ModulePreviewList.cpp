@@ -1,6 +1,6 @@
 #include "ModulePreviewList.h"
 
-#include "editor/layouts/FlowLayout.h"
+#include "../layouts/FlowLayout.h"
 #include "editor/util.h"
 #include "ModulePreview.h"
 

@@ -26,7 +26,7 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : node(node), canvas(canvas) {
+NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : canvas(canvas), node(node) {
     // create items for all controls that already exist
     for (const auto &item : node->surface.items()) {
         if (auto control = dynamic_cast<NodeControl *>(item.get())) {

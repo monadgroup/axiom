@@ -204,6 +204,7 @@ void SchematicCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         case Qt::LeftButton:
             leftMousePressEvent(event);
             break;
+        default: break;
     }
 }
 
@@ -215,6 +216,7 @@ void SchematicCanvas::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         case Qt::LeftButton:
             leftMouseReleaseEvent(event);
             break;
+        default: break;
     }
 }
 

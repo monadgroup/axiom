@@ -65,6 +65,7 @@ void ConnectionWire::updateActive() {
         case ActiveState::SINK_B:
             newActive = sinkB->active();
             break;
+        default: break;
     }
 
     if (newActive != m_active) {

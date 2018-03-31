@@ -21,27 +21,6 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-static QPointF flip(QPointF a, bool yes) {
-    if (yes) {
-        return {a.y(), a.x()};
-    }
-    return a;
-}
-
-static QSizeF flip(QSizeF a, bool yes) {
-    if (yes) {
-        return {a.height(), a.width()};
-    }
-    return a;
-}
-
-static QRectF flip(QRectF a, bool yes) {
-    if (yes) {
-        return {flip(a.topLeft(), yes), flip(a.size(), yes)};
-    }
-    return a;
-}
-
 static std::vector<std::pair<QString, NodeNumControl::Mode>> modes = {
     std::make_pair("&Plug", NodeNumControl::Mode::PLUG),
     std::make_pair("&Knob", NodeNumControl::Mode::KNOB),
@@ -133,6 +112,7 @@ QRectF NumControl::useBoundingRect() const {
         case NodeNumControl::Mode::TOGGLE:
             return togglePainter.getBounds(drawBoundingRect());
     }
+    unreachable;
 }
 
 QPainterPath NumControl::controlPath() const {
@@ -330,6 +310,7 @@ QString NumControl::valueAsString(MaximRuntime::NumValue num) {
             else return QString::number(num.left) + ", " + QString::number(num.right);
         }
     }
+    unreachable;
 }
 
 MaximRuntime::NumValue NumControl::stringAsValue(const QString &str, MaximRuntime::NumValue oldNum) {
@@ -349,6 +330,7 @@ MaximRuntime::NumValue NumControl::stringAsValue(const QString &str, MaximRuntim
         case NodeNumControl::Channel::BOTH:
             return oldNum.withLR(leftNum, rightNum);
     }
+    unreachable;
 }
 
 MaximRuntime::NumValue NumControl::getCVal() const {
@@ -361,6 +343,7 @@ MaximRuntime::NumValue NumControl::getCVal() const {
         case NodeNumControl::Channel::BOTH:
             return v;
     }
+    unreachable;
 }
 
 void NumControl::setCVal(MaximRuntime::NumValue v) const {

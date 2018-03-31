@@ -17,9 +17,9 @@ Schematic::Schematic(MaximRuntime::Surface *runtime) : _runtime(runtime) {
 
 void Schematic::serialize(QDataStream &stream) const {
     stream << pan() << static_cast<quint32>(items().size());
-    for (const auto &node : items()) {
+    //for (const auto &node : items()) {
         //node.serialize(stream);
-    }
+    //}
 }
 
 void Schematic::deserialize(QDataStream &stream) {
@@ -29,7 +29,7 @@ void Schematic::deserialize(QDataStream &stream) {
     stream >> pan >> nodeCount;
     setPan(pan);
 
-    for (auto i = 0; i < nodeCount; i++) {
+    for (size_t i = 0; i < nodeCount; i++) {
         // todo
     }
 }
@@ -77,7 +77,7 @@ ModuleNode *Schematic::groupSelection() {
 
             assert(clonedNode->surface.items().size() == node->surface.items().size());
 
-            for (auto i = 0; i < node->surface.items().size(); i++) {
+            for (size_t i = 0; i < node->surface.items().size(); i++) {
                 auto oldControl = dynamic_cast<NodeControl *>(node->surface.items()[i].get());
                 if (oldControl == nullptr) continue;
                 auto newControl = dynamic_cast<NodeControl *>(clonedNode->surface.items()[i].get());

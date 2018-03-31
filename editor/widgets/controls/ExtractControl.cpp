@@ -11,6 +11,7 @@
 #include "editor/model/control/NodeExtractControl.h"
 #include "editor/model/connection/ConnectionWire.h"
 #include "editor/model/schematic/Schematic.h"
+#include "../../util.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -82,6 +83,7 @@ QColor ExtractControl::outlineNormalColor() const {
         case ConnectionSink::Type::NUMBER: return CommonColors::numWireNormal;
         case ConnectionSink::Type::MIDI: return CommonColors::midiWireNormal;
     }
+    unreachable;
 }
 
 QColor ExtractControl::outlineActiveColor() const {
@@ -89,12 +91,12 @@ QColor ExtractControl::outlineActiveColor() const {
         case ConnectionSink::Type::NUMBER: return CommonColors::numWireActive;
         case ConnectionSink::Type::MIDI: return CommonColors::midiWireActive;
     }
+    unreachable;
 }
 
 void ExtractControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mousePressEvent(event);
     event->accept();
-    return;
 }
 
 void ExtractControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {

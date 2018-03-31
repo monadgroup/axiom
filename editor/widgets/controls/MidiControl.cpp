@@ -14,6 +14,7 @@
 #include "editor/model/control/NodeMidiControl.h"
 #include "editor/model/connection/ConnectionWire.h"
 #include "editor/model/schematic/Schematic.h"
+#include "../../util.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -88,6 +89,7 @@ QRectF MidiControl::useBoundingRect() const {
             return plugPainter.getBounds(aspectBoundingRect());
         case NodeMidiControl::Mode::PIANO:break;
     }
+    unreachable;
 }
 
 QPainterPath MidiControl::controlPath() const {
@@ -104,7 +106,6 @@ QPainterPath MidiControl::controlPath() const {
 void MidiControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mousePressEvent(event);
     event->accept();
-    return;
 }
 
 void MidiControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {

@@ -6,7 +6,7 @@
 using namespace AxiomModel;
 
 Node::Node(Schematic *parent, QString name, Type type, QPoint pos, QSize size)
-    : GridItem(parent, pos, size), parentSchematic(parent), m_name(std::move(name)), type(type), surface(this) {
+    : GridItem(parent, pos, size), type(type), surface(this), parentSchematic(parent), m_name(std::move(name)) {
     connect(this, &Node::deselected,
             &surface, &NodeSurface::deselectAll);
 }

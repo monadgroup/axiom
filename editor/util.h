@@ -4,6 +4,8 @@
 #include <QtCore/QPoint>
 #include <QtGui/QColor>
 
+#define unreachable assert(false); throw
+
 namespace AxiomUtil {
 
     QString loadStylesheet(const char *path);

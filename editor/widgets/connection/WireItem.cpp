@@ -45,7 +45,7 @@ void WireItem::updateRoute() {
         auto halfNodeSize = QPointF(SchematicCanvas::nodeGridSize.width() / 2,
                                     SchematicCanvas::nodeGridSize.height() / 2);
 
-        for (auto i = 0; i < route.size(); i++) {
+        for (size_t i = 0; i < route.size(); i++) {
             QPointF routePos = SchematicCanvas::nodeRealPos(route[i]) + halfNodeSize;
 
             if (i == 0) {
