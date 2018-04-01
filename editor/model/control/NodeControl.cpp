@@ -61,6 +61,20 @@ void NodeControl::setExposeBase(AxiomModel::NodeControl *base) {
     }
 }
 
+void NodeControl::serialize(QDataStream &stream) const {
+    GridItem::serialize(stream);
+
+    stream << m_showName;
+    // todo: control exposing
+}
+
+void NodeControl::deserialize(QDataStream &stream) {
+    GridItem::deserialize(stream);
+
+    bool showName; stream >> showName;
+    setShowName(showName);
+}
+
 void NodeControl::initSink() {
     connect(this, &NodeControl::posChanged,
             this, &NodeControl::recalcSinkPos);

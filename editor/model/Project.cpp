@@ -14,6 +14,15 @@ void Project::serialize(QDataStream &stream) const {
 }
 
 void Project::deserialize(QDataStream &stream) {
+    clear();
+
     library.deserialize(stream);
     root.deserialize(stream);
+}
+
+void Project::clear() {
+    // todo: clear library
+
+    root.selectAll();
+    root.deleteSelectedItems();
 }

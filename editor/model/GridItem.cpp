@@ -1,5 +1,7 @@
 #include "GridItem.h"
 
+#include <QtCore/QDataStream>
+
 #include "GridSurface.h"
 
 using namespace AxiomModel;
@@ -106,4 +108,20 @@ void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
         m_pos = pos;
         emit posChanged(pos);
     }
+}
+
+void GridItem::serialize(QDataStream &stream) const {
+    stream << m_selected;
+    stream << m_pos;
+    stream << m_size;
+}
+
+void GridItem::deserialize(QDataStream &stream) {
+    bool selected; stream >> selected;
+    QPoint pos; stream >> pos;
+    QSize size; stream >> size;
+
+    setPos(pos, true, false);
+    setSize(size);
+    if (selected) select(false);
 }

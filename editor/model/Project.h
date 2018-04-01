@@ -25,6 +25,8 @@ namespace AxiomModel {
 
         void deserialize(QDataStream &stream);
 
+        void clear();
+
         MaximRuntime::Runtime *runtime() const { return _runtime; }
 
     private:

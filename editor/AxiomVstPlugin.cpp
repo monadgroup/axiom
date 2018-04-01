@@ -1,5 +1,8 @@
 #include "AxiomVstPlugin.h"
 
+#include <QtCore/QBuffer>
+#include <iostream>
+
 #include "resources/resource.h"
 #include "AxiomVstEditor.h"
 #include "compiler/runtime/GeneratableModuleClass.h"
@@ -26,6 +29,14 @@ AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
 
 void AxiomVstPlugin::open() {
 
+}
+
+void AxiomVstPlugin::suspend() {
+    saveBuffer.reset();
+}
+
+void AxiomVstPlugin::resume() {
+    saveBuffer.reset();
 }
 
 void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) {
@@ -118,11 +129,29 @@ void AxiomVstPlugin::getParameterName(VstInt32 index, char *text) {
 }
 
 VstInt32 AxiomVstPlugin::getChunk(void **data, bool isPreset) {
-    // todo
+    saveBuffer = std::make_unique<QByteArray>();
+    QBuffer buffer(saveBuffer.get());
+    buffer.open(QIODevice::WriteOnly);
+    QDataStream stream(&buffer);
+
+    std::cout << "Serializing chunk" << std::endl;
+    project.serialize(stream);
+    std::cout << "Finished serializing, with " << saveBuffer->size() << " bytes" << std::endl;
+
+    buffer.close();
+
+    *data = saveBuffer->data();
+    return saveBuffer->size();
 }
 
 VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) {
-    // todo
+    QByteArray byteArray = QByteArray::fromRawData((char*)data, byteSize);
+    QDataStream stream(&byteArray, QIODevice::ReadOnly);
+
+    std::cout << "Deserializing " << byteSize << " bytes" << std::endl;
+    project.deserialize(stream);
+    std::cout << "Finished deserializing" << std::endl;
+    return 0;
 }
 
 bool AxiomVstPlugin::getEffectName(char *name) {

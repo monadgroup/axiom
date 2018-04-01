@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtCore/QDataStream>
+
 #include "../common/FormType.h"
 #include "../common/MidiEventType.h"
 #include "../codegen/MidiType.h"
@@ -35,6 +37,10 @@ namespace MaximRuntime {
         NumValue withR(float r) const {
             return {active, left, r, form};
         }
+
+        void serialize(QDataStream &stream) const;
+
+        void deserialize(QDataStream &stream);
     };
 
     struct MidiEventValue {
@@ -50,6 +56,10 @@ namespace MaximRuntime {
         bool operator!=(const MidiEventValue &other) const {
             return !(*this == other);
         }
+
+        void serialize(QDataStream &stream) const;
+
+        void deserialize(QDataStream &stream);
     };
 
     struct MidiValue {
@@ -75,6 +85,10 @@ namespace MaximRuntime {
             events[count] = event;
             count++;
         }
+
+        void serialize(QDataStream &stream) const;
+
+        void deserialize(QDataStream &stream);
     };
 
     class ValueOperator {

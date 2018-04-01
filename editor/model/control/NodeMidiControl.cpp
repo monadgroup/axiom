@@ -34,3 +34,13 @@ void NodeMidiControl::setMode(Mode mode) {
         emit modeChanged(mode);
     }
 }
+
+void NodeMidiControl::serialize(QDataStream &stream) const {
+    m_sink.value().serialize(stream);
+}
+
+void NodeMidiControl::deserialize(QDataStream &stream) {
+    MaximRuntime::MidiValue val;
+    val.deserialize(stream);
+    m_sink.setValue(val);
+}

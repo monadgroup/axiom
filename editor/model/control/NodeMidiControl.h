@@ -36,6 +36,10 @@ namespace AxiomModel {
 
         void setMode(Mode mode);
 
+        void serialize(QDataStream &stream) const override;
+
+        void deserialize(QDataStream &stream) override;
+
     signals:
 
         void valueChanged(MaximRuntime::MidiValue newValue);

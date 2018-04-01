@@ -60,6 +60,10 @@ namespace AxiomModel {
 
         void setPanelHeight(float panelHeight);
 
+        void serialize(QDataStream &stream) const override;
+
+        void deserialize(QDataStream &stream) override;
+
     signals:
 
         void nameChanged(const QString &newName);

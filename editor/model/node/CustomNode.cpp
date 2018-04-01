@@ -1,9 +1,11 @@
+#include <QtCore/QBuffer>
 #include "CustomNode.h"
 
 #include "../schematic/Schematic.h"
 #include "../control/NodeControl.h"
 #include "editor/AxiomApplication.h"
 #include "compiler/runtime/Runtime.h"
+#include "compiler/codegen/Control.h"
 
 using namespace AxiomModel;
 
@@ -51,6 +53,77 @@ void CustomNode::recompile() {
         _runtime.errorLog().errors.clear();
     } else {
         emit compileSucceeded();
+    }
+}
+
+void CustomNode::serialize(QDataStream &stream) const {
+    Node::serialize(stream);
+    stream << m_code;
+
+    // serialize controls
+    stream << (uint32_t) surface.items().size();
+    for (const auto &item : surface.items()) {
+        auto control = dynamic_cast<NodeControl*>(item.get());
+        assert(control);
+
+        stream << control->name();
+        stream << (uint8_t) control->runtime()->type()->type();
+
+        // we need to write the size of the control data so the deserializer can skip it
+        // so serialize the control into a memory buffer before putting it into the main
+        // one.
+        QBuffer controlBuffer;
+        controlBuffer.open(QBuffer::WriteOnly);
+        QDataStream dataStream(&controlBuffer);
+        control->serialize(dataStream);
+
+        stream << (uint64_t) controlBuffer.size();
+        stream.writeRawData(controlBuffer.data(), (int) controlBuffer.size());
+        controlBuffer.close();
+    }
+}
+
+void CustomNode::deserialize(QDataStream &stream) {
+    Node::deserialize(stream);
+
+    QString code; stream >> code;
+    setCode(code);
+
+    // trigger the runtime to create controls for us, which will create controls on our surface
+    _runtime.scheduleCompile();
+    _runtime.compile();
+
+    // create an index of name/type to control for deserialization
+    std::unordered_map<MaximCodegen::ControlKey, NodeControl*> controlMap;
+    for (const auto &item : surface.items()) {
+        if (auto control = dynamic_cast<NodeControl*>(item.get())) {
+            controlMap.emplace(MaximCodegen::ControlKey {
+                control->name().toStdString(),
+                control->runtime()->type()->type()
+            }, control);
+        }
+    }
+
+    // deserialize controls
+    uint32_t controlCount; stream >> controlCount;
+    for (uint32_t i = 0; i < controlCount; i++) {
+        QString controlName; stream >> controlName;
+        uint8_t intControlType; stream >> intControlType;
+
+        uint64_t controlSize; stream >> controlSize;
+
+        auto controlType = (MaximCommon::ControlType) intControlType;
+        MaximCodegen::ControlKey controlKey = { controlName.toStdString(), controlType };
+        auto realControlIndex = controlMap.find(controlKey);
+
+        // if the {name, type} pair doesn't exist anymore, skip the controls data
+        if (realControlIndex == controlMap.end()) {
+            stream.skipRawData((int) controlSize);
+            continue;
+        }
+
+        NodeControl *control = realControlIndex->second;
+        control->deserialize(stream);
     }
 }
 

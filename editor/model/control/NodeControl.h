@@ -45,6 +45,10 @@ namespace AxiomModel {
 
         void setExposeBase(NodeControl *base);
 
+        void serialize(QDataStream &stream) const override;
+
+        void deserialize(QDataStream &stream) override;
+
     signals:
 
         void showNameChanged(bool newShowName);

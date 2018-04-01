@@ -13,6 +13,8 @@ namespace AxiomModel {
 
     public:
 
+        ~HistoryList() override;
+
         void startAction(const std::string &name);
 
         void endAction(const std::string &name);

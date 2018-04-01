@@ -6,6 +6,8 @@
 
 using namespace AxiomModel;
 
+HistoryList::~HistoryList() = default;
+
 void HistoryList::startAction(const std::string &name) {
     assert(!hasCurrentAction);
     hasCurrentAction = true;

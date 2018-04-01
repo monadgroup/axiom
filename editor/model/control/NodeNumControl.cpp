@@ -39,3 +39,13 @@ void NodeNumControl::setChannel(Channel channel) {
         emit channelChanged(channel);
     }
 }
+
+void NodeNumControl::serialize(QDataStream &stream) const {
+    m_sink.value().serialize(stream);
+}
+
+void NodeNumControl::deserialize(QDataStream &stream) {
+    MaximRuntime::NumValue val;
+    val.deserialize(stream);
+    m_sink.setValue(val);
+}

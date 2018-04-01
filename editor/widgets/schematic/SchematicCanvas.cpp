@@ -12,7 +12,7 @@
 #include "editor/AxiomApplication.h"
 #include "editor/model/schematic/Schematic.h"
 #include "editor/model/node/CustomNode.h"
-#include "editor/model/node/ModuleNode.h"
+#include "editor/model/node/GroupNode.h"
 #include "editor/model/control/NodeNumControl.h"
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
@@ -176,7 +176,7 @@ void SchematicCanvas::newNode(QPointF scenePos, QString name, bool group) {
         qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height())
     );
 
-    std::unique_ptr<Node> newNode = group ? (std::unique_ptr<Node>) std::make_unique<ModuleNode>(schematic, name, targetPos, defaultSize)
+    std::unique_ptr<Node> newNode = group ? (std::unique_ptr<Node>) std::make_unique<GroupNode>(schematic, name, targetPos, defaultSize)
                                           : (std::unique_ptr<Node>) std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
     schematic->addItem(std::move(newNode));
     schematic->runtime()->runtime()->compile();

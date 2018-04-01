@@ -1,5 +1,7 @@
 #include "Node.h"
 
+#include <QtCore/QDataStream>
+
 #include "../schematic/Schematic.h"
 #include "../control/NodeControl.h"
 
@@ -89,4 +91,24 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
         surface.grid.setRect(item->pos(), item->size(), item.get());
     }
     surface.flushGrid();
+}
+
+void Node::serialize(QDataStream &stream) const {
+    GridItem::serialize(stream);
+
+    stream << m_name;
+    stream << m_panelOpen;
+    stream << m_panelHeight;
+}
+
+void Node::deserialize(QDataStream &stream) {
+    GridItem::deserialize(stream);
+
+    QString name; stream >> name;
+    bool panelOpen; stream >> panelOpen;
+    float panelHeight; stream >> panelHeight;
+
+    setName(name);
+    setPanelOpen(panelOpen);
+    setPanelHeight(panelHeight);
 }

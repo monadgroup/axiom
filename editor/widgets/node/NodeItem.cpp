@@ -8,7 +8,7 @@
 #include "../schematic/SchematicCanvas.h"
 #include "editor/model/node/Node.h"
 #include "editor/model/node/CustomNode.h"
-#include "editor/model/node/ModuleNode.h"
+#include "editor/model/node/GroupNode.h"
 #include "editor/model/control/NodeControl.h"
 #include "editor/model/control/NodeNumControl.h"
 #include "editor/model/control/NodeMidiControl.h"
@@ -200,7 +200,7 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-    if (auto moduleNode = dynamic_cast<ModuleNode *>(node)) {
+    if (auto moduleNode = dynamic_cast<GroupNode *>(node)) {
         event->accept();
 
         canvas->panel->window->showSchematic(

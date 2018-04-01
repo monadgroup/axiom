@@ -14,6 +14,10 @@ public:
 
     void open() override;
 
+    void suspend() override;
+
+    void resume() override;
+
     void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) override;
 
     VstInt32 processEvents(VstEvents *ev) override;
@@ -51,5 +55,9 @@ public:
     VstInt32 canDo(char *text) override;
 
     VstInt32 getNumMidiInputChannels() override;
+
+private:
+
+    std::unique_ptr<QByteArray> saveBuffer;
 
 };

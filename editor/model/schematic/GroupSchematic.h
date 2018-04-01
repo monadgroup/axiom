@@ -7,15 +7,15 @@
 
 namespace AxiomModel {
 
-    class ModuleNode;
+    class GroupNode;
 
-    class ModuleSchematic : public Schematic {
+    class GroupSchematic : public Schematic {
     Q_OBJECT
 
     public:
-        ModuleNode *node;
+        GroupNode *node;
 
-        explicit ModuleSchematic(ModuleNode *node);
+        explicit GroupSchematic(GroupNode *node);
 
         QString name() override;
 

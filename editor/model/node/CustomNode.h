@@ -25,6 +25,10 @@ namespace AxiomModel {
 
         void recompile();
 
+        void serialize(QDataStream &stream) const override;
+
+        void deserialize(QDataStream &stream) override;
+
     signals:
 
         void codeChanged(QString newCode);

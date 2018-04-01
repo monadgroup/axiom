@@ -47,6 +47,10 @@ namespace AxiomModel {
 
         void setChannel(Channel channel);
 
+        void serialize(QDataStream &stream) const override;
+
+        void deserialize(QDataStream &stream) override;
+
     signals:
 
         void valueChanged(MaximRuntime::NumValue newValue);

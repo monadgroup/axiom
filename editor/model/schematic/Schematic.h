@@ -18,7 +18,7 @@ namespace MaximRuntime {
 
 namespace AxiomModel {
 
-    class ModuleNode;
+    class GroupNode;
 
     class NodeControl;
 
@@ -36,10 +36,6 @@ namespace AxiomModel {
 
         const std::vector<std::unique_ptr<ConnectionWire>> &wires() const { return m_wires; }
 
-        virtual void serialize(QDataStream &stream) const;
-
-        virtual void deserialize(QDataStream &stream);
-
         void addWire(std::unique_ptr<ConnectionWire> wire);
 
         virtual bool canExposeControl() = 0;
@@ -50,9 +46,13 @@ namespace AxiomModel {
 
         void setPan(QPointF pan);
 
-        ModuleNode *groupSelection();
+        GroupNode *groupSelection();
 
         ConnectionWire *connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB);
+
+        virtual void serialize(QDataStream &stream) const;
+
+        virtual void deserialize(QDataStream &stream);
 
     signals:
 

@@ -135,3 +135,53 @@ void ValueOperator::writeMidi(void *ptr, const MidiValue &value) {
         writeMidiEvent(ptr, i, value.events[i]);
     }
 }
+
+void NumValue::serialize(QDataStream &stream) const {
+    stream << active;
+    stream << left;
+    stream << right;
+    stream << (uint8_t) form;
+}
+
+void NumValue::deserialize(QDataStream &stream) {
+    stream >> active;
+    stream >> left;
+    stream >> right;
+
+    uint8_t intForm; stream >> intForm;
+    form = (MaximCommon::FormType) intForm;
+}
+
+void MidiEventValue::serialize(QDataStream &stream) const {
+    stream << (uint8_t) event;
+    stream << channel;
+    stream << note;
+    stream << param;
+}
+
+void MidiEventValue::deserialize(QDataStream &stream) {
+    uint8_t intEvent; stream >> intEvent;
+    event = (MaximCommon::MidiEventType) intEvent;
+
+    stream >> channel;
+    stream >> note;
+    stream >> param;
+}
+
+void MidiValue::serialize(QDataStream &stream) const {
+    stream << active;
+    stream << count;
+
+    for (uint8_t i = 0; i < count; i++) {
+        events[i].serialize(stream);
+    }
+}
+
+void MidiValue::deserialize(QDataStream &stream) {
+    stream >> active;
+    stream >> count;
+
+    for (uint8_t i = 0; i < count; i++) {
+        events[i].serialize(stream);
+    }
+}
