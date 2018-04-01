@@ -32,6 +32,14 @@ namespace MaximRuntime {
 
         void *updateCurrentPtr(void *parentCtx) override;
 
+        void saveValue() override;
+
+        void restoreValue() override;
+
+        void setRestoreValue(SaveValue &value) override;
+
+        MaximCodegen::ModuleClass *moduleClass() override;
+
     signals:
 
         void controlAdded(SoftControl *control);

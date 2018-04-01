@@ -35,6 +35,9 @@ void Runtime::compile() {
     std::cout << "Beginning compile..." << std::endl;
     auto startClock = std::clock();
 
+    // tell every unit to save its current value, so we can restore it later
+    _mainSurface->saveValue();
+
     std::cerr << "  Beginning codegen..." << std::endl;
     auto codegenClock = std::clock();
     auto mainClass = _mainSurface->compile();
@@ -71,6 +74,7 @@ void Runtime::compile() {
 
     // propagate new pointers
     _mainSurface->updateCurrentPtr(ctxGlobalPtr);
+    _mainSurface->restoreValue();
 
     // initialize it
     initFuncPtr();

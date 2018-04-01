@@ -22,3 +22,7 @@ void IONode::remove() {
     _control->remove();
     Node::remove();
 }
+
+MaximCodegen::ModuleClass* IONode::moduleClass() {
+    return _moduleClass.get();
+}

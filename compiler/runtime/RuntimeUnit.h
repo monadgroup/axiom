@@ -6,6 +6,8 @@ namespace llvm {
     class Module;
 
     class Function;
+
+    class Type;
 }
 
 namespace MaximCodegen {
@@ -20,6 +22,15 @@ namespace MaximRuntime {
 
     class RuntimeUnit {
     public:
+        struct MallocDeleter {
+            void operator()(void *x) { free(x); }
+        };
+
+        struct SaveValue {
+            llvm::Type *type;
+            std::unique_ptr<void, MallocDeleter> value;
+        };
+
         explicit RuntimeUnit(Runtime *runtime);
 
         virtual ~RuntimeUnit();
@@ -38,7 +49,17 @@ namespace MaximRuntime {
 
         virtual void *updateCurrentPtr(void *parentCtx);
 
+        virtual void saveValue();
+
+        virtual void restoreValue();
+
+        virtual void setRestoreValue(SaveValue &value);
+
+        SaveValue moveValue() { return std::move(_saveVal); };
+
         void *currentPtr() const;
+
+        virtual MaximCodegen::ModuleClass *moduleClass() = 0;
 
     private:
         Runtime *_runtime;
@@ -50,6 +71,11 @@ namespace MaximRuntime {
         GetValueCb _getValueCb = nullptr;
 
         void *_currentPtr = nullptr;
+
+        SaveValue _saveVal = {
+            nullptr,
+            nullptr
+        };
     };
 
 }

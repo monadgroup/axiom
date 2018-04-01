@@ -39,6 +39,8 @@ namespace MaximRuntime {
 
         ErrorLog &errorLog() { return _errorLog; }
 
+        MaximCodegen::ModuleClass *moduleClass() override;
+
     signals:
 
         void controlAdded(HardControl *control);

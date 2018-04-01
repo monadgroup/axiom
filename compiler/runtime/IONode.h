@@ -19,6 +19,8 @@ namespace MaximRuntime {
 
         const std::unique_ptr<Control> *end() const override { return (std::unique_ptr<Control> *) &_control + 1; }
 
+        MaximCodegen::ModuleClass *moduleClass() override;
+
     private:
 
         std::unique_ptr<GeneratableModuleClass> _moduleClass;

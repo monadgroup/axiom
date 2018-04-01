@@ -41,6 +41,12 @@ namespace MaximRuntime {
 
         virtual void addExitNodes(std::set<Node *> &queue);
 
+        void saveValue() override;
+
+        void restoreValue() override;
+
+        MaximCodegen::ModuleClass *moduleClass() override { return _class.get(); }
+
     private:
         std::unique_ptr<GeneratableModuleClass> _class;
 

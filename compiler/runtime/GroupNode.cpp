@@ -51,3 +51,19 @@ void* GroupNode::updateCurrentPtr(void *parentCtx) {
     _subsurface.updateCurrentPtr(parentCtx);
     return selfPtr;
 }
+
+void GroupNode::saveValue() {
+    _subsurface.saveValue();
+}
+
+void GroupNode::restoreValue() {
+    _subsurface.restoreValue();
+}
+
+void GroupNode::setRestoreValue(MaximRuntime::RuntimeUnit::SaveValue &value) {
+    _subsurface.setRestoreValue(value);
+}
+
+MaximCodegen::ModuleClass* GroupNode::moduleClass() {
+    return _subsurface.moduleClass();
+}

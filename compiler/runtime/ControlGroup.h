@@ -60,6 +60,8 @@ namespace MaximRuntime {
 
         void *currentValuePtr() const { return *(void**)currentPtr(); }
 
+        MaximCodegen::ModuleClass *moduleClass() override { return &_compileResult; }
+
     private:
 
         MaximCodegen::Control *_type;

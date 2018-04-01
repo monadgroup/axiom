@@ -146,3 +146,7 @@ void CustomNode::updateControls() {
         emit controlAdded(newControl);
     }
 }
+
+MaximCodegen::ModuleClass* CustomNode::moduleClass() {
+    return _moduleClass.get();
+}
