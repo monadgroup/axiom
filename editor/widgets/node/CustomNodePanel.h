@@ -44,6 +44,8 @@ namespace AxiomGui {
 
         void resizerChanged(QPointF topLeft, QPointF bottomRight);
 
+        void compileFinished();
+
     signals:
 
         void resizerSizeChanged(QSizeF newSize);

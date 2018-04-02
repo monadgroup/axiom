@@ -54,6 +54,8 @@ void CustomNode::recompile() {
     } else {
         emit compileSucceeded();
     }
+
+    emit compileFinished();
 }
 
 void CustomNode::serialize(QDataStream &stream) const {

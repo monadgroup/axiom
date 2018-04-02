@@ -29,6 +29,8 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
             this, &CustomNodePanel::clearError);
     connect(node, &CustomNode::parseSucceeded,
             this, &CustomNodePanel::clearError);
+    connect(node, &CustomNode::compileFinished,
+            this, &CustomNodePanel::compileFinished);
 
     auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, Node::minPanelHeight));
     connect(this, &CustomNodePanel::resizerSizeChanged,
@@ -45,6 +47,7 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     textProxy->setZValue(1);
 
     textEditor->installEventFilter(this);
+    textEditor->setText(node->code());
     connect(textEditor, &QTextEdit::textChanged,
             this, &CustomNodePanel::controlTextChanged);
 
@@ -121,6 +124,10 @@ void CustomNodePanel::triggerGeometryChange() {
 void CustomNodePanel::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     auto nodeSize = SchematicCanvas::nodeRealSize(node->size());
     node->setPanelHeight((float) bottomRight.y() - nodeSize.height() - 5);
+}
+
+void CustomNodePanel::compileFinished() {
+    textEditor->setText(node->code());
 }
 
 bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {

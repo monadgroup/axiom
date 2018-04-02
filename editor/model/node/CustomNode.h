@@ -41,6 +41,8 @@ namespace AxiomModel {
 
         void compileSucceeded();
 
+        void compileFinished();
+
     private slots:
 
         void controlAdded(MaximRuntime::HardControl *control);

@@ -151,6 +151,7 @@ VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) 
     std::cout << "Deserializing " << byteSize << " bytes" << std::endl;
     project.deserialize(stream);
     std::cout << "Finished deserializing" << std::endl;
+    runtime.compile();
     return 0;
 }
 

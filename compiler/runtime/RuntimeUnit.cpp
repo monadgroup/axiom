@@ -36,6 +36,7 @@ void *RuntimeUnit::updateCurrentPtr(void *parentCtx) {
 }
 
 void RuntimeUnit::saveValue() {
+    if (!_currentPtr) return;
     auto module = moduleClass();
     if (!module) {
         std::cout << "  Not saving: no module" << std::endl;
@@ -51,7 +52,7 @@ void RuntimeUnit::saveValue() {
 }
 
 void RuntimeUnit::restoreValue() {
-    if (!_saveVal.value) return;
+    if (!_saveVal.value || !_currentPtr) return;
 
     auto module = moduleClass();
     if (!module) return;
