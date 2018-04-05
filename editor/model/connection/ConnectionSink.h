@@ -39,6 +39,8 @@ namespace AxiomModel {
 
         MaximRuntime::Control *runtime() const { return _runtime; }
 
+        ConnectionWire *getConnectingWire(ConnectionSink *sink) const;
+
     public slots:
 
         void addWire(ConnectionWire *wire);

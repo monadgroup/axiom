@@ -9,6 +9,13 @@ ConnectionSink::ConnectionSink(Type type, MaximRuntime::Control *runtime) : type
 
 }
 
+ConnectionWire *ConnectionSink::getConnectingWire(AxiomModel::ConnectionSink *sink) const {
+    for (const auto &connection : m_connections) {
+        if (connection->sinkA == sink || connection->sinkB == sink) return connection;
+    }
+    return nullptr;
+}
+
 void ConnectionSink::addWire(ConnectionWire *wire) {
     m_connections.push_back(wire);
 

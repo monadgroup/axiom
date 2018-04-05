@@ -149,7 +149,15 @@ void SchematicCanvas::endConnecting(QPointF mousePos) {
 
     if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
         isConnecting = false;
-        schematic->connectSinks(connectionWire->sinkA, connectable->sink());
+
+        // if the sinks are already connected, remove the connection
+        if (auto connectingWire = connectionWire->sinkA->getConnectingWire(connectable->sink())) {
+            connectingWire->remove();
+        } else {
+            schematic->connectSinks(connectionWire->sinkA, connectable->sink());
+        }
+
+        schematic->project()->build();
     } else {
         // todo: create JunctionNode if not currentItem is null
     }

@@ -131,7 +131,6 @@ ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *s
 
     if (sinkA->runtime() && sinkB->runtime()) {
         sinkA->runtime()->connectTo(sinkB->runtime());
-        _project->build();
     }
 
     auto wire = std::make_unique<ConnectionWire>(this, sinkA, sinkB);
