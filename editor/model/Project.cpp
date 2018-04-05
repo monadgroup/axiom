@@ -1,11 +1,12 @@
+#include <iostream>
 #include "Project.h"
 
 #include "compiler/runtime/Runtime.h"
 
 using namespace AxiomModel;
 
-Project::Project(MaximRuntime::Runtime *runtime) : root(runtime->mainSurface()), _runtime(runtime) {
-
+Project::Project(MaximRuntime::Runtime *runtime) : root(this, runtime->mainSurface()), _runtime(runtime) {
+    build();
 }
 
 void Project::serialize(QDataStream &stream) const {
@@ -25,4 +26,13 @@ void Project::clear() {
 
     root.selectAll();
     root.deleteSelectedItems();
+}
+
+void Project::build() {
+    std::cout << "Saving value..." << std::endl;
+    root.saveValue();
+    _runtime->compile();
+    std::cout << "Restoring value..." << std::endl;
+    root.restoreValue();
+    std::cout << "Finished project build" << std::endl;
 }

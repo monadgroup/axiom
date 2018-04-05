@@ -35,6 +35,10 @@ namespace AxiomModel {
 
         virtual void doRuntimeUpdate();
 
+        virtual void saveValue();
+
+        virtual void restoreValue();
+
         void deleteSelectedItems();
 
         void selectAll();

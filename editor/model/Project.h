@@ -27,6 +27,8 @@ namespace AxiomModel {
 
         void clear();
 
+        void build();
+
         MaximRuntime::Runtime *runtime() const { return _runtime; }
 
     private:

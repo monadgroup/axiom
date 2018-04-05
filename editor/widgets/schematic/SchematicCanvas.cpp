@@ -7,6 +7,7 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QWidgetAction>
+#include <iostream>
 
 #include "compiler/runtime/Runtime.h"
 #include "editor/AxiomApplication.h"
@@ -14,6 +15,7 @@
 #include "editor/model/node/CustomNode.h"
 #include "editor/model/node/GroupNode.h"
 #include "editor/model/control/NodeNumControl.h"
+#include "editor/model/Project.h"
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
 #include "../IConnectable.h"
@@ -179,7 +181,7 @@ void SchematicCanvas::newNode(QPointF scenePos, QString name, bool group) {
     std::unique_ptr<Node> newNode = group ? (std::unique_ptr<Node>) std::make_unique<GroupNode>(schematic, name, targetPos, defaultSize)
                                           : (std::unique_ptr<Node>) std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
     schematic->addItem(std::move(newNode));
-    schematic->runtime()->runtime()->compile();
+    schematic->project()->build();
 }
 
 void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {

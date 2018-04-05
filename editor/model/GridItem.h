@@ -38,6 +38,10 @@ namespace AxiomModel {
 
         virtual void doRuntimeUpdate() {}
 
+        virtual void saveValue() {}
+
+        virtual void restoreValue() {}
+
         void setPos(QPoint pos, bool updateGrid = true, bool checkPositions = true);
 
         void setSize(QSize size);

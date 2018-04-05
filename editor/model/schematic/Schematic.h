@@ -22,17 +22,21 @@ namespace AxiomModel {
 
     class NodeControl;
 
+    class Project;
+
     class Schematic : public GridSurface {
     Q_OBJECT
 
     public:
-        explicit Schematic(MaximRuntime::Surface *runtime);
+        explicit Schematic(Project *project, MaximRuntime::Surface *runtime);
 
         virtual QString name() = 0;
 
         MaximRuntime::Surface *runtime() { return _runtime; }
 
         QPointF pan() const { return m_pan; }
+
+        Project *project() const { return _project; }
 
         const std::vector<std::unique_ptr<ConnectionWire>> &wires() const { return m_wires; }
 
@@ -75,6 +79,7 @@ namespace AxiomModel {
         void removeWire(ConnectionWire *wire);
 
     private:
+        Project *_project;
         std::vector<std::unique_ptr<ConnectionWire>> m_wires;
         QPointF m_pan;
         MaximRuntime::Surface *_runtime;

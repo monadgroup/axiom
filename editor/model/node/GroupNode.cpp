@@ -3,6 +3,7 @@
 #include "compiler/runtime/GeneratableModuleClass.h"
 #include "compiler/runtime/Runtime.h"
 #include "../control/NodeControl.h"
+#include "../Project.h"
 
 using namespace AxiomModel;
 
@@ -15,7 +16,7 @@ GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
     connect(this, &GroupNode::removed,
             [this]() {
                 _runtime.remove();
-                _runtime.runtime()->compile();
+                parentSchematic->project()->build();
             });
 
     connect(&_runtime, &MaximRuntime::GroupNode::controlAdded,
@@ -30,6 +31,16 @@ std::unique_ptr<GridItem> GroupNode::clone(GridSurface *newParent, QPoint newPos
     surface.cloneTo(&moduleNode->surface);
     schematic->cloneTo(moduleNode->schematic.get());
     return std::move(moduleNode);
+}
+
+void GroupNode::saveValue() {
+    Node::saveValue();
+    schematic->saveValue();
+}
+
+void GroupNode::restoreValue() {
+    Node::restoreValue();
+    schematic->restoreValue();
 }
 
 void GroupNode::serialize(QDataStream &stream) const {

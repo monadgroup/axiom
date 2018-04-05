@@ -1,3 +1,4 @@
+#include <iostream>
 #include "NodeMidiControl.h"
 
 #include "compiler/runtime/Control.h"
@@ -16,12 +17,20 @@ NodeMidiControl::NodeMidiControl(Node *node, MaximRuntime::Control *runtime, QPo
 }
 
 void NodeMidiControl::doRuntimeUpdate() {
-    setValue(runtime()->group()->getMidiValue());
+    saveValue();
 }
 
 void NodeMidiControl::setValue(MaximRuntime::MidiValue value, bool setRuntime) {
     m_sink.setValue(value);
-    if (setRuntime) runtime()->group()->setMidiValue(m_sink.value());
+    if (setRuntime) restoreValue();
+}
+
+void NodeMidiControl::saveValue() {
+    setValue(runtime()->group()->getMidiValue());
+}
+
+void NodeMidiControl::restoreValue() {
+    runtime()->group()->setMidiValue(m_sink.value());
 }
 
 void NodeMidiControl::pushEvent(MaximRuntime::MidiEventValue event) {

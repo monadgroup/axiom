@@ -39,6 +39,18 @@ void GridSurface::doRuntimeUpdate() {
     }
 }
 
+void GridSurface::saveValue() {
+    for (const auto &item : m_items) {
+        item->saveValue();
+    }
+}
+
+void GridSurface::restoreValue() {
+    for (const auto &item : m_items) {
+        item->restoreValue();
+    }
+}
+
 void GridSurface::deleteSelectedItems() {
     size_t avoidedCount = 0;
     while (m_selectedItems.size() > avoidedCount) {

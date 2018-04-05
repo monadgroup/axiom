@@ -17,6 +17,14 @@ void Node::doRuntimeUpdate() {
     surface.doRuntimeUpdate();
 }
 
+void Node::saveValue() {
+    surface.saveValue();
+}
+
+void Node::restoreValue() {
+    surface.restoreValue();
+}
+
 void Node::setName(const QString &name) {
     if (name != m_name) {
         m_name = name;

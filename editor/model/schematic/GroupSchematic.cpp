@@ -1,12 +1,13 @@
 #include "GroupSchematic.h"
 
-#include "editor/model/node/GroupNode.h"
-#include "editor/model/control/NodeControl.h"
+#include "../Project.h"
+#include "../node/GroupNode.h"
+#include "../control/NodeControl.h"
 #include "compiler/runtime/Runtime.h"
 
 using namespace AxiomModel;
 
-GroupSchematic::GroupSchematic(GroupNode *node) : Schematic(node->runtime()->subsurface()), node(node) {
+GroupSchematic::GroupSchematic(GroupNode *node) : Schematic(node->parentSchematic->project(), node->runtime()->subsurface()), node(node) {
     connect(node, &GroupNode::nameChanged,
             this, &GroupSchematic::nameChanged);
     connect(node, &GroupNode::removed,
@@ -19,5 +20,5 @@ QString GroupSchematic::name() {
 
 void GroupSchematic::exposeControl(AxiomModel::NodeControl *control) {
     node->runtime()->forwardControl(control->runtime());
-    node->runtime()->runtime()->compile();
+    project()->build();
 }

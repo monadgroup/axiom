@@ -32,6 +32,10 @@ namespace AxiomModel {
 
         void setValue(MaximRuntime::MidiValue value, bool setRuntime = true);
 
+        void saveValue() override;
+
+        void restoreValue() override;
+
         void pushEvent(MaximRuntime::MidiEventValue event);
 
         void setMode(Mode mode);

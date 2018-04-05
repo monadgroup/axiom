@@ -30,6 +30,12 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override {}
 
+    public slots:
+
+        void saveValue() override {}
+
+        void restoreValue() override {}
+
     private:
 
         MaximCommon::ControlType _ioType;

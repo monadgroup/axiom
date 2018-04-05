@@ -23,6 +23,10 @@ namespace AxiomModel {
 
     public slots:
 
+        void saveValue() override;
+
+        void restoreValue() override;
+
         void serialize(QDataStream &stream) const override;
 
         void deserialize(QDataStream &stream) override;

@@ -57,23 +57,7 @@ GeneratableModuleClass *Surface::compile() {
     // walk the graph to find control groups
     auto controlGroupingStart = std::clock();
 
-    // get all old group values
-    std::unordered_map<ControlGroup*, RuntimeUnit::SaveValue> storedValues;
-    for (const auto &group : _controlGroups) {
-        storedValues.emplace(group.get(), std::move(group->moveValue()));
-    }
-
-    // make an index of old control group mappings, used to assign values later on
-    std::unordered_map<Control*, ControlGroup*> oldGroupMap;
-    for (const auto &node : _nodes) {
-        for (const std::unique_ptr<Control> &control : *node) {
-            if (control->group()) {
-                oldGroupMap.emplace(control.get(), control->group());
-            }
-        }
-    }
-
-    // walk through new groups, while making an index of which groups used to belong to which ptrs
+    // walk through new groups
     std::vector<std::unique_ptr<ControlGroup>> newGroups;
     for (const auto &node : _nodes) {
         for (const std::unique_ptr<Control> &control : *node) {
@@ -93,22 +77,6 @@ GeneratableModuleClass *Surface::compile() {
         }
     }
 
-    // assign old values to new groups
-    std::cout << "    Restoring group values" << std::endl;
-    for (const auto &group : newGroups) {
-        for (const auto &control : group->controls()) {
-            auto oldGroup = oldGroupMap.find(control);
-            if (oldGroup == oldGroupMap.end()) continue;
-
-            auto oldGroupVal = storedValues.find(oldGroup->second);
-            assert(oldGroupVal != storedValues.end());
-
-            group->setRestoreValue(oldGroupVal->second);
-            break;
-        }
-    }
-
-    storedValues.clear();
     _controlGroups = std::move(newGroups);
 
     for (const auto &node : _nodes) {
@@ -516,18 +484,12 @@ void Surface::saveValue() {
     for (const auto &node : _nodes) {
         node->saveValue();
     }
-    for (const auto &group : _controlGroups) {
-        group->saveValue();
-    }
 }
 
 void Surface::restoreValue() {
     std::cout << "Restoring node values" << std::endl;
     for (const auto &node : _nodes) {
         node->restoreValue();
-    }
-    for (const auto &group : _controlGroups) {
-        group->restoreValue();
     }
     std::cout << "Finished restoring values" << std::endl;
 }

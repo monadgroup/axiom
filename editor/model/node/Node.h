@@ -52,6 +52,10 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override;
 
+        void saveValue() override;
+
+        void restoreValue() override;
+
         void setName(const QString &name);
 
         void setCorners(QPoint topLeft, QPoint bottomRight) override;

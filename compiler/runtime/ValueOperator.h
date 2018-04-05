@@ -44,10 +44,10 @@ namespace MaximRuntime {
     };
 
     struct MidiEventValue {
-        MaximCommon::MidiEventType event;
-        uint8_t channel;
-        uint8_t note;
-        uint8_t param;
+        MaximCommon::MidiEventType event = MaximCommon::MidiEventType::NOTE_OFF;
+        uint8_t channel = 0;
+        uint8_t note = 0;
+        uint8_t param = 0;
 
         bool operator==(const MidiEventValue &other) const {
             return event == other.event && channel == other.channel && note == other.note && param == other.param;
@@ -64,7 +64,7 @@ namespace MaximRuntime {
 
     struct MidiValue {
         bool active = false;
-        uint8_t count;
+        uint8_t count = 0;
         MidiEventValue events[MaximCodegen::MidiType::maxEvents];
 
         bool operator==(const MidiValue &other) const {

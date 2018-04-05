@@ -22,6 +22,11 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override;
 
+        // todo: implement these
+        void saveValue() override {}
+
+        void restoreValue() override {}
+
     signals:
 
         void activeSlotsChanged(ExtractConnectionSink::ActiveSlotFlags newActiveItems);

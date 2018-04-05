@@ -43,6 +43,10 @@ namespace AxiomModel {
 
         void setValue(MaximRuntime::NumValue value, bool setRuntime = true);
 
+        void saveValue() override;
+
+        void restoreValue() override;
+
         void setMode(Mode mode);
 
         void setChannel(Channel channel);

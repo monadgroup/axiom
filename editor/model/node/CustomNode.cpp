@@ -3,6 +3,7 @@
 
 #include "../schematic/Schematic.h"
 #include "../control/NodeControl.h"
+#include "../Project.h"
 #include "editor/AxiomApplication.h"
 #include "compiler/runtime/Runtime.h"
 #include "compiler/codegen/Control.h"
@@ -18,7 +19,7 @@ CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
     connect(this, &CustomNode::removed,
             [this]() {
                 _runtime.remove();
-                _runtime.runtime()->compile();
+                parentSchematic->project()->build();
             });
 }
 
@@ -46,7 +47,7 @@ void CustomNode::setCode(const QString &code) {
 }
 
 void CustomNode::recompile() {
-    _runtime.runtime()->compile();
+    parentSchematic->project()->build();
 
     if (!_runtime.errorLog().errors.empty()) {
         emit compileFailed(_runtime.errorLog());

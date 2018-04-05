@@ -5,17 +5,19 @@
 #include <iostream>
 #include <QtCore/QBuffer>
 
+#include "../Project.h"
 #include "../node/Node.h"
-#include "editor/model/node/GroupNode.h"
-#include "../control/NodeControl.h"
-#include "editor/AxiomApplication.h"
-#include "compiler/runtime/Runtime.h"
+#include "../node/GroupNode.h"
 #include "../node/CustomNode.h"
+#include "../control/NodeControl.h"
+#include "../../AxiomApplication.h"
 #include "../../util.h"
+#include "compiler/runtime/Runtime.h"
+
 
 using namespace AxiomModel;
 
-Schematic::Schematic(MaximRuntime::Surface *runtime) : _runtime(runtime) {
+Schematic::Schematic(Project *project, MaximRuntime::Surface *runtime) : _project(project), _runtime(runtime) {
 
 }
 
@@ -128,7 +130,7 @@ ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *s
 
     if (sinkA->runtime() && sinkB->runtime()) {
         sinkA->runtime()->connectTo(sinkB->runtime());
-        _runtime->runtime()->compile();
+        _project->build();
     }
 
     auto wire = std::make_unique<ConnectionWire>(this, sinkA, sinkB);
