@@ -107,7 +107,7 @@ GeneratableModuleClass *Surface::compile() {
 
     // step 1: find extractor controls
     for (const auto &node : _nodes) {
-        for (const auto &control : *node) {
+        for (const std::unique_ptr<Control> &control : *node) {
             if ((uint32_t) control->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) {
                 controlQueue.emplace(control.get());
                 visitedControls.emplace(control.get());
@@ -120,14 +120,25 @@ GeneratableModuleClass *Surface::compile() {
         auto nextControl = controlQueue.front();
         controlQueue.pop();
 
+        for (const std::unique_ptr<Control> &relatedControl : *nextControl->node()) {
+            if (visitedControls.find(relatedControl.get()) != visitedControls.end()) continue;
+            visitedControls.emplace(relatedControl.get());
+
+            if ((uint32_t) relatedControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
+
+            controlQueue.emplace(relatedControl.get());
+        }
+
         // find any connections that read and aren't extractors
+        // if a connection doesn't read but is connected straight to an extractor, we also need to set it as extracted
         for (const auto &connectedControl : nextControl->connections()) {
+            if (visitedControls.find(connectedControl) != visitedControls.end()) continue;
+            visitedControls.emplace(connectedControl);
+
             if (!connectedControl->readFrom()) continue;
             if ((uint32_t) connectedControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
-            if (visitedControls.find(connectedControl) != visitedControls.end()) continue;
 
             connectedControl->node()->setExtracted(true);
-            visitedControls.emplace(connectedControl);
             controlQueue.emplace(connectedControl);
         }
     }
@@ -151,6 +162,7 @@ GeneratableModuleClass *Surface::compile() {
 
         group->setExtracted(isExtracted);
     }
+
     auto extractorSearchTime = std::clock() - extractorSearchStart;
     std::cerr << "    Finished extractor search in " << extractorSearchTime << " ms" << std::endl;
 
