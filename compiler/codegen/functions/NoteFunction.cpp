@@ -9,7 +9,7 @@
 using namespace MaximCodegen;
 
 NoteFunction::NoteFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "note", ctx->getTupleType({ctx->numType(), ctx->numType(), ctx->numType()}), {Parameter(ctx->midiType(), true, false)},
+    : Function(ctx, module, "note", ctx->getTupleType({ctx->numType(), ctx->numType(), ctx->numType(), ctx->numType()}), {Parameter(ctx->midiType(), true, false)},
                nullptr) {
 
 }
@@ -126,6 +126,11 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
         ctx()->constFloat(1),
         "pitch.normalized"
     );
+    normalizedPitch = b.CreateFMul(
+        normalizedPitch,
+        ctx()->constFloat(6),
+        "pitch.normalized"
+    );
     b.CreateStore(normalizedPitch, lastPitchPtr);
     b.CreateBr(loopEndBlock);
 
@@ -162,11 +167,11 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
 
     b.SetInsertPoint(finishBlock);
 
-    auto isActive = b.CreateICmpUGT(
+    auto isActive = b.CreateUIToFP(b.CreateICmpUGT(
         b.CreateLoad(activeCountPtr, "activecount"),
         ctx()->constInt(8, 0, false),
         "active"
-    );
+    ), llvm::Type::getFloatTy(ctx()->llvm()), "activefloat");
 
     auto noteNum = b.CreateFAdd(
         b.CreateLoad(lastNotePtr, "lastnote"),
@@ -179,22 +184,28 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
     auto undefPos = SourcePos(-1, -1);
 
     Tuple::Storage tupleVecs;
+    auto resultGate = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
+    resultGate->setVec(b, b.CreateVectorSplat(2, isActive, "gatevec"));
+    resultGate->setForm(b, MaximCommon::FormType::LINEAR);
+    resultGate->setActive(b, true);
+    tupleVecs.push_back(std::move(resultGate));
+
     auto resultNote = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
     resultNote->setVec(b, b.CreateVectorSplat(2, noteNum, "notevec"));
     resultNote->setForm(b, MaximCommon::FormType::NOTE);
-    resultNote->setActive(b, isActive);
+    resultNote->setActive(b, true);
     tupleVecs.push_back(std::move(resultNote));
 
     auto resultVelocity = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
     resultVelocity->setVec(b, b.CreateVectorSplat(2, velocityNum, "velocityvec"));
     resultVelocity->setForm(b, MaximCommon::FormType::LINEAR);
-    resultVelocity->setActive(b, isActive);
+    resultVelocity->setActive(b, true);
     tupleVecs.push_back(std::move(resultVelocity));
 
     auto resultAftertouch = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
     resultAftertouch->setVec(b, b.CreateVectorSplat(2, aftertouchNum, "aftertouchvec"));
     resultAftertouch->setForm(b, MaximCommon::FormType::LINEAR);
-    resultAftertouch->setActive(b, isActive);
+    resultAftertouch->setActive(b, true);
     tupleVecs.push_back(std::move(resultAftertouch));
 
     return Tuple::create(
