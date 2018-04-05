@@ -135,7 +135,18 @@ GeneratableModuleClass *Surface::compile() {
             if (visitedControls.find(connectedControl) != visitedControls.end()) continue;
             visitedControls.emplace(connectedControl);
 
-            if (!connectedControl->readFrom()) continue;
+            if (!connectedControl->readFrom()) {
+                // if the control writes to a group that includes an extractor, it has to be an extractor
+                bool groupHasExtractor = false;
+                for (const auto &groupControl : connectedControl->group()->controls()) {
+                    if ((uint32_t) groupControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) {
+                        groupHasExtractor = true;
+                        break;
+                    }
+                }
+
+                if (!groupHasExtractor) continue;
+            }
             if ((uint32_t) connectedControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
 
             connectedControl->node()->setExtracted(true);
