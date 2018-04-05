@@ -266,10 +266,7 @@ GeneratableModuleClass *Surface::compile() {
         // instantiate the node n times
         auto loopSize = node->extracted() ? MaximCodegen::ArrayType::arraySize : 1;
 
-        auto entryIndex = _class->addEntry(llvm::ConstantArray::get(
-            llvm::ArrayType::get(nodeClass->storageType(), loopSize),
-            std::vector<llvm::Constant*>(loopSize, nodeClass->initializeVal())
-        ));
+        auto entryIndex = _class->addEntry(llvm::ArrayType::get(nodeClass->storageType(), loopSize));
         node->setGetterMethod(_class->entryAccessor(entryIndex));
 
         // todo: these two loops really should be refactored

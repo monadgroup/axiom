@@ -23,31 +23,20 @@ std::unique_ptr<ComposableModuleClassMethod> ComposableModuleClass::entryAccesso
     return method;
 }
 
-llvm::Constant *ComposableModuleClass::initializeVal() {
-    return llvm::ConstantStruct::get(storageType(), _defaultDict);
-}
-
 llvm::StructType *ComposableModuleClass::storageType() {
     return llvm::StructType::get(ctx()->llvm(), _typeDict);
 }
 
 size_t ComposableModuleClass::addEntry(llvm::Type *type) {
     assert(!completed());
-    return addEntry(llvm::ConstantAggregateZero::get(type));
-}
-
-size_t ComposableModuleClass::addEntry(llvm::Constant *initValue) {
-    assert(!completed());
-    assert(_typeDict.size() == _defaultDict.size());
 
     auto index = _typeDict.size();
-    _typeDict.push_back(initValue->getType());
-    _defaultDict.push_back(initValue);
+    _typeDict.push_back(type);
     return index;
 }
 
 size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams, bool callConstructor) {
-    auto index = addEntry(moduleClass->initializeVal());
+    auto index = addEntry(moduleClass->storageType());
     auto moduleConstructor = moduleClass->constructor();
     if (callConstructor && moduleConstructor) {
         _constructor->callInto(index, constructorParams, moduleConstructor, "");

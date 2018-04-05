@@ -24,11 +24,11 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
     auto paramVal = dynamic_cast<Midi *>(params[0].get());
     assert(paramVal);
 
-    auto lastNotePtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constFloat(0)), "lastnote.ptr");
-    auto lastPitchPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constFloat(0)), "lastpitch.ptr");
-    auto lastVelocityPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constFloat(0)), "lastvelocity.ptr");
-    auto lastAftertouchPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constFloat(0)), "lastaftertouch.ptr");
-    auto activeCountPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constInt(8, 0, false)), "activecount.ptr");
+    auto lastNotePtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastnote.ptr");
+    auto lastPitchPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastpitch.ptr");
+    auto lastVelocityPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastvelocity.ptr");
+    auto lastAftertouchPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastaftertouch.ptr");
+    auto activeCountPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getInt8Ty(ctx()->llvm())), "activecount.ptr");
 
     auto &b = method->builder();
 

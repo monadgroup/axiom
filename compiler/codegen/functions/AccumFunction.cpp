@@ -26,7 +26,7 @@ AccumFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
     auto baseVal = dynamic_cast<Num *>(params[2].get());
 
     auto &b = method->builder();
-    auto funcContext = method->getEntryPointer(addEntry(ctx()->constFloatVec(0)), "ctx");
+    auto funcContext = method->getEntryPointer(addEntry(ctx()->floatVecTy()), "ctx");
 
     auto accumVec = b.CreateLoad(funcContext, "accum");
     auto incrementedVec = b.CreateFAdd(accumVec, xVal->vec(b), "accum.incr");

@@ -6,7 +6,7 @@ using namespace MaximCodegen;
 
 Control::Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, llvm::Type *storageType,
                  llvm::Type *underlyingType, const std::string &name)
-    : UndefInitializedModuleClass(ctx, module, name), _type(type), _storageType(storageType),
+    : ModuleClass(ctx, module, name), _type(type), _storageType(storageType),
       _underlyingType(underlyingType), _constructor(this, "constructor") {
 
 }

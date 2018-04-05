@@ -11,6 +11,10 @@ ModuleClass::ModuleClass(MaximContext *ctx, llvm::Module *module, const std::str
 
 }
 
+llvm::Constant* ModuleClass::initializeVal() {
+    return llvm::ConstantAggregateZero::get(storageType());
+}
+
 void ModuleClass::complete() {
     if (_completed) return;
     doComplete();
@@ -28,39 +32,9 @@ void ModuleClass::doComplete() {
     }
 }
 
-ZeroInitializedModuleClass::ZeroInitializedModuleClass(MaximContext *ctx, llvm::Module *module,
-                                                       const std::string &name)
-    : ModuleClass(ctx, module, name) {
-
-}
-
-llvm::Constant *ZeroInitializedModuleClass::initializeVal() {
-    return llvm::ConstantAggregateZero::get(storageType());
-}
-
-UndefInitializedModuleClass::UndefInitializedModuleClass(MaximContext *ctx, llvm::Module *module,
-                                                         const std::string &name)
-    : ModuleClass(ctx, module, name) {
-
-}
-
-llvm::Constant *UndefInitializedModuleClass::initializeVal() {
-    return llvm::UndefValue::get(storageType());
-}
-
-TypeInferencedModuleClass::TypeInferencedModuleClass(MaximContext *ctx, llvm::Module *module,
-                                                     const std::string &name)
-    : ModuleClass(ctx, module, name) {
-
-}
-
-llvm::Type *TypeInferencedModuleClass::storageType() {
-    return initializeVal()->getType();
-}
-
-BasicZeroModuleClass::BasicZeroModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name,
+BasicModuleClass::BasicModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name,
                                            llvm::Type *type)
-    : ZeroInitializedModuleClass(ctx, module, name), _storageType(type) {
+    : ModuleClass(ctx, module, name), _storageType(type) {
 
 }
 

@@ -162,6 +162,10 @@ llvm::Constant *MaximContext::constFloat(float num) {
     return llvm::ConstantFP::get(llvm::Type::getFloatTy(_llvm), num);
 }
 
+llvm::Type* MaximContext::floatVecTy() {
+    return llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2);
+}
+
 llvm::Constant *MaximContext::constFloatVec(float num) {
     return llvm::ConstantVector::getSplat(2, constFloat(num));
 }

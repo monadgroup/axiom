@@ -68,7 +68,7 @@ namespace MaximRuntime {
         Surface *_surface;
         std::set<Control *> _controls;
 
-        MaximCodegen::BasicZeroModuleClass _compileResult;
+        MaximCodegen::BasicModuleClass _compileResult;
 
         bool _extracted = false;
     };

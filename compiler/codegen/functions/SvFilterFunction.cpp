@@ -33,10 +33,10 @@ std::unique_ptr<Value> SvFilterFunction::generate(ComposableModuleClassMethod *m
     assert(inputNum && freqNum && qNum);
 
     auto &b = method->builder();
-    auto notchPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constFloatVec(0)), "notch.ptr");
-    auto lowPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constFloatVec(0)), "low.ptr");
-    auto highPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constFloatVec(0)), "high.ptr");
-    auto bandPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->constFloatVec(0)), "band.ptr");
+    auto notchPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "notch.ptr");
+    auto lowPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "low.ptr");
+    auto highPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "high.ptr");
+    auto bandPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "band.ptr");
 
     auto inputVec = inputNum->vec(b);
 

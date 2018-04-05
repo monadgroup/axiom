@@ -9,7 +9,7 @@ namespace MaximCodegen {
 
     class Type;
 
-    class ControlField : public UndefInitializedModuleClass {
+    class ControlField : public ModuleClass {
     public:
         ControlField(Control *control, const std::string &name, Type *type);
 

@@ -22,7 +22,7 @@ AmplitudeFunction::generate(ComposableModuleClassMethod *method, const std::vect
                                                         {ctx()->numType()->vecType()});
 
     auto &b = method->builder();
-    auto funcContext = method->getEntryPointer(addEntry(ctx()->constFloatVec(0)), "ctx");
+    auto funcContext = method->getEntryPointer(addEntry(ctx()->floatVecTy()), "ctx");
 
     auto paramVal = dynamic_cast<Num *>(params[0].get());
     assert(paramVal);

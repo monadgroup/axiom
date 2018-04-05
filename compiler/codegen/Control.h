@@ -10,7 +10,7 @@ namespace MaximCodegen {
 
     class Type;
 
-    class Control : public UndefInitializedModuleClass {
+    class Control : public ModuleClass {
     public:
         Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, llvm::Type *storageType,
                 llvm::Type *underlyingType, const std::string &name);

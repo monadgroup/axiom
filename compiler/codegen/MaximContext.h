@@ -118,6 +118,8 @@ namespace MaximCodegen {
 
         llvm::Constant *constFloat(float num);
 
+        llvm::Type *floatVecTy();
+
         llvm::Constant *constFloatVec(float num);
 
         llvm::Constant *constFloatVec(float left, float right);
