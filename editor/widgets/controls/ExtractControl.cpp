@@ -11,6 +11,7 @@
 #include "editor/model/control/NodeExtractControl.h"
 #include "editor/model/connection/ConnectionWire.h"
 #include "editor/model/schematic/Schematic.h"
+#include "editor/model/Project.h"
 #include "../../util.h"
 
 using namespace AxiomGui;
@@ -140,6 +141,7 @@ void ExtractControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
     if (selectedAction == clearAction) {
         control->sink()->clearConnections();
+        control->node->parentSchematic->project()->build();
     } else if (selectedAction == moveAction) {
         control->select(true);
     } else if (selectedAction == nameShownAction) {

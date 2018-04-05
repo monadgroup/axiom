@@ -12,6 +12,7 @@
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeNumControl.h"
 #include "editor/model/schematic/Schematic.h"
+#include "editor/model/Project.h"
 #include "../node/NodeItem.h"
 #include "../schematic/SchematicCanvas.h"
 #include "editor/util.h"
@@ -273,6 +274,7 @@ void NumControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
     if (selectedAction == clearAction) {
         control->sink()->clearConnections();
+        control->node->parentSchematic->project()->build();
     } else if (selectedAction == setValAction) {
         auto editor = new FloatingValueEditor(valueAsString(getCVal()), event->scenePos());
         scene()->addItem(editor);
