@@ -73,13 +73,13 @@ void NumControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
             plugPainter.paint(painter, aspectBoundingRect(), m_hoverState);
             break;
         case NodeNumControl::Mode::KNOB:
-            knobPainter.paint(painter, aspectBoundingRect(), m_hoverState, getCVal());
+            knobPainter.paint(painter, aspectBoundingRect(), m_hoverState, getCVal(), CommonColors::numNormal, CommonColors::numActive);
             break;
         case NodeNumControl::Mode::SLIDER_H:
-            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), false);
+            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), false, CommonColors::numNormal, CommonColors::numActive);
             break;
         case NodeNumControl::Mode::SLIDER_V:
-            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), true);
+            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), true, CommonColors::numNormal, CommonColors::numActive);
             break;
         case NodeNumControl::Mode::TOGGLE:
             togglePainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal());

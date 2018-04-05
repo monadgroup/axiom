@@ -78,9 +78,9 @@ void WireItem::updateRoute() {
 
 void WireItem::setActive(bool active) {
     auto normalColor =
-        wire->type == ConnectionSink::Type::NUMBER ? CommonColors::numWireNormal : CommonColors::midiWireNormal;
+        wire->type == ConnectionSink::Type::NUMBER ? CommonColors::numNormal : CommonColors::midiNormal;
     auto activeColor =
-        wire->type == ConnectionSink::Type::NUMBER ? CommonColors::numWireActive : CommonColors::midiWireActive;
+        wire->type == ConnectionSink::Type::NUMBER ? CommonColors::numActive : CommonColors::midiActive;
 
     QPen pen(active ? activeColor : normalColor, 2);
     pen.setJoinStyle(Qt::MiterJoin);

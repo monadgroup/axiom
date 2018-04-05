@@ -27,15 +27,13 @@ static QRectF flip(QRectF a, bool yes) {
 }
 
 void SliderPainter::paint(QPainter *painter, const QRectF &boundingRect, float hoverState,
-                          MaximRuntime::NumValue cv, bool vertical) {
+                          MaximRuntime::NumValue cv, bool vertical, const QColor &baseColor, const QColor &activeColor) {
     auto br = flip(getBounds(boundingRect, vertical), vertical);
     auto scaledThickness = (0.12f + 0.08f * hoverState) * br.height();
 
     auto minVal = std::min(cv.left, cv.right);
     auto maxVal = std::max(cv.left, cv.right);
 
-    auto baseColor = QColor(141, 141, 141);
-    auto activeColor = CommonColors::controlActive;
     auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, hoverState);
     auto darkerCurrent = currentColor.darker();
 

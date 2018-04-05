@@ -33,8 +33,8 @@ void TogglePainter::paint(QPainter *painter, const QRectF &boundingRect, float h
 
     painter->setPen(Qt::NoPen);
 
-    auto activeAlpha = QColor(CommonColors::controlActive.red(), CommonColors::controlActive.green(),
-                              CommonColors::controlActive.blue(), (int) (brightness * 255));
+    auto activeAlpha = QColor(CommonColors::numActive.red(), CommonColors::numActive.green(),
+                              CommonColors::numActive.blue(), (int) (brightness * 255));
     auto glowRadius = lightRadius * 2;
     QRadialGradient gradient(lightPos, glowRadius);
     gradient.setColorAt(0, activeAlpha);
@@ -43,7 +43,7 @@ void TogglePainter::paint(QPainter *painter, const QRectF &boundingRect, float h
     painter->setBrush(gradient);
     painter->drawEllipse(lightPos, glowRadius, glowRadius);
 
-    painter->setBrush(QBrush(AxiomUtil::mixColor(Qt::black, CommonColors::controlActive, brightness)));
+    painter->setBrush(QBrush(AxiomUtil::mixColor(Qt::black, CommonColors::numActive, brightness)));
     painter->drawEllipse(lightPos, lightRadius, lightRadius);
 }
 

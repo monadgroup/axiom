@@ -53,7 +53,7 @@ ExtractControl::ExtractControl(NodeExtractControl *control, SchematicCanvas *can
 void ExtractControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     ControlItem::paint(painter, option, widget);
 
-    extractPainter.paint(painter, aspectBoundingRect(), m_hoverState, control->activeSlots(), outlineActiveColor());
+    extractPainter.paint(painter, aspectBoundingRect(), m_hoverState, control->activeSlots(), outlineNormalColor(), outlineActiveColor());
 }
 
 QPainterPath ExtractControl::shape() const {
@@ -80,16 +80,16 @@ QPainterPath ExtractControl::controlPath() const {
 
 QColor ExtractControl::outlineNormalColor() const {
     switch (control->sink()->type) {
-        case ConnectionSink::Type::NUMBER: return CommonColors::numWireNormal;
-        case ConnectionSink::Type::MIDI: return CommonColors::midiWireNormal;
+        case ConnectionSink::Type::NUMBER: return CommonColors::numNormal;
+        case ConnectionSink::Type::MIDI: return CommonColors::midiNormal;
     }
     unreachable;
 }
 
 QColor ExtractControl::outlineActiveColor() const {
     switch (control->sink()->type) {
-        case ConnectionSink::Type::NUMBER: return CommonColors::numWireActive;
-        case ConnectionSink::Type::MIDI: return CommonColors::midiWireActive;
+        case ConnectionSink::Type::NUMBER: return CommonColors::numActive;
+        case ConnectionSink::Type::MIDI: return CommonColors::midiActive;
     }
     unreachable;
 }

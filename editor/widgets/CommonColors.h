@@ -16,13 +16,11 @@ namespace AxiomGui {
         static const QColor groupNodeActive;
         static const QColor groupNodeBorder;
 
-        static const QColor controlActive;
+        static const QColor numNormal;
+        static const QColor numActive;
 
-        static const QColor numWireNormal;
-        static const QColor numWireActive;
-
-        static const QColor midiWireNormal;
-        static const QColor midiWireActive;
+        static const QColor midiNormal;
+        static const QColor midiActive;
 
     };
 

@@ -9,13 +9,12 @@
 using namespace AxiomGui;
 
 void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState,
-                           AxiomModel::ExtractConnectionSink::ActiveSlotFlags activeFlags, const QColor &activeColor) {
+                           AxiomModel::ExtractConnectionSink::ActiveSlotFlags activeFlags, const QColor &baseColor,
+                           const QColor &activeColor) {
     auto scaledBorder = 0.06f * aspectBoundingRect.width();
     auto externBr = getBounds(aspectBoundingRect);
 
     auto marginF = QMarginsF(scaledBorder / 2, scaledBorder / 2, scaledBorder / 2, scaledBorder / 2);
-
-    auto baseColor = QColor(141, 141, 141);
     auto currentColor = AxiomUtil::mixColor(baseColor, activeColor, hoverState);
 
     // draw background
@@ -30,7 +29,7 @@ void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, 
     const auto markerCount = sizeof(activeFlags) * CHAR_BIT;
     auto activeMarkerPen = QPen(QColor(0, 0, 0), scaledMarkerThickness);
     for (AxiomModel::ExtractConnectionSink::ActiveSlotFlags i = 0; i < markerCount; i++) {
-        if (activeFlags & (1 << i)) {
+        if (activeFlags & (1u << i)) {
             activeMarkerPen.setColor(currentColor);
         } else {
             activeMarkerPen.setColor(QColor(0, 0, 0));

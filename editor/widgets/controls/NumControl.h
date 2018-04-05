@@ -51,9 +51,9 @@ namespace AxiomGui {
 
         QPainterPath controlPath() const override;
 
-        QColor outlineNormalColor() const override { return CommonColors::numWireNormal; }
+        QColor outlineNormalColor() const override { return CommonColors::numNormal; }
 
-        QColor outlineActiveColor() const override { return CommonColors::numWireActive; }
+        QColor outlineActiveColor() const override { return CommonColors::numActive; }
 
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 

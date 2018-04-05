@@ -9,7 +9,8 @@ namespace AxiomGui {
     class KnobPainter {
     public:
 
-        void paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, MaximRuntime::NumValue cv);
+        void paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, MaximRuntime::NumValue cv,
+                   const QColor &baseColor, const QColor &activeColor);
 
         void shape(QPainterPath &path, const QRectF &aspectBoundingRect) const;
 

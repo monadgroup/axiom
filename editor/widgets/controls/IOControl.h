@@ -25,9 +25,9 @@ namespace AxiomGui {
 
         QPainterPath controlPath() const override { return shape(); }
 
-        QColor outlineNormalColor() const override { return CommonColors::numWireNormal; }
+        QColor outlineNormalColor() const override { return CommonColors::numNormal; }
 
-        QColor outlineActiveColor() const override { return CommonColors::numWireActive; }
+        QColor outlineActiveColor() const override { return CommonColors::numActive; }
 
     private:
 

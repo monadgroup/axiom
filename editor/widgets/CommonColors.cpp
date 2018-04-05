@@ -12,10 +12,8 @@ const QColor CommonColors::groupNodeNormal = QColor(29, 15, 33, 100);
 const QColor CommonColors::groupNodeActive = QColor(44, 26, 53, 100);
 const QColor CommonColors::groupNodeBorder = QColor(84, 48, 99);
 
-const QColor CommonColors::controlActive = QColor(52, 152, 219);
+const QColor CommonColors::numNormal = QColor(52, 152, 219);
+const QColor CommonColors::numActive = QColor(153, 203, 236);
 
-const QColor CommonColors::numWireNormal = QColor(141, 141, 141);
-const QColor CommonColors::numWireActive = QColor(52, 152, 219);
-
-const QColor CommonColors::midiWireNormal = QColor(141, 141, 141);//QColor(211, 84, 0);
-const QColor CommonColors::midiWireActive = QColor(230, 126, 34);
+const QColor CommonColors::midiNormal = QColor(230, 126, 34);
+const QColor CommonColors::midiActive = QColor(242, 190, 144);
