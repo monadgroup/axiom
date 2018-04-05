@@ -17,3 +17,10 @@ void Node::scheduleCompile() {
     _needsCompile = true;
     _surface->scheduleGraphUpdate();
 }
+
+void Node::setExtracted(bool extracted) {
+    if (extracted != _extracted) {
+        _extracted = extracted;
+        emit extractedChanged(extracted);
+    }
+}

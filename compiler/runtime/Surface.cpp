@@ -49,6 +49,7 @@ GeneratableModuleClass *Surface::compile() {
     std::unordered_map<Node *, GeneratableModuleClass *> nodeClasses;
     for (const auto &node : _nodes) {
         nodeClasses.emplace(node, node->compile());
+        node->setExtracted(false);
     }
     auto nodeCodegenTime = std::clock() - nodeCodegenStart;
     std::cerr << "    Finished node codegen in " << nodeCodegenTime << " ms" << std::endl;
@@ -101,7 +102,6 @@ GeneratableModuleClass *Surface::compile() {
     /// EXTRACTOR HANDLING
     // floodfill to find extracted nodes
     auto extractorSearchStart = std::clock();
-    std::unordered_set<Node *> extractedNodes;
     std::unordered_set<Control *> visitedControls;
     std::queue<Control *> controlQueue;
 
@@ -126,7 +126,7 @@ GeneratableModuleClass *Surface::compile() {
             if ((uint32_t) connectedControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
             if (visitedControls.find(connectedControl) != visitedControls.end()) continue;
 
-            extractedNodes.emplace(connectedControl->node());
+            connectedControl->node()->setExtracted(true);
             visitedControls.emplace(connectedControl);
             controlQueue.emplace(connectedControl);
         }
@@ -143,7 +143,7 @@ GeneratableModuleClass *Surface::compile() {
                 break;
             }
             if (!control->writtenTo()) continue;
-            if (extractedNodes.find(control->node()) == extractedNodes.end()) {
+            if (!control->node()->extracted()) {
                 isExtracted = false;
                 break;
             }
@@ -252,8 +252,7 @@ GeneratableModuleClass *Surface::compile() {
         auto nodeClass = nodeClasses.find(node)->second;
 
         // instantiate the node n times
-        auto isExtracted = extractedNodes.find(node) != extractedNodes.end();
-        auto loopSize = isExtracted ? MaximCodegen::ArrayType::arraySize : 1;
+        auto loopSize = node->extracted() ? MaximCodegen::ArrayType::arraySize : 1;
 
         auto entryIndex = _class->addEntry(llvm::ConstantArray::get(
             llvm::ArrayType::get(nodeClass->storageType(), loopSize),

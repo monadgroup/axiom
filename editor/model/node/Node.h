@@ -38,6 +38,8 @@ namespace AxiomModel {
 
         virtual MaximRuntime::Node *runtime() = 0;
 
+        bool isExtracted();
+
         bool isPanelOpen() const { return m_panelOpen; }
 
         float panelHeight() const { return m_panelHeight; }
@@ -71,6 +73,8 @@ namespace AxiomModel {
     signals:
 
         void nameChanged(const QString &newName);
+
+        void extractedChanged(bool newExtracted);
 
         void panelOpenChanged(bool newPanelOpen);
 

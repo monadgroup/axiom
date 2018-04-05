@@ -1,6 +1,7 @@
 #pragma once
 
 #include <set>
+#include <QtCore/QObject>
 
 #include "ModuleRuntimeUnit.h"
 
@@ -12,7 +13,9 @@ namespace MaximRuntime {
 
     class Control;
 
-    class Node : public ModuleRuntimeUnit {
+    class Node : public QObject, public ModuleRuntimeUnit {
+        Q_OBJECT
+
     public:
         explicit Node(Surface *surface);
 
@@ -30,6 +33,16 @@ namespace MaximRuntime {
 
         bool needsCompile() const { return _needsCompile; }
 
+        bool extracted() const { return _extracted; }
+
+    public slots:
+
+        void setExtracted(bool extracted);
+
+    signals:
+
+        void extractedChanged(bool newExtracted);
+
     protected:
 
         bool _needsCompile = false;
@@ -37,6 +50,8 @@ namespace MaximRuntime {
     private:
 
         Surface *_surface;
+
+        bool _extracted = false;
     };
 
 }

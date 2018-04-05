@@ -21,6 +21,8 @@ GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
 
     connect(&_runtime, &MaximRuntime::GroupNode::controlAdded,
             this, &GroupNode::controlAdded);
+    connect(&_runtime, &MaximRuntime::GroupNode::extractedChanged,
+            this, &GroupNode::extractedChanged);
 }
 
 std::unique_ptr<GridItem> GroupNode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {

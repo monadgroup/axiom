@@ -15,6 +15,8 @@ CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
       _runtime(parent->runtime()) {
     connect(&_runtime, &MaximRuntime::CustomNode::controlAdded,
             this, &CustomNode::controlAdded);
+    connect(&_runtime, &MaximRuntime::CustomNode::extractedChanged,
+            this, &CustomNode::extractedChanged);
 
     connect(this, &CustomNode::removed,
             [this]() {

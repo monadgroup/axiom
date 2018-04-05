@@ -4,6 +4,7 @@
 
 #include "../schematic/Schematic.h"
 #include "../control/NodeControl.h"
+#include "compiler/runtime/Node.h"
 
 using namespace AxiomModel;
 
@@ -11,6 +12,10 @@ Node::Node(Schematic *parent, QString name, Type type, QPoint pos, QSize size)
     : GridItem(parent, pos, size), type(type), surface(this), parentSchematic(parent), m_name(std::move(name)) {
     connect(this, &Node::deselected,
             &surface, &NodeSurface::deselectAll);
+}
+
+bool Node::isExtracted() {
+    return runtime()->extracted();
 }
 
 void Node::doRuntimeUpdate() {

@@ -36,6 +36,8 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : canvas(canvas), node(n
 
     connect(node, &Node::nameChanged,
             this, &NodeItem::triggerUpdate);
+    connect(node, &Node::extractedChanged,
+            this, &NodeItem::triggerUpdate);
     connect(node, &Node::posChanged,
             this, &NodeItem::setPos);
     connect(node, &Node::beforeSizeChanged,
@@ -132,7 +134,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
             break;
     }
 
-    painter->setPen(QPen(outlineColor, 1));
+    painter->setPen(QPen(outlineColor, node->isExtracted() ? 3 : 1));
     if (node->isSelected()) {
         painter->setBrush(QBrush(lightColor));
     } else {

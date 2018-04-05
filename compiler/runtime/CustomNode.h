@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QtCore/QObject>
-
 #include "Node.h"
 #include "ErrorLog.h"
 #include "HardControl.h"
@@ -13,7 +11,7 @@ namespace MaximAst {
 
 namespace MaximRuntime {
 
-    class CustomNode : public QObject, public Node {
+    class CustomNode : public Node {
     Q_OBJECT
 
     public:

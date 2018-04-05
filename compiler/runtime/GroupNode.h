@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QtCore/QObject>
-
 #include "Node.h"
 #include "Surface.h"
 #include "SoftControl.h"
@@ -12,7 +10,7 @@ namespace MaximRuntime {
 
     class GeneratableModuleClass;
 
-    class GroupNode : public QObject, public Node {
+    class GroupNode : public Node {
         Q_OBJECT
 
     public:
