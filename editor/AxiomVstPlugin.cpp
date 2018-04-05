@@ -147,11 +147,7 @@ VstInt32 AxiomVstPlugin::getChunk(void **data, bool isPreset) {
 VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) {
     QByteArray byteArray = QByteArray::fromRawData((char*)data, byteSize);
     QDataStream stream(&byteArray, QIODevice::ReadOnly);
-
-    std::cout << "Deserializing " << byteSize << " bytes" << std::endl;
-    project.deserialize(stream);
-    std::cout << "Finished deserializing" << std::endl;
-    runtime.compile();
+    project.load(stream);
     return 0;
 }
 

@@ -25,6 +25,8 @@ namespace AxiomModel {
 
         void deserialize(QDataStream &stream);
 
+        void load(QDataStream &stream);
+
         void clear();
 
         void build();

@@ -9,6 +9,7 @@
 #include "../node/Node.h"
 #include "../node/GroupNode.h"
 #include "../node/CustomNode.h"
+#include "../node/IONode.h"
 #include "../control/NodeControl.h"
 #include "../../AxiomApplication.h"
 #include "../../util.h"
@@ -220,9 +221,12 @@ void Schematic::deserialize(QDataStream &stream) {
             case Node::Type::GROUP:
                 newNode = std::make_unique<GroupNode>(this, "", QPoint(0, 0), QSize(0, 0));
                 break;
-            case Node::Type::IO:
-                // todo
-                break;
+            case Node::Type::IO: {
+                auto ioItem = dynamic_cast<IONode *>(items()[i].get());
+                assert(ioItem);
+                ioItem->deserialize(stream);
+                continue;
+            }
             default:break;
         }
         if (!newNode) {

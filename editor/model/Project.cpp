@@ -15,10 +15,15 @@ void Project::serialize(QDataStream &stream) const {
 }
 
 void Project::deserialize(QDataStream &stream) {
-    clear();
-
     library.deserialize(stream);
     root.deserialize(stream);
+}
+
+void Project::load(QDataStream &stream) {
+    clear();
+    deserialize(stream);
+    _runtime->compile();
+    root.restoreValue();
 }
 
 void Project::clear() {
@@ -29,10 +34,7 @@ void Project::clear() {
 }
 
 void Project::build() {
-    std::cout << "Saving value..." << std::endl;
     root.saveValue();
     _runtime->compile();
-    std::cout << "Restoring value..." << std::endl;
     root.restoreValue();
-    std::cout << "Finished project build" << std::endl;
 }
