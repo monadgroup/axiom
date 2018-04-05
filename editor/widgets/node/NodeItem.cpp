@@ -145,6 +145,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     auto gridPen = QPen(QColor(lightColor.red(), lightColor.green(), lightColor.blue(), 255), 1);
 
     if (node->surface.hasSelection()) {
+        painter->setPen(QPen(outlineColor, 1));
         auto nodeSurfaceSize = NodeSurface::schematicToNodeSurface(node->size());
         for (auto x = 0; x < nodeSurfaceSize.width(); x++) {
             for (auto y = 0; y < nodeSurfaceSize.height(); y++) {
