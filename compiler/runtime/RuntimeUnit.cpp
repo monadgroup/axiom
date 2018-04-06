@@ -20,12 +20,18 @@ void RuntimeUnit::setMethods(std::unique_ptr<MaximCodegen::ModuleClassMethod> ge
 }
 
 void RuntimeUnit::pullMethods() {
-    if (_getterMethod) {
-        _getValueCb = (GetValueCb) _runtime->jit().getSymbolAddress(_getterMethod->name());
+    pullMethods(_getterMethod.get(), _destructorMethod);
+}
+
+void RuntimeUnit::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
+                              MaximCodegen::ModuleClassMethod *destroyMethod) {
+    if (getterMethod) {
+        _getValueCb = (GetValueCb) _runtime->jit().getSymbolAddress(getterMethod->name());
         assert(_getValueCb);
     }
-    if (_destructorMethod) {
-        _destructCb = (DestructCb) _runtime->jit().getSymbolAddress(_destructorMethod->name());
+    if (destroyMethod) {
+        _destructCb = (DestructCb) _runtime->jit().getSymbolAddress(destroyMethod->name());
+        assert(_destructCb);
     }
 }
 

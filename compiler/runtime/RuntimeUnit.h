@@ -38,6 +38,8 @@ namespace MaximRuntime {
 
         virtual void pullMethods();
 
+        virtual void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod);
+
         virtual void *getValuePtr(void *parentCtx);
 
         virtual void *updateCurrentPtr(void *parentCtx);

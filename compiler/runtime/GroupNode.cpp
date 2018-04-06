@@ -41,9 +41,10 @@ void GroupNode::forwardControl(MaximRuntime::Control *control) {
     control->node()->scheduleCompile();
 }
 
-void GroupNode::pullMethods() {
-    RuntimeUnit::pullMethods();
-    _subsurface.pullMethods();
+void GroupNode::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
+                            MaximCodegen::ModuleClassMethod *destroyMethod) {
+    RuntimeUnit::pullMethods(getterMethod, destroyMethod);
+    _subsurface.pullMethods(getterMethod, destroyMethod);
 }
 
 void* GroupNode::updateCurrentPtr(void *parentCtx) {

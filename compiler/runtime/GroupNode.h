@@ -26,7 +26,7 @@ namespace MaximRuntime {
 
         void forwardControl(Control *control);
 
-        void pullMethods() override;
+        void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod) override;
 
         void *updateCurrentPtr(void *parentCtx) override;
 

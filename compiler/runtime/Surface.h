@@ -35,6 +35,8 @@ namespace MaximRuntime {
 
         void pullMethods() override;
 
+        void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod) override;
+
         void *updateCurrentPtr(void *parentCtx) override;
 
         std::unordered_map<ControlGroup*, size_t> const &groupPtrIndexes() const { return _groupPtrIndexes; };

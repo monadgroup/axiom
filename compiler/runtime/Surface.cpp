@@ -497,6 +497,10 @@ void Surface::removeNode(Node *node) {
 
 void Surface::pullMethods() {
     RuntimeUnit::pullMethods();
+}
+
+void Surface::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod) {
+    RuntimeUnit::pullMethods(getterMethod, destroyMethod);
 
     for (const auto &group : _controlGroups) {
         group->pullMethods();
