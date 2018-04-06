@@ -15,7 +15,7 @@ namespace AxiomModel {
     public:
         std::unique_ptr<GroupSchematic> schematic;
 
-        GroupNode(Schematic *parent, QString name, QPoint pos, QSize size);
+        GroupNode(Schematic *parent, size_t index, QString name, QPoint pos, QSize size);
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 

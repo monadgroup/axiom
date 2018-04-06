@@ -7,11 +7,12 @@
 #include "editor/AxiomApplication.h"
 #include "compiler/runtime/Runtime.h"
 #include "compiler/codegen/Control.h"
+#include "../../util.h"
 
 using namespace AxiomModel;
 
-CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
-    : Node(parent, std::move(name), Type::CUSTOM, pos, size),
+CustomNode::CustomNode(Schematic *parent, size_t index, QString name, QPoint pos, QSize size)
+    : Node(parent, index, std::move(name), Type::CUSTOM, pos, size),
       _runtime(parent->runtime()) {
     connect(&_runtime, &MaximRuntime::CustomNode::controlAdded,
             this, &CustomNode::controlAdded);
@@ -26,11 +27,12 @@ CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
 }
 
 std::unique_ptr<GridItem> CustomNode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
-    auto schematicParent = dynamic_cast<Schematic *>(newParent);
+    /*auto schematicParent = dynamic_cast<Schematic *>(newParent);
     assert(schematicParent != nullptr);
 
     auto customNode = std::make_unique<CustomNode>(schematicParent, name(), pos(), size());
-    return std::move(customNode);
+    return std::move(customNode);*/
+    unreachable;
 }
 
 void CustomNode::setCode(const QString &code) {
@@ -133,5 +135,5 @@ void CustomNode::deserialize(QDataStream &stream) {
 }
 
 void CustomNode::controlAdded(MaximRuntime::HardControl *control) {
-    surface.addItem(NodeControl::fromRuntimeControl(this, control));
+    surface.addItem(NodeControl::fromRuntimeControl(this, surface.items().size(), control));
 }

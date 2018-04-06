@@ -3,8 +3,13 @@
 #include <cassert>
 
 #include "HistoryOperation.h"
+#include "../Project.h"
 
 using namespace AxiomModel;
+
+HistoryList::HistoryList(AxiomModel::Project *project) : project(project) {
+
+}
 
 HistoryList::~HistoryList() = default;
 
@@ -38,6 +43,7 @@ void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> 
     auto operationPtr = operation.get();
     currentAction.operations.push_back(std::move(operation));
     operationPtr->forward();
+    if (operationPtr->needsRefresh()) project->build();
 }
 
 bool HistoryList::canUndo() const {
@@ -52,10 +58,14 @@ void HistoryList::undo() {
     if (hasCurrentAction || !canUndo()) return;
 
     stackPos--;
+    auto needsRefresh = false;
     auto &ops = stack[stackPos].operations;
-    for (size_t i = ops.size() - 1; i >= 0; i--) {
+    for (ssize_t i = ops.size() - 1; i >= 0; i--) {
         ops[i]->backward();
+        if (ops[i]->needsRefresh()) needsRefresh = true;
     }
+
+    if (needsRefresh) project->build();
 
     if (stackPos == 0) emit canUndoChanged(false);
     if (stackPos == stack.size() - 1) emit canRedoChanged(true);
@@ -64,10 +74,14 @@ void HistoryList::undo() {
 void HistoryList::redo() {
     if (hasCurrentAction || !canRedo()) return;
 
+    auto needsRefresh = false;
     auto &ops = stack[stackPos].operations;
     for (auto &op : ops) {
         op->forward();
+        if (op->needsRefresh()) needsRefresh = true;
     }
+
+    if (needsRefresh) project->build();
 
     stackPos++;
     if (stackPos == 1) emit canUndoChanged(true);

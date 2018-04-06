@@ -7,6 +7,7 @@
 
 #include "../GridItem.h"
 #include "NodeSurface.h"
+#include "../Ref.h"
 
 namespace MaximRuntime {
     class Node;
@@ -32,7 +33,9 @@ namespace AxiomModel {
         NodeSurface surface;
         Schematic *parentSchematic;
 
-        Node(Schematic *parent, QString name, Type type, QPoint pos, QSize size);
+        Node(Schematic *parent, size_t index, QString name, Type type, QPoint pos, QSize size);
+
+        const NodeRef &ref() const { return _ref; }
 
         QString name() const { return m_name; }
 
@@ -83,6 +86,7 @@ namespace AxiomModel {
         void panelHeightChanged(float newPanelHeight);
 
     private:
+        NodeRef _ref;
         QString m_name = "";
         bool m_panelOpen = false;
         float m_panelHeight = 50;

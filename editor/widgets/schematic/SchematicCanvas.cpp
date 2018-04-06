@@ -180,16 +180,14 @@ void SchematicCanvas::addNode(AxiomModel::Node *node) {
 }
 
 void SchematicCanvas::newNode(QPointF scenePos, QString name, bool group) {
-    auto defaultSize = QSize(3, 2);
     auto targetPos = QPoint(
         qRound((float) scenePos.x() / SchematicCanvas::nodeGridSize.width()),
         qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height())
     );
 
-    std::unique_ptr<Node> newNode = group ? (std::unique_ptr<Node>) std::make_unique<GroupNode>(schematic, name, targetPos, defaultSize)
-                                          : (std::unique_ptr<Node>) std::make_unique<CustomNode>(schematic, name, targetPos, defaultSize);
-    schematic->addItem(std::move(newNode));
-    schematic->project()->build();
+    schematic->project()->history.startAction("Create Custom Node");
+    schematic->addCustomNode(name, targetPos);
+    schematic->project()->history.endAction("Create Custom Node");
 }
 
 void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {

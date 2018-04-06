@@ -4,11 +4,12 @@
 #include "compiler/runtime/Runtime.h"
 #include "../control/NodeControl.h"
 #include "../Project.h"
+#include "../../util.h"
 
 using namespace AxiomModel;
 
-GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
-    : Node(parent, std::move(name), Type::GROUP, pos, size),
+GroupNode::GroupNode(Schematic *parent, size_t index, QString name, QPoint pos, QSize size)
+    : Node(parent, index, std::move(name), Type::GROUP, pos, size),
       schematic(std::make_unique<GroupSchematic>(this)), _runtime(parent->runtime()) {
     connect(this, &GroupNode::removed,
             schematic.get(), &GroupSchematic::removed);
@@ -26,13 +27,14 @@ GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
 }
 
 std::unique_ptr<GridItem> GroupNode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
-    auto schematicParent = dynamic_cast<Schematic *>(newParent);
+    /*auto schematicParent = dynamic_cast<Schematic *>(newParent);
     assert(schematicParent != nullptr);
 
     auto moduleNode = std::make_unique<GroupNode>(schematicParent, name(), pos(), size());
     surface.cloneTo(&moduleNode->surface);
     schematic->cloneTo(moduleNode->schematic.get());
-    return std::move(moduleNode);
+    return std::move(moduleNode);*/
+    unreachable;
 }
 
 void GroupNode::saveValue() {
@@ -60,7 +62,7 @@ void GroupNode::deserialize(QDataStream &stream) {
 }
 
 void GroupNode::controlAdded(MaximRuntime::SoftControl *control) {
-    auto newControl = NodeControl::fromRuntimeControl(this, control);
+    auto newControl = NodeControl::fromRuntimeControl(this, surface.items().size(), control);
     // todo: set newControl's exposeBase to the Model Control this SoftControl is for
     // (this info is currently only needed on serialize, so there might be a better way to do it -- maybe the model
     // should be in charge of creating forward controls instead of the compiler?)

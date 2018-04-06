@@ -3,6 +3,7 @@
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QMenuBar>
+#include <QtWidgets/QShortcut>
 
 #include "editor/resources/resource.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
@@ -37,8 +38,27 @@ MainWindow::MainWindow(AxiomModel::Project *project) {
     fileMenu->addAction(new QAction(tr("Ex&it")));
 
     auto editMenu = menuBar()->addMenu(tr("&Edit"));
-    editMenu->addAction(new QAction(tr("&Undo")));
-    editMenu->addAction(new QAction(tr("&Redo")));
+    auto undoAction = editMenu->addAction(tr("&Undo"));
+    auto redoAction = editMenu->addAction(tr("&Redo"));
+
+    undoAction->setEnabled(project->history.canUndo());
+    redoAction->setEnabled(project->history.canRedo());
+    connect(&project->history, &AxiomModel::HistoryList::canUndoChanged,
+            undoAction, &QAction::setEnabled);
+    connect(&project->history, &AxiomModel::HistoryList::canRedoChanged,
+            redoAction, &QAction::setEnabled);
+    connect(undoAction, &QAction::triggered,
+            &project->history, &AxiomModel::HistoryList::undo);
+    connect(redoAction, &QAction::triggered,
+            &project->history, &AxiomModel::HistoryList::redo);
+
+    auto undoShortcut = new QShortcut(QKeySequence(tr("Ctrl+Z", "Edit|Undo")), this);
+    connect(undoShortcut, &QShortcut::activated,
+            undoAction, &QAction::trigger);
+    auto redoShortcut = new QShortcut(QKeySequence(tr("Ctrl+Y", "Edit|Redo")), this);
+    connect(redoShortcut, &QShortcut::activated,
+            redoAction, &QAction::trigger);
+
     editMenu->addSeparator();
     editMenu->addAction(new QAction(tr("C&ut")));
     editMenu->addAction(new QAction(tr("&Copy")));
@@ -50,10 +70,9 @@ MainWindow::MainWindow(AxiomModel::Project *project) {
     editMenu->addAction(new QAction(tr("Pr&eferences...")));
 
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
-    auto aboutAction = new QAction(tr("&About"));
+    auto aboutAction = helpMenu->addAction(tr("&About"));
     connect(aboutAction, &QAction::triggered,
             this, &MainWindow::showAbout);
-    helpMenu->addAction(aboutAction);
 
     auto moduleBrowser = new ModuleBrowserPanel();
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);

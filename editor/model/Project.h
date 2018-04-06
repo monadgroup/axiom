@@ -3,8 +3,10 @@
 #include <QtCore/QString>
 #include <QtCore/QObject>
 
+#include "history/HistoryList.h"
 #include "Library.h"
-#include "editor/model/schematic/RootSchematic.h"
+#include "schematic/RootSchematic.h"
+#include "Ref.h"
 
 namespace MaximRuntime {
 
@@ -14,8 +16,12 @@ namespace MaximRuntime {
 
 namespace AxiomModel {
 
+    class Node;
+    class NodeControl;
+
     class Project {
     public:
+        HistoryList history;
         Library library;
         RootSchematic root;
 
@@ -30,6 +36,12 @@ namespace AxiomModel {
         void clear();
 
         void build();
+
+        Schematic *findSurface(const SurfaceRef &ref);
+
+        Node *findNode(const NodeRef &ref);
+
+        NodeControl *findControl(const ControlRef &ref);
 
         MaximRuntime::Runtime *runtime() const { return _runtime; }
 

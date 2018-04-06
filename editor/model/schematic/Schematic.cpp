@@ -11,6 +11,7 @@
 #include "../node/CustomNode.h"
 #include "../node/IONode.h"
 #include "../control/NodeControl.h"
+#include "../history/AddCustomNodeOperation.h"
 #include "../../AxiomApplication.h"
 #include "../../util.h"
 #include "compiler/runtime/Runtime.h"
@@ -18,7 +19,7 @@
 
 using namespace AxiomModel;
 
-Schematic::Schematic(Project *project, MaximRuntime::Surface *runtime) : _project(project), _runtime(runtime) {
+Schematic::Schematic(Project *project, SurfaceRef ref, MaximRuntime::Surface *runtime) : _project(project), _ref(ref), _runtime(runtime) {
 
 }
 
@@ -33,7 +34,7 @@ GroupNode *Schematic::groupSelection() {
     // todo: this function should create 'shared' controls and maintain outside and inside connections between them,
     // so the resulting connection graph is identical to before the operation
 
-    QPoint summedPoints;
+    /*QPoint summedPoints;
 
     // calculate center point for all items
     for (const auto &gridItem : selectedItems()) {
@@ -111,7 +112,9 @@ GroupNode *Schematic::groupSelection() {
     addItem(std::move(moduleNode));
     modulePtr->select(true);
 
-    return modulePtr;
+    return modulePtr;*/
+
+    unreachable;
 }
 
 void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
@@ -215,10 +218,10 @@ void Schematic::deserialize(QDataStream &stream) {
         std::unique_ptr<Node> newNode;
         switch (type) {
             case Node::Type::CUSTOM:
-                newNode = std::make_unique<CustomNode>(this, "", QPoint(0, 0), QSize(0, 0));
+                newNode = std::make_unique<CustomNode>(this, items().size(), "", QPoint(0, 0), QSize(0, 0));
                 break;
             case Node::Type::GROUP:
-                newNode = std::make_unique<GroupNode>(this, "", QPoint(0, 0), QSize(0, 0));
+                newNode = std::make_unique<GroupNode>(this, items().size(), "", QPoint(0, 0), QSize(0, 0));
                 break;
             case Node::Type::IO: {
                 auto ioItem = dynamic_cast<IONode *>(items()[i].get());
@@ -259,6 +262,10 @@ void Schematic::deserialize(QDataStream &stream) {
 
         connectSinks(firstControl->sink(), secondControl->sink());
     }
+}
+
+void Schematic::addCustomNode(QString name, QPoint pos) {
+    _project->history.appendOperation(std::make_unique<AddCustomNodeOperation>(_project, _ref, name, pos));
 }
 
 void Schematic::remove() {

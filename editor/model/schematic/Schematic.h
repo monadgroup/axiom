@@ -9,6 +9,7 @@
 
 #include "../connection/ConnectionWire.h"
 #include "../GridSurface.h"
+#include "../Ref.h"
 
 namespace MaximRuntime {
 
@@ -28,9 +29,11 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        explicit Schematic(Project *project, MaximRuntime::Surface *runtime);
+        explicit Schematic(Project *project, SurfaceRef ref, MaximRuntime::Surface *runtime);
 
         virtual QString name() = 0;
+
+        const SurfaceRef &ref() const { return _ref; }
 
         MaximRuntime::Surface *runtime() { return _runtime; }
 
@@ -58,6 +61,8 @@ namespace AxiomModel {
 
         virtual void deserialize(QDataStream &stream);
 
+        void addCustomNode(QString name, QPoint pos);
+
     signals:
 
         void nameChanged(QString newName);
@@ -80,6 +85,7 @@ namespace AxiomModel {
 
     private:
         Project *_project;
+        SurfaceRef _ref;
         std::vector<std::unique_ptr<ConnectionWire>> m_wires;
         QPointF m_pan;
         MaximRuntime::Surface *_runtime;

@@ -19,7 +19,8 @@ set(SOURCE_FILES
         GridSurface.cpp
         Library.cpp
         LibraryEntry.cpp
-        Project.cpp)
+        Project.cpp
+        Ref.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${QT5_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

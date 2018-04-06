@@ -8,8 +8,8 @@
 
 using namespace AxiomModel;
 
-Node::Node(Schematic *parent, QString name, Type type, QPoint pos, QSize size)
-    : GridItem(parent, pos, size), type(type), surface(this), parentSchematic(parent), m_name(std::move(name)) {
+Node::Node(Schematic *parent, size_t index, QString name, Type type, QPoint pos, QSize size)
+    : GridItem(parent, pos, size), type(type), surface(this), parentSchematic(parent), _ref(NodeRef(parent->ref(), index)), m_name(std::move(name)) {
     connect(this, &Node::deselected,
             &surface, &NodeSurface::deselectAll);
 }

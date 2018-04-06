@@ -8,8 +8,8 @@
 
 using namespace AxiomModel;
 
-NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-    : NodeControl(node, runtime, pos, size), m_sink(runtime) {
+NodeNumControl::NodeNumControl(Node *node, size_t index, MaximRuntime::Control *runtime, QPoint pos, QSize size)
+    : NodeControl(node, index, runtime, pos, size), m_sink(runtime) {
     initSink();
 
     connect(&m_sink, &NumConnectionSink::valueChanged,

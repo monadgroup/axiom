@@ -13,8 +13,8 @@
 
 using namespace AxiomModel;
 
-NodeControl::NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-    : GridItem(&node->surface, pos, size), node(node), _runtime(runtime) {
+NodeControl::NodeControl(Node *node, size_t index, MaximRuntime::Control *runtime, QPoint pos, QSize size)
+    : GridItem(&node->surface, pos, size), node(node), _ref(ControlRef(node->ref(), index)), _runtime(runtime) {
 
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });
@@ -22,16 +22,16 @@ NodeControl::NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos,
             this, &NodeControl::remove);
 }
 
-std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRuntime::Control *runtime) {
+std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, size_t index, MaximRuntime::Control *runtime) {
     switch (runtime->type()->type()) {
         case MaximCommon::ControlType::NUMBER:
-            return std::make_unique<NodeNumControl>(node, runtime, QPoint(0, 0), QSize(2, 2));
+            return std::make_unique<NodeNumControl>(node, index, runtime, QPoint(0, 0), QSize(2, 2));
         case MaximCommon::ControlType::MIDI:
-            return std::make_unique<NodeMidiControl>(node, runtime, QPoint(0, 0), QSize(1, 1));
+            return std::make_unique<NodeMidiControl>(node, index, runtime, QPoint(0, 0), QSize(2, 2));
         case MaximCommon::ControlType::NUM_EXTRACT:
-            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::NUMBER, QPoint(0, 0), QSize(2, 2));
+            return std::make_unique<NodeExtractControl>(node, index, runtime, ConnectionSink::Type::NUMBER, QPoint(0, 0), QSize(2, 2));
         case MaximCommon::ControlType::MIDI_EXTRACT:
-            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::MIDI, QPoint(0, 0), QSize(2, 2));
+            return std::make_unique<NodeExtractControl>(node, index, runtime, ConnectionSink::Type::MIDI, QPoint(0, 0), QSize(2, 2));
         default:
             assert(false);
             throw;
