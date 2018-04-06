@@ -41,6 +41,8 @@ MainWindow::MainWindow(AxiomModel::Project *project) {
     auto undoAction = editMenu->addAction(tr("&Undo"));
     auto redoAction = editMenu->addAction(tr("&Redo"));
 
+    undoAction->setShortcut(QKeySequence(tr("Ctrl+Z", "Edit|Undo")));
+    redoAction->setShortcut(QKeySequence(tr("Ctrl+Y", "Edit|Redo")));
     undoAction->setEnabled(project->history.canUndo());
     redoAction->setEnabled(project->history.canRedo());
     connect(&project->history, &AxiomModel::HistoryList::canUndoChanged,
@@ -51,13 +53,6 @@ MainWindow::MainWindow(AxiomModel::Project *project) {
             &project->history, &AxiomModel::HistoryList::undo);
     connect(redoAction, &QAction::triggered,
             &project->history, &AxiomModel::HistoryList::redo);
-
-    auto undoShortcut = new QShortcut(QKeySequence(tr("Ctrl+Z", "Edit|Undo")), this);
-    connect(undoShortcut, &QShortcut::activated,
-            undoAction, &QAction::trigger);
-    auto redoShortcut = new QShortcut(QKeySequence(tr("Ctrl+Y", "Edit|Redo")), this);
-    connect(redoShortcut, &QShortcut::activated,
-            redoAction, &QAction::trigger);
 
     editMenu->addSeparator();
     editMenu->addAction(new QAction(tr("C&ut")));
