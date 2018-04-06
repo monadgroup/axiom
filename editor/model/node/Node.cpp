@@ -4,7 +4,10 @@
 
 #include "../schematic/Schematic.h"
 #include "../control/NodeControl.h"
+#include "../Project.h"
+#include "../history/DeleteNodeOperation.h"
 #include "compiler/runtime/Node.h"
+#include "CustomNode.h"
 
 using namespace AxiomModel;
 
@@ -124,4 +127,16 @@ void Node::deserialize(QDataStream &stream) {
     setName(name);
     setPanelOpen(panelOpen);
     setPanelHeight(panelHeight);
+}
+
+void Node::remove() {
+    if (!isDeletable()) return;
+
+    parentSchematic->project()->history.appendOperation(
+        std::make_unique<DeleteNodeOperation>(parentSchematic->project(), ref())
+    );
+}
+
+void Node::removeWithoutOp() {
+    GridItem::remove();
 }

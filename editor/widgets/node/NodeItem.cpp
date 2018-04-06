@@ -14,6 +14,8 @@
 #include "editor/model/control/NodeMidiControl.h"
 #include "editor/model/control/NodeExtractControl.h"
 #include "editor/model/control/NodeIOControl.h"
+#include "editor/model/history/HistoryList.h"
+#include "editor/model/Project.h"
 #include "../controls/NumControl.h"
 #include "../controls/MidiControl.h"
 #include "../controls/ExtractControl.h"
@@ -250,7 +252,9 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == savePresetAction) {
         // todo: save as preset
     } else if (selectedAction == deleteAction) {
-        node->parentSurface->deleteSelectedItems();
+        DO_ACTION(node->parentSchematic->project()->history, "Delete Selected Items", {
+            node->parentSurface->deleteSelectedItems();
+        });
     }
 }
 

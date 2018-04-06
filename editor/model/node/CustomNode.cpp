@@ -22,7 +22,6 @@ CustomNode::CustomNode(Schematic *parent, size_t index, QString name, QPoint pos
     connect(this, &CustomNode::removed,
             [this]() {
                 _runtime.remove();
-                parentSchematic->project()->build();
             });
 }
 

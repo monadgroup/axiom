@@ -73,6 +73,10 @@ namespace AxiomModel {
 
         void deserialize(QDataStream &stream) override;
 
+        void remove() override;
+
+        void removeWithoutOp();
+
     signals:
 
         void nameChanged(const QString &newName);

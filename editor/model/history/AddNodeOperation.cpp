@@ -29,8 +29,6 @@ void AddNodeOperation::forward() {
 }
 
 void AddNodeOperation::backward() {
-    auto surface = project->findSurface(surfaceRef);
-    assert(surface);
-
-    surface->items()[insertIndex]->remove();
+    auto node = project->findNode(NodeRef(surfaceRef, insertIndex));
+    if (node) node->removeWithoutOp();
 }

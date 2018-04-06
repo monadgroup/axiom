@@ -26,10 +26,12 @@ void NodeNumControl::setValue(MaximRuntime::NumValue value, bool setRuntime) {
 }
 
 void NodeNumControl::saveValue() {
+    if (!runtime()->group()) return;
     setValue(runtime()->group()->getNumValue(), false);
 }
 
 void NodeNumControl::restoreValue() {
+    if (!runtime()->group()) return;
     runtime()->group()->setNumValue(m_sink.value());
 }
 

@@ -127,6 +127,26 @@ void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
     emit wireAdded(ptr);
 }
 
+Node* Schematic::addFromStream(AxiomModel::Node::Type type, QDataStream &stream) {
+    std::unique_ptr<Node> newNode;
+    switch (type) {
+        case Node::Type::CUSTOM:
+            newNode = std::make_unique<CustomNode>(this, items().size(), "", QPoint(0, 0), QSize(0, 0));
+            break;
+        case Node::Type::GROUP:
+            newNode = std::make_unique<GroupNode>(this, items().size(), "", QPoint(0, 0), QSize(0, 0));
+            break;
+        default: break;
+    }
+
+    if (!newNode) return nullptr;
+
+    newNode->deserialize(stream);
+    auto nodePtr = newNode.get();
+    addItem(std::move(newNode));
+    return nodePtr;
+}
+
 ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB) {
     if (sinkA->type != sinkB->type) {
         return nullptr;
@@ -215,29 +235,16 @@ void Schematic::deserialize(QDataStream &stream) {
         uint64_t nodeSize; stream >> nodeSize;
 
         auto type = (Node::Type) intType;
-        std::unique_ptr<Node> newNode;
-        switch (type) {
-            case Node::Type::CUSTOM:
-                newNode = std::make_unique<CustomNode>(this, items().size(), "", QPoint(0, 0), QSize(0, 0));
-                break;
-            case Node::Type::GROUP:
-                newNode = std::make_unique<GroupNode>(this, items().size(), "", QPoint(0, 0), QSize(0, 0));
-                break;
-            case Node::Type::IO: {
+        auto added = addFromStream(type, stream);
+        if (!added) {
+            if (type == Node::Type::IO) {
                 auto ioItem = dynamic_cast<IONode *>(items()[i].get());
                 assert(ioItem);
                 ioItem->deserialize(stream);
-                continue;
+            } else {
+                stream.skipRawData((int) nodeSize);
             }
-            default:break;
         }
-        if (!newNode) {
-            stream.skipRawData((int) nodeSize);
-            continue;
-        }
-
-        newNode->deserialize(stream);
-        addItem(std::move(newNode));
     }
 
     auto &itms = items();

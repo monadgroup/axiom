@@ -26,7 +26,17 @@ void HistoryList::endAction(const std::string &name) {
 
     hasCurrentAction = false;
 
+    // don't create the action if it's empty
+    if (currentAction.operations.empty()) return;
+
     auto couldRedo = canRedo();
+
+    // if any of the operations needed a refresh, do that now
+    for (const auto &operation : currentAction.operations) {
+        if (!operation->needsRefresh()) continue;
+        project->build();
+        break;
+    }
 
     // remove items ahead of where we are
     stack.erase(stack.begin() + stackPos, stack.end());
@@ -43,7 +53,6 @@ void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> 
     auto operationPtr = operation.get();
     currentAction.operations.push_back(std::move(operation));
     operationPtr->forward();
-    if (operationPtr->needsRefresh()) project->build();
 }
 
 bool HistoryList::canUndo() const {

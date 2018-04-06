@@ -52,7 +52,7 @@ namespace AxiomModel {
 
         void deselect();
 
-        void remove();
+        virtual void remove();
 
         void startDragging();
 

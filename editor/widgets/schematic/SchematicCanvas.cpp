@@ -284,7 +284,9 @@ void SchematicCanvas::keyPressEvent(QKeyEvent *event) {
     if (focusItem()) {
         QGraphicsScene::keyPressEvent(event);
     } else if (event->matches(QKeySequence::Delete)) {
-        schematic->deleteSelectedItems();
+        DO_ACTION(schematic->project()->history, "Delete Selected Items", {
+            schematic->deleteSelectedItems();
+        });
     }
 }
 

@@ -50,6 +50,8 @@ namespace AxiomModel {
 
         virtual void exposeControl(AxiomModel::NodeControl *control) = 0;
 
+        Node *addFromStream(Node::Type type, QDataStream &stream);
+
     public slots:
 
         void setPan(QPointF pan);

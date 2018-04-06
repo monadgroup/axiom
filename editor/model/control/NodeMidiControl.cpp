@@ -26,10 +26,12 @@ void NodeMidiControl::setValue(MaximRuntime::MidiValue value, bool setRuntime) {
 }
 
 void NodeMidiControl::saveValue() {
+    if (!runtime()->group()) return;
     setValue(runtime()->group()->getMidiValue());
 }
 
 void NodeMidiControl::restoreValue() {
+    if (!runtime()->group()) return;
     runtime()->group()->setMidiValue(m_sink.value());
 }
 
