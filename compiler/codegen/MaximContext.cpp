@@ -22,7 +22,7 @@
 #include "functions/NoiseFunction.h"
 #include "functions/ActiveFunction.h"
 #include "functions/WithActiveFunction.h"
-//#include "functions/DelayFunction.h"
+#include "functions/DelayFunction.h"
 #include "functions/NextFunction.h"
 #include "functions/AmplitudeFunction.h"
 #include "functions/HoldFunction.h"
@@ -178,29 +178,21 @@ llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool 
     return llvm::ConstantInt::get(llvm::Type::getIntNTy(_llvm, numBits), val, isSigned);
 }
 
+llvm::Constant* MaximContext::sizeOf(llvm::Type *type) {
+    auto ptrType = llvm::PointerType::get(type, 0);
+    auto nextPtr = llvm::ConstantExpr::getGetElementPtr(type, llvm::ConstantPointerNull::get(ptrType), constInt(64, 1, false));
+    return llvm::ConstantExpr::getPtrToInt(nextPtr, llvm::Type::getInt64Ty(_llvm));
+}
+
 void MaximContext::copyPtr(Builder &builder, llvm::Value *src, llvm::Value *dest) {
     assert(src->getType() == dest->getType());
 
-    auto ptrType = llvm::cast<llvm::PointerType>(src->getType());
-
-    auto paramSizePtr = builder.CreateGEP(
-        llvm::ConstantPointerNull::get(ptrType),
-        constInt(64, 1, false),
-        "paramsize"
-    );
-    auto paramSize = builder.CreatePtrToInt(paramSizePtr, llvm::Type::getInt32Ty(_llvm));
+    auto paramSize = sizeOf(src->getType()->getPointerElementType());
     builder.CreateMemCpy(dest, src, paramSize, 0);
 }
 
 void MaximContext::clearPtr(Builder &builder, llvm::Value *src) {
-    auto ptrType = llvm::cast<llvm::PointerType>(src->getType());
-
-    auto paramSizePtr = builder.CreateGEP(
-        llvm::ConstantPointerNull::get(ptrType),
-        constInt(64, 1, false),
-        "paramsize"
-    );
-    auto paramSize = builder.CreatePtrToInt(paramSizePtr, llvm::Type::getInt32Ty(_llvm));
+    auto paramSize = sizeOf(src->getType()->getPointerElementType());
     auto byteParam = builder.CreateBitCast(src, llvm::PointerType::get(llvm::Type::getInt8Ty(_llvm), 0));
     builder.CreateMemSet(byteParam, constInt(8, 0, false), paramSize, 0);
 }
@@ -245,7 +237,7 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerFunction(ActiveFunction::create(this, libModule));
     registerFunction(WithActiveFunction::create(this, libModule));
     registerFunction(NextFunction::create(this, libModule));
-    //registerFunction(DelayFunction::create(this, libModule));
+    registerFunction(DelayFunction::create(this, libModule));
     registerFunction(AmplitudeFunction::create(this, libModule));
     registerFunction(HoldFunction::create(this, libModule));
     registerFunction(AccumFunction::create(this, libModule));

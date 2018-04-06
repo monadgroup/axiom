@@ -126,6 +126,8 @@ namespace MaximCodegen {
 
         llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned);
 
+        llvm::Constant *sizeOf(llvm::Type *type);
+
         void copyPtr(Builder &builder, llvm::Value *src, llvm::Value *dest);
 
         void clearPtr(Builder &builder, llvm::Value *src);

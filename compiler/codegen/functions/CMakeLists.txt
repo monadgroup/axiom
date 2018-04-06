@@ -7,7 +7,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/ChannelFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ClampFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CombineFunction.cpp"
-        #"${CMAKE_CURRENT_SOURCE_DIR}/DelayFunction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DelayFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/HoldFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/MixdownFunction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/MixFunction.cpp"

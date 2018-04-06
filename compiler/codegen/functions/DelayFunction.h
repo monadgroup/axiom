@@ -15,16 +15,7 @@ namespace MaximCodegen {
         generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
                  std::unique_ptr<VarArg> vararg) override;
 
-        std::vector<std::unique_ptr<Value>> mapArguments(std::vector<std::unique_ptr<Value>> providedArgs) override;
-
-        void sampleArguments(ComposableModuleClassMethod *method, size_t index,
-                             const std::vector<std::unique_ptr<Value>> &args,
-                             const std::vector<std::unique_ptr<Value>> &varargs) override;
-
-    private:
-        llvm::StructType *getChannelType();
-
-        llvm::StructType *getContextType();
+        std::vector<std::unique_ptr<Value>> mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) override;
     };
 
 }
