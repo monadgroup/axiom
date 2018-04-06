@@ -208,7 +208,7 @@ void Schematic::serialize(QDataStream &stream) const {
         QDataStream dataStream(&nodeBuffer);
         node->serialize(dataStream);
 
-        stream << (uint64_t) nodeBuffer.size();
+        stream << (quint64) nodeBuffer.size();
         stream.writeRawData(nodeBuffer.data(), (int) nodeBuffer.size());
         nodeBuffer.close();
     }
@@ -232,7 +232,7 @@ void Schematic::deserialize(QDataStream &stream) {
     uint32_t nodeCount; stream >> nodeCount;
     for (uint32_t i = 0; i < nodeCount; i++) {
         uint8_t intType; stream >> intType;
-        uint64_t nodeSize; stream >> nodeSize;
+        quint64 nodeSize; stream >> nodeSize;
 
         auto type = (Node::Type) intType;
         auto added = addFromStream(type, stream);

@@ -83,7 +83,7 @@ void CustomNode::serialize(QDataStream &stream) const {
         QDataStream dataStream(&controlBuffer);
         control->serialize(dataStream);
 
-        stream << (uint64_t) controlBuffer.size();
+        stream << (quint64) controlBuffer.size();
         stream.writeRawData(controlBuffer.data(), (int) controlBuffer.size());
         controlBuffer.close();
     }
@@ -116,7 +116,7 @@ void CustomNode::deserialize(QDataStream &stream) {
         QString controlName; stream >> controlName;
         uint8_t intControlType; stream >> intControlType;
 
-        uint64_t controlSize; stream >> controlSize;
+        quint64 controlSize; stream >> controlSize;
 
         auto controlType = (MaximCommon::ControlType) intControlType;
         MaximCodegen::ControlKey controlKey = { controlName.toStdString(), controlType };
