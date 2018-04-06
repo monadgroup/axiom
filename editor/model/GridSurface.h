@@ -39,6 +39,8 @@ namespace AxiomModel {
 
         virtual void restoreValue();
 
+        void deleteAll();
+
         void deleteSelectedItems();
 
         void selectAll();

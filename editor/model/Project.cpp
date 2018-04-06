@@ -27,10 +27,8 @@ void Project::load(QDataStream &stream) {
 }
 
 void Project::clear() {
-    // todo: clear library
-
-    root.selectAll();
-    root.deleteSelectedItems();
+    library.clear();
+    root.deleteAll();
 }
 
 void Project::build() {

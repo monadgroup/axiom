@@ -13,7 +13,7 @@
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow() {
+MainWindow::MainWindow(AxiomModel::Project *project) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -54,14 +54,6 @@ MainWindow::MainWindow() {
     connect(aboutAction, &QAction::triggered,
             this, &MainWindow::showAbout);
     helpMenu->addAction(aboutAction);
-}
-
-void MainWindow::closeProject() {
-    // todo
-}
-
-void MainWindow::loadProject(AxiomModel::Project *project) {
-    closeProject();
 
     auto moduleBrowser = new ModuleBrowserPanel();
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);

@@ -9,3 +9,7 @@ void Library::serialize(QDataStream &stream) const {
 void Library::deserialize(QDataStream &stream) {
 
 }
+
+void Library::clear() {
+
+}

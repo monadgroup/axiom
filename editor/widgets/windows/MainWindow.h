@@ -20,13 +20,9 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        MainWindow();
+        MainWindow(AxiomModel::Project *project);
 
     public slots:
-
-        void closeProject();
-
-        void loadProject(AxiomModel::Project *project);
 
         void showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic *schematic, bool split);
 

@@ -2,8 +2,7 @@
 
 #include "AxiomVstPlugin.h"
 
-AxiomVstEditor::AxiomVstEditor(AxiomVstPlugin *plugin) : plugin(plugin) {
-    window.loadProject(&plugin->project);
+AxiomVstEditor::AxiomVstEditor(AxiomVstPlugin *plugin) : plugin(plugin), window(&plugin->project) {
 }
 
 bool AxiomVstEditor::open(void *ptr) {

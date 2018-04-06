@@ -51,6 +51,15 @@ void GridSurface::restoreValue() {
     }
 }
 
+void GridSurface::deleteAll() {
+    size_t avoidedCount = 0;
+    while (m_items.size() > avoidedCount) {
+        auto &currentItem = m_items[avoidedCount];
+        if (currentItem->isDeletable()) currentItem->remove();
+        else avoidedCount++;
+    }
+}
+
 void GridSurface::deleteSelectedItems() {
     size_t avoidedCount = 0;
     while (m_selectedItems.size() > avoidedCount) {
