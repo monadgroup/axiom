@@ -212,7 +212,7 @@ GeneratableModuleClass *Surface::compile() {
         }
 
         _groupPtrIndexes.emplace(group.get(), entryIndex);
-        group->setGetterMethod(_class->entryAccessor(entryIndex));
+        group->setMethods(_class->entryAccessor(entryIndex), _class->destructor());
     }
     auto groupInitializationTime = std::clock() - groupInitializationStart;
     std::cerr << "    Finished group initialization in " << groupInitializationTime << " ms" << std::endl;
@@ -278,7 +278,7 @@ GeneratableModuleClass *Surface::compile() {
         auto loopSize = node->extracted() ? MaximCodegen::ArrayType::arraySize : 1;
 
         auto entryIndex = _class->addEntry(llvm::ArrayType::get(nodeClass->storageType(), loopSize));
-        node->setGetterMethod(_class->entryAccessor(entryIndex));
+        node->setMethods(_class->entryAccessor(entryIndex), _class->destructor());
 
         // todo: these two loops really should be refactored
 
@@ -495,15 +495,15 @@ void Surface::removeNode(Node *node) {
     scheduleGraphUpdate();
 }
 
-void Surface::pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method) {
-    RuntimeUnit::pullGetterMethod(method);
+void Surface::pullMethods() {
+    RuntimeUnit::pullMethods();
 
     for (const auto &group : _controlGroups) {
-        group->pullGetterMethod();
+        group->pullMethods();
     }
 
     for (const auto &node : _nodes) {
-        node->pullGetterMethod();
+        node->pullMethods();
     }
 }
 

@@ -11,6 +11,7 @@ Node::Node(Surface *surface) : ModuleRuntimeUnit(surface->runtime(), "node"), _s
 
 void Node::remove() {
     _surface->removeNode(this);
+    cleanup();
 }
 
 void Node::scheduleCompile() {

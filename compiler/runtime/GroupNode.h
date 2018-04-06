@@ -26,15 +26,13 @@ namespace MaximRuntime {
 
         void forwardControl(Control *control);
 
-        void pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method = nullptr) override;
+        void pullMethods() override;
 
         void *updateCurrentPtr(void *parentCtx) override;
 
         void saveValue() override;
 
         void restoreValue() override;
-
-        void setRestoreValue(SaveValue &value) override;
 
         MaximCodegen::ModuleClass *moduleClass() override;
 

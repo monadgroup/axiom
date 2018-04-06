@@ -13,15 +13,19 @@ RuntimeUnit::RuntimeUnit(Runtime *runtime) : _runtime(runtime) {
 
 RuntimeUnit::~RuntimeUnit() = default;
 
-void RuntimeUnit::setGetterMethod(std::unique_ptr<MaximCodegen::ComposableModuleClassMethod> method) {
-    _method = std::move(method);
+void RuntimeUnit::setMethods(std::unique_ptr<MaximCodegen::ModuleClassMethod> getterMethod,
+                             MaximCodegen::ModuleClassMethod *destructorMethod) {
+    _getterMethod = std::move(getterMethod);
+    _destructorMethod = destructorMethod;
 }
 
-void RuntimeUnit::pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method) {
-    auto mthd = method ? method : _method.get();
-    if (mthd) {
-        _getValueCb = (GetValueCb) _runtime->jit().getSymbolAddress(mthd->name());
+void RuntimeUnit::pullMethods() {
+    if (_getterMethod) {
+        _getValueCb = (GetValueCb) _runtime->jit().getSymbolAddress(_getterMethod->name());
         assert(_getValueCb);
+    }
+    if (_destructorMethod) {
+        _destructCb = (DestructCb) _runtime->jit().getSymbolAddress(_destructorMethod->name());
     }
 }
 
@@ -46,33 +50,42 @@ void RuntimeUnit::saveValue() {
     auto moduleType = module->storageType();
     auto size = _runtime->ctx()->dataLayout().getTypeAllocSize(moduleType);
     std::cout << "  Saving " << size << " bytes" << std::endl;
-    _saveVal.type = moduleType;
-    _saveVal.value = std::unique_ptr<void, MallocDeleter>(malloc(size));
-    if (_saveVal.value) memcpy(_saveVal.value.get(), _currentPtr, size);
+    _saveType = moduleType;
+    _saveValue = std::unique_ptr<void, ValueDeleter>(malloc(size));
+    if (_saveValue) {
+        memcpy(_saveValue.get(), _currentPtr, size);
+    }
 }
 
 void RuntimeUnit::restoreValue() {
-    if (!_saveVal.value || !_currentPtr) return;
+    if (!_saveValue || !_currentPtr) return;
 
     auto module = moduleClass();
     if (!module) return;
 
     auto moduleType = module->storageType();
-    if (moduleType != _saveVal.type) return;
+    if (moduleType != _saveType) return;
 
-    auto size = _runtime->ctx()->dataLayout().getTypeAllocSize(_saveVal.type);
+    auto size = _runtime->ctx()->dataLayout().getTypeAllocSize(_saveType);
     std::cout << "  Restoring " << size << " bytes" << std::endl;
-    memcpy(_currentPtr, _saveVal.value.get(), size);
+    memcpy(_currentPtr, _saveValue.get(), size);
+    return;
 }
 
-void RuntimeUnit::setRestoreValue(MaximRuntime::RuntimeUnit::SaveValue &value) {
-    _saveVal.type = value.type;
+void RuntimeUnit::destructIfNeeded() {
+    auto module = moduleClass();
 
-    if (value.value) {
-        auto size = _runtime->ctx()->dataLayout().getTypeAllocSize(_saveVal.type);
-        _saveVal.value = std::unique_ptr<void, MallocDeleter>(malloc(size));
-        if (_saveVal.value) memcpy(_saveVal.value.get(), value.value.get(), size);
-    } else _saveVal.value.reset();
+    if ((!module || module->storageType() != _saveType) && _destructCb && _currentPtr) {
+        std::cout << "Invoking destructor because type has changed" << std::endl;
+        _destructCb(_currentPtr);
+    }
+}
+
+void RuntimeUnit::cleanup() {
+    if (_currentPtr && _destructCb) {
+        std::cout << "Invoking destructor on cleanup" << std::endl;
+        _destructCb(_currentPtr);
+    }
 }
 
 void *RuntimeUnit::currentPtr() const {

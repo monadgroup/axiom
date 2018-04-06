@@ -33,7 +33,7 @@ namespace MaximRuntime {
 
         void removeNode(Node *node);
 
-        void pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method = nullptr) override;
+        void pullMethods() override;
 
         void *updateCurrentPtr(void *parentCtx) override;
 

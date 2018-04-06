@@ -71,6 +71,7 @@ GeneratableModuleClass *CustomNode::compile() {
         // update control list
         updateControls();
 
+        destructIfNeeded();
         deploy();
     } catch (const MaximCommon::CompileError &err) {
         _errorLog.errors.push_back(err);

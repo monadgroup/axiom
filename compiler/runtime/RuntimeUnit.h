@@ -13,7 +13,7 @@ namespace llvm {
 namespace MaximCodegen {
     class ModuleClass;
 
-    class ComposableModuleClassMethod;
+    class ModuleClassMethod;
 }
 
 namespace MaximRuntime {
@@ -22,15 +22,6 @@ namespace MaximRuntime {
 
     class RuntimeUnit {
     public:
-        struct MallocDeleter {
-            void operator()(void *x) { free(x); }
-        };
-
-        struct SaveValue {
-            llvm::Type *type;
-            std::unique_ptr<void, MallocDeleter> value;
-        };
-
         explicit RuntimeUnit(Runtime *runtime);
 
         virtual ~RuntimeUnit();
@@ -39,11 +30,13 @@ namespace MaximRuntime {
 
         virtual llvm::Module *module() = 0;
 
-        void setGetterMethod(std::unique_ptr<MaximCodegen::ComposableModuleClassMethod> method);
+        void setMethods(std::unique_ptr<MaximCodegen::ModuleClassMethod> getterMethod, MaximCodegen::ModuleClassMethod *destructorMethod);
 
-        MaximCodegen::ComposableModuleClassMethod *getterMethod() const { return _method.get(); }
+        MaximCodegen::ModuleClassMethod *getterMethod() const { return _getterMethod.get(); }
 
-        virtual void pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method = nullptr);
+        MaximCodegen::ModuleClassMethod *destructorMethod() const { return _destructorMethod; }
+
+        virtual void pullMethods();
 
         virtual void *getValuePtr(void *parentCtx);
 
@@ -53,29 +46,34 @@ namespace MaximRuntime {
 
         virtual void restoreValue();
 
-        virtual void setRestoreValue(SaveValue &value);
+        void destructIfNeeded();
 
-        SaveValue moveValue() { return std::move(_saveVal); };
+        void cleanup();
 
         void *currentPtr() const;
 
         virtual MaximCodegen::ModuleClass *moduleClass() = 0;
 
     private:
+        struct ValueDeleter {
+            void operator()(void *x) { free(x); }
+        };
+
         Runtime *_runtime;
 
-        std::unique_ptr<MaximCodegen::ComposableModuleClassMethod> _method;
+        std::unique_ptr<MaximCodegen::ModuleClassMethod> _getterMethod;
+        MaximCodegen::ModuleClassMethod *_destructorMethod = nullptr;
 
         using GetValueCb = void *(*)(void *);
+        using DestructCb = void (*)(void *);
 
         GetValueCb _getValueCb = nullptr;
+        DestructCb _destructCb = nullptr;
 
         void *_currentPtr = nullptr;
 
-        SaveValue _saveVal = {
-            nullptr,
-            nullptr
-        };
+        llvm::Type *_saveType;
+        std::unique_ptr<void, ValueDeleter> _saveValue;
     };
 
 }

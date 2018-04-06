@@ -41,9 +41,9 @@ void GroupNode::forwardControl(MaximRuntime::Control *control) {
     control->node()->scheduleCompile();
 }
 
-void GroupNode::pullGetterMethod(MaximCodegen::ComposableModuleClassMethod *method) {
-    RuntimeUnit::pullGetterMethod(method);
-    _subsurface.pullGetterMethod(method ? method : getterMethod());
+void GroupNode::pullMethods() {
+    RuntimeUnit::pullMethods();
+    _subsurface.pullMethods();
 }
 
 void* GroupNode::updateCurrentPtr(void *parentCtx) {
@@ -58,10 +58,6 @@ void GroupNode::saveValue() {
 
 void GroupNode::restoreValue() {
     _subsurface.restoreValue();
-}
-
-void GroupNode::setRestoreValue(MaximRuntime::RuntimeUnit::SaveValue &value) {
-    _subsurface.setRestoreValue(value);
 }
 
 MaximCodegen::ModuleClass* GroupNode::moduleClass() {
