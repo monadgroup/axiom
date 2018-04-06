@@ -12,6 +12,7 @@ using namespace MaximRuntime;
 
 static const std::string initFuncName = "init";
 static const std::string generateFuncName = "generate";
+static const std::string cleanupFuncName = "cleanup";
 static const std::string globalCtxName = "globalCtx";
 
 Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
@@ -38,6 +39,9 @@ void Runtime::compile() {
     // tell every unit to save its current value, so we can restore it later
     _mainSurface->saveValue();
 
+    // call old destructors
+    if (_cleanupFuncPtr) _cleanupFuncPtr();
+
     std::cerr << "  Beginning codegen..." << std::endl;
     auto codegenClock = std::clock();
     auto mainClass = _mainSurface->compile();
@@ -58,6 +62,7 @@ void Runtime::compile() {
     //       it passes in arguments
     createForwardFunc(module.get(), initFuncName, ctxGlobal, mainClass->constructor());
     createForwardFunc(module.get(), generateFuncName, ctxGlobal, mainClass->generate());
+    createForwardFunc(module.get(), cleanupFuncName, ctxGlobal, mainClass->destructor());
 
     // deploy the new module to the JIT
     if (_isDeployed) _jit.removeModule(_deployKey);
@@ -70,6 +75,7 @@ void Runtime::compile() {
     auto ctxGlobalPtr = (void *) _jit.getSymbolAddress(globalCtxName);
     auto initFuncPtr = (void (*)()) _jit.getSymbolAddress(initFuncName);
     _generateFuncPtr = (void (*)()) _jit.getSymbolAddress(generateFuncName);
+    _cleanupFuncPtr = (void (*)()) _jit.getSymbolAddress(cleanupFuncName);
     assert(ctxGlobalPtr && initFuncPtr && _generateFuncPtr);
 
     // propagate new pointers

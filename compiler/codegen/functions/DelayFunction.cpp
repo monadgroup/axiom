@@ -40,6 +40,10 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
         }, false),
         llvm::Function::ExternalLinkage, "realloc", module()
     );
+    auto freeFunction = llvm::Function::Create(
+        llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()->llvm()), {voidPtrType}, false),
+        llvm::Function::ExternalLinkage, "free", module()
+    );
 
     // we need to store:
     //  - current lengths of buffers (in samples)
@@ -172,8 +176,16 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
     auto rightPosPtr = method->getEntryPointer(addEntry(sizeType), "rightpos.ptr");
     auto leftBufferLengthPtr = method->getEntryPointer(addEntry(sizeType), "leftbuflength.ptr");
     auto rightBufferLengthPtr = method->getEntryPointer(addEntry(sizeType), "rightbuflength.ptr");
-    auto leftSamplesPtrPtr = method->getEntryPointer(addEntry(llvm::PointerType::get(channelType, 0)), "leftsamples.ptr.ptr");
-    auto rightSamplesPtrPtr = method->getEntryPointer(addEntry(llvm::PointerType::get(channelType, 0)), "rightsamples.ptr.ptr");
+
+    auto leftSamplesPtrIndex = addEntry(llvm::PointerType::get(channelType, 0));
+    auto rightSamplePtrIndex = addEntry(llvm::PointerType::get(channelType, 0));
+    auto leftSamplesPtrPtr = method->getEntryPointer(leftSamplesPtrIndex, "leftsamples.ptr.ptr");
+    auto rightSamplesPtrPtr = method->getEntryPointer(rightSamplePtrIndex, "rightsamples.ptr.ptr");
+
+    // generate destructors for the two pointers
+    auto &db = destructor()->builder();
+    CreateCall(db, freeFunction, {db.CreateBitCast(db.CreateLoad(cdestructor()->getEntryPointer(leftSamplesPtrIndex, "leftsamples.ptr.ptr")), voidPtrType)}, "");
+    CreateCall(db, freeFunction, {db.CreateBitCast(db.CreateLoad(cdestructor()->getEntryPointer(rightSamplePtrIndex, "rightsamples.ptr.ptr")), voidPtrType)}, "");
 
     auto &b = method->builder();
     auto inputVec = inputVal->vec(b);

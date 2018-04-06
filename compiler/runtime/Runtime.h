@@ -58,6 +58,7 @@ namespace MaximRuntime {
         Jit::ModuleKey _deployKey;
 
         void (*_generateFuncPtr)() = nullptr;
+        void (*_cleanupFuncPtr)() = nullptr;
 
         llvm::Function *createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,
                                           MaximCodegen::ModuleClassMethod *method);

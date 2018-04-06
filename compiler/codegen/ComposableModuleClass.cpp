@@ -9,10 +9,15 @@ ComposableModuleClass::ComposableModuleClass(MaximContext *ctx, llvm::Module *mo
                                              const std::vector<llvm::Type *> &constructorParams)
     : ModuleClass(ctx, module, name) {
     _constructor = std::make_unique<ComposableModuleClassMethod>(this, "constructor", nullptr, constructorParams);
+    _destructor = std::make_unique<ComposableModuleClassMethod>(this, "destructor", nullptr);
 }
 
 ModuleClassMethod *ComposableModuleClass::constructor() {
     return _constructor.get();
+}
+
+ModuleClassMethod* ComposableModuleClass::destructor() {
+    return _destructor.get();
 }
 
 std::unique_ptr<ComposableModuleClassMethod> ComposableModuleClass::entryAccessor(size_t index) {
@@ -35,11 +40,15 @@ size_t ComposableModuleClass::addEntry(llvm::Type *type) {
     return index;
 }
 
-size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams, bool callConstructor) {
+size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams, bool callDefaults) {
     auto index = addEntry(moduleClass->storageType());
     auto moduleConstructor = moduleClass->constructor();
-    if (callConstructor && moduleConstructor) {
+    if (callDefaults && moduleConstructor) {
         _constructor->callInto(index, constructorParams, moduleConstructor, "");
+    }
+    auto moduleDestructor = moduleClass->destructor();
+    if (callDefaults && moduleDestructor) {
+        _destructor->callInto(index, {}, moduleDestructor, "");
     }
     return index;
 }

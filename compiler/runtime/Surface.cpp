@@ -349,6 +349,42 @@ GeneratableModuleClass *Surface::compile() {
             b.SetInsertPoint(loopEndBlock);
         }
 
+        // DESTRUCTOR LOOP
+        {
+            auto &b = _class->destructor()->builder();
+            auto entryArrPtr = _class->cdestructor()->getEntryPointer(entryIndex, "entryarr");
+            auto indexPtr = _class->destructor()->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
+            b.CreateStore(runtime()->ctx()->constInt(8, 0, false), indexPtr);
+
+            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck", _class->destructor()->get(module()));
+            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun", _class->destructor()->get(module()));
+            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend", _class->destructor()->get(module()));
+
+            b.CreateBr(loopCheckBlock);
+            b.SetInsertPoint(loopCheckBlock);
+
+            auto currentIndex = b.CreateLoad(indexPtr, "currentindex");
+            auto cond = b.CreateICmpULT(currentIndex, runtime()->ctx()->constInt(8, loopSize, false), "loopcond");
+            b.CreateCondBr(cond, loopRunBlock, loopEndBlock);
+            b.SetInsertPoint(loopRunBlock);
+            auto entryPtr = b.CreateGEP(entryArrPtr, {
+                runtime()->ctx()->constInt(64, 0, false),
+                currentIndex
+            }, "entry.ptr");
+
+            nodeClass->destructor()->call(b, {}, entryPtr, module(), "");
+
+            auto incrIndex = b.CreateAdd(
+                currentIndex,
+                runtime()->ctx()->constInt(8, 1, false),
+                "incr"
+            );
+            b.CreateStore(incrIndex, indexPtr);
+            b.CreateBr(loopCheckBlock);
+
+            b.SetInsertPoint(loopEndBlock);
+        }
+
         // GENERATE LOOP
         {
             auto &b = _class->generate()->builder();

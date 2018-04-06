@@ -26,9 +26,11 @@ std::string ModuleClass::mangleMethodName(const std::string &name) {
 }
 
 void ModuleClass::doComplete() {
-    auto constructorMethod = constructor();
-    if (constructorMethod) {
+    if (auto constructorMethod = constructor()) {
         constructorMethod->builder().CreateRetVoid();
+    }
+    if (auto destructorMethod = destructor()) {
+        destructorMethod->builder().CreateRetVoid();
     }
 }
 

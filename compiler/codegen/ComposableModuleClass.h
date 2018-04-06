@@ -13,7 +13,11 @@ namespace MaximCodegen {
 
         ModuleClassMethod *constructor() override;
 
+        ModuleClassMethod *destructor() override;
+
         ComposableModuleClassMethod *cconstructor() const { return _constructor.get(); }
+
+        ComposableModuleClassMethod *cdestructor() const { return _destructor.get(); }
 
         std::unique_ptr<ComposableModuleClassMethod> entryAccessor(size_t index);
 
@@ -21,7 +25,7 @@ namespace MaximCodegen {
 
         size_t addEntry(llvm::Type *type);
 
-        size_t addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams = {}, bool callConstructor = true);
+        size_t addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams = {}, bool callDefaults = true);
 
         llvm::Value *getEntryPointer(Builder &b, size_t index, llvm::Value *context, const llvm::Twine &resultName);
 
@@ -34,6 +38,7 @@ namespace MaximCodegen {
         std::vector<ModuleClass *> _moduleClasses;
 
         std::unique_ptr<ComposableModuleClassMethod> _constructor;
+        std::unique_ptr<ComposableModuleClassMethod> _destructor;
     };
 
 }

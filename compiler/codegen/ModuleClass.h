@@ -27,6 +27,8 @@ namespace MaximCodegen {
 
         virtual ModuleClassMethod *constructor() { return nullptr; }
 
+        virtual ModuleClassMethod *destructor() { return nullptr; }
+
         bool completed() const { return _completed; }
 
         void complete();
