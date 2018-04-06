@@ -10,6 +10,7 @@
 #include "../connection/ConnectionWire.h"
 #include "../GridSurface.h"
 #include "../Ref.h"
+#include "../node/Node.h"
 
 namespace MaximRuntime {
 
@@ -61,7 +62,7 @@ namespace AxiomModel {
 
         virtual void deserialize(QDataStream &stream);
 
-        void addCustomNode(QString name, QPoint pos);
+        void addNode(Node::Type type, QString name, QPoint pos);
 
     signals:
 

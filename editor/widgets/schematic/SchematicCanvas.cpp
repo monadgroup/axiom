@@ -185,9 +185,15 @@ void SchematicCanvas::newNode(QPointF scenePos, QString name, bool group) {
         qRound((float) scenePos.y() / SchematicCanvas::nodeGridSize.height())
     );
 
-    schematic->project()->history.startAction("Create Custom Node");
-    schematic->addCustomNode(name, targetPos);
-    schematic->project()->history.endAction("Create Custom Node");
+    if (group) {
+        DO_ACTION(schematic->project()->history, "Create Group Node", {
+            schematic->addNode(Node::Type::GROUP, name, targetPos);
+        });
+    } else {
+        DO_ACTION(schematic->project()->history, "Create Custom Node", {
+            schematic->addNode(Node::Type::CUSTOM, name, targetPos);
+        });
+    }
 }
 
 void SchematicCanvas::addWire(AxiomModel::ConnectionWire *wire) {

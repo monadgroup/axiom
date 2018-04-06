@@ -11,7 +11,7 @@
 #include "../node/CustomNode.h"
 #include "../node/IONode.h"
 #include "../control/NodeControl.h"
-#include "../history/AddCustomNodeOperation.h"
+#include "editor/model/history/AddNodeOperation.h"
 #include "../../AxiomApplication.h"
 #include "../../util.h"
 #include "compiler/runtime/Runtime.h"
@@ -264,8 +264,8 @@ void Schematic::deserialize(QDataStream &stream) {
     }
 }
 
-void Schematic::addCustomNode(QString name, QPoint pos) {
-    _project->history.appendOperation(std::make_unique<AddCustomNodeOperation>(_project, _ref, name, pos));
+void Schematic::addNode(Node::Type type, QString name, QPoint pos) {
+    _project->history.appendOperation(std::make_unique<AddNodeOperation>(_project, _ref, type, name, pos));
 }
 
 void Schematic::remove() {

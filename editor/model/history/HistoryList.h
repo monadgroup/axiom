@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#define DO_ACTION(history, name, block) (history).startAction((name)); (block); (history).endAction((name))
+
 namespace AxiomModel {
 
     class HistoryOperation;
@@ -15,7 +17,7 @@ namespace AxiomModel {
 
     public:
 
-        HistoryList(Project *project);
+        explicit HistoryList(Project *project);
 
         ~HistoryList() override;
 
