@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QMenu>
 
@@ -11,6 +12,8 @@ namespace AxiomModel {
     class Schematic;
 
     class Node;
+
+    class GridItem;
 }
 
 namespace AxiomGui {
@@ -83,6 +86,7 @@ namespace AxiomGui {
 
     private:
         bool isSelecting = false;
+        std::set<AxiomModel::GridItem *> lastSelectedItems;
 
         QVector<QPointF> selectionPoints;
         QGraphicsPathItem *selectionPath;

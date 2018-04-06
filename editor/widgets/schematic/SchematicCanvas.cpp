@@ -250,12 +250,27 @@ void SchematicCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         selectionPath->setVisible(true);
 
         auto selectItems = items(path);
+
+        std::set<AxiomModel::GridItem *> newSelectedItems;
         for (auto &item : selectItems) {
             auto nodeItem = dynamic_cast<NodeItem *>(item);
-            if (nodeItem) {
-                nodeItem->node->select(false);
+            if (!nodeItem) continue;
+            newSelectedItems.emplace(nodeItem->node);
+        }
+
+        std::vector<AxiomModel::GridItem *> edgeItems;
+        std::set_symmetric_difference(lastSelectedItems.begin(), lastSelectedItems.end(),
+                                      newSelectedItems.begin(), newSelectedItems.end(), std::back_inserter(edgeItems));
+
+        for (auto &item : edgeItems) {
+            if (item->isSelected()) {
+                item->deselect();
+            } else {
+                item->select(false);
             }
         }
+
+        lastSelectedItems = newSelectedItems;
 
         event->accept();
     }
@@ -318,6 +333,7 @@ void SchematicCanvas::leftMousePressEvent(QGraphicsSceneMouseEvent *event) {
         schematic->deselectAll();
         if (focusItem()) focusItem()->clearFocus();
     }
+    lastSelectedItems.clear();
     selectionPoints.append(event->scenePos());
     event->accept();
 }
