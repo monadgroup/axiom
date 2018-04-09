@@ -17,10 +17,6 @@ namespace AxiomGui {
     public:
         explicit SchematicView(SchematicPanel *panel, AxiomModel::Schematic *schematic);
 
-    public slots:
-
-        void pan(QPointF delta);
-
     protected:
 
         void mousePressEvent(QMouseEvent *event) override;
@@ -29,11 +25,23 @@ namespace AxiomGui {
 
         void mouseReleaseEvent(QMouseEvent *event) override;
 
+        void wheelEvent(QWheelEvent *event) override;
+
+    private slots:
+
+        void pan(QPointF pan);
+
+        void zoom(float zoom);
+
     private:
         AxiomModel::Schematic *schematic;
 
         bool isPanning = false;
-        QPoint lastMousePos;
+        QPoint startMousePos;
+        QPointF startPan;
+        float lastScale = 1;
+
+        static float zoomToScale(float zoom);
     };
 
 }

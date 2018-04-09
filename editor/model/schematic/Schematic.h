@@ -40,6 +40,8 @@ namespace AxiomModel {
 
         QPointF pan() const { return m_pan; }
 
+        float zoom() const { return m_zoom; }
+
         Project *project() const { return _project; }
 
         const std::vector<std::unique_ptr<ConnectionWire>> &wires() const { return m_wires; }
@@ -56,6 +58,8 @@ namespace AxiomModel {
 
         void setPan(QPointF pan);
 
+        void setZoom(float zoom);
+
         GroupNode *groupSelection();
 
         ConnectionWire *connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB);
@@ -71,6 +75,8 @@ namespace AxiomModel {
         void nameChanged(QString newName);
 
         void panChanged(QPointF newPan);
+
+        void zoomChanged(float newZoom);
 
         void wireAdded(ConnectionWire *connection);
 
@@ -91,6 +97,7 @@ namespace AxiomModel {
         SurfaceRef _ref;
         std::vector<std::unique_ptr<ConnectionWire>> m_wires;
         QPointF m_pan;
+        float m_zoom = 0;
         MaximRuntime::Surface *_runtime;
     };
 

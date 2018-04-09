@@ -30,6 +30,13 @@ void Schematic::setPan(QPointF pan) {
     }
 }
 
+void Schematic::setZoom(float zoom) {
+    if (zoom != m_zoom) {
+        m_zoom = zoom;
+        emit zoomChanged(zoom);
+    }
+}
+
 GroupNode *Schematic::groupSelection() {
     // todo: this function should create 'shared' controls and maintain outside and inside connections between them,
     // so the resulting connection graph is identical to before the operation
@@ -181,6 +188,7 @@ static QDataStream &operator>>(QDataStream &stream, SinkIndex &index) {
 
 void Schematic::serialize(QDataStream &stream) const {
     stream << pan();
+    stream << zoom();
 
     // serialize nodes - also build an index of ConnectionSinks to node/control indexes for connection serialization
     stream << (uint32_t) items().size();
@@ -227,7 +235,9 @@ void Schematic::serialize(QDataStream &stream) const {
 
 void Schematic::deserialize(QDataStream &stream) {
     QPointF pan; stream >> pan;
+    float zoom; stream >> zoom;
     setPan(pan);
+    setZoom(zoom);
 
     uint32_t nodeCount; stream >> nodeCount;
     for (uint32_t i = 0; i < nodeCount; i++) {
