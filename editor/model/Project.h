@@ -19,11 +19,18 @@ namespace AxiomModel {
     class Node;
     class NodeControl;
 
+    class DeserializeInvalidFileException {};
+
+    class DeserializeInvalidSchemaException {};
+
     class Project {
     public:
         HistoryList history;
         Library library;
         RootSchematic root;
+
+        static constexpr quint32 schemaMagic = 0xDEFACED;
+        static constexpr quint32 schemaRevision = 1;
 
         explicit Project(MaximRuntime::Runtime *runtime);
 

@@ -12,11 +12,21 @@ Project::Project(MaximRuntime::Runtime *runtime) : history(this), root(this, run
 }
 
 void Project::serialize(QDataStream &stream) const {
+    stream << schemaMagic;
+    stream << schemaRevision;
+
     library.serialize(stream);
     root.serialize(stream);
 }
 
 void Project::deserialize(QDataStream &stream) {
+    quint32 readMagic; stream >> readMagic;
+    if (readMagic != schemaMagic) throw DeserializeInvalidFileException();
+
+    // todo: format upgrade system? maybe a file format that upgrades better?
+    quint32 readRevision; stream >> readRevision;
+    if (readRevision != schemaRevision) throw DeserializeInvalidSchemaException();
+
     library.deserialize(stream);
     root.deserialize(stream);
 }

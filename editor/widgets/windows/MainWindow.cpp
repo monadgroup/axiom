@@ -4,6 +4,8 @@
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QShortcut>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMessageBox>
 
 #include "editor/resources/resource.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
@@ -14,7 +16,7 @@
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(AxiomModel::Project *project) {
+MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -30,8 +32,15 @@ MainWindow::MainWindow(AxiomModel::Project *project) {
     fileMenu->addAction(new QAction(tr("&Import Library...")));
     fileMenu->addAction(new QAction(tr("E&xport Library...")));
     fileMenu->addSeparator();
-    fileMenu->addAction(new QAction(tr("&Open...")));
-    fileMenu->addAction(new QAction(tr("&Save As...")));
+
+    auto openAction = fileMenu->addAction(tr("&Open..."));
+    connect(openAction, &QAction::triggered,
+            this, &MainWindow::openProject);
+
+    auto saveAction = fileMenu->addAction(tr("&Save As..."));
+    connect(saveAction, &QAction::triggered,
+            this, &MainWindow::saveProject);
+
     fileMenu->addSeparator();
     fileMenu->addAction(new QAction(tr("&Export...")));
     fileMenu->addSeparator();
@@ -113,4 +122,44 @@ void MainWindow::showAbout() {
 
 void MainWindow::removeSchematic(AxiomModel::Schematic *schematic) {
     _openPanels.erase(schematic);
+}
+
+void MainWindow::openProject() {
+    auto selectedFile = QFileDialog::getOpenFileName(this, "Open Project", QString(), tr("Axiom Project Files (*.axp);;All Files (*.*)"));
+    if (selectedFile == QString()) return;
+
+    QFile file(selectedFile);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox(QMessageBox::Critical, "Failed to open project", "The file you selected couldn't be opened.", QMessageBox::Ok).exec();
+        return;
+    }
+
+    QDataStream stream(&file);
+    try {
+        _project->load(stream);
+    } catch (AxiomModel::DeserializeInvalidFileException) {
+        QMessageBox(QMessageBox::Critical, "Failed to load project", "The file you selected is an invalid project file (bad magic header).\n"
+                                                                     "Maybe it's corrupt?", QMessageBox::Ok).exec();
+    } catch (AxiomModel::DeserializeInvalidSchemaException) {
+        QMessageBox(QMessageBox::Critical, "Failed to load project", "The file you selected is saved with an outdated project format.\n\n"
+                                                                     "Unfortunately Axiom currently doesn't support loading old project formats.\n"
+                                                                     "If you really want this feature, maybe make a pull request (https://github.com/monadgroup/axiom/pulls)"
+                                                                     " or report an issue (https://github.com/monadgroup/axiom/issues).", QMessageBox::Ok).exec();
+    }
+    file.close();
+}
+
+void MainWindow::saveProject() {
+    auto selectedFile = QFileDialog::getSaveFileName(this, "Save Project", QString(), tr("Axiom Project Files (*.axp);;All Files (*.*)"));
+    if (selectedFile == QString()) return;
+
+    QFile file(selectedFile);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox(QMessageBox::Critical, "Failed to save project", "The file you selected couldn't be opened.", QMessageBox::Ok).exec();
+        return;
+    }
+
+    QDataStream stream(&file);
+    _project->serialize(stream);
+    file.close();
 }

@@ -32,8 +32,13 @@ namespace AxiomGui {
 
         void removeSchematic(AxiomModel::Schematic *schematic);
 
+        void openProject();
+
+        void saveProject();
+
     private:
 
+        AxiomModel::Project *_project;
         std::unordered_map<AxiomModel::Schematic *, std::unique_ptr<SchematicPanel>> _openPanels;
     };
 

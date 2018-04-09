@@ -2,6 +2,7 @@
 
 #include <QtCore/QBuffer>
 #include <iostream>
+#include <QtWidgets/QMessageBox>
 
 #include "resources/resource.h"
 #include "AxiomVstEditor.h"
@@ -147,7 +148,19 @@ VstInt32 AxiomVstPlugin::getChunk(void **data, bool isPreset) {
 VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) {
     QByteArray byteArray = QByteArray::fromRawData((char*)data, byteSize);
     QDataStream stream(&byteArray, QIODevice::ReadOnly);
-    project.load(stream);
+
+    try {
+        project.load(stream);
+    } catch (AxiomModel::DeserializeInvalidFileException) {
+        QMessageBox(QMessageBox::Critical, "Failed to load data", "Your DAW just gave Axiom an invalid project file (bad magic header).\n"
+                                                                  "Maybe it's corrupt?", QMessageBox::Ok).exec();
+    } catch (AxiomModel::DeserializeInvalidSchemaException) {
+        QMessageBox(QMessageBox::Critical, "Failed to load data", "Your DAW just gave Axiom a project file saved with an outdated project format.\n\n"
+                                                                  "Unfortunately Axiom currently doesn't support loading old project formats.\n"
+                                                                  "If you really want this feature, maybe make a pull request (https://github.com/monadgroup/axiom/pulls)"
+                                                                  " or report an issue (https://github.com/monadgroup/axiom/issues).", QMessageBox::Ok).exec();
+    }
+
     return 0;
 }
 
