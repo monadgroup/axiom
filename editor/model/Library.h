@@ -6,20 +6,33 @@
 #include <QtCore/QObject>
 #include <QtCore/QString>
 
-#include "LibraryEntry.h"
-
 namespace AxiomModel {
 
-    class Library {
+    class LibraryEntry;
+
+    class Library : public QObject {
+        Q_OBJECT
+
     public:
-        std::vector<std::unique_ptr<LibraryEntry>> entries;
-        std::map<QString, std::vector<LibraryEntry *>> index;
+        ~Library();
 
         void serialize(QDataStream &stream) const;
 
         void deserialize(QDataStream &stream);
 
         void clear();
+
+        std::vector<std::unique_ptr<LibraryEntry>> &entries() { return _entries; }
+
+        void addEntry(std::unique_ptr<LibraryEntry> entry);
+
+    signals:
+
+        void entryAdded(LibraryEntry *entry);
+
+    private:
+
+        std::vector<std::unique_ptr<LibraryEntry>> _entries;
     };
 
 }

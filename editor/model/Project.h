@@ -19,9 +19,9 @@ namespace AxiomModel {
     class Node;
     class NodeControl;
 
-    class DeserializeInvalidFileException {};
+    class DeserializeInvalidFileException : public std::exception {};
 
-    class DeserializeInvalidSchemaException {};
+    class DeserializeInvalidSchemaException : public std::exception {};
 
     class Project {
     public:

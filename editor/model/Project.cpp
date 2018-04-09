@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Project.h"
+#include "LibraryEntry.h"
 #include "node/GroupNode.h"
 #include "control/NodeControl.h"
 #include "compiler/runtime/Runtime.h"

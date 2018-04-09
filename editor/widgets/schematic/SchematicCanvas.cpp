@@ -9,6 +9,7 @@
 #include <QtWidgets/QWidgetAction>
 #include <iostream>
 
+#include "AddNodeMenu.h"
 #include "compiler/runtime/Runtime.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/schematic/Schematic.h"
@@ -295,17 +296,9 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     if (event->isAccepted()) return;
 
     auto scenePos = event->scenePos();
+    AddNodeMenu menu(schematic, "");
 
-    QMenu menu;
-    auto contextSearch = new QLineEdit(&menu);
-    contextSearch->setPlaceholderText("Search modules...");
-    auto widgetAction = new QWidgetAction(&menu);
-    widgetAction->setDefaultWidget(contextSearch);
-    menu.addAction(widgetAction);
-    menu.addSeparator();
-
-    auto newNodeAction = menu.addAction(tr("New Node"));
-    connect(newNodeAction, &QAction::triggered,
+    connect(&menu, &AddNodeMenu::newNodeAdded,
             [this, scenePos]() {
                 auto editor = new FloatingValueEditor("New Node", scenePos);
                 addItem(editor);
@@ -314,9 +307,7 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                             newNode(scenePos, value, false);
                         });
             });
-
-    auto newGroupAction = menu.addAction(tr("New Group"));
-    connect(newGroupAction, &QAction::triggered,
+    connect(&menu, &AddNodeMenu::newGroupAdded,
             [this, scenePos]() {
                 auto editor = new FloatingValueEditor("New Group", scenePos);
                 addItem(editor);
@@ -325,10 +316,6 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                             newNode(scenePos, value, true);
                         });
             });
-
-    menu.addSeparator();
-    menu.addAction(tr("LFO"));
-    menu.addAction(tr("Something else"));
 
     menu.exec(event->screenPos());
 }
