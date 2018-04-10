@@ -20,11 +20,13 @@ namespace AxiomModel {
     public:
         Node *node;
 
-        NodeControl(Node *node, size_t index, MaximRuntime::Control *runtime, QPoint pos, QSize size);
+        NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size);
 
-        static std::unique_ptr<NodeControl> fromRuntimeControl(Node *node, size_t index, MaximRuntime::Control *runtime);
+        static std::unique_ptr<NodeControl> fromRuntimeControl(Node *node, MaximRuntime::Control *runtime);
 
-        const ControlRef &ref() const { return _ref; }
+        ControlRef ref() const;
+
+        //const ControlRef &ref() const { return _ref; }
 
         virtual ConnectionSink *sink() = 0;
 
@@ -68,7 +70,6 @@ namespace AxiomModel {
 
     private:
 
-        ControlRef _ref;
         bool m_showName = true;
         NodeControl *_exposeBase = nullptr;
         MaximRuntime::Control *_runtime;

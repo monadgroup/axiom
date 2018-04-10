@@ -26,13 +26,12 @@ void AddNodeOperation::forward() {
 
     auto defaultSize = QSize(3, 2);
 
-    // todo: add at nodeRef index
     switch (type) {
         case Node::Type::CUSTOM:
-            surface->addItem(std::make_unique<CustomNode>(surface, surface->items().size(), name, pos, defaultSize));
+            surface->insertItem(nodeRef.index, std::make_unique<CustomNode>(surface, name, pos, defaultSize));
             break;
         case Node::Type::GROUP:
-            surface->addItem(std::make_unique<GroupNode>(surface, surface->items().size(), name, pos, defaultSize));
+            surface->insertItem(nodeRef.index, std::make_unique<GroupNode>(surface, name, pos, defaultSize));
             break;
         case Node::Type::IO:break;
     }

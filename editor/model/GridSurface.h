@@ -29,6 +29,8 @@ namespace AxiomModel {
 
         void addItem(std::unique_ptr<GridItem> item);
 
+        void insertItem(size_t index, std::unique_ptr<GridItem> item);
+
         void cloneTo(GridSurface *surface) const;
 
     public slots:

@@ -11,8 +11,8 @@
 
 using namespace AxiomModel;
 
-CustomNode::CustomNode(Schematic *parent, size_t index, QString name, QPoint pos, QSize size)
-    : Node(parent, index, std::move(name), Type::CUSTOM, pos, size),
+CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
+    : Node(parent, std::move(name), Type::CUSTOM, pos, size),
       _runtime(parent->runtime()) {
     connect(&_runtime, &MaximRuntime::CustomNode::controlAdded,
             this, &CustomNode::controlAdded);
@@ -134,5 +134,5 @@ void CustomNode::deserialize(QDataStream &stream) {
 }
 
 void CustomNode::controlAdded(MaximRuntime::HardControl *control) {
-    surface.addItem(NodeControl::fromRuntimeControl(this, surface.items().size(), control));
+    surface.addItem(NodeControl::fromRuntimeControl(this, control));
 }

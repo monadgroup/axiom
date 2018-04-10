@@ -17,4 +17,13 @@ namespace AxiomUtil {
 
     bool strToFloat(QString str, float &result);
 
+    template<class InputIterator, class T>
+    InputIterator findUnique(InputIterator first, InputIterator last, const T *ptr) {
+        while (first != last) {
+            if (first->get() == ptr) return first;
+            ++first;
+        }
+        return last;
+    };
+
 }

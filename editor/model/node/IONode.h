@@ -17,7 +17,7 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        IONode(RootSchematic *parent, size_t index, MaximRuntime::IONode *runtime, const QString &name, QPoint pos);
+        IONode(RootSchematic *parent, MaximRuntime::IONode *runtime, const QString &name, QPoint pos);
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 

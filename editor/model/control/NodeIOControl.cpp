@@ -7,8 +7,8 @@
 
 using namespace AxiomModel;
 
-NodeIOControl::NodeIOControl(IONode *node, size_t index, MaximRuntime::IOControl *runtime)
-    : NodeControl(node, index, runtime, QPoint(0, 0), QSize(2, 2)), _ioType(runtime->ioType()) {
+NodeIOControl::NodeIOControl(IONode *node, MaximRuntime::IOControl *runtime)
+    : NodeControl(node, runtime, QPoint(0, 0), QSize(2, 2)), _ioType(runtime->ioType()) {
     switch (runtime->ioType()) {
         case MaximCommon::ControlType::NUMBER:
             m_sink = std::make_unique<NumConnectionSink>(runtime);

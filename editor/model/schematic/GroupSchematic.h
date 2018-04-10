@@ -19,6 +19,8 @@ namespace AxiomModel {
 
         QString name() override;
 
+        SurfaceRef ref() const override;
+
         bool canExposeControl() override { return true; }
 
         void exposeControl(AxiomModel::NodeControl *control) override;

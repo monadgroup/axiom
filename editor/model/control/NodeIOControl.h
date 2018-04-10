@@ -18,7 +18,7 @@ namespace AxiomModel {
 
     public:
 
-        NodeIOControl(IONode *node, size_t index, MaximRuntime::IOControl *runtime);
+        NodeIOControl(IONode *node, MaximRuntime::IOControl *runtime);
 
         ConnectionSink *sink() override { return m_sink.get(); }
 

@@ -8,8 +8,8 @@
 
 using namespace AxiomModel;
 
-GroupNode::GroupNode(Schematic *parent, size_t index, QString name, QPoint pos, QSize size)
-    : Node(parent, index, std::move(name), Type::GROUP, pos, size),
+GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
+    : Node(parent, std::move(name), Type::GROUP, pos, size),
       schematic(std::make_unique<GroupSchematic>(this)), _runtime(parent->runtime()) {
     connect(this, &GroupNode::removed,
             schematic.get(), &GroupSchematic::removed);
@@ -62,7 +62,7 @@ void GroupNode::deserialize(QDataStream &stream) {
 }
 
 void GroupNode::controlAdded(MaximRuntime::SoftControl *control) {
-    auto newControl = NodeControl::fromRuntimeControl(this, surface.items().size(), control);
+    auto newControl = NodeControl::fromRuntimeControl(this, control);
     // todo: set newControl's exposeBase to the Model Control this SoftControl is for
     // (this info is currently only needed on serialize, so there might be a better way to do it -- maybe the model
     // should be in charge of creating forward controls instead of the compiler?)

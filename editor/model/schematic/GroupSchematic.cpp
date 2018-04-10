@@ -7,7 +7,7 @@
 
 using namespace AxiomModel;
 
-GroupSchematic::GroupSchematic(GroupNode *node) : Schematic(node->parentSchematic->project(), SurfaceRef(node->ref().path()), node->runtime()->subsurface()), node(node) {
+GroupSchematic::GroupSchematic(GroupNode *node) : Schematic(node->parentSchematic->project(), node->runtime()->subsurface()), node(node) {
     connect(node, &GroupNode::nameChanged,
             this, &GroupSchematic::nameChanged);
     connect(node, &GroupNode::removed,
@@ -16,6 +16,10 @@ GroupSchematic::GroupSchematic(GroupNode *node) : Schematic(node->parentSchemati
 
 QString GroupSchematic::name() {
     return node->name();
+}
+
+SurfaceRef GroupSchematic::ref() const {
+    return SurfaceRef(node->ref().path());
 }
 
 void GroupSchematic::exposeControl(AxiomModel::NodeControl *control) {

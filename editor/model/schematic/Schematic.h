@@ -30,11 +30,11 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        explicit Schematic(Project *project, SurfaceRef ref, MaximRuntime::Surface *runtime);
+        explicit Schematic(Project *project, MaximRuntime::Surface *runtime);
 
         virtual QString name() = 0;
 
-        const SurfaceRef &ref() const { return _ref; }
+        virtual SurfaceRef ref() const = 0;
 
         MaximRuntime::Surface *runtime() { return _runtime; }
 
@@ -52,7 +52,7 @@ namespace AxiomModel {
 
         virtual void exposeControl(AxiomModel::NodeControl *control) = 0;
 
-        Node *addFromStream(Node::Type type, QDataStream &stream);
+        Node *addFromStream(Node::Type type, size_t index, QDataStream &stream);
 
     public slots:
 
@@ -94,7 +94,6 @@ namespace AxiomModel {
 
     private:
         Project *_project;
-        SurfaceRef _ref;
         std::vector<std::unique_ptr<ConnectionWire>> m_wires;
         QPointF m_pan;
         float m_zoom = 0;

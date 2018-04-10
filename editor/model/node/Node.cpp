@@ -8,13 +8,21 @@
 #include "../history/DeleteNodeOperation.h"
 #include "compiler/runtime/Node.h"
 #include "CustomNode.h"
+#include "../../util.h"
 
 using namespace AxiomModel;
 
-Node::Node(Schematic *parent, size_t index, QString name, Type type, QPoint pos, QSize size)
-    : GridItem(parent, pos, size), type(type), surface(this), parentSchematic(parent), _ref(NodeRef(parent->ref(), index)), m_name(std::move(name)) {
+Node::Node(Schematic *parent, QString name, Type type, QPoint pos, QSize size)
+    : GridItem(parent, pos, size), type(type), surface(this), parentSchematic(parent), m_name(std::move(name)) {
     connect(this, &Node::deselected,
             &surface, &NodeSurface::deselectAll);
+}
+
+NodeRef Node::ref() const {
+    auto &parentItems = parentSchematic->items();
+    auto index = AxiomUtil::findUnique(parentItems.begin(), parentItems.end(), this) - parentItems.begin();
+    assert(index >= 0 && index < (long long int) parentItems.size());
+    return NodeRef(parentSchematic->ref(), (size_t) index);
 }
 
 bool Node::isExtracted() {

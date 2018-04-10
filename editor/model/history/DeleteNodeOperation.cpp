@@ -41,13 +41,8 @@ void DeleteNodeOperation::forward() {
 
 void DeleteNodeOperation::backward() {
     auto surface = project->findSurface(nodeRef.surface);
-    nodeRef.index = surface->items().size();
-
     QDataStream deserializeStream(nodeBuffer.get(), QIODevice::ReadOnly);
-
-    // todo: somehow add at the correct index, and update indexes of everything after it?
-    // otherwise the solution here is going to break on groupnodes :)
-    surface->addFromStream(nodeType, deserializeStream);
+    surface->addFromStream(nodeType, nodeRef.index, deserializeStream);
 
     nodeBuffer.reset();
 }

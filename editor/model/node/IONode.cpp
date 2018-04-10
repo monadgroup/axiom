@@ -7,9 +7,9 @@
 
 using namespace AxiomModel;
 
-IONode::IONode(RootSchematic *parent, size_t index, MaximRuntime::IONode *runtime, const QString &name, QPoint pos)
-    : Node(parent, index, name, Type::IO, pos, QSize(1, 1)), _runtime(runtime) {
-    surface.addItem(std::make_unique<NodeIOControl>(this, 0, runtime->control()));
+IONode::IONode(RootSchematic *parent, MaximRuntime::IONode *runtime, const QString &name, QPoint pos)
+    : Node(parent, name, Type::IO, pos, QSize(1, 1)), _runtime(runtime) {
+    surface.addItem(std::make_unique<NodeIOControl>(this, runtime->control()));
 }
 
 std::unique_ptr<GridItem> IONode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {

@@ -25,7 +25,7 @@ namespace AxiomModel {
             BOTH = LEFT | RIGHT
         };
 
-        NodeNumControl(Node *node, size_t index, MaximRuntime::Control *runtime, QPoint pos, QSize size);
+        NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size);
 
         NumConnectionSink *sink() override { return &m_sink; }
 

@@ -19,7 +19,7 @@
 
 using namespace AxiomModel;
 
-Schematic::Schematic(Project *project, SurfaceRef ref, MaximRuntime::Surface *runtime) : _project(project), _ref(ref), _runtime(runtime) {
+Schematic::Schematic(Project *project, MaximRuntime::Surface *runtime) : _project(project), _runtime(runtime) {
 
 }
 
@@ -134,14 +134,14 @@ void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
     emit wireAdded(ptr);
 }
 
-Node* Schematic::addFromStream(AxiomModel::Node::Type type, QDataStream &stream) {
+Node* Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataStream &stream) {
     std::unique_ptr<Node> newNode;
     switch (type) {
         case Node::Type::CUSTOM:
-            newNode = std::make_unique<CustomNode>(this, items().size(), "", QPoint(0, 0), QSize(0, 0));
+            newNode = std::make_unique<CustomNode>(this, "", QPoint(0, 0), QSize(0, 0));
             break;
         case Node::Type::GROUP:
-            newNode = std::make_unique<GroupNode>(this, items().size(), "", QPoint(0, 0), QSize(0, 0));
+            newNode = std::make_unique<GroupNode>(this, "", QPoint(0, 0), QSize(0, 0));
             break;
         default: break;
     }
@@ -150,7 +150,7 @@ Node* Schematic::addFromStream(AxiomModel::Node::Type type, QDataStream &stream)
 
     newNode->deserialize(stream);
     auto nodePtr = newNode.get();
-    addItem(std::move(newNode));
+    insertItem(index, std::move(newNode));
     return nodePtr;
 }
 
@@ -245,7 +245,7 @@ void Schematic::deserialize(QDataStream &stream) {
         quint64 nodeSize; stream >> nodeSize;
 
         auto type = (Node::Type) intType;
-        auto added = addFromStream(type, stream);
+        auto added = addFromStream(type, i, stream);
         if (!added) {
             if (type == Node::Type::IO) {
                 auto ioItem = dynamic_cast<IONode *>(items()[i].get());
@@ -282,7 +282,7 @@ void Schematic::deserialize(QDataStream &stream) {
 }
 
 void Schematic::addNode(Node::Type type, QString name, QPoint pos) {
-    _project->history.appendOperation(std::make_unique<AddNodeOperation>(_project, NodeRef(_ref, items().size()), type, name, pos));
+    _project->history.appendOperation(std::make_unique<AddNodeOperation>(_project, NodeRef(ref(), items().size()), type, name, pos));
 }
 
 void Schematic::remove() {

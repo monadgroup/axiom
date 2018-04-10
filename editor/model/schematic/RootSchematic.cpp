@@ -7,9 +7,9 @@
 
 using namespace AxiomModel;
 
-RootSchematic::RootSchematic(Project *project, MaximRuntime::RootSurface *runtime) : Schematic(project, SurfaceRef(std::vector<size_t>()), runtime) {
-    addItem(std::make_unique<IONode>(this, 0, &runtime->input, "Input", QPoint(-3, 0)));
-    addItem(std::make_unique<IONode>(this, 1, &runtime->output, "Output", QPoint(3, 0)));
+RootSchematic::RootSchematic(Project *project, MaximRuntime::RootSurface *runtime) : Schematic(project, runtime) {
+    addItem(std::make_unique<IONode>(this, &runtime->input, "Input", QPoint(-3, 0)));
+    addItem(std::make_unique<IONode>(this, &runtime->output, "Output", QPoint(3, 0)));
 
     runtime->scheduleGraphUpdate();
 }

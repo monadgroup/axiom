@@ -8,8 +8,8 @@
 
 using namespace AxiomModel;
 
-NodeMidiControl::NodeMidiControl(Node *node, size_t index, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-    : NodeControl(node, index, runtime, pos, size), m_sink(runtime) {
+NodeMidiControl::NodeMidiControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
+    : NodeControl(node, runtime, pos, size), m_sink(runtime) {
     initSink();
 
     connect(&m_sink, &MidiConnectionSink::valueChanged,

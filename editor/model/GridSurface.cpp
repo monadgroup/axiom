@@ -7,8 +7,12 @@ GridSurface::GridSurface(QPoint minRect, QPoint maxRect) : grid(Grid<GridItem>(m
 }
 
 void GridSurface::addItem(std::unique_ptr<GridItem> item) {
+    insertItem(m_items.size(), std::move(item));
+}
+
+void GridSurface::insertItem(size_t index, std::unique_ptr<AxiomModel::GridItem> item) {
     auto ptr = item.get();
-    m_items.push_back(std::move(item));
+    m_items.insert(m_items.begin() + index, std::move(item));
 
     connect(ptr, &GridItem::cleanup,
             this, [this, ptr]() { removeItem(ptr); });
