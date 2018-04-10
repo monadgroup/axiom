@@ -17,19 +17,31 @@ namespace AxiomModel {
 
     public:
 
+        enum class ActionType {
+            DELETE_SELECTED_ITEMS,
+            CREATE_GROUP_NODE,
+            CREATE_CUSTOM_NODE
+        };
+
+        size_t maxActions = 256;
+
         explicit HistoryList(Project *project);
 
         ~HistoryList() override;
 
-        void startAction(const std::string &name);
+        void startAction(ActionType type);
 
-        void endAction(const std::string &name);
+        void endAction(ActionType type);
 
         void appendOperation(std::unique_ptr<HistoryOperation> operation);
 
         bool canUndo() const;
 
         bool canRedo() const;
+
+        void serialize(QDataStream &stream) const;
+
+        void deserialize(QDataStream &stream);
 
     public slots:
 
@@ -46,7 +58,7 @@ namespace AxiomModel {
     private:
 
         struct HistoryAction {
-            std::string name;
+            ActionType type;
             std::vector<std::unique_ptr<HistoryOperation>> operations;
         };
 

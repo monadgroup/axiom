@@ -282,7 +282,7 @@ void Schematic::deserialize(QDataStream &stream) {
 }
 
 void Schematic::addNode(Node::Type type, QString name, QPoint pos) {
-    _project->history.appendOperation(std::make_unique<AddNodeOperation>(_project, _ref, type, name, pos));
+    _project->history.appendOperation(std::make_unique<AddNodeOperation>(_project, NodeRef(_ref, items().size()), type, name, pos));
 }
 
 void Schematic::remove() {

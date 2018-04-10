@@ -13,16 +13,16 @@ HistoryList::HistoryList(AxiomModel::Project *project) : project(project) {
 
 HistoryList::~HistoryList() = default;
 
-void HistoryList::startAction(const std::string &name) {
+void HistoryList::startAction(ActionType type) {
     assert(!hasCurrentAction);
     hasCurrentAction = true;
-    currentAction.name = name;
+    currentAction.type = type;
     currentAction.operations.clear();
 }
 
-void HistoryList::endAction(const std::string &name) {
+void HistoryList::endAction(ActionType type) {
     assert(hasCurrentAction);
-    assert(currentAction.name == name);
+    assert(currentAction.type == type);
 
     hasCurrentAction = false;
 
@@ -40,18 +40,24 @@ void HistoryList::endAction(const std::string &name) {
 
     // remove items ahead of where we are
     stack.erase(stack.begin() + stackPos, stack.end());
+
+    // if the stack is going to be longer than max size, remove the first item
+    if (stack.size() == maxActions) {
+        stack.erase(stack.begin());
+    } else stackPos++;
+
     stack.push_back(std::move(currentAction));
 
     // if the position went from 0 to 1, emit that we can undo
-    stackPos++;
     if (stackPos == 1) emit canUndoChanged(true);
     if (couldRedo) emit canRedoChanged(false);
 }
 
 void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> operation) {
-    assert(hasCurrentAction);
     auto operationPtr = operation.get();
-    currentAction.operations.push_back(std::move(operation));
+    if (hasCurrentAction) {
+        currentAction.operations.push_back(std::move(operation));
+    }
     operationPtr->forward();
 }
 
@@ -61,6 +67,45 @@ bool HistoryList::canUndo() const {
 
 bool HistoryList::canRedo() const {
     return stackPos < stack.size();
+}
+
+void HistoryList::serialize(QDataStream &stream) const {
+    assert(!hasCurrentAction);
+
+    stream << (quint32) stack.size();
+    stream << (quint32) stackPos;
+    for (const auto &action : stack) {
+        stream << (quint32) action.type;
+        stream << (quint32) action.operations.size();
+        for (const auto &operation : action.operations) {
+            stream << (quint32) operation->type();
+            operation->serialize(stream);
+        }
+    }
+}
+
+void HistoryList::deserialize(QDataStream &stream) {
+    assert(!hasCurrentAction);
+
+    stack.clear();
+    quint32 stackSize; stream >> stackSize;
+    quint32 intPos; stream >> intPos;
+    stackPos = intPos;
+
+    for (quint32 i = 0; i < stackSize; i++) {
+        quint32 intActionType; stream >> intActionType;
+        quint32 opCount; stream >> opCount;
+        stack.push_back(HistoryAction { (ActionType) intActionType, {} });
+
+        auto &action = stack.back();
+        for (quint32 j = 0; j < opCount; j++) {
+            quint32 intOpType; stream >> intOpType;
+            action.operations.push_back(HistoryOperation::deserialize((HistoryOperation::Type) intOpType, stream, project));
+        }
+    }
+
+    emit canUndoChanged(stackPos > 0);
+    emit canRedoChanged(stackPos < stack.size());
 }
 
 void HistoryList::undo() {

@@ -252,7 +252,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == savePresetAction) {
         // todo: save as preset
     } else if (selectedAction == deleteAction) {
-        DO_ACTION(node->parentSchematic->project()->history, "Delete Selected Items", {
+        DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {
             node->parentSurface->deleteSelectedItems();
         });
     }

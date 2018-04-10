@@ -1,7 +1,6 @@
 #pragma once
 
 #include "HistoryOperation.h"
-#include "../Project.h"
 #include "../node/Node.h"
 
 namespace AxiomModel {
@@ -10,9 +9,13 @@ namespace AxiomModel {
     public:
         DeleteNodeOperation(Project *project, NodeRef nodeRef);
 
+        static std::unique_ptr<DeleteNodeOperation> deserialize(QDataStream &stream, Project *project);
+
         void forward() override;
 
         void backward() override;
+
+        void serialize(QDataStream &stream) const override;
 
     private:
 

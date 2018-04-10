@@ -9,6 +9,15 @@
 using namespace AxiomModel;
 
 Project::Project(MaximRuntime::Runtime *runtime) : history(this), root(this, runtime->mainSurface()), _runtime(runtime) {
+    library.addEntry(std::make_unique<LibraryEntry>("LFO", std::set<QString>{}));
+    library.addEntry(std::make_unique<LibraryEntry>("Bla", std::set<QString>{}));
+    library.addEntry(std::make_unique<LibraryEntry>("Hello, world", std::set<QString>{}));
+    library.addEntry(std::make_unique<LibraryEntry>("What's going on", std::set<QString>{}));
+    library.addEntry(std::make_unique<LibraryEntry>("This is a test", std::set<QString>{}));
+    library.addEntry(std::make_unique<LibraryEntry>("Test", std::set<QString>{}));
+    library.addEntry(std::make_unique<LibraryEntry>("Hey there", std::set<QString>{}));
+    library.addEntry(std::make_unique<LibraryEntry>("olololo", std::set<QString>{}));
+
     build();
 }
 
@@ -18,6 +27,7 @@ void Project::serialize(QDataStream &stream) const {
 
     library.serialize(stream);
     root.serialize(stream);
+    history.serialize(stream);
 }
 
 void Project::deserialize(QDataStream &stream) {
@@ -30,6 +40,7 @@ void Project::deserialize(QDataStream &stream) {
 
     library.deserialize(stream);
     root.deserialize(stream);
+    history.deserialize(stream);
 }
 
 void Project::load(QDataStream &stream) {

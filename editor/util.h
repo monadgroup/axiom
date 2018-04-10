@@ -3,6 +3,7 @@
 #include <QtCore/QString>
 #include <QtCore/QPoint>
 #include <QtGui/QColor>
+#include <cassert>
 
 #define unreachable assert(false); throw
 

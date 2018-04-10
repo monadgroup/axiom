@@ -187,11 +187,11 @@ void SchematicCanvas::newNode(QPointF scenePos, QString name, bool group) {
     );
 
     if (group) {
-        DO_ACTION(schematic->project()->history, "Create Group Node", {
+        DO_ACTION(schematic->project()->history, HistoryList::ActionType::CREATE_GROUP_NODE, {
             schematic->addNode(Node::Type::GROUP, name, targetPos);
         });
     } else {
-        DO_ACTION(schematic->project()->history, "Create Custom Node", {
+        DO_ACTION(schematic->project()->history, HistoryList::ActionType::CREATE_CUSTOM_NODE, {
             schematic->addNode(Node::Type::CUSTOM, name, targetPos);
         });
     }
@@ -285,7 +285,7 @@ void SchematicCanvas::keyPressEvent(QKeyEvent *event) {
     if (focusItem()) {
         QGraphicsScene::keyPressEvent(event);
     } else if (event->matches(QKeySequence::Delete)) {
-        DO_ACTION(schematic->project()->history, "Delete Selected Items", {
+        DO_ACTION(schematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {
             schematic->deleteSelectedItems();
         });
     }
