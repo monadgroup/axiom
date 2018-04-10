@@ -58,7 +58,9 @@ void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> 
     if (hasCurrentAction) {
         currentAction.operations.push_back(std::move(operation));
     }
-    operationPtr->forward();
+    if (operationPtr->exec()) {
+        operationPtr->forward();
+    }
 }
 
 bool HistoryList::canUndo() const {

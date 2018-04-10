@@ -9,6 +9,7 @@
 #include "compiler/runtime/Node.h"
 #include "CustomNode.h"
 #include "../../util.h"
+#include "../history/MoveNodeOperation.h"
 
 using namespace AxiomModel;
 
@@ -115,6 +116,16 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
         surface.grid.setRect(item->pos(), item->size(), item.get());
     }
     surface.flushGrid();
+}
+
+void Node::startDragging() {
+    startDragPos = pos();
+    GridItem::startDragging();
+}
+
+void Node::finishDragging() {
+    GridItem::finishDragging();
+    parentSchematic->project()->history.appendOperation(std::make_unique<MoveNodeOperation>(parentSchematic->project(), ref(), startDragPos, pos()));
 }
 
 void Node::serialize(QDataStream &stream) const {

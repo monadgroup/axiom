@@ -11,14 +11,17 @@ namespace AxiomModel {
     public:
         enum class Type {
             ADD_NODE,
-            DELETE_NODE
+            DELETE_NODE,
+            MOVE_NODE
         };
 
-        explicit HistoryOperation(bool needsRefresh, Type type);
+        HistoryOperation(bool needsRefresh, Type type, bool exec = true);
 
         static std::unique_ptr<HistoryOperation> deserialize(Type type, QDataStream &stream, Project *project);
 
         Type type() const { return _type; }
+
+        bool exec() const { return _exec; }
 
         bool needsRefresh() const { return _needsRefresh; }
 
@@ -31,6 +34,7 @@ namespace AxiomModel {
     private:
         bool _needsRefresh;
         Type _type;
+        bool _exec;
 
     };
 

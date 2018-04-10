@@ -4,6 +4,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/AddNodeOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/DeleteNodeOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/HistoryList.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/HistoryOperation.cpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/HistoryOperation.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/MoveNodeOperation.cpp")
 
 target_sources(axiom_model PRIVATE ${SOURCE_FILES})

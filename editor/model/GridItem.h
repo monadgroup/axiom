@@ -54,11 +54,11 @@ namespace AxiomModel {
 
         virtual void remove();
 
-        void startDragging();
+        virtual void startDragging();
 
         void dragTo(QPoint delta);
 
-        void finishDragging();
+        virtual void finishDragging();
 
         virtual void serialize(QDataStream &stream) const;
 

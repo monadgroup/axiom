@@ -20,7 +20,8 @@ namespace AxiomModel {
         enum class ActionType {
             DELETE_SELECTED_ITEMS,
             CREATE_GROUP_NODE,
-            CREATE_CUSTOM_NODE
+            CREATE_CUSTOM_NODE,
+            MOVE_NODE
         };
 
         size_t maxActions = 256;

@@ -65,6 +65,10 @@ namespace AxiomModel {
 
         void setCorners(QPoint topLeft, QPoint bottomRight) override;
 
+        void startDragging() override;
+
+        void finishDragging() override;
+
         void setPanelOpen(bool panelOpen);
 
         void setPanelHeight(float panelHeight);
@@ -93,6 +97,8 @@ namespace AxiomModel {
         QString m_name = "";
         bool m_panelOpen = false;
         float m_panelHeight = 50;
+
+        QPoint startDragPos;
     };
 
 }

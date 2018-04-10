@@ -199,7 +199,9 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
-    emit node->finishedDragging();
+    DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::MOVE_NODE, {
+        emit node->finishedDragging();
+    });
 
     event->accept();
 }
