@@ -65,6 +65,10 @@ namespace AxiomModel {
 
         void setCorners(QPoint topLeft, QPoint bottomRight) override;
 
+        void startResize();
+
+        void finishResize();
+
         void startDragging() override;
 
         void finishDragging() override;
@@ -99,6 +103,8 @@ namespace AxiomModel {
         float m_panelHeight = 50;
 
         QPoint startDragPos;
+        QPoint startResizeTopLeft;
+        QPoint startResizeBottomRight;
     };
 
 }

@@ -21,7 +21,8 @@ namespace AxiomModel {
             DELETE_SELECTED_ITEMS,
             CREATE_GROUP_NODE,
             CREATE_CUSTOM_NODE,
-            MOVE_NODE
+            MOVE_NODE,
+            SIZE_NODE
         };
 
         size_t maxActions = 256;

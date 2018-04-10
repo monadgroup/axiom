@@ -82,8 +82,16 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : canvas(canvas), node(n
 
             connect(resizer, &ItemResizer::startDrag,
                     this, &NodeItem::resizerStartDrag);
+            connect(resizer, &ItemResizer::startDrag,
+                    node, &Node::startResize);
             connect(resizer, &ItemResizer::changed,
                     this, &NodeItem::resizerChanged);
+            connect(resizer, &ItemResizer::endDrag,
+                    [this, node]() {
+                        DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::SIZE_NODE, {
+                            node->finishResize();
+                        });
+                    });
 
             connect(&node->surface, &NodeSurface::hasSelectionChanged,
                     [this, resizer](auto hasSelection) { resizer->setVisible(!hasSelection); });

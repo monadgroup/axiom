@@ -10,6 +10,7 @@
 #include "CustomNode.h"
 #include "../../util.h"
 #include "../history/MoveNodeOperation.h"
+#include "../history/SizeNodeOperation.h"
 
 using namespace AxiomModel;
 
@@ -116,6 +117,20 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
         surface.grid.setRect(item->pos(), item->size(), item.get());
     }
     surface.flushGrid();
+}
+
+void Node::startResize() {
+    startResizeTopLeft = pos();
+    startResizeBottomRight = pos() + QPoint(size().width(), size().height());
+}
+
+void Node::finishResize() {
+    parentSchematic->project()->history.appendOperation(std::make_unique<SizeNodeOperation>(
+        parentSchematic->project(),
+        ref(),
+        startResizeTopLeft, startResizeBottomRight,
+        pos(), pos() + QPoint(size().width(), size().height())
+    ));
 }
 
 void Node::startDragging() {

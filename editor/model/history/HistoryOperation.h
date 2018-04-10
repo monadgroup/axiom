@@ -12,7 +12,8 @@ namespace AxiomModel {
         enum class Type {
             ADD_NODE,
             DELETE_NODE,
-            MOVE_NODE
+            MOVE_NODE,
+            SIZE_NODE
         };
 
         HistoryOperation(bool needsRefresh, Type type, bool exec = true);
