@@ -162,7 +162,7 @@ llvm::Constant *MaximContext::constFloat(float num) {
     return llvm::ConstantFP::get(llvm::Type::getFloatTy(_llvm), num);
 }
 
-llvm::Type* MaximContext::floatVecTy() {
+llvm::Type *MaximContext::floatVecTy() {
     return llvm::VectorType::get(llvm::Type::getFloatTy(_llvm), 2);
 }
 
@@ -178,9 +178,10 @@ llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool 
     return llvm::ConstantInt::get(llvm::Type::getIntNTy(_llvm, numBits), val, isSigned);
 }
 
-llvm::Constant* MaximContext::sizeOf(llvm::Type *type) {
+llvm::Constant *MaximContext::sizeOf(llvm::Type *type) {
     auto ptrType = llvm::PointerType::get(type, 0);
-    auto nextPtr = llvm::ConstantExpr::getGetElementPtr(type, llvm::ConstantPointerNull::get(ptrType), constInt(64, 1, false));
+    auto nextPtr = llvm::ConstantExpr::getGetElementPtr(type, llvm::ConstantPointerNull::get(ptrType),
+                                                        constInt(64, 1, false));
     return llvm::ConstantExpr::getPtrToInt(nextPtr, llvm::Type::getInt64Ty(_llvm));
 }
 
@@ -317,8 +318,10 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::NUMBER, numType(), "num"));
     registerControl(ScalarControl::create(this, libModule, MaximCommon::ControlType::MIDI, midiType(), "midi"));
 
-    registerControl(ExtractControl::create(this, libModule, MaximCommon::ControlType::NUM_EXTRACT, numType(), "numextract"));
-    registerControl(ExtractControl::create(this, libModule, MaximCommon::ControlType::MIDI_EXTRACT, midiType(), "midi"));
+    registerControl(
+        ExtractControl::create(this, libModule, MaximCommon::ControlType::NUM_EXTRACT, numType(), "numextract"));
+    registerControl(
+        ExtractControl::create(this, libModule, MaximCommon::ControlType::MIDI_EXTRACT, midiType(), "midi"));
 }
 
 void MaximContext::registerOperator(std::unique_ptr<Operator> op) {

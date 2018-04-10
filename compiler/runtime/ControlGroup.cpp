@@ -90,7 +90,8 @@ void ControlGroup::pushMidiEvent(const MidiEventValue &event) const {
 uint32_t ControlGroup::getActiveFlags() const {
     if (_type->type() == MaximCommon::ControlType::NUMBER || _type->type() == MaximCommon::ControlType::NUM_EXTRACT) {
         return _surface->runtime()->op().readNumArrayActiveFlags(currentValuePtr());
-    } else if (_type->type() == MaximCommon::ControlType::MIDI || _type->type() == MaximCommon::ControlType::MIDI_EXTRACT) {
+    } else if (_type->type() == MaximCommon::ControlType::MIDI ||
+               _type->type() == MaximCommon::ControlType::MIDI_EXTRACT) {
         return _surface->runtime()->op().readMidiArrayActiveFlags(currentValuePtr());
     } else {
         assert(false);

@@ -1,8 +1,6 @@
 #include <iostream>
 #include "GroupNode.h"
 
-#include "GeneratableModuleClass.h"
-#include "SoftControl.h"
 #include "Runtime.h"
 
 using namespace MaximRuntime;
@@ -11,7 +9,7 @@ GroupNode::GroupNode(Surface *surface) : Node(surface), _subsurface(surface->run
 
 }
 
-GeneratableModuleClass* GroupNode::compile() {
+GeneratableModuleClass *GroupNode::compile() {
     auto result = _subsurface.compile();
 
     std::string type_str;
@@ -47,7 +45,7 @@ void GroupNode::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
     _subsurface.pullMethods(getterMethod, destroyMethod);
 }
 
-void* GroupNode::updateCurrentPtr(void *parentCtx) {
+void *GroupNode::updateCurrentPtr(void *parentCtx) {
     auto selfPtr = RuntimeUnit::updateCurrentPtr(parentCtx);
     _subsurface.updateCurrentPtr(parentCtx);
     return selfPtr;
@@ -61,6 +59,6 @@ void GroupNode::restoreValue() {
     _subsurface.restoreValue();
 }
 
-MaximCodegen::ModuleClass* GroupNode::moduleClass() {
+MaximCodegen::ModuleClass *GroupNode::moduleClass() {
     return _subsurface.moduleClass();
 }

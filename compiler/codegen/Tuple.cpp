@@ -4,7 +4,8 @@
 
 using namespace MaximCodegen;
 
-Tuple::Tuple(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos)
+Tuple::Tuple(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos,
+             SourcePos endPos)
     : Value(startPos, endPos), _context(context) {
 
     std::vector<Type *> types;
@@ -34,7 +35,7 @@ std::unique_ptr<Tuple> Tuple::create(MaximContext *context, TupleType *type, llv
     return std::make_unique<Tuple>(context, type, get, startPos, endPos);
 }
 
-llvm::Value* Tuple::indexPtr(size_t index, Builder &builder) const {
+llvm::Value *Tuple::indexPtr(size_t index, Builder &builder) const {
     return builder.CreateStructGEP(_type->get(), _get, (unsigned int) index, "tupleitem.ptr");
 }
 

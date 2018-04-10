@@ -73,7 +73,7 @@ uint8_t ValueOperator::readMidiCount(void *ptr) {
     return *(bytePtr + midiCountOffset);
 }
 
-void* ValueOperator::getMidiEventPtr(void *ptr, uint8_t index) {
+void *ValueOperator::getMidiEventPtr(void *ptr, uint8_t index) {
     auto arrayPtr = ((uint8_t *) ptr) + midiArrayOffset;
     return arrayPtr + midiEventSize * index;
 }
@@ -125,7 +125,7 @@ void ValueOperator::pushMidiEvent(void *ptr, const MidiEventValue &value) {
     if (count >= MaximCodegen::MidiType::maxEvents) return;
 
     writeMidiEvent(ptr, count, value);
-    writeMidiCount(ptr, (uint8_t)(count + 1));
+    writeMidiCount(ptr, (uint8_t) (count + 1));
 }
 
 void ValueOperator::writeMidi(void *ptr, const MidiValue &value) {
@@ -148,7 +148,8 @@ void NumValue::deserialize(QDataStream &stream) {
     stream >> left;
     stream >> right;
 
-    uint8_t intForm; stream >> intForm;
+    uint8_t intForm;
+    stream >> intForm;
     form = (MaximCommon::FormType) intForm;
 }
 
@@ -160,7 +161,8 @@ void MidiEventValue::serialize(QDataStream &stream) const {
 }
 
 void MidiEventValue::deserialize(QDataStream &stream) {
-    uint8_t intEvent; stream >> intEvent;
+    uint8_t intEvent;
+    stream >> intEvent;
     event = (MaximCommon::MidiEventType) intEvent;
 
     stream >> channel;

@@ -46,7 +46,8 @@ void Function::generate() {
         auto &param = _parameters[i];
         auto instPtr = _callMethod->arg(i + _returnByRef);
         if (!param.passByRef) {
-            auto valAlloc = _callMethod->allocaBuilder().CreateAlloca(param.type->get(), nullptr, "param." + std::to_string(i));
+            auto valAlloc = _callMethod->allocaBuilder().CreateAlloca(param.type->get(), nullptr,
+                                                                      "param." + std::to_string(i));
             _callMethod->builder().CreateStore(instPtr, valAlloc);
             instPtr = valAlloc;
         }
@@ -138,13 +139,14 @@ std::unique_ptr<Value> Function::call(ComposableModuleClassMethod *method, std::
     return _returnType->createInstance(retAlloca, startPos, endPos);
 }
 
-std::vector<std::unique_ptr<Value>> Function::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
+std::vector<std::unique_ptr<Value>>
+Function::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
     return providedArgs;
 }
 
 void Function::sampleArguments(ComposableModuleClassMethod *method, size_t index,
-                               const std::vector<Value*> &args,
-                               const std::vector<Value*> &varargs) {
+                               const std::vector<Value *> &args,
+                               const std::vector<Value *> &varargs) {
 
 }
 
@@ -190,8 +192,8 @@ std::unique_ptr<Parameter> Parameter::create(Type *type, bool passByRef, bool op
     return std::make_unique<Parameter>(type, passByRef, optional);
 }
 
-llvm::Type* Parameter::getType() const {
-    return passByRef ? (llvm::Type*) llvm::PointerType::get(type->get(), 0) : type->get();
+llvm::Type *Parameter::getType() const {
+    return passByRef ? (llvm::Type *) llvm::PointerType::get(type->get(), 0) : type->get();
 }
 
 VarArg::VarArg(MaximContext *context) : context(context) {
@@ -210,7 +212,7 @@ Function::DynVarArg::DynVarArg(MaximContext *context, llvm::Value *argStruct, Ty
 std::unique_ptr<Value> Function::DynVarArg::atIndex(llvm::Value *index, Builder &b) {
     auto valPtr = b.CreateExtractValue(argStruct, 1, "va.ptr");
     auto elementPtr = b.CreateGEP(valPtr, {index}, "va.elementptr");
-    auto ptr = passByRef ? (llvm::Value*) b.CreateLoad(elementPtr, "va.deref") : elementPtr;
+    auto ptr = passByRef ? (llvm::Value *) b.CreateLoad(elementPtr, "va.deref") : elementPtr;
     return type->createInstance(ptr, SourcePos(-1, -1), SourcePos(-1, -1));
 }
 

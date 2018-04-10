@@ -69,7 +69,7 @@ void CustomNode::serialize(QDataStream &stream) const {
     // serialize controls
     stream << (uint32_t) surface.items().size();
     for (const auto &item : surface.items()) {
-        auto control = dynamic_cast<NodeControl*>(item.get());
+        auto control = dynamic_cast<NodeControl *>(item.get());
         assert(control);
 
         stream << control->name();
@@ -92,7 +92,8 @@ void CustomNode::serialize(QDataStream &stream) const {
 void CustomNode::deserialize(QDataStream &stream) {
     Node::deserialize(stream);
 
-    QString code; stream >> code;
+    QString code;
+    stream >> code;
     setCode(code);
 
     // trigger the runtime to create controls for us, which will create controls on our surface
@@ -100,10 +101,10 @@ void CustomNode::deserialize(QDataStream &stream) {
     _runtime.compile();
 
     // create an index of name/type to control for deserialization
-    std::unordered_map<MaximCodegen::ControlKey, NodeControl*> controlMap;
+    std::unordered_map<MaximCodegen::ControlKey, NodeControl *> controlMap;
     for (const auto &item : surface.items()) {
-        if (auto control = dynamic_cast<NodeControl*>(item.get())) {
-            controlMap.emplace(MaximCodegen::ControlKey {
+        if (auto control = dynamic_cast<NodeControl *>(item.get())) {
+            controlMap.emplace(MaximCodegen::ControlKey{
                 control->name().toStdString(),
                 control->runtime()->type()->type()
             }, control);
@@ -111,15 +112,19 @@ void CustomNode::deserialize(QDataStream &stream) {
     }
 
     // deserialize controls
-    uint32_t controlCount; stream >> controlCount;
+    uint32_t controlCount;
+    stream >> controlCount;
     for (uint32_t i = 0; i < controlCount; i++) {
-        QString controlName; stream >> controlName;
-        uint8_t intControlType; stream >> intControlType;
+        QString controlName;
+        stream >> controlName;
+        uint8_t intControlType;
+        stream >> intControlType;
 
-        quint64 controlSize; stream >> controlSize;
+        quint64 controlSize;
+        stream >> controlSize;
 
         auto controlType = (MaximCommon::ControlType) intControlType;
-        MaximCodegen::ControlKey controlKey = { controlName.toStdString(), controlType };
+        MaximCodegen::ControlKey controlKey = {controlName.toStdString(), controlType};
         auto realControlIndex = controlMap.find(controlKey);
 
         // if the {name, type} pair doesn't exist anymore, skip the controls data

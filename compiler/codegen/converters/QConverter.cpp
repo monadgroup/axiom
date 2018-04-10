@@ -14,7 +14,7 @@ std::unique_ptr<QConverter> QConverter::create(MaximContext *ctx, llvm::Module *
     return std::make_unique<QConverter>(ctx, module);
 }
 
-llvm::Value* QConverter::fromControl(ComposableModuleClassMethod *method, llvm::Value *val) {
+llvm::Value *QConverter::fromControl(ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
     auto m = b.CreateFMul(ctx()->constFloatVec(-2), val);
     m = b.CreateFMul(m, ctx()->constFloatVec(0.999));

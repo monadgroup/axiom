@@ -16,7 +16,11 @@ namespace AxiomGui {
 
     class ExtractControl : public ControlItem {
     Q_OBJECT
-        Q_PROPERTY(float hoverState READ hoverState WRITE setHoverState)
+        Q_PROPERTY(float hoverState
+                       READ
+                       hoverState
+                       WRITE
+                       setHoverState)
 
     public:
         AxiomModel::NodeExtractControl *control;

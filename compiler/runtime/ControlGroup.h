@@ -58,7 +58,7 @@ namespace MaximRuntime {
 
         uint32_t getActiveFlags() const;
 
-        void *currentValuePtr() const { return *(void**)currentPtr(); }
+        void *currentValuePtr() const { return *(void **) currentPtr(); }
 
         MaximCodegen::ModuleClass *moduleClass() override { return &_compileResult; }
 

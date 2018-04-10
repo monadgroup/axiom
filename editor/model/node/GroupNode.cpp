@@ -1,6 +1,5 @@
 #include "GroupNode.h"
 
-#include "compiler/runtime/GeneratableModuleClass.h"
 #include "compiler/runtime/Runtime.h"
 #include "../control/NodeControl.h"
 #include "../Project.h"

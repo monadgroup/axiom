@@ -22,8 +22,10 @@ std::unique_ptr<ChannelFunction> ChannelFunction::create(MaximContext *context, 
 std::unique_ptr<Value> ChannelFunction::generate(ComposableModuleClassMethod *method,
                                                  const std::vector<std::unique_ptr<Value>> &params,
                                                  std::unique_ptr<VarArg> vararg) {
-    auto minFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum, {llvm::Type::getFloatTy(ctx()->llvm())});
-    auto maxFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum, {llvm::Type::getFloatTy(ctx()->llvm())});
+    auto minFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum,
+                                                   {llvm::Type::getFloatTy(ctx()->llvm())});
+    auto maxFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum,
+                                                   {llvm::Type::getFloatTy(ctx()->llvm())});
 
     auto inputMidi = dynamic_cast<Midi *>(params[0].get());
     auto channelNum = dynamic_cast<Num *>(params[1].get());
@@ -63,7 +65,8 @@ std::unique_ptr<Value> ChannelFunction::generate(ComposableModuleClassMethod *me
     b.CreateCondBr(indexCond, loopBodyBlock, loopEndBlock);
 
     b.SetInsertPoint(loopBodyBlock);
-    auto nextIndex = b.CreateAdd(currentIndex, llvm::ConstantInt::get(ctx()->midiType()->countType(), 1, false), "nextindex");
+    auto nextIndex = b.CreateAdd(currentIndex, llvm::ConstantInt::get(ctx()->midiType()->countType(), 1, false),
+                                 "nextindex");
     b.CreateStore(nextIndex, currentIndexPtr);
 
     auto currentEvent = inputMidi->eventAt(b, currentIndex);

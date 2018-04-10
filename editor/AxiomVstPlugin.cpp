@@ -6,12 +6,6 @@
 
 #include "resources/resource.h"
 #include "AxiomVstEditor.h"
-#include "compiler/runtime/GeneratableModuleClass.h"
-#include "compiler/runtime/ControlGroup.h"
-#include "compiler/codegen/Operator.h"
-#include "compiler/codegen/Converter.h"
-#include "compiler/codegen/Control.h"
-#include "compiler/codegen/Function.h"
 
 AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
     return new AxiomVstPlugin(audioMaster);
@@ -49,7 +43,7 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *ev) {
         auto evt = ev->events[i];
         if (evt->type != kVstMidiType) continue;
 
-        auto midiEvent = (VstMidiEvent*) evt;
+        auto midiEvent = (VstMidiEvent *) evt;
         auto midiStatus = midiEvent->midiData[0];
         auto midiData1 = midiEvent->midiData[1];
         auto midiData2 = midiEvent->midiData[2];
@@ -57,7 +51,7 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *ev) {
         auto eventType = (uint8_t) (midiStatus & 0xF0);
         auto eventChannel = (uint8_t) (midiStatus & 0x0F);
 
-        MaximRuntime::MidiEventValue event {};
+        MaximRuntime::MidiEventValue event{};
         event.channel = eventChannel;
         event.note = (uint8_t) midiData1;
         event.param = (uint8_t) midiData2;
@@ -65,15 +59,15 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *ev) {
         switch (eventType) {
             case 0x80: // note off
                 event.event = MaximCommon::MidiEventType::NOTE_OFF;
-                runtime.queueEvent({ evt->deltaFrames, event });
+                runtime.queueEvent({evt->deltaFrames, event});
                 break;
             case 0x90: // note on
                 event.event = MaximCommon::MidiEventType::NOTE_ON;
-                runtime.queueEvent({ evt->deltaFrames, event });
+                runtime.queueEvent({evt->deltaFrames, event});
                 break;
             case 0xA0: // polyphonic aftertouch
                 event.event = MaximCommon::MidiEventType::POLYPHONIC_AFTERTOUCH;
-                runtime.queueEvent({ evt->deltaFrames, event });
+                runtime.queueEvent({evt->deltaFrames, event});
                 break;
             case 0xB0: // control mode change
 
@@ -86,11 +80,11 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *ev) {
             case 0xD0: // channel aftertouch
                 event.event = MaximCommon::MidiEventType::CHANNEL_AFTERTOUCH;
                 event.param = (uint8_t) midiData1;
-                runtime.queueEvent({ evt->deltaFrames, event });
+                runtime.queueEvent({evt->deltaFrames, event});
                 break;
             case 0xE0: // pitch wheel
                 event.event = MaximCommon::MidiEventType::PITCH_WHEEL;
-                runtime.queueEvent({ evt->deltaFrames, event });
+                runtime.queueEvent({evt->deltaFrames, event});
                 break;
             default:;
         }
@@ -146,19 +140,21 @@ VstInt32 AxiomVstPlugin::getChunk(void **data, bool isPreset) {
 }
 
 VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) {
-    QByteArray byteArray = QByteArray::fromRawData((char*)data, byteSize);
+    QByteArray byteArray = QByteArray::fromRawData((char *) data, byteSize);
     QDataStream stream(&byteArray, QIODevice::ReadOnly);
 
     try {
         project.load(stream);
     } catch (AxiomModel::DeserializeInvalidFileException) {
-        QMessageBox(QMessageBox::Critical, "Failed to load data", "Your DAW just gave Axiom an invalid project file (bad magic header).\n"
-                                                                  "Maybe it's corrupt?", QMessageBox::Ok).exec();
+        QMessageBox(QMessageBox::Critical, "Failed to load data",
+                    "Your DAW just gave Axiom an invalid project file (bad magic header).\n"
+                    "Maybe it's corrupt?", QMessageBox::Ok).exec();
     } catch (AxiomModel::DeserializeInvalidSchemaException) {
-        QMessageBox(QMessageBox::Critical, "Failed to load data", "Your DAW just gave Axiom a project file saved with an outdated project format.\n\n"
-                                                                  "Unfortunately Axiom currently doesn't support loading old project formats.\n"
-                                                                  "If you really want this feature, maybe make a pull request (https://github.com/monadgroup/axiom/pulls)"
-                                                                  " or report an issue (https://github.com/monadgroup/axiom/issues).", QMessageBox::Ok).exec();
+        QMessageBox(QMessageBox::Critical, "Failed to load data",
+                    "Your DAW just gave Axiom a project file saved with an outdated project format.\n\n"
+                    "Unfortunately Axiom currently doesn't support loading old project formats.\n"
+                    "If you really want this feature, maybe make a pull request (https://github.com/monadgroup/axiom/pulls)"
+                    " or report an issue (https://github.com/monadgroup/axiom/issues).", QMessageBox::Ok).exec();
     }
 
     return 0;

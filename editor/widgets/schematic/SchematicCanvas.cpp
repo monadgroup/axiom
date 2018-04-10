@@ -6,7 +6,6 @@
 #include <QtWidgets/QGraphicsPathItem>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtWidgets/QWidgetAction>
 #include <iostream>
 
 #include "AddNodeMenu.h"
@@ -219,7 +218,8 @@ void SchematicCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         case Qt::LeftButton:
             leftMousePressEvent(event);
             break;
-        default: break;
+        default:
+            break;
     }
 }
 
@@ -231,7 +231,8 @@ void SchematicCanvas::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         case Qt::LeftButton:
             leftMouseReleaseEvent(event);
             break;
-        default: break;
+        default:
+            break;
     }
 }
 

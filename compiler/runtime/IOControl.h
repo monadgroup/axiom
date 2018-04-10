@@ -21,7 +21,7 @@ namespace MaximRuntime {
 
         bool readFrom() const override { return _isRead; }
 
-        void addInternallyLinkedControls(std::set<Control *> &controls) override { }
+        void addInternallyLinkedControls(std::set<Control *> &controls) override {}
 
         // todo: this might be bad, since the control instance doesn't actually exist
         int64_t instanceId() const override { return -1; }

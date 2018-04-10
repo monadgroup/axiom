@@ -9,7 +9,8 @@
 using namespace MaximCodegen;
 
 NoteFunction::NoteFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "note", ctx->getTupleType({ctx->numType(), ctx->numType(), ctx->numType(), ctx->numType()}), {Parameter(ctx->midiType(), true, false)},
+    : Function(ctx, module, "note", ctx->getTupleType({ctx->numType(), ctx->numType(), ctx->numType(), ctx->numType()}),
+               {Parameter(ctx->midiType(), true, false)},
                nullptr) {
 
 }
@@ -24,11 +25,16 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
     auto paramVal = dynamic_cast<Midi *>(params[0].get());
     assert(paramVal);
 
-    auto lastNotePtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastnote.ptr");
-    auto lastPitchPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastpitch.ptr");
-    auto lastVelocityPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastvelocity.ptr");
-    auto lastAftertouchPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastaftertouch.ptr");
-    auto activeCountPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getInt8Ty(ctx()->llvm())), "activecount.ptr");
+    auto lastNotePtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())),
+                                               "lastnote.ptr");
+    auto lastPitchPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())),
+                                                "lastpitch.ptr");
+    auto lastVelocityPtr = method->getEntryPointer(
+        method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastvelocity.ptr");
+    auto lastAftertouchPtr = method->getEntryPointer(
+        method->moduleClass()->addEntry(llvm::Type::getFloatTy(ctx()->llvm())), "lastaftertouch.ptr");
+    auto activeCountPtr = method->getEntryPointer(method->moduleClass()->addEntry(llvm::Type::getInt8Ty(ctx()->llvm())),
+                                                  "activecount.ptr");
 
     auto &b = method->builder();
 
@@ -106,7 +112,8 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
     //    note: pitch wheel LSB stored in 4 bits of note, MSB stored in 4 bits of param
     auto pitchWheelBlock = llvm::BasicBlock::Create(ctx()->llvm(), "pitchwheel", func);
     eventSwitch->addCase(
-        llvm::ConstantInt::get(ctx()->midiType()->typeType(), (uint64_t) MaximCommon::MidiEventType::PITCH_WHEEL, false),
+        llvm::ConstantInt::get(ctx()->midiType()->typeType(), (uint64_t) MaximCommon::MidiEventType::PITCH_WHEEL,
+                               false),
         pitchWheelBlock
     );
     b.SetInsertPoint(pitchWheelBlock);
@@ -138,11 +145,13 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
     //  - set lastAftertouch to normalized aftertouch
     auto aftertouchBlock = llvm::BasicBlock::Create(ctx()->llvm(), "aftertouch", func);
     eventSwitch->addCase(
-        llvm::ConstantInt::get(ctx()->midiType()->typeType(), (uint64_t) MaximCommon::MidiEventType::POLYPHONIC_AFTERTOUCH, false),
+        llvm::ConstantInt::get(ctx()->midiType()->typeType(),
+                               (uint64_t) MaximCommon::MidiEventType::POLYPHONIC_AFTERTOUCH, false),
         aftertouchBlock
     );
     eventSwitch->addCase(
-        llvm::ConstantInt::get(ctx()->midiType()->typeType(), (uint64_t) MaximCommon::MidiEventType::CHANNEL_AFTERTOUCH, false),
+        llvm::ConstantInt::get(ctx()->midiType()->typeType(), (uint64_t) MaximCommon::MidiEventType::CHANNEL_AFTERTOUCH,
+                               false),
         aftertouchBlock
     );
     b.SetInsertPoint(aftertouchBlock);

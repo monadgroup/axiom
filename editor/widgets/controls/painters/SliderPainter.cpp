@@ -1,6 +1,5 @@
 #include "SliderPainter.h"
 
-#include "../../CommonColors.h"
 #include "editor/util.h"
 
 using namespace AxiomGui;
@@ -27,7 +26,8 @@ static QRectF flip(QRectF a, bool yes) {
 }
 
 void SliderPainter::paint(QPainter *painter, const QRectF &boundingRect, float hoverState,
-                          MaximRuntime::NumValue cv, bool vertical, const QColor &baseColor, const QColor &activeColor) {
+                          MaximRuntime::NumValue cv, bool vertical, const QColor &baseColor,
+                          const QColor &activeColor) {
     auto br = flip(getBounds(boundingRect, vertical), vertical);
     auto scaledThickness = (0.12f + 0.08f * hoverState) * br.height();
 

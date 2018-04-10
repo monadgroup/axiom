@@ -8,7 +8,8 @@
 using namespace MaximCodegen;
 
 SvFilterFunction::SvFilterFunction(MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "svFilter", ctx->getTupleType({ctx->numType(), ctx->numType(), ctx->numType(), ctx->numType()}),
+    : Function(ctx, module, "svFilter",
+               ctx->getTupleType({ctx->numType(), ctx->numType(), ctx->numType(), ctx->numType()}),
                {Parameter(ctx->numType(), false, false),
                 Parameter(ctx->numType(), false, false),
                 Parameter(ctx->numType(), false, false)},
@@ -23,9 +24,12 @@ std::unique_ptr<SvFilterFunction> SvFilterFunction::create(MaximContext *ctx, ll
 std::unique_ptr<Value> SvFilterFunction::generate(ComposableModuleClassMethod *method,
                                                   const std::vector<std::unique_ptr<Value>> &params,
                                                   std::unique_ptr<VarArg> vararg) {
-    auto sinFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::sin, {ctx()->numType()->vecType()});
-    auto minFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum, {ctx()->numType()->vecType()});
-    auto powFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::pow, {ctx()->numType()->vecType()});
+    auto sinFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::sin,
+                                                   {ctx()->numType()->vecType()});
+    auto minFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum,
+                                                   {ctx()->numType()->vecType()});
+    auto powFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::pow,
+                                                   {ctx()->numType()->vecType()});
 
     auto inputNum = dynamic_cast<Num *>(params[0].get());
     auto freqNum = dynamic_cast<Num *>(params[1].get());
@@ -66,7 +70,8 @@ std::unique_ptr<Value> SvFilterFunction::generate(ComposableModuleClassMethod *m
 
     auto damp = CreateCall(b, minFunc, {dampVal, maxDamp}, "damp");
 
-    auto loopIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "index.ptr");
+    auto loopIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr,
+                                                             "index.ptr");
     b.CreateStore(ctx()->constInt(8, 0, false), loopIndexPtr);
     auto loopCount = ctx()->constInt(8, 2, false);
 

@@ -44,9 +44,11 @@ namespace MaximCodegen {
 
         Midi(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
 
-        static std::unique_ptr<Midi> create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
+        static std::unique_ptr<Midi>
+        create(MaximContext *context, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
-        static std::unique_ptr<Midi> create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
+        static std::unique_ptr<Midi>
+        create(MaximContext *context, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
 
         static void initialize(llvm::Module *module, MaximContext *ctx);
 

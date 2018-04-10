@@ -64,13 +64,17 @@ NoiseFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
     return std::move(numResult);
 }
 
-std::vector<std::unique_ptr<Value>> NoiseFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
+std::vector<std::unique_ptr<Value>>
+NoiseFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
     auto undefPos = SourcePos(-1, -1);
     if (providedArgs.empty()) {
-        providedArgs.push_back(Num::create(ctx(), method->allocaBuilder(), -1, -1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(
+            Num::create(ctx(), method->allocaBuilder(), -1, -1, MaximCommon::FormType::LINEAR, true, undefPos,
+                        undefPos));
     }
     if (providedArgs.size() < 2) {
-        providedArgs.push_back(Num::create(ctx(), method->allocaBuilder(), 1, 1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(
+            Num::create(ctx(), method->allocaBuilder(), 1, 1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     }
     return providedArgs;
 }

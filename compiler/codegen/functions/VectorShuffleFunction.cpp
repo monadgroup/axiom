@@ -3,7 +3,6 @@
 #include "../MaximContext.h"
 #include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
-#include "../../util.h"
 
 using namespace MaximCodegen;
 

@@ -20,7 +20,8 @@ visitSingleUnary(ComposableModuleClassMethod *method, Scope *scope, MaximAst::Un
     newNum->setActive(method->builder(), num->active(method->builder()));
 
     switch (expr->type) {
-        case MaximAst::UnaryExpression::Type::POSITIVE: assert(false && "is the world broken?");
+        case MaximAst::UnaryExpression::Type::POSITIVE:
+            assert(false && "is the world broken?");
         case MaximAst::UnaryExpression::Type::NEGATIVE: {
             auto numVec = num->vec(method->builder());
             auto negVec = method->builder().CreateFNeg(numVec, "negative");

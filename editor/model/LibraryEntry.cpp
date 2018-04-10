@@ -1,7 +1,5 @@
 #include "LibraryEntry.h"
 
-#include <QtCore/QDataStream>
-
 using namespace AxiomModel;
 
 LibraryEntry::LibraryEntry(QString name, std::set<QString> tags) : _name(std::move(name)), _tags(std::move(tags)) {
@@ -18,12 +16,15 @@ void LibraryEntry::serialize(QDataStream &stream) const {
 }
 
 void LibraryEntry::deserialize(QDataStream &stream) {
-    QString name; stream >> name;
+    QString name;
+    stream >> name;
     setName(name);
 
-    quint32 tagCount; stream >> tagCount;
+    quint32 tagCount;
+    stream >> tagCount;
     for (quint32 i = 0; i < tagCount; i++) {
-        QString tagName; stream >> tagName;
+        QString tagName;
+        stream >> tagName;
         addTag(tagName);
     }
 

@@ -1,8 +1,6 @@
 #include <iostream>
 #include "Runtime.h"
 
-#include "GeneratableModuleClass.h"
-#include "ControlGroup.h"
 #include "../codegen/Operator.h"
 #include "../codegen/Converter.h"
 #include "../codegen/Control.h"
@@ -41,7 +39,7 @@ void Runtime::compile() {
     std::cerr << "  Beginning codegen..." << std::endl;
     auto codegenClock = std::clock();
     auto mainClass = _mainSurface->compile();
-    auto codegenEndClock = (std::clock() - codegenClock) / (double)(CLOCKS_PER_SEC / 1000);
+    auto codegenEndClock = (std::clock() - codegenClock) / (double) (CLOCKS_PER_SEC / 1000);
     std::cerr << "  Finished codegen in " << codegenEndClock << " ms" << std::endl;
 
     auto module = std::make_unique<llvm::Module>("controller", _context.llvm());
@@ -79,7 +77,7 @@ void Runtime::compile() {
     // initialize it
     initFuncPtr();
 
-    auto endClock = (std::clock() - startClock) / (double)(CLOCKS_PER_SEC / 1000);
+    auto endClock = (std::clock() - startClock) / (double) (CLOCKS_PER_SEC / 1000);
     std::cout << "Finished compile in " << endClock << " ms" << std::endl;
 }
 
@@ -112,7 +110,7 @@ void Runtime::fillBuffer(float **buffer, size_t size) {
     while (remainingSamples > 0) {
         auto samplesToNextEvent = remainingSamples;
 
-        MidiValue triggerEvents {};
+        MidiValue triggerEvents{};
         triggerEvents.active = true;
 
         for (size_t i = 0; i < eventQueueSize; i++) {

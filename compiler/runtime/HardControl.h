@@ -24,7 +24,7 @@ namespace MaximRuntime {
 
         bool readFrom() const override;
 
-        void addInternallyLinkedControls(std::set<Control *> &controls) override { }
+        void addInternallyLinkedControls(std::set<Control *> &controls) override {}
 
         int64_t instanceId() const override { return _instance.instId; }
 

@@ -6,18 +6,20 @@ class QLineEdit;
 
 namespace AxiomModel {
     class Schematic;
+
     class LibraryEntry;
 }
 
 namespace AxiomGui {
 
     class AddNodeMenu : public QMenu {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         AddNodeMenu(AxiomModel::Schematic *schematic, const QString &search);
 
     public slots:
+
         void applySearch(QString search);
 
     signals:

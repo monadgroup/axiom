@@ -8,7 +8,8 @@
 
 using namespace AxiomModel;
 
-HistoryOperation::HistoryOperation(bool needsRefresh, Type type, bool exec) : _needsRefresh(needsRefresh), _type(type), _exec(exec) {
+HistoryOperation::HistoryOperation(bool needsRefresh, Type type, bool exec) : _needsRefresh(needsRefresh), _type(type),
+                                                                              _exec(exec) {
 
 }
 

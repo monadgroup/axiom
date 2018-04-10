@@ -6,15 +6,19 @@ using namespace AxiomModel;
 
 MoveNodeOperation::MoveNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef, QPoint startPos,
                                      QPoint endPos)
-    : HistoryOperation(false, Type::MOVE_NODE, false), project(project), nodeRef(std::move(nodeRef)), startPos(startPos),
+    : HistoryOperation(false, Type::MOVE_NODE, false), project(project), nodeRef(std::move(nodeRef)),
+      startPos(startPos),
       endPos(endPos) {
 
 }
 
 std::unique_ptr<MoveNodeOperation> MoveNodeOperation::deserialize(QDataStream &stream, AxiomModel::Project *project) {
-    NodeRef nodeRef; stream >> nodeRef;
-    QPoint startPos; stream >> startPos;
-    QPoint endPos; stream >> endPos;
+    NodeRef nodeRef;
+    stream >> nodeRef;
+    QPoint startPos;
+    stream >> startPos;
+    QPoint endPos;
+    stream >> endPos;
 
     return std::make_unique<MoveNodeOperation>(project, nodeRef, startPos, endPos);
 }

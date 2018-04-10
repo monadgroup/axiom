@@ -15,7 +15,8 @@ namespace MaximCodegen {
         generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
                  std::unique_ptr<VarArg> vararg) override;
 
-        std::vector<std::unique_ptr<Value>> mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) override;
+        std::vector<std::unique_ptr<Value>>
+        mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) override;
     };
 
 }

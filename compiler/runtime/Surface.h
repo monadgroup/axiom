@@ -35,11 +35,12 @@ namespace MaximRuntime {
 
         void pullMethods() override;
 
-        void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod) override;
+        void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
+                         MaximCodegen::ModuleClassMethod *destroyMethod) override;
 
         void *updateCurrentPtr(void *parentCtx) override;
 
-        std::unordered_map<ControlGroup*, size_t> const &groupPtrIndexes() const { return _groupPtrIndexes; };
+        std::unordered_map<ControlGroup *, size_t> const &groupPtrIndexes() const { return _groupPtrIndexes; };
 
         virtual void addExitNodes(std::set<Node *> &queue);
 
@@ -59,7 +60,7 @@ namespace MaximRuntime {
 
         std::vector<std::unique_ptr<ControlGroup>> _controlGroups;
 
-        std::unordered_map<ControlGroup*, size_t> _groupPtrIndexes;
+        std::unordered_map<ControlGroup *, size_t> _groupPtrIndexes;
     };
 
 }

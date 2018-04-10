@@ -8,7 +8,8 @@
 
 using namespace AxiomModel;
 
-Project::Project(MaximRuntime::Runtime *runtime) : history(this), root(this, runtime->mainSurface()), _runtime(runtime) {
+Project::Project(MaximRuntime::Runtime *runtime) : history(this), root(this, runtime->mainSurface()),
+                                                   _runtime(runtime) {
     library.addEntry(std::make_unique<LibraryEntry>("LFO", std::set<QString>{}));
     library.addEntry(std::make_unique<LibraryEntry>("Bla", std::set<QString>{}));
     library.addEntry(std::make_unique<LibraryEntry>("Hello, world", std::set<QString>{}));
@@ -31,11 +32,13 @@ void Project::serialize(QDataStream &stream) const {
 }
 
 void Project::deserialize(QDataStream &stream) {
-    quint32 readMagic; stream >> readMagic;
+    quint32 readMagic;
+    stream >> readMagic;
     if (readMagic != schemaMagic) throw DeserializeInvalidFileException();
 
     // todo: format upgrade system? maybe a file format that upgrades better?
-    quint32 readRevision; stream >> readRevision;
+    quint32 readRevision;
+    stream >> readRevision;
     if (readRevision != schemaRevision) throw DeserializeInvalidSchemaException();
 
     library.deserialize(stream);
@@ -65,7 +68,7 @@ Schematic *Project::findSurface(const AxiomModel::SurfaceRef &ref) {
     Schematic *currentSurface = &root;
 
     for (const auto &index : ref.path) {
-        auto targetNode = dynamic_cast<GroupNode*>(currentSurface->items()[index].get());
+        auto targetNode = dynamic_cast<GroupNode *>(currentSurface->items()[index].get());
         if (!targetNode) return nullptr;
         currentSurface = targetNode->schematic.get();
     }
@@ -77,12 +80,12 @@ Node *Project::findNode(const AxiomModel::NodeRef &ref) {
     auto surface = findSurface(ref.surface);
     if (!surface) return nullptr;
 
-    return dynamic_cast<Node*>(surface->items()[ref.index].get());
+    return dynamic_cast<Node *>(surface->items()[ref.index].get());
 }
 
 NodeControl *Project::findControl(const AxiomModel::ControlRef &ref) {
     auto node = findNode(ref.node);
     if (!node) return nullptr;
 
-    return dynamic_cast<NodeControl*>(node->surface.items()[ref.index].get());
+    return dynamic_cast<NodeControl *>(node->surface.items()[ref.index].get());
 }

@@ -48,27 +48,27 @@ std::unique_ptr<Num> Num::create(MaximContext *context, llvm::Value *get, Source
     return std::make_unique<Num>(context, get, startPos, endPos);
 }
 
-llvm::Value* Num::vecPtr(Builder &builder) const {
+llvm::Value *Num::vecPtr(Builder &builder) const {
     return builder.CreateStructGEP(type()->get(), _get, 1, _get->getName() + ".vec.ptr");
 }
 
-llvm::Value* Num::formPtr(Builder &builder) const {
+llvm::Value *Num::formPtr(Builder &builder) const {
     return builder.CreateStructGEP(type()->get(), _get, 2, _get->getName() + ".form.ptr");
 }
 
-llvm::Value* Num::activePtr(Builder &builder) const {
+llvm::Value *Num::activePtr(Builder &builder) const {
     return builder.CreateStructGEP(type()->get(), _get, 0, _get->getName() + ".active.ptr");
 }
 
-llvm::Value* Num::vec(Builder &builder) const {
+llvm::Value *Num::vec(Builder &builder) const {
     return builder.CreateLoad(vecPtr(builder), _get->getName() + ".vec");
 }
 
-llvm::Value* Num::form(Builder &builder) const {
+llvm::Value *Num::form(Builder &builder) const {
     return builder.CreateLoad(formPtr(builder), _get->getName() + ".form");
 }
 
-llvm::Value* Num::active(Builder &builder) const {
+llvm::Value *Num::active(Builder &builder) const {
     return builder.CreateLoad(activePtr(builder), _get->getName() + ".active");
 }
 

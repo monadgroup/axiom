@@ -76,6 +76,6 @@ ControlInstance &Scope::getControl(const std::string &name, MaximCommon::Control
 
     auto control = method->moduleClass()->ctx()->getControl(type);
     auto instId = method->moduleClass()->addEntry(control);
-    auto newPos = _controls.emplace(key, ControlInstance {control, false, false, instId});
+    auto newPos = _controls.emplace(key, ControlInstance{control, false, false, instId});
     return newPos.first->second;
 }

@@ -1,6 +1,5 @@
 #include "Control.h"
 
-#include <cassert>
 #include <unordered_set>
 #include <queue>
 #include <iostream>

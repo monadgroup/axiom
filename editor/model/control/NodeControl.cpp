@@ -6,8 +6,6 @@
 #include "NodeMidiControl.h"
 #include "NodeExtractControl.h"
 #include "../schematic/Schematic.h"
-#include "../node/Node.h"
-#include "../connection/ConnectionWire.h"
 #include "compiler/runtime/Control.h"
 #include "compiler/codegen/Control.h"
 #include "../../util.h"
@@ -30,9 +28,11 @@ std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRu
         case MaximCommon::ControlType::MIDI:
             return std::make_unique<NodeMidiControl>(node, runtime, QPoint(0, 0), QSize(2, 2));
         case MaximCommon::ControlType::NUM_EXTRACT:
-            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::NUMBER, QPoint(0, 0), QSize(2, 2));
+            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::NUMBER, QPoint(0, 0),
+                                                        QSize(2, 2));
         case MaximCommon::ControlType::MIDI_EXTRACT:
-            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::MIDI, QPoint(0, 0), QSize(2, 2));
+            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::MIDI, QPoint(0, 0),
+                                                        QSize(2, 2));
         default:
             assert(false);
             throw;
@@ -79,7 +79,8 @@ void NodeControl::serialize(QDataStream &stream) const {
 void NodeControl::deserialize(QDataStream &stream) {
     GridItem::deserialize(stream);
 
-    bool showName; stream >> showName;
+    bool showName;
+    stream >> showName;
     setShowName(showName);
 }
 

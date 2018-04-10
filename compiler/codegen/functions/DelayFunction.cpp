@@ -1,7 +1,6 @@
 #include "DelayFunction.h"
 
 #include "../MaximContext.h"
-#include "../ComposableModuleClass.h"
 #include "../ComposableModuleClassMethod.h"
 #include "../Num.h"
 
@@ -30,8 +29,10 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
     auto dataLayoutType = llvm::Type::getIntNTy(ctx()->llvm(), ctx()->dataLayout().getPointerSizeInBits(0));
     auto voidPtrType = llvm::PointerType::get(llvm::Type::getInt8Ty(ctx()->llvm()), 0);
 
-    auto minIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum, {ctx()->numType()->vecType()});
-    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum, {ctx()->numType()->vecType()});
+    auto minIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::minnum,
+                                                        {ctx()->numType()->vecType()});
+    auto maxIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum,
+                                                        {ctx()->numType()->vecType()});
     auto clzIntrinsic = llvm::Intrinsic::getDeclaration(module(), llvm::Intrinsic::ID::ctlz, {sizeType});
     auto reallocFunction = llvm::Function::Create(
         llvm::FunctionType::get(voidPtrType, {
@@ -77,7 +78,8 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
         ctx()->numType()->activeType(),                                    // input active?
         llvm::Type::getFloatTy(ctx()->llvm()),                             // input value
     }, false);
-    auto channelUpdateFunc = llvm::Function::Create(channelUpdateType, llvm::Function::InternalLinkage, "maxim.util.channelUpdate", module());
+    auto channelUpdateFunc = llvm::Function::Create(channelUpdateType, llvm::Function::InternalLinkage,
+                                                    "maxim.util.channelUpdate", module());
 
     {
         auto currentPosPtr = channelUpdateFunc->arg_begin();
@@ -184,16 +186,20 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
 
     // generate destructors for the two pointers
     auto &db = destructor()->builder();
-    CreateCall(db, freeFunction, {db.CreateBitCast(db.CreateLoad(cdestructor()->getEntryPointer(leftSamplesPtrIndex, "leftsamples.ptr.ptr")), voidPtrType)}, "");
-    CreateCall(db, freeFunction, {db.CreateBitCast(db.CreateLoad(cdestructor()->getEntryPointer(rightSamplePtrIndex, "rightsamples.ptr.ptr")), voidPtrType)}, "");
+    CreateCall(db, freeFunction, {db.CreateBitCast(
+        db.CreateLoad(cdestructor()->getEntryPointer(leftSamplesPtrIndex, "leftsamples.ptr.ptr")), voidPtrType)}, "");
+    CreateCall(db, freeFunction, {db.CreateBitCast(
+        db.CreateLoad(cdestructor()->getEntryPointer(rightSamplePtrIndex, "rightsamples.ptr.ptr")), voidPtrType)}, "");
 
     auto &b = method->builder();
     auto inputVec = inputVal->vec(b);
     auto inputActive = inputVal->active(b);
 
     // determine reserve samples
-    auto reserveSamplesUnclamped = b.CreateFMul(reserveVal->vec(b), ctx()->constFloatVec(ctx()->sampleRate), "reservesamples.unclamped");
-    auto reserveSamplesFloat = CreateCall(b, maxIntrinsic, {reserveSamplesUnclamped, ctx()->constFloatVec(0)}, "reservesamples.clamped");
+    auto reserveSamplesUnclamped = b.CreateFMul(reserveVal->vec(b), ctx()->constFloatVec(ctx()->sampleRate),
+                                                "reservesamples.unclamped");
+    auto reserveSamplesFloat = CreateCall(b, maxIntrinsic, {reserveSamplesUnclamped, ctx()->constFloatVec(0)},
+                                          "reservesamples.clamped");
     auto reserveSamples = b.CreateFPToUI(reserveSamplesFloat, llvm::VectorType::get(sizeType, 2), "reservesamples.int");
 
     // determine delay length with saturate(delayVal * reserve samples)
@@ -248,7 +254,8 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
     return std::move(resultNum);
 }
 
-std::vector<std::unique_ptr<Value>> DelayFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<MaximCodegen::Value>> providedArgs) {
+std::vector<std::unique_ptr<Value>> DelayFunction::mapArguments(ComposableModuleClassMethod *method,
+                                                                std::vector<std::unique_ptr<MaximCodegen::Value>> providedArgs) {
     if (providedArgs.size() < 3) {
         providedArgs.insert(providedArgs.begin() + 1,
                             Num::create(ctx(), method->allocaBuilder(), 1, 1, MaximCommon::FormType::LINEAR, true));

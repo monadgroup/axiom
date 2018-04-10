@@ -51,10 +51,12 @@ PeriodicFunction::generate(ComposableModuleClassMethod *method, const std::vecto
     return std::move(newNum);
 }
 
-std::vector<std::unique_ptr<Value>> PeriodicFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
+std::vector<std::unique_ptr<Value>>
+PeriodicFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs) {
     if (providedArgs.size() < 2) {
         auto undefPos = SourcePos(-1, -1);
-        providedArgs.push_back(Num::create(ctx(), method->allocaBuilder(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+        providedArgs.push_back(
+            Num::create(ctx(), method->allocaBuilder(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
     }
     return providedArgs;
 }

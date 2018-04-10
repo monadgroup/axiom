@@ -1,21 +1,21 @@
 #include "DeleteNodeOperation.h"
 
-#include <QtCore/QDataStream>
-#include <QtCore/QIODevice>
-
 #include "../Project.h"
 
 using namespace AxiomModel;
 
 DeleteNodeOperation::DeleteNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef)
-    : HistoryOperation(true, Type::DELETE_NODE), project(project), nodeRef(std::move(nodeRef)), nodeType(Node::Type::IO) {
+    : HistoryOperation(true, Type::DELETE_NODE), project(project), nodeRef(std::move(nodeRef)),
+      nodeType(Node::Type::IO) {
 
 }
 
 std::unique_ptr<DeleteNodeOperation> DeleteNodeOperation::deserialize(QDataStream &stream,
                                                                       AxiomModel::Project *project) {
-    NodeRef nodeRef; stream >> nodeRef;
-    quint32 typeInt; stream >> typeInt;
+    NodeRef nodeRef;
+    stream >> nodeRef;
+    quint32 typeInt;
+    stream >> typeInt;
     auto nodeBuffer = std::make_unique<QByteArray>();
     stream >> *nodeBuffer;
 

@@ -10,7 +10,9 @@ namespace AxiomGui {
     class ExtractPainter {
     public:
 
-        void paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, AxiomModel::ExtractConnectionSink::ActiveSlotFlags activeFlags, const QColor &baseColor, const QColor &activeColor);
+        void paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState,
+                   AxiomModel::ExtractConnectionSink::ActiveSlotFlags activeFlags, const QColor &baseColor,
+                   const QColor &activeColor);
 
         void shape(QPainterPath &path, const QRectF &aspectBoundingRect) const;
 

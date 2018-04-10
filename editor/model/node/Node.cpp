@@ -1,7 +1,5 @@
 #include "Node.h"
 
-#include <QtCore/QDataStream>
-
 #include "../schematic/Schematic.h"
 #include "../control/NodeControl.h"
 #include "../Project.h"
@@ -140,7 +138,8 @@ void Node::startDragging() {
 
 void Node::finishDragging() {
     GridItem::finishDragging();
-    parentSchematic->project()->history.appendOperation(std::make_unique<MoveNodeOperation>(parentSchematic->project(), ref(), startDragPos, pos()));
+    parentSchematic->project()->history.appendOperation(
+        std::make_unique<MoveNodeOperation>(parentSchematic->project(), ref(), startDragPos, pos()));
 }
 
 void Node::serialize(QDataStream &stream) const {
@@ -154,9 +153,12 @@ void Node::serialize(QDataStream &stream) const {
 void Node::deserialize(QDataStream &stream) {
     GridItem::deserialize(stream);
 
-    QString name; stream >> name;
-    bool panelOpen; stream >> panelOpen;
-    float panelHeight; stream >> panelHeight;
+    QString name;
+    stream >> name;
+    bool panelOpen;
+    stream >> panelOpen;
+    float panelHeight;
+    stream >> panelHeight;
 
     setName(name);
     setPanelOpen(panelOpen);

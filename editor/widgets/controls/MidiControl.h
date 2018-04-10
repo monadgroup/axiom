@@ -15,8 +15,12 @@ namespace AxiomGui {
     class NodeItem;
 
     class MidiControl : public ControlItem {
-        Q_OBJECT
-        Q_PROPERTY(float hoverState READ hoverState WRITE setHoverState)
+    Q_OBJECT
+        Q_PROPERTY(float hoverState
+                       READ
+                       hoverState
+                       WRITE
+                       setHoverState)
 
     public:
         AxiomModel::NodeMidiControl *control;

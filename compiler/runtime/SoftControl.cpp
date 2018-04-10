@@ -23,7 +23,7 @@ std::string SoftControl::name() const {
     return _forward->name();
 }
 
-MaximCodegen::Control* SoftControl::type() const {
+MaximCodegen::Control *SoftControl::type() const {
     return _forward->type();
 }
 

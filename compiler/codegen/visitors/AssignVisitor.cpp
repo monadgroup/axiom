@@ -58,7 +58,8 @@ MaximCodegen::visitAssign(ComposableModuleClassMethod *method, Scope *scope, Max
         for (size_t i = 0; i < expr->left->assignments.size(); i++) {
             rightVals.push_back(rightVal->clone());
         }
-        return Tuple::create(method->moduleClass()->ctx(), std::move(rightVals), method->builder(), method->allocaBuilder(),
+        return Tuple::create(method->moduleClass()->ctx(), std::move(rightVals), method->builder(),
+                             method->allocaBuilder(),
                              expr->startPos, expr->endPos);
     }
 

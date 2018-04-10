@@ -57,11 +57,12 @@ namespace MaximCodegen {
         generate(ComposableModuleClassMethod *method, const std::vector<std::unique_ptr<Value>> &params,
                  std::unique_ptr<VarArg> vararg) = 0;
 
-        virtual std::vector<std::unique_ptr<Value>> mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs);
+        virtual std::vector<std::unique_ptr<Value>>
+        mapArguments(ComposableModuleClassMethod *method, std::vector<std::unique_ptr<Value>> providedArgs);
 
         virtual void sampleArguments(ComposableModuleClassMethod *method, size_t index,
-                                     const std::vector<Value*> &args,
-                                     const std::vector<Value*> &varargs);
+                                     const std::vector<Value *> &args,
+                                     const std::vector<Value *> &varargs);
 
     private:
         class DynVarArg : public VarArg {

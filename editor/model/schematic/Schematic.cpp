@@ -1,12 +1,10 @@
 #include "Schematic.h"
 
-#include <QDataStream>
 #include <cassert>
 #include <iostream>
 #include <QtCore/QBuffer>
 
 #include "../Project.h"
-#include "../node/Node.h"
 #include "../node/GroupNode.h"
 #include "../node/CustomNode.h"
 #include "../node/IONode.h"
@@ -134,7 +132,7 @@ void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
     emit wireAdded(ptr);
 }
 
-Node* Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataStream &stream) {
+Node *Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataStream &stream) {
     std::unique_ptr<Node> newNode;
     switch (type) {
         case Node::Type::CUSTOM:
@@ -143,7 +141,8 @@ Node* Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataS
         case Node::Type::GROUP:
             newNode = std::make_unique<GroupNode>(this, "", QPoint(0, 0), QSize(0, 0));
             break;
-        default: break;
+        default:
+            break;
     }
 
     if (!newNode) return nullptr;
@@ -192,17 +191,17 @@ void Schematic::serialize(QDataStream &stream) const {
 
     // serialize nodes - also build an index of ConnectionSinks to node/control indexes for connection serialization
     stream << (uint32_t) items().size();
-    std::unordered_map<ConnectionSink*, SinkIndex> sinkIndexes;
+    std::unordered_map<ConnectionSink *, SinkIndex> sinkIndexes;
     auto &itms = items();
     for (size_t nodeI = 0; nodeI < itms.size(); nodeI++) {
-        auto node = dynamic_cast<Node*>(itms[nodeI].get());
+        auto node = dynamic_cast<Node *>(itms[nodeI].get());
         assert(node);
 
         // add sinks to index
         auto &nodeItms = node->surface.items();
         for (size_t controlI = 0; controlI < nodeItms.size(); controlI++) {
-            if (auto control = dynamic_cast<NodeControl*>(nodeItms[controlI].get())) {
-                sinkIndexes.emplace(control->sink(), SinkIndex { (uint32_t) nodeI, (uint32_t) controlI });
+            if (auto control = dynamic_cast<NodeControl *>(nodeItms[controlI].get())) {
+                sinkIndexes.emplace(control->sink(), SinkIndex{(uint32_t) nodeI, (uint32_t) controlI});
             }
         }
 
@@ -234,15 +233,20 @@ void Schematic::serialize(QDataStream &stream) const {
 }
 
 void Schematic::deserialize(QDataStream &stream) {
-    QPointF pan; stream >> pan;
-    float zoom; stream >> zoom;
+    QPointF pan;
+    stream >> pan;
+    float zoom;
+    stream >> zoom;
     setPan(pan);
     setZoom(zoom);
 
-    uint32_t nodeCount; stream >> nodeCount;
+    uint32_t nodeCount;
+    stream >> nodeCount;
     for (uint32_t i = 0; i < nodeCount; i++) {
-        uint8_t intType; stream >> intType;
-        quint64 nodeSize; stream >> nodeSize;
+        uint8_t intType;
+        stream >> intType;
+        quint64 nodeSize;
+        stream >> nodeSize;
 
         auto type = (Node::Type) intType;
         auto added = addFromStream(type, i, stream);
@@ -259,7 +263,8 @@ void Schematic::deserialize(QDataStream &stream) {
 
     auto &itms = items();
 
-    uint32_t wireCount; stream >> wireCount;
+    uint32_t wireCount;
+    stream >> wireCount;
     for (uint32_t i = 0; i < wireCount; i++) {
         SinkIndex firstIndex, secondIndex;
 
@@ -267,14 +272,14 @@ void Schematic::deserialize(QDataStream &stream) {
         stream >> secondIndex;
 
         assert(firstIndex.nodeIndex < itms.size() && secondIndex.nodeIndex < itms.size());
-        auto firstNode = dynamic_cast<Node*>(itms[firstIndex.nodeIndex].get());
-        auto secondNode = dynamic_cast<Node*>(itms[secondIndex.nodeIndex].get());
+        auto firstNode = dynamic_cast<Node *>(itms[firstIndex.nodeIndex].get());
+        auto secondNode = dynamic_cast<Node *>(itms[secondIndex.nodeIndex].get());
         assert(firstNode && secondNode);
 
         assert(firstIndex.controlIndex < firstNode->surface.items().size()
                && secondIndex.controlIndex < secondNode->surface.items().size());
-        auto firstControl = dynamic_cast<NodeControl*>(firstNode->surface.items()[firstIndex.controlIndex].get());
-        auto secondControl = dynamic_cast<NodeControl*>(secondNode->surface.items()[secondIndex.controlIndex].get());
+        auto firstControl = dynamic_cast<NodeControl *>(firstNode->surface.items()[firstIndex.controlIndex].get());
+        auto secondControl = dynamic_cast<NodeControl *>(secondNode->surface.items()[secondIndex.controlIndex].get());
         assert(firstControl && secondControl);
 
         connectSinks(firstControl->sink(), secondControl->sink());
@@ -282,7 +287,8 @@ void Schematic::deserialize(QDataStream &stream) {
 }
 
 void Schematic::addNode(Node::Type type, QString name, QPoint pos) {
-    _project->history.appendOperation(std::make_unique<AddNodeOperation>(_project, NodeRef(ref(), items().size()), type, name, pos));
+    _project->history.appendOperation(
+        std::make_unique<AddNodeOperation>(_project, NodeRef(ref(), items().size()), type, name, pos));
 }
 
 void Schematic::remove() {

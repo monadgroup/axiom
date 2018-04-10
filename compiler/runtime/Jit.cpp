@@ -89,7 +89,7 @@ Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
     std::cerr << "    Beginning deploy..." << std::endl;
     auto startClock = std::clock();
     auto key = llvm::cantFail(optimizeLayer.addModule(std::move(m), std::move(resolver)));
-    auto endClock = (std::clock() - startClock) / (double)(CLOCKS_PER_SEC / 1000);
+    auto endClock = (std::clock() - startClock) / (double) (CLOCKS_PER_SEC / 1000);
     std::cerr << "    Finished deploy in " << endClock << " ms" << std::endl;
 
     return std::move(key);
@@ -157,7 +157,7 @@ std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> 
         fpm.run(f);
     }
     mpm.run(*m);
-    auto endClock = (std::clock() - startClock) / (double)(CLOCKS_PER_SEC / 1000);
+    auto endClock = (std::clock() - startClock) / (double) (CLOCKS_PER_SEC / 1000);
     std::cerr << "      >> Optimized in " << endClock << " ms" << std::endl;
 
     //m->print(llvm::errs(), nullptr);

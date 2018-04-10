@@ -17,11 +17,14 @@ namespace MaximRuntime {
 namespace AxiomModel {
 
     class Node;
+
     class NodeControl;
 
-    class DeserializeInvalidFileException : public std::exception {};
+    class DeserializeInvalidFileException : public std::exception {
+    };
 
-    class DeserializeInvalidSchemaException : public std::exception {};
+    class DeserializeInvalidSchemaException : public std::exception {
+    };
 
     class Project {
     public:

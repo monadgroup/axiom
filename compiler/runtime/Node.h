@@ -14,7 +14,7 @@ namespace MaximRuntime {
     class Control;
 
     class Node : public QObject, public ModuleRuntimeUnit {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         explicit Node(Surface *surface);

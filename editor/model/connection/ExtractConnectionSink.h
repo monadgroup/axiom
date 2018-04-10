@@ -5,7 +5,7 @@
 namespace AxiomModel {
 
     class ExtractConnectionSink : public ConnectionSink {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         using ActiveSlotFlags = uint16_t;

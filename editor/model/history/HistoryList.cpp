@@ -10,12 +10,18 @@ using namespace AxiomModel;
 
 QString HistoryList::typeToString(AxiomModel::HistoryList::ActionType type) {
     switch (type) {
-        case ActionType::NONE: return "";
-        case ActionType::DELETE_SELECTED_ITEMS: return "Delete Selected Items";
-        case ActionType::CREATE_GROUP_NODE: return "Create Group Node";
-        case ActionType::CREATE_CUSTOM_NODE: return "Create Custom Node";
-        case ActionType::MOVE_NODE: return "Move Node";
-        case ActionType::SIZE_NODE: return "Resize Node";
+        case ActionType::NONE:
+            return "";
+        case ActionType::DELETE_SELECTED_ITEMS:
+            return "Delete Selected Items";
+        case ActionType::CREATE_GROUP_NODE:
+            return "Create Group Node";
+        case ActionType::CREATE_CUSTOM_NODE:
+            return "Create Custom Node";
+        case ActionType::MOVE_NODE:
+            return "Move Node";
+        case ActionType::SIZE_NODE:
+            return "Resize Node";
     }
 
     unreachable;
@@ -107,19 +113,25 @@ void HistoryList::deserialize(QDataStream &stream) {
     assert(!hasCurrentAction);
 
     stack.clear();
-    quint32 stackSize; stream >> stackSize;
-    quint32 intPos; stream >> intPos;
+    quint32 stackSize;
+    stream >> stackSize;
+    quint32 intPos;
+    stream >> intPos;
     stackPos = intPos;
 
     for (quint32 i = 0; i < stackSize; i++) {
-        quint32 intActionType; stream >> intActionType;
-        quint32 opCount; stream >> opCount;
-        stack.push_back(HistoryAction { (ActionType) intActionType, {} });
+        quint32 intActionType;
+        stream >> intActionType;
+        quint32 opCount;
+        stream >> opCount;
+        stack.push_back(HistoryAction{(ActionType) intActionType, {}});
 
         auto &action = stack.back();
         for (quint32 j = 0; j < opCount; j++) {
-            quint32 intOpType; stream >> intOpType;
-            action.operations.push_back(HistoryOperation::deserialize((HistoryOperation::Type) intOpType, stream, project));
+            quint32 intOpType;
+            stream >> intOpType;
+            action.operations.push_back(
+                HistoryOperation::deserialize((HistoryOperation::Type) intOpType, stream, project));
         }
     }
 

@@ -4,7 +4,6 @@
 #include "../ComposableModuleClassMethod.h"
 #include "../Midi.h"
 #include "../Num.h"
-#include "../MidiType.h"
 #include "../Array.h"
 #include "../../util.h"
 
@@ -35,11 +34,15 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
     )), "ctx");
 
     auto undefPos = SourcePos(-1, -1);
-    auto result = Array::create(ctx(), ctx()->getArrayType(ctx()->midiType()), method->allocaBuilder(), undefPos, undefPos);
+    auto result = Array::create(ctx(), ctx()->getArrayType(ctx()->midiType()), method->allocaBuilder(), undefPos,
+                                undefPos);
 
-    auto initIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "initindex.ptr");
-    auto eventIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "eventindex.ptr");
-    auto innerIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "innerindex.ptr");
+    auto initIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr,
+                                                             "initindex.ptr");
+    auto eventIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr,
+                                                              "eventindex.ptr");
+    auto innerIndexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr,
+                                                              "innerindex.ptr");
 
     b.CreateStore(ctx()->constInt(8, 0, false), initIndexPtr);
     b.CreateStore(ctx()->constInt(8, 0, false), eventIndexPtr);
@@ -150,16 +153,19 @@ std::unique_ptr<Value> VoicesFunction::generate(ComposableModuleClassMethod *met
         auto currentEventType = currentEvent.type(b);
         auto channelAftertouchCond = b.CreateICmpEQ(
             currentEventType,
-            llvm::ConstantInt::get(ctx()->midiType()->typeType(), (uint64_t) MaximCommon::MidiEventType::CHANNEL_AFTERTOUCH, false),
+            llvm::ConstantInt::get(ctx()->midiType()->typeType(),
+                                   (uint64_t) MaximCommon::MidiEventType::CHANNEL_AFTERTOUCH, false),
             "channelaftertouchcond"
         );
         auto channelPitchwheelCond = b.CreateICmpEQ(
             currentEventType,
-            llvm::ConstantInt::get(ctx()->midiType()->typeType(), (uint64_t) MaximCommon::MidiEventType::PITCH_WHEEL, false),
+            llvm::ConstantInt::get(ctx()->midiType()->typeType(), (uint64_t) MaximCommon::MidiEventType::PITCH_WHEEL,
+                                   false),
             "channelpitchweelcond"
         );
         auto isChannelEventCond = b.CreateOr(channelAftertouchCond, channelPitchwheelCond, "channeleventcond");
-        auto branchCond = b.CreateAnd(activeCond, b.CreateOr(notesEqualCond, isChannelEventCond, "matchescond"), "queuecond");
+        auto branchCond = b.CreateAnd(activeCond, b.CreateOr(notesEqualCond, isChannelEventCond, "matchescond"),
+                                      "queuecond");
 
         b.CreateCondBr(branchCond, noteElseAssignBlock, noteElseLoopCheckBlock);
         b.SetInsertPoint(noteElseAssignBlock);

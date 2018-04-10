@@ -17,7 +17,6 @@
 #include "../schematic/SchematicCanvas.h"
 #include "editor/util.h"
 #include "../FloatingValueEditor.h"
-#include "../CommonColors.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -74,13 +73,16 @@ void NumControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
             plugPainter.paint(painter, aspectBoundingRect(), m_hoverState);
             break;
         case NodeNumControl::Mode::KNOB:
-            knobPainter.paint(painter, aspectBoundingRect(), m_hoverState, getCVal(), CommonColors::numNormal, CommonColors::numActive);
+            knobPainter.paint(painter, aspectBoundingRect(), m_hoverState, getCVal(), CommonColors::numNormal,
+                              CommonColors::numActive);
             break;
         case NodeNumControl::Mode::SLIDER_H:
-            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), false, CommonColors::numNormal, CommonColors::numActive);
+            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), false, CommonColors::numNormal,
+                                CommonColors::numActive);
             break;
         case NodeNumControl::Mode::SLIDER_V:
-            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), true, CommonColors::numNormal, CommonColors::numActive);
+            sliderPainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal(), true, CommonColors::numNormal,
+                                CommonColors::numActive);
             break;
         case NodeNumControl::Mode::TOGGLE:
             togglePainter.paint(painter, drawBoundingRect(), m_hoverState, getCVal());
@@ -292,7 +294,7 @@ void NumControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         control->select(true);
     } else if (selectedAction == nameShownAction) {
         control->setShowName(nameShownAction->isChecked());
-    } else if (exposedAction && selectedAction ==  exposedAction) {
+    } else if (exposedAction && selectedAction == exposedAction) {
         control->node->parentSchematic->exposeControl(control);
     }
 }

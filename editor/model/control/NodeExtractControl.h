@@ -6,11 +6,12 @@
 namespace AxiomModel {
 
     class NodeExtractControl : public NodeControl {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
 
-        NodeExtractControl(Node *node, MaximRuntime::Control *runtime, ConnectionSink::Type baseType, QPoint pos, QSize size);
+        NodeExtractControl(Node *node, MaximRuntime::Control *runtime, ConnectionSink::Type baseType, QPoint pos,
+                           QSize size);
 
         ExtractConnectionSink *sink() override { return &m_sink; }
 

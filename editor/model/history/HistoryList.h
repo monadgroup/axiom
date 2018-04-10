@@ -13,7 +13,7 @@ namespace AxiomModel {
     class Project;
 
     class HistoryList : public QObject {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
 

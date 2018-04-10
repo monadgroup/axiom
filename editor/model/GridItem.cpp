@@ -117,9 +117,12 @@ void GridItem::serialize(QDataStream &stream) const {
 }
 
 void GridItem::deserialize(QDataStream &stream) {
-    bool selected; stream >> selected;
-    QPoint pos; stream >> pos;
-    QSize size; stream >> size;
+    bool selected;
+    stream >> selected;
+    QPoint pos;
+    stream >> pos;
+    QSize size;
+    stream >> size;
 
     setPos(pos, true, false);
     setSize(size);

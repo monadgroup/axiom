@@ -11,7 +11,7 @@ namespace AxiomModel {
     class LibraryEntry;
 
     class Library : public QObject {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         ~Library();

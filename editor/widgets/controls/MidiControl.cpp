@@ -1,6 +1,5 @@
 #include "MidiControl.h"
 
-#include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtCore/QStateMachine>
 #include <QtCore/QSignalTransition>
@@ -68,7 +67,8 @@ void MidiControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
         case NodeMidiControl::Mode::PLUG:
             plugPainter.paint(painter, aspectBoundingRect(), m_hoverState);
             break;
-        case NodeMidiControl::Mode::PIANO:break;
+        case NodeMidiControl::Mode::PIANO:
+            break;
     }
 }
 
@@ -88,7 +88,8 @@ QRectF MidiControl::useBoundingRect() const {
     switch (control->mode()) {
         case NodeMidiControl::Mode::PLUG:
             return plugPainter.getBounds(aspectBoundingRect());
-        case NodeMidiControl::Mode::PIANO:break;
+        case NodeMidiControl::Mode::PIANO:
+            break;
     }
     unreachable;
 }
@@ -99,7 +100,8 @@ QPainterPath MidiControl::controlPath() const {
         case NodeMidiControl::Mode::PLUG:
             plugPainter.shape(path, aspectBoundingRect());
             break;
-        case NodeMidiControl::Mode::PIANO:break;
+        case NodeMidiControl::Mode::PIANO:
+            break;
     }
     return path;
 }

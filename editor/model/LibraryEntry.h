@@ -11,7 +11,7 @@ namespace AxiomModel {
     class Library;
 
     class LibraryEntry : public QObject {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         LibraryEntry(QString name, std::set<QString> tags);

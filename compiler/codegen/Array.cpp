@@ -23,11 +23,11 @@ std::unique_ptr<Array> Array::create(MaximContext *context, ArrayType *type, Bui
     return std::make_unique<Array>(context, type, allocaBuilder, startPos, endPos);
 }
 
-llvm::Value* Array::indexPtr(size_t index, Builder &builder) {
+llvm::Value *Array::indexPtr(size_t index, Builder &builder) {
     return indexPtr(_context->constInt(32, index, false), builder);
 }
 
-llvm::Value* Array::indexPtr(llvm::Value *index, Builder &builder) {
+llvm::Value *Array::indexPtr(llvm::Value *index, Builder &builder) {
     return builder.CreateGEP(_get, {
         _context->constInt(64, 0, false),
         index

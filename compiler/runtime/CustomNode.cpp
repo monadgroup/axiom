@@ -3,7 +3,6 @@
 
 #include "Surface.h"
 #include "Runtime.h"
-#include "GeneratableModuleClass.h"
 #include "../parser/TokenStream.h"
 #include "../parser/Parser.h"
 #include "../ast/Block.h"
@@ -148,6 +147,6 @@ void CustomNode::updateControls() {
     }
 }
 
-MaximCodegen::ModuleClass* CustomNode::moduleClass() {
+MaximCodegen::ModuleClass *CustomNode::moduleClass() {
     return _moduleClass.get();
 }

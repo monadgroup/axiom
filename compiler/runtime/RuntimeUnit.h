@@ -30,7 +30,8 @@ namespace MaximRuntime {
 
         virtual llvm::Module *module() = 0;
 
-        void setMethods(std::unique_ptr<MaximCodegen::ModuleClassMethod> getterMethod, MaximCodegen::ModuleClassMethod *destructorMethod);
+        void setMethods(std::unique_ptr<MaximCodegen::ModuleClassMethod> getterMethod,
+                        MaximCodegen::ModuleClassMethod *destructorMethod);
 
         MaximCodegen::ModuleClassMethod *getterMethod() const { return _getterMethod.get(); }
 
@@ -38,7 +39,8 @@ namespace MaximRuntime {
 
         virtual void pullMethods();
 
-        virtual void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod);
+        virtual void
+        pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod);
 
         virtual void *getValuePtr(void *parentCtx);
 

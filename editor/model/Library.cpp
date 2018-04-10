@@ -2,8 +2,6 @@
 
 #include "LibraryEntry.h"
 
-#include <QtCore/QDataStream>
-
 using namespace AxiomModel;
 
 Library::~Library() = default;
@@ -16,7 +14,8 @@ void Library::serialize(QDataStream &stream) const {
 }
 
 void Library::deserialize(QDataStream &stream) {
-    quint32 entryCount; stream >> entryCount;
+    quint32 entryCount;
+    stream >> entryCount;
     for (quint32 i = 0; i < entryCount; i++) {
         auto newEntry = std::make_unique<LibraryEntry>("", std::set<QString>());
         newEntry->deserialize(stream);

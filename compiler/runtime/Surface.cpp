@@ -6,8 +6,6 @@
 
 #include "Runtime.h"
 #include "HardControl.h"
-#include "ControlGroup.h"
-#include "GeneratableModuleClass.h"
 #include "../codegen/Control.h"
 
 using namespace MaximRuntime;
@@ -286,12 +284,16 @@ GeneratableModuleClass *Surface::compile() {
         {
             auto &b = _class->constructor()->builder();
             auto entryArrPtr = _class->cconstructor()->getEntryPointer(entryIndex, "entryarr");
-            auto indexPtr = _class->constructor()->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
+            auto indexPtr = _class->constructor()->allocaBuilder().CreateAlloca(
+                llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
             b.CreateStore(runtime()->ctx()->constInt(8, 0, false), indexPtr);
 
-            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck", _class->constructor()->get(module()));
-            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun", _class->constructor()->get(module()));
-            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend", _class->constructor()->get(module()));
+            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck",
+                                                           _class->constructor()->get(module()));
+            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun",
+                                                         _class->constructor()->get(module()));
+            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend",
+                                                         _class->constructor()->get(module()));
 
             b.CreateBr(loopCheckBlock);
             b.SetInsertPoint(loopCheckBlock);
@@ -322,7 +324,8 @@ GeneratableModuleClass *Surface::compile() {
 
                 // get the pointer for the specific index we're at if this is control is in an extracted group
                 // AND it's not an extractor control (since these get access to the entire array)
-                if (control->group()->extracted() && !((uint32_t)control->type()->type() & (uint32_t)MaximCommon::ControlType::EXTRACT)) {
+                if (control->group()->extracted() &&
+                    !((uint32_t) control->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT)) {
                     // each item in the array is a {bool, value}, we only want the value
                     groupIndexPtr = _class->constructor()->builder().CreateGEP(
                         groupPtr,
@@ -353,12 +356,16 @@ GeneratableModuleClass *Surface::compile() {
         {
             auto &b = _class->destructor()->builder();
             auto entryArrPtr = _class->cdestructor()->getEntryPointer(entryIndex, "entryarr");
-            auto indexPtr = _class->destructor()->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
+            auto indexPtr = _class->destructor()->allocaBuilder().CreateAlloca(
+                llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
             b.CreateStore(runtime()->ctx()->constInt(8, 0, false), indexPtr);
 
-            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck", _class->destructor()->get(module()));
-            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun", _class->destructor()->get(module()));
-            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend", _class->destructor()->get(module()));
+            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck",
+                                                           _class->destructor()->get(module()));
+            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun",
+                                                         _class->destructor()->get(module()));
+            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend",
+                                                         _class->destructor()->get(module()));
 
             b.CreateBr(loopCheckBlock);
             b.SetInsertPoint(loopCheckBlock);
@@ -389,14 +396,20 @@ GeneratableModuleClass *Surface::compile() {
         {
             auto &b = _class->generate()->builder();
             auto entryArrPtr = _class->generate()->getEntryPointer(entryIndex, "entryarr");
-            auto indexPtr = _class->generate()->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
+            auto indexPtr = _class->generate()->allocaBuilder().CreateAlloca(
+                llvm::Type::getInt8Ty(runtime()->ctx()->llvm()), nullptr, "index");
             b.CreateStore(runtime()->ctx()->constInt(8, 0, false), indexPtr);
 
-            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck", _class->generate()->get(module()));
-            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun", _class->generate()->get(module()));
-            auto generateBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "generate", _class->generate()->get(module()));
-            auto generateEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "generateend", _class->generate()->get(module()));
-            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend", _class->generate()->get(module()));
+            auto loopCheckBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopcheck",
+                                                           _class->generate()->get(module()));
+            auto loopRunBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "looprun",
+                                                         _class->generate()->get(module()));
+            auto generateBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "generate",
+                                                          _class->generate()->get(module()));
+            auto generateEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "generateend",
+                                                             _class->generate()->get(module()));
+            auto loopEndBlock = llvm::BasicBlock::Create(runtime()->ctx()->llvm(), "loopend",
+                                                         _class->generate()->get(module()));
 
             b.CreateBr(loopCheckBlock);
             b.SetInsertPoint(loopCheckBlock);
@@ -432,7 +445,8 @@ GeneratableModuleClass *Surface::compile() {
                     auto controlPtr = nodeClass->getEntryPointer(b, instId, entryPtr, "controlinst");
 
                     // array types are always active (because they don't store an active flag...)
-                    llvm::Value *controlActive = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()), 1, false);
+                    llvm::Value *controlActive = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()),
+                                                                        1, false);
                     auto loadedPtr = b.CreateLoad(controlPtr);
                     if (loadedPtr->getType()->getPointerElementType()->isStructTy()) {
                         controlActive = b.CreateLoad(b.CreateGEP(
@@ -499,7 +513,8 @@ void Surface::pullMethods() {
     RuntimeUnit::pullMethods();
 }
 
-void Surface::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod) {
+void
+Surface::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod) {
     RuntimeUnit::pullMethods(getterMethod, destroyMethod);
 
     for (const auto &group : _controlGroups) {

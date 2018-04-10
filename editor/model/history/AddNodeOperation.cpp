@@ -6,16 +6,22 @@
 
 using namespace AxiomModel;
 
-AddNodeOperation::AddNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef, Node::Type type, QString name, QPoint pos)
-    : HistoryOperation(true, Type::ADD_NODE), project(project), nodeRef(std::move(nodeRef)), type(type), name(std::move(name)), pos(pos) {
+AddNodeOperation::AddNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef, Node::Type type,
+                                   QString name, QPoint pos)
+    : HistoryOperation(true, Type::ADD_NODE), project(project), nodeRef(std::move(nodeRef)), type(type),
+      name(std::move(name)), pos(pos) {
 
 }
 
 std::unique_ptr<AddNodeOperation> AddNodeOperation::deserialize(QDataStream &stream, Project *project) {
-    NodeRef nodeRef; stream >> nodeRef;
-    quint32 typeInt; stream >> typeInt;
-    QString name; stream >> name;
-    QPoint pos; stream >> pos;
+    NodeRef nodeRef;
+    stream >> nodeRef;
+    quint32 typeInt;
+    stream >> typeInt;
+    QString name;
+    stream >> name;
+    QPoint pos;
+    stream >> pos;
 
     return std::make_unique<AddNodeOperation>(project, nodeRef, (Node::Type) typeInt, name, pos);
 }
@@ -33,7 +39,8 @@ void AddNodeOperation::forward() {
         case Node::Type::GROUP:
             surface->insertItem(nodeRef.index, std::make_unique<GroupNode>(surface, name, pos, defaultSize));
             break;
-        case Node::Type::IO:break;
+        case Node::Type::IO:
+            break;
     }
 }
 

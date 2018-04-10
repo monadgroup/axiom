@@ -11,7 +11,7 @@ ModuleClass::ModuleClass(MaximContext *ctx, llvm::Module *module, const std::str
 
 }
 
-llvm::Constant* ModuleClass::initializeVal() {
+llvm::Constant *ModuleClass::initializeVal() {
     return llvm::ConstantAggregateZero::get(storageType());
 }
 
@@ -35,7 +35,7 @@ void ModuleClass::doComplete() {
 }
 
 BasicModuleClass::BasicModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name,
-                                           llvm::Type *type)
+                                   llvm::Type *type)
     : ModuleClass(ctx, module, name), _storageType(type) {
 
 }

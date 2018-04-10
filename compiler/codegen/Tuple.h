@@ -19,12 +19,14 @@ namespace MaximCodegen {
     public:
         using Storage = std::vector<std::unique_ptr<Value>>;
 
-        Tuple(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
+        Tuple(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos,
+              SourcePos endPos);
 
         Tuple(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);
 
         static std::unique_ptr<Tuple>
-        create(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos, SourcePos endPos);
+        create(MaximContext *context, Storage values, Builder &builder, Builder &allocaBuilder, SourcePos startPos,
+               SourcePos endPos);
 
         static std::unique_ptr<Tuple>
         create(MaximContext *context, TupleType *type, llvm::Value *get, SourcePos startPos, SourcePos endPos);

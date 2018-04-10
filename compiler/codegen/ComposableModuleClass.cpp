@@ -16,7 +16,7 @@ ModuleClassMethod *ComposableModuleClass::constructor() {
     return _constructor.get();
 }
 
-ModuleClassMethod* ComposableModuleClass::destructor() {
+ModuleClassMethod *ComposableModuleClass::destructor() {
     return _destructor.get();
 }
 
@@ -40,7 +40,8 @@ size_t ComposableModuleClass::addEntry(llvm::Type *type) {
     return index;
 }
 
-size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams, bool callDefaults) {
+size_t ComposableModuleClass::addEntry(ModuleClass *moduleClass, const std::vector<llvm::Value *> &constructorParams,
+                                       bool callDefaults) {
     auto index = addEntry(moduleClass->storageType());
     auto moduleConstructor = moduleClass->constructor();
     if (callDefaults && moduleConstructor) {

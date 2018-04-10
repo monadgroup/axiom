@@ -8,7 +8,7 @@ namespace AxiomModel {
     class Node;
 
     class NodeMidiControl : public NodeControl {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         enum class Mode {
