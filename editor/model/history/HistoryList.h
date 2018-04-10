@@ -18,6 +18,7 @@ namespace AxiomModel {
     public:
 
         enum class ActionType {
+            NONE,
             DELETE_SELECTED_ITEMS,
             CREATE_GROUP_NODE,
             CREATE_CUSTOM_NODE,
@@ -26,6 +27,8 @@ namespace AxiomModel {
         };
 
         size_t maxActions = 256;
+
+        static QString typeToString(ActionType type);
 
         explicit HistoryList(Project *project);
 
@@ -56,6 +59,10 @@ namespace AxiomModel {
         void canUndoChanged(bool canUndo);
 
         void canRedoChanged(bool canRedo);
+
+        void undoTypeChanged(ActionType newType);
+
+        void redoTypeChanged(ActionType newType);
 
     private:
 

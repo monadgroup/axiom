@@ -4,8 +4,22 @@
 
 #include "HistoryOperation.h"
 #include "../Project.h"
+#include "../../util.h"
 
 using namespace AxiomModel;
+
+QString HistoryList::typeToString(AxiomModel::HistoryList::ActionType type) {
+    switch (type) {
+        case ActionType::NONE: return "";
+        case ActionType::DELETE_SELECTED_ITEMS: return "Delete Selected Items";
+        case ActionType::CREATE_GROUP_NODE: return "Create Group Node";
+        case ActionType::CREATE_CUSTOM_NODE: return "Create Custom Node";
+        case ActionType::MOVE_NODE: return "Move Node";
+        case ActionType::SIZE_NODE: return "Resize Node";
+    }
+
+    unreachable;
+}
 
 HistoryList::HistoryList(AxiomModel::Project *project) : project(project) {
 
@@ -48,9 +62,12 @@ void HistoryList::endAction(ActionType type) {
 
     stack.push_back(std::move(currentAction));
 
-    // if the position went from 0 to 1, emit that we can undo
+    // update undo/redo state
     if (stackPos == 1) emit canUndoChanged(true);
     if (couldRedo) emit canRedoChanged(false);
+
+    emit undoTypeChanged(type);
+    emit redoTypeChanged(ActionType::NONE);
 }
 
 void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> operation) {
@@ -108,6 +125,8 @@ void HistoryList::deserialize(QDataStream &stream) {
 
     emit canUndoChanged(stackPos > 0);
     emit canRedoChanged(stackPos < stack.size());
+    emit undoTypeChanged(stackPos > 0 ? stack[stackPos - 1].type : ActionType::NONE);
+    emit redoTypeChanged(stackPos < stack.size() ? stack[stackPos].type : ActionType::NONE);
 }
 
 void HistoryList::undo() {
@@ -125,6 +144,9 @@ void HistoryList::undo() {
 
     if (stackPos == 0) emit canUndoChanged(false);
     if (stackPos == stack.size() - 1) emit canRedoChanged(true);
+
+    emit undoTypeChanged(stackPos == 0 ? ActionType::NONE : stack[stackPos - 1].type);
+    emit redoTypeChanged(stack[stackPos].type);
 }
 
 void HistoryList::redo() {
@@ -142,4 +164,7 @@ void HistoryList::redo() {
     stackPos++;
     if (stackPos == 1) emit canUndoChanged(true);
     if (stackPos == stack.size()) emit canRedoChanged(false);
+
+    emit undoTypeChanged(stack[stackPos - 1].type);
+    emit redoTypeChanged(stackPos == stack.size() ? ActionType::NONE : stack[stackPos].type);
 }

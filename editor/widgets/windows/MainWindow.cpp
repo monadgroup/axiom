@@ -58,6 +58,15 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
             undoAction, &QAction::setEnabled);
     connect(&project->history, &AxiomModel::HistoryList::canRedoChanged,
             redoAction, &QAction::setEnabled);
+    connect(&project->history, &AxiomModel::HistoryList::undoTypeChanged,
+            [undoAction](AxiomModel::HistoryList::ActionType type) {
+                undoAction->setText("&Undo " + AxiomModel::HistoryList::typeToString(type));
+            });
+    connect(&project->history, &AxiomModel::HistoryList::redoTypeChanged,
+            [redoAction](AxiomModel::HistoryList::ActionType type) {
+                redoAction->setText("&Redo " + AxiomModel::HistoryList::typeToString(type));
+            });
+
     connect(undoAction, &QAction::triggered,
             &project->history, &AxiomModel::HistoryList::undo);
     connect(redoAction, &QAction::triggered,
