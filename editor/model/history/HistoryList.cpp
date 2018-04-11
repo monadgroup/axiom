@@ -30,6 +30,8 @@ QString HistoryList::typeToString(AxiomModel::HistoryList::ActionType type) {
             return "Hide Control Name";
         case ActionType::MOVE_CONTROL:
             return "Move Control";
+        case ActionType::SIZE_CONTROL:
+            return "Resize Control";
     }
 
     unreachable;

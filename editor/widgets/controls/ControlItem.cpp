@@ -48,8 +48,16 @@ ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : contro
 
         connect(resizer, &ItemResizer::startDrag,
                 this, &ControlItem::resizerStartDrag);
+        connect(resizer, &ItemResizer::startDrag,
+                control, &NodeControl::startResize);
         connect(resizer, &ItemResizer::changed,
                 this, &ControlItem::resizerChanged);
+        connect(resizer, &ItemResizer::endDrag,
+                [this, control]() {
+                    DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::SIZE_CONTROL, {
+                        control->finishResize();
+                    });
+                });
 
         connect(control, &NodeControl::selected,
                 resizer, [this, resizer]() { resizer->setVisible(true); });

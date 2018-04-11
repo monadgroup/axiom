@@ -9,6 +9,7 @@
 #include "../Project.h"
 #include "../history/ShowHideControlNameOperation.h"
 #include "../history/MoveControlOperation.h"
+#include "../history/SizeControlOperation.h"
 #include "compiler/runtime/Control.h"
 #include "compiler/codegen/Control.h"
 #include "../../util.h"
@@ -75,6 +76,23 @@ void NodeControl::setExposeBase(AxiomModel::NodeControl *base) {
     if (node->parentSchematic->canExposeControl() && base != _exposeBase) {
         _exposeBase = base;
         emit exposeBaseChanged(base);
+    }
+}
+
+void NodeControl::startResize() {
+    startResizeTopLeft = pos();
+    startResizeBottomRight = pos() + QPoint(size().width(), size().height());
+}
+
+void NodeControl::finishResize() {
+    auto bottomRight = pos() + QPoint(size().width(), size().height());
+    if (pos() != startResizeTopLeft || bottomRight != startResizeBottomRight) {
+        node->parentSchematic->project()->history.appendOperation(std::make_unique<SizeControlOperation>(
+            node->parentSchematic->project(),
+            ref(),
+            startResizeTopLeft, startResizeBottomRight,
+            pos(), bottomRight
+        ));
     }
 }
 

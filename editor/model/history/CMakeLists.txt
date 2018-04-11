@@ -9,6 +9,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/MoveNodeOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/RenameNodeOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ShowHideControlNameOperation.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SizeControlOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/SizeNodeOperation.cpp")
 
 target_sources(axiom_model PRIVATE ${SOURCE_FILES})

@@ -27,7 +27,8 @@ namespace AxiomModel {
             RENAME_NODE,
             SHOW_CONTROL_NAME,
             HIDE_CONTROL_NAME,
-            MOVE_CONTROL
+            MOVE_CONTROL,
+            SIZE_CONTROL
         };
 
         size_t maxActions = 256;

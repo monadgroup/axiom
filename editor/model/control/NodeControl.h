@@ -54,6 +54,10 @@ namespace AxiomModel {
 
         void restoreValue() override = 0;
 
+        void startResize();
+
+        void finishResize();
+
         void startDragging() override;
 
         void finishDragging() override;
@@ -79,6 +83,8 @@ namespace AxiomModel {
         MaximRuntime::Control *_runtime;
 
         QPoint startDragPos;
+        QPoint startResizeTopLeft;
+        QPoint startResizeBottomRight;
 
     private slots:
 

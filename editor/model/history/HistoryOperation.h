@@ -17,8 +17,8 @@ namespace AxiomModel {
             RENAME_NODE,
             SHOW_HIDE_CONTROL_NAME,
             MOVE_CONTROL,
-            /*SIZE_CONTROL,
-            CHANGE_NUM_VALUE,
+            SIZE_CONTROL,
+            /*CHANGE_NUM_VALUE,
             EXPOSE_CONTROL,
             ADD_WIRE,
             REMOVE_WIRE*/
