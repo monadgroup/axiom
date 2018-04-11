@@ -293,7 +293,10 @@ void NumControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == moveAction) {
         control->select(true);
     } else if (selectedAction == nameShownAction) {
-        control->setShowName(nameShownAction->isChecked());
+        auto actionType = nameShownAction->isChecked() ? HistoryList::ActionType::SHOW_CONTROL_NAME : HistoryList::ActionType::HIDE_CONTROL_NAME;
+        DO_ACTION(control->node->parentSchematic->project()->history, actionType, {
+            control->setShowName(nameShownAction->isChecked());
+        });
     } else if (exposedAction && selectedAction == exposedAction) {
         control->node->parentSchematic->exposeControl(control);
     }

@@ -1,12 +1,13 @@
 #include "RenameNodeOperation.h"
-
+#include <utility>
 #include "../Project.h"
 
 using namespace AxiomModel;
 
 RenameNodeOperation::RenameNodeOperation(AxiomModel::Project *project, NodeRef nodeRef, QString beforeName,
                                          QString afterName)
-    : HistoryOperation(false, HistoryOperation::Type::RENAME_NODE, true), project(project), nodeRef(nodeRef), beforeName(beforeName), afterName(afterName) {
+    : HistoryOperation(false, HistoryOperation::Type::RENAME_NODE), project(project), nodeRef(std::move(nodeRef)), beforeName(
+    std::move(beforeName)), afterName(std::move(afterName)) {
 
 }
 

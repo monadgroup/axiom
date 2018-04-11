@@ -26,8 +26,6 @@ namespace AxiomModel {
 
         ControlRef ref() const;
 
-        //const ControlRef &ref() const { return _ref; }
-
         virtual ConnectionSink *sink() = 0;
 
         MaximRuntime::Control *runtime() const { return _runtime; }
@@ -47,6 +45,8 @@ namespace AxiomModel {
     public slots:
 
         void setShowName(bool showName);
+
+        void setShowNameNoOp(bool showName);
 
         void setExposeBase(NodeControl *base);
 

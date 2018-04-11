@@ -14,7 +14,14 @@ namespace AxiomModel {
             DELETE_NODE,
             MOVE_NODE,
             SIZE_NODE,
-            RENAME_NODE
+            RENAME_NODE,
+            SHOW_HIDE_CONTROL_NAME,
+            /*MOVE_CONTROL,
+            SIZE_CONTROL,
+            CHANGE_NUM_VALUE,
+            EXPOSE_CONTROL,
+            ADD_WIRE,
+            REMOVE_WIRE*/
         };
 
         HistoryOperation(bool needsRefresh, Type type, bool exec = true);

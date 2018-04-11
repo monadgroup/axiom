@@ -24,6 +24,10 @@ QString HistoryList::typeToString(AxiomModel::HistoryList::ActionType type) {
             return "Resize Node";
         case ActionType::RENAME_NODE:
             return "Rename Node";
+        case ActionType::SHOW_CONTROL_NAME:
+            return "Show Control Name";
+        case ActionType::HIDE_CONTROL_NAME:
+            return "Hide Control Name";
     }
 
     unreachable;

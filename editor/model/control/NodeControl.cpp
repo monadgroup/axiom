@@ -6,6 +6,8 @@
 #include "NodeMidiControl.h"
 #include "NodeExtractControl.h"
 #include "../schematic/Schematic.h"
+#include "../Project.h"
+#include "../history/ShowHideControlNameOperation.h"
 #include "compiler/runtime/Control.h"
 #include "compiler/codegen/Control.h"
 #include "../../util.h"
@@ -57,6 +59,12 @@ std::unique_ptr<GridItem> NodeControl::clone(GridSurface *newParent, QPoint newP
 
 void NodeControl::setShowName(bool showName) {
     if (showName != m_showName) {
+        node->parentSchematic->project()->history.appendOperation(std::make_unique<ShowHideControlNameOperation>(node->parentSchematic->project(), ref(), showName));
+    }
+}
+
+void NodeControl::setShowNameNoOp(bool showName) {
+    if (showName != m_showName) {
         m_showName = showName;
         emit showNameChanged(showName);
     }
@@ -81,7 +89,7 @@ void NodeControl::deserialize(QDataStream &stream) {
 
     bool showName;
     stream >> showName;
-    setShowName(showName);
+    setShowNameNoOp(showName);
 }
 
 void NodeControl::initSink() {
