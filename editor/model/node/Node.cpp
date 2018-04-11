@@ -9,6 +9,7 @@
 #include "../../util.h"
 #include "../history/MoveNodeOperation.h"
 #include "../history/SizeNodeOperation.h"
+#include "../history/RenameNodeOperation.h"
 
 using namespace AxiomModel;
 
@@ -42,6 +43,12 @@ void Node::restoreValue() {
 }
 
 void Node::setName(const QString &name) {
+    if (name != m_name) {
+        parentSchematic->project()->history.appendOperation(std::make_unique<RenameNodeOperation>(parentSchematic->project(), ref(), m_name, name));
+    }
+}
+
+void Node::setNameNoOp(const QString &name) {
     if (name != m_name) {
         m_name = name;
         emit nameChanged(name);
@@ -123,12 +130,15 @@ void Node::startResize() {
 }
 
 void Node::finishResize() {
-    parentSchematic->project()->history.appendOperation(std::make_unique<SizeNodeOperation>(
-        parentSchematic->project(),
-        ref(),
-        startResizeTopLeft, startResizeBottomRight,
-        pos(), pos() + QPoint(size().width(), size().height())
-    ));
+    auto bottomRight = pos() + QPoint(size().width(), size().height());
+    if (pos() != startResizeTopLeft || bottomRight != startResizeBottomRight) {
+        parentSchematic->project()->history.appendOperation(std::make_unique<SizeNodeOperation>(
+            parentSchematic->project(),
+            ref(),
+            startResizeTopLeft, startResizeBottomRight,
+            pos(), bottomRight
+        ));
+    }
 }
 
 void Node::startDragging() {
@@ -138,8 +148,11 @@ void Node::startDragging() {
 
 void Node::finishDragging() {
     GridItem::finishDragging();
-    parentSchematic->project()->history.appendOperation(
-        std::make_unique<MoveNodeOperation>(parentSchematic->project(), ref(), startDragPos, pos()));
+
+    if (startDragPos != pos()) {
+        parentSchematic->project()->history.appendOperation(
+            std::make_unique<MoveNodeOperation>(parentSchematic->project(), ref(), startDragPos, pos()));
+    }
 }
 
 void Node::serialize(QDataStream &stream) const {
@@ -160,7 +173,7 @@ void Node::deserialize(QDataStream &stream) {
     float panelHeight;
     stream >> panelHeight;
 
-    setName(name);
+    setNameNoOp(name);
     setPanelOpen(panelOpen);
     setPanelHeight(panelHeight);
 }

@@ -5,6 +5,7 @@
 #include "DeleteNodeOperation.h"
 #include "MoveNodeOperation.h"
 #include "SizeNodeOperation.h"
+#include "RenameNodeOperation.h"
 
 using namespace AxiomModel;
 
@@ -24,6 +25,8 @@ std::unique_ptr<HistoryOperation> HistoryOperation::deserialize(AxiomModel::Hist
             return MoveNodeOperation::deserialize(stream, project);
         case Type::SIZE_NODE:
             return SizeNodeOperation::deserialize(stream, project);
+        case Type::RENAME_NODE:
+            return RenameNodeOperation::deserialize(stream, project);
     }
 
     unreachable;

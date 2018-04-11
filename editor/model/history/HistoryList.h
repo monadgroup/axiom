@@ -23,7 +23,8 @@ namespace AxiomModel {
             CREATE_GROUP_NODE,
             CREATE_CUSTOM_NODE,
             MOVE_NODE,
-            SIZE_NODE
+            SIZE_NODE,
+            RENAME_NODE
         };
 
         size_t maxActions = 256;

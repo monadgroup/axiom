@@ -13,7 +13,8 @@ namespace AxiomModel {
             ADD_NODE,
             DELETE_NODE,
             MOVE_NODE,
-            SIZE_NODE
+            SIZE_NODE,
+            RENAME_NODE
         };
 
         HistoryOperation(bool needsRefresh, Type type, bool exec = true);

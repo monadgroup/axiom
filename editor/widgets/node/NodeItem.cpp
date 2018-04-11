@@ -252,7 +252,11 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         scene()->addItem(editor);
 
         connect(editor, &FloatingValueEditor::valueSubmitted,
-                node, &Node::setName);
+                [this](QString name) {
+                    DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::RENAME_NODE, {
+                        node->setName(name);
+                    });
+                });
     } else if (selectedAction == groupAction) {
         auto groupedNode = node->parentSchematic->groupSelection();
         canvas->panel->window->showSchematic(
