@@ -6,6 +6,7 @@
 
 #include "editor/model/node/Node.h"
 #include "editor/model/control/NodeControl.h"
+#include "editor/model/Project.h"
 #include "editor/util.h"
 #include "../ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
@@ -178,7 +179,9 @@ void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         isMoving = false;
-        emit control->finishedDragging();
+        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::MOVE_CONTROL, {
+            emit control->finishedDragging();
+        });
     } else {
         event->ignore();
     }

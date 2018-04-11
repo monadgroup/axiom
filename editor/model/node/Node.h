@@ -107,6 +107,7 @@ namespace AxiomModel {
         QPoint startDragPos;
         QPoint startResizeTopLeft;
         QPoint startResizeBottomRight;
+        std::vector<QPoint> controlStartPos;
     };
 
 }

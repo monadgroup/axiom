@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Node.h"
 
 #include "../schematic/Schematic.h"
@@ -8,6 +9,7 @@
 #include "CustomNode.h"
 #include "../../util.h"
 #include "../history/MoveNodeOperation.h"
+#include "../history/MoveControlOperation.h"
 #include "../history/SizeNodeOperation.h"
 #include "../history/RenameNodeOperation.h"
 
@@ -127,6 +129,12 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
 void Node::startResize() {
     startResizeTopLeft = pos();
     startResizeBottomRight = pos() + QPoint(size().width(), size().height());
+
+    // populate current control positions for adding history later
+    controlStartPos.clear();
+    for (const auto &item : surface.items()) {
+        controlStartPos.push_back(item->pos());
+    }
 }
 
 void Node::finishResize() {
@@ -139,6 +147,23 @@ void Node::finishResize() {
             pos(), bottomRight
         ));
     }
+
+    for (size_t i = 0; i < surface.items().size(); i++) {
+        auto controlItem = dynamic_cast<NodeControl *>(surface.items()[i].get());
+        auto startPos = controlStartPos[i];
+        if (!controlItem) continue;
+
+        // only add the operation if the surface position has changed
+        if (pos() * 2 + controlItem->pos() == startResizeTopLeft * 2 + startPos) continue;
+
+        parentSchematic->project()->history.appendOperation(std::make_unique<MoveControlOperation>(
+            parentSchematic->project(),
+            controlItem->ref(),
+            startPos,
+            controlItem->pos()
+        ));
+    }
+    controlStartPos.clear();
 }
 
 void Node::startDragging() {

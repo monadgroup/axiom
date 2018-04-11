@@ -7,6 +7,7 @@
 #include "SizeNodeOperation.h"
 #include "RenameNodeOperation.h"
 #include "ShowHideControlNameOperation.h"
+#include "MoveControlOperation.h"
 
 using namespace AxiomModel;
 
@@ -30,6 +31,8 @@ std::unique_ptr<HistoryOperation> HistoryOperation::deserialize(AxiomModel::Hist
             return RenameNodeOperation::deserialize(stream, project);
         case Type::SHOW_HIDE_CONTROL_NAME:
             return ShowHideControlNameOperation::deserialize(stream, project);
+        case Type::MOVE_CONTROL:
+            return MoveControlOperation::deserialize(stream, project);
     }
 
     unreachable;

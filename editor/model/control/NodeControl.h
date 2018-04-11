@@ -54,6 +54,10 @@ namespace AxiomModel {
 
         void restoreValue() override = 0;
 
+        void startDragging() override;
+
+        void finishDragging() override;
+
         void serialize(QDataStream &stream) const override;
 
         void deserialize(QDataStream &stream) override;
@@ -73,6 +77,8 @@ namespace AxiomModel {
         bool m_showName = true;
         NodeControl *_exposeBase = nullptr;
         MaximRuntime::Control *_runtime;
+
+        QPoint startDragPos;
 
     private slots:
 
