@@ -63,6 +63,11 @@ void SchematicView::mouseReleaseEvent(QMouseEvent *event) {
     QGraphicsView::mouseReleaseEvent(event);
 }
 
+void SchematicView::resizeEvent(QResizeEvent *event) {
+    QGraphicsView::resizeEvent(event);
+    pan(schematic->pan());
+}
+
 void SchematicView::wheelEvent(QWheelEvent *event) {
     event->ignore();
 
