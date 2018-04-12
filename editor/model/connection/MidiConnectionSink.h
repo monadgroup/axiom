@@ -10,7 +10,7 @@ namespace AxiomModel {
 
     public:
 
-        explicit MidiConnectionSink(MaximRuntime::Control *runtime);
+        explicit MidiConnectionSink(NodeControl *control);
 
         MaximRuntime::MidiValue value() const { return m_value; }
 

@@ -29,7 +29,9 @@ namespace AxiomModel {
             HIDE_CONTROL_NAME,
             MOVE_CONTROL,
             SIZE_CONTROL,
-            CONNECT_CONTROL
+            CONNECT_CONTROL,
+            DISCONNECT_CONTROL,
+            DISCONNECT_ALL
         };
 
         size_t maxActions = 256;

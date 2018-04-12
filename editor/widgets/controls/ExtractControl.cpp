@@ -145,8 +145,9 @@ void ExtractControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == clearAction) {
-        control->sink()->clearConnections();
-        control->node->parentSchematic->project()->build();
+        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::DISCONNECT_ALL, {
+            control->sink()->clearConnections();
+        });
     } else if (selectedAction == moveAction) {
         control->select(true);
     } else if (selectedAction == nameShownAction) {

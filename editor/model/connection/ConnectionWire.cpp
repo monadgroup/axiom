@@ -2,15 +2,18 @@
 
 #include <cassert>
 
-#include "../GridSurface.h"
+#include "../schematic/Schematic.h"
+#include "../Project.h"
+#include "../history/DisconnectControlsOperation.h"
+#include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
 
-ConnectionWire::ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, ConnectionSink *sinkB)
-    : surface(surface), sinkA(sinkA), sinkB(sinkB), type(sinkA->type) {
+ConnectionWire::ConnectionWire(Schematic *schematic, ConnectionSink *sinkA, ConnectionSink *sinkB)
+    : schematic(schematic), sinkA(sinkA), sinkB(sinkB), type(sinkA->type) {
     assert(sinkA->type == sinkB->type);
 
-    connect(surface, &GridSurface::gridChanged,
+    connect(schematic, &Schematic::gridChanged,
             this, &ConnectionWire::updateRoute);
     connect(sinkA, &ConnectionSink::posChanged,
             this, &ConnectionWire::updateRoute);
@@ -36,17 +39,31 @@ ConnectionWire::ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, Conn
     sinkA->addWire(this);
     sinkB->addWire(this);
 
+    if (sinkA->runtime() && sinkB->runtime()) {
+        sinkA->runtime()->connectTo(sinkB->runtime());
+    }
+
     updateRoute();
     updateActive();
 }
 
 void ConnectionWire::remove() {
+    // todo: create op
+
+    schematic->project()->history.appendOperation(std::make_unique<DisconnectControlsOperation>(schematic->project(), sinkA->ref(), sinkB->ref()));
+}
+
+void ConnectionWire::removeNoOp() {
+    if (sinkA->runtime() && sinkB->runtime()) {
+        sinkA->runtime()->disconnectFrom(sinkB->runtime());
+    }
+
     emit removed();
     emit cleanup();
 }
 
 void ConnectionWire::updateRoute() {
-    m_route = surface->grid.findPath(sinkA->pos(), sinkB->pos(), 1, 10, 4);
+    m_route = schematic->grid.findPath(sinkA->pos(), sinkB->pos(), 1, 10, 4);
     emit routeChanged(m_route);
 }
 

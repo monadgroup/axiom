@@ -9,7 +9,7 @@
 using namespace AxiomModel;
 
 NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-    : NodeControl(node, runtime, pos, size), m_sink(runtime) {
+    : NodeControl(node, runtime, pos, size), m_sink(this) {
     initSink();
 
     connect(&m_sink, &NumConnectionSink::valueChanged,

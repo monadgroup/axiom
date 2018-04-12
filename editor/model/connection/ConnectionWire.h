@@ -9,17 +9,19 @@ namespace AxiomModel {
 
     class GridSurface;
 
+    class Schematic;
+
     class ConnectionWire : public QObject {
     Q_OBJECT
 
     public:
-        GridSurface *surface;
+        Schematic *schematic;
         ConnectionSink *sinkA;
         ConnectionSink *sinkB;
 
         const ConnectionSink::Type type;
 
-        ConnectionWire(GridSurface *surface, ConnectionSink *sinkA, ConnectionSink *sinkB);
+        ConnectionWire(Schematic *schematic, ConnectionSink *sinkA, ConnectionSink *sinkB);
 
         const std::deque<QPoint> &route() const { return m_route; }
 
@@ -28,6 +30,8 @@ namespace AxiomModel {
     public slots:
 
         void remove();
+
+        void removeNoOp();
 
         void updateRoute();
 

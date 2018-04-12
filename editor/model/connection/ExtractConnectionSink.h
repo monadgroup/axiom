@@ -10,7 +10,7 @@ namespace AxiomModel {
     public:
         using ActiveSlotFlags = uint16_t;
 
-        explicit ExtractConnectionSink(MaximRuntime::Control *runtime, Type baseType);
+        explicit ExtractConnectionSink(NodeControl *control, Type baseType);
 
         ActiveSlotFlags activeSlots() const { return m_activeSlots; }
 

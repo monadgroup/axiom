@@ -4,6 +4,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/AddNodeOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ConnectControlsOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/DeleteNodeOperation.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DisconnectControlsOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/HistoryList.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/HistoryOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/MoveControlOperation.cpp"

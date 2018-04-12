@@ -2,8 +2,7 @@
 
 using namespace AxiomModel;
 
-ExtractConnectionSink::ExtractConnectionSink(MaximRuntime::Control *runtime, Type baseType) : ConnectionSink(baseType,
-                                                                                                             runtime) {
+ExtractConnectionSink::ExtractConnectionSink(NodeControl *control, Type baseType) : ConnectionSink(baseType, control) {
 
 }
 

@@ -16,7 +16,6 @@ GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
     connect(this, &GroupNode::removed,
             [this]() {
                 _runtime.remove();
-                parentSchematic->project()->build();
             });
 
     connect(&_runtime, &MaximRuntime::GroupNode::controlAdded,

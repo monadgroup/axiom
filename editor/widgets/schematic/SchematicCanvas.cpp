@@ -155,20 +155,20 @@ void SchematicCanvas::endConnecting(QPointF mousePos) {
 
         // if the sinks are already connected, remove the connection
         if (auto connectingWire = connectionWire->sinkA->getConnectingWire(connectable->sink()->sink())) {
-            connectingWire->remove();
+            DO_ACTION(schematic->project()->history, HistoryList::ActionType::DISCONNECT_CONTROL, {
+                connectingWire->remove();
+            });
         } else {
             DO_ACTION(schematic->project()->history, HistoryList::ActionType::CONNECT_CONTROL, {
                 schematic->connectControls(sourceControl, connectable->sink());
             });
         }
-
-        schematic->project()->build();
     } else {
         // todo: create JunctionNode if not currentItem is null
     }
 
     connectionSink->setActive(false);
-    connectionWire->remove();
+    connectionWire->removeNoOp();
     connectionSink.reset();
 }
 

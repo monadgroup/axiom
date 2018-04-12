@@ -1,13 +1,16 @@
 #include "ConnectControlsOperation.h"
 
+#include <utility>
+
 #include "../Project.h"
 #include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
 
-ConnectControlsOperation::ConnectControlsOperation(AxiomModel::Project *project, AxiomModel::ControlRef controlARef,
-                                                   AxiomModel::ControlRef controlBRef)
-    : HistoryOperation(true, HistoryOperation::Type::CONNECT_CONTROLS), project(project), controlARef(controlARef), controlBRef(controlBRef) {
+ConnectControlsOperation::ConnectControlsOperation(AxiomModel::Project *project, ControlRef controlARef,
+                                                   ControlRef controlBRef)
+    : HistoryOperation(true, HistoryOperation::Type::CONNECT_CONTROLS), project(project), controlARef(
+      std::move(controlARef)), controlBRef(std::move(controlBRef)) {
 
 }
 
@@ -32,9 +35,7 @@ void ConnectControlsOperation::backward() {
     auto controlB = project->findControl(controlBRef);
 
     auto wire = controlA->sink()->getConnectingWire(controlB->sink());
-    if (wire) {
-        wire->remove();
-    }
+    if (wire) wire->removeNoOp();
 }
 
 void ConnectControlsOperation::serialize(QDataStream &stream) const {

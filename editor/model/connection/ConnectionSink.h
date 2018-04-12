@@ -4,6 +4,8 @@
 #include <QtCore/QPoint>
 #include <vector>
 
+#include "../Ref.h"
+
 namespace MaximRuntime {
 
     class Control;
@@ -13,6 +15,8 @@ namespace MaximRuntime {
 namespace AxiomModel {
 
     class ConnectionWire;
+
+    class NodeControl;
 
     class GridSurface;
 
@@ -27,7 +31,7 @@ namespace AxiomModel {
 
         const Type type;
 
-        explicit ConnectionSink(Type type, MaximRuntime::Control *runtime);
+        explicit ConnectionSink(Type type, NodeControl *control);
 
         std::vector<ConnectionWire *> const &connections() const { return m_connections; }
 
@@ -37,7 +41,9 @@ namespace AxiomModel {
 
         bool active() const { return m_active; }
 
-        MaximRuntime::Control *runtime() const { return _runtime; }
+        MaximRuntime::Control *runtime() const;
+
+        ControlRef ref() const;
 
         ConnectionWire *getConnectingWire(ConnectionSink *sink) const;
 
@@ -74,7 +80,7 @@ namespace AxiomModel {
         QPoint m_pos;
         QPointF m_subPos;
         bool m_active = false;
-        MaximRuntime::Control *_runtime;
+        NodeControl *_control;
     };
 
 }

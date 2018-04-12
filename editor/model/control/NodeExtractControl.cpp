@@ -7,7 +7,7 @@ using namespace AxiomModel;
 
 NodeExtractControl::NodeExtractControl(Node *node, MaximRuntime::Control *runtime, ConnectionSink::Type baseType,
                                        QPoint pos, QSize size)
-    : NodeControl(node, runtime, pos, size), m_sink(runtime, baseType) {
+    : NodeControl(node, runtime, pos, size), m_sink(this, baseType) {
     initSink();
 
     connect(&m_sink, &ExtractConnectionSink::activeSlotsChanged,

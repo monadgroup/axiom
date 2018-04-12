@@ -2,7 +2,7 @@
 
 using namespace AxiomModel;
 
-MidiConnectionSink::MidiConnectionSink(MaximRuntime::Control *runtime) : ConnectionSink(Type::MIDI, runtime) {
+MidiConnectionSink::MidiConnectionSink(NodeControl *control) : ConnectionSink(Type::MIDI, control) {
 
 }
 

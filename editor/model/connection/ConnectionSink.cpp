@@ -1,12 +1,20 @@
 #include "ConnectionSink.h"
 
 #include "ConnectionWire.h"
-#include "compiler/runtime/Control.h"
+#include "../control/NodeControl.h"
 
 using namespace AxiomModel;
 
-ConnectionSink::ConnectionSink(Type type, MaximRuntime::Control *runtime) : type(type), _runtime(runtime) {
+ConnectionSink::ConnectionSink(Type type, NodeControl *control) : type(type), _control(control) {
 
+}
+
+MaximRuntime::Control* ConnectionSink::runtime() const {
+    return _control ? _control->runtime() : nullptr;
+}
+
+ControlRef ConnectionSink::ref() const {
+    return _control ? _control->ref() : ControlRef();
 }
 
 ConnectionWire *ConnectionSink::getConnectingWire(AxiomModel::ConnectionSink *sink) const {

@@ -2,7 +2,7 @@
 
 using namespace AxiomModel;
 
-NumConnectionSink::NumConnectionSink(MaximRuntime::Control *runtime) : ConnectionSink(Type::NUMBER, runtime) {}
+NumConnectionSink::NumConnectionSink(NodeControl *control) : ConnectionSink(Type::NUMBER, control) {}
 
 void NumConnectionSink::setValue(MaximRuntime::NumValue value) {
     value.left = value.left < 0 ? 0 : value.left > 1 ? 1 : value.left;
