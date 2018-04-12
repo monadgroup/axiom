@@ -9,7 +9,8 @@
 #include "../node/CustomNode.h"
 #include "../node/IONode.h"
 #include "../control/NodeControl.h"
-#include "editor/model/history/AddNodeOperation.h"
+#include "../history/AddNodeOperation.h"
+#include "../history/ConnectControlsOperation.h"
 #include "../../AxiomApplication.h"
 #include "../../util.h"
 #include "compiler/runtime/Runtime.h"
@@ -151,6 +152,14 @@ Node *Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataS
     auto nodePtr = newNode.get();
     insertItem(index, std::move(newNode));
     return nodePtr;
+}
+
+void Schematic::connectControls(AxiomModel::NodeControl *controlA, AxiomModel::NodeControl *controlB) {
+    if (controlA->sink()->type != controlB->sink()->type) {
+        return;
+    }
+
+    _project->history.appendOperation(std::make_unique<ConnectControlsOperation>(_project, controlA->ref(), controlB->ref()));
 }
 
 ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB) {

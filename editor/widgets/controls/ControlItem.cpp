@@ -130,8 +130,8 @@ bool ControlItem::isEditable() const {
     return !control->isSelected();
 }
 
-AxiomModel::ConnectionSink *ControlItem::sink() {
-    return control->sink();
+AxiomModel::NodeControl *ControlItem::sink() {
+    return control;
 }
 
 QRectF ControlItem::drawBoundingRect() const {

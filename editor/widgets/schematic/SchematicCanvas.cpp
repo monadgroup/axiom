@@ -111,10 +111,11 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
     if (isConnecting) return;
 
     isConnecting = true;
-    connectionSink = std::make_unique<ConnectionSink>(control->sink()->type, nullptr);
-    connectionSink->setPos(control->sink()->pos(), control->sink()->subPos());
+    sourceControl = control->sink();
+    connectionSink = std::make_unique<ConnectionSink>(control->sink()->sink()->type, nullptr);
+    connectionSink->setPos(control->sink()->pos(), control->sink()->sink()->subPos());
     connectionSink->setActive(true);
-    connectionWire = schematic->connectSinks(control->sink(), connectionSink.get());
+    connectionWire = schematic->connectSinks(control->sink()->sink(), connectionSink.get());
     assert(connectionWire != nullptr);
 
     connect(connectionWire, &ConnectionWire::removed,
@@ -126,8 +127,10 @@ void SchematicCanvas::updateConnecting(QPointF mousePos) {
 
     auto currentItem = itemAt(mousePos, QTransform());
     auto connectable = dynamic_cast<IConnectable *>(currentItem);
-    if (connectable && connectable->sink()->type == connectionSink->type) {
-        connectionSink->setPos(connectable->sink()->pos(), connectable->sink()->subPos());
+
+    // snap to the connectable if it's not the one we started with, and it has the same type
+    if (connectable && connectable->sink()->sink()->type == connectionSink->type && connectable->sink() != sourceControl) {
+        connectionSink->setPos(connectable->sink()->pos(), connectable->sink()->sink()->subPos());
     } else {
         connectionSink->setPos(
             QPoint(
@@ -151,10 +154,12 @@ void SchematicCanvas::endConnecting(QPointF mousePos) {
         isConnecting = false;
 
         // if the sinks are already connected, remove the connection
-        if (auto connectingWire = connectionWire->sinkA->getConnectingWire(connectable->sink())) {
+        if (auto connectingWire = connectionWire->sinkA->getConnectingWire(connectable->sink()->sink())) {
             connectingWire->remove();
         } else {
-            schematic->connectSinks(connectionWire->sinkA, connectable->sink());
+            DO_ACTION(schematic->project()->history, HistoryList::ActionType::CONNECT_CONTROL, {
+                schematic->connectControls(sourceControl, connectable->sink());
+            });
         }
 
         schematic->project()->build();

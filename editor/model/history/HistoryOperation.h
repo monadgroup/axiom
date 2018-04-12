@@ -18,6 +18,7 @@ namespace AxiomModel {
             SHOW_HIDE_CONTROL_NAME,
             MOVE_CONTROL,
             SIZE_CONTROL,
+            CONNECT_CONTROLS
             /*CHANGE_NUM_VALUE,
             EXPOSE_CONTROL,
             ADD_WIRE,

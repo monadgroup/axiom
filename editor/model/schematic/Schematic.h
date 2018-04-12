@@ -62,6 +62,8 @@ namespace AxiomModel {
 
         GroupNode *groupSelection();
 
+        void connectControls(NodeControl *controlA, NodeControl *controlB);
+
         ConnectionWire *connectSinks(ConnectionSink *sinkA, ConnectionSink *sinkB);
 
         virtual void serialize(QDataStream &stream) const;

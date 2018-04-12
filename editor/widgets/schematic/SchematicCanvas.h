@@ -13,6 +13,8 @@ namespace AxiomModel {
 
     class Node;
 
+    class NodeControl;
+
     class GridItem;
 }
 
@@ -94,6 +96,7 @@ namespace AxiomGui {
         bool isConnecting = false;
         std::unique_ptr<AxiomModel::ConnectionSink> connectionSink;
         AxiomModel::ConnectionWire *connectionWire;
+        AxiomModel::NodeControl *sourceControl;
 
         void leftMousePressEvent(QGraphicsSceneMouseEvent *event);
 

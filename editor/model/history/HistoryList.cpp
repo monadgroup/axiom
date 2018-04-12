@@ -32,6 +32,8 @@ QString HistoryList::typeToString(AxiomModel::HistoryList::ActionType type) {
             return "Move Control";
         case ActionType::SIZE_CONTROL:
             return "Resize Control";
+        case ActionType::CONNECT_CONTROL:
+            return "Connect Controls";
     }
 
     unreachable;
