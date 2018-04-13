@@ -3,9 +3,11 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtGui/QIcon>
+#include <QtCore/QDateTime>
 
 #include "editor/util.h"
 #include "editor/resources/resource.h"
+#include "editor/timestamp.h"
 
 using namespace AxiomGui;
 
@@ -22,6 +24,10 @@ AboutWindow::AboutWindow() : QDialog(nullptr,
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setMargin(10);
 
+    // get nicely formatted build date
+    auto buildDate = QDateTime::fromString(tr(TIMEZ), Qt::ISODate);
+    auto buildDateStr = buildDate.toString("yyyy/MM/dd HH:mm:ss t");
+
     QPixmap logoImg(":/logo.png");
     auto logoLabel = new QLabel();
     logoLabel->setObjectName("about-logo");
@@ -35,7 +41,7 @@ AboutWindow::AboutWindow() : QDialog(nullptr,
     auto versionLabel = new QLabel(tr("Version:"));
     versionLabel->setObjectName("about-label");
     mainLayout->addWidget(versionLabel, 2, 0);
-    mainLayout->addWidget(new QLabel(tr(VER_FILEVERSION_STR)), 2, 1);
+    mainLayout->addWidget(new QLabel(tr(VER_FILEVERSION_STR) + ", built " + buildDateStr), 2, 1);
 
     auto authLabel = new QLabel(tr("Author:"));
     authLabel->setObjectName("about-label");

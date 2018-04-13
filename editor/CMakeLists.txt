@@ -31,6 +31,12 @@ add_definitions(${LLVM_DEFINITIONS})
 llvm_map_components_to_libnames(llvm_libs support core ipo irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
 set(LINK_LIBS axiom_widgets axiom_model maxim_runtime maxim_codegen maxim_common vst_sdk Qt5::Widgets ${llvm_libs})
 
+# create build time header
+file(WRITE ${CMAKE_BINARY_DIR}/timestamp.cmake "string(TIMESTAMP TIMEZ UTC)\n")
+file(APPEND ${CMAKE_BINARY_DIR}/timestamp.cmake "file(WRITE timestamp.h \"#pragma once\\n\")\n")
+file(APPEND ${CMAKE_BINARY_DIR}/timestamp.cmake "file(APPEND timestamp.h \"#define TIMEZ \\\"\${TIMEZ}\\\"\\n\\n\")\n")
+add_custom_target(timestamp COMMAND ${CMAKE_COMMAND} -P ${CMAKE_BINARY_DIR}/timestamp.cmake ADD_DEPENDENCIES ${CMAKE_BINARY_DIR}/timestamp.cmake)
+
 add_subdirectory(model)
 add_subdirectory(widgets)
 add_subdirectory(../compiler compiler)
@@ -38,6 +44,8 @@ add_subdirectory(../vendor/vst vendor/vst)
 
 add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_editor ${LINK_LIBS})
+add_dependencies(axiom_editor timestamp)
 
 add_executable(axiom_standalone ${STANDALONE_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_standalone ${LINK_LIBS})
+add_dependencies(axiom_standalone timestamp)

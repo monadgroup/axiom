@@ -19,7 +19,7 @@ set(SOURCE_FILES
         GlobalActions.cpp
         ItemResizer.cpp)
 
-include_directories(../../ ${LLVM_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
+include_directories(../../ ${LLVM_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_library(axiom_widgets ${SOURCE_FILES})
