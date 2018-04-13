@@ -136,54 +136,58 @@ void ValueOperator::writeMidi(void *ptr, const MidiValue &value) {
     }
 }
 
-void NumValue::serialize(QDataStream &stream) const {
-    stream << active;
-    stream << left;
-    stream << right;
-    stream << (uint8_t) form;
+QDataStream& MaximRuntime::operator<<(QDataStream &stream, const MaximRuntime::NumValue &val) {
+    stream << val.active;
+    stream << val.left;
+    stream << val.right;
+    stream << (uint8_t ) val.form;
+    return stream;
 }
 
-void NumValue::deserialize(QDataStream &stream) {
-    stream >> active;
-    stream >> left;
-    stream >> right;
+QDataStream& MaximRuntime::operator>>(QDataStream &stream, MaximRuntime::NumValue &val) {
+    stream >> val.active;
+    stream >> val.left;
+    stream >> val.right;
 
-    uint8_t intForm;
-    stream >> intForm;
-    form = (MaximCommon::FormType) intForm;
+    uint8_t intForm; stream >> intForm;
+    val.form = (MaximCommon::FormType) intForm;
+    return stream;
 }
 
-void MidiEventValue::serialize(QDataStream &stream) const {
-    stream << (uint8_t) event;
-    stream << channel;
-    stream << note;
-    stream << param;
+QDataStream& MaximRuntime::operator<<(QDataStream &stream, const MaximRuntime::MidiEventValue &val) {
+    stream << (uint8_t) val.event;
+    stream << val.channel;
+    stream << val.note;
+    stream << val.param;
+    return stream;
 }
 
-void MidiEventValue::deserialize(QDataStream &stream) {
-    uint8_t intEvent;
-    stream >> intEvent;
-    event = (MaximCommon::MidiEventType) intEvent;
+QDataStream& MaximRuntime::operator>>(QDataStream &stream, MaximRuntime::MidiEventValue &val) {
+    uint8_t intEvent; stream >> intEvent;
+    val.event = (MaximCommon::MidiEventType) intEvent;
 
-    stream >> channel;
-    stream >> note;
-    stream >> param;
+    stream >> val.channel;
+    stream >> val.note;
+    stream >> val.param;
+    return stream;
 }
 
-void MidiValue::serialize(QDataStream &stream) const {
-    stream << active;
-    stream << count;
+QDataStream& MaximRuntime::operator<<(QDataStream &stream, const MaximRuntime::MidiValue &val) {
+    stream << val.active;
+    stream << val.count;
 
-    for (uint8_t i = 0; i < count; i++) {
-        events[i].serialize(stream);
+    for (uint8_t i = 0; i < val.count; i++) {
+        stream << val.events[i];
     }
+    return stream;
 }
 
-void MidiValue::deserialize(QDataStream &stream) {
-    stream >> active;
-    stream >> count;
+QDataStream& MaximRuntime::operator>>(QDataStream &stream, MaximRuntime::MidiValue &val) {
+    stream >> val.active;
+    stream >> val.count;
 
-    for (uint8_t i = 0; i < count; i++) {
-        events[i].serialize(stream);
+    for (uint8_t i = 0; i < val.count; i++) {
+        stream >> val.events[i];
     }
+    return stream;
 }

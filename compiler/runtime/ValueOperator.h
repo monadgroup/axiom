@@ -37,11 +37,10 @@ namespace MaximRuntime {
         NumValue withR(float r) const {
             return {active, left, r, form};
         }
-
-        void serialize(QDataStream &stream) const;
-
-        void deserialize(QDataStream &stream);
     };
+
+    QDataStream &operator<<(QDataStream &stream, const NumValue &val);
+    QDataStream &operator>>(QDataStream &stream, NumValue &val);
 
     struct MidiEventValue {
         MaximCommon::MidiEventType event = MaximCommon::MidiEventType::NOTE_OFF;
@@ -56,11 +55,10 @@ namespace MaximRuntime {
         bool operator!=(const MidiEventValue &other) const {
             return !(*this == other);
         }
-
-        void serialize(QDataStream &stream) const;
-
-        void deserialize(QDataStream &stream);
     };
+
+    QDataStream &operator<<(QDataStream &stream, const MidiEventValue &val);
+    QDataStream &operator>>(QDataStream &stream, MidiEventValue &val);
 
     struct MidiValue {
         bool active = false;
@@ -85,11 +83,10 @@ namespace MaximRuntime {
             events[count] = event;
             count++;
         }
-
-        void serialize(QDataStream &stream) const;
-
-        void deserialize(QDataStream &stream);
     };
+
+    QDataStream &operator<<(QDataStream &stream, const MidiValue &val);
+    QDataStream &operator>>(QDataStream &stream, MidiValue &val);
 
     class ValueOperator {
     public:
