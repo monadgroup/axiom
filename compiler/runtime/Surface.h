@@ -29,7 +29,7 @@ namespace MaximRuntime {
 
         GeneratableModuleClass *compile();
 
-        void addNode(Node *node);
+        void addNode(std::unique_ptr<Node> node);
 
         void removeNode(Node *node);
 
@@ -56,7 +56,7 @@ namespace MaximRuntime {
         size_t _depth;
         bool _needsGraphUpdate = false;
 
-        std::set<Node *> _nodes;
+        std::set<std::unique_ptr<Node>> _nodes;
 
         std::vector<std::unique_ptr<ControlGroup>> _controlGroups;
 

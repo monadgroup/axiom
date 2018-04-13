@@ -46,7 +46,7 @@ GeneratableModuleClass *Surface::compile() {
     auto nodeCodegenStart = std::clock();
     std::unordered_map<Node *, GeneratableModuleClass *> nodeClasses;
     for (const auto &node : _nodes) {
-        nodeClasses.emplace(node, node->compile());
+        nodeClasses.emplace(node.get(), node->compile());
         node->setExtracted(false);
     }
     auto nodeCodegenTime = std::clock() - nodeCodegenStart;
@@ -257,8 +257,8 @@ GeneratableModuleClass *Surface::compile() {
     // but ultimately that's probably futile
     if (inverseExecutionOrder.size() < _nodes.size()) {
         for (const auto &node : _nodes) {
-            if (visitedNodes.find(node) == visitedNodes.end()) {
-                inverseExecutionOrder.push_back(node);
+            if (visitedNodes.find(node.get()) == visitedNodes.end()) {
+                inverseExecutionOrder.push_back(node.get());
             }
         }
     }
@@ -499,13 +499,19 @@ GeneratableModuleClass *Surface::compile() {
     return _class.get();
 }
 
-void Surface::addNode(Node *node) {
-    _nodes.emplace(node);
+void Surface::addNode(std::unique_ptr<Node> node) {
+    _nodes.emplace(std::move(node));
     scheduleGraphUpdate();
 }
 
 void Surface::removeNode(Node *node) {
-    _nodes.erase(node);
+    for (auto i = _nodes.begin(); i != _nodes.end(); i++) {
+        if (i->get() == node) {
+            _nodes.erase(i);
+            break;
+        }
+    }
+
     scheduleGraphUpdate();
 }
 
@@ -550,7 +556,7 @@ void Surface::addExitNodes(std::set<MaximRuntime::Node *> &queue) {
             break;
         }
 
-        if (addNode) queue.emplace(node);
+        if (addNode) queue.emplace(node.get());
     }
 }
 

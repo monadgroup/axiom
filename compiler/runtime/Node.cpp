@@ -5,13 +5,13 @@
 using namespace MaximRuntime;
 
 Node::Node(Surface *surface) : ModuleRuntimeUnit(surface->runtime(), "node"), _surface(surface) {
-    surface->addNode(this);
+    //surface->addNode(this);
     scheduleCompile();
 }
 
 void Node::remove() {
-    _surface->removeNode(this);
     cleanup();
+    _surface->removeNode(this);
 }
 
 void Node::scheduleCompile() {
