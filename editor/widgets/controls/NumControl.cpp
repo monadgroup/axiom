@@ -152,7 +152,11 @@ void NumControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         auto cv = getCVal();
         auto isActive = cv.left != 0 || cv.right != 0;
         auto newVal = !isActive;
-        setCVal(cv.withLR(newVal, newVal));
+        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_VALUE, {
+            control->startSetValue();
+            setCVal(cv.withLR(newVal, newVal));
+            control->endSetValue();
+        });
         return;
     }
 
