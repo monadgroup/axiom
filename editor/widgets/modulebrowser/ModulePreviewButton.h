@@ -4,6 +4,7 @@
 #include <QtWidgets/QLabel>
 
 namespace AxiomModel {
+    class Library;
     class LibraryEntry;
 }
 
@@ -13,13 +14,16 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        explicit ModulePreviewButton(AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
+        explicit ModulePreviewButton(AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
 
     private slots:
 
         void setName(QString name);
 
+        void setVisibleTag(const QString &tag);
+
     private:
+        AxiomModel::LibraryEntry *entry;
         QLabel *label;
 
     };

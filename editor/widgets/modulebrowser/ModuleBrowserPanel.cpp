@@ -6,10 +6,12 @@
 
 #include "editor/util.h"
 #include "ModulePreviewList.h"
+#include "editor/model/Library.h"
 
 using namespace AxiomGui;
 
-ModuleBrowserPanel::ModuleBrowserPanel(AxiomModel::Library *library, QWidget *parent) : DockPanel("Modules", parent) {
+ModuleBrowserPanel::ModuleBrowserPanel(AxiomModel::Library *library, QWidget *parent) : DockPanel("Modules", parent),
+                                                                                        library(library) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/ModuleBrowserPanel.qss"));
 
     auto mainLayout = new QGridLayout(this);
@@ -23,11 +25,10 @@ ModuleBrowserPanel::ModuleBrowserPanel(AxiomModel::Library *library, QWidget *pa
     mainLayout->setColumnMinimumWidth(1, 200);
     mainLayout->setRowStretch(1, 1);
 
-    auto filterTabs = new QTabBar(this);
+    filterTabs = new QTabBar(this);
     mainLayout->addWidget(filterTabs, 0, 0, Qt::AlignLeft);
 
     filterTabs->addTab(tr("All"));
-    filterTabs->addTab(tr("+"));
 
     auto searchBox = new QLineEdit(this);
     searchBox->setObjectName("searchBox");
@@ -39,4 +40,37 @@ ModuleBrowserPanel::ModuleBrowserPanel(AxiomModel::Library *library, QWidget *pa
 
     mainWidget->setLayout(mainLayout);
     setWidget(mainWidget);
+
+    for (const auto &tag : library->tags()) {
+        addTag(tag.first);
+    }
+    connect(library, &AxiomModel::Library::tagAdded,
+            this, &ModuleBrowserPanel::addTag);
+    connect(library, &AxiomModel::Library::tagRemoved,
+            this, &ModuleBrowserPanel::removeTag);
+    connect(filterTabs, &QTabBar::currentChanged,
+            this, &ModuleBrowserPanel::changeTag);
+}
+
+void ModuleBrowserPanel::addTag(const QString &tag) {
+    auto index = filterTabs->addTab(tag);
+    tabIndexes.emplace(tag, index);
+    indexTabs.emplace(index, tag);
+}
+
+void ModuleBrowserPanel::removeTag(const QString &tag) {
+    auto index = tabIndexes.find(tag);
+    assert(index != tabIndexes.end());
+    filterTabs->removeTab(index->second);
+    tabIndexes.erase(index);
+    indexTabs.erase(indexTabs.find(index->second));
+}
+
+void ModuleBrowserPanel::changeTag(int tag) {
+    if (tag == 0) library->setActiveTag("");
+    else {
+        auto index = indexTabs.find(tag);
+        assert(index != indexTabs.end());
+        library->setActiveTag(index->second);
+    }
 }

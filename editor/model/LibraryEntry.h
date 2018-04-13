@@ -2,6 +2,8 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QString>
+#include <QtCore/QUuid>
+#include <QtCore/QDateTime>
 #include <set>
 
 #include "schematic/LibrarySchematic.h"
@@ -34,6 +36,8 @@ namespace AxiomModel {
 
         void removeTag(const QString &tag);
 
+        void modified();
+
     signals:
 
         void nameChanged(const QString &newName);
@@ -45,6 +49,9 @@ namespace AxiomModel {
     private:
 
         QString _name;
+        QUuid baseUuid;
+        QUuid modificationUuid;
+        QDateTime modificationDateTime;
         std::set<QString> _tags;
         LibrarySchematic _schematic;
     };

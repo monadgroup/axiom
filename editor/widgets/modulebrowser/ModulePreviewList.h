@@ -24,6 +24,7 @@ namespace AxiomGui {
 
     private:
 
+        AxiomModel::Library *library;
         FlowLayout *layout;
     };
 

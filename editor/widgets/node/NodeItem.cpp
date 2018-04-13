@@ -248,7 +248,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     renameAction->setVisible(node->parentSchematic->selectedItems().size() == 1);
     menu.addSeparator();
     auto groupAction = menu.addAction(tr("&Group..."));
-    auto savePresetAction = menu.addAction(tr("&Save as Preset..."));
+    auto saveModuleAction = menu.addAction(tr("&Save as Module..."));
     menu.addSeparator();
     auto deleteAction = menu.addAction(tr("&Delete"));
     deleteAction->setEnabled(node->isDeletable());
@@ -271,7 +271,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             groupedNode->schematic.get(),
             true
         );
-    } else if (selectedAction == savePresetAction) {
+    } else if (selectedAction == saveModuleAction) {
         // todo: save as preset
     } else if (selectedAction == deleteAction) {
         DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {
