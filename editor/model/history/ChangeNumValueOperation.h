@@ -1,7 +1,7 @@
 #pragma once
 
 #include "HistoryOperation.h"
-#include "../control/NodeControl.h"
+#include "../control/NodeNumControl.h"
 #include "compiler/runtime/ValueOperator.h"
 
 namespace AxiomModel {

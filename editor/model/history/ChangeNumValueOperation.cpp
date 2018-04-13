@@ -1,7 +1,6 @@
 #include "ChangeNumValueOperation.h"
 
 #include "../Project.h"
-#include "../control/NodeNumControl.h"
 
 using namespace AxiomModel;
 

@@ -20,7 +20,8 @@ namespace AxiomModel {
             SIZE_CONTROL,
             CONNECT_CONTROLS,
             DISCONNECT_CONTROLS,
-            CHANGE_NUM_VAL
+            CHANGE_NUM_VAL,
+            CHANGE_NUM_MODE
         };
 
         HistoryOperation(bool needsRefresh, Type type, bool exec = true);

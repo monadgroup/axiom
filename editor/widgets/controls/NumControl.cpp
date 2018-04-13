@@ -197,7 +197,7 @@ void NumControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     event->accept();
 
     if (isDragging) {
-        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_NUM_VALUE, {
+        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_VALUE, {
             control->endSetValue();
         });
         isDragging = false;
@@ -256,7 +256,10 @@ void NumControl::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
         connect(action, &QAction::triggered,
                 [this, modePair]() {
-                    control->setMode(modePair.second);
+                    DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_MODE,
+                              {
+                                  control->setMode(modePair.second);
+                              });
                 });
     }
 

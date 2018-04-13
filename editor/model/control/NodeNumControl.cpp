@@ -5,6 +5,7 @@
 #include "../node/NodeSurface.h"
 #include "../Project.h"
 #include "../history/ChangeNumValueOperation.h"
+#include "../history/ChangeNumModeOperation.h"
 #include "compiler/runtime/Control.h"
 #include "compiler/runtime/ControlGroup.h"
 #include "compiler/runtime/Node.h"
@@ -52,6 +53,13 @@ void NodeNumControl::restoreValue() {
 
 void NodeNumControl::setMode(Mode mode) {
     if (mode != m_mode) {
+        node->parentSchematic->project()->history.appendOperation(
+            std::make_unique<ChangeNumModeOperation>(node->parentSchematic->project(), ref(), m_mode, mode));
+    }
+}
+
+void NodeNumControl::setModeNoOp(AxiomModel::NodeNumControl::Mode mode) {
+    if (mode != m_mode) {
         m_mode = mode;
         emit modeChanged(mode);
     }
@@ -66,9 +74,13 @@ void NodeNumControl::setChannel(Channel channel) {
 
 void NodeNumControl::serialize(QDataStream &stream) const {
     stream << m_sink.value();
+    stream << (uint8_t) mode();
 }
 
 void NodeNumControl::deserialize(QDataStream &stream) {
     MaximRuntime::NumValue val; stream >> val;
     m_sink.setValue(val);
+
+    uint8_t modeInt; stream >> modeInt;
+    setModeNoOp((Mode) modeInt);
 }

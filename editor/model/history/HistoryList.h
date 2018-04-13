@@ -32,7 +32,8 @@ namespace AxiomModel {
             CONNECT_CONTROL,
             DISCONNECT_CONTROL,
             DISCONNECT_ALL,
-            CHANGE_NUM_VALUE
+            CHANGE_VALUE,
+            CHANGE_MODE
         };
 
         size_t maxActions = 256;

@@ -53,6 +53,8 @@ namespace AxiomModel {
 
         void setMode(Mode mode);
 
+        void setModeNoOp(Mode mode);
+
         void setChannel(Channel channel);
 
         void serialize(QDataStream &stream) const override;
