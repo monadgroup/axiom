@@ -126,6 +126,13 @@ QRectF NodeItem::boundingRect() const {
     };
 }
 
+QRectF NodeItem::drawBoundingRect() const {
+    return {
+        QPointF(0, 0),
+        SchematicCanvas::nodeRealSize(node->size())
+    };
+}
+
 void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     painter->setRenderHint(QPainter::Antialiasing, false);
 
@@ -329,11 +336,4 @@ void NodeItem::triggerUpdate() {
 
 void NodeItem::triggerGeometryChange() {
     prepareGeometryChange();
-}
-
-QRectF NodeItem::drawBoundingRect() const {
-    return {
-        QPointF(0, 0),
-        SchematicCanvas::nodeRealSize(node->size())
-    };
 }

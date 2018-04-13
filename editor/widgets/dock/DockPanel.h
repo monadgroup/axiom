@@ -8,7 +8,7 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        DockPanel(const QString &title);
+        DockPanel(const QString &title, QWidget *parent = nullptr);
     };
 
 }

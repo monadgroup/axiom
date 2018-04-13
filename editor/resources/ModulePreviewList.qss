@@ -1,3 +1,12 @@
 * {
     border: none;
 }
+
+QGraphicsView {
+    border: 2px solid #222;
+    border-radius: 5px;
+}
+
+QGraphicsView:hover {
+    border-color: #444;
+}

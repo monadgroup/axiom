@@ -4,5 +4,5 @@
 
 using namespace AxiomGui;
 
-DockPanel::DockPanel(const QString &title) : QDockWidget(title) {
+DockPanel::DockPanel(const QString &title, QWidget *parent) : QDockWidget(title, parent) {
 }

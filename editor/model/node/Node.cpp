@@ -30,8 +30,7 @@ NodeRef Node::ref() const {
 }
 
 bool Node::isExtracted() {
-    // todo: don't read runtime, cause it might not be attached
-    return runtime()->extracted();
+    return runtime() ? runtime()->extracted() : false;
 }
 
 void Node::doRuntimeUpdate() {

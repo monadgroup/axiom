@@ -1,9 +1,11 @@
 #include "LibraryEntry.h"
 
+#include "node/CustomNode.h"
+
 using namespace AxiomModel;
 
 LibraryEntry::LibraryEntry(QString name, std::set<QString> tags) : _name(std::move(name)), _tags(std::move(tags)) {
-
+    _schematic.addItem(std::make_unique<CustomNode>(&_schematic, "Test", QPoint(0, 0), QSize(2, 2)));
 }
 
 void LibraryEntry::serialize(QDataStream &stream) const {

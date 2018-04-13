@@ -9,7 +9,7 @@
 
 using namespace AxiomGui;
 
-ModuleBrowserPanel::ModuleBrowserPanel() : DockPanel("Modules") {
+ModuleBrowserPanel::ModuleBrowserPanel(AxiomModel::Library *library, QWidget *parent) : DockPanel("Modules", parent) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/ModuleBrowserPanel.qss"));
 
     auto mainLayout = new QGridLayout(this);
@@ -26,8 +26,7 @@ ModuleBrowserPanel::ModuleBrowserPanel() : DockPanel("Modules") {
     auto filterTabs = new QTabBar(this);
     mainLayout->addWidget(filterTabs, 0, 0, Qt::AlignLeft);
 
-    filterTabs->addTab(tr("Test 1"));
-    filterTabs->addTab(tr("Test 2"));
+    filterTabs->addTab(tr("All"));
     filterTabs->addTab(tr("+"));
 
     auto searchBox = new QLineEdit(this);
@@ -35,7 +34,7 @@ ModuleBrowserPanel::ModuleBrowserPanel() : DockPanel("Modules") {
     searchBox->setPlaceholderText("Search modules...");
     mainLayout->addWidget(searchBox, 0, 1);
 
-    auto previewList = new ModulePreviewList(this);
+    auto previewList = new ModulePreviewList(library, this);
     mainLayout->addWidget(previewList, 1, 0, 1, 2);
 
     mainWidget->setLayout(mainLayout);

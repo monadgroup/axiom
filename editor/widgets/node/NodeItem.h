@@ -24,6 +24,8 @@ namespace AxiomGui {
 
         QRectF boundingRect() const override;
 
+        QRectF drawBoundingRect() const;
+
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
         QPainterPath shape() const override;
@@ -71,8 +73,6 @@ namespace AxiomGui {
         QPoint mouseStartPoint;
 
         static const int textOffset = 15;
-
-        QRectF drawBoundingRect() const;
     };
 
 }
