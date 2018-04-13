@@ -16,7 +16,9 @@ namespace AxiomModel {
             PIANO
         };
 
-        NodeMidiControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size);
+        NodeMidiControl(Node *node, QString name, QPoint pos, QSize size);
+
+        MaximCommon::ControlType type() const { return MaximCommon::ControlType::MIDI; }
 
         MidiConnectionSink *sink() override { return &m_sink; }
 

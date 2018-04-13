@@ -9,19 +9,37 @@ using namespace AxiomModel;
 
 GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
     : Node(parent, std::move(name), Type::GROUP, pos, size),
-      schematic(std::make_unique<GroupSchematic>(this)), _runtime(parent->runtime()) {
+      schematic(std::make_unique<GroupSchematic>(this)) {
     connect(this, &GroupNode::removed,
             schematic.get(), &GroupSchematic::removed);
+}
 
+void GroupNode::attachRuntime(MaximRuntime::GroupNode *runtime) {
+    _runtime = runtime;
+
+    connect(_runtime, &MaximRuntime::GroupNode::controlAdded,
+            this, &GroupNode::controlAdded);
+    connect(_runtime, &MaximRuntime::GroupNode::extractedChanged,
+            this, &GroupNode::extractedChanged);
+
+    // todo: maybe this should go in surface?
     connect(this, &GroupNode::removed,
             [this]() {
-                _runtime.remove();
+                _runtime->remove();
             });
 
-    connect(&_runtime, &MaximRuntime::GroupNode::controlAdded,
-            this, &GroupNode::controlAdded);
-    connect(&_runtime, &MaximRuntime::GroupNode::extractedChanged,
-            this, &GroupNode::extractedChanged);
+    schematic->attachRuntime(runtime->subsurface());
+
+    // add any controls that might already exist
+    for (const std::unique_ptr<MaximRuntime::Control> &control : *runtime) {
+        controlAdded(control.get());
+    }
+}
+
+void GroupNode::createAndAttachRuntime(MaximRuntime::Surface *surface) {
+    auto runtime = std::make_unique<MaximRuntime::GroupNode>(surface);
+    attachRuntime(runtime.get());
+    surface->addNode(std::move(runtime));
 }
 
 std::unique_ptr<GridItem> GroupNode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
@@ -59,11 +77,10 @@ void GroupNode::deserialize(QDataStream &stream) {
     // todo: deserialize controls
 }
 
-void GroupNode::controlAdded(MaximRuntime::SoftControl *control) {
-    auto newControl = NodeControl::fromRuntimeControl(this, control);
+void GroupNode::controlAdded(MaximRuntime::Control *control) {
     // todo: set newControl's exposeBase to the Model Control this SoftControl is for
     // (this info is currently only needed on serialize, so there might be a better way to do it -- maybe the model
     // should be in charge of creating forward controls instead of the compiler?)
     // --> the same might go for other controls, when we need to deserialize
-    surface.addItem(std::move(newControl));
+    addFromRuntime(control);
 }

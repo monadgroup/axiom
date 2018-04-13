@@ -2,6 +2,6 @@
 
 using namespace AxiomModel;
 
-LibrarySchematic::LibrarySchematic() : Schematic(nullptr, nullptr) {
+LibrarySchematic::LibrarySchematic() : Schematic(nullptr) {
 
 }

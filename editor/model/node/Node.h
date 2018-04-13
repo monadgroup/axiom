@@ -11,11 +11,15 @@
 
 namespace MaximRuntime {
     class Node;
+    class Surface;
+    class Control;
 }
 
 namespace AxiomModel {
 
     class Schematic;
+
+    class NodeControl;
 
     class Node : public GridItem {
     Q_OBJECT
@@ -40,6 +44,8 @@ namespace AxiomModel {
         QString name() const { return m_name; }
 
         virtual MaximRuntime::Node *runtime() = 0;
+
+        virtual void createAndAttachRuntime(MaximRuntime::Surface *surface) = 0;
 
         bool isExtracted();
 
@@ -98,6 +104,10 @@ namespace AxiomModel {
         void beforePanelHeightChanged(float newPanelHeight);
 
         void panelHeightChanged(float newPanelHeight);
+
+    protected:
+
+        NodeControl *addFromRuntime(MaximRuntime::Control *control);
 
     private:
         QString m_name = "";

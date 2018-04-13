@@ -7,13 +7,22 @@
 
 using namespace AxiomModel;
 
-RootSchematic::RootSchematic(Project *project, MaximRuntime::RootSurface *runtime) : Schematic(project, runtime) {
-    addItem(std::make_unique<IONode>(this, &runtime->input, "Input", QPoint(-3, 0)));
-    addItem(std::make_unique<IONode>(this, &runtime->output, "Output", QPoint(3, 0)));
+RootSchematic::RootSchematic(Project *project) : Schematic(project) {
+    auto inNode = std::make_unique<IONode>(this, "Input", QPoint(-3, 0), MaximCommon::ControlType::MIDI);
+    inputNode = inNode.get();
+    addItem(std::move(inNode));
 
-    runtime->scheduleGraphUpdate();
+    auto outNode = std::make_unique<IONode>(this, "Output", QPoint(3, 0), MaximCommon::ControlType::NUMBER);
+    outputNode = outNode.get();
+    addItem(std::move(outNode));
 }
 
 QString RootSchematic::name() {
     return "Root";
+}
+
+void RootSchematic::attachRuntime(MaximRuntime::RootSurface *surface) {
+    inputNode->attachRuntime(surface->input);
+    outputNode->attachRuntime(surface->output);
+    Schematic::attachRuntime(surface);
 }

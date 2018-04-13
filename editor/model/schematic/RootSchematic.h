@@ -12,11 +12,13 @@ namespace MaximRuntime {
 
 namespace AxiomModel {
 
+    class IONode;
+
     class RootSchematic : public Schematic {
     Q_OBJECT
 
     public:
-        explicit RootSchematic(Project *project, MaximRuntime::RootSurface *runtime);
+        explicit RootSchematic(Project *project);
 
         QString name() override;
 
@@ -25,6 +27,13 @@ namespace AxiomModel {
         bool canExposeControl() override { return false; }
 
         void exposeControl(AxiomModel::NodeControl *control) override { assert(false); }
+
+        void attachRuntime(MaximRuntime::RootSurface *surface);
+
+    private:
+
+        IONode *inputNode;
+        IONode *outputNode;
 
     };
 

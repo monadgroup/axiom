@@ -6,6 +6,7 @@
 #include "../Project.h"
 #include "../history/DeleteNodeOperation.h"
 #include "compiler/runtime/Node.h"
+#include "compiler/codegen/Control.h"
 #include "CustomNode.h"
 #include "../../util.h"
 #include "../history/MoveNodeOperation.h"
@@ -29,6 +30,7 @@ NodeRef Node::ref() const {
 }
 
 bool Node::isExtracted() {
+    // todo: don't read runtime, cause it might not be attached
     return runtime()->extracted();
 }
 
@@ -213,4 +215,32 @@ void Node::remove() {
 
 void Node::removeWithoutOp() {
     GridItem::remove();
+}
+
+NodeControl* Node::addFromRuntime(MaximRuntime::Control *control) {
+    std::cout << "Adding control from runtime... Name is " << control->name() << ", type is " << (uint32_t) control->type()->type() << std::endl;
+
+    // find a control with the right type and name, that doesn't have a runtime attached
+    for (const auto &item : surface.items()) {
+        if (auto existingControl = dynamic_cast<NodeControl *>(item.get())) {
+            std::cout << "";
+
+            if (existingControl->type() == control->type()->type()
+                && existingControl->name().toStdString() == control->name() && !existingControl->runtime()) {
+                std::cout << "Found control, attaching runtime" << std::endl;
+                existingControl->attachRuntime(control);
+                return existingControl;
+            }
+        }
+    }
+
+    std::cout << "Making a new control" << std::endl;
+
+    // looks like we need to make a new control
+    std::cout << "Creating control with name " << control->name() << std::endl;
+    auto newControl = NodeControl::create(this, control->type()->type(), QString::fromStdString(control->name()));
+    newControl->attachRuntime(control);
+    auto newControlPtr = newControl.get();
+    surface.addItem(std::move(newControl));
+    return newControlPtr;
 }

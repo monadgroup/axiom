@@ -13,11 +13,13 @@ namespace AxiomModel {
 
     class RootSchematic;
 
+    class NodeIOControl;
+
     class IONode : public Node {
     Q_OBJECT
 
     public:
-        IONode(RootSchematic *parent, MaximRuntime::IONode *runtime, const QString &name, QPoint pos);
+        IONode(RootSchematic *parent, const QString &name, QPoint pos, MaximCommon::ControlType type);
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 
@@ -27,9 +29,14 @@ namespace AxiomModel {
 
         MaximRuntime::IONode *runtime() override { return _runtime; }
 
+        void attachRuntime(MaximRuntime::IONode *runtime);
+
+        void createAndAttachRuntime(MaximRuntime::Surface *surface) { assert(false); }
+
     private:
 
-        MaximRuntime::IONode *_runtime;
+        NodeIOControl *_control;
+        MaximRuntime::IONode *_runtime = nullptr;
     };
 
 }

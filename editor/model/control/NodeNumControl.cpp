@@ -13,8 +13,8 @@
 
 using namespace AxiomModel;
 
-NodeNumControl::NodeNumControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-    : NodeControl(node, runtime, pos, size), m_sink(this) {
+NodeNumControl::NodeNumControl(Node *node, QString name, QPoint pos, QSize size)
+    : NodeControl(node, std::move(name), pos, size), m_sink(this) {
     initSink();
 
     connect(&m_sink, &NumConnectionSink::valueChanged,
@@ -42,12 +42,12 @@ void NodeNumControl::endSetValue() {
 }
 
 void NodeNumControl::saveValue() {
-    if (!runtime()->group()) return;
+    if (!runtime() || !runtime()->group()) return;
     setValue(runtime()->group()->getNumValue(), false);
 }
 
 void NodeNumControl::restoreValue() {
-    if (!runtime()->group()) return;
+    if (!runtime() || !runtime()->group()) return;
     runtime()->group()->setNumValue(m_sink.value());
 }
 

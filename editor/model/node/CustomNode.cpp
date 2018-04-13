@@ -1,28 +1,47 @@
-#include <QtCore/QBuffer>
 #include "CustomNode.h"
+
+#include <QtCore/QBuffer>
 
 #include "../schematic/Schematic.h"
 #include "../control/NodeControl.h"
 #include "../Project.h"
 #include "editor/AxiomApplication.h"
 #include "compiler/runtime/Runtime.h"
-#include "compiler/codegen/Control.h"
 #include "../../util.h"
 
 using namespace AxiomModel;
 
 CustomNode::CustomNode(Schematic *parent, QString name, QPoint pos, QSize size)
-    : Node(parent, std::move(name), Type::CUSTOM, pos, size),
-      _runtime(parent->runtime()) {
-    connect(&_runtime, &MaximRuntime::CustomNode::controlAdded,
+    : Node(parent, std::move(name), Type::CUSTOM, pos, size) {
+}
+
+void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
+    assert(!_runtime);
+    _runtime = runtime;
+
+    connect(_runtime, &MaximRuntime::CustomNode::controlAdded,
             this, &CustomNode::controlAdded);
-    connect(&_runtime, &MaximRuntime::CustomNode::extractedChanged,
+    connect(_runtime, &MaximRuntime::CustomNode::extractedChanged,
             this, &CustomNode::extractedChanged);
 
     connect(this, &CustomNode::removed,
             [this]() {
-                _runtime.remove();
+                _runtime->remove();
             });
+
+    // add any controls that might already exist
+    for (const std::unique_ptr<MaximRuntime::Control> &control : *runtime) {
+        controlAdded(control.get());
+    }
+
+    parseCode();
+    runtime->scheduleCompile();
+}
+
+void CustomNode::createAndAttachRuntime(MaximRuntime::Surface *surface) {
+    auto runtime = std::make_unique<MaximRuntime::CustomNode>(surface);
+    attachRuntime(runtime.get());
+    surface->addNode(std::move(runtime));
 }
 
 std::unique_ptr<GridItem> CustomNode::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
@@ -39,10 +58,16 @@ void CustomNode::setCode(const QString &code) {
         m_code = code;
         emit codeChanged(code);
 
-        _runtime.setCode(code.toStdString());
-        if (!_runtime.errorLog().errors.empty()) {
-            emit parseFailed(_runtime.errorLog());
-            _runtime.errorLog().errors.clear();
+        parseCode();
+    }
+}
+
+void CustomNode::parseCode() {
+    if (_runtime) {
+        _runtime->setCode(m_code.toStdString());
+        if (!_runtime->errorLog().errors.empty()) {
+            emit parseFailed(_runtime->errorLog());
+            _runtime->errorLog().errors.clear();
         } else {
             emit parseSucceeded();
         }
@@ -52,11 +77,13 @@ void CustomNode::setCode(const QString &code) {
 void CustomNode::recompile() {
     parentSchematic->project()->build();
 
-    if (!_runtime.errorLog().errors.empty()) {
-        emit compileFailed(_runtime.errorLog());
-        _runtime.errorLog().errors.clear();
-    } else {
-        emit compileSucceeded();
+    if (_runtime) {
+        if (!_runtime->errorLog().errors.empty()) {
+            emit compileFailed(_runtime->errorLog());
+            _runtime->errorLog().errors.clear();
+        } else {
+            emit compileSucceeded();
+        }
     }
 
     emit compileFinished();
@@ -73,19 +100,8 @@ void CustomNode::serialize(QDataStream &stream) const {
         assert(control);
 
         stream << control->name();
-        stream << (uint8_t) control->runtime()->type()->type();
-
-        // we need to write the size of the control data so the deserializer can skip it
-        // so serialize the control into a memory buffer before putting it into the main
-        // one.
-        QBuffer controlBuffer;
-        controlBuffer.open(QBuffer::WriteOnly);
-        QDataStream dataStream(&controlBuffer);
-        control->serialize(dataStream);
-
-        stream << (quint64) controlBuffer.size();
-        stream.writeRawData(controlBuffer.data(), (int) controlBuffer.size());
-        controlBuffer.close();
+        stream << (uint8_t) control->type();
+        control->serialize(stream);
     }
 }
 
@@ -96,22 +112,6 @@ void CustomNode::deserialize(QDataStream &stream) {
     stream >> code;
     setCode(code);
 
-    // trigger the runtime to create controls for us, which will create controls on our surface
-    _runtime.scheduleCompile();
-    _runtime.compile();
-
-    // create an index of name/type to control for deserialization
-    std::unordered_map<MaximCodegen::ControlKey, NodeControl *> controlMap;
-    for (const auto &item : surface.items()) {
-        if (auto control = dynamic_cast<NodeControl *>(item.get())) {
-            controlMap.emplace(MaximCodegen::ControlKey{
-                control->name().toStdString(),
-                control->runtime()->type()->type()
-            }, control);
-        }
-    }
-
-    // deserialize controls
     uint32_t controlCount;
     stream >> controlCount;
     for (uint32_t i = 0; i < controlCount; i++) {
@@ -120,24 +120,12 @@ void CustomNode::deserialize(QDataStream &stream) {
         uint8_t intControlType;
         stream >> intControlType;
 
-        quint64 controlSize;
-        stream >> controlSize;
-
-        auto controlType = (MaximCommon::ControlType) intControlType;
-        MaximCodegen::ControlKey controlKey = {controlName.toStdString(), controlType};
-        auto realControlIndex = controlMap.find(controlKey);
-
-        // if the {name, type} pair doesn't exist anymore, skip the controls data
-        if (realControlIndex == controlMap.end()) {
-            stream.skipRawData((int) controlSize);
-            continue;
-        }
-
-        NodeControl *control = realControlIndex->second;
+        auto control = NodeControl::create(this, (MaximCommon::ControlType) intControlType, controlName);
         control->deserialize(stream);
+        surface.addItem(std::move(control));
     }
 }
 
-void CustomNode::controlAdded(MaximRuntime::HardControl *control) {
-    surface.addItem(NodeControl::fromRuntimeControl(this, control));
+void CustomNode::controlAdded(MaximRuntime::Control *control) {
+    addFromRuntime(control);
 }

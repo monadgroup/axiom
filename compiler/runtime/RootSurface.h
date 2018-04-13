@@ -13,8 +13,8 @@ namespace MaximRuntime {
 
         void addExitNodes(std::set<Node *> &queue) override;
 
-        IONode input;
-        IONode output;
+        IONode *input;
+        IONode *output;
     };
 
 }

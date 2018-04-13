@@ -8,8 +8,8 @@
 
 using namespace AxiomModel;
 
-NodeMidiControl::NodeMidiControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-    : NodeControl(node, runtime, pos, size), m_sink(this) {
+NodeMidiControl::NodeMidiControl(Node *node, QString name, QPoint pos, QSize size)
+    : NodeControl(node, std::move(name), pos, size), m_sink(this) {
     initSink();
 
     connect(&m_sink, &MidiConnectionSink::valueChanged,
@@ -26,12 +26,12 @@ void NodeMidiControl::setValue(MaximRuntime::MidiValue value, bool setRuntime) {
 }
 
 void NodeMidiControl::saveValue() {
-    if (!runtime()->group()) return;
+    if (!runtime() || !runtime()->group()) return;
     setValue(runtime()->group()->getMidiValue());
 }
 
 void NodeMidiControl::restoreValue() {
-    if (!runtime()->group()) return;
+    if (!runtime() || !runtime()->group()) return;
     runtime()->group()->setMidiValue(m_sink.value());
 }
 

@@ -84,7 +84,7 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
     connect(aboutAction, &QAction::triggered,
             this, &MainWindow::showAbout);
 
-    auto moduleBrowser = new ModuleBrowserPanel();
+    auto moduleBrowser = new ModuleBrowserPanel(&project->library, this);
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
 

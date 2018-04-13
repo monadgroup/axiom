@@ -18,8 +18,15 @@
 
 using namespace AxiomModel;
 
-Schematic::Schematic(Project *project, MaximRuntime::Surface *runtime) : _project(project), _runtime(runtime) {
+Schematic::Schematic(Project *project) : _project(project) {
 
+}
+
+void Schematic::attachRuntime(MaximRuntime::Surface *runtime) {
+    assert(!_runtime);
+    _runtime = runtime;
+
+    // todo: attach nodes that already exist in the runtime to nodes here
 }
 
 void Schematic::setPan(QPointF pan) {
@@ -149,6 +156,12 @@ Node *Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataS
     if (!newNode) return nullptr;
 
     newNode->deserialize(stream);
+
+    // create and attach runtime
+    if (_runtime) {
+        newNode->createAndAttachRuntime(_runtime);
+    }
+
     auto nodePtr = newNode.get();
     insertItem(index, std::move(newNode));
     return nodePtr;
@@ -211,18 +224,7 @@ void Schematic::serialize(QDataStream &stream) const {
         }
 
         stream << (uint8_t) node->type;
-
-        // serialize the node
-        // todo: for now, since IO nodes are skipped, we need to write the size of the node data
-        // so we can skip it when deserializing
-        QBuffer nodeBuffer;
-        nodeBuffer.open(QBuffer::WriteOnly);
-        QDataStream dataStream(&nodeBuffer);
-        node->serialize(dataStream);
-
-        stream << (quint64) nodeBuffer.size();
-        stream.writeRawData(nodeBuffer.data(), (int) nodeBuffer.size());
-        nodeBuffer.close();
+        node->serialize(stream);
     }
 
     // serialize connections using the index built above
@@ -250,19 +252,15 @@ void Schematic::deserialize(QDataStream &stream) {
     for (uint32_t i = 0; i < nodeCount; i++) {
         uint8_t intType;
         stream >> intType;
-        quint64 nodeSize;
-        stream >> nodeSize;
 
         auto type = (Node::Type) intType;
         auto added = addFromStream(type, i, stream);
         if (!added) {
-            if (type == Node::Type::IO) {
-                auto ioItem = dynamic_cast<IONode *>(items()[i].get());
-                assert(ioItem);
-                ioItem->deserialize(stream);
-            } else {
-                stream.skipRawData((int) nodeSize);
-            }
+            assert(type == Node::Type::IO);
+
+            auto ioItem = dynamic_cast<IONode *>(items()[i].get());
+            assert(ioItem);
+            ioItem->deserialize(stream);
         }
     }
 

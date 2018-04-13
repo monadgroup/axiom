@@ -32,16 +32,24 @@ void AddNodeOperation::forward() {
 
     auto defaultSize = QSize(3, 2);
 
+    std::unique_ptr<Node> newNode;
     switch (type) {
         case Node::Type::CUSTOM:
-            surface->insertItem(nodeRef.index, std::make_unique<CustomNode>(surface, name, pos, defaultSize));
+            newNode = std::make_unique<CustomNode>(surface, name, pos, defaultSize);
             break;
         case Node::Type::GROUP:
-            surface->insertItem(nodeRef.index, std::make_unique<GroupNode>(surface, name, pos, defaultSize));
+            newNode = std::make_unique<GroupNode>(surface, name, pos, defaultSize);
             break;
         case Node::Type::IO:
             break;
     }
+
+    if (!newNode) return;
+
+    if (surface->runtime()) {
+        newNode->createAndAttachRuntime(surface->runtime());
+    }
+    surface->insertItem(nodeRef.index, std::move(newNode));
 }
 
 void AddNodeOperation::backward() {

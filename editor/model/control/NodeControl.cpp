@@ -16,30 +16,33 @@
 
 using namespace AxiomModel;
 
-NodeControl::NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size)
-    : GridItem(&node->surface, pos, size), node(node), _runtime(runtime) {
+NodeControl::NodeControl(Node *node, QString name, QPoint pos, QSize size)
+    : GridItem(&node->surface, pos, size), node(node) {
 
     connect(this, &NodeControl::selected,
             [this, node]() { node->select(true); });
+}
+
+void NodeControl::attachRuntime(MaximRuntime::Control *runtime) {
+    assert(!_runtime);
+    _runtime = runtime;
+
     connect(runtime, &MaximRuntime::Control::removed,
             this, &NodeControl::remove);
 }
 
-std::unique_ptr<NodeControl> NodeControl::fromRuntimeControl(Node *node, MaximRuntime::Control *runtime) {
-    switch (runtime->type()->type()) {
+std::unique_ptr<NodeControl> NodeControl::create(AxiomModel::Node *node, MaximCommon::ControlType type, QString name) {
+    switch (type) {
         case MaximCommon::ControlType::NUMBER:
-            return std::make_unique<NodeNumControl>(node, runtime, QPoint(0, 0), QSize(2, 2));
+            return std::make_unique<NodeNumControl>(node, name, QPoint(0, 0), QSize(2, 2));
         case MaximCommon::ControlType::MIDI:
-            return std::make_unique<NodeMidiControl>(node, runtime, QPoint(0, 0), QSize(2, 2));
+            return std::make_unique<NodeMidiControl>(node, name, QPoint(0, 0), QSize(2, 2));
         case MaximCommon::ControlType::NUM_EXTRACT:
-            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::NUMBER, QPoint(0, 0),
-                                                        QSize(2, 2));
+            return std::make_unique<NodeExtractControl>(node, ConnectionSink::Type::NUMBER, name, QPoint(0, 0), QSize(2, 2));
         case MaximCommon::ControlType::MIDI_EXTRACT:
-            return std::make_unique<NodeExtractControl>(node, runtime, ConnectionSink::Type::MIDI, QPoint(0, 0),
-                                                        QSize(2, 2));
+            return std::make_unique<NodeExtractControl>(node, ConnectionSink::Type::MIDI, name, QPoint(0, 0), QSize(2, 2));
         default:
-            assert(false);
-            throw;
+            unreachable;
     }
 }
 
@@ -48,10 +51,6 @@ ControlRef NodeControl::ref() const {
     auto index = AxiomUtil::findUnique(parentItems.begin(), parentItems.end(), this) - parentItems.begin();
     assert(index >= 0 && index < (long long int) parentItems.size());
     return ControlRef(node->ref(), (size_t) index);
-}
-
-QString NodeControl::name() const {
-    return QString::fromStdString(_runtime->name());
 }
 
 std::unique_ptr<GridItem> NodeControl::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {

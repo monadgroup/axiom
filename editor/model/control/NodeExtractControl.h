@@ -10,8 +10,10 @@ namespace AxiomModel {
 
     public:
 
-        NodeExtractControl(Node *node, MaximRuntime::Control *runtime, ConnectionSink::Type baseType, QPoint pos,
+        NodeExtractControl(Node *node, ConnectionSink::Type baseType, QString name, QPoint pos,
                            QSize size);
+
+        MaximCommon::ControlType type() const;
 
         ExtractConnectionSink *sink() override { return &m_sink; }
 

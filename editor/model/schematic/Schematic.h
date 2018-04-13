@@ -30,13 +30,15 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        explicit Schematic(Project *project, MaximRuntime::Surface *runtime);
+        explicit Schematic(Project *project);
 
         virtual QString name() = 0;
 
         virtual SurfaceRef ref() const = 0;
 
-        MaximRuntime::Surface *runtime() { return _runtime; }
+        MaximRuntime::Surface *runtime() const { return _runtime; }
+
+        void attachRuntime(MaximRuntime::Surface *runtime);
 
         QPointF pan() const { return m_pan; }
 
@@ -99,7 +101,7 @@ namespace AxiomModel {
         std::vector<std::unique_ptr<ConnectionWire>> m_wires;
         QPointF m_pan;
         float m_zoom = 0;
-        MaximRuntime::Surface *_runtime;
+        MaximRuntime::Surface *_runtime = nullptr;
     };
 
 }

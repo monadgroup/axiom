@@ -15,13 +15,19 @@ namespace AxiomModel {
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 
-        MaximRuntime::CustomNode *runtime() override { return &_runtime; }
+        MaximRuntime::CustomNode *runtime() override { return _runtime; }
+
+        void attachRuntime(MaximRuntime::CustomNode *runtime);
+
+        void createAndAttachRuntime(MaximRuntime::Surface *surface) override;
 
         QString code() const { return m_code; }
 
     public slots:
 
         void setCode(const QString &code);
+
+        void parseCode();
 
         void recompile();
 
@@ -45,11 +51,12 @@ namespace AxiomModel {
 
     private slots:
 
-        void controlAdded(MaximRuntime::HardControl *control);
+        void controlAdded(MaximRuntime::Control *control);
 
     private:
         QString m_code = "";
-        MaximRuntime::CustomNode _runtime;
+        MaximRuntime::CustomNode *_runtime = nullptr;
+        //std::unique_ptr<MaximRuntime::CustomNode> _runtime;
     };
 
 }

@@ -18,7 +18,9 @@ namespace AxiomModel {
 
     public:
 
-        NodeIOControl(IONode *node, MaximRuntime::IOControl *runtime);
+        NodeIOControl(IONode *node, MaximCommon::ControlType ioType, QString name);
+
+        MaximCommon::ControlType type() const { return _ioType; }
 
         ConnectionSink *sink() override { return m_sink.get(); }
 

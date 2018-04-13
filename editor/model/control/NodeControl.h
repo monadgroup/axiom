@@ -3,6 +3,7 @@
 #include "../GridItem.h"
 #include "../connection/ConnectionSink.h"
 #include "../Ref.h"
+#include "compiler/common/ControlType.h"
 
 namespace MaximRuntime {
 
@@ -20,9 +21,11 @@ namespace AxiomModel {
     public:
         Node *node;
 
-        NodeControl(Node *node, MaximRuntime::Control *runtime, QPoint pos, QSize size);
+        NodeControl(Node *node, QString name, QPoint pos, QSize size);
 
-        static std::unique_ptr<NodeControl> fromRuntimeControl(Node *node, MaximRuntime::Control *runtime);
+        //static std::unique_ptr<NodeControl> fromRuntimeControl(Node *node, MaximRuntime::Control *runtime);
+
+        static std::unique_ptr<NodeControl> create(Node *node, MaximCommon::ControlType type, QString name);
 
         ControlRef ref() const;
 
@@ -30,7 +33,11 @@ namespace AxiomModel {
 
         MaximRuntime::Control *runtime() const { return _runtime; }
 
-        QString name() const;
+        void attachRuntime(MaximRuntime::Control *runtime);
+
+        QString name() const { return _name; }
+
+        virtual MaximCommon::ControlType type() const = 0;
 
         bool showName() const { return m_showName; }
 
@@ -80,7 +87,8 @@ namespace AxiomModel {
 
         bool m_showName = true;
         NodeControl *_exposeBase = nullptr;
-        MaximRuntime::Control *_runtime;
+        MaximRuntime::Control *_runtime = nullptr;
+        QString _name;
 
         QPoint startDragPos;
         QPoint startResizeTopLeft;
