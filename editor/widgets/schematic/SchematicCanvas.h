@@ -72,8 +72,6 @@ namespace AxiomGui {
 
         void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 
-        void keyPressEvent(QKeyEvent *event) override;
-
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
     private slots:

@@ -16,6 +16,7 @@ find_package(Qt5Widgets REQUIRED)
 set(SOURCE_FILES
         CommonColors.cpp
         FloatingValueEditor.cpp
+        GlobalActions.cpp
         ItemResizer.cpp)
 
 include_directories(../../ ${LLVM_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})

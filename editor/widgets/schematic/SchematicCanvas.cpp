@@ -20,6 +20,7 @@
 #include "../connection/WireItem.h"
 #include "../IConnectable.h"
 #include "../FloatingValueEditor.h"
+#include "../GlobalActions.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -64,6 +65,21 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
             });
     connect(schematic, &Schematic::wireAdded,
             this, &SchematicCanvas::addWire);
+
+    connect(GlobalActions::editDelete, &QAction::triggered,
+            [this]() {
+                if (hasFocus()) {
+                    DO_ACTION(this->schematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {
+                        this->schematic->deleteSelectedItems();
+                    });
+                }
+            });
+    connect(GlobalActions::editSelectAll, &QAction::triggered,
+            [this]() {
+                if (hasFocus()) {
+                    this->schematic->selectAll();
+                }
+            });
 
     // start runtime update timer
     auto timer = new QTimer(this);
@@ -284,16 +300,6 @@ void SchematicCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         lastSelectedItems = newSelectedItems;
 
         event->accept();
-    }
-}
-
-void SchematicCanvas::keyPressEvent(QKeyEvent *event) {
-    if (focusItem()) {
-        QGraphicsScene::keyPressEvent(event);
-    } else if (event->matches(QKeySequence::Delete)) {
-        DO_ACTION(schematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {
-            schematic->deleteSelectedItems();
-        });
     }
 }
 

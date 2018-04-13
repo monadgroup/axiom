@@ -10,6 +10,7 @@
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/Project.h"
+#include "../GlobalActions.h"
 
 using namespace AxiomGui;
 
@@ -24,64 +25,69 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
     setDockNestingEnabled(true);
     setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
-    // create menu bars
+    // build
     auto fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(new QAction(tr("&Import Library...")));
-    fileMenu->addAction(new QAction(tr("E&xport Library...")));
+    fileMenu->addAction(GlobalActions::fileImportLibrary);
+    fileMenu->addAction(GlobalActions::fileExportLibrary);
     fileMenu->addSeparator();
 
-    auto openAction = fileMenu->addAction(tr("&Open..."));
-    connect(openAction, &QAction::triggered,
-            this, &MainWindow::openProject);
-
-    auto saveAction = fileMenu->addAction(tr("&Save As..."));
-    connect(saveAction, &QAction::triggered,
-            this, &MainWindow::saveProject);
-
+    fileMenu->addAction(GlobalActions::fileOpen);
+    fileMenu->addAction(GlobalActions::fileSave);
     fileMenu->addSeparator();
-    fileMenu->addAction(new QAction(tr("&Export...")));
+
+    fileMenu->addAction(GlobalActions::fileExport);
     fileMenu->addSeparator();
-    fileMenu->addAction(new QAction(tr("Ex&it")));
+
+    fileMenu->addAction(GlobalActions::fileQuit);
 
     auto editMenu = menuBar()->addMenu(tr("&Edit"));
-    auto undoAction = editMenu->addAction(tr("&Undo"));
-    auto redoAction = editMenu->addAction(tr("&Redo"));
-
-    undoAction->setShortcut(QKeySequence(tr("Ctrl+Z", "Edit|Undo")));
-    redoAction->setShortcut(QKeySequence(tr("Ctrl+Y", "Edit|Redo")));
-    undoAction->setEnabled(project->history.canUndo());
-    redoAction->setEnabled(project->history.canRedo());
-    connect(&project->history, &AxiomModel::HistoryList::canUndoChanged,
-            undoAction, &QAction::setEnabled);
-    connect(&project->history, &AxiomModel::HistoryList::canRedoChanged,
-            redoAction, &QAction::setEnabled);
-    connect(&project->history, &AxiomModel::HistoryList::undoTypeChanged,
-            [undoAction](AxiomModel::HistoryList::ActionType type) {
-                undoAction->setText("&Undo " + AxiomModel::HistoryList::typeToString(type));
-            });
-    connect(&project->history, &AxiomModel::HistoryList::redoTypeChanged,
-            [redoAction](AxiomModel::HistoryList::ActionType type) {
-                redoAction->setText("&Redo " + AxiomModel::HistoryList::typeToString(type));
-            });
-
-    connect(undoAction, &QAction::triggered,
-            &project->history, &AxiomModel::HistoryList::undo);
-    connect(redoAction, &QAction::triggered,
-            &project->history, &AxiomModel::HistoryList::redo);
-
+    editMenu->addAction(GlobalActions::editUndo);
+    editMenu->addAction(GlobalActions::editRedo);
     editMenu->addSeparator();
-    editMenu->addAction(new QAction(tr("C&ut")));
-    editMenu->addAction(new QAction(tr("&Copy")));
-    editMenu->addAction(new QAction(tr("&Paste")));
-    editMenu->addAction(new QAction(tr("&Delete")));
+
+    editMenu->addAction(GlobalActions::editCut);
+    editMenu->addAction(GlobalActions::editCopy);
+    editMenu->addAction(GlobalActions::editPaste);
+    editMenu->addAction(GlobalActions::editDelete);
     editMenu->addSeparator();
-    editMenu->addAction(new QAction(tr("&Select All")));
+
+    editMenu->addAction(GlobalActions::editSelectAll);
     editMenu->addSeparator();
-    editMenu->addAction(new QAction(tr("Pr&eferences...")));
+
+    editMenu->addAction(GlobalActions::editPreferences);
 
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
-    auto aboutAction = helpMenu->addAction(tr("&About"));
-    connect(aboutAction, &QAction::triggered,
+    helpMenu->addAction(GlobalActions::helpAbout);
+
+    // connect menu things
+    connect(GlobalActions::fileOpen, &QAction::triggered,
+            this, &MainWindow::openProject);
+    connect(GlobalActions::fileSave, &QAction::triggered,
+            this, &MainWindow::saveProject);
+    connect(GlobalActions::fileQuit, &QAction::triggered,
+            QApplication::quit);
+
+    GlobalActions::editUndo->setEnabled(project->history.canUndo());
+    connect(&project->history, &AxiomModel::HistoryList::canUndoChanged,
+            GlobalActions::editUndo, &QAction::setEnabled);
+    connect(&project->history, &AxiomModel::HistoryList::undoTypeChanged,
+            [](AxiomModel::HistoryList::ActionType type) {
+                GlobalActions::editUndo->setText("&Undo " + AxiomModel::HistoryList::typeToString(type));
+            });
+    connect(GlobalActions::editUndo, &QAction::triggered,
+            &project->history, &AxiomModel::HistoryList::undo);
+
+    GlobalActions::editRedo->setEnabled(project->history.canRedo());
+    connect(&project->history, &AxiomModel::HistoryList::canRedoChanged,
+            GlobalActions::editRedo, &QAction::setEnabled);
+    connect(&project->history, &AxiomModel::HistoryList::undoTypeChanged,
+            [](AxiomModel::HistoryList::ActionType type) {
+                GlobalActions::editRedo->setText("&Redo " + AxiomModel::HistoryList::typeToString(type));
+            });
+    connect(GlobalActions::editRedo, &QAction::triggered,
+            &project->history, &AxiomModel::HistoryList::redo);
+
+    connect(GlobalActions::helpAbout, &QAction::triggered,
             this, &MainWindow::showAbout);
 
     auto moduleBrowser = new ModuleBrowserPanel(&project->library, this);

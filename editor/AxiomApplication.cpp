@@ -5,6 +5,7 @@
 
 #include "util.h"
 #include "editor/model/node/CustomNode.h"
+#include "widgets/GlobalActions.h"
 
 AxiomApplication AxiomApplication::main;
 
@@ -16,6 +17,8 @@ AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
+
+    AxiomGui::GlobalActions::setupActions();
 
     setStyleSheet(AxiomUtil::loadStylesheet(":/MainStyles.qss"));
 }
