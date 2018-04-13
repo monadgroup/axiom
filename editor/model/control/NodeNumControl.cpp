@@ -1,6 +1,10 @@
+#include <editor/model/node/Node.h>
 #include "NodeNumControl.h"
 
+#include "../schematic/Schematic.h"
 #include "../node/NodeSurface.h"
+#include "../Project.h"
+#include "../history/ChangeNumValueOperation.h"
 #include "compiler/runtime/Control.h"
 #include "compiler/runtime/ControlGroup.h"
 #include "compiler/runtime/Node.h"
@@ -20,9 +24,20 @@ void NodeNumControl::doRuntimeUpdate() {
     saveValue();
 }
 
+void NodeNumControl::startSetValue() {
+    beforeVal = value();
+}
+
 void NodeNumControl::setValue(MaximRuntime::NumValue value, bool setRuntime) {
     m_sink.setValue(value);
     if (setRuntime) restoreValue();
+}
+
+void NodeNumControl::endSetValue() {
+    if (beforeVal != value()) {
+        node->parentSchematic->project()->history.appendOperation(
+            std::make_unique<ChangeNumValueOperation>(node->parentSchematic->project(), ref(), beforeVal, value()));
+    }
 }
 
 void NodeNumControl::saveValue() {

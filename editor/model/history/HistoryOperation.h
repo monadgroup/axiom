@@ -19,11 +19,8 @@ namespace AxiomModel {
             MOVE_CONTROL,
             SIZE_CONTROL,
             CONNECT_CONTROLS,
-            DISCONNECT_CONTROLS
-            /*CHANGE_NUM_VALUE,
-            EXPOSE_CONTROL,
-            ADD_WIRE,
-            REMOVE_WIRE*/
+            DISCONNECT_CONTROLS,
+            CHANGE_NUM_VAL
         };
 
         HistoryOperation(bool needsRefresh, Type type, bool exec = true);

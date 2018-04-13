@@ -156,9 +156,12 @@ void NumControl::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
 
-    isDragging = true;
-    beforeDragVal = getCVal();
-    mouseStartPoint = event->pos();
+    if (!isDragging) {
+        isDragging = true;
+        beforeDragVal = getCVal();
+        mouseStartPoint = event->pos();
+        control->startSetValue();
+    }
 }
 
 void NumControl::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
@@ -193,7 +196,12 @@ void NumControl::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
     event->accept();
 
-    isDragging = false;
+    if (isDragging) {
+        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_NUM_VALUE, {
+            control->endSetValue();
+        });
+        isDragging = false;
+    }
 }
 
 void NumControl::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {

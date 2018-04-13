@@ -11,6 +11,7 @@
 #include "SizeControlOperation.h"
 #include "ConnectControlsOperation.h"
 #include "DisconnectControlsOperation.h"
+#include "ChangeNumValueOperation.h"
 
 using namespace AxiomModel;
 
@@ -42,6 +43,8 @@ std::unique_ptr<HistoryOperation> HistoryOperation::deserialize(AxiomModel::Hist
             return ConnectControlsOperation::deserialize(stream, project);
         case Type::DISCONNECT_CONTROLS:
             return DisconnectControlsOperation::deserialize(stream, project);
+        case Type::CHANGE_NUM_VAL:
+            return ChangeNumValueOperation::deserialize(stream, project);
     }
 
     unreachable;

@@ -38,6 +38,8 @@ QString HistoryList::typeToString(AxiomModel::HistoryList::ActionType type) {
             return "Disconnect Controls";
         case ActionType::DISCONNECT_ALL:
             return "Disconnect All Connections";
+        case ActionType::CHANGE_NUM_VALUE:
+            return "Change Value";
     }
 
     unreachable;

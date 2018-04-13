@@ -41,7 +41,11 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override;
 
+        void startSetValue();
+
         void setValue(MaximRuntime::NumValue value, bool setRuntime = true);
+
+        void endSetValue();
 
         void saveValue() override;
 
@@ -68,6 +72,8 @@ namespace AxiomModel {
         Mode m_mode = Mode::KNOB;
         Channel m_channel = Channel::BOTH;
         NumConnectionSink m_sink;
+
+        MaximRuntime::NumValue beforeVal;
     };
 
 }
