@@ -15,6 +15,22 @@
 #include "../../util.h"
 #include "compiler/runtime/Runtime.h"
 
+struct SinkIndex {
+    uint32_t nodeIndex = 0;
+    uint32_t controlIndex = 0;
+};
+
+static QDataStream &operator<<(QDataStream &stream, const SinkIndex &index) {
+    stream << index.nodeIndex;
+    stream << index.controlIndex;
+    return stream;
+}
+
+static QDataStream &operator>>(QDataStream &stream, SinkIndex &index) {
+    stream >> index.nodeIndex;
+    stream >> index.controlIndex;
+    return stream;
+}
 
 using namespace AxiomModel;
 
@@ -43,11 +59,11 @@ void Schematic::setZoom(float zoom) {
     }
 }
 
-GroupNode *Schematic::groupSelection() {
+/*GroupNode *Schematic::groupSelection() {
     // todo: this function should create 'shared' controls and maintain outside and inside connections between them,
     // so the resulting connection graph is identical to before the operation
 
-    /*QPoint summedPoints;
+    QPoint summedPoints;
 
     // calculate center point for all items
     for (const auto &gridItem : selectedItems()) {
@@ -125,9 +141,117 @@ GroupNode *Schematic::groupSelection() {
     addItem(std::move(moduleNode));
     modulePtr->select(true);
 
-    return modulePtr;*/
+    return modulePtr;
 
     unreachable;
+}*/
+
+void Schematic::partialSerialize(QDataStream &stream, const std::vector<GridItem*> &items, QPoint center) {
+    // Later on, we only want to serialize connections that connect between two of the items passed.
+    // In order to do this efficiently, we use two maps: firstConnections and secondConnections
+    // When a ConnectionWire is first encountered (that is, it's not in firstConnections yet) we add it
+    // to firstConnections, alongside a node/control index (relative to the items we're actually serializing).
+    // If a ConnectionWire is encountered a second time (meaning we've found its other end), it's put
+    // in the secondConnections map, alongside the node/control index of the other control.
+    // This means that, after iterating through all our nodes, secondConnections contains a list of all
+    // wires that have both ends attached to an item in this list. We also know the node/control indexes
+    // of both ends, which are used to serialize the connections.
+    std::unordered_map<ConnectionWire*, SinkIndex> firstConnections;
+    std::map<ConnectionWire*, SinkIndex> secondConnections;
+
+    // serialize nodes
+    stream << (uint32_t) items.size();
+    for (size_t nodeI = 0; nodeI < items.size(); nodeI++) {
+        auto node = dynamic_cast<Node*>(items[nodeI]);
+        assert(node);
+        stream << (uint8_t) node->type;
+
+        std::cout << "Serializing node at pos " << stream.device()->pos() << std::endl;
+        node->serialize(stream, -center);
+
+        for (size_t controlI = 0; controlI < node->surface.items().size(); controlI++) {
+            auto control = dynamic_cast<NodeControl*>(node->surface.items()[controlI].get());
+            assert(control);
+
+            for (const auto &connection : control->sink()->connections()) {
+                if (firstConnections.find(connection) == firstConnections.end()) {
+                    firstConnections.emplace(connection, SinkIndex {(uint32_t) nodeI, (uint32_t) controlI});
+                } else {
+                    secondConnections.emplace(connection, SinkIndex {(uint32_t) nodeI, (uint32_t) controlI});
+                }
+            }
+        }
+    }
+
+    // serialize connections
+    stream << (uint32_t) secondConnections.size();
+    for (const auto &pair : secondConnections) {
+        auto firstConnectionIndex = firstConnections.find(pair.first);
+        assert(firstConnectionIndex != firstConnections.end());
+
+        stream << firstConnectionIndex->second;
+        stream << pair.second;
+    }
+}
+
+void Schematic::partialDeserialize(QDataStream &stream, QPoint center) {
+    auto nodeStart = items().size();
+
+    // todo: this part doesn't handle history correctly!
+    uint32_t nodeCount;
+    stream >> nodeCount;
+    for (uint32_t i = 0; i < nodeCount; i++) {
+        uint8_t intType;
+        stream >> intType;
+
+        auto type = (Node::Type) intType;
+        if (type == Node::Type::IO) {
+            std::cout << "Deserializing IONode at pos " << stream.device()->pos() << std::endl;
+            auto ioItem = dynamic_cast<IONode *>(items()[i].get());
+            assert(ioItem);
+            ioItem->deserialize(stream, center);
+        } else {
+            std::cout << "Deserializing other node at pos " << stream.device()->pos() << std::endl;
+            assert(addFromStream(type, i, stream, center));
+        }
+    }
+
+    uint32_t wireCount;
+    stream >> wireCount;
+    for (uint32_t i = 0; i < wireCount; i++) {
+        SinkIndex firstIndex, secondIndex;
+
+        stream >> firstIndex;
+        stream >> secondIndex;
+
+        // serialized indexes are relative to the nodes we're deserializing
+        firstIndex.nodeIndex += nodeStart;
+        secondIndex.nodeIndex += nodeStart;
+
+        assert(firstIndex.nodeIndex < items().size() && secondIndex.nodeIndex < items().size());
+        auto firstNode = dynamic_cast<Node *>(items()[firstIndex.nodeIndex].get());
+        auto secondNode = dynamic_cast<Node *>(items()[secondIndex.nodeIndex].get());
+        assert(firstNode && secondNode);
+
+        assert(firstIndex.controlIndex < firstNode->surface.items().size()
+               && secondIndex.controlIndex < secondNode->surface.items().size());
+        auto firstControl = dynamic_cast<NodeControl *>(firstNode->surface.items()[firstIndex.controlIndex].get());
+        auto secondControl = dynamic_cast<NodeControl *>(secondNode->surface.items()[secondIndex.controlIndex].get());
+        assert(firstControl && secondControl);
+
+        connectControls(firstControl, secondControl);
+    }
+}
+
+void Schematic::copyIntoSelf(const std::vector<AxiomModel::GridItem *> &items, QPoint center) {
+    // first serialize items into a buffer
+    QByteArray serializedBuffer;
+    QDataStream serializeStream(&serializedBuffer, QIODevice::WriteOnly);
+    partialSerialize(serializeStream, items, findCenter(items));
+
+    // now deserialize onto us
+    QDataStream deserializeStream(&serializedBuffer, QIODevice::ReadOnly);
+    partialDeserialize(deserializeStream, center);
 }
 
 void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
@@ -140,7 +264,7 @@ void Schematic::addWire(std::unique_ptr<ConnectionWire> wire) {
     emit wireAdded(ptr);
 }
 
-Node *Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataStream &stream) {
+Node *Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataStream &stream, QPoint center) {
     std::unique_ptr<Node> newNode;
     switch (type) {
         case Node::Type::CUSTOM:
@@ -155,7 +279,7 @@ Node *Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataS
 
     if (!newNode) return nullptr;
 
-    newNode->deserialize(stream);
+    newNode->deserialize(stream, center);
 
     // create and attach runtime
     if (_runtime) {
@@ -186,57 +310,16 @@ ConnectionWire *Schematic::connectSinks(ConnectionSink *sinkA, ConnectionSink *s
     return ptr;
 }
 
-struct SinkIndex {
-    uint32_t nodeIndex = 0;
-    uint32_t controlIndex = 0;
-};
-
-static QDataStream &operator<<(QDataStream &stream, SinkIndex &index) {
-    stream << index.nodeIndex;
-    stream << index.controlIndex;
-    return stream;
-}
-
-static QDataStream &operator>>(QDataStream &stream, SinkIndex &index) {
-    stream >> index.nodeIndex;
-    stream >> index.controlIndex;
-    return stream;
-}
-
 void Schematic::serialize(QDataStream &stream) const {
     stream << pan();
     stream << zoom();
 
-    // serialize nodes - also build an index of ConnectionSinks to node/control indexes for connection serialization
-    stream << (uint32_t) items().size();
-    std::unordered_map<ConnectionSink *, SinkIndex> sinkIndexes;
-    auto &itms = items();
-    for (size_t nodeI = 0; nodeI < itms.size(); nodeI++) {
-        auto node = dynamic_cast<Node *>(itms[nodeI].get());
-        assert(node);
-
-        // add sinks to index
-        auto &nodeItms = node->surface.items();
-        for (size_t controlI = 0; controlI < nodeItms.size(); controlI++) {
-            if (auto control = dynamic_cast<NodeControl *>(nodeItms[controlI].get())) {
-                sinkIndexes.emplace(control->sink(), SinkIndex{(uint32_t) nodeI, (uint32_t) controlI});
-            }
-        }
-
-        stream << (uint8_t) node->type;
-        node->serialize(stream);
+    std::vector<GridItem*> itms;
+    for (const auto &ptr : items()) {
+        itms.push_back(ptr.get());
     }
 
-    // serialize connections using the index built above
-    stream << (uint32_t) m_wires.size();
-    for (const auto &wire : m_wires) {
-        auto firstIter = sinkIndexes.find(wire->sinkA);
-        auto secondIter = sinkIndexes.find(wire->sinkB);
-        assert(firstIter != sinkIndexes.end() && secondIter != sinkIndexes.end());
-
-        stream << firstIter->second;
-        stream << secondIter->second;
-    }
+    partialSerialize(stream, itms, QPoint(0, 0));
 }
 
 void Schematic::deserialize(QDataStream &stream) {
@@ -247,46 +330,7 @@ void Schematic::deserialize(QDataStream &stream) {
     setPan(pan);
     setZoom(zoom);
 
-    uint32_t nodeCount;
-    stream >> nodeCount;
-    for (uint32_t i = 0; i < nodeCount; i++) {
-        uint8_t intType;
-        stream >> intType;
-
-        auto type = (Node::Type) intType;
-        auto added = addFromStream(type, i, stream);
-        if (!added) {
-            assert(type == Node::Type::IO);
-
-            auto ioItem = dynamic_cast<IONode *>(items()[i].get());
-            assert(ioItem);
-            ioItem->deserialize(stream);
-        }
-    }
-
-    auto &itms = items();
-
-    uint32_t wireCount;
-    stream >> wireCount;
-    for (uint32_t i = 0; i < wireCount; i++) {
-        SinkIndex firstIndex, secondIndex;
-
-        stream >> firstIndex;
-        stream >> secondIndex;
-
-        assert(firstIndex.nodeIndex < itms.size() && secondIndex.nodeIndex < itms.size());
-        auto firstNode = dynamic_cast<Node *>(itms[firstIndex.nodeIndex].get());
-        auto secondNode = dynamic_cast<Node *>(itms[secondIndex.nodeIndex].get());
-        assert(firstNode && secondNode);
-
-        assert(firstIndex.controlIndex < firstNode->surface.items().size()
-               && secondIndex.controlIndex < secondNode->surface.items().size());
-        auto firstControl = dynamic_cast<NodeControl *>(firstNode->surface.items()[firstIndex.controlIndex].get());
-        auto secondControl = dynamic_cast<NodeControl *>(secondNode->surface.items()[secondIndex.controlIndex].get());
-        assert(firstControl && secondControl);
-
-        connectSinks(firstControl->sink(), secondControl->sink());
-    }
+    partialDeserialize(stream, QPoint(0, 0));
 }
 
 void Schematic::addNode(Node::Type type, QString name, QPoint pos) {

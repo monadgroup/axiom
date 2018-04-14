@@ -4,6 +4,10 @@
 
 using namespace AxiomModel;
 
+Library::Library(AxiomModel::Project *project) : project(project) {
+
+}
+
 Library::~Library() = default;
 
 void Library::serialize(QDataStream &stream) const {
@@ -20,7 +24,7 @@ void Library::deserialize(QDataStream &stream) {
     quint32 entryCount;
     stream >> entryCount;
     for (quint32 i = 0; i < entryCount; i++) {
-        auto newEntry = std::make_unique<LibraryEntry>("", std::set<QString>());
+        auto newEntry = std::make_unique<LibraryEntry>("", std::set<QString>(), project);
         newEntry->deserialize(stream);
         addEntry(std::move(newEntry));
     }
@@ -28,7 +32,9 @@ void Library::deserialize(QDataStream &stream) {
 
 void Library::clear() {
     _activeTag = "";
-    _entries.clear();
+    while (!_entries.empty()) {
+        _entries.front()->remove();
+    }
 }
 
 void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
@@ -43,6 +49,8 @@ void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
             this, &Library::tagAdded);
     connect(entryPtr, &AxiomModel::LibraryEntry::tagRemoved,
             this, &Library::tagRemoved);
+    connect(entryPtr, &AxiomModel::LibraryEntry::cleanup,
+            [this, entryPtr]() { removeEntry(entryPtr); });
 }
 
 void Library::setActiveTag(const QString &activeTag) {
@@ -71,5 +79,14 @@ void Library::removeTag(const QString &tag) {
         _tags.erase(index);
         if (_activeTag == tag) setActiveTag("");
         emit tagRemoved(tag);
+    }
+}
+
+void Library::removeEntry(AxiomModel::LibraryEntry *entry) {
+    for (auto i = _entries.begin(); i != _entries.end(); i++) {
+        if (i->get() == entry) {
+            _entries.erase(i);
+            return;
+        }
     }
 }

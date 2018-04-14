@@ -21,6 +21,8 @@ namespace AxiomModel {
 
         explicit GridSurface(QPoint minRect = QPoint(INT_MIN, INT_MIN), QPoint maxRect = QPoint(INT_MAX, INT_MAX));
 
+        static QPoint findCenter(const std::vector<GridItem*> &items);
+
         std::vector<std::unique_ptr<GridItem>> const &items() const { return m_items; }
 
         bool hasSelection() const { return !m_selectedItems.empty(); }

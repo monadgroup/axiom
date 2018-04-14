@@ -6,6 +6,14 @@ GridSurface::GridSurface(QPoint minRect, QPoint maxRect) : grid(Grid<GridItem>(m
 
 }
 
+QPoint GridSurface::findCenter(const std::vector<AxiomModel::GridItem *> &items) {
+    QPoint currentCenter;
+    for (const auto &item : items) {
+        currentCenter = currentCenter + item->pos() + QPoint(item->size().width() / 2, item->size().height() / 2);
+    }
+    return currentCenter / items.size();
+}
+
 void GridSurface::addItem(std::unique_ptr<GridItem> item) {
     insertItem(m_items.size(), std::move(item));
 }

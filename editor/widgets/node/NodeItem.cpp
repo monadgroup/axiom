@@ -265,12 +265,12 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                     });
                 });
     } else if (selectedAction == groupAction) {
-        auto groupedNode = node->parentSchematic->groupSelection();
+        /*auto groupedNode = node->parentSchematic->groupSelection();
         canvas->panel->window->showSchematic(
             canvas->panel,
             groupedNode->schematic.get(),
             true
-        );
+        );*/
     } else if (selectedAction == saveModuleAction) {
         // todo: save as preset
     } else if (selectedAction == deleteAction) {

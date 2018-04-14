@@ -46,11 +46,13 @@ void NodeMidiControl::setMode(Mode mode) {
     }
 }
 
-void NodeMidiControl::serialize(QDataStream &stream) const {
+void NodeMidiControl::serialize(QDataStream &stream, QPoint offset) const {
+    NodeControl::serialize(stream, offset);
     stream << m_sink.value();
 }
 
-void NodeMidiControl::deserialize(QDataStream &stream) {
+void NodeMidiControl::deserialize(QDataStream &stream, QPoint offset) {
+    NodeControl::deserialize(stream, offset);
     MaximRuntime::MidiValue val; stream >> val;
     m_sink.setValue(val);
 }

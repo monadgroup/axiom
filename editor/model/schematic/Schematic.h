@@ -54,7 +54,9 @@ namespace AxiomModel {
 
         virtual void exposeControl(AxiomModel::NodeControl *control) = 0;
 
-        Node *addFromStream(Node::Type type, size_t index, QDataStream &stream);
+        Node *addFromStream(Node::Type type, size_t index, QDataStream &stream, QPoint center);
+
+        static void partialSerialize(QDataStream &stream, const std::vector<GridItem*> &items, QPoint center);
 
     public slots:
 
@@ -62,7 +64,9 @@ namespace AxiomModel {
 
         void setZoom(float zoom);
 
-        GroupNode *groupSelection();
+        void partialDeserialize(QDataStream &stream, QPoint center);
+
+        void copyIntoSelf(const std::vector<GridItem*> &items, QPoint center);
 
         void connectControls(NodeControl *controlA, NodeControl *controlB);
 

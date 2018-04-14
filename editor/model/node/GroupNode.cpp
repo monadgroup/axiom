@@ -63,15 +63,15 @@ void GroupNode::restoreValue() {
     schematic->restoreValue();
 }
 
-void GroupNode::serialize(QDataStream &stream) const {
-    Node::serialize(stream);
+void GroupNode::serialize(QDataStream &stream, QPoint offset) const {
+    Node::serialize(stream, offset);
     schematic->serialize(stream);
 
     // todo: serialize controls
 }
 
-void GroupNode::deserialize(QDataStream &stream) {
-    Node::deserialize(stream);
+void GroupNode::deserialize(QDataStream &stream, QPoint offset) {
+    Node::deserialize(stream, offset);
     schematic->deserialize(stream);
 
     // todo: deserialize controls

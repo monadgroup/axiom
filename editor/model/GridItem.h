@@ -60,9 +60,9 @@ namespace AxiomModel {
 
         virtual void finishDragging();
 
-        virtual void serialize(QDataStream &stream) const;
+        virtual void serialize(QDataStream &stream, QPoint offset) const;
 
-        virtual void deserialize(QDataStream &stream);
+        virtual void deserialize(QDataStream &stream, QPoint offset);
 
     signals:
 

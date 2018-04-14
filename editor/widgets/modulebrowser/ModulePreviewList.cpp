@@ -1,3 +1,4 @@
+#include <iostream>
 #include "ModulePreviewList.h"
 
 #include "../layouts/FlowLayout.h"
@@ -27,5 +28,12 @@ ModulePreviewList::ModulePreviewList(AxiomModel::Library *library, QWidget *pare
 }
 
 void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
-    layout->addWidget(new ModulePreviewButton(library, entry, this));
+    auto widget = new ModulePreviewButton(library, entry, this);
+    layout->addWidget(widget);
+
+    connect(entry, &AxiomModel::LibraryEntry::removed,
+            [this, widget]() {
+                layout->removeWidget(widget);
+                delete widget;
+            });
 }

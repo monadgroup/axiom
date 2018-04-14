@@ -10,7 +10,7 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        LibrarySchematic();
+        LibrarySchematic(Project *project);
 
         QString name() override { return ""; }
 

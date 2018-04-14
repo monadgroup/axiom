@@ -8,12 +8,16 @@
 
 namespace AxiomModel {
 
+    class Project;
+
     class LibraryEntry;
 
     class Library : public QObject {
     Q_OBJECT
 
     public:
+        Library(Project *project);
+
         ~Library();
 
         const QString &activeTag() const { return _activeTag; }
@@ -50,8 +54,11 @@ namespace AxiomModel {
 
         void removeTag(const QString &tag);
 
+        void removeEntry(LibraryEntry *entry);
+
     private:
 
+        Project *project;
         std::vector<std::unique_ptr<LibraryEntry>> _entries;
         std::map<QString, size_t> _tags;
         QString _activeTag;

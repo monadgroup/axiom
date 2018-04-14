@@ -16,7 +16,7 @@ namespace AxiomModel {
     Q_OBJECT
 
     public:
-        LibraryEntry(QString name, std::set<QString> tags);
+        LibraryEntry(QString name, std::set<QString> tags, Project *project);
 
         QString name() const { return _name; }
 
@@ -38,6 +38,8 @@ namespace AxiomModel {
 
         void modified();
 
+        void remove();
+
     signals:
 
         void nameChanged(const QString &newName);
@@ -45,6 +47,10 @@ namespace AxiomModel {
         void tagAdded(const QString &tag);
 
         void tagRemoved(const QString &tag);
+
+        void removed();
+
+        void cleanup();
 
     private:
 

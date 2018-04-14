@@ -108,15 +108,15 @@ void NodeControl::finishDragging() {
     }
 }
 
-void NodeControl::serialize(QDataStream &stream) const {
-    GridItem::serialize(stream);
+void NodeControl::serialize(QDataStream &stream, QPoint offset) const {
+    GridItem::serialize(stream, offset);
 
     stream << m_showName;
     // todo: control exposing
 }
 
-void NodeControl::deserialize(QDataStream &stream) {
-    GridItem::deserialize(stream);
+void NodeControl::deserialize(QDataStream &stream, QPoint offset) {
+    GridItem::deserialize(stream, offset);
 
     bool showName;
     stream >> showName;

@@ -72,12 +72,14 @@ void NodeNumControl::setChannel(Channel channel) {
     }
 }
 
-void NodeNumControl::serialize(QDataStream &stream) const {
+void NodeNumControl::serialize(QDataStream &stream, QPoint offset) const {
+    //NodeControl::serialize(stream, offset);
     stream << m_sink.value();
     stream << (uint8_t) mode();
 }
 
-void NodeNumControl::deserialize(QDataStream &stream) {
+void NodeNumControl::deserialize(QDataStream &stream, QPoint offset) {
+    //NodeControl::deserialize(stream, offset);
     MaximRuntime::NumValue val; stream >> val;
     m_sink.setValue(val);
 

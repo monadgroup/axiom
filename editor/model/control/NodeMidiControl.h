@@ -42,9 +42,9 @@ namespace AxiomModel {
 
         void setMode(Mode mode);
 
-        void serialize(QDataStream &stream) const override;
+        void serialize(QDataStream &stream, QPoint offset) const override;
 
-        void deserialize(QDataStream &stream) override;
+        void deserialize(QDataStream &stream, QPoint offset) override;
 
     signals:
 

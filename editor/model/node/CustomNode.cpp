@@ -89,8 +89,8 @@ void CustomNode::recompile() {
     emit compileFinished();
 }
 
-void CustomNode::serialize(QDataStream &stream) const {
-    Node::serialize(stream);
+void CustomNode::serialize(QDataStream &stream, QPoint offset) const {
+    Node::serialize(stream, offset);
     stream << m_code;
 
     // serialize controls
@@ -101,12 +101,12 @@ void CustomNode::serialize(QDataStream &stream) const {
 
         stream << control->name();
         stream << (uint8_t) control->type();
-        control->serialize(stream);
+        control->serialize(stream, QPoint(0, 0));
     }
 }
 
-void CustomNode::deserialize(QDataStream &stream) {
-    Node::deserialize(stream);
+void CustomNode::deserialize(QDataStream &stream, QPoint offset) {
+    Node::deserialize(stream, offset);
 
     QString code;
     stream >> code;
@@ -121,7 +121,7 @@ void CustomNode::deserialize(QDataStream &stream) {
         stream >> intControlType;
 
         auto control = NodeControl::create(this, (MaximCommon::ControlType) intControlType, controlName);
-        control->deserialize(stream);
+        control->deserialize(stream, QPoint(0, 0));
         surface.addItem(std::move(control));
     }
 }

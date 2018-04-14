@@ -1,6 +1,7 @@
 #include "GridItem.h"
 
 #include <QtCore/QDataStream>
+#include <iostream>
 
 #include "GridSurface.h"
 
@@ -110,13 +111,13 @@ void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
     }
 }
 
-void GridItem::serialize(QDataStream &stream) const {
+void GridItem::serialize(QDataStream &stream, QPoint offset) const {
     stream << m_selected;
-    stream << m_pos;
+    stream << (m_pos + offset);
     stream << m_size;
 }
 
-void GridItem::deserialize(QDataStream &stream) {
+void GridItem::deserialize(QDataStream &stream, QPoint offset) {
     bool selected;
     stream >> selected;
     QPoint pos;
@@ -124,7 +125,7 @@ void GridItem::deserialize(QDataStream &stream) {
     QSize size;
     stream >> size;
 
-    setPos(pos, true, false);
+    setPos(pos + offset, true, false);
     setSize(size);
     if (selected) select(false);
 }

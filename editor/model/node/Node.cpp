@@ -181,16 +181,16 @@ void Node::finishDragging() {
     }
 }
 
-void Node::serialize(QDataStream &stream) const {
-    GridItem::serialize(stream);
+void Node::serialize(QDataStream &stream, QPoint offset) const {
+    GridItem::serialize(stream, offset);
 
     stream << m_name;
     stream << m_panelOpen;
     stream << m_panelHeight;
 }
 
-void Node::deserialize(QDataStream &stream) {
-    GridItem::deserialize(stream);
+void Node::deserialize(QDataStream &stream, QPoint offset) {
+    GridItem::deserialize(stream, offset);
 
     QString name;
     stream >> name;
@@ -210,6 +210,7 @@ void Node::remove() {
     parentSchematic->project()->history.appendOperation(
         std::make_unique<DeleteNodeOperation>(parentSchematic->project(), ref())
     );
+    removeWithoutOp();
 }
 
 void Node::removeWithoutOp() {
