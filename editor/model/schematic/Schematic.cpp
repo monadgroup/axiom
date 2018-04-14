@@ -166,7 +166,6 @@ void Schematic::partialSerialize(QDataStream &stream, const std::vector<GridItem
         assert(node);
         stream << (uint8_t) node->type;
 
-        std::cout << "Serializing node at pos " << stream.device()->pos() << std::endl;
         node->serialize(stream, -center);
 
         for (size_t controlI = 0; controlI < node->surface.items().size(); controlI++) {
@@ -206,13 +205,12 @@ void Schematic::partialDeserialize(QDataStream &stream, QPoint center) {
 
         auto type = (Node::Type) intType;
         if (type == Node::Type::IO) {
-            std::cout << "Deserializing IONode at pos " << stream.device()->pos() << std::endl;
+            nodeStart--;
             auto ioItem = dynamic_cast<IONode *>(items()[i].get());
             assert(ioItem);
             ioItem->deserialize(stream, center);
         } else {
-            std::cout << "Deserializing other node at pos " << stream.device()->pos() << std::endl;
-            assert(addFromStream(type, i, stream, center));
+            assert(addFromStream(type, nodeStart + i, stream, center));
         }
     }
 
@@ -314,12 +312,7 @@ void Schematic::serialize(QDataStream &stream) const {
     stream << pan();
     stream << zoom();
 
-    std::vector<GridItem*> itms;
-    for (const auto &ptr : items()) {
-        itms.push_back(ptr.get());
-    }
-
-    partialSerialize(stream, itms, QPoint(0, 0));
+    partialSerialize(stream, rawItems(), QPoint(0, 0));
 }
 
 void Schematic::deserialize(QDataStream &stream) {

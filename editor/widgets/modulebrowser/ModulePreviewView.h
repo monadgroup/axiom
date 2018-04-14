@@ -14,6 +14,9 @@ namespace AxiomGui {
     public:
         explicit ModulePreviewView(AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
 
+    protected:
+        void mousePressEvent(QMouseEvent *event) override;
+
     private:
 
         AxiomModel::LibraryEntry *entry;

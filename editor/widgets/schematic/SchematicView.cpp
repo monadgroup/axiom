@@ -4,6 +4,8 @@
 #include <QtWidgets/QGraphicsItem>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsSceneWheelEvent>
+#include <QtCore/QMimeData>
+#include <iostream>
 
 #include "editor/model/node/CustomNode.h"
 #include "editor/model/schematic/Schematic.h"
@@ -15,6 +17,7 @@ using namespace AxiomModel;
 SchematicView::SchematicView(SchematicPanel *panel, Schematic *schematic)
     : QGraphicsView(new SchematicCanvas(panel, schematic)), schematic(schematic) {
     scene()->setParent(this);
+    setAcceptDrops(true);
 
     connect(schematic, &Schematic::panChanged,
             this, &SchematicView::pan);
@@ -88,6 +91,50 @@ void SchematicView::wheelEvent(QWheelEvent *event) {
         schematic->setZoom(schematic->zoom() + delta);
         schematic->setPan(schematic->pan() - translatedEventPos / zoomToScale(schematic->zoom()) + lastScaledPan);
     }
+}
+
+void SchematicView::dragEnterEvent(QDragEnterEvent *event) {
+    if (!event->mimeData()->hasFormat("application/axiom-partial-surface")) return;
+
+    event->acceptProposedAction();
+
+    auto currentItemCount = schematic->items().size();
+
+    // add the nodes to the surface, select them, and make them follow the mouse
+    auto scenePos = mapToScene(event->pos());
+    auto nodePos = QPoint(
+        (int) (scenePos.x() / SchematicCanvas::nodeGridSize.width()),
+        (int) (scenePos.y() / SchematicCanvas::nodeGridSize.height())
+    );
+
+    auto data = event->mimeData()->data("application/axiom-partial-surface");
+    QDataStream stream(&data, QIODevice::ReadOnly);
+    schematic->partialDeserialize(stream, nodePos);
+
+    schematic->deselectAll();
+    for (size_t i = currentItemCount; i < schematic->items().size(); i++) {
+        schematic->items()[i]->select(false);
+    }
+    schematic->startDragging();
+    startMousePos = QPoint(scenePos.x(), scenePos.y());
+}
+
+void SchematicView::dragMoveEvent(QDragMoveEvent *event) {
+    auto mouseDelta = mapToScene(event->pos()) - startMousePos;
+    schematic->dragTo(QPoint(
+        mouseDelta.x() / SchematicCanvas::nodeGridSize.width(),
+        mouseDelta.y() / SchematicCanvas::nodeGridSize.height()
+    ));
+}
+
+void SchematicView::dragLeaveEvent(QDragLeaveEvent *event) {
+    schematic->finishDragging();
+    schematic->deleteSelectedItems();
+}
+
+void SchematicView::dropEvent(QDropEvent *event) {
+    schematic->finishDragging();
+    setFocus(Qt::OtherFocusReason);
 }
 
 void SchematicView::pan(QPointF pan) {

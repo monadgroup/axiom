@@ -2,7 +2,10 @@
 
 #include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsItem>
+#include <QtGui/QMouseEvent>
 #include <iostream>
+#include <QtGui/QDrag>
+#include <QtCore/QMimeData>
 
 #include "ModulePreviewCanvas.h"
 #include "../node/NodeItem.h"
@@ -38,4 +41,22 @@ ModulePreviewView::ModulePreviewView(AxiomModel::LibraryEntry *entry, QWidget *p
     auto scaleFactor = boundingRect.width() > boundingRect.height() ? selfWidth / boundingRect.width() : selfHeight / boundingRect.height();
     scale(scaleFactor, scaleFactor);
     centerOn(boundingRect.center());
+}
+
+void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        auto drag = new QDrag(this);
+
+        // serialize the surface and set mime data
+        QByteArray serializeArray;
+        QDataStream stream(&serializeArray, QIODevice::WriteOnly);
+        entry->schematic().partialSerialize(stream, entry->schematic().rawItems(), QPoint(0, 0));
+
+        auto mimeData = new QMimeData();
+        mimeData->setData("application/axiom-partial-surface", serializeArray);
+        drag->setMimeData(mimeData);
+        //drag->setPixmap(grab());
+
+        drag->exec();
+    }
 }

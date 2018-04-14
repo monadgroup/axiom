@@ -23,7 +23,11 @@ namespace AxiomModel {
 
         static QPoint findCenter(const std::vector<GridItem*> &items);
 
+        QPoint findCenter() const;
+
         std::vector<std::unique_ptr<GridItem>> const &items() const { return m_items; }
+
+        std::vector<GridItem *> rawItems() const;
 
         bool hasSelection() const { return !m_selectedItems.empty(); }
 

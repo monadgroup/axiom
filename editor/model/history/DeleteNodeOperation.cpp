@@ -29,7 +29,6 @@ std::unique_ptr<DeleteNodeOperation> DeleteNodeOperation::deserialize(QDataStrea
 }
 
 void DeleteNodeOperation::forward() {
-    std::cout << "Running DeleteNodeOperation#forward" << std::endl;
     auto node = project->findNode(nodeRef);
 
     // serialize the node to make undo easier

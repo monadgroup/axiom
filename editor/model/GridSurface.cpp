@@ -14,6 +14,23 @@ QPoint GridSurface::findCenter(const std::vector<AxiomModel::GridItem *> &items)
     return currentCenter / items.size();
 }
 
+QPoint GridSurface::findCenter() const {
+    QPoint currentCenter;
+    for (const auto &item : items()) {
+        currentCenter = currentCenter + item->pos() + QPoint(item->size().width() / 2, item->size().height() / 2);
+    }
+    return currentCenter / items().size();
+}
+
+std::vector<GridItem *> GridSurface::rawItems() const {
+    std::vector<GridItem *> result;
+    result.reserve(items().size());
+    for (const auto &item : items()) {
+        result.push_back(item.get());
+    }
+    return result;
+}
+
 void GridSurface::addItem(std::unique_ptr<GridItem> item) {
     insertItem(m_items.size(), std::move(item));
 }
