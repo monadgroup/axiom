@@ -5,6 +5,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/ChangeNumModeOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ChangeNumValueOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ConnectControlsOperation.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CreateNodeOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/DeleteNodeOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/DisconnectControlsOperation.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/HistoryList.cpp"

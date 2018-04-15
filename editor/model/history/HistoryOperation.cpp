@@ -2,6 +2,7 @@
 
 #include "../../util.h"
 #include "AddNodeOperation.h"
+#include "CreateNodeOperation.h"
 #include "DeleteNodeOperation.h"
 #include "MoveNodeOperation.h"
 #include "SizeNodeOperation.h"
@@ -16,6 +17,26 @@
 
 using namespace AxiomModel;
 
+QString HistoryOperation::typeToString(AxiomModel::HistoryOperation::Type type) {
+    switch (type) {
+        case Type::ADD_NODE: return "Add Node";
+        case Type::CREATE_NODE: return "Create Node";
+        case Type::DELETE_NODE: return "Delete Node";
+        case Type::MOVE_NODE: return "Move Node";
+        case Type::SIZE_NODE: return "Size Node";
+        case Type::RENAME_NODE: return "Rename Node";
+        case Type::SHOW_HIDE_CONTROL_NAME: return "ShowHide Control Name";
+        case Type::MOVE_CONTROL: return "Move Control";
+        case Type::SIZE_CONTROL: return "Size Control";
+        case Type::CONNECT_CONTROLS: return "Connect Controls";
+        case Type::DISCONNECT_CONTROLS: return "Disconnect Controls";
+        case Type::CHANGE_NUM_VAL: return "Change Num Val";
+        case Type::CHANGE_NUM_MODE: return "Change Num Mode";
+    }
+
+    unreachable;
+}
+
 HistoryOperation::HistoryOperation(bool needsRefresh, Type type, bool exec) : _needsRefresh(needsRefresh), _type(type),
                                                                               _exec(exec) {
 
@@ -26,6 +47,8 @@ std::unique_ptr<HistoryOperation> HistoryOperation::deserialize(AxiomModel::Hist
     switch (type) {
         case Type::ADD_NODE:
             return AddNodeOperation::deserialize(stream, project);
+        case Type::CREATE_NODE:
+            return CreateNodeOperation::deserialize(stream, project);
         case Type::DELETE_NODE:
             return DeleteNodeOperation::deserialize(stream, project);
         case Type::MOVE_NODE:

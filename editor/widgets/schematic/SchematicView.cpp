@@ -9,6 +9,7 @@
 
 #include "editor/model/node/CustomNode.h"
 #include "editor/model/schematic/Schematic.h"
+#include "editor/model/Project.h"
 #include "SchematicCanvas.h"
 
 using namespace AxiomGui;
@@ -97,6 +98,7 @@ void SchematicView::dragEnterEvent(QDragEnterEvent *event) {
     if (!event->mimeData()->hasFormat("application/axiom-partial-surface")) return;
 
     event->acceptProposedAction();
+    schematic->project()->history.startAction(HistoryList::ActionType::PLACE_MODULE);
 
     auto currentItemCount = schematic->items().size();
 
@@ -129,11 +131,12 @@ void SchematicView::dragMoveEvent(QDragMoveEvent *event) {
 
 void SchematicView::dragLeaveEvent(QDragLeaveEvent *event) {
     schematic->finishDragging();
-    schematic->deleteSelectedItems();
+    schematic->project()->history.cancelAction(HistoryList::ActionType::PLACE_MODULE);
 }
 
 void SchematicView::dropEvent(QDropEvent *event) {
     schematic->finishDragging();
+    schematic->project()->history.endAction(HistoryList::ActionType::PLACE_MODULE);
     setFocus(Qt::OtherFocusReason);
 }
 

@@ -9,8 +9,9 @@
 #include "../node/CustomNode.h"
 #include "../node/IONode.h"
 #include "../control/NodeControl.h"
-#include "../history/AddNodeOperation.h"
+#include "../history/CreateNodeOperation.h"
 #include "../history/ConnectControlsOperation.h"
+#include "../history/AddNodeOperation.h"
 #include "../../AxiomApplication.h"
 #include "../../util.h"
 #include "compiler/runtime/Runtime.h"
@@ -166,7 +167,11 @@ void Schematic::partialSerialize(QDataStream &stream, const std::vector<GridItem
         assert(node);
         stream << (uint8_t) node->type;
 
-        node->serialize(stream, -center);
+        // serialize into a buffer so deserialization knows size
+        QByteArray serializeArray;
+        QDataStream serializeStream(&serializeArray, QIODevice::WriteOnly);
+        node->serialize(serializeStream, -center);
+        stream << serializeArray;
 
         for (size_t controlI = 0; controlI < node->surface.items().size(); controlI++) {
             auto control = dynamic_cast<NodeControl*>(node->surface.items()[controlI].get());
@@ -196,7 +201,6 @@ void Schematic::partialSerialize(QDataStream &stream, const std::vector<GridItem
 void Schematic::partialDeserialize(QDataStream &stream, QPoint center) {
     auto nodeStart = items().size();
 
-    // todo: this part doesn't handle history correctly!
     uint32_t nodeCount;
     stream >> nodeCount;
     for (uint32_t i = 0; i < nodeCount; i++) {
@@ -205,12 +209,22 @@ void Schematic::partialDeserialize(QDataStream &stream, QPoint center) {
 
         auto type = (Node::Type) intType;
         if (type == Node::Type::IO) {
+            // skip the size
+            quint32 notUsed;
+            stream >> notUsed;
+
             nodeStart--;
             auto ioItem = dynamic_cast<IONode *>(items()[i].get());
             assert(ioItem);
             ioItem->deserialize(stream, center);
         } else {
-            assert(addFromStream(type, nodeStart + i, stream, center));
+            // read into a byte array to pass into the operation
+            QByteArray readArray;
+            stream >> readArray;
+
+            _project->history.appendOperation(std::make_unique<AddNodeOperation>(
+                _project, NodeRef(ref(), nodeStart + i), type, center, std::move(readArray)
+            ));
         }
     }
 
@@ -328,7 +342,7 @@ void Schematic::deserialize(QDataStream &stream) {
 
 void Schematic::addNode(Node::Type type, QString name, QPoint pos) {
     _project->history.appendOperation(
-        std::make_unique<AddNodeOperation>(_project, NodeRef(ref(), items().size()), type, name, pos));
+        std::make_unique<CreateNodeOperation>(_project, NodeRef(ref(), items().size()), type, name, pos));
 }
 
 void Schematic::remove() {

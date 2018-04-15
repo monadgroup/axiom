@@ -42,6 +42,8 @@ QString HistoryList::typeToString(AxiomModel::HistoryList::ActionType type) {
             return "Change Value";
         case ActionType::CHANGE_MODE:
             return "Change Mode";
+        case ActionType::PLACE_MODULE:
+            return "Place Module";
     }
 
     unreachable;
@@ -79,21 +81,34 @@ void HistoryList::endAction(ActionType type) {
     }
 
     // remove items ahead of where we are
-    stack.erase(stack.begin() + stackPos, stack.end());
+    _stack.erase(_stack.begin() + _stackPos, _stack.end());
 
     // if the stack is going to be longer than max size, remove the first item
-    if (stack.size() == maxActions) {
-        stack.erase(stack.begin());
-    } else stackPos++;
+    if (_stack.size() == maxActions) {
+        _stack.erase(_stack.begin());
+    } else _stackPos++;
 
-    stack.push_back(std::move(currentAction));
+    _stack.push_back(std::move(currentAction));
 
     // update undo/redo state
-    if (stackPos == 1) emit canUndoChanged(true);
+    if (_stackPos == 1) emit canUndoChanged(true);
     if (couldRedo) emit canRedoChanged(false);
 
     emit undoTypeChanged(type);
     emit redoTypeChanged(ActionType::NONE);
+    emit stackChanged();
+}
+
+void HistoryList::cancelAction(AxiomModel::HistoryList::ActionType type) {
+    assert(hasCurrentAction);
+    assert(currentAction.type == type);
+
+    hasCurrentAction = false;
+
+    // undo all operations in the stack
+    for (ssize_t i = currentAction.operations.size() - 1; i >= 0; i--) {
+        currentAction.operations[i]->backward();
+    }
 }
 
 void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> operation) {
@@ -107,19 +122,19 @@ void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> 
 }
 
 bool HistoryList::canUndo() const {
-    return stackPos > 0;
+    return _stackPos > 0;
 }
 
 bool HistoryList::canRedo() const {
-    return stackPos < stack.size();
+    return _stackPos < _stack.size();
 }
 
 void HistoryList::serialize(QDataStream &stream) const {
     assert(!hasCurrentAction);
 
-    stream << (quint32) stack.size();
-    stream << (quint32) stackPos;
-    for (const auto &action : stack) {
+    stream << (quint32) _stack.size();
+    stream << (quint32) _stackPos;
+    for (const auto &action : _stack) {
         stream << (quint32) action.type;
         stream << (quint32) action.operations.size();
         for (const auto &operation : action.operations) {
@@ -132,21 +147,21 @@ void HistoryList::serialize(QDataStream &stream) const {
 void HistoryList::deserialize(QDataStream &stream) {
     assert(!hasCurrentAction);
 
-    stack.clear();
+    _stack.clear();
     quint32 stackSize;
     stream >> stackSize;
     quint32 intPos;
     stream >> intPos;
-    stackPos = intPos;
+    _stackPos = intPos;
 
     for (quint32 i = 0; i < stackSize; i++) {
         quint32 intActionType;
         stream >> intActionType;
         quint32 opCount;
         stream >> opCount;
-        stack.push_back(HistoryAction{(ActionType) intActionType, {}});
+        _stack.push_back(HistoryAction{(ActionType) intActionType, {}});
 
-        auto &action = stack.back();
+        auto &action = _stack.back();
         for (quint32 j = 0; j < opCount; j++) {
             quint32 intOpType;
             stream >> intOpType;
@@ -155,18 +170,19 @@ void HistoryList::deserialize(QDataStream &stream) {
         }
     }
 
-    emit canUndoChanged(stackPos > 0);
-    emit canRedoChanged(stackPos < stack.size());
-    emit undoTypeChanged(stackPos > 0 ? stack[stackPos - 1].type : ActionType::NONE);
-    emit redoTypeChanged(stackPos < stack.size() ? stack[stackPos].type : ActionType::NONE);
+    emit canUndoChanged(_stackPos > 0);
+    emit canRedoChanged(_stackPos < _stack.size());
+    emit undoTypeChanged(_stackPos > 0 ? _stack[_stackPos - 1].type : ActionType::NONE);
+    emit redoTypeChanged(_stackPos < _stack.size() ? _stack[_stackPos].type : ActionType::NONE);
+    emit stackChanged();
 }
 
 void HistoryList::undo() {
     if (hasCurrentAction || !canUndo()) return;
 
-    stackPos--;
+    _stackPos--;
     auto needsRefresh = false;
-    auto &ops = stack[stackPos].operations;
+    auto &ops = _stack[_stackPos].operations;
     for (ssize_t i = ops.size() - 1; i >= 0; i--) {
         ops[i]->backward();
         if (ops[i]->needsRefresh()) needsRefresh = true;
@@ -174,18 +190,19 @@ void HistoryList::undo() {
 
     if (needsRefresh) project->build();
 
-    if (stackPos == 0) emit canUndoChanged(false);
-    if (stackPos == stack.size() - 1) emit canRedoChanged(true);
+    if (_stackPos == 0) emit canUndoChanged(false);
+    if (_stackPos == _stack.size() - 1) emit canRedoChanged(true);
 
-    emit undoTypeChanged(stackPos == 0 ? ActionType::NONE : stack[stackPos - 1].type);
-    emit redoTypeChanged(stack[stackPos].type);
+    emit undoTypeChanged(_stackPos == 0 ? ActionType::NONE : _stack[_stackPos - 1].type);
+    emit redoTypeChanged(_stack[_stackPos].type);
+    emit stackChanged();
 }
 
 void HistoryList::redo() {
     if (hasCurrentAction || !canRedo()) return;
 
     auto needsRefresh = false;
-    auto &ops = stack[stackPos].operations;
+    auto &ops = _stack[_stackPos].operations;
     for (auto &op : ops) {
         op->forward();
         if (op->needsRefresh()) needsRefresh = true;
@@ -193,10 +210,11 @@ void HistoryList::redo() {
 
     if (needsRefresh) project->build();
 
-    stackPos++;
-    if (stackPos == 1) emit canUndoChanged(true);
-    if (stackPos == stack.size()) emit canRedoChanged(false);
+    _stackPos++;
+    if (_stackPos == 1) emit canUndoChanged(true);
+    if (_stackPos == _stack.size()) emit canRedoChanged(false);
 
-    emit undoTypeChanged(stack[stackPos - 1].type);
-    emit redoTypeChanged(stackPos == stack.size() ? ActionType::NONE : stack[stackPos].type);
+    emit undoTypeChanged(_stack[_stackPos - 1].type);
+    emit redoTypeChanged(_stackPos == _stack.size() ? ActionType::NONE : _stack[_stackPos].type);
+    emit stackChanged();
 }

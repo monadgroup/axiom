@@ -11,6 +11,7 @@ namespace AxiomModel {
     public:
         enum class Type {
             ADD_NODE,
+            CREATE_NODE,
             DELETE_NODE,
             MOVE_NODE,
             SIZE_NODE,
@@ -23,6 +24,8 @@ namespace AxiomModel {
             CHANGE_NUM_VAL,
             CHANGE_NUM_MODE
         };
+
+        static QString typeToString(Type type);
 
         HistoryOperation(bool needsRefresh, Type type, bool exec = true);
 

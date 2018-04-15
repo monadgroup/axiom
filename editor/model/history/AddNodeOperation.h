@@ -7,7 +7,7 @@ namespace AxiomModel {
 
     class AddNodeOperation : public HistoryOperation {
     public:
-        AddNodeOperation(Project *project, NodeRef nodeRef, Node::Type type, QString name, QPoint pos);
+        AddNodeOperation(Project *project, NodeRef nodeRef, Node::Type nodeType, QPoint center, QByteArray nodeBuffer);
 
         static std::unique_ptr<AddNodeOperation> deserialize(QDataStream &stream, Project *project);
 
@@ -21,9 +21,9 @@ namespace AxiomModel {
 
         Project *project;
         NodeRef nodeRef;
-        Node::Type type;
-        QString name;
-        QPoint pos;
+        Node::Type nodeType;
+        QPoint center;
+        QByteArray nodeBuffer;
     };
 
 }

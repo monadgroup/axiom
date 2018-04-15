@@ -33,7 +33,13 @@ namespace AxiomModel {
             DISCONNECT_CONTROL,
             DISCONNECT_ALL,
             CHANGE_VALUE,
-            CHANGE_MODE
+            CHANGE_MODE,
+            PLACE_MODULE
+        };
+
+        struct HistoryAction {
+            ActionType type;
+            std::vector<std::unique_ptr<HistoryOperation>> operations;
         };
 
         size_t maxActions = 256;
@@ -44,9 +50,15 @@ namespace AxiomModel {
 
         ~HistoryList() override;
 
+        size_t stackPos() const { return _stackPos; }
+
+        const std::vector<HistoryAction> &stack() const { return _stack; }
+
         void startAction(ActionType type);
 
         void endAction(ActionType type);
+
+        void cancelAction(ActionType type);
 
         void appendOperation(std::unique_ptr<HistoryOperation> operation);
 
@@ -74,17 +86,14 @@ namespace AxiomModel {
 
         void redoTypeChanged(ActionType newType);
 
-    private:
+        void stackChanged();
 
-        struct HistoryAction {
-            ActionType type;
-            std::vector<std::unique_ptr<HistoryOperation>> operations;
-        };
+    private:
 
         Project *project;
 
-        size_t stackPos = 0;
-        std::vector<HistoryAction> stack;
+        size_t _stackPos = 0;
+        std::vector<HistoryAction> _stack;
 
         bool hasCurrentAction = false;
         HistoryAction currentAction;

@@ -7,6 +7,7 @@
 
 #include "editor/resources/resource.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
+#include "../history/HistoryPanel.h"
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/Project.h"
@@ -89,6 +90,10 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
 
     connect(GlobalActions::helpAbout, &QAction::triggered,
             this, &MainWindow::showAbout);
+
+    auto historyList = new HistoryPanel(&project->history, this);
+    historyList->setAllowedAreas(Qt::AllDockWidgetAreas);
+    addDockWidget(Qt::RightDockWidgetArea, historyList);
 
     auto moduleBrowser = new ModuleBrowserPanel(&project->library, this);
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);

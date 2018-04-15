@@ -7,7 +7,7 @@ namespace AxiomModel {
 
     class DeleteNodeOperation : public HistoryOperation {
     public:
-        DeleteNodeOperation(Project *project, NodeRef nodeRef);
+        DeleteNodeOperation(Project *project, NodeRef nodeRef, Node::Type nodeType, QByteArray nodeBuffer);
 
         static std::unique_ptr<DeleteNodeOperation> deserialize(QDataStream &stream, Project *project);
 
@@ -22,7 +22,7 @@ namespace AxiomModel {
         Project *project;
         NodeRef nodeRef;
         Node::Type nodeType;
-        std::unique_ptr<QByteArray> nodeBuffer;
+        QByteArray nodeBuffer;
     };
 
 }

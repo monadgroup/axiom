@@ -207,8 +207,13 @@ void Node::deserialize(QDataStream &stream, QPoint offset) {
 void Node::remove() {
     if (!isDeletable()) return;
 
+    // serialize the node for the operation
+    QByteArray nodeBuffer;
+    QDataStream serializeStream(&nodeBuffer, QIODevice::WriteOnly);
+    serialize(serializeStream, QPoint(0, 0));
+
     parentSchematic->project()->history.appendOperation(
-        std::make_unique<DeleteNodeOperation>(parentSchematic->project(), ref())
+        std::make_unique<DeleteNodeOperation>(parentSchematic->project(), ref(), type, std::move(nodeBuffer))
     );
     removeWithoutOp();
 }
@@ -218,8 +223,6 @@ void Node::removeWithoutOp() {
 }
 
 NodeControl* Node::addFromRuntime(MaximRuntime::Control *control) {
-    std::cout << "Adding control from runtime... Name is " << control->name() << ", type is " << (uint32_t) control->type()->type() << std::endl;
-
     // find a control with the right type and name, that doesn't have a runtime attached
     for (const auto &item : surface.items()) {
         if (auto existingControl = dynamic_cast<NodeControl *>(item.get())) {
@@ -227,17 +230,13 @@ NodeControl* Node::addFromRuntime(MaximRuntime::Control *control) {
 
             if (existingControl->type() == control->type()->type()
                 && existingControl->name().toStdString() == control->name() && !existingControl->runtime()) {
-                std::cout << "Found control, attaching runtime" << std::endl;
                 existingControl->attachRuntime(control);
                 return existingControl;
             }
         }
     }
 
-    std::cout << "Making a new control" << std::endl;
-
     // looks like we need to make a new control
-    std::cout << "Creating control with name " << control->name() << std::endl;
     auto newControl = NodeControl::create(this, control->type()->type(), QString::fromStdString(control->name()));
     newControl->attachRuntime(control);
     auto newControlPtr = newControl.get();
