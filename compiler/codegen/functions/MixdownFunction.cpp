@@ -25,7 +25,7 @@ std::unique_ptr<Value> MixdownFunction::generate(ComposableModuleClassMethod *me
     assert(inputArray);
 
     auto &b = method->builder();
-    auto result = Num::create(ctx(), inputArray->atIndex((uint64_t) 0, method->builder())->get(), method->builder(),
+    auto result = Num::create(ctx(), inputArray->atIndex((size_t) 0, method->builder())->get(), method->builder(),
                               method->allocaBuilder());
 
     auto indexPtr = method->allocaBuilder().CreateAlloca(llvm::Type::getInt8Ty(ctx()->llvm()), nullptr, "index.ptr");

@@ -1,5 +1,6 @@
 #include "SchematicCanvas.h"
 
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <cassert>
 #include <QtGui/QResizeEvent>

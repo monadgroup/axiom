@@ -13,7 +13,9 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
+if (NOT MSVC)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
+endif()
 
 set(SOURCE_FILES util.h
         common/FormType.cpp common/OperatorType.cpp common/ControlType.cpp

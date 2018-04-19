@@ -4,7 +4,7 @@
 #include "../codegen/Scope.h"
 
 namespace MaximCodegen {
-    class ControlInstance;
+    struct ControlInstance;
 }
 
 namespace MaximRuntime {

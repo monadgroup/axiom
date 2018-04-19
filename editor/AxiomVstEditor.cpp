@@ -8,6 +8,7 @@ AxiomVstEditor::AxiomVstEditor(AxiomVstPlugin *plugin) : plugin(plugin), window(
 bool AxiomVstEditor::open(void *ptr) {
     AEffEditor::open(ptr);
     window.show();
+    return true;
 }
 
 void AxiomVstEditor::close() {

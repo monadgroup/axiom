@@ -1,5 +1,8 @@
 #include "SinOscFunction.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "../MaximContext.h"
 #include "../ComposableModuleClassMethod.h"
 #include "../Num.h"

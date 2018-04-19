@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#define DO_ACTION(history, name, block) (history).startAction((name)); (block); (history).endAction((name))
+#define DO_ACTION(history, name, block) (history).startAction((name)); block; (history).endAction((name))
 
 namespace AxiomModel {
 

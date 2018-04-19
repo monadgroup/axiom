@@ -1,6 +1,7 @@
 #include "HistoryList.h"
 
 #include <cassert>
+#include <llvm/Support/DataTypes.h>
 
 #include "HistoryOperation.h"
 #include "../Project.h"

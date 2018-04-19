@@ -2,6 +2,7 @@
 
 #include <istream>
 #include <regex>
+#include <array>
 
 #include "Token.h"
 

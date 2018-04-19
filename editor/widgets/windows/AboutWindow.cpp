@@ -8,7 +8,6 @@
 
 #include "editor/util.h"
 #include "editor/resources/resource.h"
-#include "editor/timestamp.h"
 
 using namespace AxiomGui;
 

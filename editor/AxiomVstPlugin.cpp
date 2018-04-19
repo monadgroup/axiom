@@ -95,6 +95,8 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *ev) {
             default:;
         }
     }
+
+    return 0;
 }
 
 void AxiomVstPlugin::setProgramName(char *name) {
@@ -115,6 +117,7 @@ void AxiomVstPlugin::setParameter(VstInt32 index, float value) {
 
 float AxiomVstPlugin::getParameter(VstInt32 index) {
     // todo
+    return 0;
 }
 
 void AxiomVstPlugin::getParameterLabel(VstInt32 index, char *label) {
@@ -178,6 +181,7 @@ bool AxiomVstPlugin::getVendorString(char *text) {
 
 bool AxiomVstPlugin::getProductString(char *text) {
     vst_strncpy(text, VER_FILEDESCRIPTION_STR, kVstMaxProductStrLen);
+    return true;
 }
 
 VstInt32 AxiomVstPlugin::getVendorVersion() {
