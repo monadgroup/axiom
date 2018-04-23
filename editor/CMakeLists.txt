@@ -17,6 +17,8 @@ message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+set(Qt5_USE_STATIC_LIBS ON)
+set(Qt5_USE_STATIC_RUNTIME ON)
 find_package(Qt5Widgets REQUIRED)
 
 set(SOURCE_FILES AxiomApplication.cpp util.cpp)
@@ -44,4 +46,4 @@ add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_editor ${LINK_LIBS})
 
 add_executable(axiom_standalone ${STANDALONE_SOURCE_FILES} ${RES_FILES})
-target_link_libraries(axiom_standalone ${LINK_LIBS})
+target_link_libraries(axiom_standalone ${LINK_LIBS} -static)
