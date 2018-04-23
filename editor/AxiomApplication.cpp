@@ -9,6 +9,7 @@
 #include "editor/model/node/CustomNode.h"
 #include "widgets/GlobalActions.h"
 
+#ifdef AXIOM_STATIC_BUILD
 #ifdef Q_OS_WIN
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 /*
@@ -20,6 +21,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 #elif defined(Q_OS_DARWIN)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#endif
 #endif
 
 AxiomApplication AxiomApplication::main;

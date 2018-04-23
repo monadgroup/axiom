@@ -17,8 +17,25 @@ message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(Qt5_USE_STATIC_LIBS ON)
-set(Qt5_USE_STATIC_RUNTIME ON)
+
+# default to static linking on windows, shared otherwise
+if(WIN32) # note that UNIX is true on Cygwin (and maybe MinGW?) as well!
+    set(AXIOM_STATIC_LINK TRUE)
+else()
+    # you usually don't want to link statically by default on eg. linux,
+    # as most libraries usually come in shared-only versions from the package
+    # repo. (package maintainers take care of 'SO hell')
+    set(AXIOM_STATIC_LINK FALSE)
+endif()
+
+if(AXIOM_STATIC_LINK)
+    set(Qt5_USE_STATIC_LIBS ON)
+    set(Qt5_USE_STATIC_RUNTIME ON)
+    add_definitions(-DAXIOM_STATIC_BUILD=1)
+    set(AXIOM_LINK_FLAGS -static)
+else()
+    set(AXIOM_LINK_FLAGS "")
+endif()
 find_package(Qt5Widgets REQUIRED)
 
 set(SOURCE_FILES AxiomApplication.cpp util.cpp)
@@ -46,4 +63,5 @@ add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_editor ${LINK_LIBS})
 
 add_executable(axiom_standalone ${STANDALONE_SOURCE_FILES} ${RES_FILES})
-target_link_libraries(axiom_standalone ${LINK_LIBS} -static)
+
+target_link_libraries(axiom_standalone ${LINK_LIBS} ${AXIOM_LINK_FLAGS})
