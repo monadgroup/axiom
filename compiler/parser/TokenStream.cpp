@@ -36,18 +36,18 @@ Token TokenStream::peek() {
 }
 
 Token TokenStream::processNext() {
-    if (dataBegin >= data.end()) {
-        return Token(
-            Token::Type::END_OF_FILE, "",
-            SourcePos(currentLine, currentColumn),
-            SourcePos(currentLine, currentColumn)
-        );
-    }
-
     bool hasToken = false;
     Token pickToken(Token::Type::UNKNOWN, "", SourcePos(0, 0), SourcePos(0, 0));
 
     do {
+        if (dataBegin >= data.end()) {
+            return Token(
+                Token::Type::END_OF_FILE, "",
+                SourcePos(currentLine, currentColumn),
+                SourcePos(currentLine, currentColumn)
+            );
+        }
+
         for (const auto &token : TokenStream::matches) {
             std::match_results<std::string::iterator> m;
             if (!std::regex_search(
