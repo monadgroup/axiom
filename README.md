@@ -25,6 +25,12 @@ Once Qt and LLVM are installed, go to the directory where you'd like to build Ax
 cmake ../path/to/source
 ```
 
+If you want to build it statically-linked, pass the `AXIOM_STATIC_LINK` flag:
+
+```
+cmake ../path/to/source -DAXIOM_STATIC_LINK=ON
+```
+
 CMake will setup files necessary for building. If this fails, make sure you've got Qt and LLVM installed correctly. Once complete, run the following command from your output directory to build the Axiom VSTi.
 
 ```

@@ -18,16 +18,6 @@ message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-# default to static linking on windows, shared otherwise
-if(WIN32) # note that UNIX is true on Cygwin (and maybe MinGW?) as well!
-    set(AXIOM_STATIC_LINK TRUE)
-else()
-    # you usually don't want to link statically by default on eg. linux,
-    # as most libraries usually come in shared-only versions from the package
-    # repo. (package maintainers take care of 'SO hell')
-    set(AXIOM_STATIC_LINK FALSE)
-endif()
-
 if(AXIOM_STATIC_LINK)
     set(Qt5_USE_STATIC_LIBS ON)
     set(Qt5_USE_STATIC_RUNTIME ON)
