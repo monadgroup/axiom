@@ -22,7 +22,7 @@ if(AXIOM_STATIC_LINK)
     set(Qt5_USE_STATIC_LIBS ON)
     set(Qt5_USE_STATIC_RUNTIME ON)
     add_definitions(-DAXIOM_STATIC_BUILD=1)
-    set(AXIOM_LINK_FLAGS -static)
+    set(AXIOM_LINK_FLAGS -static -static-libgcc -static-libstdc++)
 else()
     set(AXIOM_LINK_FLAGS "")
 endif()
@@ -50,8 +50,7 @@ add_subdirectory(widgets)
 add_subdirectory(../compiler compiler)
 
 add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
-target_link_libraries(axiom_editor ${LINK_LIBS})
+target_link_libraries(axiom_editor ${LINK_LIBS} ${AXIOM_LINK_FLAGS})
 
 add_executable(axiom_standalone ${STANDALONE_SOURCE_FILES} ${RES_FILES})
-
 target_link_libraries(axiom_standalone ${LINK_LIBS} ${AXIOM_LINK_FLAGS})

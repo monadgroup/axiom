@@ -78,7 +78,7 @@ VST_EXPORT AEffect* main_plugin (audioMasterCallback audioMaster) { return VSTPl
 //------------------------------------------------------------------------
 #if WIN32
 #include <windows.h>
-void* hInstance;
+/*void* hInstance;
 
 extern "C" {
 BOOL WINAPI DllMain (HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
@@ -86,5 +86,5 @@ BOOL WINAPI DllMain (HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
 	hInstance = hInst;
 	return 1;
 }
-} // extern "C"
+} // extern "C"*/
 #endif
