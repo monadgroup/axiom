@@ -118,13 +118,15 @@ GeneratableModuleClass *Surface::compile() {
         auto nextControl = controlQueue.front();
         controlQueue.pop();
 
-        for (const std::unique_ptr<Control> &relatedControl : *nextControl->node()) {
-            if (visitedControls.find(relatedControl.get()) != visitedControls.end()) continue;
-            visitedControls.emplace(relatedControl.get());
+        if (!((uint32_t) nextControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT)) {
+            for (const std::unique_ptr<Control> &relatedControl : *nextControl->node()) {
+                if (visitedControls.find(relatedControl.get()) != visitedControls.end()) continue;
+                visitedControls.emplace(relatedControl.get());
 
-            if ((uint32_t) relatedControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
+                if ((uint32_t) relatedControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
 
-            controlQueue.emplace(relatedControl.get());
+                controlQueue.emplace(relatedControl.get());
+            }
         }
 
         // find any connections that read and aren't extractors
