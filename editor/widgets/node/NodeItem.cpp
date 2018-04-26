@@ -22,6 +22,7 @@
 #include "../controls/IOControl.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
+#include "../windows/SaveModuleWindow.h"
 #include "../FloatingValueEditor.h"
 #include "CustomNodePanel.h"
 
@@ -272,6 +273,8 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             true
         );*/
     } else if (selectedAction == saveModuleAction) {
+        (new SaveModuleWindow())->show();
+
         // todo: save as preset
     } else if (selectedAction == deleteAction) {
         DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {

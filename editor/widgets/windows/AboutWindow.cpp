@@ -4,7 +4,6 @@
 #include <QtWidgets/QLabel>
 #include <QtGui/QIcon>
 #include <QtCore/QDateTime>
-#include <iostream>
 
 #include "editor/util.h"
 #include "editor/resources/resource.h"
@@ -25,31 +24,31 @@ AboutWindow::AboutWindow() : QDialog(nullptr,
     mainLayout->setMargin(10);
 
     QPixmap logoImg(":/logo.png");
-    auto logoLabel = new QLabel();
+    auto logoLabel = new QLabel(this);
     logoLabel->setObjectName("about-logo");
     logoLabel->setPixmap(logoImg);
     mainLayout->addWidget(logoLabel, 0, 0, 1, 2);
 
-    auto descriptLabel = new QLabel(tr(VER_FILEDESCRIPTION_STR " - " VER_LEGALCOPYRIGHT_STR));
+    auto descriptLabel = new QLabel(tr(VER_FILEDESCRIPTION_STR " - " VER_LEGALCOPYRIGHT_STR), this);
     descriptLabel->setObjectName("about-descript");
     mainLayout->addWidget(descriptLabel, 1, 0, 1, 2);
 
-    auto versionLabel = new QLabel(tr("Version:"));
+    auto versionLabel = new QLabel(tr("Version:"), this);
     versionLabel->setObjectName("about-label");
     mainLayout->addWidget(versionLabel, 2, 0);
-    mainLayout->addWidget(new QLabel(tr(VER_FILEVERSION_STR) + ", built " + __DATE__ " " __TIME__), 2, 1);
+    mainLayout->addWidget(new QLabel(tr(VER_FILEVERSION_STR) + ", built " + __DATE__ " " __TIME__, this), 2, 1);
 
-    auto authLabel = new QLabel(tr("Author:"));
+    auto authLabel = new QLabel(tr("Author:"), this);
     authLabel->setObjectName("about-label");
     mainLayout->addWidget(authLabel, 3, 0);
-    mainLayout->addWidget(new QLabel(tr("cpdt (github.com/cpdt)")), 3, 1);
+    mainLayout->addWidget(new QLabel(tr("cpdt (github.com/cpdt)"), this), 3, 1);
 
-    auto contribLabel = new QLabel(tr("Contributors:"));
+    auto contribLabel = new QLabel(tr("Contributors:"), this);
     contribLabel->setObjectName("about-label");
     mainLayout->addWidget(contribLabel, 4, 0);
-    mainLayout->addWidget(new QLabel(tr("PoroCYon")), 4, 1);
+    mainLayout->addWidget(new QLabel(tr("PoroCYon"), this), 4, 1);
     auto couldBeYouLabel = new QLabel(
-        tr("You could be here too! Help out by contributing to the project on Github: github.com/monadgroup/axiom"));
+        tr("You could be here too! Help out by contributing to the project on Github: github.com/monadgroup/axiom"), this);
     couldBeYouLabel->setWordWrap(true);
     couldBeYouLabel->setObjectName("about-none");
     mainLayout->addWidget(couldBeYouLabel, 5, 1);
