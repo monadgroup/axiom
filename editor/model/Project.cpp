@@ -10,15 +10,6 @@ using namespace AxiomModel;
 
 Project::Project(MaximRuntime::Runtime *runtime) : history(this), library(this), root(this),
                                                    _runtime(runtime) {
-    library.addEntry(std::make_unique<LibraryEntry>("LFO", std::set<QString>{}, this));
-    library.addEntry(std::make_unique<LibraryEntry>("Bla", std::set<QString>{}, this));
-    library.addEntry(std::make_unique<LibraryEntry>("Hello, world", std::set<QString>{}, this));
-    library.addEntry(std::make_unique<LibraryEntry>("What's going on", std::set<QString>{}, this));
-    library.addEntry(std::make_unique<LibraryEntry>("This is a test", std::set<QString>{}, this));
-    library.addEntry(std::make_unique<LibraryEntry>("Test", std::set<QString>{}, this));
-    library.addEntry(std::make_unique<LibraryEntry>("Hey there", std::set<QString>{}, this));
-    library.addEntry(std::make_unique<LibraryEntry>("olololo", std::set<QString>{}, this));
-
     root.attachRuntime(runtime->mainSurface());
     build();
 }

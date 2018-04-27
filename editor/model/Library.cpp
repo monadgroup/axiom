@@ -37,6 +37,14 @@ void Library::clear() {
     }
 }
 
+QStringList Library::tags() const {
+    QStringList result;
+    for (const auto &pair : _tags) {
+        result << pair.first;
+    }
+    return result;
+}
+
 void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
     auto entryPtr = entry.get();
     _entries.push_back(std::move(entry));

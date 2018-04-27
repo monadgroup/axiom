@@ -28,6 +28,8 @@ ModulePreviewList::ModulePreviewList(AxiomModel::Library *library, QWidget *pare
 }
 
 void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
+    std::cout << "Adding entry!" << std::endl;
+
     auto widget = new ModulePreviewButton(library, entry, this);
     layout->addWidget(widget);
 

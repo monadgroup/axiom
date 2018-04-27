@@ -41,8 +41,9 @@ ModuleBrowserPanel::ModuleBrowserPanel(AxiomModel::Library *library, QWidget *pa
     mainWidget->setLayout(mainLayout);
     setWidget(mainWidget);
 
-    for (const auto &tag : library->tags()) {
-        addTag(tag.first);
+    auto tags = library->tags();
+    for (const auto &tag : tags) {
+        addTag(tag);
     }
     connect(library, &AxiomModel::Library::tagAdded,
             this, &ModuleBrowserPanel::addTag);

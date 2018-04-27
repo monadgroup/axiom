@@ -187,3 +187,19 @@ QDockWidget::close-button:hover, QDockWidget::float-button:hover {
 QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
     background: #3498DB;
 }
+
+QPushButton {
+    background: #333;
+    border: 2px solid #333;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+QPushButton:hover {
+    background: #444;
+    border-color: #444;
+}
+
+QPushButton:pressed {
+    border-color: #666;
+}

@@ -30,7 +30,7 @@ namespace AxiomModel {
 
         std::vector<std::unique_ptr<LibraryEntry>> &entries() { return _entries; }
 
-        std::map<QString, size_t> &tags() { return _tags; }
+        QStringList tags() const;
 
         void addEntry(std::unique_ptr<LibraryEntry> entry);
 

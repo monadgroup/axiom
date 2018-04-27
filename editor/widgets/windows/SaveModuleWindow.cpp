@@ -4,20 +4,23 @@
 #include <QtWidgets/QLabel>
 #include <QtGui/QIcon>
 #include <QtCore/QDateTime>
-#include <QLineEdit>
+#include <QtWidgets/QCompleter>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QDialogButtonBox>
 
 #include "editor/util.h"
-#include "../tageditor/TagLineEdit.h"
+#include "editor/model/Library.h"
+#include "../SpaceCompleter.h"
 
 using namespace AxiomGui;
 
-SaveModuleWindow::SaveModuleWindow() : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
+SaveModuleWindow::SaveModuleWindow(AxiomModel::Library *library) : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("Add Module"));
-    //setStyleSheet(AxiomUtil::loadStylesheet(":/SaveModuleWindow.qss"));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/SaveModuleWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));
 
-    //setFixedSize(300, 400);
-    setBaseSize(300, 400);
+    setFixedSize(400, 400);
 
     auto mainLayout = new QGridLayout();
 
@@ -27,18 +30,54 @@ SaveModuleWindow::SaveModuleWindow() : QDialog(nullptr, Qt::WindowTitleHint | Qt
     // todo: put a module preview here?
 
     auto nameLabel = new QLabel(tr("Name:"), this);
-    nameLabel->setObjectName("save-name");
+    nameLabel->setObjectName("save-label");
     mainLayout->addWidget(nameLabel, 0, 0);
 
-    auto nameInput = new QLineEdit("New Module", this);
-    mainLayout->addWidget(nameInput, 0, 1);
+    nameInput = new QLineEdit("New Module", this);
+    mainLayout->addWidget(nameInput, 1, 0);
 
-    auto tagsLabel = new QLabel(tr("Tags:"), this);
-    tagsLabel->setObjectName("save-tags");
-    mainLayout->addWidget(tagsLabel, 1, 0);
+    auto tagsLabel = new QLabel(tr("Tags: (space-separated)"), this);
+    tagsLabel->setObjectName("save-label");
+    mainLayout->addWidget(tagsLabel, 2, 0);
 
-    auto tagsInput = new TagLineEdit(this);
-    mainLayout->addWidget(tagsInput, 1, 1);
+    // generate a few random tags
+    tagsInput = new QLineEdit(this);
+    auto tagList = library->tags();
+    auto completer = new SpaceCompleter(tagList, tagsInput, this);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
+    std::random_shuffle(tagList.begin(), tagList.end());
+    auto tagCount = tagList.size() > 3 ? 3 : tagList.size();
+
+    QString randomTags = "E.g. ";
+    for (auto i = 0; i < tagCount; i++) {
+        randomTags += tagList[i] + " ";
+    }
+
+    tagsInput->setCompleter(completer);
+    tagsInput->setPlaceholderText(randomTags);
+    mainLayout->addWidget(tagsInput, 3, 0);
+
+    mainLayout->setRowStretch(4, 1);
+
+    auto buttonBox = new QDialogButtonBox();
+    auto okButton = buttonBox->addButton(QDialogButtonBox::Ok);
+    okButton->setDefault(true);
+    auto cancelButton = buttonBox->addButton(QDialogButtonBox::Cancel);
+    mainLayout->addWidget(buttonBox, 5, 0);
 
     setLayout(mainLayout);
+
+    connect(okButton, &QPushButton::clicked,
+            this, &SaveModuleWindow::accept);
+    connect(cancelButton, &QPushButton::clicked,
+            this, &SaveModuleWindow::reject);
+}
+
+QString SaveModuleWindow::enteredName() const {
+    return nameInput->text();
+}
+
+QStringList SaveModuleWindow::enteredTags() const {
+    return tagsInput->text().split(QRegExp("(\\s?,\\s?)|(\\s+)"));
 }

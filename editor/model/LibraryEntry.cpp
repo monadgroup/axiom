@@ -5,7 +5,6 @@
 using namespace AxiomModel;
 
 LibraryEntry::LibraryEntry(QString name, std::set<QString> tags, Project *project) : _name(std::move(name)), _tags(std::move(tags)), _schematic(project) {
-    _schematic.addItem(std::make_unique<CustomNode>(&_schematic, "Test", QPoint(0, 0), QSize(2, 2)));
     addTag("Test" + (qrand() * 2 / RAND_MAX));
 }
 

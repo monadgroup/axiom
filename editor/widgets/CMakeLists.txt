@@ -19,7 +19,8 @@ set(SOURCE_FILES
         CommonColors.cpp
         FloatingValueEditor.cpp
         GlobalActions.cpp
-        ItemResizer.cpp)
+        ItemResizer.cpp
+        SpaceCompleter.cpp)
 
 include_directories(../../ ${LLVM_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
 add_definitions(${LLVM_DEFINITIONS})
@@ -34,5 +35,4 @@ add_subdirectory(layouts)
 add_subdirectory(modulebrowser)
 add_subdirectory(node)
 add_subdirectory(schematic)
-add_subdirectory(tageditor)
 add_subdirectory(windows)

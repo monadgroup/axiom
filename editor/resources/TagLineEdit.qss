@@ -1,5 +1,0 @@
-QLineEdit {
-    border: none;
-    border-radius: 0;
-    padding: 0;
-}

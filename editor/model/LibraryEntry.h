@@ -24,6 +24,8 @@ namespace AxiomModel {
 
         const LibrarySchematic &schematic() const { return _schematic; }
 
+        LibrarySchematic &schematic() { return _schematic; }
+
         void serialize(QDataStream &stream) const;
 
         void deserialize(QDataStream &stream);
