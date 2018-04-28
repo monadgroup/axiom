@@ -6,19 +6,22 @@
 #include <QtGui/QDrag>
 #include <QtCore/QMimeData>
 #include <QtWidgets/QMenu>
+#include <QtWidgets/QMessageBox>
 #include <iostream>
 
 #include "ModulePreviewCanvas.h"
 #include "../node/NodeItem.h"
+#include "editor/model/Library.h"
 #include "editor/model/LibraryEntry.h"
 #include "editor/model/schematic/LibrarySchematic.h"
 #include "../windows/MainWindow.h"
+#include "../windows/ModulePropertiesWindow.h"
 #include "../../util.h"
 
 using namespace AxiomGui;
 
-ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::LibraryEntry *entry, QWidget *parent)
-    : QGraphicsView(parent), window(window), entry(entry) {
+ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent)
+    : QGraphicsView(parent), window(window), library(library), entry(entry) {
     auto moduleScene = new ModulePreviewCanvas(&entry->schematic());
     setScene(moduleScene);
     scene()->setParent(this);
@@ -72,9 +75,41 @@ void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
     if (selectedAction == editAction) {
         window->showSchematic(nullptr, &entry->schematic(), true);
     } else if (selectedAction == propertiesAction) {
+        ModulePropertiesWindow propWindow(library);
+        propWindow.setEnteredName(entry->name());
 
+        QStringList currentTags;
+        for (const auto &tag : entry->tags()) {
+            currentTags.push_back(tag);
+        }
+        propWindow.setEnteredTags(currentTags);
+
+        if (propWindow.exec() == QDialog::Accepted) {
+            entry->setName(propWindow.enteredName());
+
+            auto enteredTags = propWindow.enteredTags();
+            std::set<QString> newTags(enteredTags.begin(), enteredTags.end());
+
+            // remove old tags
+            std::set<QString> oldTags(entry->tags());
+            for (const auto &oldTag : oldTags) {
+                if (newTags.find(oldTag) == newTags.end()) entry->removeTag(oldTag);
+            }
+
+            // add new tags
+            for (const auto &newTag : newTags) {
+                entry->addTag(newTag);
+            }
+        }
     } else if (selectedAction == deleteAction) {
+        QMessageBox confirmBox(QMessageBox::Warning, "Confirm Delete", "Are you sure you want to delete this module?\n\n"
+                                                                       "This operation cannot be undone.");
+        confirmBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+        confirmBox.setDefaultButton(QMessageBox::Yes);
 
+        if (confirmBox.exec() == QMessageBox::Yes) {
+            entry->remove();
+        }
     }
 }
 

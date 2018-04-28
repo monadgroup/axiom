@@ -29,7 +29,8 @@ namespace AxiomModel {
         enum class ReadLevel {
             SURFACE,
             NODE,
-            CONTROL
+            CONTROL,
+            CODE
         };
 
         static QString typeToString(Type type);

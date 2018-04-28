@@ -16,7 +16,7 @@ ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setRowStretch(0, 1);
 
-    mainLayout->addWidget(new ModulePreviewView(window, entry, this), 0, 0);
+    mainLayout->addWidget(new ModulePreviewView(window, library, entry, this), 0, 0);
 
     label = new QLabel(this);
     mainLayout->addWidget(label, 1, 0);

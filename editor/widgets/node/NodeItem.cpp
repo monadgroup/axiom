@@ -23,7 +23,7 @@
 #include "../controls/IOControl.h"
 #include "../schematic/SchematicPanel.h"
 #include "../windows/MainWindow.h"
-#include "../windows/SaveModuleWindow.h"
+#include "editor/widgets/windows/ModulePropertiesWindow.h"
 #include "../FloatingValueEditor.h"
 #include "CustomNodePanel.h"
 
@@ -280,7 +280,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             true
         );*/
     } else if (selectedAction == saveModuleAction) {
-        SaveModuleWindow saveWindow(&node->parentSchematic->project()->library);
+        ModulePropertiesWindow saveWindow(&node->parentSchematic->project()->library);
         if (saveWindow.exec() == QDialog::Accepted) {
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();

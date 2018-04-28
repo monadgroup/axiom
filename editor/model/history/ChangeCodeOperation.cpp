@@ -7,7 +7,7 @@ using namespace AxiomModel;
 
 ChangeCodeOperation::ChangeCodeOperation(AxiomModel::Project *project, NodeRef nodeRef, QString beforeCode,
                                          QString afterCode)
-    : HistoryOperation(true, HistoryOperation::ReadLevel::NODE, HistoryOperation::Type::CHANGE_CODE, false), project(project), nodeRef(std::move(nodeRef)),
+    : HistoryOperation(true, HistoryOperation::ReadLevel::CODE, HistoryOperation::Type::CHANGE_CODE, false), project(project), nodeRef(std::move(nodeRef)),
       beforeCode(std::move(beforeCode)), afterCode(std::move(afterCode)) {
 
 }

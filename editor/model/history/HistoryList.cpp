@@ -78,7 +78,7 @@ void HistoryList::endAction(ActionType type) {
 
     // resort operations
     std::sort(currentAction.operations.begin(), currentAction.operations.end(), [](const std::unique_ptr<HistoryOperation> &first, const std::unique_ptr<HistoryOperation> &second) {
-        return first->level() > second->level();
+        return first->level() < second->level();
     });
 
     hasCurrentAction = false;
@@ -200,7 +200,7 @@ void HistoryList::undo() {
         // has access to any changes
         if (i > 0) {
             auto &nextOp = ops[i - 1];
-            if (needsRefresh && nextOp->level() > ops[i]->level()) {
+            if (needsRefresh && nextOp->level() < ops[i]->level()) {
                 project->build();
                 needsRefresh = false;
             }
