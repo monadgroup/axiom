@@ -54,6 +54,8 @@ void Schematic::setPan(QPointF pan) {
 }
 
 void Schematic::setZoom(float zoom) {
+    zoom = zoom > 0.5f ? 0.5f : zoom < -0.5f ? -0.5f : zoom;
+
     if (zoom != m_zoom) {
         m_zoom = zoom;
         emit zoomChanged(zoom);
