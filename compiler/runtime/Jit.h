@@ -6,7 +6,7 @@
 #include <llvm/ExecutionEngine/Orc/IRTransformLayer.h>
 #include <llvm/IR/Mangler.h>
 
-#include <unordered_map>
+#include <deque>
 
 namespace llvm {
     class Module;
@@ -34,6 +34,10 @@ namespace MaximRuntime {
 
         void removeModule(ModuleKey k);
 
+        void markForRemove(ModuleKey k);
+
+        void flushRemoveQueue();
+
         llvm::JITSymbol findSymbol(const std::string &name);
 
         llvm::JITSymbol findSymbol(llvm::GlobalValue *value);
@@ -51,6 +55,8 @@ namespace MaximRuntime {
         CompileLayer compileLayer;
         OptimizeLayer optimizeLayer;
         llvm::Mangler mangler;
+
+        std::deque<ModuleKey> removeQueue;
     };
 
 }

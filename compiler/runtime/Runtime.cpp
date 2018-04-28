@@ -25,6 +25,10 @@ Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
 void Runtime::compile() {
     std::lock_guard<std::mutex> lock(_mutex);
 
+    std::cout << "Removing destroyed modules..." << std::endl;
+    _jit.flushRemoveQueue();
+    std::cout << "Finished removing destroyed modules" << std::endl;
+
     if (!_mainSurface->needsGraphUpdate()) {
         std::cout << "Not compiling, no update needed" << std::endl;
         return;

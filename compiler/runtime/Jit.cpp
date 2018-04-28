@@ -103,6 +103,17 @@ void Jit::removeModule(ModuleKey k) {
     llvm::cantFail(optimizeLayer.removeModule(k));
 }
 
+void Jit::markForRemove(MaximRuntime::Jit::ModuleKey k) {
+    removeQueue.push_back(std::move(k));
+}
+
+void Jit::flushRemoveQueue() {
+    while (!removeQueue.empty()) {
+        removeModule(removeQueue.front());
+        removeQueue.pop_front();
+    }
+}
+
 llvm::JITSymbol Jit::findSymbol(const std::string &name) {
     std::string mangledName;
     llvm::raw_string_ostream mangledNameStream(mangledName);

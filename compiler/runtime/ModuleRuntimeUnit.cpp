@@ -10,6 +10,10 @@ ModuleRuntimeUnit::ModuleRuntimeUnit(Runtime *runtime, const std::string &name)
     _module->setDataLayout(runtime->ctx()->dataLayout());
 }
 
+ModuleRuntimeUnit::~ModuleRuntimeUnit() {
+    if (_isDeployed) runtime()->jit().markForRemove(_deployKey);
+}
+
 std::unique_ptr<llvm::Module> ModuleRuntimeUnit::reset() {
     return setModule(std::make_unique<llvm::Module>(_module->getName(), runtime()->ctx()->llvm()));
 }

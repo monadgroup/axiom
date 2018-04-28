@@ -11,6 +11,8 @@ namespace MaximRuntime {
     public:
         explicit ModuleRuntimeUnit(Runtime *runtime, const std::string &name);
 
+        ~ModuleRuntimeUnit() override;
+
         llvm::Module *module() override { return _module.get(); }
 
     protected:
