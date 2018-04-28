@@ -244,13 +244,17 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
     event->accept();
 
+    auto copyableItems = GridSurface::findCopyable(node->parentSchematic->selectedItems());
+
     QMenu menu;
 
     auto renameAction = menu.addAction(tr("&Rename..."));
     renameAction->setVisible(node->parentSchematic->selectedItems().size() == 1);
     menu.addSeparator();
     auto groupAction = menu.addAction(tr("&Group..."));
+    groupAction->setEnabled(!copyableItems.empty());
     auto saveModuleAction = menu.addAction(tr("&Save as Module..."));
+    saveModuleAction->setEnabled(!copyableItems.empty());
     menu.addSeparator();
     auto deleteAction = menu.addAction(tr("&Delete"));
     deleteAction->setEnabled(node->isDeletable());
@@ -283,7 +287,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
             node->parentSchematic->project()->library.addEntry(
                 std::move(newEntry),
-                node->parentSchematic->selectedItems(),
+                copyableItems,
                 QPoint(0, 0)
             );
         }

@@ -57,6 +57,8 @@ namespace AxiomModel {
 
         bool isResizable() const override { return true; }
 
+        bool isCopyable() const override { return true; }
+
         bool isDeletable() const override { return true; }
 
     public slots:

@@ -23,6 +23,8 @@ namespace AxiomModel {
 
         static QPoint findCenter(const std::vector<GridItem*> &items);
 
+        static std::vector<GridItem *> findCopyable(const std::vector<GridItem*> &items);
+
         QPoint findCenter() const;
 
         std::vector<std::unique_ptr<GridItem>> const &items() const { return m_items; }

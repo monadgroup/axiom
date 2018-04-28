@@ -25,6 +25,8 @@ namespace AxiomModel {
 
         bool isResizable() const override { return false; }
 
+        bool isCopyable() const override { return false; }
+
         bool isDeletable() const override { return false; }
 
         MaximRuntime::IONode *runtime() override { return _runtime; }

@@ -43,6 +43,8 @@ namespace AxiomModel {
 
         bool isMovable() const override { return true; }
 
+        bool isCopyable() const override { return false; }
+
         bool isDeletable() const override { return false; }
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;

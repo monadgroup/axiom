@@ -14,6 +14,14 @@ QPoint GridSurface::findCenter(const std::vector<AxiomModel::GridItem *> &items)
     return currentCenter / items.size();
 }
 
+std::vector<GridItem *> GridSurface::findCopyable(const std::vector<GridItem*> &items) {
+    std::vector<GridItem *> result;
+    for (const auto &item : items) {
+        if (item->isCopyable()) result.push_back(item);
+    }
+    return result;
+}
+
 QPoint GridSurface::findCenter() const {
     QPoint currentCenter;
     for (const auto &item : items()) {

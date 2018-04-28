@@ -213,6 +213,7 @@ void Schematic::partialDeserialize(QDataStream &stream, QPoint center) {
             quint32 notUsed;
             stream >> notUsed;
 
+            assert(items().size() > i);
             nodeStart--;
             auto ioItem = dynamic_cast<IONode *>(items()[i].get());
             assert(ioItem);

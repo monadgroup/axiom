@@ -30,6 +30,8 @@ namespace AxiomModel {
 
         virtual bool isResizable() const = 0;
 
+        virtual bool isCopyable() const = 0;
+
         virtual bool isDeletable() const = 0;
 
         virtual std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const = 0;
