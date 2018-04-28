@@ -95,7 +95,7 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
     historyList->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::RightDockWidgetArea, historyList);
 
-    auto moduleBrowser = new ModuleBrowserPanel(&project->library, this);
+    auto moduleBrowser = new ModuleBrowserPanel(this, &project->library, this);
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
 

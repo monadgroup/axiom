@@ -5,17 +5,20 @@
 #include <QtGui/QMouseEvent>
 #include <QtGui/QDrag>
 #include <QtCore/QMimeData>
+#include <QtWidgets/QMenu>
+#include <iostream>
 
 #include "ModulePreviewCanvas.h"
 #include "../node/NodeItem.h"
 #include "editor/model/LibraryEntry.h"
 #include "editor/model/schematic/LibrarySchematic.h"
+#include "../windows/MainWindow.h"
 #include "../../util.h"
 
 using namespace AxiomGui;
 
-ModulePreviewView::ModulePreviewView(AxiomModel::LibraryEntry *entry, QWidget *parent)
-    : QGraphicsView(parent), entry(entry) {
+ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::LibraryEntry *entry, QWidget *parent)
+    : QGraphicsView(parent), window(window), entry(entry) {
     auto moduleScene = new ModulePreviewCanvas(&entry->schematic());
     setScene(moduleScene);
     scene()->setParent(this);
@@ -32,7 +35,10 @@ ModulePreviewView::ModulePreviewView(AxiomModel::LibraryEntry *entry, QWidget *p
 }
 
 void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
+    QGraphicsView::mousePressEvent(event);
+
     if (event->button() == Qt::LeftButton) {
+        event->accept();
         auto drag = new QDrag(this);
 
         // serialize the surface and set mime data
@@ -45,6 +51,30 @@ void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
         drag->setMimeData(mimeData);
 
         drag->exec();
+    }
+}
+
+void ModulePreviewView::mouseDoubleClickEvent(QMouseEvent *event) {
+    window->showSchematic(nullptr, &entry->schematic(), true);
+}
+
+void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
+    event->accept();
+
+    QMenu menu;
+
+    auto editAction = menu.addAction(tr("&Edit"));
+    auto propertiesAction = menu.addAction(tr("&Properties..."));
+    menu.addSeparator();
+    auto deleteAction = menu.addAction(tr("&Delete"));
+    auto selectedAction = menu.exec(event->globalPos());
+
+    if (selectedAction == editAction) {
+        window->showSchematic(nullptr, &entry->schematic(), true);
+    } else if (selectedAction == propertiesAction) {
+
+    } else if (selectedAction == deleteAction) {
+
     }
 }
 
@@ -65,6 +95,8 @@ void ModulePreviewView::updateScaling() {
     auto selfHeight = height() - 30;
     auto scaleFactor = boundingRect.width() > boundingRect.height() ? selfWidth / boundingRect.width() : selfHeight / boundingRect.height();
 
+    scale(1 / currentScale, 1 / currentScale);
     centerOn(boundingRect.center());
     scale(scaleFactor, scaleFactor);
+    currentScale = scaleFactor;
 }

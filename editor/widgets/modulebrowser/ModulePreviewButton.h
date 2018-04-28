@@ -10,11 +10,13 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class MainWindow;
+
     class ModulePreviewButton : public QFrame {
     Q_OBJECT
 
     public:
-        explicit ModulePreviewButton(AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
+        explicit ModulePreviewButton(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
 
     private slots:
 

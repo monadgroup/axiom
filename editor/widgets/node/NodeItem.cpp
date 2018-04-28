@@ -215,6 +215,8 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) return;
+
     isDragging = false;
     DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::MOVE_NODE, {
         emit

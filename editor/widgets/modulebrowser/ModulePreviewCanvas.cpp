@@ -30,11 +30,16 @@ ModulePreviewCanvas::ModulePreviewCanvas(const Schematic *schematic) {
             this, &ModulePreviewCanvas::contentChanged);
     connect(schematic, &Schematic::wireAdded,
             this, &ModulePreviewCanvas::addWire);
-    connect(schematic, &Schematic::wireAdded,
-            this, &ModulePreviewCanvas::contentChanged);
 }
 
 void ModulePreviewCanvas::addNode(AxiomModel::Node *node) {
+    connect(node, &Node::posChanged,
+            this, &ModulePreviewCanvas::contentChanged);
+    connect(node, &Node::sizeChanged,
+            this, &ModulePreviewCanvas::contentChanged);
+    connect(node, &Node::removed,
+            this, &ModulePreviewCanvas::contentChanged);
+
     auto item = new NodeItem(node, nullptr);
     item->setZValue(1);
     addItem(item);

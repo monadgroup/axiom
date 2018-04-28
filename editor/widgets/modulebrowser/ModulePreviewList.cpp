@@ -8,7 +8,7 @@
 
 using namespace AxiomGui;
 
-ModulePreviewList::ModulePreviewList(AxiomModel::Library *library, QWidget *parent) : QScrollArea(parent), library(library) {
+ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *library, QWidget *parent) : QScrollArea(parent), window(window), library(library) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/ModulePreviewList.qss"));
 
     auto widget = new QWidget(this);
@@ -27,7 +27,7 @@ ModulePreviewList::ModulePreviewList(AxiomModel::Library *library, QWidget *pare
 }
 
 void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
-    auto widget = new ModulePreviewButton(library, entry, this);
+    auto widget = new ModulePreviewButton(window, library, entry, this);
     layout->addWidget(widget);
 
     connect(entry, &AxiomModel::LibraryEntry::removed,

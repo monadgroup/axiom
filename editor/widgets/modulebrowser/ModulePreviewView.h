@@ -8,14 +8,20 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class MainWindow;
+
     class ModulePreviewView : public QGraphicsView {
     Q_OBJECT
 
     public:
-        explicit ModulePreviewView(AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
+        explicit ModulePreviewView(MainWindow *window, AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
 
     protected:
         void mousePressEvent(QMouseEvent *event) override;
+
+        void mouseDoubleClickEvent(QMouseEvent *event) override;
+
+        void contextMenuEvent(QContextMenuEvent *event) override;
 
     private slots:
 
@@ -23,7 +29,9 @@ namespace AxiomGui {
 
     private:
 
+        MainWindow *window;
         AxiomModel::LibraryEntry *entry;
+        qreal currentScale = 1;
     };
 
 }

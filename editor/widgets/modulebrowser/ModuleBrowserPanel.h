@@ -12,11 +12,13 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class MainWindow;
+
     class ModuleBrowserPanel : public DockPanel {
     Q_OBJECT
 
     public:
-        explicit ModuleBrowserPanel(AxiomModel::Library *library, QWidget *parent = nullptr);
+        explicit ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *library, QWidget *parent = nullptr);
 
     private slots:
 

@@ -12,11 +12,13 @@ namespace AxiomGui {
 
     class FlowLayout;
 
+    class MainWindow;
+
     class ModulePreviewList : public QScrollArea {
     Q_OBJECT
 
     public:
-        explicit ModulePreviewList(AxiomModel::Library *library, QWidget *parent = nullptr);
+        explicit ModulePreviewList(MainWindow *window, AxiomModel::Library *library, QWidget *parent = nullptr);
 
     private slots:
 
@@ -24,6 +26,7 @@ namespace AxiomGui {
 
     private:
 
+        MainWindow *window;
         AxiomModel::Library *library;
         FlowLayout *layout;
     };
