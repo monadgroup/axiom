@@ -2,13 +2,17 @@
 
 using namespace AxiomModel;
 
-SurfaceRef::SurfaceRef() : path({}) {}
+SurfaceRef::SurfaceRef() {}
 
-SurfaceRef::SurfaceRef(std::vector<size_t> path) : path(std::move(path)) {}
+SurfaceRef::SurfaceRef(const QUuid &root) : root(root), path({}) {}
+
+SurfaceRef::SurfaceRef(const QUuid &root, std::vector<size_t> path) : root(root), path(std::move(path)) {}
 
 NodeRef::NodeRef() : index(0) {}
 
-NodeRef::NodeRef(AxiomModel::SurfaceRef surface, size_t index) : surface(std::move(surface)), index(index) {}
+NodeRef::NodeRef(const QUuid &root) : surface(root), index(0) {}
+
+NodeRef::NodeRef(const AxiomModel::SurfaceRef &surface, size_t index) : surface(surface), index(index) {}
 
 std::vector<size_t> NodeRef::path() const {
     auto newPath = std::vector<size_t>(surface.path);
@@ -18,7 +22,9 @@ std::vector<size_t> NodeRef::path() const {
 
 ControlRef::ControlRef() : index(0) {}
 
-ControlRef::ControlRef(AxiomModel::NodeRef node, size_t index) : node(std::move(node)), index(index) {}
+ControlRef::ControlRef(const QUuid &root) : node(root), index(0) {}
+
+ControlRef::ControlRef(const AxiomModel::NodeRef &node, size_t index) : node(node), index(index) {}
 
 std::vector<size_t> ControlRef::path() const {
     auto newPath = node.path();
@@ -27,6 +33,7 @@ std::vector<size_t> ControlRef::path() const {
 }
 
 QDataStream &AxiomModel::operator<<(QDataStream &stream, const AxiomModel::SurfaceRef &ref) {
+    stream << ref.root;
     stream << (quint32) ref.path.size();
     for (const auto &crumb : ref.path) {
         stream << (quint32) crumb;
@@ -35,6 +42,7 @@ QDataStream &AxiomModel::operator<<(QDataStream &stream, const AxiomModel::Surfa
 }
 
 QDataStream &AxiomModel::operator>>(QDataStream &stream, AxiomModel::SurfaceRef &ref) {
+    stream >> ref.root;
     ref.path.clear();
     quint32 pathCount;
     stream >> pathCount;

@@ -17,6 +17,10 @@ namespace AxiomGui {
     protected:
         void mousePressEvent(QMouseEvent *event) override;
 
+    private slots:
+
+        void updateScaling();
+
     private:
 
         AxiomModel::LibraryEntry *entry;

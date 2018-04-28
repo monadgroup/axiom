@@ -6,19 +6,24 @@
 
 namespace AxiomModel {
 
+    class LibraryEntry;
+
     class LibrarySchematic : public Schematic {
     Q_OBJECT
 
     public:
-        LibrarySchematic(Project *project);
+        LibrarySchematic(LibraryEntry *entry, Project *project);
 
-        QString name() override { return ""; }
+        QString name() override;
 
-        SurfaceRef ref() const override { return SurfaceRef(); }
+        SurfaceRef ref() const override;
 
         bool canExposeControl() override { return false; }
 
         void exposeControl(AxiomModel::NodeControl *control) { assert(false); }
+
+    private:
+        LibraryEntry *entry;
     };
 
 }

@@ -19,6 +19,10 @@ namespace AxiomGui {
 
         explicit ModulePreviewCanvas(const AxiomModel::Schematic *schematic);
 
+    signals:
+
+        void contentChanged();
+
     private slots:
 
         void addNode(AxiomModel::Node *node);

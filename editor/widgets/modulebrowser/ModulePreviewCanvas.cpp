@@ -8,6 +8,7 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 ModulePreviewCanvas::ModulePreviewCanvas(const Schematic *schematic) {
+    // todo: this could be refactored with SchematicCanvas
     for (const auto &item : schematic->items()) {
         if (auto node = dynamic_cast<Node *>(item.get())) {
             addNode(node);
@@ -17,6 +18,20 @@ ModulePreviewCanvas::ModulePreviewCanvas(const Schematic *schematic) {
     for (const auto &wire : schematic->wires()) {
         addWire(wire.get());
     }
+
+    // connect to model
+    connect(schematic, &Schematic::itemAdded,
+            [this](AxiomModel::GridItem *item) {
+                if (auto node = dynamic_cast<Node *>(item)) {
+                    addNode(node);
+                }
+            });
+    connect(schematic, &Schematic::itemAdded,
+            this, &ModulePreviewCanvas::contentChanged);
+    connect(schematic, &Schematic::wireAdded,
+            this, &ModulePreviewCanvas::addWire);
+    connect(schematic, &Schematic::wireAdded,
+            this, &ModulePreviewCanvas::contentChanged);
 }
 
 void ModulePreviewCanvas::addNode(AxiomModel::Node *node) {

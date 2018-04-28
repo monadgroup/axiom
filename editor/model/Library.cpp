@@ -24,9 +24,7 @@ void Library::deserialize(QDataStream &stream) {
     quint32 entryCount;
     stream >> entryCount;
     for (quint32 i = 0; i < entryCount; i++) {
-        auto newEntry = std::make_unique<LibraryEntry>("", std::set<QString>(), project);
-        newEntry->deserialize(stream);
-        addEntry(std::move(newEntry));
+        addEntry(LibraryEntry::deserialize(stream, project));
     }
 }
 
@@ -49,7 +47,18 @@ void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
     auto entryPtr = entry.get();
     _entries.push_back(std::move(entry));
     emit entryAdded(entryPtr);
+}
 
+void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry,
+                       const std::vector<AxiomModel::GridItem *> &items, QPoint center) {
+    auto entryPtr = entry.get();
+    _entries.push_back(std::move(entry));
+    entryPtr->schematic().copyIntoSelf(items, center);
+    emit entryAdded(entryPtr);
+    connectEntry(entryPtr);
+}
+
+void Library::connectEntry(AxiomModel::LibraryEntry *entryPtr) {
     for (const auto &tag : entryPtr->tags()) {
         addTag(tag);
     }
@@ -59,6 +68,13 @@ void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
             this, &Library::tagRemoved);
     connect(entryPtr, &AxiomModel::LibraryEntry::cleanup,
             [this, entryPtr]() { removeEntry(entryPtr); });
+}
+
+LibraryEntry* Library::findById(const QUuid &id) {
+    for (const auto &entry : _entries) {
+        if (entry->baseUuid() == id) return entry.get();
+    }
+    return nullptr;
 }
 
 void Library::setActiveTag(const QString &activeTag) {

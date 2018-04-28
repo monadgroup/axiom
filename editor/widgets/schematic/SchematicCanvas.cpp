@@ -7,7 +7,6 @@
 #include <QtWidgets/QGraphicsPathItem>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <iostream>
 
 #include "AddNodeMenu.h"
 #include "compiler/runtime/Runtime.h"

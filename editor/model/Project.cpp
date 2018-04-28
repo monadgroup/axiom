@@ -57,7 +57,16 @@ void Project::build() {
 }
 
 Schematic *Project::findSurface(const AxiomModel::SurfaceRef &ref) {
-    Schematic *currentSurface = &root;
+    // base surface can either be the project root, or one of the library surfaces.
+    // this is determined by the ref.root UUID, which is null for the project root, or a library entry
+    // UUID for those.
+    Schematic *currentSurface;
+    if (ref.root.isNull()) currentSurface = &root;
+    else {
+        auto libraryEntry = library.findById(ref.root);
+        if (!libraryEntry) return nullptr;
+        currentSurface = &libraryEntry->schematic();
+    }
 
     for (const auto &index : ref.path) {
         auto targetNode = dynamic_cast<GroupNode *>(currentSurface->items()[index].get());

@@ -18,7 +18,8 @@ QString GroupSchematic::name() {
 }
 
 SurfaceRef GroupSchematic::ref() const {
-    return SurfaceRef(node->ref().path());
+    auto nodeRef = node->ref();
+    return SurfaceRef(nodeRef.surface.root, nodeRef.path());
 }
 
 void GroupSchematic::exposeControl(AxiomModel::NodeControl *control) {

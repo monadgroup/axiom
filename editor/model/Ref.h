@@ -2,15 +2,19 @@
 
 #include <vector>
 #include <QtCore/QDataStream>
+#include <QtCore/QUuid>
 
 namespace AxiomModel {
 
     struct SurfaceRef {
+        QUuid root;
         std::vector<size_t> path;
 
         SurfaceRef();
 
-        explicit SurfaceRef(std::vector<size_t> path);
+        SurfaceRef(const QUuid &root);
+
+        SurfaceRef(const QUuid &root, std::vector<size_t> path);
     };
 
     QDataStream &operator<<(QDataStream &stream, const SurfaceRef &ref);
@@ -23,7 +27,9 @@ namespace AxiomModel {
 
         NodeRef();
 
-        NodeRef(SurfaceRef surface, size_t index);
+        NodeRef(const QUuid &root);
+
+        NodeRef(const SurfaceRef &surface, size_t index);
 
         std::vector<size_t> path() const;
     };
@@ -38,7 +44,9 @@ namespace AxiomModel {
 
         ControlRef();
 
-        ControlRef(NodeRef node, size_t index);
+        ControlRef(const QUuid &root);
+
+        ControlRef(const NodeRef &node, size_t index);
 
         std::vector<size_t> path() const;
     };

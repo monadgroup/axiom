@@ -5,7 +5,6 @@
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsSceneWheelEvent>
 #include <QtCore/QMimeData>
-#include <iostream>
 
 #include "editor/model/node/CustomNode.h"
 #include "editor/model/schematic/Schematic.h"

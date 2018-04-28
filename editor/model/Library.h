@@ -12,6 +12,8 @@ namespace AxiomModel {
 
     class LibraryEntry;
 
+    class GridItem;
+
     class Library : public QObject {
     Q_OBJECT
 
@@ -33,6 +35,10 @@ namespace AxiomModel {
         QStringList tags() const;
 
         void addEntry(std::unique_ptr<LibraryEntry> entry);
+
+        void addEntry(std::unique_ptr<LibraryEntry> entry, const std::vector<AxiomModel::GridItem *> &items, QPoint center);
+
+        LibraryEntry *findById(const QUuid &id);
 
     public slots:
 
@@ -57,6 +63,8 @@ namespace AxiomModel {
         void removeEntry(LibraryEntry *entry);
 
     private:
+
+        void connectEntry(AxiomModel::LibraryEntry *entryPtr);
 
         Project *project;
         std::vector<std::unique_ptr<LibraryEntry>> _entries;

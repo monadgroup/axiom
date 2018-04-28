@@ -3,7 +3,6 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QGraphicsProxyWidget>
 #include <QtCore/QTimer>
-#include <iostream>
 
 #include "editor/widgets/ItemResizer.h"
 #include "../schematic/SchematicCanvas.h"
@@ -277,15 +276,16 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == saveModuleAction) {
         SaveModuleWindow saveWindow(&node->parentSchematic->project()->library);
         if (saveWindow.exec() == QDialog::Accepted) {
-            std::cout << "Window accepted!" << std::endl;
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();
 
             auto newEntry = std::make_unique<LibraryEntry>(enteredName, std::set<QString>(enteredTags.begin(), enteredTags.end()), node->parentSchematic->project());
-            newEntry->schematic().copyIntoSelf(node->parentSchematic->selectedItems(), QPoint(0, 0));
-            node->parentSchematic->project()->library.addEntry(std::move(newEntry));
-        } else {
-            std::cout << "Window not accepted" << std::endl;
+
+            node->parentSchematic->project()->library.addEntry(
+                std::move(newEntry),
+                node->parentSchematic->selectedItems(),
+                QPoint(0, 0)
+            );
         }
     } else if (selectedAction == deleteAction) {
         DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {

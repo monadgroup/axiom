@@ -1,7 +1,6 @@
 #include "SpaceCompleter.h"
 
 #include <QtWidgets/QLineEdit>
-#include <iostream>
 
 using namespace AxiomGui;
 

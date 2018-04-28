@@ -79,5 +79,7 @@ QString SaveModuleWindow::enteredName() const {
 }
 
 QStringList SaveModuleWindow::enteredTags() const {
-    return tagsInput->text().split(QRegExp("(\\s?,\\s?)|(\\s+)"));
+    auto trimmedInput = tagsInput->text().trimmed();
+    if (trimmedInput.isEmpty()) return {};
+    else return trimmedInput.split(QRegExp("(\\s?,\\s?)|(\\s+)"));
 }

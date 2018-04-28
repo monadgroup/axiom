@@ -256,10 +256,13 @@ void Schematic::partialDeserialize(QDataStream &stream, QPoint center) {
 }
 
 void Schematic::copyIntoSelf(const std::vector<AxiomModel::GridItem *> &items, QPoint center) {
+    QPoint currentCenter = findCenter(items);
+    std::cout << "Mapping items from " << currentCenter.x() << "," << currentCenter.y() << " to " << center.x() << "," << center.y() << std::endl;
+
     // first serialize items into a buffer
     QByteArray serializedBuffer;
     QDataStream serializeStream(&serializedBuffer, QIODevice::WriteOnly);
-    partialSerialize(serializeStream, items, findCenter(items));
+    partialSerialize(serializeStream, items, currentCenter);
 
     // now deserialize onto us
     QDataStream deserializeStream(&serializedBuffer, QIODevice::ReadOnly);
