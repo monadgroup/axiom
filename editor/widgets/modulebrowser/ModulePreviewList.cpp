@@ -12,7 +12,7 @@ ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *li
     setStyleSheet(AxiomUtil::loadStylesheet(":/ModulePreviewList.qss"));
 
     auto widget = new QWidget(this);
-    layout = new FlowLayout(this, -1, 10, 10);
+    layout = new FlowLayout(this, 0, 0, 0);
 
     for (const auto &entry : library->entries()) {
         addEntry(entry.get());
@@ -28,6 +28,7 @@ ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *li
 
 void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
     auto widget = new ModulePreviewButton(window, library, entry, this);
+    widget->setObjectName("preview-button");
     layout->addWidget(widget);
 
     connect(entry, &AxiomModel::LibraryEntry::removed,

@@ -2,6 +2,10 @@
     border: none;
 }
 
+#preview-button {
+    margin: 5px 0 5px 10px;
+}
+
 QGraphicsView {
     border: 2px solid #222;
     border-radius: 5px;
