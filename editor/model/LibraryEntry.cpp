@@ -27,9 +27,7 @@ std::unique_ptr<LibraryEntry> LibraryEntry::deserialize(QDataStream &stream, Pro
         tags.emplace(tagName);
     }
 
-    auto newEntry = std::make_unique<LibraryEntry>(name, baseUuid, modificationUuid, modificationDateTime, std::move(tags), project);
-    newEntry->schematic().deserialize(stream);
-    return std::move(newEntry);
+    return std::make_unique<LibraryEntry>(name, baseUuid, modificationUuid, modificationDateTime, std::move(tags), project);
 }
 
 void LibraryEntry::serialize(QDataStream &stream) const {
@@ -41,7 +39,6 @@ void LibraryEntry::serialize(QDataStream &stream) const {
     for (const auto &tag : _tags) {
         stream << tag;
     }
-    _schematic.serialize(stream);
 }
 
 void LibraryEntry::setName(const QString &name) {

@@ -6,7 +6,7 @@
 using namespace AxiomModel;
 
 DeleteNodeOperation::DeleteNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef, Node::Type nodeType, QByteArray nodeBuffer)
-    : HistoryOperation(true, HistoryOperation::ReadLevel::NODE, Type::DELETE_NODE, false), project(project), nodeRef(std::move(nodeRef)),
+    : HistoryOperation(true, HistoryOperation::ReadLevel::NODE, Type::DELETE_NODE), project(project), nodeRef(std::move(nodeRef)),
       nodeType(nodeType), nodeBuffer(std::move(nodeBuffer)) {
 
 }

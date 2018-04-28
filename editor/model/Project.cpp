@@ -18,7 +18,7 @@ void Project::serialize(QDataStream &stream) const {
     stream << schemaMagic;
     stream << schemaRevision;
 
-    //library.serialize(stream);
+    library.serialize(stream);
     root.serialize(stream);
     history.serialize(stream);
 }
@@ -33,7 +33,7 @@ void Project::deserialize(QDataStream &stream) {
     stream >> readRevision;
     if (readRevision != schemaRevision) throw DeserializeInvalidSchemaException();
 
-    //library.deserialize(stream);
+    library.deserialize(stream);
     root.deserialize(stream);
     history.deserialize(stream);
 }
@@ -46,7 +46,7 @@ void Project::load(QDataStream &stream) {
 }
 
 void Project::clear() {
-    //library.clear();
+    library.clear();
     root.deleteAll();
 }
 

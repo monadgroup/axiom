@@ -15,6 +15,7 @@ void Library::serialize(QDataStream &stream) const {
     stream << (quint32) _entries.size();
     for (const auto &entry : _entries) {
         entry->serialize(stream);
+        entry->schematic().serialize(stream);
     }
 }
 
@@ -24,7 +25,12 @@ void Library::deserialize(QDataStream &stream) {
     quint32 entryCount;
     stream >> entryCount;
     for (quint32 i = 0; i < entryCount; i++) {
-        addEntry(LibraryEntry::deserialize(stream, project));
+        auto entry = LibraryEntry::deserialize(stream, project);
+        auto entryPtr = entry.get();
+        _entries.push_back(std::move(entry));
+        entryPtr->schematic().deserialize(stream);
+        emit entryAdded(entryPtr);
+        connectEntry(entryPtr);
     }
 }
 
@@ -47,6 +53,7 @@ void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
     auto entryPtr = entry.get();
     _entries.push_back(std::move(entry));
     emit entryAdded(entryPtr);
+    connectEntry(entryPtr);
 }
 
 void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry,

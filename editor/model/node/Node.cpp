@@ -215,7 +215,6 @@ void Node::remove() {
     parentSchematic->project()->history.appendOperation(
         std::make_unique<DeleteNodeOperation>(parentSchematic->project(), ref(), type, std::move(nodeBuffer))
     );
-    removeWithoutOp();
 }
 
 void Node::removeWithoutOp() {
