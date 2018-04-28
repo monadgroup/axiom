@@ -29,6 +29,13 @@ void NodeControl::attachRuntime(MaximRuntime::Control *runtime) {
 
     connect(runtime, &MaximRuntime::Control::removed,
             this, &NodeControl::remove);
+
+    // connect wires in the runtime
+    for (const auto &wire : sink()->connections()) {
+        if (wire->sinkA->runtime() && wire->sinkB->runtime()) {
+            wire->sinkA->runtime()->connectTo(wire->sinkB->runtime());
+        }
+    }
 }
 
 std::unique_ptr<NodeControl> NodeControl::create(AxiomModel::Node *node, MaximCommon::ControlType type, QString name) {

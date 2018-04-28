@@ -1,6 +1,7 @@
 #include "ConnectionWire.h"
 
 #include <cassert>
+#include <iostream>
 
 #include "../schematic/Schematic.h"
 #include "../Project.h"
@@ -48,8 +49,6 @@ ConnectionWire::ConnectionWire(Schematic *schematic, ConnectionSink *sinkA, Conn
 }
 
 void ConnectionWire::remove() {
-    // todo: create op
-
     schematic->project()->history.appendOperation(std::make_unique<DisconnectControlsOperation>(schematic->project(), sinkA->ref(), sinkB->ref()));
 }
 
