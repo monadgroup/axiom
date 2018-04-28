@@ -34,7 +34,8 @@ namespace AxiomModel {
             DISCONNECT_ALL,
             CHANGE_VALUE,
             CHANGE_MODE,
-            PLACE_MODULE
+            PLACE_MODULE,
+            CHANGE_CODE
         };
 
         struct HistoryAction {

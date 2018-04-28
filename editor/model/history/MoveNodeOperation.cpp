@@ -6,7 +6,7 @@ using namespace AxiomModel;
 
 MoveNodeOperation::MoveNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef, QPoint startPos,
                                      QPoint endPos)
-    : HistoryOperation(false, Type::MOVE_NODE, false), project(project), nodeRef(std::move(nodeRef)),
+    : HistoryOperation(false, HistoryOperation::ReadLevel::NODE, Type::MOVE_NODE, false), project(project), nodeRef(std::move(nodeRef)),
       startPos(startPos),
       endPos(endPos) {
 

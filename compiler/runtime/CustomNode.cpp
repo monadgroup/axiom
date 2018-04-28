@@ -83,6 +83,8 @@ GeneratableModuleClass *CustomNode::compile() {
         setModule(std::move(oldModule));
     }
 
+    emit finishedCodegen();
+
     return _moduleClass.get();
 }
 

@@ -6,7 +6,7 @@ using namespace AxiomModel;
 
 AddNodeOperation::AddNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef,
                                    AxiomModel::Node::Type nodeType, QPoint center, QByteArray nodeBuffer)
-    : HistoryOperation(true, HistoryOperation::Type::ADD_NODE), project(project), nodeRef(std::move(nodeRef)),
+    : HistoryOperation(true, HistoryOperation::ReadLevel::SURFACE, HistoryOperation::Type::ADD_NODE), project(project), nodeRef(std::move(nodeRef)),
       nodeType(nodeType), center(center), nodeBuffer(std::move(nodeBuffer)) {
 
 }

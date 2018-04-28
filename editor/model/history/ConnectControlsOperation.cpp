@@ -9,7 +9,7 @@ using namespace AxiomModel;
 
 ConnectControlsOperation::ConnectControlsOperation(AxiomModel::Project *project, ControlRef controlARef,
                                                    ControlRef controlBRef)
-    : HistoryOperation(true, HistoryOperation::Type::CONNECT_CONTROLS), project(project), controlARef(
+    : HistoryOperation(true, HistoryOperation::ReadLevel::CONTROL, HistoryOperation::Type::CONNECT_CONTROLS), project(project), controlARef(
       std::move(controlARef)), controlBRef(std::move(controlBRef)) {
 
 }

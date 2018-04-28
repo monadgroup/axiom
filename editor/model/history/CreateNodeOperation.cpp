@@ -8,7 +8,7 @@ using namespace AxiomModel;
 
 CreateNodeOperation::CreateNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef, Node::Type type,
                                    QString name, QPoint pos)
-    : HistoryOperation(true, Type::CREATE_NODE), project(project), nodeRef(std::move(nodeRef)), type(type),
+    : HistoryOperation(true, HistoryOperation::ReadLevel::SURFACE, Type::CREATE_NODE), project(project), nodeRef(std::move(nodeRef)), type(type),
       name(std::move(name)), pos(pos) {
 
 }

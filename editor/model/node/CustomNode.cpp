@@ -1,9 +1,11 @@
 #include "CustomNode.h"
 
 #include <QtCore/QBuffer>
+#include <iostream>
 
 #include "../schematic/Schematic.h"
 #include "../control/NodeControl.h"
+#include "../history/ChangeCodeOperation.h"
 #include "../Project.h"
 #include "editor/AxiomApplication.h"
 #include "compiler/runtime/Runtime.h"
@@ -23,11 +25,14 @@ void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
             this, &CustomNode::controlAdded);
     connect(_runtime, &MaximRuntime::CustomNode::extractedChanged,
             this, &CustomNode::extractedChanged);
+    connect(_runtime, &MaximRuntime::CustomNode::finishedCodegen,
+            this, &CustomNode::finishedCodegen);
 
     connect(this, &CustomNode::removed,
             [this]() {
                 _runtime->remove();
             });
+
 
     // add any controls that might already exist
     for (const std::unique_ptr<MaximRuntime::Control> &control : *runtime) {
@@ -35,7 +40,6 @@ void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
     }
 
     parseCode();
-    runtime->scheduleCompile();
 }
 
 void CustomNode::createAndAttachRuntime(MaximRuntime::Surface *surface) {
@@ -75,18 +79,11 @@ void CustomNode::parseCode() {
 }
 
 void CustomNode::recompile() {
-    parentSchematic->project()->build();
-
-    if (_runtime) {
-        if (!_runtime->errorLog().errors.empty()) {
-            emit compileFailed(_runtime->errorLog());
-            _runtime->errorLog().errors.clear();
-        } else {
-            emit compileSucceeded();
-        }
+    if (lastCode != m_code) {
+        parentSchematic->project()->history.appendOperation(
+            std::make_unique<ChangeCodeOperation>(parentSchematic->project(), ref(), lastCode, m_code));
+        lastCode = m_code;
     }
-
-    emit compileFinished();
 }
 
 void CustomNode::serialize(QDataStream &stream, QPoint offset) const {
@@ -128,4 +125,19 @@ void CustomNode::deserialize(QDataStream &stream, QPoint offset) {
 
 void CustomNode::controlAdded(MaximRuntime::Control *control) {
     addFromRuntime(control);
+}
+
+void CustomNode::finishedCodegen() {
+    if (_runtime) {
+        std::cout << "Finished codegen! Error count: " << _runtime->errorLog().errors.size() << std::endl;
+
+        if (!_runtime->errorLog().errors.empty()) {
+            emit compileFailed(_runtime->errorLog());
+            _runtime->errorLog().errors.clear();
+        } else {
+            emit compileSucceeded();
+        }
+    }
+
+    emit compileFinished();
 }

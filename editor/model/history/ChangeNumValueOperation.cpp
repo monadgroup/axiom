@@ -6,7 +6,7 @@ using namespace AxiomModel;
 
 ChangeNumValueOperation::ChangeNumValueOperation(AxiomModel::Project *project, AxiomModel::ControlRef controlRef,
                                                  MaximRuntime::NumValue beforeVal, MaximRuntime::NumValue afterVal)
-    : HistoryOperation(false, HistoryOperation::Type::CHANGE_NUM_VAL, false), project(project),
+    : HistoryOperation(false, HistoryOperation::ReadLevel::CONTROL, HistoryOperation::Type::CHANGE_NUM_VAL, false), project(project),
       controlRef(std::move(controlRef)), beforeVal(beforeVal), afterVal(afterVal) {
 
 }

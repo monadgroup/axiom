@@ -14,6 +14,7 @@
 #include "DisconnectControlsOperation.h"
 #include "ChangeNumValueOperation.h"
 #include "ChangeNumModeOperation.h"
+#include "ChangeCodeOperation.h"
 
 using namespace AxiomModel;
 
@@ -32,13 +33,14 @@ QString HistoryOperation::typeToString(AxiomModel::HistoryOperation::Type type) 
         case Type::DISCONNECT_CONTROLS: return "Disconnect Controls";
         case Type::CHANGE_NUM_VAL: return "Change Num Val";
         case Type::CHANGE_NUM_MODE: return "Change Num Mode";
+        case Type::CHANGE_CODE: return "Change Code";
     }
 
     unreachable;
 }
 
-HistoryOperation::HistoryOperation(bool needsRefresh, Type type, bool exec) : _needsRefresh(needsRefresh), _type(type),
-                                                                              _exec(exec) {
+HistoryOperation::HistoryOperation(bool needsRefresh, ReadLevel level, Type type, bool exec)
+    : _needsRefresh(needsRefresh), _level(level), _type(type), _exec(exec) {
 
 }
 
@@ -71,6 +73,8 @@ std::unique_ptr<HistoryOperation> HistoryOperation::deserialize(AxiomModel::Hist
             return ChangeNumValueOperation::deserialize(stream, project);
         case Type::CHANGE_NUM_MODE:
             return ChangeNumModeOperation::deserialize(stream, project);
+        case Type::CHANGE_CODE:
+            return ChangeCodeOperation::deserialize(stream, project);
     }
 
     unreachable;

@@ -6,7 +6,7 @@ using namespace AxiomModel;
 
 ShowHideControlNameOperation::ShowHideControlNameOperation(AxiomModel::Project *project, ControlRef controlRef,
                                                            bool show)
-    : HistoryOperation(false, HistoryOperation::Type::SHOW_HIDE_CONTROL_NAME), project(project), controlRef(
+    : HistoryOperation(false, HistoryOperation::ReadLevel::CONTROL, HistoryOperation::Type::SHOW_HIDE_CONTROL_NAME), project(project), controlRef(
     std::move(controlRef)), show(show) {
 
 }

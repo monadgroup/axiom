@@ -43,6 +43,8 @@ namespace MaximRuntime {
 
         void controlAdded(HardControl *control);
 
+        void finishedCodegen();
+
     private:
 
         std::unique_ptr<GeneratableModuleClass> _moduleClass;

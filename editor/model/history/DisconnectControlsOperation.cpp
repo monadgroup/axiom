@@ -8,7 +8,7 @@ using namespace AxiomModel;
 DisconnectControlsOperation::DisconnectControlsOperation(AxiomModel::Project *project,
                                                          AxiomModel::ControlRef controlARef,
                                                          AxiomModel::ControlRef controlBRef)
-    : HistoryOperation(true, HistoryOperation::Type::DISCONNECT_CONTROLS), project(project),
+    : HistoryOperation(true, HistoryOperation::ReadLevel::CONTROL, HistoryOperation::Type::DISCONNECT_CONTROLS), project(project),
       controlARef(std::move(controlARef)), controlBRef(std::move(controlBRef)) {
 
 }

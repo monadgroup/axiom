@@ -38,6 +38,8 @@ namespace AxiomGui {
 
         void clearError();
 
+        void codeChanged(const QString &newCode);
+
         void triggerUpdate();
 
         void triggerGeometryChange();

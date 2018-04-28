@@ -53,7 +53,10 @@ namespace AxiomModel {
 
         void controlAdded(MaximRuntime::Control *control);
 
+        void finishedCodegen();
+
     private:
+        QString lastCode = "";
         QString m_code = "";
         MaximRuntime::CustomNode *_runtime = nullptr;
         //std::unique_ptr<MaximRuntime::CustomNode> _runtime;

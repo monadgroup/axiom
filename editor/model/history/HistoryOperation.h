@@ -22,16 +22,25 @@ namespace AxiomModel {
             CONNECT_CONTROLS,
             DISCONNECT_CONTROLS,
             CHANGE_NUM_VAL,
-            CHANGE_NUM_MODE
+            CHANGE_NUM_MODE,
+            CHANGE_CODE
+        };
+
+        enum class ReadLevel {
+            SURFACE,
+            NODE,
+            CONTROL
         };
 
         static QString typeToString(Type type);
 
-        HistoryOperation(bool needsRefresh, Type type, bool exec = true);
+        HistoryOperation(bool needsRefresh, ReadLevel level, Type type, bool exec = true);
 
         static std::unique_ptr<HistoryOperation> deserialize(Type type, QDataStream &stream, Project *project);
 
         Type type() const { return _type; }
+
+        ReadLevel level() const { return _level; }
 
         bool exec() const { return _exec; }
 
@@ -45,6 +54,7 @@ namespace AxiomModel {
 
     private:
         bool _needsRefresh;
+        ReadLevel _level;
         Type _type;
         bool _exec;
 

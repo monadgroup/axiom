@@ -6,7 +6,7 @@ using namespace AxiomModel;
 
 SizeNodeOperation::SizeNodeOperation(AxiomModel::Project *project, AxiomModel::NodeRef nodeRef, QPoint beforeTopLeft,
                                      QPoint beforeBottomRight, QPoint afterTopLeft, QPoint afterBottomRight)
-    : HistoryOperation(false, Type::SIZE_NODE, false), project(project), nodeRef(std::move(nodeRef)),
+    : HistoryOperation(false, HistoryOperation::ReadLevel::NODE, Type::SIZE_NODE, false), project(project), nodeRef(std::move(nodeRef)),
       beforeTopLeft(beforeTopLeft), beforeBottomRight(beforeBottomRight), afterTopLeft(afterTopLeft),
       afterBottomRight(afterBottomRight) {
 

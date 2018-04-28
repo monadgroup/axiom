@@ -7,7 +7,7 @@ using namespace AxiomModel;
 SizeControlOperation::SizeControlOperation(AxiomModel::Project *project, AxiomModel::ControlRef controlRef,
                                            QPoint beforeTopLeft, QPoint beforeBottomRight, QPoint afterTopLeft,
                                            QPoint afterBottomRight)
-    : HistoryOperation(false, Type::SIZE_CONTROL, false), project(project), controlRef(std::move(controlRef)),
+    : HistoryOperation(false, HistoryOperation::ReadLevel::CONTROL, Type::SIZE_CONTROL, false), project(project), controlRef(std::move(controlRef)),
       beforeTopLeft(beforeTopLeft), beforeBottomRight(beforeBottomRight), afterTopLeft(afterTopLeft),
       afterBottomRight(afterBottomRight) {
 

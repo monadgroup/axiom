@@ -45,6 +45,8 @@ QString HistoryList::typeToString(AxiomModel::HistoryList::ActionType type) {
             return "Change Mode";
         case ActionType::PLACE_MODULE:
             return "Place Module";
+        case ActionType::CHANGE_CODE:
+            return "Change Code";
     }
 
     unreachable;
@@ -67,19 +69,24 @@ void HistoryList::endAction(ActionType type) {
     assert(hasCurrentAction);
     assert(currentAction.type == type);
 
+    // if any of the operations needed a refresh, do that first
+    for (const auto &operation : currentAction.operations) {
+        if (!operation->needsRefresh()) continue;
+        project->build();
+        break;
+    }
+
+    // resort operations
+    std::sort(currentAction.operations.begin(), currentAction.operations.end(), [](const std::unique_ptr<HistoryOperation> &first, const std::unique_ptr<HistoryOperation> &second) {
+        return first->level() > second->level();
+    });
+
     hasCurrentAction = false;
 
     // don't create the action if it's empty
     if (currentAction.operations.empty()) return;
 
     auto couldRedo = canRedo();
-
-    // if any of the operations needed a refresh, do that now
-    for (const auto &operation : currentAction.operations) {
-        if (!operation->needsRefresh()) continue;
-        project->build();
-        break;
-    }
 
     // remove items ahead of where we are
     _stack.erase(_stack.begin() + _stackPos, _stack.end());
@@ -113,12 +120,13 @@ void HistoryList::cancelAction(AxiomModel::HistoryList::ActionType type) {
 }
 
 void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> operation) {
-    auto operationPtr = operation.get();
+    // operation->forward() is always run first in case it ends up appending another operation,
+    // which should be applied before this one.
+    if (operation->exec()) {
+        operation->forward();
+    }
     if (hasCurrentAction) {
         currentAction.operations.push_back(std::move(operation));
-    }
-    if (operationPtr->exec()) {
-        operationPtr->forward();
     }
 }
 
@@ -187,6 +195,16 @@ void HistoryList::undo() {
     for (ssize_t i = ops.size() - 1; i >= 0; i--) {
         ops[i]->backward();
         if (ops[i]->needsRefresh()) needsRefresh = true;
+
+        // if the op level is going down (eg surface to node), rebuild the project first to ensure the next op
+        // has access to any changes
+        if (i > 0) {
+            auto &nextOp = ops[i - 1];
+            if (needsRefresh && nextOp->level() > ops[i]->level()) {
+                project->build();
+                needsRefresh = false;
+            }
+        }
     }
 
     if (needsRefresh) project->build();

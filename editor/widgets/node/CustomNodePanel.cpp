@@ -1,8 +1,11 @@
 #include "CustomNodePanel.h"
 
 #include <QtWidgets/QGraphicsProxyWidget>
+#include <iostream>
 
 #include "editor/model/node/CustomNode.h"
+#include "editor/model/schematic/Schematic.h"
+#include "editor/model/Project.h"
 #include "editor/widgets/CommonColors.h"
 #include "../schematic/SchematicCanvas.h"
 #include "../ItemResizer.h"
@@ -31,6 +34,8 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
             this, &CustomNodePanel::clearError);
     connect(node, &CustomNode::compileFinished,
             this, &CustomNodePanel::compileFinished);
+    connect(node, &CustomNode::codeChanged,
+            this, &CustomNodePanel::codeChanged);
 
     auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, Node::minPanelHeight));
     connect(this, &CustomNodePanel::resizerSizeChanged,
@@ -113,6 +118,12 @@ void CustomNodePanel::clearError() {
     update();
 }
 
+void CustomNodePanel::codeChanged(const QString &newCode) {
+    if (newCode != textEditor->toPlainText()) {
+        textEditor->setPlainText(newCode);
+    }
+}
+
 void CustomNodePanel::triggerUpdate() {
     update();
 }
@@ -135,7 +146,10 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
         if (event->type() == QEvent::FocusOut) {
             showingErrors = hasErrors;
             update();
-            node->recompile();
+
+            DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_CODE, {
+                node->recompile();
+            });
             return true;
         } else if (event->type() == QEvent::FocusIn) {
             node->parentSurface->deselectAll();

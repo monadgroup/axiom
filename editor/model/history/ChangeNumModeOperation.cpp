@@ -6,7 +6,7 @@ using namespace AxiomModel;
 
 ChangeNumModeOperation::ChangeNumModeOperation(Project *project, ControlRef controlRef,
                                                NodeNumControl::Mode beforeMode, NodeNumControl::Mode afterMode)
-    : HistoryOperation(false, HistoryOperation::Type::CHANGE_NUM_MODE), project(project),
+    : HistoryOperation(false, HistoryOperation::ReadLevel::CONTROL, HistoryOperation::Type::CHANGE_NUM_MODE), project(project),
       controlRef(std::move(controlRef)), beforeMode(beforeMode), afterMode(afterMode) {
 
 }

@@ -6,7 +6,7 @@ using namespace AxiomModel;
 
 MoveControlOperation::MoveControlOperation(AxiomModel::Project *project, AxiomModel::ControlRef controlRef,
                                            QPoint startPos, QPoint endPos)
-    : HistoryOperation(false, Type::MOVE_CONTROL, false), project(project), controlRef(std::move(controlRef)), startPos(startPos), endPos(endPos) {
+    : HistoryOperation(false, HistoryOperation::ReadLevel::CONTROL, Type::MOVE_CONTROL, false), project(project), controlRef(std::move(controlRef)), startPos(startPos), endPos(endPos) {
 
 }
 
