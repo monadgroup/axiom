@@ -23,6 +23,6 @@ SurfaceRef GroupSchematic::ref() const {
 }
 
 void GroupSchematic::exposeControl(AxiomModel::NodeControl *control) {
-    node->runtime()->forwardControl(control->runtime());
-    project()->build();
+    node->exposeControl(control);
+    //project()->build();
 }

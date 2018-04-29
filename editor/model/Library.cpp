@@ -74,7 +74,7 @@ void Library::connectEntry(AxiomModel::LibraryEntry *entryPtr) {
     connect(entryPtr, &AxiomModel::LibraryEntry::tagRemoved,
             this, &Library::tagRemoved);
     connect(entryPtr, &AxiomModel::LibraryEntry::cleanup,
-            [this, entryPtr]() { removeEntry(entryPtr); });
+            this, [this, entryPtr]() { removeEntry(entryPtr); });
 }
 
 LibraryEntry* Library::findById(const QUuid &id) {

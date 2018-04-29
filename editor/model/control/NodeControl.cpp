@@ -1,10 +1,12 @@
 #include "NodeControl.h"
 
 #include <cassert>
+#include <iostream>
 
 #include "NodeNumControl.h"
 #include "NodeMidiControl.h"
 #include "NodeExtractControl.h"
+#include "../node/GroupNode.h"
 #include "../schematic/Schematic.h"
 #include "../Project.h"
 #include "../history/ShowHideControlNameOperation.h"
@@ -20,12 +22,14 @@ NodeControl::NodeControl(Node *node, QString name, QPoint pos, QSize size)
     : GridItem(&node->surface, pos, size), node(node) {
 
     connect(this, &NodeControl::selected,
-            [this, node]() { node->select(true); });
+            this, [node]() { node->select(true); });
 }
 
 void NodeControl::attachRuntime(MaximRuntime::Control *runtime) {
     assert(!_runtime);
     _runtime = runtime;
+
+    std::cout << "[NodeControl] attaching runtime" << std::endl;
 
     connect(runtime, &MaximRuntime::Control::removed,
             this, &NodeControl::remove);
@@ -36,6 +40,13 @@ void NodeControl::attachRuntime(MaximRuntime::Control *runtime) {
             wire->sinkA->runtime()->connectTo(wire->sinkB->runtime());
         }
     }
+
+    // if I want to be exposed, handle that
+    std::cout << "[NodeControl] exposer is " << _exposer << ", parent schematic is " << node->parentSchematic << std::endl;
+    if (_exposer) {
+        node->parentSchematic->exposeControl(this);
+    }
+    std::cout << "[NodeControl] finished exposing" << std::endl;
 }
 
 std::unique_ptr<NodeControl> NodeControl::create(AxiomModel::Node *node, MaximCommon::ControlType type, QString name) {
@@ -53,11 +64,16 @@ std::unique_ptr<NodeControl> NodeControl::create(AxiomModel::Node *node, MaximCo
     }
 }
 
-ControlRef NodeControl::ref() const {
+long long int NodeControl::index() const {
     auto &parentItems = node->surface.items();
     auto index = AxiomUtil::findUnique(parentItems.begin(), parentItems.end(), this) - parentItems.begin();
     assert(index >= 0 && index < (long long int) parentItems.size());
-    return ControlRef(node->ref(), (size_t) index);
+    return index;
+}
+
+ControlRef NodeControl::ref() const {
+
+    return ControlRef(node->ref(), (size_t) index());
 }
 
 std::unique_ptr<GridItem> NodeControl::clone(GridSurface *newParent, QPoint newPos, QSize newSize) const {
@@ -78,10 +94,10 @@ void NodeControl::setShowNameNoOp(bool showName) {
     }
 }
 
-void NodeControl::setExposeBase(AxiomModel::NodeControl *base) {
-    if (node->parentSchematic->canExposeControl() && base != _exposeBase) {
-        _exposeBase = base;
-        emit exposeBaseChanged(base);
+void NodeControl::setExposer(AxiomModel::NodeControl *base) {
+    if (base != _exposer) {
+        _exposer = base;
+        emit exposerChanged(base);
     }
 }
 
@@ -119,7 +135,13 @@ void NodeControl::serialize(QDataStream &stream, QPoint offset) const {
     GridItem::serialize(stream, offset);
 
     stream << m_showName;
-    // todo: control exposing
+
+    // serialize control exposing
+    stream << (_exposer != nullptr);
+    if (_exposer) {
+        // we only need to store the exposers index, since we know it belongs to the parent node
+        stream << (quint32) _exposer->index();
+    }
 }
 
 void NodeControl::deserialize(QDataStream &stream, QPoint offset) {
@@ -128,6 +150,19 @@ void NodeControl::deserialize(QDataStream &stream, QPoint offset) {
     bool showName;
     stream >> showName;
     setShowNameNoOp(showName);
+
+    bool hasExposer; stream >> hasExposer;
+    if (hasExposer) {
+        auto parentSurface = dynamic_cast<GroupSchematic *>(node->parentSchematic);
+        assert(parentSurface);
+
+        quint32 exposerIndex; stream >> exposerIndex;
+
+        std::cout << "[NodeControl] has exposer at index " << exposerIndex << std::endl;
+
+        auto targetControl = dynamic_cast<NodeControl *>(parentSurface->node->surface.items()[exposerIndex].get());
+        setExposer(targetControl);
+    }
 }
 
 void NodeControl::initSink() {
@@ -141,7 +176,7 @@ void NodeControl::initSink() {
     connect(this, &NodeControl::removed,
             sink(), &ConnectionSink::removed);
     connect(sink(), &ConnectionSink::connectionAdded,
-            [this](ConnectionWire *wire) {
+            this, [this](ConnectionWire *wire) {
                 connect(this, &NodeControl::removed,
                         wire, &ConnectionWire::remove);
             });

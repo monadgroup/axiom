@@ -21,6 +21,8 @@ void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
     assert(!_runtime);
     _runtime = runtime;
 
+    std::cout << "[CustomNode] attaching runtime" << std::endl;
+
     connect(_runtime, &MaximRuntime::CustomNode::controlAdded,
             this, &CustomNode::controlAdded);
     connect(_runtime, &MaximRuntime::CustomNode::extractedChanged,
@@ -29,16 +31,16 @@ void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
             this, &CustomNode::finishedCodegen);
 
     connect(this, &CustomNode::removed,
-            [this]() {
+            this, [this]() {
                 _runtime->remove();
             });
-
 
     // add any controls that might already exist
     for (const std::unique_ptr<MaximRuntime::Control> &control : *runtime) {
         controlAdded(control.get());
     }
 
+    std::cout << "[CustomNode] Running parseCode on " << m_code.toStdString() << std::endl;
     parseCode();
 }
 
@@ -124,6 +126,7 @@ void CustomNode::deserialize(QDataStream &stream, QPoint offset) {
 }
 
 void CustomNode::controlAdded(MaximRuntime::Control *control) {
+    std::cout << "[CustomNode] controllAdded: " << control << std::endl;
     addFromRuntime(control);
 }
 

@@ -26,7 +26,7 @@ namespace MaximRuntime {
 
         Surface *subsurface() { return &_subsurface; }
 
-        void forwardControl(Control *control);
+        SoftControl *forwardControl(Control *control);
 
         void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
                          MaximCodegen::ModuleClassMethod *destroyMethod) override;

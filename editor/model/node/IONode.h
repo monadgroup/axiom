@@ -33,7 +33,7 @@ namespace AxiomModel {
 
         void attachRuntime(MaximRuntime::IONode *runtime);
 
-        void createAndAttachRuntime(MaximRuntime::Surface *surface) { assert(false); }
+        void createAndAttachRuntime(MaximRuntime::Surface *surface) { }
 
     private:
 

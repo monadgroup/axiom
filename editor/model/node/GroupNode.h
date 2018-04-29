@@ -35,9 +35,11 @@ namespace AxiomModel {
 
         void deserialize(QDataStream &stream, QPoint offset) override;
 
+        void exposeControl(NodeControl *control);
+
     private slots:
 
-        void controlAdded(MaximRuntime::Control *control);
+        void onRemoved();
 
     private:
 

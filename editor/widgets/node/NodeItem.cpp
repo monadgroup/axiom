@@ -59,7 +59,7 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : canvas(canvas), node(n
             this, &NodeItem::triggerUpdate);
 
     connect(&node->surface, &NodeSurface::itemAdded,
-            [this](AxiomModel::GridItem *item) {
+            this, [this](AxiomModel::GridItem *item) {
                 if (auto control = dynamic_cast<NodeControl *>(item)) {
                     addControl(control);
                 }
@@ -89,14 +89,14 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : canvas(canvas), node(n
             connect(resizer, &ItemResizer::changed,
                     this, &NodeItem::resizerChanged);
             connect(resizer, &ItemResizer::endDrag,
-                    [this, node]() {
+                    this, [node]() {
                         DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::SIZE_NODE, {
                             node->finishResize();
                         });
                     });
 
             connect(&node->surface, &NodeSurface::hasSelectionChanged,
-                    [this, resizer](auto hasSelection) { resizer->setVisible(!hasSelection); });
+                    this, [resizer](auto hasSelection) { resizer->setVisible(!hasSelection); });
 
             resizer->setParentItem(this);
             resizer->setVisible(!node->surface.hasSelection());
@@ -267,7 +267,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         scene()->addItem(editor);
 
         connect(editor, &FloatingValueEditor::valueSubmitted,
-                [this](QString name) {
+                this, [this](QString name) {
                     DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::RENAME_NODE, {
                         node->setName(name);
                     });

@@ -58,7 +58,7 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
 
     // connect to model
     connect(schematic, &Schematic::itemAdded,
-            [this](AxiomModel::GridItem *item) {
+            this, [this](AxiomModel::GridItem *item) {
                 if (auto node = dynamic_cast<Node *>(item)) {
                     addNode(node);
                 }
@@ -67,7 +67,7 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
             this, &SchematicCanvas::addWire);
 
     connect(GlobalActions::editDelete, &QAction::triggered,
-            [this]() {
+            this, [this]() {
                 if (hasFocus()) {
                     DO_ACTION(this->schematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {
                         this->schematic->deleteSelectedItems();
@@ -75,7 +75,7 @@ SchematicCanvas::SchematicCanvas(SchematicPanel *panel, Schematic *schematic) : 
                 }
             });
     connect(GlobalActions::editSelectAll, &QAction::triggered,
-            [this]() {
+            this, [this]() {
                 if (hasFocus()) {
                     this->schematic->selectAll();
                 }
@@ -135,7 +135,7 @@ void SchematicCanvas::startConnecting(IConnectable *control) {
     assert(connectionWire != nullptr);
 
     connect(connectionWire, &ConnectionWire::removed,
-            [this]() { isConnecting = false; });
+            this, [this]() { isConnecting = false; });
 }
 
 void SchematicCanvas::updateConnecting(QPointF mousePos) {
@@ -315,7 +315,7 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                 auto editor = new FloatingValueEditor("New Node", scenePos);
                 addItem(editor);
                 connect(editor, &FloatingValueEditor::valueSubmitted,
-                        [this, scenePos](QString value) {
+                        this, [this, scenePos](QString value) {
                             newNode(scenePos, value, false);
                         });
             });
@@ -324,7 +324,7 @@ void SchematicCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                 auto editor = new FloatingValueEditor("New Group", scenePos);
                 addItem(editor);
                 connect(editor, &FloatingValueEditor::valueSubmitted,
-                        [this, scenePos](QString value) {
+                        this, [this, scenePos](QString value) {
                             newNode(scenePos, value, true);
                         });
             });

@@ -27,6 +27,8 @@ namespace AxiomModel {
 
         static std::unique_ptr<NodeControl> create(Node *node, MaximCommon::ControlType type, QString name);
 
+        long long int index() const;
+
         ControlRef ref() const;
 
         virtual ConnectionSink *sink() = 0;
@@ -49,7 +51,7 @@ namespace AxiomModel {
 
         std::unique_ptr<GridItem> clone(GridSurface *newParent, QPoint newPos, QSize newSize) const override;
 
-        NodeControl *exposeBase() const { return _exposeBase; }
+        NodeControl *exposer() const { return _exposer; }
 
     public slots:
 
@@ -57,7 +59,7 @@ namespace AxiomModel {
 
         void setShowNameNoOp(bool showName);
 
-        void setExposeBase(NodeControl *base);
+        void setExposer(NodeControl *base);
 
         void saveValue() override = 0;
 
@@ -79,7 +81,7 @@ namespace AxiomModel {
 
         void showNameChanged(bool newShowName);
 
-        void exposeBaseChanged(NodeControl *newBase);
+        void exposerChanged(NodeControl *newBase);
 
     protected:
 
@@ -88,7 +90,7 @@ namespace AxiomModel {
     private:
 
         bool m_showName = true;
-        NodeControl *_exposeBase = nullptr;
+        NodeControl *_exposer = nullptr;
         MaximRuntime::Control *_runtime = nullptr;
         QString _name;
 

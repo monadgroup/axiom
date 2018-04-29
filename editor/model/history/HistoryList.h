@@ -6,6 +6,8 @@
 
 #define DO_ACTION(history, name, block) (history).startAction((name)); block; (history).endAction((name))
 
+#define DO_SUPPRESS(history, block) (history).startSuppressing(); block; (history).stopSuppressing()
+
 namespace AxiomModel {
 
     class HistoryOperation;
@@ -71,11 +73,17 @@ namespace AxiomModel {
 
         void deserialize(QDataStream &stream);
 
+        bool isSuppressing() const { return _isSuppressing; }
+
     public slots:
 
         void undo();
 
         void redo();
+
+        void startSuppressing();
+
+        void stopSuppressing();
 
     signals:
 
@@ -98,6 +106,8 @@ namespace AxiomModel {
 
         bool hasCurrentAction = false;
         HistoryAction currentAction;
+
+        bool _isSuppressing = false;
 
     };
 

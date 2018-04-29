@@ -1,3 +1,4 @@
+#include <iostream>
 #include "GroupNode.h"
 
 #include "compiler/runtime/Runtime.h"
@@ -11,29 +12,25 @@ GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
     : Node(parent, std::move(name), Type::GROUP, pos, size),
       schematic(std::make_unique<GroupSchematic>(this)) {
     connect(this, &GroupNode::removed,
-            schematic.get(), &GroupSchematic::removed);
+            this, &GroupNode::onRemoved);
 }
 
 void GroupNode::attachRuntime(MaximRuntime::GroupNode *runtime) {
+    std::cout << "[GroupNode] Attaching runtime!" << std::endl;
     _runtime = runtime;
 
-    connect(_runtime, &MaximRuntime::GroupNode::controlAdded,
-            this, &GroupNode::controlAdded);
     connect(_runtime, &MaximRuntime::GroupNode::extractedChanged,
             this, &GroupNode::extractedChanged);
 
     // todo: maybe this should go in surface?
     connect(this, &GroupNode::removed,
-            [this]() {
+            this, [this]() {
                 _runtime->remove();
             });
 
     schematic->attachRuntime(runtime->subsurface());
 
-    // add any controls that might already exist
-    for (const std::unique_ptr<MaximRuntime::Control> &control : *runtime) {
-        controlAdded(control.get());
-    }
+    // todo: add any controls that already exist from the runtime?
 }
 
 void GroupNode::createAndAttachRuntime(MaximRuntime::Surface *surface) {
@@ -65,22 +62,59 @@ void GroupNode::restoreValue() {
 
 void GroupNode::serialize(QDataStream &stream, QPoint offset) const {
     Node::serialize(stream, offset);
-    schematic->serialize(stream);
 
-    // todo: serialize controls
+    stream << (uint32_t) surface.items().size();
+    for (const auto &item : surface.items()) {
+        auto control = dynamic_cast<NodeControl *>(item.get());
+        assert(control);
+
+        stream << control->name();
+        stream << (uint8_t) control->type();
+        control->serialize(stream, QPoint(0, 0));
+    }
+
+    schematic->serialize(stream);
 }
 
 void GroupNode::deserialize(QDataStream &stream, QPoint offset) {
     Node::deserialize(stream, offset);
-    schematic->deserialize(stream);
 
-    // todo: deserialize controls
+    uint32_t controlCount; stream >> controlCount;
+    for (uint32_t i = 0; i < controlCount; i++) {
+        QString controlName; stream >> controlName;
+        uint8_t intControlType; stream >> intControlType;
+
+        auto control = NodeControl::create(this, (MaximCommon::ControlType) intControlType, controlName);
+        control->deserialize(stream, QPoint(0, 0));
+        surface.addItem(std::move(control));
+    }
+
+    schematic->deserialize(stream);
 }
 
-void GroupNode::controlAdded(MaximRuntime::Control *control) {
-    // todo: set newControl's exposeBase to the Model Control this SoftControl is for
-    // (this info is currently only needed on serialize, so there might be a better way to do it -- maybe the model
-    // should be in charge of creating forward controls instead of the compiler?)
-    // --> the same might go for other controls, when we need to deserialize
-    addFromRuntime(control);
+void GroupNode::exposeControl(AxiomModel::NodeControl *control) {
+    if (!runtime() || !control->runtime()) return;
+
+    auto newRuntime = runtime()->forwardControl(control->runtime());
+
+    if (control->exposer()) {
+        // if the control already has a exposer control in mind, just link to it
+        std::cout << "[GroupNode] exposeControl: already has exposer, attaching runtime" << std::endl;
+        control->exposer()->attachRuntime(newRuntime);
+    } else {
+        // otherwise, create a new one
+        std::cout << "[GroupNode] exposeControl: doesn't have exposer, creating one" << std::endl;
+        auto newControl = addFromRuntime(newRuntime);
+        control->setExposer(newControl);
+    }
+
+    qt_noop();
+}
+
+void GroupNode::onRemoved() {
+    std::cout << "Removing GroupNode" << std::endl;
+    DO_SUPPRESS(parentSchematic->project()->history, {
+        emit schematic->removed();
+    });
+    std::cout << "Finished removing GroupNode" << std::endl;
 }

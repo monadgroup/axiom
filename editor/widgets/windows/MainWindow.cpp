@@ -128,7 +128,7 @@ void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic 
     }
 
     connect(newDockPtr, &SchematicPanel::closed,
-            [this, schematic]() { removeSchematic(schematic); });
+            this, [this, schematic]() { removeSchematic(schematic); });
 
     _openPanels.emplace(schematic, std::move(newDock));
 }

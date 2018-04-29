@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <llvm/Support/DataTypes.h>
+#include <iostream>
 
 #include "HistoryOperation.h"
 #include "../Project.h"
@@ -77,9 +78,9 @@ void HistoryList::endAction(ActionType type) {
     }
 
     // resort operations
-    std::sort(currentAction.operations.begin(), currentAction.operations.end(), [](const std::unique_ptr<HistoryOperation> &first, const std::unique_ptr<HistoryOperation> &second) {
-        return first->level() < second->level();
-    });
+    /*std::sort(currentAction.operations.begin(), currentAction.operations.end(), [](const std::unique_ptr<HistoryOperation> &first, const std::unique_ptr<HistoryOperation> &second) {
+        return first->level() > second->level();
+    });*/
 
     hasCurrentAction = false;
 
@@ -123,9 +124,11 @@ void HistoryList::appendOperation(std::unique_ptr<AxiomModel::HistoryOperation> 
     // operation->forward() is always run first in case it ends up appending another operation,
     // which should be applied before this one.
     if (operation->exec()) {
+        std::cout << "[history] Running " << HistoryOperation::typeToString(operation->type()).toStdString() << std::endl;
         operation->forward();
     }
-    if (hasCurrentAction) {
+    if (hasCurrentAction && !_isSuppressing) {
+        std::cout << "[history] Pushing " << HistoryOperation::typeToString(operation->type()).toStdString() << std::endl;
         currentAction.operations.push_back(std::move(operation));
     }
 }
@@ -200,7 +203,7 @@ void HistoryList::undo() {
         // has access to any changes
         if (i > 0) {
             auto &nextOp = ops[i - 1];
-            if (needsRefresh && nextOp->level() < ops[i]->level()) {
+            if (needsRefresh && nextOp->level() > ops[i]->level()) {
                 project->build();
                 needsRefresh = false;
             }
@@ -236,4 +239,12 @@ void HistoryList::redo() {
     emit undoTypeChanged(_stack[_stackPos - 1].type);
     emit redoTypeChanged(_stackPos == _stack.size() ? ActionType::NONE : _stack[_stackPos].type);
     emit stackChanged();
+}
+
+void HistoryList::startSuppressing() {
+    _isSuppressing = true;
+}
+
+void HistoryList::stopSuppressing() {
+    _isSuppressing = false;
 }

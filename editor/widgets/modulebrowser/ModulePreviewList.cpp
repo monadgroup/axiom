@@ -32,7 +32,7 @@ void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
     layout->addWidget(widget);
 
     connect(entry, &AxiomModel::LibraryEntry::removed,
-            [this, widget]() {
+            this, [this, widget]() {
                 layout->removeWidget(widget);
                 delete widget;
             });

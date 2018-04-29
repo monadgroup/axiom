@@ -43,6 +43,12 @@ void Schematic::attachRuntime(MaximRuntime::Surface *runtime) {
     assert(!_runtime);
     _runtime = runtime;
 
+    for (const auto &item : items()) {
+        if (auto node = dynamic_cast<Node*>(item.get())) {
+            node->createAndAttachRuntime(runtime);
+        }
+    }
+
     // todo: attach nodes that already exist in the runtime to nodes here
 }
 
@@ -297,15 +303,16 @@ Node *Schematic::addFromStream(AxiomModel::Node::Type type, size_t index, QDataS
 
     if (!newNode) return nullptr;
 
-    newNode->deserialize(stream, center);
+    auto nodePtr = newNode.get();
+    insertItem(index, std::move(newNode));
+
+    nodePtr->deserialize(stream, center);
 
     // create and attach runtime
     if (_runtime) {
-        newNode->createAndAttachRuntime(_runtime);
+        nodePtr->createAndAttachRuntime(_runtime);
     }
 
-    auto nodePtr = newNode.get();
-    insertItem(index, std::move(newNode));
     return nodePtr;
 }
 
@@ -352,8 +359,8 @@ void Schematic::addNode(Node::Type type, QString name, QPoint pos) {
 }
 
 void Schematic::remove() {
-    for (const auto &item : items()) {
-        item->remove();
+    while (!items().empty()) {
+        items().front()->remove();
     }
 
     emit removed();

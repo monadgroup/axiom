@@ -28,7 +28,7 @@ GeneratableModuleClass *GroupNode::compile() {
     return result;
 }
 
-void GroupNode::forwardControl(MaximRuntime::Control *control) {
+SoftControl *GroupNode::forwardControl(MaximRuntime::Control *control) {
     assert(control->node()->surface() == &_subsurface);
 
     auto newControl = SoftControl::create(this, control);
@@ -37,6 +37,7 @@ void GroupNode::forwardControl(MaximRuntime::Control *control) {
     emit controlAdded(newControlPtr);
 
     control->node()->scheduleCompile();
+    return newControlPtr;
 }
 
 void GroupNode::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
