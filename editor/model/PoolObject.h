@@ -8,7 +8,7 @@ namespace AxiomModel {
 
     class PoolObject {
     public:
-        PoolObject(QUuid uuid, QUuid parentUuid, Pool *pool);
+        PoolObject(const QUuid &uuid, const QUuid &parentUuid, Pool *pool);
 
         virtual ~PoolObject();
 
@@ -24,11 +24,6 @@ namespace AxiomModel {
         QUuid _parentUuid;
 
         Pool *_pool;
-    };
-
-    class Test : public PoolObject {
-    public:
-        Test(Pool *pool) : PoolObject(QUuid(), QUuid(), pool) {}
     };
 
 }

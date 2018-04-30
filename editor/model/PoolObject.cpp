@@ -3,7 +3,7 @@
 
 using namespace AxiomModel;
 
-PoolObject::PoolObject(QUuid uuid, QUuid parentUuid, AxiomModel::Pool *pool) : _uuid(uuid), _parentUuid(parentUuid), _pool(pool) {
+PoolObject::PoolObject(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::Pool *pool) : _uuid(uuid), _parentUuid(parentUuid), _pool(pool) {
     _pool->registerObj(this);
 }
 

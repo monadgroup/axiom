@@ -13,23 +13,3 @@ void Pool::registerObj(AxiomModel::PoolObject *obj) {
 void Pool::removeObj(AxiomModel::PoolObject *obj) {
     _objects.erase(obj);
 }
-
-void bla() {
-    Pool myPool;
-    QUuid parentId;
-
-    auto testItems = myPool.filterType<Test>();
-    auto testChildren = testItems.filterChildren(parentId);
-
-    for (const auto &child : testChildren) {
-        // `child` is an instance of `Test` that has it's parent UUID set to `parentId`
-    }
-
-    testChildren.filter(testItems.filter(*myPool.collection().begin()));
-
-    //testChildren.filter(testItems.filter(*myPool.collection().begin()));
-
-    //auto rootItem = testChildren.filter
-
-    //auto rootItem = testChildren.filter
-}

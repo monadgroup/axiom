@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QUuid>
+#include <QtCore/QUuid>
 #include <unordered_set>
 
 #include "CollectionView.h"
@@ -43,16 +43,22 @@ namespace AxiomModel {
             return const_iterator(this, find_iter);
         }
 
-        value_type find(const QUuid &uuid) {
+        template<class TF = typename std::remove_pointer<value_type>::type>
+        TF *find(const QUuid &uuid) {
             for (const auto &item : *this) {
-                if (item->uuid() == uuid) return item;
+                if (item->uuid() == uuid) {
+                    return dynamic_cast<TF*>(item);
+                }
             }
             return nullptr;
         }
 
-        const value_type find(const QUuid &uuid) const {
+        template<class TF = typename std::remove_pointer<value_type>::type>
+        const TF *find(const QUuid &uuid) const {
             for (const auto &item : *this) {
-                if (item->uuid() == uuid) return item;
+                if (item->uuid() == uuid) {
+                    return dynamic_cast<const TF*>(item);
+                }
             }
             return nullptr;
         }
