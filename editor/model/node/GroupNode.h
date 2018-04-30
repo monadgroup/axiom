@@ -37,10 +37,6 @@ namespace AxiomModel {
 
         void exposeControl(NodeControl *control);
 
-    private slots:
-
-        void onRemoved();
-
     private:
 
         MaximRuntime::GroupNode *_runtime = nullptr;

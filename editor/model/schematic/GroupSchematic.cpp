@@ -10,7 +10,11 @@ GroupSchematic::GroupSchematic(GroupNode *node) : Schematic(node->parentSchemati
     connect(node, &GroupNode::nameChanged,
             this, &GroupSchematic::nameChanged);
     connect(node, &GroupNode::removed,
-            this, &GroupSchematic::remove);
+            this, [this]() {
+                DO_SUPPRESS(project()->history, {
+                    remove();
+                });
+            });
 }
 
 QString GroupSchematic::name() {

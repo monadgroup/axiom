@@ -11,8 +11,6 @@ using namespace AxiomModel;
 GroupNode::GroupNode(Schematic *parent, QString name, QPoint pos, QSize size)
     : Node(parent, std::move(name), Type::GROUP, pos, size),
       schematic(std::make_unique<GroupSchematic>(this)) {
-    connect(this, &GroupNode::removed,
-            this, &GroupNode::onRemoved);
 }
 
 void GroupNode::attachRuntime(MaximRuntime::GroupNode *runtime) {
@@ -109,12 +107,4 @@ void GroupNode::exposeControl(AxiomModel::NodeControl *control) {
     }
 
     qt_noop();
-}
-
-void GroupNode::onRemoved() {
-    std::cout << "Removing GroupNode" << std::endl;
-    DO_SUPPRESS(parentSchematic->project()->history, {
-        emit schematic->removed();
-    });
-    std::cout << "Finished removing GroupNode" << std::endl;
 }
