@@ -3,6 +3,8 @@
 #include <optional>
 #include <functional>
 
+#include "Event.h"
+
 namespace AxiomModel {
 
     /**
@@ -112,7 +114,12 @@ namespace AxiomModel {
             }
         };
 
-        explicit CollectionView(collection_type collection, filter_func filter) : _collection(collection), _filter(filter) {}
+        Event<const value_type &> itemAdded;
+        Event<const value_type &> itemRemoved;
+
+        explicit CollectionView(collection_type collection, filter_func filter) : _collection(collection), _filter(filter) {
+            assignFilters(&collection);
+        }
 
         collection_type &collection() { return _collection; }
 
@@ -147,6 +154,23 @@ namespace AxiomModel {
     private:
         collection_type _collection;
         filter_func _filter;
+
+        void assignFilters(CollectionView *view) {
+            view->itemAdded.listen(&CollectionView::addedFilter);
+            view->itemRemoved.listen(&CollectionView::removedFilter);
+        }
+
+        template<class TG> void assignFilters(const TG &v) {}
+
+        void addedFilter(const collection_value_type &item) const {
+            auto filtered = filter(item);
+            if (filtered) itemAdded.emit(*filtered);
+        }
+
+        void removedFilter(const collection_value_type &item) const {
+            auto filtered = filter(item);
+            if (filtered) itemRemoved.emit(*filtered);
+        }
     };
 
 }

@@ -8,8 +8,10 @@ Pool::Pool() : PoolView(_objects, [](const collection_value_type &base) -> std::
 
 void Pool::registerObj(AxiomModel::PoolObject *obj) {
     _objects.emplace(obj);
+    itemAdded.emit(obj);
 }
 
 void Pool::removeObj(AxiomModel::PoolObject *obj) {
+    itemRemoved.emit(obj);
     _objects.erase(obj);
 }

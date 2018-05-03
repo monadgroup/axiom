@@ -104,13 +104,10 @@ namespace AxiomModel {
         using typename inherit_type::collection_value_type;
         using typename inherit_type::value_type;
 
-        explicit ChildFilteredPoolView(collection_type collection, const QUuid &uuid)
-            : ChildFilteredPoolView::PoolView(collection, [this](const collection_value_type &base) -> std::optional<value_type> {
-                return base->parentUuid() == _uuid ? std::optional<value_type>(base) : std::optional<value_type>();
+        explicit ChildFilteredPoolView(collection_type collection, QUuid uuid)
+            : ChildFilteredPoolView::PoolView(collection, [uuid](const collection_value_type &base) -> std::optional<value_type> {
+                return base->parentUuid() == uuid ? std::optional<value_type>(base) : std::optional<value_type>();
             }) {}
-
-    private:
-        QUuid _uuid;
     };
 
     class PoolObject;
