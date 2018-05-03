@@ -4,10 +4,12 @@
 #include <functional>
 #include <set>
 
+#include "Hookable.h"
+
 namespace AxiomModel {
 
     template<class... A>
-    class Event {
+    class Event : public Hookable {
     private:
         using owned_collection = typename std::vector<Event>;
 
@@ -17,6 +19,13 @@ namespace AxiomModel {
         Event() noexcept = default;
 
         explicit Event(func_type func) noexcept : callback(func) {}
+
+        template<class... TA>
+        explicit Event(std::function<void(TA...)> func) noexcept
+            : callback([func](A... params) {
+                func(params...);
+            }) {
+        }
 
         Event(const Event &a) noexcept : callback(a.callback) {
             copyFrom(a);
@@ -38,7 +47,7 @@ namespace AxiomModel {
             return *this;
         }
 
-        ~Event() {
+        ~Event() override {
             detachAll();
         }
 
@@ -63,15 +72,40 @@ namespace AxiomModel {
             return listen(Event(listener));
         }
 
-        Event *listen(Event *follow, Event listener) {
+        template<class ...TA>
+        Event *listen(std::function<void(TA...)> listener) {
+            return listen(Event(listener));
+        }
+
+        Event *listen(Hookable *follow, Event listener) {
             auto result = listen(std::move(listener));
             result->follow(follow);
             return result;
         }
 
-        Event *listen(Event *follow, func_type listener) {
+        Event *listen(Hookable *follow, func_type listener) {
             return listen(follow, Event(listener));
         }
+
+        template<class... TA>
+        Event *listen(Hookable *follow, std::function<void(TA...)> listener) {
+            return listen(follow, Event(listener));
+        }
+
+        template<class TB, class... TA>
+        Event *listen(TB *follow, void (TB::*listener)(TA...)) {
+            auto binding = std::mem_fn(listener);
+            return listen(follow, Event([follow, binding](A... params) {
+                binding(follow, params...);
+            }));
+        }
+
+        template<class TB, class... TA>
+        Event *listenCtx(TB *follow, std::function<void(TB*, TA...)> listener) {
+            return listen(follow, Event([follow, listener](A... params) {
+                listener(follow, params...);
+            }));
+        };
 
         void connect(Event *other) {
             listeners.emplace(other);
@@ -88,14 +122,14 @@ namespace AxiomModel {
             }
         }
 
-        void follow(Event *other) {
+        void follow(Hookable *other) {
             following.emplace(other);
-            other->followers.emplace(this);
+            other->addDestructHook(this, [this]() { detachAll(); });
         }
 
-        void unfollow(Event *other) {
+        void unfollow(Hookable *other) {
             following.erase(other);
-            other->followers.erase(this);
+            other->removeDestructHook(this);
         }
 
     private:
@@ -103,15 +137,11 @@ namespace AxiomModel {
         owned_collection ownedListeners;
         std::set<Event *> listeners;
         std::set<Event *> invListeners;
-        std::set<Event *> following;
-        std::set<Event *> followers;
+        std::set<Hookable *> following;
 
         void detachAll() {
             while (!invListeners.empty()) {
                 (*invListeners.begin())->disconnect(this);
-            }
-            while (!followers.empty()) {
-                (*followers.begin())->detachAll();
             }
             while (!following.empty()) {
                 unfollow(*following.begin());
@@ -139,15 +169,14 @@ namespace AxiomModel {
             listeners = std::move(a.listeners);
             invListeners = std::move(a.invListeners);
             following = std::move(a.following);
-            followers = std::move(a.followers);
 
             for (const auto &listener : listeners) {
                 listener->invListeners.erase(&a);
                 listener->invListeners.emplace(this);
             }
-            for (const auto &evt : following) {
-                evt->followers.erase(&a);
-                evt->followers.emplace(this);
+            for (const auto &hook : following) {
+                hook->removeDestructHook(&a);
+                hook->addDestructHook(this, [this]() { detachAll(); });
             }
         }
     };

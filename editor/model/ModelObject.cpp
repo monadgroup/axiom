@@ -31,3 +31,8 @@ void ModelObject::serialize(QDataStream &stream) const {
     stream << uuid();
     stream << parentUuid();
 }
+
+void ModelObject::remove() {
+    removed.emit();
+    cleanup.emit();
+}

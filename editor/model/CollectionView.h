@@ -2,175 +2,275 @@
 
 #include <optional>
 #include <functional>
+#include <memory>
 
 #include "Event.h"
 
 namespace AxiomModel {
 
-    /**
-     * A CollectionView is a "lazy iterator" wrapper of a collection.
-     * It can both filter out and map collections, by implementing the `filter` method.
-     *
-     * Template parameters:
-     *  - TI is the output item type
-     *  - TC is the collection type
-     */
-    template<class TI, class TC>
+    // the user should see an interface like:
+    template<class TI>
     class CollectionView {
     public:
-        using collection_type = TC;
-
-        // sometimes we need to read dependent types on `collection_type`, so remove a possible reference
-        using collection_class = typename std::remove_reference<collection_type>::type;
-        using collection_iter = typename collection_class::iterator;
-        using collection_const_iter = typename collection_class::const_iterator;
-        using collection_value_type = typename collection_class::value_type;
-
-        // some types expected for collections
         using value_type = TI;
         using reference = value_type&;
         using const_reference = const reference;
         using pointer = value_type*;
         using const_pointer = const pointer;
-        using difference_type = typename collection_class::difference_type;
 
-        using filter_func = typename std::function<std::optional<value_type>(const collection_value_type &base)>;
+    private:
+        class IteratorImpl {
+        public:
+            virtual void increment(bool incr_iter) = 0;
+            virtual pointer last() = 0;
+            virtual std::unique_ptr<IteratorImpl> clone() const = 0;
+        };
 
-        // standard iterator
+        class AbstractImpl {
+        public:
+            virtual std::unique_ptr<IteratorImpl> begin() = 0;
+            virtual std::unique_ptr<IteratorImpl> end() = 0;
+            virtual std::unique_ptr<IteratorImpl> begin() const = 0;
+            virtual std::unique_ptr<IteratorImpl> end() const = 0;
+            virtual bool empty() const = 0;
+            virtual size_t size() const = 0;
+            virtual std::unique_ptr<AbstractImpl> clone() const = 0;
+        };
+
+        template<class TC>
+        class ConverterImpl : public AbstractImpl {
+        private:
+            using collection_type = TC;
+            using collection_class = typename std::remove_reference<collection_type>::type;
+            using collection_iter = typename collection_class::iterator;
+            using collection_const_iter = typename collection_class::const_iterator;
+            using collection_value_type = typename collection_class::value_type;
+
+            using filter_func = typename std::function<std::optional<value_type>(const collection_value_type &)>;
+
+        private:
+            class ConverterIteratorImpl : public IteratorImpl {
+            public:
+                ConverterIteratorImpl(ConverterImpl *converter, collection_iter iter, std::optional<value_type> last)
+                    : _converter(converter), _iter(iter), _last(last) {
+                    increment(false);
+                }
+
+                void increment(bool incrIter) override {
+                    do {
+                        if (incrIter) _iter++;
+                        incrIter = true;
+
+                        if (_iter == _converter->collection.end()) break;
+
+                        _last = _converter->filter(*_iter);
+                    } while (!_last);
+                }
+
+                pointer last() override {
+                    return &*_last;
+                }
+
+                std::unique_ptr<IteratorImpl> clone() const {
+                    return std::make_unique<ConverterIteratorImpl>(_converter, _iter, _last);
+                }
+
+            private:
+                ConverterImpl *_converter;
+                collection_iter _iter;
+                std::optional<value_type> _last;
+            };
+
+            class ConverterConstInteratorImpl : public IteratorImpl {
+            public:
+                ConverterConstInteratorImpl(const ConverterImpl *converter, collection_const_iter iter, std::optional<const value_type> last)
+                    : _converter(converter), _iter(iter), _last(last) {
+                    increment(false);
+                }
+
+                void increment(bool incrIter) override {
+                    do {
+                        if (incrIter) _iter++;
+                        incrIter = true;
+
+                        if (_iter == _converter->collection.end()) break;
+
+                        _last = _converter->filter(*_iter);
+                    } while (!_last);
+                }
+
+                pointer last() override {
+                    return &*_last;
+                }
+
+                std::unique_ptr<IteratorImpl> clone() const {
+                    return std::make_unique<ConverterIteratorImpl>(_converter, _iter, _last);
+                }
+
+            private:
+                const ConverterImpl *_converter;
+                collection_const_iter _iter;
+                std::optional<const value_type> _last;
+            };
+
+        public:
+
+            ConverterImpl(collection_type collection, filter_func filter) : collection(collection), filter(filter) {
+
+            }
+
+            std::unique_ptr<IteratorImpl> begin() {
+                return std::make_unique<ConverterIteratorImpl>(this, collection.begin(), std::optional<value_type>());
+            }
+
+            std::unique_ptr<IteratorImpl> end() {
+                return std::make_unique<ConverterIteratorImpl>(this, collection.end(), std::optional<value_type>());
+            }
+
+            std::unique_ptr<IteratorImpl> begin() const {
+                return std::make_unique<ConverterConstInteratorImpl>(this, collection.begin(), std::optional<value_type>());
+            }
+
+            std::unique_ptr<IteratorImpl> end() const {
+                return std::make_unique<ConverterConstInteratorImpl>(this, collection.end(), std::optional<value_type>());
+            }
+
+            bool empty() const {
+                if (collection.empty()) return true;
+                return begin()->last() == end()->last();
+            }
+
+            size_t size() const {
+                size_t acc = 0;
+                for (const auto &itm : *this) {
+                    acc++;
+                }
+                return acc;
+            }
+
+            std::unique_ptr<AbstractImpl> clone() const {
+                return std::make_unique<ConverterImpl>(collection, filter);
+            }
+
+        private:
+            TC collection;
+            filter_func filter;
+        };
+
+    public:
         class iterator {
         public:
             using self_type = iterator;
             using iterator_category = std::forward_iterator_tag;
 
-            iterator(CollectionView *view, collection_iter iter) : _view(view), _iter(iter) {
-                increment(false);
+            explicit iterator(std::unique_ptr<IteratorImpl> impl) : impl(std::move(impl)) {}
+
+            iterator(const iterator &a) : impl(a.impl->clone()) {}
+
+            iterator &operator=(const iterator &a) {
+                impl = a.impl->clone();
+                return *this;
             }
 
-            self_type operator++() { self_type i = *this; increment(true); return i; }
+            self_type operator++() { self_type i = *this; impl->increment(true); return i; }
 
-            const self_type operator++(int junk) { increment(true); return *this; }
+            const self_type operator++(int junk) { impl->increment(true); return *this; }
 
-            reference operator*() { return *_last; }
+            reference operator*() { return *impl->last(); }
 
-            pointer operator->() { return &*_last; }
+            pointer operator->() { return impl->last(); }
 
-            bool operator==(const self_type &rhs) { return _iter == rhs._iter; }
+            bool operator==(const self_type &rhs) { return impl->last() == rhs.impl->last(); }
 
-            bool operator!=(const self_type &rhs) { return _iter != rhs._iter; }
+            bool operator!=(const self_type &rhs) { return impl->last() != rhs.impl->last(); }
 
         private:
-            CollectionView *_view;
-            collection_iter _iter;
-            std::optional<value_type> _last;
-
-            void increment(bool incr_iter) {
-                do {
-                    if (incr_iter) _iter++;
-                    incr_iter = true;
-
-                    if (_iter == _view->_collection.end()) break;
-
-                    _last = _view->filter(*_iter);
-                } while (!_last);
-            }
+            std::unique_ptr<IteratorImpl> impl;
         };
 
-        // standard const iterator
-        class const_iterator {
-        public:
-            using self_type = const_iterator;
-            using iterator_category = std::forward_iterator_tag;
-
-            const_iterator(const CollectionView *view, collection_const_iter iter) : _view(view), _iter(iter) {
-                increment(false);
-            }
-
-            self_type operator++() { self_type i = *this; increment(true); return i; }
-
-            const self_type operator++(int junk) { increment(true); return *this; }
-
-            reference operator*() { return *_last; }
-
-            pointer operator->() { return &*_last; }
-
-            bool operator==(const self_type &rhs) { return _iter == rhs._iter; }
-
-            bool operator!=(const self_type &rhs) { return _iter != rhs._iter; }
-
-        private:
-            const CollectionView *_view;
-            collection_const_iter _iter;
-            std::optional<const value_type> _last;
-
-            void increment(bool incr_iter) {
-                do {
-                    if (incr_iter) _iter++;
-                    incr_iter = true;
-
-                    if (_iter = _view->_collection.end()) break;
-
-                    _last = _view->filter(*_iter);
-                } while (!_last);
-            }
-        };
+        using const_iterator = iterator;
 
         Event<const value_type &> itemAdded;
         Event<const value_type &> itemRemoved;
 
-        explicit CollectionView(collection_type collection, filter_func filter) : _collection(collection), _filter(filter) {
-            assignFilters(&collection);
+        template<class TC>
+        CollectionView(TC collection, std::function<std::optional<TI>(const typename std::remove_reference<TC>::type::value_type &)> func) {
+            impl = std::make_unique<ConverterImpl<TC>>(std::move(collection), std::move(func));
         }
 
-        collection_type &collection() { return _collection; }
+        CollectionView(const CollectionView &a) : impl(a.impl->clone()) {}
 
-        const collection_type &collection() const { return _collection; }
-
-        iterator begin() { return iterator(this, _collection.begin()); }
-
-        iterator end() { return iterator(this, _collection.end()); }
-
-        const_iterator begin() const { return const_iterator(this, _collection.begin()); }
-
-        const_iterator end() const { return const_iterator(this, _collection.end()); }
-
-        std::optional<value_type> filter(const collection_value_type &base) {
-            return _filter(base);
+        CollectionView &operator=(const CollectionView &a) {
+            impl = a.impl->clone();
+            return *this;
         }
 
-        std::optional<const value_type> filter(const collection_value_type &base) const {
-            return _filter(base);
-        }
+        iterator begin() { return iterator(impl->begin()); }
 
-        std::optional<value_type> filter(const std::optional<collection_value_type> &base) {
-            if (!base) return std::optional<value_type>();
-            return filter(base);
-        }
+        iterator end() { return iterator(impl->end()); }
 
-        std::optional<const value_type> filter(const std::optional<collection_value_type> &base) const {
-            if (!base) return std::optional<const value_type>();
-            return filter(base);
-        }
+        const_iterator begin() const { return const_iterator(impl->begin()); }
+
+        const_iterator end() const { return const_iterator(impl->end()); }
+
+        bool empty() const { return impl->empty(); }
+
+        size_t size() const { return impl->size(); }
 
     private:
-        collection_type _collection;
-        filter_func _filter;
-
-        void assignFilters(CollectionView *view) {
-            view->itemAdded.listen(&CollectionView::addedFilter);
-            view->itemRemoved.listen(&CollectionView::removedFilter);
-        }
-
-        template<class TG> void assignFilters(const TG &v) {}
-
-        void addedFilter(const collection_value_type &item) const {
-            auto filtered = filter(item);
-            if (filtered) itemAdded.emit(*filtered);
-        }
-
-        void removedFilter(const collection_value_type &item) const {
-            auto filtered = filter(item);
-            if (filtered) itemRemoved.emit(*filtered);
-        }
+        std::unique_ptr<AbstractImpl> impl;
     };
 
-}
+    template<class TO, class TI>
+    CollectionView<TO> derive(const CollectionView<TI> &input, std::function<std::optional<TO>(const TI &)> func) {
+        auto view = CollectionView<TO>(input, func);
+
+        input.itemAdded.listenCtx<CollectionView<TO>, const TI &>(&view, [func](CollectionView<TO> *collection, const TI &item) {
+            auto result = func(item);
+            if (result) collection->itemAdded.emit(*result);
+        });
+        input.itemRemoved.listenCtx<typename CollectionView<TO>, const TI &>(&view, [func](CollectionView<TO> *collection, const TI &item) {
+            auto result = func(item);
+            if (result) collection->itemRemoved.emit(*result);
+        });
+
+        return std::move(view);
+    }
+
+    template<class TO, class TI>
+    CollectionView<TO> filterType(const CollectionView<TI> &input) {
+        return derive(input, [](const TI &base) -> std::optional<TO> {
+            auto convert = dynamic_cast<TO>(base);
+            if (!convert) return std::optional<TO>();
+            else return convert;
+        });
+    };
+
+    template<class TO, class TI>
+    CollectionView<TO> staticCast(const CollectionView<TI> &input) {
+        return derive(input, [](const TI &base) -> std::optional<TO> {
+            return static_cast<TO>(base);
+        });
+    };
+
+    template<class TO, class TI>
+    CollectionView<TO> reinterpetCast(const CollectionView<TI> &input) {
+        return derive(input, [](const TI &base) -> std::optional<TO> {
+            return reinterpret_cast<TO>(base);
+        });
+    };
+
+    template<class TI>
+    void collect(const CollectionView<TI> &input, const std::vector<TI> &result) {
+        for (const auto &itm : input) {
+            result.push_back(itm);
+        }
+    }
+
+    template<class TI>
+    std::vector<TI> collect(const CollectionView<TI> &input) {
+        std::vector<TI> result;
+        collect(input, result);
+        return result;
+    }
+};

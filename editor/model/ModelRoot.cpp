@@ -3,10 +3,13 @@
 #include <cassert>
 
 #include "ModelObject.h"
+#include "Pool.h"
 
 using namespace AxiomModel;
 
-ModelRoot::ModelRoot(AxiomModel::Pool *pool) : _pool(pool) {
+ModelRoot::ModelRoot(AxiomModel::Pool *pool) : _pool(pool), _surfaces(filterType<Surface*>(*pool)),
+                                               _nodes(filterType<Node*>(*pool)),
+                                               _controls(filterType<Control*>(*pool)) {
 
 }
 

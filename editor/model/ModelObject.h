@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "PoolObject.h"
+#include "Event.h"
 
 namespace AxiomModel {
 
@@ -13,11 +14,16 @@ namespace AxiomModel {
     public:
         enum class ModelType {
             SURFACE,
-            NODE,
+            CUSTOM_NODE,
+            GROUP_NODE,
+            IO_NODE,
             CONTROL,
             LIBRARY_ENTRY,
             HISTORY_ACTION
         };
+
+        Event<> removed;
+        Event<> cleanup;
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
@@ -28,6 +34,9 @@ namespace AxiomModel {
         ModelType modelType() const { return _modelType; }
 
         ModelRoot *root() const { return _root; }
+
+    protected:
+        void remove();
 
     private:
         ModelType _modelType;

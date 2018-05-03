@@ -4,7 +4,7 @@
 
 using namespace AxiomModel;
 
-Pool::Pool() : PoolView(_objects, [](const collection_value_type &base) -> std::optional<value_type> { return base; }) {}
+Pool::Pool() : BasePoolView(_objects, [](PoolObject *const &base) -> std::optional<PoolObject*> { return base; }) {}
 
 void Pool::registerObj(AxiomModel::PoolObject *obj) {
     _objects.emplace(obj);

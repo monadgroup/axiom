@@ -11,19 +11,20 @@ if (NOT MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
 endif()
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 find_package(Qt5Core REQUIRED)
 get_target_property(QT5_INCLUDE_DIRS Qt5::Core INTERFACE_INCLUDE_DIRECTORIES)
 
 set(SOURCE_FILES
+        Hookable.cpp
         ModelObject.cpp
         ModelRoot.cpp
         Pool.cpp
-        PoolObject.cpp
-        CollectionView.h)
+        PoolObject.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${QT5_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_library(axiom_model ${SOURCE_FILES})
+
+add_subdirectory(grid)
+add_subdirectory(objects)
