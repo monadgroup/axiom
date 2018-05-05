@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Surface.h"
+#include "NodeSurface.h"
 
 namespace AxiomModel {
 
-    class RootSurface : public Surface {
+    class RootSurface : public NodeSurface {
     public:
         RootSurface(const QUuid &uuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 

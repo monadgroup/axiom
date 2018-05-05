@@ -1,11 +1,12 @@
 #include "GridSurface.h"
 
 #include "GridItem.h"
+#include "../CollectionViewOperators.h"
 
 using namespace AxiomModel;
 
 GridSurface::GridSurface(AxiomModel::GridSurface::ItemCollection view, QPoint minRect, QPoint maxRect)
-    : _grid(minRect, maxRect), _items(std::move(view)), _selectedItems(derive(_items, &GridSurface::filterSelected)) {
+    : _grid(minRect, maxRect), _items(std::move(view)), _selectedItems(deriveFunc<GridItem*>(_items, &GridSurface::filterSelected)) {
     _items.itemAdded.listen(this, &GridSurface::handleItemAdded);
 }
 
@@ -24,18 +25,6 @@ void GridSurface::saveValue() {
 void GridSurface::restoreValue() {
     for (const auto &item : items()) {
         item->restoreValue();
-    }
-}
-
-void GridSurface::deleteAll() {
-    while (!items().empty()) {
-        (*items().begin())->remove();
-    }
-}
-
-void GridSurface::deleteSelectedItems() {
-    while (!selectedItems().empty()) {
-        (*items().begin())->remove();
     }
 }
 
@@ -84,7 +73,7 @@ void GridSurface::finishDragging() {
 }
 
 void GridSurface::flushGrid() {
-    gridChanged.emit();
+    gridChanged.trigger();
 }
 
 std::optional<GridItem*> GridSurface::filterSelected(AxiomModel::GridItem *const &item) {

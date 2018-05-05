@@ -56,10 +56,6 @@ namespace AxiomModel {
 
         void restoreValue();
 
-        void deleteAll();
-
-        void deleteSelectedItems();
-
         void selectAll();
 
         void deselectAll();

@@ -24,8 +24,6 @@ namespace AxiomModel {
         Event<> startedDragging;
         Event<QPoint> draggedTo;
         Event<> finishedDragging;
-        Event<> removed;
-        Event<> cleanup;
 
         GridItem(GridSurface *parent, QPoint pos, QSize size, bool selected);
 
@@ -64,8 +62,6 @@ namespace AxiomModel {
         void select(bool exclusive);
 
         void deselect();
-
-        virtual void remove();
 
         virtual void startDragging();
 

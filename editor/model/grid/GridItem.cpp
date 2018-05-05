@@ -34,11 +34,11 @@ void GridItem::setSize(QSize size) {
     if (size != m_size) {
         if (size.width() < 1 || size.height() < 1 || !parentSurface->grid().isRectAvailable(m_pos, size, this)) return;
 
-        beforeSizeChanged.emit(size);
+        beforeSizeChanged.trigger(size);
         parentSurface->grid().moveRect(m_pos, m_size, m_pos, size, this);
         parentSurface->flushGrid();
         m_size = size;
-        sizeChanged.emit(size);
+        sizeChanged.trigger(size);
     }
 }
 
@@ -67,27 +67,27 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (topLeft == m_pos && newSize == m_size) return;
     parentSurface->grid().moveRect(m_pos, m_size, topLeft, newSize, this);
     parentSurface->flushGrid();
-    beforePosChanged.emit(topLeft);
+    beforePosChanged.trigger(topLeft);
     m_pos = topLeft;
-    posChanged.emit(m_pos);
-    beforeSizeChanged.emit(newSize);
+    posChanged.trigger(m_pos);
+    beforeSizeChanged.trigger(newSize);
     m_size = newSize;
-    sizeChanged.emit(m_size);
+    sizeChanged.trigger(m_size);
 }
 
 void GridItem::select(bool exclusive) {
     if (exclusive || !m_selected) {
         m_selected = true;
-        selectedChanged.emit(m_selected);
-        selected.emit(exclusive);
+        selectedChanged.trigger(m_selected);
+        selected.trigger(exclusive);
     }
 }
 
 void GridItem::deselect() {
     if (!m_selected) return;
     m_selected = false;
-    selectedChanged.emit(m_selected);
-    deselected.emit();
+    selectedChanged.trigger(m_selected);
+    deselected.trigger();
 }
 
 void GridItem::startDragging() {
@@ -101,23 +101,18 @@ void GridItem::dragTo(QPoint delta) {
 void GridItem::finishDragging() {
 }
 
-void GridItem::remove() {
-    removed.emit();
-    cleanup.emit();
-}
-
 void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
     if (pos != m_pos) {
         if (checkPositions && !parentSurface->grid().isRectAvailable(pos, m_size, this)) return;
 
         if (pos == m_pos) return;
 
-        beforePosChanged.emit(pos);
+        beforePosChanged.trigger(pos);
         if (updateGrid) {
             parentSurface->grid().moveRect(m_pos, m_size, pos, m_size, this);
             parentSurface->flushGrid();
         }
         m_pos = pos;
-        posChanged.emit(pos);
+        posChanged.trigger(pos);
     }
 }
