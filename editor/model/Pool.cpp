@@ -8,10 +8,10 @@ Pool::Pool() : BasePoolView(_objects, [](PoolObject *const &base) -> std::option
 
 void Pool::registerObj(AxiomModel::PoolObject *obj) {
     _objects.emplace(obj);
-    itemAdded.emit(obj);
+    itemAdded.trigger(obj);
 }
 
 void Pool::removeObj(AxiomModel::PoolObject *obj) {
-    itemRemoved.emit(obj);
+    itemRemoved.trigger(obj);
     _objects.erase(obj);
 }

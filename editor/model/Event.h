@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <optional>
 #include <functional>
 #include <set>
@@ -8,13 +9,13 @@
 
 namespace AxiomModel {
 
-    template<class... A>
+    template<class... Args>
     class Event : public Hookable {
     private:
         using owned_collection = typename std::vector<Event>;
 
     public:
-        using func_type = std::function<void(A...)>;
+        using func_type = std::function<void(Args...)>;
 
         Event() noexcept = default;
 
@@ -22,7 +23,7 @@ namespace AxiomModel {
 
         template<class... TA>
         explicit Event(std::function<void(TA...)> func) noexcept
-            : callback([func](A... params) {
+            : callback([func](Args... params) {
                 func(params...);
             }) {
         }
@@ -51,13 +52,13 @@ namespace AxiomModel {
             detachAll();
         }
 
-        void emit(A... params) const {
+        void trigger(Args... params) const {
             if (callback) {
                 (*callback)(params...);
             }
 
             for (const auto &listener : listeners) {
-                listener->emit(params...);
+                listener->trigger(params...);
             }
         }
 
@@ -94,18 +95,11 @@ namespace AxiomModel {
 
         template<class TB, class... TA>
         Event *listen(TB *follow, void (TB::*listener)(TA...)) {
-            auto binding = std::mem_fn(listener);
-            return listen(follow, Event([follow, binding](A... params) {
-                binding(follow, params...);
+            auto wrapper = std::mem_fn(listener);
+            return listen(follow, Event([follow, wrapper](Args... params) {
+                wrapper(follow, params...);
             }));
         }
-
-        template<class TB, class... TA>
-        Event *listenCtx(TB *follow, std::function<void(TB*, TA...)> listener) {
-            return listen(follow, Event([follow, listener](A... params) {
-                listener(follow, params...);
-            }));
-        };
 
         void connect(Event *other) {
             listeners.emplace(other);

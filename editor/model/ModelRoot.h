@@ -11,16 +11,19 @@ namespace AxiomModel {
 
     class ModelObject;
 
-    class Surface;
+    class NodeSurface;
 
     class Node;
+
+    class ControlSurface;
 
     class Control;
 
     class ModelRoot {
     public:
-        using SurfaceCollection = CollectionView<Surface*>;
+        using NodeSurfaceCollection = CollectionView<NodeSurface*>;
         using NodeCollection = CollectionView<Node*>;
+        using ControlSurfaceCollection = CollectionView<ControlSurface*>;
         using ControlCollection = CollectionView<Control*>;
 
         static constexpr uint32_t schemaVersion = 2;
@@ -45,24 +48,29 @@ namespace AxiomModel {
 
         Pool *pool() const { return _pool; }
 
-        SurfaceCollection &surfaces() { return _surfaces; }
+        NodeSurfaceCollection &nodeSurfaces() { return _nodeSurfaces; }
 
-        const SurfaceCollection &surfaces() const { return _surfaces; }
+        const NodeSurfaceCollection &nodeSurfaces() const { return _nodeSurfaces; }
 
         NodeCollection &nodes() { return _nodes; }
 
         const NodeCollection &nodes() const { return _nodes; }
 
+        ControlSurfaceCollection &controlSurfaces() { return _controlSurfaces; }
+
+        const ControlSurfaceCollection &controlSurfaces() const { return _controlSurfaces; }
+
         ControlCollection &controls() { return _controls; }
 
         const ControlCollection &controls() const { return _controls; }
 
-        void deserializeChunk(QDataStream &stream, std::vector<std::unique_ptr<ModelObject>> &objects);
+        void deserializeChunk(QDataStream &stream, const QUuid &parent, std::vector<std::unique_ptr<ModelObject>> &objects);
 
     private:
         Pool *_pool;
-        SurfaceCollection _surfaces;
+        NodeSurfaceCollection _nodeSurfaces;
         NodeCollection  _nodes;
+        ControlSurfaceCollection _controlSurfaces;
         ControlCollection  _controls;
     };
 

@@ -7,6 +7,6 @@ PoolObject::PoolObject(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::P
     _pool->registerObj(this);
 }
 
-PoolObject::~PoolObject() {
+void PoolObject::remove() {
     _pool->removeObj(this);
 }

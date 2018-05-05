@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "Event.h"
+#include "Promise.h"
 
 namespace AxiomModel {
 
@@ -26,12 +27,47 @@ namespace AxiomModel {
             virtual std::unique_ptr<IteratorImpl> clone() const = 0;
         };
 
+    public:
+        class iterator {
+        public:
+            using self_type = iterator;
+            using iterator_category = std::forward_iterator_tag;
+
+            explicit iterator(std::unique_ptr<IteratorImpl> impl) : impl(std::move(impl)) {}
+
+            iterator(const iterator &a) : impl(a.impl->clone()) {}
+
+            iterator &operator=(const iterator &a) {
+                impl = a.impl->clone();
+                return *this;
+            }
+
+            self_type operator++() { self_type i = *this; impl->increment(true); return i; }
+
+            const self_type operator++(int junk) { impl->increment(true); return *this; }
+
+            reference operator*() { return *impl->last(); }
+
+            pointer operator->() { return impl->last(); }
+
+            bool operator==(const self_type &rhs) { return impl->last() == rhs.impl->last(); }
+
+            bool operator!=(const self_type &rhs) { return impl->last() != rhs.impl->last(); }
+
+        private:
+            std::unique_ptr<IteratorImpl> impl;
+        };
+
+        using const_iterator = iterator;
+
+    private:
+
         class AbstractImpl {
         public:
-            virtual std::unique_ptr<IteratorImpl> begin() = 0;
-            virtual std::unique_ptr<IteratorImpl> end() = 0;
-            virtual std::unique_ptr<IteratorImpl> begin() const = 0;
-            virtual std::unique_ptr<IteratorImpl> end() const = 0;
+            virtual iterator begin() = 0;
+            virtual iterator end() = 0;
+            virtual const_iterator begin() const = 0;
+            virtual const_iterator end() const = 0;
             virtual bool empty() const = 0;
             virtual size_t size() const = 0;
             virtual std::unique_ptr<AbstractImpl> clone() const = 0;
@@ -95,7 +131,7 @@ namespace AxiomModel {
 
                         if (_iter == _converter->collection.end()) break;
 
-                        _last = _converter->filter(*_iter);
+                        _last = std::move(_converter->filter(*_iter));
                     } while (!_last);
                 }
 
@@ -104,13 +140,13 @@ namespace AxiomModel {
                 }
 
                 std::unique_ptr<IteratorImpl> clone() const {
-                    return std::make_unique<ConverterIteratorImpl>(_converter, _iter, _last);
+                    return std::make_unique<ConverterConstInteratorImpl>(_converter, _iter, _last);
                 }
 
             private:
                 const ConverterImpl *_converter;
                 collection_const_iter _iter;
-                std::optional<const value_type> _last;
+                std::optional<value_type> _last;
             };
 
         public:
@@ -119,30 +155,30 @@ namespace AxiomModel {
 
             }
 
-            std::unique_ptr<IteratorImpl> begin() {
-                return std::make_unique<ConverterIteratorImpl>(this, collection.begin(), std::optional<value_type>());
+            iterator begin() {
+                return iterator(std::make_unique<ConverterIteratorImpl>(this, collection.begin(), std::optional<value_type>()));
             }
 
-            std::unique_ptr<IteratorImpl> end() {
-                return std::make_unique<ConverterIteratorImpl>(this, collection.end(), std::optional<value_type>());
+            iterator end() {
+                return iterator(std::make_unique<ConverterIteratorImpl>(this, collection.end(), std::optional<value_type>()));
             }
 
-            std::unique_ptr<IteratorImpl> begin() const {
-                return std::make_unique<ConverterConstInteratorImpl>(this, collection.begin(), std::optional<value_type>());
+            const_iterator begin() const {
+                return const_iterator(std::make_unique<ConverterConstInteratorImpl>(this, collection.begin(), std::optional<value_type>()));
             }
 
-            std::unique_ptr<IteratorImpl> end() const {
-                return std::make_unique<ConverterConstInteratorImpl>(this, collection.end(), std::optional<value_type>());
+            const_iterator end() const {
+                return const_iterator(std::make_unique<ConverterConstInteratorImpl>(this, collection.end(), std::optional<value_type>()));
             }
 
             bool empty() const {
                 if (collection.empty()) return true;
-                return begin()->last() == end()->last();
+                return begin() == end();
             }
 
             size_t size() const {
                 size_t acc = 0;
-                for (const auto &itm : *this) {
+                for (auto i = begin(); i != end(); i++) {
                     acc++;
                 }
                 return acc;
@@ -158,38 +194,6 @@ namespace AxiomModel {
         };
 
     public:
-        class iterator {
-        public:
-            using self_type = iterator;
-            using iterator_category = std::forward_iterator_tag;
-
-            explicit iterator(std::unique_ptr<IteratorImpl> impl) : impl(std::move(impl)) {}
-
-            iterator(const iterator &a) : impl(a.impl->clone()) {}
-
-            iterator &operator=(const iterator &a) {
-                impl = a.impl->clone();
-                return *this;
-            }
-
-            self_type operator++() { self_type i = *this; impl->increment(true); return i; }
-
-            const self_type operator++(int junk) { impl->increment(true); return *this; }
-
-            reference operator*() { return *impl->last(); }
-
-            pointer operator->() { return impl->last(); }
-
-            bool operator==(const self_type &rhs) { return impl->last() == rhs.impl->last(); }
-
-            bool operator!=(const self_type &rhs) { return impl->last() != rhs.impl->last(); }
-
-        private:
-            std::unique_ptr<IteratorImpl> impl;
-        };
-
-        using const_iterator = iterator;
-
         Event<const value_type &> itemAdded;
         Event<const value_type &> itemRemoved;
 
@@ -205,13 +209,13 @@ namespace AxiomModel {
             return *this;
         }
 
-        iterator begin() { return iterator(impl->begin()); }
+        iterator begin() { return impl->begin(); }
 
-        iterator end() { return iterator(impl->end()); }
+        iterator end() { return impl->end(); }
 
-        const_iterator begin() const { return const_iterator(impl->begin()); }
+        const_iterator begin() const { return impl->begin(); }
 
-        const_iterator end() const { return const_iterator(impl->end()); }
+        const_iterator end() const { return impl->end(); }
 
         bool empty() const { return impl->empty(); }
 
@@ -220,57 +224,4 @@ namespace AxiomModel {
     private:
         std::unique_ptr<AbstractImpl> impl;
     };
-
-    template<class TO, class TI>
-    CollectionView<TO> derive(const CollectionView<TI> &input, std::function<std::optional<TO>(const TI &)> func) {
-        auto view = CollectionView<TO>(input, func);
-
-        input.itemAdded.listenCtx<CollectionView<TO>, const TI &>(&view, [func](CollectionView<TO> *collection, const TI &item) {
-            auto result = func(item);
-            if (result) collection->itemAdded.emit(*result);
-        });
-        input.itemRemoved.listenCtx<typename CollectionView<TO>, const TI &>(&view, [func](CollectionView<TO> *collection, const TI &item) {
-            auto result = func(item);
-            if (result) collection->itemRemoved.emit(*result);
-        });
-
-        return std::move(view);
-    }
-
-    template<class TO, class TI>
-    CollectionView<TO> filterType(const CollectionView<TI> &input) {
-        return derive(input, [](const TI &base) -> std::optional<TO> {
-            auto convert = dynamic_cast<TO>(base);
-            if (!convert) return std::optional<TO>();
-            else return convert;
-        });
-    };
-
-    template<class TO, class TI>
-    CollectionView<TO> staticCast(const CollectionView<TI> &input) {
-        return derive(input, [](const TI &base) -> std::optional<TO> {
-            return static_cast<TO>(base);
-        });
-    };
-
-    template<class TO, class TI>
-    CollectionView<TO> reinterpetCast(const CollectionView<TI> &input) {
-        return derive(input, [](const TI &base) -> std::optional<TO> {
-            return reinterpret_cast<TO>(base);
-        });
-    };
-
-    template<class TI>
-    void collect(const CollectionView<TI> &input, const std::vector<TI> &result) {
-        for (const auto &itm : input) {
-            result.push_back(itm);
-        }
-    }
-
-    template<class TI>
-    std::vector<TI> collect(const CollectionView<TI> &input) {
-        std::vector<TI> result;
-        collect(input, result);
-        return result;
-    }
 };

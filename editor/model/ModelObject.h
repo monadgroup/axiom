@@ -13,10 +13,9 @@ namespace AxiomModel {
     class ModelObject : public PoolObject {
     public:
         enum class ModelType {
-            SURFACE,
-            CUSTOM_NODE,
-            GROUP_NODE,
-            IO_NODE,
+            NODE_SURFACE,
+            NODE,
+            CONTROL_SURFACE,
             CONTROL,
             LIBRARY_ENTRY,
             HISTORY_ACTION
@@ -27,7 +26,7 @@ namespace AxiomModel {
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
-        static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, ModelRoot *root);
+        static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, const QUuid &parent, ModelRoot *root);
 
         virtual void serialize(QDataStream &stream) const;
 
@@ -35,8 +34,7 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
-    protected:
-        void remove();
+        void remove() override;
 
     private:
         ModelType _modelType;
