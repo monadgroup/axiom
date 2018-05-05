@@ -10,13 +10,15 @@
 #include "objects/Node.h"
 #include "objects/ControlSurface.h"
 #include "objects/Control.h"
+#include "objects/Connection.h"
 
 using namespace AxiomModel;
 
 ModelRoot::ModelRoot(AxiomModel::Pool *pool) : _pool(pool), _nodeSurfaces(filterType<NodeSurface*>(*pool)),
                                                _nodes(filterType<Node*>(*pool)),
                                                _controlSurfaces(filterType<ControlSurface*>(*pool)),
-                                               _controls(filterType<Control*>(*pool)) {
+                                               _controls(filterType<Control*>(*pool)),
+                                               _connections(filterType<Connection*>(*pool)) {
 
 }
 

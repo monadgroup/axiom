@@ -5,6 +5,8 @@
 
 namespace AxiomModel {
 
+    class Node;
+
     class Control;
 
     class ControlSurface : public ModelObject {
@@ -27,6 +29,10 @@ namespace AxiomModel {
             return {(int) ceilf(p.x() / 2.f), (int) ceilf(p.y() / 2.f)};
         }
 
+        static QPointF controlToNode(QPointF p) {
+            return { p.x() / 2., p.y() / 2. };
+        }
+
         static QSize controlToNodeFloor(QSize s) {
             return {(int) floorf(s.width() / 2.f), (int) floorf(s.height() / 2.f)};
         }
@@ -35,7 +41,13 @@ namespace AxiomModel {
             return {(int) ceilf(s.width() / 2.f), (int) ceilf(s.height() / 2.f)};
         }
 
+        static QSizeF controlToNode(QSizeF p) {
+            return { p.width() / 2., p.height() / 2. };
+        }
+
         void serialize(QDataStream &stream) const override;
+
+        Node *node() const { return _node; }
 
         ChildCollection &controls() { return _controls; }
 
@@ -48,6 +60,7 @@ namespace AxiomModel {
         void remove() override;
 
     private:
+        Node *_node;
         ChildCollection _controls;
         GridSurface _grid;
     };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Control.h"
+#include "compiler/runtime/ValueOperator.h"
 
 namespace AxiomModel {
 
@@ -22,8 +23,9 @@ namespace AxiomModel {
 
         Event<DisplayMode> displayModeChanged;
         Event<Channel> channelChanged;
+        Event<const MaximRuntime::NumValue &> valueChanged;
 
-        NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, DisplayMode displayMode, Channel channel, ModelRoot *root);
+        NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, DisplayMode displayMode, Channel channel, MaximRuntime::NumValue value, ModelRoot *root);
 
         static std::unique_ptr<NumControl> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
 
@@ -37,9 +39,14 @@ namespace AxiomModel {
 
         void setChannel(Channel channel);
 
+        const MaximRuntime::NumValue &value() const { return _value; }
+
+        void setValue(const MaximRuntime::NumValue &value);
+
     private:
         DisplayMode _displayMode;
         Channel _channel;
+        MaximRuntime::NumValue _value;
     };
 
 }

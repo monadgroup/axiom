@@ -4,6 +4,8 @@
 #include "objects/NodeSurface.h"
 #include "objects/CustomNode.h"
 #include "objects/ControlSurface.h"
+#include "objects/Control.h"
+#include "objects/Connection.h"
 #include "../util.h"
 
 using namespace AxiomModel;
@@ -24,12 +26,13 @@ std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const
         case ModelType::NODE_SURFACE: return NodeSurface::deserialize(stream, uuid, parentUuid, root);
         case ModelType::NODE: return Node::deserialize(stream, uuid, parentUuid, root);
         case ModelType::CONTROL_SURFACE: return ControlSurface::deserialize(stream, uuid, parentUuid, root);
-        case ModelType::CONTROL:break;
+        case ModelType::CONTROL: return Control::deserialize(stream, uuid, parentUuid, root);
+        case ModelType::CONNECTION: return Connection::deserialize(stream, uuid, parentUuid, root);
         case ModelType::LIBRARY_ENTRY:break;
         case ModelType::HISTORY_ACTION:break;
     }
 
-    return nullptr;
+    unreachable;
 }
 
 void ModelObject::serialize(QDataStream &stream) const {

@@ -1,4 +1,5 @@
 set(SOURCE_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/Connection.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Control.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ControlSurface.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Node.cpp"

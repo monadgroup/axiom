@@ -19,12 +19,15 @@ namespace AxiomModel {
 
     class Control;
 
+    class Connection;
+
     class ModelRoot {
     public:
         using NodeSurfaceCollection = CollectionView<NodeSurface*>;
         using NodeCollection = CollectionView<Node*>;
         using ControlSurfaceCollection = CollectionView<ControlSurface*>;
         using ControlCollection = CollectionView<Control*>;
+        using ConnectionCollection = CollectionView<Connection*>;
 
         static constexpr uint32_t schemaVersion = 2;
         static constexpr uint32_t schemaMagic = 0xDEFACED;
@@ -64,6 +67,10 @@ namespace AxiomModel {
 
         const ControlCollection &controls() const { return _controls; }
 
+        ConnectionCollection &connections() { return _connections; }
+
+        const ConnectionCollection &connections() const { return _connections; }
+
         void deserializeChunk(QDataStream &stream, const QUuid &parent, std::vector<std::unique_ptr<ModelObject>> &objects);
 
     private:
@@ -72,6 +79,7 @@ namespace AxiomModel {
         NodeCollection  _nodes;
         ControlSurfaceCollection _controlSurfaces;
         ControlCollection  _controls;
+        ConnectionCollection  _connections;
     };
 
 }

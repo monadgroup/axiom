@@ -17,6 +17,7 @@ namespace AxiomModel {
             NODE,
             CONTROL_SURFACE,
             CONTROL,
+            CONNECTION,
             LIBRARY_ENTRY,
             HISTORY_ACTION
         };
