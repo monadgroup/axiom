@@ -62,8 +62,11 @@ namespace AxiomModel {
 
     private:
 
-        class AbstractImpl {
+        class AbstractImpl : public Hookable {
         public:
+            Event<const value_type &> itemAdded;
+            Event<const value_type &> itemRemoved;
+
             virtual iterator begin() = 0;
             virtual iterator end() = 0;
             virtual const_iterator begin() const = 0;
@@ -151,8 +154,9 @@ namespace AxiomModel {
 
         public:
 
-            ConverterImpl(collection_type collection, filter_func filter) : collection(collection), filter(filter) {
-
+            ConverterImpl(collection_type collection, filter_func filter)
+                : collection(collection), filter(filter) {
+                attachEvent(collection);
             }
 
             iterator begin() {
@@ -191,6 +195,23 @@ namespace AxiomModel {
         private:
             TC collection;
             filter_func filter;
+
+            void attachEvent(CollectionView<collection_value_type> &collection) {
+                collection.itemAdded.listen(this, &ConverterImpl::filterItemAdded);
+                collection.itemRemoved.listen(this, &ConverterImpl::filterItemRemoved);
+            }
+
+            template<class Dummy> void attachEvent(Dummy &collection) { }
+
+            void filterItemAdded(const collection_value_type &itm) {
+                auto result = filter(itm);
+                if (result) AbstractImpl::itemAdded.trigger(*result);
+            }
+
+            void filterItemRemoved(const collection_value_type &itm) {
+                auto result = filter(itm);
+                if (result) AbstractImpl::itemRemoved.trigger(*result);
+            }
         };
 
     public:
@@ -200,6 +221,8 @@ namespace AxiomModel {
         template<class TC>
         CollectionView(TC collection, std::function<std::optional<TI>(const typename std::remove_reference<TC>::type::value_type &)> func) {
             impl = std::make_unique<ConverterImpl<TC>>(std::move(collection), std::move(func));
+            impl->itemAdded.connect(&itemAdded);
+            impl->itemRemoved.connect(&itemRemoved);
         }
 
         template<class TC>
@@ -210,7 +233,14 @@ namespace AxiomModel {
         CollectionView(const CollectionView &a) : impl(a.impl->clone()) {}
 
         CollectionView &operator=(const CollectionView &a) {
+            if (impl) {
+                impl->itemAdded.disconnect(&itemAdded);
+                impl->itemRemoved.disconnect(&itemRemoved);
+            }
+
             impl = a.impl->clone();
+            impl->itemAdded.connect(&itemAdded);
+            impl->itemRemoved.connect(&itemRemoved);
             return *this;
         }
 
