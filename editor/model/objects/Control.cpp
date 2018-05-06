@@ -9,17 +9,17 @@
 
 using namespace AxiomModel;
 
-Control::Control(ControlType controlType, ValueType wireType, QUuid uuid, const QUuid &parentUuid, QPoint pos,
+Control::Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid, QPoint pos,
                  QSize size, bool selected, QString name, AxiomModel::ModelRoot *root)
     : GridItem(&find(root->controlSurfaces(), parentUuid)->grid(), pos, size, selected),
       ModelObject(ModelType::CONTROL, uuid, parentUuid, root), _surface(find(root->controlSurfaces(), parentUuid)),
       _controlType(controlType), _wireType(wireType), _name(std::move(name)),
       _connections(derive<Connection*, Connection*>(root->connections(), [uuid](Connection *const &connection) -> std::optional<Connection*> {
-          if (connection->controlAUuid() == uuid || connection->controlBUuid() == uuid) return connection;
+          if (connection->controlA()->uuid() == uuid || connection->controlB()->uuid() == uuid) return connection;
           else return std::optional<Connection*>();
       })), _connectedControls(derive<Control*, Connection*>(_connections, [uuid](Connection *const &connection) -> std::optional<Control*> {
-          if (connection->controlAUuid() == uuid) return connection->controlB().value();
-          if (connection->controlBUuid() == uuid) return connection->controlA().value();
+          if (connection->controlA()->uuid() == uuid) return connection->controlB();
+          if (connection->controlB()->uuid() == uuid) return connection->controlA();
           return std::optional<Control*>();
       })) {
     posChanged.listen([this](QPoint) { updateSinkPos(); });

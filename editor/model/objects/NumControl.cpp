@@ -6,7 +6,7 @@ using namespace AxiomModel;
 
 NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                        DisplayMode displayMode, Channel channel, MaximRuntime::NumValue value, ModelRoot *root)
-    : Control(ControlType::NUM_SCALAR, ValueType::NUM, uuid, parentUuid, pos, size, selected, std::move(name), root),
+    : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, uuid, parentUuid, pos, size, selected, std::move(name), root),
       _displayMode(displayMode), _channel(channel), _value(value) {
 }
 

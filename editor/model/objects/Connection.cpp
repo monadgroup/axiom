@@ -15,8 +15,8 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
                                                          _controlA->worldPos().toPoint(), _controlB->worldPos().toPoint()) {
     _controlA->worldPosChanged.listen(&_wire, [this](QPointF newPos) { _wire.setStartPos(newPos.toPoint()); });
     _controlB->worldPosChanged.listen(&_wire, [this](QPointF newPos) { _wire.setEndPos(newPos.toPoint()); });
-    _controlA->removed.listen<ModelObject>(this, &Connection::remove);
-    _controlB->removed.listen<ModelObject>(this, &Connection::remove);
+    _controlA->removed.listen(this, &Connection::remove);
+    _controlB->removed.listen(this, &Connection::remove);
 }
 
 std::unique_ptr<Connection> Connection::create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA,
