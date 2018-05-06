@@ -27,5 +27,6 @@ add_definitions(${LLVM_DEFINITIONS})
 
 add_library(axiom_model ${SOURCE_FILES})
 
+add_subdirectory(actions)
 add_subdirectory(grid)
 add_subdirectory(objects)

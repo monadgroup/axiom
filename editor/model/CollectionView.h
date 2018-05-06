@@ -202,6 +202,11 @@ namespace AxiomModel {
             impl = std::make_unique<ConverterImpl<TC>>(std::move(collection), std::move(func));
         }
 
+        template<class TC>
+        static CollectionView create(TC collection, std::function<std::optional<TI>(const typename std::remove_reference<TC>::type::value_type &)> func) {
+            return CollectionView(collection, func);
+        }
+
         CollectionView(const CollectionView &a) : impl(a.impl->clone()) {}
 
         CollectionView &operator=(const CollectionView &a) {

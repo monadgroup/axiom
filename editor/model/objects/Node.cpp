@@ -40,7 +40,9 @@ std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, 
     unreachable;
 }
 
-void Node::serialize(QDataStream &stream) const {
+void Node::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
+    ModelObject::serialize(stream, parent, withContext);
+
     stream << (uint8_t) _nodeType;
     GridItem::serialize(stream);
     stream << _name;

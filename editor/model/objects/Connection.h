@@ -16,7 +16,7 @@ namespace AxiomModel {
 
         static std::unique_ptr<Connection> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
-        void serialize(QDataStream &stream) const override;
+        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
         NodeSurface *surface() const { return _surface; }
 

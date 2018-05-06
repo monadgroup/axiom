@@ -20,8 +20,8 @@ std::unique_ptr<NumControl> NumControl::deserialize(QDataStream &stream, const Q
     return std::make_unique<NumControl>(uuid, parentUuid, pos, size, selected, name, (DisplayMode) displayModeInt, (Channel) channelInt, value, root);
 }
 
-void NumControl::serialize(QDataStream &stream) const {
-    Control::serialize(stream);
+void NumControl::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
+    Control::serialize(stream, parent, withContext);
     stream << (uint8_t) _displayMode;
     stream << (uint8_t) _channel;
     stream << _value;

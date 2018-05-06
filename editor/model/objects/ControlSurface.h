@@ -15,6 +15,8 @@ namespace AxiomModel {
 
         ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
+        static std::unique_ptr<ControlSurface> create(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
+
         static std::unique_ptr<ControlSurface> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
         static QPoint nodeToControl(QPoint p) { return p * 2; }
@@ -45,7 +47,7 @@ namespace AxiomModel {
             return { p.width() / 2., p.height() / 2. };
         }
 
-        void serialize(QDataStream &stream) const override;
+        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
         Node *node() const { return _node; }
 

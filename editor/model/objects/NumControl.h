@@ -29,7 +29,7 @@ namespace AxiomModel {
 
         static std::unique_ptr<NumControl> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
 
-        void serialize(QDataStream &stream) const override;
+        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
         DisplayMode displayMode() const { return _displayMode; }
 

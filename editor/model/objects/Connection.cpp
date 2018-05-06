@@ -31,7 +31,8 @@ std::unique_ptr<Connection> Connection::deserialize(QDataStream &stream, const Q
     return std::make_unique<Connection>(uuid, parentUuid, controlA, controlB, root);
 }
 
-void Connection::serialize(QDataStream &stream) const {
+void Connection::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
+    ModelObject::serialize(stream, parent, withContext);
     stream << _controlAUuid;
     stream << _controlBUuid;
 }

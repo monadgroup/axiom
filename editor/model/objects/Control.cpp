@@ -45,7 +45,9 @@ std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &
     unreachable;
 }
 
-void Control::serialize(QDataStream &stream) const {
+void Control::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
+    ModelObject::serialize(stream, parent, withContext);
+
     stream << (uint8_t) _controlType;
     GridItem::serialize(stream);
     stream << _name;

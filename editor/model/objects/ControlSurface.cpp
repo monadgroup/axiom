@@ -13,12 +13,19 @@ ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, Axiom
 
 }
 
-std::unique_ptr<ControlSurface> ControlSurface::deserialize(QDataStream &stream, const QUuid &uuid,
-                                                            const QUuid &parentUuid, AxiomModel::ModelRoot *root) {
+std::unique_ptr<ControlSurface> ControlSurface::create(const QUuid &uuid, const QUuid &parentUuid,
+                                                       AxiomModel::ModelRoot *root) {
     return std::make_unique<ControlSurface>(uuid, parentUuid, root);
 }
 
-void ControlSurface::serialize(QDataStream &stream) const {}
+std::unique_ptr<ControlSurface> ControlSurface::deserialize(QDataStream &stream, const QUuid &uuid,
+                                                            const QUuid &parentUuid, AxiomModel::ModelRoot *root) {
+    return create(uuid, parentUuid, root);
+}
+
+void ControlSurface::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
+    ModelObject::serialize(stream, parent, withContext);
+}
 
 void ControlSurface::remove() {
     for (const auto &control : _controls) {

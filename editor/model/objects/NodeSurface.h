@@ -20,7 +20,7 @@ namespace AxiomModel {
 
         static std::unique_ptr<NodeSurface> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
-        void serialize(QDataStream &stream) const override;
+        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
         ChildCollection &nodes() { return _nodes; }
 

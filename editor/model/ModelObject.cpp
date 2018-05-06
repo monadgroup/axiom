@@ -15,14 +15,16 @@ ModelObject::ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &pa
 }
 
 std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &parent, ModelRoot *root) {
-    uint8_t typeInt; stream >> typeInt;
     QUuid uuid; stream >> uuid;
     QUuid parentUuid; stream >> parentUuid;
-
     if (parentUuid.isNull()) parentUuid = parent;
+    return deserialize(stream, uuid, parentUuid, root);
+}
 
-    auto type = (ModelType) typeInt;
-    switch (type) {
+std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                      AxiomModel::ModelRoot *root) {
+    uint8_t typeInt; stream >> typeInt;
+    switch ((ModelType) typeInt) {
         case ModelType::NODE_SURFACE: return NodeSurface::deserialize(stream, uuid, parentUuid, root);
         case ModelType::NODE: return Node::deserialize(stream, uuid, parentUuid, root);
         case ModelType::CONTROL_SURFACE: return ControlSurface::deserialize(stream, uuid, parentUuid, root);
@@ -35,10 +37,13 @@ std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const
     unreachable;
 }
 
-void ModelObject::serialize(QDataStream &stream) const {
+void ModelObject::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
+    if (withContext) {
+        stream << uuid();
+        stream << (parent == parentUuid() ? QUuid() : parent);
+    }
+
     stream << (uint8_t) modelType();
-    stream << uuid();
-    stream << parentUuid();
 }
 
 void ModelObject::remove() {
