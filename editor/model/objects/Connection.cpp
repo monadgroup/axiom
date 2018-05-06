@@ -15,11 +15,11 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
       _wire(&_surface->grid(), QPoint(0, 0), QPoint(0, 0))  {
     _controlA.then([this](Control *control) {
         control->worldPosChanged.listen(&_wire, [this](QPointF newPos) { _wire.setStartPos(newPos.toPoint()); });
-        control->removed.listen(this, &Connection::remove);
+        control->removed.listen(this, &Connection::remove); // FIXME: fails to compile, "no matching overload found", can't debug this atm.
     });
     _controlB.then([this](Control *control) {
         control->worldPosChanged.listen(&_wire, [this](QPointF newPos) { _wire.setEndPos(newPos.toPoint()); });
-        control->removed.listen(this, &Connection::remove);
+        control->removed.listen(this, &Connection::remove); // FIXME: see above
     });
 }
 

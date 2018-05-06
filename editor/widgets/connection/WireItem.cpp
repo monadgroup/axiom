@@ -3,6 +3,7 @@
 #include <QtWidgets/QGraphicsScene>
 #include <editor/widgets/CommonColors.h>
 
+// FIXME: add this file to git :P
 #include "editor/model/connection/ConnectionWire.h"
 #include "../schematic/SchematicCanvas.h"
 

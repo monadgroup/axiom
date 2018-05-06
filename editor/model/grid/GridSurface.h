@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <memory>
 #include <vector>
 #include <unordered_map>

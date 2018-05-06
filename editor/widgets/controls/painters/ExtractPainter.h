@@ -3,6 +3,7 @@
 #include <QtGui/QPainter>
 #include <QtWidgets/QStyleOptionGraphicsItem>
 
+// FIXME: add this file to git :P
 #include "editor/model/connection/ExtractConnectionSink.h"
 
 namespace AxiomGui {
