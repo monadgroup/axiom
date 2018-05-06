@@ -11,7 +11,7 @@
 using namespace AxiomModel;
 
 ModelObject::ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root)
-    : PoolObject(uuid, parentUuid, root->pool()), _modelType(modelType), _root(root) {
+    : PoolObject(uuid, parentUuid, &root->pool()), _modelType(modelType), _root(root) {
 }
 
 std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &parent, ModelRoot *root) {
@@ -30,8 +30,6 @@ std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const
         case ModelType::CONTROL_SURFACE: return ControlSurface::deserialize(stream, uuid, parentUuid, root);
         case ModelType::CONTROL: return Control::deserialize(stream, uuid, parentUuid, root);
         case ModelType::CONNECTION: return Connection::deserialize(stream, uuid, parentUuid, root);
-        case ModelType::LIBRARY_ENTRY:break;
-        case ModelType::HISTORY_ACTION:break;
     }
 
     unreachable;

@@ -3,6 +3,7 @@
 #include <QDataStream>
 #include <memory>
 
+#include "Pool.h"
 #include "CollectionView.h"
 
 namespace AxiomModel {
@@ -33,7 +34,7 @@ namespace AxiomModel {
         static constexpr uint32_t schemaMagic = 0xDEFACED;
         static constexpr uint32_t minSchemaVersion = 2;
 
-        explicit ModelRoot(Pool *pool);
+        ModelRoot();
 
         template<class T>
         static void serializeChunk(QDataStream &stream, const T &objects) {
@@ -49,7 +50,9 @@ namespace AxiomModel {
             }
         }
 
-        Pool *pool() const { return _pool; }
+        Pool &pool() { return _pool; }
+
+        const Pool &pool() const { return _pool; }
 
         NodeSurfaceCollection &nodeSurfaces() { return _nodeSurfaces; }
 
@@ -74,7 +77,7 @@ namespace AxiomModel {
         void deserializeChunk(QDataStream &stream, const QUuid &parent, std::vector<std::unique_ptr<ModelObject>> &objects);
 
     private:
-        Pool *_pool;
+        Pool _pool;
         NodeSurfaceCollection _nodeSurfaces;
         NodeCollection  _nodes;
         ControlSurfaceCollection _controlSurfaces;

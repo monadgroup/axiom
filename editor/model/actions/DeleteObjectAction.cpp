@@ -8,7 +8,7 @@
 using namespace AxiomModel;
 
 DeleteObjectAction::DeleteObjectAction(const QUuid &uuid, const QUuid &parentUuid, QByteArray buffer, AxiomModel::ModelRoot *root)
-    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), parentUuid(parentUuid), buffer(std::move(buffer)) {
+    : Action(ActionType::DELETE_OBJECT, true, root), uuid(uuid), parentUuid(parentUuid), buffer(std::move(buffer)) {
 }
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, const QUuid &parentUuid, QByteArray buffer,
@@ -20,7 +20,7 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
     QByteArray buffer;
     QDataStream stream(&buffer, QIODevice::WriteOnly);
 
-    auto obj = find<ModelObject*>(*root->pool(), uuid);
+    auto obj = find<ModelObject*>(root->pool(), uuid);
     obj->serialize(stream, obj->parentUuid(), false);
 
     return create(uuid, obj->parentUuid(), std::move(buffer), root);
@@ -41,10 +41,10 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
 }
 
 void DeleteObjectAction::forward() const {
-    find(*root()->pool(), uuid)->remove();
+    find(root()->pool(), uuid)->remove();
 }
 
 void DeleteObjectAction::backward() const {
     QDataStream stream(const_cast<QByteArray*>(&buffer), QIODevice::ReadOnly);
-    root()->pool()->registerObj(ModelObject::deserialize(stream, uuid, parentUuid, root()));
+    root()->pool().registerObj(ModelObject::deserialize(stream, uuid, parentUuid, root()));
 }

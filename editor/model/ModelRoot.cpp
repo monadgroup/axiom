@@ -14,11 +14,11 @@
 
 using namespace AxiomModel;
 
-ModelRoot::ModelRoot(AxiomModel::Pool *pool) : _pool(pool), _nodeSurfaces(filterType<NodeSurface*>(*pool)),
-                                               _nodes(filterType<Node*>(*pool)),
-                                               _controlSurfaces(filterType<ControlSurface*>(*pool)),
-                                               _controls(filterType<Control*>(*pool)),
-                                               _connections(filterType<Connection*>(*pool)) {
+ModelRoot::ModelRoot() : _nodeSurfaces(filterType<NodeSurface*>(_pool)),
+                         _nodes(filterType<Node*>(_pool)),
+                         _controlSurfaces(filterType<ControlSurface*>(_pool)),
+                         _controls(filterType<Control*>(_pool)),
+                         _connections(filterType<Connection*>(_pool)) {
 
 }
 

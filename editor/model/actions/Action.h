@@ -10,14 +10,17 @@ namespace AxiomModel {
     class Action {
     public:
         enum class ActionType {
+            NONE,
             DELETE_OBJECT,
             CREATE_CUSTOM_NODE,
             CREATE_GROUP_NODE
         };
 
-        Action(ActionType actionType, ModelRoot *root);
+        Action(ActionType actionType, bool exec, ModelRoot *root);
 
-        std::unique_ptr<Action> deserialize(QDataStream &stream, ModelRoot *root);
+        static QString typeToString(ActionType type);
+
+        static std::unique_ptr<Action> deserialize(QDataStream &stream, ModelRoot *root);
 
         virtual void serialize(QDataStream &stream) const;
 
@@ -25,12 +28,15 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
+        bool exec() const { return _exec; }
+
         virtual void forward() const = 0;
 
         virtual void backward() const = 0;
 
     private:
         ActionType _actionType;
+        bool _exec;
         ModelRoot *_root;
     };
 

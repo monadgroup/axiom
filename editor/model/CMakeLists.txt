@@ -16,6 +16,7 @@ get_target_property(QT5_INCLUDE_DIRS Qt5::Core INTERFACE_INCLUDE_DIRECTORIES)
 
 set(SOURCE_FILES
         ConnectionWire.cpp
+        HistoryList.cpp
         Hookable.cpp
         ModelObject.cpp
         ModelRoot.cpp

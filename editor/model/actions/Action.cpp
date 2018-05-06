@@ -7,9 +7,19 @@
 
 using namespace AxiomModel;
 
-Action::Action(AxiomModel::Action::ActionType actionType, AxiomModel::ModelRoot *root)
-    : _actionType(actionType), _root(root) {
+Action::Action(AxiomModel::Action::ActionType actionType, bool exec, AxiomModel::ModelRoot *root)
+    : _actionType(actionType), _exec(exec), _root(root) {
+}
 
+QString Action::typeToString(AxiomModel::Action::ActionType type) {
+    switch (type) {
+        case ActionType::NONE: return "";
+        case ActionType::DELETE_OBJECT: return "Delete Object";
+        case ActionType::CREATE_CUSTOM_NODE: return "Create Custom Node";
+        case ActionType::CREATE_GROUP_NODE: return "Create Group Node";
+    }
+
+    unreachable;
 }
 
 std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
