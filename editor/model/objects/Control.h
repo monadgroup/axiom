@@ -3,6 +3,7 @@
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
 #include "../CollectionView.h"
+#include "../ConnectionWire.h"
 
 namespace AxiomModel {
 

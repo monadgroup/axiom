@@ -41,7 +41,7 @@ void CreateConnectionAction::serialize(QDataStream &stream) const {
 }
 
 void CreateConnectionAction::forward() const {
-    root()->pool().registerObj(Connection::create(uuid, parentUuid, controlA, controlB, root()))
+    root()->pool().registerObj(Connection::create(uuid, parentUuid, controlA, controlB, root()));
 }
 
 void CreateConnectionAction::backward() const {

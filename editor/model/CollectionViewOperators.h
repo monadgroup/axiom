@@ -1,21 +1,12 @@
 #pragma once
 
+#include "CollectionView.h"
+
 namespace AxiomModel {
 
     template<class TO, class TI>
     CollectionView<TO> derive(const CollectionView<TI> &input, std::function<std::optional<TO>(const TI &)> func) {
-        auto view = CollectionView<TO>(input, func);
-
-        /*input.itemAdded.template listenCtx<CollectionView<TO>>(&view, [func](CollectionView<TO> *collection, const TI &item) {
-            auto result = func(item);
-            if (result) collection->itemAdded.trigger(*result);
-        });
-        input.itemRemoved.template listenCtx<CollectionView<TO>>(&view, [func](CollectionView<TO> *collection, const TI &item) {
-            auto result = func(item);
-            if (result) collection->itemRemoved.trigger(*result);
-        });*/
-
-        return std::move(view);
+        return CollectionView<TO>(input, func);
     }
 
     template<class TO, class TI>

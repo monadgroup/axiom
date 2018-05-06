@@ -1,14 +1,14 @@
 #pragma once
 
 namespace AxiomModel {
-    class NodeControl;
+    class Control;
 }
 
 namespace AxiomGui {
 
     class IConnectable {
     public:
-        virtual AxiomModel::NodeControl *sink() = 0;
+        virtual AxiomModel::Control *sink() = 0;
     };
 
 }
