@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "CollectionView.h"
+#include "PoolObject.h"
 
 namespace AxiomModel {
 

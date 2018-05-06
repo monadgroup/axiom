@@ -2,8 +2,25 @@
 
 using namespace AxiomModel;
 
-HistoryList::HistoryList(AxiomModel::ModelRoot *root) : _root(root) {
+HistoryList::HistoryList() = default;
 
+HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
+    uint32_t stackPos; stream >> stackPos;
+    uint32_t stackSize; stream >> stackSize;
+
+    _stackPos = stackPos;
+    _stack.reserve(stackSize);
+    for (uint32_t i = 0; i < stackSize; i++) {
+        _stack.push_back(Action::deserialize(stream, root));
+    }
+}
+
+void HistoryList::serialize(QDataStream &stream) {
+    stream << (uint32_t) _stackPos;
+    stream << (uint32_t) _stack.size();
+    for (const auto &action : _stack) {
+        action->serialize(stream);
+    }
 }
 
 void HistoryList::append(std::unique_ptr<AxiomModel::Action> action) {

@@ -21,7 +21,8 @@ set(SOURCE_FILES
         ModelObject.cpp
         ModelRoot.cpp
         Pool.cpp
-        PoolObject.cpp)
+        PoolObject.cpp
+        Project.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${QT5_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

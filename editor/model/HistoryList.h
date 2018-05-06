@@ -12,7 +12,7 @@ namespace AxiomModel {
 
     class Action;
 
-    class HistoryList {
+    class HistoryList : public Hookable {
     public:
         Event<bool> canUndoChanged;
         Event<bool> canRedoChanged;
@@ -21,9 +21,11 @@ namespace AxiomModel {
 
         size_t maxActions = 256;
 
-        explicit HistoryList(ModelRoot *root);
+        HistoryList();
 
-        ModelRoot *root() const { return _root; }
+        explicit HistoryList(QDataStream &stream, ModelRoot *root);
+
+        void serialize(QDataStream &stream);
 
         size_t stackPos() const { return _stackPos; }
 
@@ -38,7 +40,6 @@ namespace AxiomModel {
         void redo();
 
     private:
-        ModelRoot *_root;
         size_t _stackPos = 0;
         std::vector<std::unique_ptr<Action>> _stack;
     };

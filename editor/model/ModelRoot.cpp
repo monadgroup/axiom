@@ -22,19 +22,21 @@ ModelRoot::ModelRoot() : _nodeSurfaces(filterType<NodeSurface*>(_pool)),
 
 }
 
-void ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent, std::vector<std::unique_ptr<ModelObject>> &objects) {
-    uint32_t magic; stream >> magic;
-    assert(magic == schemaMagic);
-    uint32_t version; stream >> version;
-    assert(version >= minSchemaVersion && version <= schemaVersion);
+ModelRoot::ModelRoot(QDataStream &stream) : ModelRoot() {
+    deserializeChunk(stream, QUuid());
+    _history = HistoryList(stream, this);
+}
 
+void ModelRoot::serialize(QDataStream &stream) {
+    serializeChunk(stream, QUuid(), filterType<ModelObject*>(_pool));
+    _history.serialize(stream);
+}
+
+void ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent) {
     uint32_t objectCount; stream >> objectCount;
     for (uint32_t i = 0; i < objectCount; i++) {
         QByteArray objectBuffer; stream >> objectBuffer;
         QDataStream objectStream(&objectBuffer, QIODevice::ReadOnly);
-
-        auto newObj = ModelObject::deserialize(stream, parent, this);
-        if (!newObj) continue;
-        objects.push_back(std::move(newObj));
+        _pool.registerObj(ModelObject::deserialize(objectStream, parent, this));
     }
 }
