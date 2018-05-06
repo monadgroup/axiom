@@ -28,7 +28,7 @@ namespace AxiomGui {
     public:
         AxiomModel::NodeNumControl *control;
 
-        NumControl(AxiomModel::NodeNumControl *control, SchematicCanvas *canvas);
+        NumControl(AxiomModel::NodeNumControl *control, NodeSurfaceCanvas *canvas);
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 

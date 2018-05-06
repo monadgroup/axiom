@@ -8,9 +8,12 @@ namespace AxiomModel {
 
     class Node;
 
+    class Connection;
+
     class NodeSurface : public ModelObject {
     public:
         using ChildCollection = CollectionView<Node*>;
+        using ConnectionCollection = CollectionView<Connection*>;
 
         Event<const QString &> nameChanged;
         Event<const QPointF &> panChanged;
@@ -25,6 +28,10 @@ namespace AxiomModel {
         ChildCollection &nodes() { return _nodes; }
 
         const ChildCollection &nodes() const { return _nodes; }
+
+        ConnectionCollection &connections() { return _connections; }
+
+        const ConnectionCollection &connections() const { return _connections; }
 
         GridSurface &grid() { return _grid; }
 
@@ -44,6 +51,7 @@ namespace AxiomModel {
 
     private:
         ChildCollection _nodes;
+        ConnectionCollection _connections;
         GridSurface _grid;
         QPointF _pan;
         float _zoom;

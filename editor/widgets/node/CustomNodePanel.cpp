@@ -7,7 +7,7 @@
 #include "editor/model/schematic/Schematic.h"
 #include "editor/model/Project.h"
 #include "editor/widgets/CommonColors.h"
-#include "../schematic/SchematicCanvas.h"
+#include "editor/widgets/schematic/NodeSurfaceCanvas.h"
 #include "../ItemResizer.h"
 
 using namespace AxiomGui;
@@ -61,7 +61,7 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
 }
 
 QRectF CustomNodePanel::boundingRect() const {
-    QRectF rect = {QPointF(0, 0), SchematicCanvas::nodeRealSize(node->size()) + QSizeF(1, node->panelHeight())};
+    QRectF rect = {QPointF(0, 0), NodeSurfaceCanvas::nodeRealSize(node->size()) + QSizeF(1, node->panelHeight())};
     return rect.marginsAdded(QMarginsF(5, 5, 5, 5));
 }
 
@@ -79,7 +79,7 @@ void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 void CustomNodePanel::updateSize() {
     auto br = boundingRect();
-    auto nodeSize = SchematicCanvas::nodeRealSize(node->size());
+    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
 
     textProxy->setGeometry(QRectF(
         QPointF(0, nodeSize.height() + 5),
@@ -133,7 +133,7 @@ void CustomNodePanel::triggerGeometryChange() {
 }
 
 void CustomNodePanel::resizerChanged(QPointF topLeft, QPointF bottomRight) {
-    auto nodeSize = SchematicCanvas::nodeRealSize(node->size());
+    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
     node->setPanelHeight((float) bottomRight.y() - nodeSize.height() - 5);
 }
 

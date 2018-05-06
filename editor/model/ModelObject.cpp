@@ -46,6 +46,5 @@ void ModelObject::serialize(QDataStream &stream, const QUuid &parent, bool withC
 
 void ModelObject::remove() {
     removed.trigger();
-    cleanup.trigger();
     PoolObject::remove();
 }

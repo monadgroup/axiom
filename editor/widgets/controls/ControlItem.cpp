@@ -9,12 +9,12 @@
 #include "editor/model/Project.h"
 #include "editor/util.h"
 #include "../ItemResizer.h"
-#include "../schematic/SchematicCanvas.h"
+#include "editor/widgets/schematic/NodeSurfaceCanvas.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : control(control), canvas(canvas) {
+ControlItem::ControlItem(NodeControl *control, NodeSurfaceCanvas *canvas) : control(control), canvas(canvas) {
     connect(control, &NodeControl::showNameChanged,
             this, &ControlItem::triggerUpdate);
     connect(control, &NodeControl::posChanged,
@@ -34,7 +34,7 @@ ControlItem::ControlItem(NodeControl *control, SchematicCanvas *canvas) : contro
         ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
     };
     for (auto i = 0; i < 8; i++) {
-        auto resizer = new ItemResizer(directions[i], SchematicCanvas::controlGridSize);
+        auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::controlGridSize);
         resizer->enablePainting();
         resizer->setVisible(false);
 
@@ -137,7 +137,7 @@ AxiomModel::NodeControl *ControlItem::sink() {
 QRectF ControlItem::drawBoundingRect() const {
     return {
         QPoint(0, 0),
-        SchematicCanvas::controlRealSize(control->size())
+        NodeSurfaceCanvas::controlRealSize(control->size())
     };
 }
 
@@ -169,8 +169,8 @@ void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
         auto mouseDelta = event->screenPos() - mouseStartPoint;
         emit control->draggedTo(QPoint(
-            qRound((float) mouseDelta.x() / SchematicCanvas::controlGridSize.width()),
-            qRound((float) mouseDelta.y() / SchematicCanvas::controlGridSize.height())
+            qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
+            qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())
         ));
     } else {
         event->ignore();
@@ -201,13 +201,13 @@ void ControlItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void ControlItem::setPos(QPoint newPos) {
-    auto realPos = SchematicCanvas::controlRealPos(newPos);
+    auto realPos = NodeSurfaceCanvas::controlRealPos(newPos);
     QGraphicsItem::setPos(realPos.x(), realPos.y());
     emit resizerPosChanged(realPos);
 }
 
 void ControlItem::setSize(QSize newSize) {
-    emit resizerSizeChanged(SchematicCanvas::controlRealSize(newSize));
+    emit resizerSizeChanged(NodeSurfaceCanvas::controlRealSize(newSize));
 }
 
 void ControlItem::updateSelected(bool selected) {
@@ -224,11 +224,11 @@ void ControlItem::remove() {
 
 void ControlItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     control->setCorners(QPoint(
-        qRound(topLeft.x() / SchematicCanvas::controlGridSize.width()),
-        qRound(topLeft.y() / SchematicCanvas::controlGridSize.height())
+        qRound(topLeft.x() / NodeSurfaceCanvas::controlGridSize.width()),
+        qRound(topLeft.y() / NodeSurfaceCanvas::controlGridSize.height())
     ), QPoint(
-        qRound(bottomRight.x() / SchematicCanvas::controlGridSize.width()),
-        qRound(bottomRight.y() / SchematicCanvas::controlGridSize.height())
+        qRound(bottomRight.x() / NodeSurfaceCanvas::controlGridSize.width()),
+        qRound(bottomRight.y() / NodeSurfaceCanvas::controlGridSize.height())
     ));
 }
 

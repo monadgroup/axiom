@@ -10,17 +10,17 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class SchematicCanvas;
+    class NodeSurfaceCanvas;
 
     class NodeItem : public QGraphicsObject {
     Q_OBJECT
 
     public:
-        SchematicCanvas *canvas;
+        NodeSurfaceCanvas *canvas;
 
         AxiomModel::Node *node;
 
-        NodeItem(AxiomModel::Node *node, SchematicCanvas *canvas);
+        NodeItem(AxiomModel::Node *node, NodeSurfaceCanvas *canvas);
 
         QRectF boundingRect() const override;
 

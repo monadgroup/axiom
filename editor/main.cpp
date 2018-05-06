@@ -11,9 +11,7 @@
 
 int main(int argc, char *argv[]) {
     MaximRuntime::Runtime runtime;
-    AxiomModel::Project project(&runtime);
-    AxiomGui::MainWindow window(&project);
-
+    AxiomGui::MainWindow window(AxiomModel::Project {});
     window.show();
     return AxiomApplication::main.exec();
 }

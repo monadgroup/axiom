@@ -4,8 +4,8 @@
 
 using namespace AxiomModel;
 
-ConnectionWire::ConnectionWire(const AxiomModel::GridSurface *grid, const QPoint &startPos, const QPoint &endPos)
-    : _grid(grid), _startPos(startPos), _endPos(endPos) {
+ConnectionWire::ConnectionWire(const AxiomModel::GridSurface *grid, WireType wireType, const QPoint &startPos, const QPoint &endPos)
+    : _grid(grid), _wireType(wireType), _startPos(startPos), _endPos(endPos) {
     updateRoute();
 }
 
@@ -22,6 +22,51 @@ void ConnectionWire::setEndPos(const QPoint &endPos) {
         _endPos = endPos;
         endPosChanged.trigger(endPos);
         updateRoute();
+    }
+}
+
+void ConnectionWire::setStartActive(bool active) {
+    if (active != _startActive) {
+        _startActive = active;
+        updateActive();
+    }
+}
+
+void ConnectionWire::setEndActive(bool active) {
+    if (active != _endActive) {
+        _endActive = active;
+        updateActive();
+    }
+}
+
+void ConnectionWire::remove() {
+    removed.trigger();
+}
+
+void ConnectionWire::updateActive() {
+    if (activeState == ActiveState::NONE) {
+        activeState = _startActive ? ActiveState::START :
+                      _endActive ? ActiveState::END :
+                      ActiveState::NONE;
+    }
+
+    auto newActive = false;
+    switch (activeState) {
+        case ActiveState::START:
+            newActive = _startActive;
+            break;
+        case ActiveState::END:
+            newActive = _endActive;
+            break;
+    }
+
+    if (newActive != _active) {
+        _active = newActive;
+        activeChanged.trigger(newActive);
+    }
+
+    if (!_startActive && !_endActive) {
+        activeState = ActiveState::NONE;
     }
 }
 

@@ -13,7 +13,7 @@ namespace AxiomGui {
     public:
         AxiomModel::NodeIOControl *control;
 
-        IOControl(AxiomModel::NodeIOControl *control, SchematicCanvas *canvas);
+        IOControl(AxiomModel::NodeIOControl *control, NodeSurfaceCanvas *canvas);
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 

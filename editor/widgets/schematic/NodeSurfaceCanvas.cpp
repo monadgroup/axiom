@@ -1,0 +1,345 @@
+#include "NodeSurfaceCanvas.h"
+
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <cassert>
+#include <QtGui/QResizeEvent>
+#include <QtWidgets/QGraphicsPathItem>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QGraphicsSceneMouseEvent>
+#include <QtCore/QTimer>
+
+#include "AddNodeMenu.h"
+#include "compiler/runtime/Runtime.h"
+#include "editor/AxiomApplication.h"
+#include "editor/model/Project.h"
+#include "editor/model/grid/GridItem.h"
+#include "editor/model/objects/NodeSurface.h"
+#include "editor/model/objects/Control.h"
+#include "editor/model/objects/Connection.h"
+#include "editor/model/actions/CreateCustomNodeAction.h"
+#include "editor/model/actions/CreateGroupNodeAction.h"
+#include "editor/model/actions/CreateConnectionAction.h"
+#include "../node/NodeItem.h"
+#include "../connection/WireItem.h"
+#include "../IConnectable.h"
+#include "../FloatingValueEditor.h"
+#include "../GlobalActions.h"
+
+using namespace AxiomGui;
+using namespace AxiomModel;
+
+QSize NodeSurfaceCanvas::nodeGridSize = QSize(50, 50);
+
+QSize NodeSurfaceCanvas::controlGridSize = QSize(25, 25);
+
+int NodeSurfaceCanvas::wireZVal = 0;
+int NodeSurfaceCanvas::activeWireZVal = 1;
+int NodeSurfaceCanvas::nodeZVal = 2;
+int NodeSurfaceCanvas::activeNodeZVal = 3;
+int NodeSurfaceCanvas::panelZVal = 4;
+int NodeSurfaceCanvas::selectionZVal = 5;
+
+NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surface) : panel(panel), surface(surface) {
+    // build selection
+    auto selectionPen = QPen(QColor::fromRgb(52, 152, 219));
+    auto selectionBrush = QBrush(QColor::fromRgb(52, 152, 219, 50));
+
+    selectionPath = addPath(QPainterPath(), selectionPen, selectionBrush);
+    selectionPath->setVisible(false);
+    selectionPath->setZValue(selectionZVal);
+
+    // create items for all nodes & wires that already exist
+    for (const auto &node : surface->nodes()) {
+        addNode(node);
+    }
+
+    for (const auto &connection : surface->connections()) {
+        addWire(&connection->wire());
+    }
+
+    // connect to model
+    surface->nodes().itemAdded.listen(this, &NodeSurfaceCanvas::addNode);
+    surface->connections().itemAdded.listen(this, [this](Connection *connection) {
+        addWire(&connection->wire());
+    });
+
+    // todo: select all and delete selected
+
+    auto timer = new QTimer(this);
+    connect(timer, &QTimer::timeout,
+            this, &NodeSurfaceCanvas::doRuntimeUpdate);
+    timer->start(16);
+
+}
+
+QPoint NodeSurfaceCanvas::nodeRealPos(const QPoint &p) {
+    return {
+        p.x() * NodeSurfaceCanvas::nodeGridSize.width(),
+        p.y() * NodeSurfaceCanvas::nodeGridSize.height()
+    };
+}
+
+QSize NodeSurfaceCanvas::nodeRealSize(const QSize &s) {
+    return {
+        s.width() * NodeSurfaceCanvas::nodeGridSize.width(),
+        s.height() * NodeSurfaceCanvas::nodeGridSize.height()
+    };
+}
+
+QPoint NodeSurfaceCanvas::controlRealPos(const QPoint &p) {
+    return {
+        p.x() * NodeSurfaceCanvas::controlGridSize.width(),
+        p.y() * NodeSurfaceCanvas::controlGridSize.height()
+    };
+}
+
+QPointF NodeSurfaceCanvas::controlRealPos(const QPointF &p) {
+    return {
+        p.x() * NodeSurfaceCanvas::controlGridSize.width(),
+        p.y() * NodeSurfaceCanvas::controlGridSize.height()
+    };
+}
+
+QSize NodeSurfaceCanvas::controlRealSize(const QSize &s) {
+    return {
+        s.width() * NodeSurfaceCanvas::controlGridSize.width(),
+        s.height() * NodeSurfaceCanvas::controlGridSize.height()
+    };
+}
+
+void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
+    if (isConnecting) return;
+
+    isConnecting = true;
+    sourceControl = control->sink();
+    auto startPos = sourceControl->worldPos().toPoint();
+    connectionWire = ConnectionWire(&surface->grid(), sourceControl->wireType(), startPos, startPos);
+    connectionWire.setStartActive(true);
+    addWire(&connectionWire);
+
+    connectionWire.removed.listen(this, [this]() { isConnecting = false; });
+}
+
+void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
+    if (!isConnecting) return;
+
+    auto currentItem = itemAt(mousePos, QTransform());
+
+    // snap to the connectable if it's not the one we started with, and it has the same type
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable->sink()->wireType() == connectionWire.wireType() && connectable->sink() != sourceControl) {
+        connectionWire.setEndPos(connectable->sink()->worldPos().toPoint());
+    } else {
+        connectionWire.setEndPos(
+            QPoint(
+                (int) (mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                (int) (mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
+            )
+        );
+    }
+}
+
+void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
+    if (!isConnecting) return;
+
+    auto currentItem = itemAt(mousePos, QTransform());
+
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
+        // if the sinks are already connected, remove the connection
+        // todo
+
+        surface->root()->history().append(CreateConnectionAction::create(surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(), surface->root()));
+    } else {
+        // todo: do something?
+    }
+
+    connectionWire.remove();
+}
+
+void NodeSurfaceCanvas::cancelConnecting() {
+    if (!isConnecting) return;
+
+    connectionWire.remove();
+}
+
+void NodeSurfaceCanvas::addNode(AxiomModel::Node *node) {
+    auto item = new NodeItem(node, this);
+    item->setZValue(nodeZVal);
+    addItem(item);
+}
+
+void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, bool group) {
+    auto targetPos = QPoint(
+        qRound((float) scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+        qRound((float) scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
+    );
+
+    if (group) {
+        surface->root()->history().append(CreateGroupNodeAction::create(
+            surface->uuid(), targetPos, QSize(3, 2), false, name, QPointF(0, 0), 0, surface->root()
+        ));
+    } else {
+        surface->root()->history().append(CreateCustomNodeAction::create(
+            surface->uuid(), targetPos, QSize(3, 2), false, name, "", surface->root()
+        ));
+    }
+}
+
+void NodeSurfaceCanvas::addWire(AxiomModel::ConnectionWire *wire) {
+    auto item = new WireItem(this, wire);
+    item->setZValue(wireZVal);
+    addItem(item);
+}
+
+void NodeSurfaceCanvas::doRuntimeUpdate() {
+    //schematic->doRuntimeUpdate();
+}
+
+void NodeSurfaceCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
+    drawGrid(painter, rect, nodeGridSize, QColor::fromRgb(34, 34, 34), 2);
+}
+
+void NodeSurfaceCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    QGraphicsScene::mousePressEvent(event);
+    if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
+
+    switch (event->button()) {
+        case Qt::LeftButton:
+            leftMousePressEvent(event);
+            break;
+        default:
+            break;
+    }
+}
+
+void NodeSurfaceCanvas::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    QGraphicsScene::mouseReleaseEvent(event);
+    if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
+
+    switch (event->button()) {
+        case Qt::LeftButton:
+            leftMouseReleaseEvent(event);
+            break;
+        default:
+            break;
+    }
+}
+
+void NodeSurfaceCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    QGraphicsScene::mouseMoveEvent(event);
+    if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
+
+    event->ignore();
+
+    if (isSelecting) {
+        selectionPoints.append(event->scenePos());
+
+        auto path = QPainterPath();
+        path.moveTo(selectionPoints.first());
+        for (auto i = 1; i < selectionPoints.size(); i++) {
+            path.lineTo(selectionPoints[i]);
+        }
+        path.closeSubpath();
+
+        selectionPath->setPath(path);
+        selectionPath->setVisible(true);
+
+        auto selectItems = items(path);
+
+        std::set<AxiomModel::GridItem *> newSelectedItems;
+        for (auto &item : selectItems) {
+            auto nodeItem = dynamic_cast<NodeItem *>(item);
+            if (!nodeItem) continue;
+            newSelectedItems.emplace(nodeItem->node);
+        }
+
+        std::vector<AxiomModel::GridItem *> edgeItems;
+        std::set_symmetric_difference(lastSelectedItems.begin(), lastSelectedItems.end(),
+                                      newSelectedItems.begin(), newSelectedItems.end(), std::back_inserter(edgeItems));
+
+        for (auto &item : edgeItems) {
+            if (item->isSelected()) {
+                item->deselect();
+            } else {
+                item->select(false);
+            }
+        }
+
+        lastSelectedItems = newSelectedItems;
+
+        event->accept();
+    }
+}
+
+void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    QGraphicsScene::contextMenuEvent(event);
+    if (event->isAccepted()) return;
+
+    auto scenePos = event->scenePos();
+    AddNodeMenu menu(surface, "");
+
+    connect(&menu, &AddNodeMenu::newNodeAdded,
+            [this, scenePos]() {
+                auto editor = new FloatingValueEditor("New Node", scenePos);
+                addItem(editor);
+                connect(editor, &FloatingValueEditor::valueSubmitted,
+                        this, [this, scenePos](QString value) {
+                            newNode(scenePos, value, false);
+                        });
+            });
+    connect(&menu, &AddNodeMenu::newGroupAdded,
+            [this, scenePos]() {
+                auto editor = new FloatingValueEditor("New Group", scenePos);
+                addItem(editor);
+                connect(editor, &FloatingValueEditor::valueSubmitted,
+                        this, [this, scenePos](QString value) {
+                            newNode(scenePos, value, true);
+                        });
+            });
+
+    menu.exec(event->screenPos());
+}
+
+void NodeSurfaceCanvas::leftMousePressEvent(QGraphicsSceneMouseEvent *event) {
+    isSelecting = true;
+    if (!(event->modifiers() & Qt::ShiftModifier)) {
+        surface->grid().deselectAll();
+        if (focusItem()) focusItem()->clearFocus();
+    }
+    lastSelectedItems.clear();
+    selectionPoints.append(event->scenePos());
+    event->accept();
+}
+
+void NodeSurfaceCanvas::leftMouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isSelecting) {
+        event->ignore();
+        return;
+    }
+
+    isSelecting = false;
+    selectionPoints.clear();
+    selectionPath->setVisible(false);
+    event->accept();
+}
+
+void NodeSurfaceCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color,
+                               qreal pointSize) {
+    QPointF topLeft = rect.topLeft();
+    topLeft.setX(std::floor(topLeft.x() / size.width()) * size.width());
+    topLeft.setY(std::floor(topLeft.y() / size.height()) * size.height());
+
+    QPointF bottomRight = rect.bottomRight();
+    bottomRight.setX(std::ceil(bottomRight.x() / size.width()) * size.width());
+    bottomRight.setY(std::ceil(bottomRight.y() / size.height()) * size.height());
+
+    auto drawPen = QPen(color);
+    drawPen.setWidthF(pointSize);
+    painter->setPen(drawPen);
+
+    for (auto x = topLeft.x(); x < bottomRight.x(); x += size.width()) {
+        for (auto y = topLeft.y(); y < bottomRight.y(); y += size.height()) {
+            painter->drawPoint((int) x + 1, (int) y + 1);
+        }
+    }
+}

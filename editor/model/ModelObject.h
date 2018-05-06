@@ -21,7 +21,6 @@ namespace AxiomModel {
         };
 
         Event<> removed;
-        Event<> cleanup;
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 

@@ -101,6 +101,14 @@ namespace AxiomModel {
             }));
         }
 
+        template<class TB, class... TA>
+        Event *forward(TB *handler, void (TB::*listener)(TA...)) {
+            auto wrapper = std::mem_fn(listener);
+            return listen(Event([handler, wrapper](Args... params) {
+                wrapper(handler, params...);
+            }));
+        };
+
         void connect(Event *other) {
             listeners.emplace(other);
             other->invListeners.emplace(this);

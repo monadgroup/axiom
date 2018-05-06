@@ -5,7 +5,7 @@
 
 // FIXME: add this file to git :P
 #include "editor/model/connection/ConnectionWire.h"
-#include "../schematic/SchematicCanvas.h"
+#include "editor/widgets/schematic/NodeSurfaceCanvas.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -30,8 +30,8 @@ void WireItem::updateRoute() {
     QPainterPath path;
     auto route = wire->route();
 
-    auto firstPos = SchematicCanvas::controlRealPos(wire->sinkA->subPos());
-    auto lastPos = SchematicCanvas::controlRealPos(wire->sinkB->subPos());
+    auto firstPos = NodeSurfaceCanvas::controlRealPos(wire->sinkA->subPos());
+    auto lastPos = NodeSurfaceCanvas::controlRealPos(wire->sinkB->subPos());
 
     // todo: find spaces where several wires are, and make them look nice
     // e.g. - if they're going in the same direction, separate them out a bit
@@ -43,11 +43,11 @@ void WireItem::updateRoute() {
         path.lineTo(QPointF(lastPos.x(), firstPos.y()));
         path.lineTo(lastPos);
     } else if (route.size() >= 2) {
-        auto halfNodeSize = QPointF(SchematicCanvas::nodeGridSize.width() / 2,
-                                    SchematicCanvas::nodeGridSize.height() / 2);
+        auto halfNodeSize = QPointF(NodeSurfaceCanvas::nodeGridSize.width() / 2,
+                                    NodeSurfaceCanvas::nodeGridSize.height() / 2);
 
         for (size_t i = 0; i < route.size(); i++) {
-            QPointF routePos = SchematicCanvas::nodeRealPos(route[i]) + halfNodeSize;
+            QPointF routePos = NodeSurfaceCanvas::nodeRealPos(route[i]) + halfNodeSize;
 
             if (i == 0) {
                 routePos = firstPos;
@@ -87,7 +87,7 @@ void WireItem::setActive(bool active) {
     pen.setJoinStyle(Qt::MiterJoin);
     setPen(pen);
 
-    setZValue(active ? SchematicCanvas::activeWireZVal : SchematicCanvas::wireZVal);
+    setZValue(active ? NodeSurfaceCanvas::activeWireZVal : NodeSurfaceCanvas::wireZVal);
 }
 
 void WireItem::remove() {

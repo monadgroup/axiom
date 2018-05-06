@@ -25,7 +25,7 @@ namespace AxiomGui {
     public:
         AxiomModel::NodeExtractControl *control;
 
-        ExtractControl(AxiomModel::NodeExtractControl *control, SchematicCanvas *canvas);
+        ExtractControl(AxiomModel::NodeExtractControl *control, NodeSurfaceCanvas *canvas);
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 

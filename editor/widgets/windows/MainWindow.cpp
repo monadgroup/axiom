@@ -4,6 +4,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
+#include <QtCore/QTimer>
 
 #include "editor/resources/resource.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
@@ -15,7 +16,7 @@
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
+MainWindow::MainWindow(AxiomModel::Project project) : _project(std::move(project)) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -68,30 +69,28 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
     connect(GlobalActions::fileQuit, &QAction::triggered,
             QApplication::quit);
 
-    GlobalActions::editUndo->setEnabled(project->history.canUndo());
-    connect(&project->history, &AxiomModel::HistoryList::canUndoChanged,
-            GlobalActions::editUndo, &QAction::setEnabled);
-    connect(&project->history, &AxiomModel::HistoryList::undoTypeChanged,
-            [](AxiomModel::HistoryList::ActionType type) {
-                GlobalActions::editUndo->setText("&Undo " + AxiomModel::HistoryList::typeToString(type));
-            });
-    connect(GlobalActions::editUndo, &QAction::triggered,
-            &project->history, &AxiomModel::HistoryList::undo);
+    auto &history = project.mainRoot().history();
 
-    GlobalActions::editRedo->setEnabled(project->history.canRedo());
-    connect(&project->history, &AxiomModel::HistoryList::canRedoChanged,
-            GlobalActions::editRedo, &QAction::setEnabled);
-    connect(&project->history, &AxiomModel::HistoryList::undoTypeChanged,
-            [](AxiomModel::HistoryList::ActionType type) {
-                GlobalActions::editRedo->setText("&Redo " + AxiomModel::HistoryList::typeToString(type));
-            });
+    GlobalActions::editUndo->setEnabled(history.canUndo());
+    history.canUndoChanged.forward(GlobalActions::editUndo, &QAction::setEnabled);
+    history.undoTypeChanged.listen([](AxiomModel::Action::ActionType type) {
+        GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(type));
+    });
+    connect(GlobalActions::editUndo, &QAction::triggered,
+            &history, &AxiomModel::HistoryList::undo);
+
+    GlobalActions::editRedo->setEnabled(history.canRedo());
+    history.canRedoChanged.forward(GlobalActions::editRedo, &QAction::setEnabled);
+    history.redoTypeChanged.listen([](AxiomModel::Action::ActionType type) {
+        GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(type));
+    });
     connect(GlobalActions::editRedo, &QAction::triggered,
-            &project->history, &AxiomModel::HistoryList::redo);
+            &history, &AxiomModel::HistoryList::redo);
 
     connect(GlobalActions::helpAbout, &QAction::triggered,
             this, &MainWindow::showAbout);
 
-    auto historyList = new HistoryPanel(&project->history, this);
+    /*auto historyList = new HistoryPanel(&project->history, this);
     historyList->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::RightDockWidgetArea, historyList);
 
@@ -99,10 +98,10 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
     moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);
     addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
 
-    showSchematic(nullptr, &project->root, false);
+    showSchematic(nullptr, &project->root, false);*/
 }
 
-void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic *schematic, bool split) {
+/*void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split) {
     auto openPanel = _openPanels.find(schematic);
     if (openPanel != _openPanels.end()) {
         openPanel->second->raise();
@@ -127,17 +126,17 @@ void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic 
         });
     }
 
-    connect(newDockPtr, &SchematicPanel::closed,
-            this, [this, schematic]() { removeSchematic(schematic); });
+    //connect(newDockPtr, &SchematicPanel::closed,
+    //        this, [this, schematic]() { removeSchematic(schematic); });
 
     _openPanels.emplace(schematic, std::move(newDock));
-}
+}*/
 
 void MainWindow::showAbout() {
     AboutWindow().exec();
 }
 
-void MainWindow::removeSchematic(AxiomModel::Schematic *schematic) {
+/*void MainWindow::removeSchematic(AxiomModel::Schematic *schematic) {
     _openPanels.erase(schematic);
 }
 
@@ -185,4 +184,4 @@ void MainWindow::saveProject() {
     QDataStream stream(&file);
     _project->serialize(stream);
     file.close();
-}
+}*/

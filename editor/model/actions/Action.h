@@ -15,7 +15,8 @@ namespace AxiomModel {
             NONE,
             DELETE_OBJECT,
             CREATE_CUSTOM_NODE,
-            CREATE_GROUP_NODE
+            CREATE_GROUP_NODE,
+            CREATE_CONNECTION
         };
 
         Action(ActionType actionType, bool exec, ModelRoot *root);

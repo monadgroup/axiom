@@ -17,7 +17,7 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-ExtractControl::ExtractControl(NodeExtractControl *control, SchematicCanvas *canvas)
+ExtractControl::ExtractControl(NodeExtractControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
     setAcceptHoverEvents(true);
 

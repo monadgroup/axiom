@@ -14,7 +14,7 @@
 #include "editor/model/schematic/Schematic.h"
 #include "editor/model/Project.h"
 #include "../node/NodeItem.h"
-#include "../schematic/SchematicCanvas.h"
+#include "editor/widgets/schematic/NodeSurfaceCanvas.h"
 #include "editor/util.h"
 #include "../FloatingValueEditor.h"
 
@@ -29,7 +29,7 @@ static std::vector<std::pair<QString, NodeNumControl::Mode>> modes = {
     std::make_pair("&Toggle Button", NodeNumControl::Mode::TOGGLE)
 };
 
-NumControl::NumControl(NodeNumControl *control, SchematicCanvas *canvas)
+NumControl::NumControl(NodeNumControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
     setAcceptHoverEvents(true);
 

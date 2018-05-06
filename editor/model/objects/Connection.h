@@ -14,32 +14,28 @@ namespace AxiomModel {
     public:
         Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB, ModelRoot *root);
 
+        static std::unique_ptr<Connection> create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB, ModelRoot *root);
+
         static std::unique_ptr<Connection> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
         NodeSurface *surface() const { return _surface; }
 
-        const QUuid &controlAUuid() const { return _controlAUuid; }
+        Control *controlA() const { return _controlA; }
 
-        Promise<Control*> &controlA() { return _controlA; }
+        Control *controlB() const { return _controlB; }
 
-        const Promise<Control*> &controlA() const { return _controlA; }
-
-        const QUuid &controlBUuid() const { return _controlBUuid; }
-
-        Promise<Control*> &controlB() { return _controlB; }
-
-        const Promise<Control*> &controlB() const { return _controlB; }
+        ConnectionWire &wire() { return _wire; }
 
         const ConnectionWire &wire() const { return _wire; }
 
+        void remove() override;
+
     private:
         NodeSurface *_surface;
-        QUuid _controlAUuid;
-        Promise<Control*> _controlA;
-        QUuid _controlBUuid;
-        Promise<Control*> _controlB;
+        Control* _controlA;
+        Control* _controlB;
         ConnectionWire _wire;
     };
 

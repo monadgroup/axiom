@@ -5,7 +5,7 @@
 #include <QtCore/QTimer>
 
 #include "editor/widgets/ItemResizer.h"
-#include "../schematic/SchematicCanvas.h"
+#include "editor/widgets/schematic/NodeSurfaceCanvas.h"
 #include "editor/model/node/Node.h"
 #include "editor/model/node/CustomNode.h"
 #include "editor/model/node/GroupNode.h"
@@ -21,7 +21,7 @@
 #include "../controls/MidiControl.h"
 #include "../controls/ExtractControl.h"
 #include "../controls/IOControl.h"
-#include "../schematic/SchematicPanel.h"
+#include "editor/widgets/schematic/NodeSurfacePanel.h"
 #include "../windows/MainWindow.h"
 #include "editor/widgets/windows/ModulePropertiesWindow.h"
 #include "../FloatingValueEditor.h"
@@ -30,7 +30,7 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : canvas(canvas), node(node) {
+NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node(node) {
     // create items for all controls that already exist
     for (const auto &item : node->surface.items()) {
         if (auto control = dynamic_cast<NodeControl *>(item.get())) {
@@ -72,7 +72,7 @@ NodeItem::NodeItem(Node *node, SchematicCanvas *canvas) : canvas(canvas), node(n
             ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
         };
         for (auto i = 0; i < 8; i++) {
-            auto resizer = new ItemResizer(directions[i], SchematicCanvas::nodeGridSize);
+            auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::nodeGridSize);
 
             // ensure corners are on top of edges
             resizer->setZValue(i > 3 ? 2 : 1);
@@ -131,7 +131,7 @@ QRectF NodeItem::boundingRect() const {
 QRectF NodeItem::drawBoundingRect() const {
     return {
         QPointF(0, 0),
-        SchematicCanvas::nodeRealSize(node->size())
+        NodeSurfaceCanvas::nodeRealSize(node->size())
     };
 }
 
@@ -168,7 +168,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         auto nodeSurfaceSize = NodeSurface::schematicToNodeSurface(node->size());
         for (auto x = 0; x < nodeSurfaceSize.width(); x++) {
             for (auto y = 0; y < nodeSurfaceSize.height(); y++) {
-                painter->drawPoint(SchematicCanvas::controlRealPos(QPoint(x, y)));
+                painter->drawPoint(NodeSurfaceCanvas::controlRealPos(QPoint(x, y)));
             }
         }
     }
@@ -207,8 +207,8 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
     emit node->draggedTo(QPoint(
-        qRound((float) mouseDelta.x() / SchematicCanvas::nodeGridSize.width()),
-        qRound((float) mouseDelta.y() / SchematicCanvas::nodeGridSize.height())
+        qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+        qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())
     ));
 
     event->accept();
@@ -301,13 +301,13 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 }
 
 void NodeItem::setPos(QPoint newPos) {
-    auto realPos = SchematicCanvas::nodeRealPos(newPos);
+    auto realPos = NodeSurfaceCanvas::nodeRealPos(newPos);
     QGraphicsItem::setPos(realPos.x(), realPos.y());
     emit resizerPosChanged(realPos);
 }
 
 void NodeItem::setSize(QSize newSize) {
-    emit resizerSizeChanged(SchematicCanvas::nodeRealSize(newSize));
+    emit resizerSizeChanged(NodeSurfaceCanvas::nodeRealSize(newSize));
 }
 
 void NodeItem::addControl(NodeControl *control) {
@@ -329,7 +329,7 @@ void NodeItem::addControl(NodeControl *control) {
 }
 
 void NodeItem::setIsSelected(bool selected) {
-    setZValue(selected ? SchematicCanvas::activeNodeZVal : SchematicCanvas::nodeZVal);
+    setZValue(selected ? NodeSurfaceCanvas::activeNodeZVal : NodeSurfaceCanvas::nodeZVal);
 }
 
 void NodeItem::remove() {
@@ -338,11 +338,11 @@ void NodeItem::remove() {
 
 void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     node->setCorners(QPoint(
-        qRound(topLeft.x() / SchematicCanvas::nodeGridSize.width()),
-        qRound(topLeft.y() / SchematicCanvas::nodeGridSize.height())
+        qRound(topLeft.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+        qRound(topLeft.y() / NodeSurfaceCanvas::nodeGridSize.height())
     ), QPoint(
-        qRound(bottomRight.x() / SchematicCanvas::nodeGridSize.width()),
-        qRound(bottomRight.y() / SchematicCanvas::nodeGridSize.height())
+        qRound(bottomRight.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+        qRound(bottomRight.y() / NodeSurfaceCanvas::nodeGridSize.height())
     ));
 }
 

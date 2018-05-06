@@ -17,15 +17,10 @@ namespace AxiomModel {
             MIDI_SCALAR
         };
 
-        enum class ValueType {
-            NUM,
-            MIDI
-        };
-
         Event<const QString &> nameChanged;
         Event<QPointF> worldPosChanged;
 
-        Control(ControlType controlType, ValueType valueType, QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
+        Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
 
         static std::unique_ptr<Control> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
@@ -35,7 +30,7 @@ namespace AxiomModel {
 
         ControlType controlType() const { return _controlType; }
 
-        ValueType valueType() const { return _valueType; }
+        ConnectionWire::WireType wireType() const { return _wireType; }
 
         bool isMovable() const override { return true; }
 
@@ -64,7 +59,7 @@ namespace AxiomModel {
     private:
         ControlSurface *_surface;
         ControlType _controlType;
-        ValueType _valueType;
+        ConnectionWire::WireType _wireType;
         QString _name;
 
         CollectionView<Connection *> _connections;

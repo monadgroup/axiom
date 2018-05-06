@@ -25,7 +25,7 @@ namespace AxiomGui {
     public:
         AxiomModel::NodeMidiControl *control;
 
-        MidiControl(AxiomModel::NodeMidiControl *control, SchematicCanvas *canvas);
+        MidiControl(AxiomModel::NodeMidiControl *control, NodeSurfaceCanvas *canvas);
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 

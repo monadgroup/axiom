@@ -24,7 +24,7 @@ static std::vector<std::pair<QString, NodeMidiControl::Mode>> modes = {
     std::make_pair("&Piano", NodeMidiControl::Mode::PIANO)
 };
 
-MidiControl::MidiControl(AxiomModel::NodeMidiControl *control, SchematicCanvas *canvas)
+MidiControl::MidiControl(AxiomModel::NodeMidiControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
     setAcceptHoverEvents(true);
 

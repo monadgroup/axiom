@@ -18,6 +18,10 @@ namespace AxiomModel {
 
         static bool readHeader(QDataStream &stream, uint32_t *versionOut);
 
+        ModelRoot &mainRoot() { return _mainRoot; }
+
+        const ModelRoot &mainRoot() const { return _mainRoot; }
+
         void serialize(QDataStream &stream);
 
     private:

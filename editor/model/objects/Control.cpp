@@ -9,11 +9,11 @@
 
 using namespace AxiomModel;
 
-Control::Control(ControlType controlType, ValueType valueType, QUuid uuid, const QUuid &parentUuid, QPoint pos,
+Control::Control(ControlType controlType, ValueType wireType, QUuid uuid, const QUuid &parentUuid, QPoint pos,
                  QSize size, bool selected, QString name, AxiomModel::ModelRoot *root)
     : GridItem(&find(root->controlSurfaces(), parentUuid)->grid(), pos, size, selected),
       ModelObject(ModelType::CONTROL, uuid, parentUuid, root), _surface(find(root->controlSurfaces(), parentUuid)),
-      _controlType(controlType), _valueType(valueType), _name(std::move(name)),
+      _controlType(controlType), _wireType(wireType), _name(std::move(name)),
       _connections(derive<Connection*, Connection*>(root->connections(), [uuid](Connection *const &connection) -> std::optional<Connection*> {
           if (connection->controlAUuid() == uuid || connection->controlBUuid() == uuid) return connection;
           else return std::optional<Connection*>();
