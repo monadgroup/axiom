@@ -58,6 +58,8 @@ void ConnectionWire::updateActive() {
         case ActiveState::END:
             newActive = _endActive;
             break;
+        default:
+            break;
     }
 
     if (newActive != _active) {

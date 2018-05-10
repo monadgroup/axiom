@@ -7,13 +7,13 @@ Hookable::Hookable(AxiomModel::Hookable &&a) noexcept {
 }
 
 Hookable& Hookable::operator=(AxiomModel::Hookable &&a) noexcept {
-    triggerDestruct();
+    triggerDestruct(true);
     destructEvents = std::move(a.destructEvents);
     return *this;
 }
 
 Hookable::~Hookable() {
-    triggerDestruct();
+    triggerDestruct(true);
 }
 
 void Hookable::addDestructHook(void *handle, std::function<void()> func) {
@@ -24,8 +24,10 @@ void Hookable::removeDestructHook(void *handle) {
     destructEvents.erase(handle);
 }
 
-void Hookable::triggerDestruct() {
+void Hookable::triggerDestruct(bool isFinal) {
     for (const auto &event : destructEvents) {
         event.second();
     }
+
+    if (!isFinal) destructEvents.clear();
 }

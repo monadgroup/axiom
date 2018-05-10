@@ -35,9 +35,8 @@ std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::Mod
         case ActionType::CREATE_CUSTOM_NODE: return CreateCustomNodeAction::deserialize(stream, root);
         case ActionType::CREATE_GROUP_NODE: return CreateGroupNodeAction::deserialize(stream, root);
         case ActionType::CREATE_CONNECTION: return CreateConnectionAction::deserialize(stream, root);
+        default: unreachable;
     }
-
-    unreachable;
 }
 
 void Action::serialize(QDataStream &stream) const {

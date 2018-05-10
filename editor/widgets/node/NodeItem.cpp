@@ -28,14 +28,14 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node(node) {
-    node->nameChanged.listen(this, &NodeItem::triggerUpdate);
-    node->extractedChanged.listen(this, &NodeItem::triggerUpdate);
-    node->posChanged.listen(this, &NodeItem::setPos);
-    node->beforeSizeChanged.listen(this, &NodeItem::triggerGeometryChange);
-    node->sizeChanged.listen(this, &NodeItem::setSize);
-    node->selectedChanged.listen(this, &NodeItem::setIsSelected);
-    node->deselected.listen(this, &NodeItem::triggerUpdate);
-    node->removed.listen(this, &NodeItem::remove);
+    node->nameChanged.connect(this, &NodeItem::triggerUpdate);
+    node->extractedChanged.connect(this, &NodeItem::triggerUpdate);
+    node->posChanged.connect(this, &NodeItem::setPos);
+    node->beforeSizeChanged.connect(this, &NodeItem::triggerGeometryChange);
+    node->sizeChanged.connect(this, &NodeItem::setSize);
+    node->selectedChanged.connect(this, &NodeItem::setIsSelected);
+    node->deselected.connect(this, &NodeItem::triggerUpdate);
+    node->removed.connect(this, &NodeItem::remove);
 
     // create resize items
     if (node->isResizable()) {
@@ -61,7 +61,7 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
 
             node->controls().then([resizer](ControlSurface *surface) {
                 resizer->setVisible(!surface->grid().hasSelection());
-                surface->grid().hasSelectionChanged.listen([resizer](bool hasSelection) {
+                surface->grid().hasSelectionChanged.connect([resizer](bool hasSelection) {
                     resizer->setVisible(!hasSelection);
                 });
             });
@@ -83,8 +83,8 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
             addControl(control);
         }
 
-        surface->controls().itemAdded.listen(this, &NodeItem::addControl);
-        surface->grid().hasSelectionChanged.listen(this, &NodeItem::triggerUpdate);
+        surface->controls().itemAdded.connect(this, &NodeItem::addControl);
+        surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
     });
 }
 
@@ -193,11 +193,11 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     event->accept();
 
-    if (auto groupNode = dynamic_cast<GroupNode *>(node)) {
+    /*if (auto groupNode = dynamic_cast<GroupNode *>(node)) {
         // todo: show surface
     } else if (auto customNode = dynamic_cast<CustomNode *>(node)) {
         // todo: open panel
-    }
+    }*/
 }
 
 void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {

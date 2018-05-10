@@ -41,7 +41,7 @@ namespace AxiomModel {
     Promise<TI> getFirst(CollectionView<TI> input) {
         Promise<TI> result;
 
-        input.itemAdded.listen([result](const TI &item) mutable {
+        input.itemAdded.connect([result](const TI &item) mutable {
             result.resolve(item);
         });
 

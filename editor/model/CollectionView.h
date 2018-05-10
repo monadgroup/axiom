@@ -197,8 +197,8 @@ namespace AxiomModel {
             filter_func filter;
 
             void attachEvent(CollectionView<collection_value_type> &collection) {
-                collection.itemAdded.listen(this, &ConverterImpl::filterItemAdded);
-                collection.itemRemoved.listen(this, &ConverterImpl::filterItemRemoved);
+                collection.itemAdded.connect(this, &ConverterImpl::filterItemAdded);
+                collection.itemRemoved.connect(this, &ConverterImpl::filterItemRemoved);
             }
 
             template<class Dummy> void attachEvent(Dummy &collection) { }

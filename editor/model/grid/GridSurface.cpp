@@ -7,7 +7,7 @@ using namespace AxiomModel;
 
 GridSurface::GridSurface(AxiomModel::GridSurface::ItemCollection view, QPoint minRect, QPoint maxRect)
     : _grid(minRect, maxRect), _items(std::move(view)), _selectedItems(deriveFunc<GridItem*>(_items, &GridSurface::filterSelected)) {
-    _items.itemAdded.listen(this, &GridSurface::handleItemAdded);
+    _items.itemAdded.connect(this, &GridSurface::handleItemAdded);
 }
 
 void GridSurface::doRuntimeUpdate() {
@@ -97,7 +97,7 @@ QPoint GridSurface::findAvailableDelta(QPoint delta) {
 }
 
 void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
-    item->startedDragging.listen(this, &GridSurface::startDragging);
-    item->draggedTo.listen(this, &GridSurface::dragTo);
-    item->finishedDragging.listen(this, &GridSurface::finishDragging);
+    item->startedDragging.connect(this, &GridSurface::startDragging);
+    item->draggedTo.connect(this, &GridSurface::dragTo);
+    item->finishedDragging.connect(this, &GridSurface::finishDragging);
 }

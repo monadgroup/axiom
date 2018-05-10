@@ -13,11 +13,13 @@
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/Project.h"
+#include "editor/model/objects/RootSurface.h"
+#include "editor/model/PoolOperators.h"
 #include "../GlobalActions.h"
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(AxiomModel::Project project) : _project(std::move(project)) {
+MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) : _project(std::move(project)) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -70,18 +72,18 @@ MainWindow::MainWindow(AxiomModel::Project project) : _project(std::move(project
     connect(GlobalActions::fileQuit, &QAction::triggered,
             QApplication::quit);
 
-    auto &history = project.mainRoot().history();
+    auto &history = _project->mainRoot().history();
 
     GlobalActions::editUndo->setEnabled(history.canUndo());
     history.canUndoChanged.forward(GlobalActions::editUndo, &QAction::setEnabled);
-    history.undoTypeChanged.listen([](AxiomModel::Action::ActionType type) {
+    history.undoTypeChanged.connect([](AxiomModel::Action::ActionType type) {
         GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(type));
     });
     connect(GlobalActions::editUndo, &QAction::triggered, [&history]() { history.undo(); });
 
     GlobalActions::editRedo->setEnabled(history.canRedo());
     history.canRedoChanged.forward(GlobalActions::editRedo, &QAction::setEnabled);
-    history.redoTypeChanged.listen([](AxiomModel::Action::ActionType type) {
+    history.redoTypeChanged.connect([](AxiomModel::Action::ActionType type) {
         GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(type));
     });
     connect(GlobalActions::editRedo, &QAction::triggered, [&history]() { history.redo(); });
@@ -98,16 +100,20 @@ MainWindow::MainWindow(AxiomModel::Project project) : _project(std::move(project
     addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
 
     showSchematic(nullptr, &project->root, false);*/
+
+    //auto rootUuid = QUuid::createUuid();
+    //_project->mainRoot().pool().registerObj(std::make_unique<AxiomModel::RootSurface>(QUuid::createUuid(), QPointF(0, 0), 0, &_project->mainRoot()));
+    //showSurface(nullptr, AxiomModel::find(_project->mainRoot().nodeSurfaces(), rootUuid), false);
 }
 
-/*void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split) {
-    auto openPanel = _openPanels.find(schematic);
+void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *surface, bool split) {
+    auto openPanel = _openPanels.find(surface);
     if (openPanel != _openPanels.end()) {
         openPanel->second->raise();
         return;
     }
 
-    auto newDock = std::make_unique<SchematicPanel>(this, schematic);
+    auto newDock = std::make_unique<NodeSurfacePanel>(this, surface);
     auto newDockPtr = newDock.get();
     newDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     if (!fromPanel) {
@@ -125,14 +131,17 @@ MainWindow::MainWindow(AxiomModel::Project project) : _project(std::move(project
         });
     }
 
-    //connect(newDockPtr, &SchematicPanel::closed,
-    //        this, [this, schematic]() { removeSchematic(schematic); });
-
-    _openPanels.emplace(schematic, std::move(newDock));
-}*/
+    connect(newDockPtr, &NodeSurfacePanel::closed,
+            this, [this, surface]() { removeSurface(surface); });
+    _openPanels.emplace(surface, std::move(newDock));
+}
 
 void MainWindow::showAbout() {
     AboutWindow().exec();
+}
+
+void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {
+    _openPanels.erase(surface);
 }
 
 /*void MainWindow::removeSchematic(AxiomModel::Schematic *schematic) {

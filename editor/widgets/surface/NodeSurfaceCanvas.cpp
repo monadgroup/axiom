@@ -60,8 +60,8 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     }
 
     // connect to model
-    surface->nodes().itemAdded.listen(this, &NodeSurfaceCanvas::addNode);
-    surface->connections().itemAdded.listen(this, std::function([this](Connection *connection) {
+    surface->nodes().itemAdded.connect(this, &NodeSurfaceCanvas::addNode);
+    surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
         addWire(&connection->wire());
     }));
 
@@ -118,7 +118,7 @@ void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
     connectionWire->setStartActive(true);
     addWire(&*connectionWire);
 
-    connectionWire->removed.listen(this, std::function([this]() { connectionWire.reset(); }));
+    connectionWire->removed.connect(this, std::function([this]() { connectionWire.reset(); }));
 }
 
 void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {

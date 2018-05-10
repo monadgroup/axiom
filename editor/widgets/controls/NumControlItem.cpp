@@ -26,10 +26,10 @@ static std::vector<std::pair<QString, NumControl::DisplayMode>> modes = {
 
 NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
-    control->valueChanged.listen<ControlItem>(this, &NumControlItem::triggerUpdate);
-    control->displayModeChanged.listen<ControlItem>(this, &NumControlItem::triggerUpdate);
-    control->connections().itemAdded.listen<ControlItem>(this, &NumControlItem::triggerUpdate);
-    control->connections().itemRemoved.listen<ControlItem>(this, &NumControlItem::triggerUpdate);
+    control->valueChanged.connect(this, &NumControlItem::triggerUpdate);
+    control->displayModeChanged.connect(this, &NumControlItem::triggerUpdate);
+    control->connections().itemAdded.connect(this, &NumControlItem::triggerUpdate);
+    control->connections().itemRemoved.connect(this, &NumControlItem::triggerUpdate);
 }
 
 void NumControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {

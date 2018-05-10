@@ -10,9 +10,9 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 WireItem::WireItem(QObject *parent, AxiomModel::ConnectionWire *wire) : QObject(parent), wire(wire) {
-    wire->routeChanged.listen(this, &WireItem::updateRoute);
-    wire->activeChanged.listen(this, &WireItem::setIsActive);
-    wire->removed.listen(this, &WireItem::remove);
+    wire->routeChanged.connect(this, &WireItem::updateRoute);
+    wire->activeChanged.connect(this, &WireItem::setIsActive);
+    wire->removed.connect(this, &WireItem::remove);
 
     setBrush(Qt::NoBrush);
 

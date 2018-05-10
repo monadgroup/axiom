@@ -20,25 +20,25 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        MainWindow(AxiomModel::Project project);
+        MainWindow(std::unique_ptr<AxiomModel::Project> project);
 
     public slots:
 
-        //void showSchematic(SchematicPanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split);
+        void showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split);
 
         void showAbout();
 
     private slots:
 
-        /*void removeSchematic(AxiomModel::Schematic *schematic);
+        void removeSurface(AxiomModel::NodeSurface *surface);
 
-        void openProject();
+        /*void openProject();
 
         void saveProject();*/
 
     private:
 
-        AxiomModel::Project _project;
+        std::unique_ptr<AxiomModel::Project> _project;
         std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
     };
 

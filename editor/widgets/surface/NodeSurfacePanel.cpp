@@ -11,8 +11,8 @@ NodeSurfacePanel::NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *
     : DockPanel(surface->name()), window(window) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/SchematicPanel.qss"));
 
-    surface->nameChanged.listen(this, &NodeSurfacePanel::setWindowTitle);
-    surface->removed.listen(this, &NodeSurfacePanel::close);
+    surface->nameChanged.connect(this, &NodeSurfacePanel::setWindowTitle);
+    surface->removed.connect(this, &NodeSurfacePanel::close);
 
     setWidget(new NodeSurfaceView(this, surface));
     widget()->setParent(this);

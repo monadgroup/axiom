@@ -1,5 +1,7 @@
 #include "PortalControl.h"
 
+#include "../../util.h"
+
 using namespace AxiomModel;
 
 static Control::ControlType typeFromWireType(ConnectionWire::WireType wireType) {
@@ -7,6 +9,7 @@ static Control::ControlType typeFromWireType(ConnectionWire::WireType wireType) 
         case ConnectionWire::WireType::NUM: return Control::ControlType::NUM_PORTAL;
         case ConnectionWire::WireType::MIDI: return Control::ControlType::MIDI_PORTAL;
     }
+    unreachable;
 }
 
 PortalControl::PortalControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,

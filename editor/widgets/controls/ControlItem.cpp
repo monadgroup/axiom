@@ -21,12 +21,12 @@ using namespace AxiomModel;
 ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(control), canvas(canvas) {
     setAcceptHoverEvents(true);
 
-    control->posChanged.listen(this, &ControlItem::setPos);
-    control->beforeSizeChanged.listen(this, &ControlItem::triggerGeometryChange);
-    control->sizeChanged.listen(this, &ControlItem::setSize);
-    control->selectedChanged.listen(this, &ControlItem::updateSelected);
-    control->isActiveChanged.listen(this, &ControlItem::triggerUpdate);
-    control->removed.listen(this, &ControlItem::remove);
+    control->posChanged.connect(this, &ControlItem::setPos);
+    control->beforeSizeChanged.connect(this, &ControlItem::triggerGeometryChange);
+    control->sizeChanged.connect(this, &ControlItem::setSize);
+    control->selectedChanged.connect(this, &ControlItem::updateSelected);
+    control->isActiveChanged.connect(this, &ControlItem::triggerUpdate);
+    control->removed.connect(this, &ControlItem::remove);
 
     // create resize items
     if (control->isResizable()) {
@@ -52,8 +52,8 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
             connect(resizer, &ItemResizer::changed,
                     this, &ControlItem::resizerChanged);
 
-            control->selected.listen(this, std::function([resizer]() { resizer->setVisible(true); }));
-            control->deselected.listen(this, std::function([resizer]() { resizer->setVisible(false); }));
+            control->selected.connect(this, std::function([resizer]() { resizer->setVisible(true); }));
+            control->deselected.connect(this, std::function([resizer]() { resizer->setVisible(false); }));
 
             resizer->setParentItem(this);
         }

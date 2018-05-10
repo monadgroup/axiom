@@ -21,10 +21,11 @@ namespace AxiomModel {
 
         void removeDestructHook(void *handle);
 
+    protected:
+        virtual void triggerDestruct(bool isFinal);
+
     private:
         std::map<void *, std::function<void()>> destructEvents;
-
-        void triggerDestruct();
     };
 
 }

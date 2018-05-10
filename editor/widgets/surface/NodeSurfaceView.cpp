@@ -18,8 +18,8 @@ NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
     scene()->setParent(this);
     setAcceptDrops(true);
 
-    surface->panChanged.listen(this, &NodeSurfaceView::pan);
-    surface->zoomChanged.listen(this, &NodeSurfaceView::zoom);
+    surface->panChanged.connect(this, &NodeSurfaceView::pan);
+    surface->zoomChanged.connect(this, &NodeSurfaceView::zoom);
 
     // set properties
     setDragMode(QGraphicsView::NoDrag);

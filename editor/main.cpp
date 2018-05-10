@@ -11,8 +11,9 @@
 #include "compiler/codegen/Function.h"
 
 int main(int argc, char *argv[]) {
-    MaximRuntime::Runtime runtime;
-    AxiomGui::MainWindow window(AxiomModel::Project {});
+    //MaximRuntime::Runtime runtime;
+    auto project = std::make_unique<AxiomModel::Project>();
+    AxiomGui::MainWindow window(std::move(project));
     window.show();
     return AxiomApplication::main.exec();
 }

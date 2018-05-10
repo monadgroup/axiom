@@ -13,8 +13,8 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
-    node->beforeSizeChanged.listen(this, &CustomNodePanel::triggerGeometryChange);
-    node->sizeChanged.listen(this, &CustomNodePanel::updateSize);
+    node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
+    node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
 
     // todo: panel events, parse/compile errors, code changed event:
     /*connect(node, &CustomNode::beforeSizeChanged,
@@ -82,7 +82,7 @@ void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 void CustomNodePanel::updateSize() {
     auto br = boundingRect();
-    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
+    //auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
 
     /*textProxy->setGeometry(QRectF(
         QPointF(0, nodeSize.height() + 5),
@@ -136,7 +136,7 @@ void CustomNodePanel::triggerGeometryChange() {
 }
 
 void CustomNodePanel::resizerChanged(QPointF topLeft, QPointF bottomRight) {
-    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
+    //auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
     //node->setPanelHeight((float) bottomRight.y() - nodeSize.height() - 5);
 }
 

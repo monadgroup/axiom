@@ -26,8 +26,8 @@ Control::Control(ControlType controlType, ConnectionWire::WireType wireType, QUu
           if (connection->controlB()->uuid() == uuid) return connection->controlA();
           return std::optional<Control*>();
       })) {
-    posChanged.listen([this](QPoint) { updateSinkPos(); });
-    _surface->node()->posChanged.listen([this](QPoint) { updateSinkPos(); });
+    posChanged.connect([this](QPoint) { updateSinkPos(); });
+    _surface->node()->posChanged.connect([this](QPoint) { updateSinkPos(); });
 }
 
 std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
