@@ -13,9 +13,9 @@ using namespace AxiomModel;
 
 ExtractControlItem::ExtractControlItem(ExtractControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
-    control->activeSlotsChanged.listen(this, &ExtractControlItem::triggerUpdate);
-    control->connections().itemAdded.listen(this, &ExtractControlItem::triggerUpdate);
-    control->connections().itemRemoved.listen(this, &ExtractControlItem::triggerUpdate);
+    control->activeSlotsChanged.listen<ControlItem>(this, &ExtractControlItem::triggerUpdate);
+    control->connections().itemAdded.listen<ControlItem>(this, &ExtractControlItem::triggerUpdate);
+    control->connections().itemRemoved.listen<ControlItem>(this, &ExtractControlItem::triggerUpdate);
 }
 
 void ExtractControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {

@@ -3,8 +3,6 @@
 #include "../layouts/FlowLayout.h"
 #include "editor/util.h"
 #include "ModulePreviewButton.h"
-#include "editor/model/Library.h"
-#include "editor/model/LibraryEntry.h"
 
 using namespace AxiomGui;
 
@@ -14,12 +12,12 @@ ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *li
     auto widget = new QWidget(this);
     layout = new FlowLayout(this, 0, 0, 0);
 
-    for (const auto &entry : library->entries()) {
+    /*for (const auto &entry : library->entries()) {
         addEntry(entry.get());
     }
 
     connect(library, &AxiomModel::Library::entryAdded,
-            this, &ModulePreviewList::addEntry);
+            this, &ModulePreviewList::addEntry);*/
 
     widget->setLayout(layout);
     setWidgetResizable(true);
@@ -31,9 +29,9 @@ void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
     widget->setObjectName("preview-button");
     layout->addWidget(widget);
 
-    connect(entry, &AxiomModel::LibraryEntry::removed,
+    /*connect(entry, &AxiomModel::LibraryEntry::removed,
             this, [this, widget]() {
                 layout->removeWidget(widget);
                 delete widget;
-            });
+            });*/
 }

@@ -4,6 +4,7 @@
 #include <QtWidgets/QTextEdit>
 
 #include "compiler/runtime/ErrorLog.h"
+#include "editor/model/Hookable.h"
 
 class QGraphicsProxyWidget;
 
@@ -15,7 +16,7 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class CustomNodePanel : public QGraphicsObject {
+    class CustomNodePanel : public QGraphicsObject, public AxiomModel::Hookable {
     Q_OBJECT
 
     public:

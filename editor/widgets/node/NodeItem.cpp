@@ -8,6 +8,10 @@
 #include "editor/model/objects/GroupNode.h"
 #include "editor/model/objects/CustomNode.h"
 #include "editor/model/objects/ControlSurface.h"
+#include "editor/model/objects/NumControl.h"
+#include "editor/model/objects/MidiControl.h"
+#include "editor/model/objects/ExtractControl.h"
+#include "editor/model/objects/PortalControl.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "../surface/NodeSurfacePanel.h"
 #include "editor/widgets/controls/NumControlItem.h"
@@ -153,7 +157,7 @@ QPainterPath NodeItem::shape() const {
 }
 
 void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if (node->controls().value()) (*node->controls().value())->deselectAll();
+    if (node->controls().value()) (*node->controls().value())->grid().deselectAll();
 
     if (event->button() == Qt::LeftButton) {
         if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));

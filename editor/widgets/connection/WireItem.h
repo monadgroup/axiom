@@ -4,13 +4,15 @@
 #include <QtWidgets/QGraphicsPathItem>
 #include <deque>
 
+#include "editor/model/Hookable.h"
+
 namespace AxiomModel {
     class ConnectionWire;
 }
 
 namespace AxiomGui {
 
-    class WireItem : public QObject, public QGraphicsPathItem {
+    class WireItem : public QObject, public QGraphicsPathItem, public AxiomModel::Hookable {
     Q_OBJECT
 
     public:
@@ -20,9 +22,9 @@ namespace AxiomGui {
 
     private slots:
 
-        void updateRoute();
+        void updateRoute(const std::deque<QPoint> &route);
 
-        void setActive(bool active);
+        void setIsActive(bool active);
 
         void remove();
 

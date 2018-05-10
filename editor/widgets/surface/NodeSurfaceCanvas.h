@@ -93,8 +93,7 @@ namespace AxiomGui {
         QVector<QPointF> selectionPoints;
         QGraphicsPathItem *selectionPath;
 
-        bool isConnecting = false;
-        AxiomModel::ConnectionWire connectionWire;
+        std::optional<AxiomModel::ConnectionWire> connectionWire;
         AxiomModel::Control *sourceControl;
 
         //bool isConnecting = false;

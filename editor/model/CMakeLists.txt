@@ -15,6 +15,7 @@ find_package(Qt5Core REQUIRED)
 get_target_property(QT5_INCLUDE_DIRS Qt5::Core INTERFACE_INCLUDE_DIRECTORIES)
 
 set(SOURCE_FILES
+        Event.h
         ConnectionWire.cpp
         HistoryList.cpp
         Hookable.cpp

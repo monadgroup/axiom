@@ -7,6 +7,7 @@
 #include <QtCore/QTimer>
 
 #include "editor/resources/resource.h"
+#include "../surface/NodeSurfacePanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
 #include "../history/HistoryPanel.h"
 #include "AboutWindow.h"
@@ -62,10 +63,10 @@ MainWindow::MainWindow(AxiomModel::Project project) : _project(std::move(project
     helpMenu->addAction(GlobalActions::helpAbout);
 
     // connect menu things
-    connect(GlobalActions::fileOpen, &QAction::triggered,
+    /*connect(GlobalActions::fileOpen, &QAction::triggered,
             this, &MainWindow::openProject);
     connect(GlobalActions::fileSave, &QAction::triggered,
-            this, &MainWindow::saveProject);
+            this, &MainWindow::saveProject);*/
     connect(GlobalActions::fileQuit, &QAction::triggered,
             QApplication::quit);
 
@@ -76,16 +77,14 @@ MainWindow::MainWindow(AxiomModel::Project project) : _project(std::move(project
     history.undoTypeChanged.listen([](AxiomModel::Action::ActionType type) {
         GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(type));
     });
-    connect(GlobalActions::editUndo, &QAction::triggered,
-            &history, &AxiomModel::HistoryList::undo);
+    connect(GlobalActions::editUndo, &QAction::triggered, [&history]() { history.undo(); });
 
     GlobalActions::editRedo->setEnabled(history.canRedo());
     history.canRedoChanged.forward(GlobalActions::editRedo, &QAction::setEnabled);
     history.redoTypeChanged.listen([](AxiomModel::Action::ActionType type) {
         GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(type));
     });
-    connect(GlobalActions::editRedo, &QAction::triggered,
-            &history, &AxiomModel::HistoryList::redo);
+    connect(GlobalActions::editRedo, &QAction::triggered, [&history]() { history.redo(); });
 
     connect(GlobalActions::helpAbout, &QAction::triggered,
             this, &MainWindow::showAbout);

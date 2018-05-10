@@ -1,6 +1,5 @@
 #include "ModulePreviewCanvas.h"
 
-#include "editor/model/schematic/Schematic.h"
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
 
@@ -9,7 +8,7 @@ using namespace AxiomModel;
 
 ModulePreviewCanvas::ModulePreviewCanvas(const Schematic *schematic) {
     // todo: this could be refactored with SchematicCanvas
-    for (const auto &item : schematic->items()) {
+    /*for (const auto &item : schematic->items()) {
         if (auto node = dynamic_cast<Node *>(item.get())) {
             addNode(node);
         }
@@ -29,11 +28,11 @@ ModulePreviewCanvas::ModulePreviewCanvas(const Schematic *schematic) {
     connect(schematic, &Schematic::itemAdded,
             this, &ModulePreviewCanvas::contentChanged);
     connect(schematic, &Schematic::wireAdded,
-            this, &ModulePreviewCanvas::addWire);
+            this, &ModulePreviewCanvas::addWire);*/
 }
 
 void ModulePreviewCanvas::addNode(AxiomModel::Node *node) {
-    connect(node, &Node::posChanged,
+    /*connect(node, &Node::posChanged,
             this, &ModulePreviewCanvas::contentChanged);
     connect(node, &Node::sizeChanged,
             this, &ModulePreviewCanvas::contentChanged);
@@ -42,11 +41,11 @@ void ModulePreviewCanvas::addNode(AxiomModel::Node *node) {
 
     auto item = new NodeItem(node, nullptr);
     item->setZValue(1);
-    addItem(item);
+    addItem(item);*/
 }
 
 void ModulePreviewCanvas::addWire(AxiomModel::ConnectionWire *wire) {
-    auto item = new WireItem(this, wire);
+    /*auto item = new WireItem(this, wire);
     item->setZValue(0);
-    addItem(item);
+    addItem(item);*/
 }

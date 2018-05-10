@@ -5,7 +5,6 @@
 #include <memory>
 
 #include "editor/model/Project.h"
-#include "editor/widgets/schematic/NodeSurfacePanel.h"
 
 namespace AxiomModel {
     class Project;

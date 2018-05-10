@@ -84,10 +84,10 @@ void CustomNodePanel::updateSize() {
     auto br = boundingRect();
     auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
 
-    textProxy->setGeometry(QRectF(
+    /*textProxy->setGeometry(QRectF(
         QPointF(0, nodeSize.height() + 5),
         QSizeF(br.width() - 10, node->panelHeight() - 5)
-    ));
+    ));*/
 
     emit resizerSizeChanged(br.size() - QSizeF(5, 5));
 }

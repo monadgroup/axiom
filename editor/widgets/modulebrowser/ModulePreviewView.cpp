@@ -11,9 +11,6 @@
 
 #include "ModulePreviewCanvas.h"
 #include "../node/NodeItem.h"
-#include "editor/model/Library.h"
-#include "editor/model/LibraryEntry.h"
-#include "editor/model/schematic/LibrarySchematic.h"
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
 #include "../../util.h"
@@ -22,7 +19,7 @@ using namespace AxiomGui;
 
 ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent)
     : QGraphicsView(parent), window(window), library(library), entry(entry) {
-    auto moduleScene = new ModulePreviewCanvas(&entry->schematic());
+    /*auto moduleScene = new ModulePreviewCanvas(&entry->schematic());
     setScene(moduleScene);
     scene()->setParent(this);
 
@@ -34,11 +31,11 @@ ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *li
     setFixedSize(100, 100);
     updateScaling();
     connect(moduleScene, &ModulePreviewCanvas::contentChanged,
-            this, &ModulePreviewView::updateScaling);
+            this, &ModulePreviewView::updateScaling);*/
 }
 
 void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
-    QGraphicsView::mousePressEvent(event);
+    /*QGraphicsView::mousePressEvent(event);
 
     if (event->button() == Qt::LeftButton) {
         event->accept();
@@ -54,15 +51,15 @@ void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
         drag->setMimeData(mimeData);
 
         drag->exec();
-    }
+    }*/
 }
 
 void ModulePreviewView::mouseDoubleClickEvent(QMouseEvent *event) {
-    window->showSchematic(nullptr, &entry->schematic(), true);
+    //window->showSchematic(nullptr, &entry->schematic(), true);
 }
 
 void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
-    event->accept();
+    /*event->accept();
 
     QMenu menu;
 
@@ -110,12 +107,12 @@ void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
         if (confirmBox.exec() == QMessageBox::Yes) {
             entry->remove();
         }
-    }
+    }*/
 }
 
 void ModulePreviewView::updateScaling() {
     // figure out the bounding box size of the scene
-    QRectF boundingRect;
+    /*QRectF boundingRect;
     for (const auto &item : scene()->items()) {
         if (auto node = dynamic_cast<NodeItem*>(item)) {
             auto br = node->drawBoundingRect();
@@ -133,5 +130,5 @@ void ModulePreviewView::updateScaling() {
     scale(1 / currentScale, 1 / currentScale);
     centerOn(boundingRect.center());
     scale(scaleFactor, scaleFactor);
-    currentScale = scaleFactor;
+    currentScale = scaleFactor;*/
 }

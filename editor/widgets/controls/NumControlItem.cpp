@@ -9,8 +9,9 @@
 #include "editor/model/Project.h"
 #include "editor/model/objects/NumControl.h"
 #include "../node/NodeItem.h"
-#include "editor/util.h"
+#include "../CommonColors.h"
 #include "../FloatingValueEditor.h"
+#include "../../util.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -25,10 +26,10 @@ static std::vector<std::pair<QString, NumControl::DisplayMode>> modes = {
 
 NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
-    control->valueChanged.listen(this, &NumControlItem::triggerUpdate);
-    control->displayModeChanged.listen(this, &NumControlItem::triggerUpdate);
-    control->connections().itemAdded.listen(this, &NumControlItem::triggerUpdate);
-    control->connections().itemRemoved.listen(this, &NumControlItem::triggerUpdate);
+    control->valueChanged.listen<ControlItem>(this, &NumControlItem::triggerUpdate);
+    control->displayModeChanged.listen<ControlItem>(this, &NumControlItem::triggerUpdate);
+    control->connections().itemAdded.listen<ControlItem>(this, &NumControlItem::triggerUpdate);
+    control->connections().itemRemoved.listen<ControlItem>(this, &NumControlItem::triggerUpdate);
 }
 
 void NumControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {

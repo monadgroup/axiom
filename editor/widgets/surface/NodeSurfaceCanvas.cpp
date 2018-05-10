@@ -17,6 +17,7 @@
 #include "editor/model/objects/NodeSurface.h"
 #include "editor/model/objects/Control.h"
 #include "editor/model/objects/Connection.h"
+#include "editor/model/objects/Node.h"
 #include "editor/model/actions/CreateCustomNodeAction.h"
 #include "editor/model/actions/CreateGroupNodeAction.h"
 #include "editor/model/actions/CreateConnectionAction.h"
@@ -60,9 +61,9 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
 
     // connect to model
     surface->nodes().itemAdded.listen(this, &NodeSurfaceCanvas::addNode);
-    surface->connections().itemAdded.listen(this, [this](Connection *connection) {
+    surface->connections().itemAdded.listen(this, std::function([this](Connection *connection) {
         addWire(&connection->wire());
-    });
+    }));
 
     // todo: select all and delete selected
 
@@ -109,28 +110,27 @@ QSize NodeSurfaceCanvas::controlRealSize(const QSize &s) {
 }
 
 void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
-    if (isConnecting) return;
+    if (connectionWire) return;
 
-    isConnecting = true;
     sourceControl = control->sink();
     auto startPos = sourceControl->worldPos().toPoint();
     connectionWire = ConnectionWire(&surface->grid(), sourceControl->wireType(), startPos, startPos);
-    connectionWire.setStartActive(true);
-    addWire(&connectionWire);
+    connectionWire->setStartActive(true);
+    addWire(&*connectionWire);
 
-    connectionWire.removed.listen(this, [this]() { isConnecting = false; });
+    connectionWire->removed.listen(this, std::function([this]() { connectionWire.reset(); }));
 }
 
 void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
-    if (!isConnecting) return;
+    if (!connectionWire) return;
 
     auto currentItem = itemAt(mousePos, QTransform());
 
     // snap to the connectable if it's not the one we started with, and it has the same type
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable->sink()->wireType() == connectionWire.wireType() && connectable->sink() != sourceControl) {
-        connectionWire.setEndPos(connectable->sink()->worldPos().toPoint());
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable->sink()->wireType() == connectionWire->wireType() && connectable->sink() != sourceControl) {
+        connectionWire->setEndPos(connectable->sink()->worldPos().toPoint());
     } else {
-        connectionWire.setEndPos(
+        connectionWire->setEndPos(
             QPoint(
                 (int) (mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
                 (int) (mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
@@ -140,7 +140,7 @@ void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
 }
 
 void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
-    if (!isConnecting) return;
+    if (!connectionWire) return;
 
     auto currentItem = itemAt(mousePos, QTransform());
 
@@ -153,13 +153,13 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
         // todo: do something?
     }
 
-    connectionWire.remove();
+    connectionWire->remove();
 }
 
 void NodeSurfaceCanvas::cancelConnecting() {
-    if (!isConnecting) return;
+    if (!connectionWire) return;
 
-    connectionWire.remove();
+    connectionWire->remove();
 }
 
 void NodeSurfaceCanvas::addNode(AxiomModel::Node *node) {
@@ -275,7 +275,8 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
     QGraphicsScene::contextMenuEvent(event);
     if (event->isAccepted()) return;
 
-    auto scenePos = event->scenePos();
+    // todo
+    /*auto scenePos = event->scenePos();
     AddNodeMenu menu(surface, "");
 
     connect(&menu, &AddNodeMenu::newNodeAdded,
@@ -297,7 +298,7 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
                         });
             });
 
-    menu.exec(event->screenPos());
+    menu.exec(event->screenPos());*/
 }
 
 void NodeSurfaceCanvas::leftMousePressEvent(QGraphicsSceneMouseEvent *event) {

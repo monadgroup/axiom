@@ -4,6 +4,7 @@
 #include <optional>
 #include <functional>
 #include <set>
+#include <utility>
 
 #include "Hookable.h"
 
@@ -20,13 +21,6 @@ namespace AxiomModel {
         Event() noexcept = default;
 
         explicit Event(func_type func) noexcept : callback(func) {}
-
-        template<class... TA>
-        explicit Event(std::function<void(TA...)> func) noexcept
-            : callback([func](Args... params) {
-                func(params...);
-            }) {
-        }
 
         Event(const Event &a) noexcept : callback(a.callback) {
             copyFrom(a);
@@ -73,41 +67,34 @@ namespace AxiomModel {
             return listen(Event(listener));
         }
 
-        template<class ...TA>
-        Event *listen(std::function<void(TA...)> listener) {
-            return listen(Event(listener));
-        }
-
         Event *listen(Hookable *follow, Event listener) {
             auto result = listen(std::move(listener));
             result->follow(follow);
             return result;
         }
 
-        Event *listen(Hookable *follow, func_type listener) {
-            return listen(follow, Event(listener));
+        template<class TR, class... TA>
+        Event *listen(Hookable *follow, std::function<TR(TA...)> listener) {
+            return listen(follow, Event(std::function([listener](Args&&... params) {
+                applyFunc<sizeof...(TA)>(listener, std::forward<Args>(params)...);
+            })));
         }
 
-        template<class... TA>
-        Event *listen(Hookable *follow, std::function<void(TA...)> listener) {
-            return listen(follow, Event(listener));
-        }
-
-        template<class TB, class... TA>
-        Event *listen(TB *follow, void (TB::*listener)(TA...)) {
+        template<class TB, class TFB, class TR, class... TA>
+        Event *listen(TB *follow, TR (TFB::*listener)(TA...)) {
             auto wrapper = std::mem_fn(listener);
-            return listen(follow, Event([follow, wrapper](Args... params) {
-                wrapper(follow, params...);
-            }));
+            return listen(follow, Event(std::function([follow, wrapper](Args&&... params) {
+                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+            })));
         }
 
-        template<class TB, class... TA>
-        Event *forward(TB *handler, void (TB::*listener)(TA...)) {
+        template<class TB, class TFB, class TR, class... TA>
+        Event *forward(TB *handler, TR (TFB::*listener)(TA...)) {
             auto wrapper = std::mem_fn(listener);
-            return listen(Event([handler, wrapper](Args... params) {
-                wrapper(handler, params...);
-            }));
-        };
+            return listen(Event(std::function([handler, wrapper](Args&&... params) {
+                applyFunc<sizeof...(TA) + 1>(wrapper, handler, std::forward<Args>(params)...);
+            })));
+        }
 
         void connect(Event *other) {
             listeners.emplace(other);
@@ -180,6 +167,16 @@ namespace AxiomModel {
                 hook->removeDestructHook(&a);
                 hook->addDestructHook(this, [this]() { detachAll(); });
             }
+        }
+
+        template<class Func, size_t... I, class... PassArgs>
+        static void applyFuncIndexed(const Func &func, std::index_sequence<I...>, PassArgs&&... params) {
+            func(std::get<I>(std::make_tuple(std::forward<PassArgs>(params)...))...);
+        }
+
+        template<size_t ArgCount, class Func, class... PassArgs>
+        static void applyFunc(const Func &func, PassArgs&&... params) {
+            applyFuncIndexed(func, std::make_index_sequence<ArgCount>{}, std::forward<PassArgs>(params)...);
         }
     };
 

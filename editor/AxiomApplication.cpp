@@ -6,7 +6,6 @@
 #include <QtCore/QtCore>
 
 #include "util.h"
-#include "editor/model/node/CustomNode.h"
 #include "widgets/GlobalActions.h"
 
 #ifdef AXIOM_STATIC_BUILD

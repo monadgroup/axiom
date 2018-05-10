@@ -52,8 +52,8 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
             connect(resizer, &ItemResizer::changed,
                     this, &ControlItem::resizerChanged);
 
-            control->selected.listen(this, [resizer]() { resizer->setVisible(true); });
-            control->deselected.listen(this, [resizer]() { resizer->setVisible(false); });
+            control->selected.listen(this, std::function([resizer]() { resizer->setVisible(true); }));
+            control->deselected.listen(this, std::function([resizer]() { resizer->setVisible(false); }));
 
             resizer->setParentItem(this);
         }

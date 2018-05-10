@@ -1,5 +1,6 @@
 #include "compiler/runtime/Runtime.h"
 #include "widgets/windows/MainWindow.h"
+#include "widgets/surface/NodeSurfacePanel.h"
 #include "model/Project.h"
 #include "AxiomApplication.h"
 #include "compiler/runtime/GeneratableModuleClass.h"

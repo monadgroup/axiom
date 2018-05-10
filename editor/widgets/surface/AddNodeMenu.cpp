@@ -3,9 +3,7 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QWidgetAction>
 
-#include "editor/model/schematic/Schematic.h"
 #include "editor/model/Project.h"
-#include "editor/model/LibraryEntry.h"
 
 using namespace AxiomGui;
 
@@ -32,7 +30,7 @@ AddNodeMenu::AddNodeMenu(AxiomModel::Schematic *schematic, const QString &search
     addSeparator();
 
     // add default entries
-    std::vector<AxiomModel::LibraryEntry *> sortedEntries;
+    /*std::vector<AxiomModel::LibraryEntry *> sortedEntries;
     for (const auto &entry : schematic->project()->library.entries()) {
         sortedEntries.push_back(entry.get());
     }
@@ -41,7 +39,7 @@ AddNodeMenu::AddNodeMenu(AxiomModel::Schematic *schematic, const QString &search
     });
     for (const auto &entry : sortedEntries) {
         entryActions.emplace(entry, addAction(entry->name()));
-    }
+    }*/
 
     cantFindAction = addAction(tr("Oops, I can't find that one..."));
     cantFindAction->setEnabled(false);
@@ -51,7 +49,7 @@ AddNodeMenu::AddNodeMenu(AxiomModel::Schematic *schematic, const QString &search
 }
 
 void AddNodeMenu::applySearch(QString search) {
-    QString lowerSearch = search.toLower();
+    /*QString lowerSearch = search.toLower();
 
     bool anyEntryVisible = false;
     for (const auto &pair : entryActions) {
@@ -60,5 +58,5 @@ void AddNodeMenu::applySearch(QString search) {
         if (inName) anyEntryVisible = true;
     }
 
-    cantFindAction->setVisible(!anyEntryVisible);
+    cantFindAction->setVisible(!anyEntryVisible);*/
 }

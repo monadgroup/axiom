@@ -7,6 +7,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/CustomNode.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ExtractControl.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/GroupNode.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/GroupSurface.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/NodeSurface.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/NumControl.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/PortalControl.cpp"

@@ -3,8 +3,7 @@
 #include <QtGui/QPainter>
 #include <QtWidgets/QStyleOptionGraphicsItem>
 
-// FIXME: add this file to git :P
-#include "editor/model/connection/ExtractConnectionSink.h"
+#include "editor/model/objects/ExtractControl.h"
 
 namespace AxiomGui {
 
@@ -12,7 +11,7 @@ namespace AxiomGui {
     public:
 
         void paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState,
-                   AxiomModel::ExtractConnectionSink::ActiveSlotFlags activeFlags, const QColor &baseColor,
+                   AxiomModel::ExtractControl::ActiveSlotFlags activeFlags, const QColor &baseColor,
                    const QColor &activeColor);
 
         void shape(QPainterPath &path, const QRectF &aspectBoundingRect) const;

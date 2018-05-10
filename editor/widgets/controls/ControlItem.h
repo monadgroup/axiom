@@ -74,8 +74,6 @@ namespace AxiomGui {
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-    protected slots:
-
         void triggerGeometryChange();
 
         void triggerUpdate();
