@@ -3,24 +3,26 @@
 #include <QtWidgets/QGraphicsObject>
 
 #include "../IConnectable.h"
+#include "editor/model/Hookable.h"
 
 namespace AxiomModel {
-    class NodeControl;
+    class Control;
 }
 
 namespace AxiomGui {
 
     class NodeSurfaceCanvas;
 
-    class ControlItem : public QGraphicsObject, public IConnectable {
+    class ControlItem : public QGraphicsObject, public AxiomModel::Hookable, public IConnectable {
     Q_OBJECT
+    Q_PROPERTY(float hoverState READ hoverState WRITE setHoverState)
 
     public:
-        AxiomModel::NodeControl *control;
+        AxiomModel::Control *control;
 
         NodeSurfaceCanvas *canvas;
 
-        explicit ControlItem(AxiomModel::NodeControl *control, NodeSurfaceCanvas *canvas);
+        explicit ControlItem(AxiomModel::Control *control, NodeSurfaceCanvas *canvas);
 
         QRectF boundingRect() const override;
 
@@ -28,7 +30,23 @@ namespace AxiomGui {
 
         bool isEditable() const;
 
-        AxiomModel::NodeControl *sink() override;
+        AxiomModel::Control *sink() override { return control; }
+
+        float hoverState() const { return _hoverState; }
+
+    public slots:
+
+        void setHoverState(float hoverState);
+
+    signals:
+
+        void resizerPosChanged(QPointF newPos);
+
+        void resizerSizeChanged(QSizeF newSize);
+
+        void mouseEnter();
+
+        void mouseLeave();
 
     protected:
 
@@ -38,9 +56,9 @@ namespace AxiomGui {
 
         virtual QPainterPath controlPath() const = 0;
 
-        virtual QColor outlineNormalColor() const = 0;
+        QColor outlineNormalColor() const;
 
-        virtual QColor outlineActiveColor() const = 0;
+        QColor outlineActiveColor() const;
 
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
@@ -49,6 +67,10 @@ namespace AxiomGui {
         void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
@@ -72,16 +94,11 @@ namespace AxiomGui {
 
         void resizerStartDrag();
 
-    signals:
-
-        void resizerPosChanged(QPointF newPos);
-
-        void resizerSizeChanged(QSizeF newSize);
-
     private:
         bool isMoving = false;
         bool isConnecting = false;
         QPointF mouseStartPoint;
+        float _hoverState = 0;
     };
 
 }

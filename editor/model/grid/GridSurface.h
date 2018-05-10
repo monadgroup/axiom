@@ -51,6 +51,8 @@ namespace AxiomModel {
         
         const ItemCollection &selectedItems() const { return _selectedItems; }
 
+        bool hasSelection() const { return !_selectedItems.empty(); }
+
         void doRuntimeUpdate();
 
         void saveValue();

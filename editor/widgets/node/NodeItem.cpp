@@ -4,66 +4,34 @@
 #include <QtWidgets/QGraphicsProxyWidget>
 #include <QtCore/QTimer>
 
-#include "editor/widgets/ItemResizer.h"
-#include "editor/widgets/schematic/NodeSurfaceCanvas.h"
-#include "editor/model/node/Node.h"
-#include "editor/model/node/CustomNode.h"
-#include "editor/model/node/GroupNode.h"
-#include "editor/model/control/NodeControl.h"
-#include "editor/model/control/NodeNumControl.h"
-#include "editor/model/control/NodeMidiControl.h"
-#include "editor/model/control/NodeExtractControl.h"
-#include "editor/model/control/NodeIOControl.h"
-#include "editor/model/history/HistoryList.h"
-#include "editor/model/Project.h"
-#include "editor/model/LibraryEntry.h"
-#include "../controls/NumControl.h"
-#include "../controls/MidiControl.h"
-#include "../controls/ExtractControl.h"
-#include "../controls/IOControl.h"
-#include "editor/widgets/schematic/NodeSurfacePanel.h"
+#include "editor/model/objects/Node.h"
+#include "editor/model/objects/GroupNode.h"
+#include "editor/model/objects/CustomNode.h"
+#include "editor/model/objects/ControlSurface.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "../surface/NodeSurfacePanel.h"
+#include "editor/widgets/controls/NumControlItem.h"
+#include "editor/widgets/controls/MidiControlItem.h"
+#include "editor/widgets/controls/ExtractControlItem.h"
+#include "editor/widgets/controls/PortalControlItem.h"
 #include "../windows/MainWindow.h"
-#include "editor/widgets/windows/ModulePropertiesWindow.h"
+#include "../windows/ModulePropertiesWindow.h"
 #include "../FloatingValueEditor.h"
+#include "../ItemResizer.h"
 #include "CustomNodePanel.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
 NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node(node) {
-    // create items for all controls that already exist
-    for (const auto &item : node->surface.items()) {
-        if (auto control = dynamic_cast<NodeControl *>(item.get())) {
-            addControl(control);
-        }
-    }
-
-    connect(node, &Node::nameChanged,
-            this, &NodeItem::triggerUpdate);
-    connect(node, &Node::extractedChanged,
-            this, &NodeItem::triggerUpdate);
-    connect(node, &Node::posChanged,
-            this, &NodeItem::setPos);
-    connect(node, &Node::beforeSizeChanged,
-            this, &NodeItem::triggerGeometryChange);
-    connect(node, &Node::sizeChanged,
-            this, &NodeItem::setSize);
-    connect(node, &Node::selectedChanged,
-            this, &NodeItem::setIsSelected);
-    connect(node, &Node::deselected,
-            this, &NodeItem::triggerUpdate);
-    connect(node, &Node::removed,
-            this, &NodeItem::remove);
-
-    connect(&node->surface, &NodeSurface::hasSelectionChanged,
-            this, &NodeItem::triggerUpdate);
-
-    connect(&node->surface, &NodeSurface::itemAdded,
-            this, [this](AxiomModel::GridItem *item) {
-                if (auto control = dynamic_cast<NodeControl *>(item)) {
-                    addControl(control);
-                }
-            });
+    node->nameChanged.listen(this, &NodeItem::triggerUpdate);
+    node->extractedChanged.listen(this, &NodeItem::triggerUpdate);
+    node->posChanged.listen(this, &NodeItem::setPos);
+    node->beforeSizeChanged.listen(this, &NodeItem::triggerGeometryChange);
+    node->sizeChanged.listen(this, &NodeItem::setSize);
+    node->selectedChanged.listen(this, &NodeItem::setIsSelected);
+    node->deselected.listen(this, &NodeItem::triggerUpdate);
+    node->removed.listen(this, &NodeItem::remove);
 
     // create resize items
     if (node->isResizable()) {
@@ -84,40 +52,36 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
 
             connect(resizer, &ItemResizer::startDrag,
                     this, &NodeItem::resizerStartDrag);
-            connect(resizer, &ItemResizer::startDrag,
-                    node, &Node::startResize);
             connect(resizer, &ItemResizer::changed,
                     this, &NodeItem::resizerChanged);
-            connect(resizer, &ItemResizer::endDrag,
-                    this, [node]() {
-                        DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::SIZE_NODE, {
-                            node->finishResize();
-                        });
-                    });
 
-            connect(&node->surface, &NodeSurface::hasSelectionChanged,
-                    this, [resizer](auto hasSelection) { resizer->setVisible(!hasSelection); });
+            node->controls().then([resizer](ControlSurface *surface) {
+                resizer->setVisible(!surface->grid().hasSelection());
+                surface->grid().hasSelectionChanged.listen([resizer](bool hasSelection) {
+                    resizer->setVisible(!hasSelection);
+                });
+            });
 
             resizer->setParentItem(this);
-            resizer->setVisible(!node->surface.hasSelection());
         }
     }
 
-    if (auto customNode = dynamic_cast<CustomNode *>(node)) {
-        auto panel = new CustomNodePanel(customNode);
-        panel->setParentItem(this);
-        panel->setFlag(QGraphicsItem::ItemStacksBehindParent);
-    }
+    // todo: custom node panel
 
     // set initial state
     setPos(node->pos());
     setSize(node->size());
     setIsSelected(node->isSelected());
-    for (const auto &item : node->surface.items()) {
-        if (auto control = dynamic_cast<NodeControl *>(item.get())) {
+
+    // create items for all controls that already exist
+    node->controls().then([this](ControlSurface *surface) {
+        for (const auto &control : surface->controls()) {
             addControl(control);
         }
-    }
+
+        surface->controls().itemAdded.listen(this, &NodeItem::addControl);
+        surface->grid().hasSelectionChanged.listen(this, &NodeItem::triggerUpdate);
+    });
 }
 
 QRectF NodeItem::boundingRect() const {
@@ -139,14 +103,13 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     painter->setRenderHint(QPainter::Antialiasing, false);
 
     QColor darkColor, lightColor, outlineColor;
-    switch (node->type) {
-        case Node::Type::IO:
-        case Node::Type::CUSTOM:
+    switch (node->nodeType()) {
+        case Node::NodeType::CUSTOM_NODE:
             darkColor = CommonColors::customNodeNormal;
             lightColor = CommonColors::customNodeActive;
             outlineColor = CommonColors::customNodeBorder;
             break;
-        case Node::Type::GROUP:
+        case Node::NodeType::GROUP_NODE:
             darkColor = CommonColors::groupNodeNormal;
             lightColor = CommonColors::groupNodeActive;
             outlineColor = CommonColors::groupNodeBorder;
@@ -163,9 +126,10 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     auto gridPen = QPen(QColor(lightColor.red(), lightColor.green(), lightColor.blue(), 255), 1);
 
-    if (node->surface.hasSelection()) {
+    //if (node->surface.hasSelection()) {
+    if (node->controls().value() && (*node->controls().value())->grid().hasSelection()) {
         painter->setPen(QPen(outlineColor, 1));
-        auto nodeSurfaceSize = NodeSurface::schematicToNodeSurface(node->size());
+        auto nodeSurfaceSize = ControlSurface::nodeToControl(node->size());
         for (auto x = 0; x < nodeSurfaceSize.width(); x++) {
             for (auto y = 0; y < nodeSurfaceSize.height(); y++) {
                 painter->drawPoint(NodeSurfaceCanvas::controlRealPos(QPoint(x, y)));
@@ -189,14 +153,14 @@ QPainterPath NodeItem::shape() const {
 }
 
 void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    node->surface.deselectAll();
+    if (node->controls().value()) (*node->controls().value())->deselectAll();
 
     if (event->button() == Qt::LeftButton) {
         if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
 
         isDragging = true;
         mouseStartPoint = event->screenPos();
-        emit node->startedDragging();
+        node->startedDragging.trigger();
     }
 
     event->accept();
@@ -206,7 +170,7 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
-    emit node->draggedTo(QPoint(
+    node->draggedTo.trigger(QPoint(
         qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
         qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())
     ));
@@ -216,35 +180,26 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
-
     isDragging = false;
-    DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::MOVE_NODE, {
-        emit
-        node->finishedDragging();
-    });
+    node->finishedDragging.trigger();
 
     event->accept();
 }
 
 void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-    if (auto moduleNode = dynamic_cast<GroupNode *>(node)) {
-        event->accept();
+    event->accept();
 
-        canvas->panel->window->showSchematic(
-            canvas->panel,
-            moduleNode->schematic.get(),
-            false
-        );
-    } else {
-        event->accept();
-        node->setPanelOpen(!node->isPanelOpen());
+    if (auto groupNode = dynamic_cast<GroupNode *>(node)) {
+        // todo: show surface
+    } else if (auto customNode = dynamic_cast<CustomNode *>(node)) {
+        // todo: open panel
     }
 }
 
 void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     if (!node->isSelected()) node->select(true);
 
-    event->accept();
+    /*event->accept();
 
     auto copyableItems = GridSurface::findCopyable(node->parentSchematic->selectedItems());
 
@@ -273,12 +228,12 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                     });
                 });
     } else if (selectedAction == groupAction) {
-        /*auto groupedNode = node->parentSchematic->groupSelection();
+        *auto groupedNode = node->parentSchematic->groupSelection();
         canvas->panel->window->showSchematic(
             canvas->panel,
             groupedNode->schematic.get(),
             true
-        );*/
+        );*
     } else if (selectedAction == saveModuleAction) {
         ModulePropertiesWindow saveWindow(&node->parentSchematic->project()->library);
         if (saveWindow.exec() == QDialog::Accepted) {
@@ -297,7 +252,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {
             node->parentSurface->deleteSelectedItems();
         });
-    }
+    }*/
 }
 
 void NodeItem::setPos(QPoint newPos) {
@@ -310,17 +265,17 @@ void NodeItem::setSize(QSize newSize) {
     emit resizerSizeChanged(NodeSurfaceCanvas::nodeRealSize(newSize));
 }
 
-void NodeItem::addControl(NodeControl *control) {
+void NodeItem::addControl(Control *control) {
     ControlItem *item = nullptr;
 
-    if (auto numControl = dynamic_cast<NodeNumControl *>(control)) {
-        item = new NumControl(numControl, canvas);
-    } else if (auto midiControl = dynamic_cast<NodeMidiControl *>(control)) {
-        item = new MidiControl(midiControl, canvas);
-    } else if (auto extractControl = dynamic_cast<NodeExtractControl *>(control)) {
-        item = new ExtractControl(extractControl, canvas);
-    } else if (auto outputControl = dynamic_cast<NodeIOControl *>(control)) {
-        item = new IOControl(outputControl, canvas);
+    if (auto numControl = dynamic_cast<NumControl *>(control)) {
+        item = new NumControlItem(numControl, canvas);
+    } else if (auto midiControl = dynamic_cast<MidiControl *>(control)) {
+        item = new MidiControlItem(midiControl, canvas);
+    } else if (auto extractControl = dynamic_cast<ExtractControl *>(control)) {
+        item = new ExtractControlItem(extractControl, canvas);
+    } else if (auto outputControl = dynamic_cast<PortalControl *>(control)) {
+        item = new PortalControlItem(outputControl, canvas);
     }
 
     assert(item);

@@ -2,17 +2,19 @@
 
 #include <QtWidgets/QGraphicsObject>
 
+#include "editor/model/Hookable.h"
+
 namespace AxiomModel {
     class Node;
 
-    class NodeControl;
+    class Control;
 }
 
 namespace AxiomGui {
 
     class NodeSurfaceCanvas;
 
-    class NodeItem : public QGraphicsObject {
+    class NodeItem : public QGraphicsObject, public AxiomModel::Hookable {
     Q_OBJECT
 
     public:
@@ -48,7 +50,7 @@ namespace AxiomGui {
 
         void setSize(QSize newSize);
 
-        void addControl(AxiomModel::NodeControl *control);
+        void addControl(AxiomModel::Control *control);
 
         void setIsSelected(bool selected);
 

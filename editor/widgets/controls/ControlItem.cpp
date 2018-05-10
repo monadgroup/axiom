@@ -3,73 +3,84 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
+#include <QtCore/QStateMachine>
+#include <QtCore/QSignalTransition>
+#include <QtCore/QPropertyAnimation>
 
-#include "editor/model/node/Node.h"
-#include "editor/model/control/NodeControl.h"
 #include "editor/model/Project.h"
+#include "editor/model/objects/Control.h"
+#include "editor/model/objects/ControlSurface.h"
 #include "editor/util.h"
 #include "../ItemResizer.h"
-#include "editor/widgets/schematic/NodeSurfaceCanvas.h"
+#include "../CommonColors.h"
+#include "../surface/NodeSurfaceCanvas.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-ControlItem::ControlItem(NodeControl *control, NodeSurfaceCanvas *canvas) : control(control), canvas(canvas) {
-    connect(control, &NodeControl::showNameChanged,
-            this, &ControlItem::triggerUpdate);
-    connect(control, &NodeControl::posChanged,
-            this, &ControlItem::setPos);
-    connect(control, &NodeControl::beforeSizeChanged,
-            this, &ControlItem::triggerGeometryChange);
-    connect(control, &NodeControl::sizeChanged,
-            this, &ControlItem::setSize);
-    connect(control, &NodeControl::selectedChanged,
-            this, &ControlItem::updateSelected);
-    connect(control, &NodeControl::removed,
-            this, &ControlItem::remove);
+ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(control), canvas(canvas) {
+    setAcceptHoverEvents(true);
+
+    control->posChanged.listen(this, &ControlItem::setPos);
+    control->beforeSizeChanged.listen(this, &ControlItem::triggerGeometryChange);
+    control->sizeChanged.listen(this, &ControlItem::setSize);
+    control->selectedChanged.listen(this, &ControlItem::updateSelected);
+    control->isActiveChanged.listen(this, &ControlItem::triggerUpdate);
+    control->removed.listen(this, &ControlItem::remove);
 
     // create resize items
-    ItemResizer::Direction directions[] = {
-        ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
-        ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
-    };
-    for (auto i = 0; i < 8; i++) {
-        auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::controlGridSize);
-        resizer->enablePainting();
-        resizer->setVisible(false);
+    if (control->isResizable()) {
+        ItemResizer::Direction directions[] = {
+            ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
+            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
+        };
+        for (auto i = 0; i < 8; i++) {
+            auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::controlGridSize);
+            resizer->enablePainting();
+            resizer->setVisible(false);
 
-        // ensure corners are on top of edges
-        resizer->setZValue(i > 3 ? 3 : 2);
+            // ensure corners are on top of edges
+            resizer->setZValue(i > 3 ? 3 : 2);
 
-        connect(this, &ControlItem::resizerPosChanged,
-                resizer, &ItemResizer::setPos);
-        connect(this, &ControlItem::resizerSizeChanged,
-                resizer, &ItemResizer::setSize);
+            connect(this, &ControlItem::resizerPosChanged,
+                    resizer, &ItemResizer::setPos);
+            connect(this, &ControlItem::resizerSizeChanged,
+                    resizer, &ItemResizer::setSize);
 
-        connect(resizer, &ItemResizer::startDrag,
-                this, &ControlItem::resizerStartDrag);
-        connect(resizer, &ItemResizer::startDrag,
-                control, &NodeControl::startResize);
-        connect(resizer, &ItemResizer::changed,
-                this, &ControlItem::resizerChanged);
-        connect(resizer, &ItemResizer::endDrag,
-                [this, control]() {
-                    DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::SIZE_CONTROL, {
-                        control->finishResize();
-                    });
-                });
+            connect(resizer, &ItemResizer::startDrag,
+                    this, &ControlItem::resizerStartDrag);
+            connect(resizer, &ItemResizer::changed,
+                    this, &ControlItem::resizerChanged);
 
-        connect(control, &NodeControl::selected,
-                resizer, [this, resizer]() { resizer->setVisible(true); });
-        connect(control, &NodeControl::deselected,
-                resizer, [this, resizer]() { resizer->setVisible(false); });
+            control->selected.listen(this, [resizer]() { resizer->setVisible(true); });
+            control->deselected.listen(this, [resizer]() { resizer->setVisible(false); });
 
-        resizer->setParentItem(this);
+            resizer->setParentItem(this);
+        }
     }
 
     // set initial state
     setPos(control->pos());
     setSize(control->size());
+
+    // build a state machine for hovering animation
+    auto machine = new QStateMachine(this);
+    auto unhoveredState = new QState(machine);
+    unhoveredState->assignProperty(this, "hoverState", 0);
+    machine->setInitialState(unhoveredState);
+
+    auto hoveredState = new QState(machine);
+    hoveredState->assignProperty(this, "hoverState", 1);
+
+    auto mouseEnterTransition = unhoveredState->addTransition(this, &ControlItem::mouseEnter, hoveredState);
+    auto mouseLeaveTransition = unhoveredState->addTransition(this, &ControlItem::mouseLeave, hoveredState);
+
+    auto anim = new QPropertyAnimation(this, "hoverState");
+    anim->setDuration(100);
+    mouseEnterTransition->addAnimation(anim);
+    mouseLeaveTransition->addAnimation(anim);
+
+    machine->start();
 }
 
 QRectF ControlItem::boundingRect() const {
@@ -107,15 +118,15 @@ QRectF ControlItem::aspectBoundingRect() const {
 
 void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     // draw an outline if we're connected to something
-    if (!control->sink()->connections().empty()) {
+    if (!control->connections().empty()) {
         auto bounds = controlPath();
-        auto activeColor = AxiomUtil::mixColor(outlineNormalColor(), outlineActiveColor(), control->sink()->active());
+        auto activeColor = AxiomUtil::mixColor(outlineNormalColor(), outlineActiveColor(), control->isActive());
         painter->setPen(QPen(activeColor, 3));
         painter->setBrush(QBrush(activeColor));
         painter->drawPath(bounds);
     }
 
-    if (!control->showName()) return;
+    //if (!control->showName()) return;
 
     auto br = boundingRect();
     auto pathBr = useBoundingRect();
@@ -130,8 +141,11 @@ bool ControlItem::isEditable() const {
     return !control->isSelected();
 }
 
-AxiomModel::NodeControl *ControlItem::sink() {
-    return control;
+void ControlItem::setHoverState(float hoverState) {
+    if (hoverState != _hoverState) {
+        _hoverState = hoverState;
+        update();
+    }
 }
 
 QRectF ControlItem::drawBoundingRect() const {
@@ -139,6 +153,22 @@ QRectF ControlItem::drawBoundingRect() const {
         QPoint(0, 0),
         NodeSurfaceCanvas::controlRealSize(control->size())
     };
+}
+
+QColor ControlItem::outlineNormalColor() const {
+    switch (control->wireType()) {
+        case ConnectionWire::WireType::NUM: return CommonColors::numNormal;
+        case ConnectionWire::WireType::MIDI: return CommonColors::midiNormal;
+    }
+    unreachable;
+}
+
+QColor ControlItem::outlineActiveColor() const {
+    switch (control->wireType()) {
+        case ConnectionWire::WireType::NUM: return CommonColors::numActive;
+        case ConnectionWire::WireType::MIDI: return CommonColors::midiActive;
+    }
+    unreachable;
 }
 
 void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
@@ -152,9 +182,9 @@ void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 
         isMoving = true;
         mouseStartPoint = event->screenPos();
-        emit control->startedDragging();
+        control->startedDragging.trigger();
     } else {
-        control->node->surface.deselectAll();
+        control->surface()->grid().deselectAll();
         event->ignore();
     }
 }
@@ -168,7 +198,7 @@ void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         auto mouseDelta = event->screenPos() - mouseStartPoint;
-        emit control->draggedTo(QPoint(
+        control->draggedTo.trigger(QPoint(
             qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
             qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())
         ));
@@ -187,17 +217,31 @@ void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         isMoving = false;
-        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::MOVE_CONTROL, {
-            emit control->finishedDragging();
-        });
+        control->finishedDragging.trigger();
     } else {
         event->ignore();
     }
 }
 
 void ControlItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    control->setIsActive(false);
+    emit mouseLeave();
     control->select(true);
     mousePressEvent(event);
+}
+
+void ControlItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    if (!isEditable()) return;
+
+    control->setIsActive(true);
+    emit mouseEnter();
+}
+
+void ControlItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    if (!isEditable()) return;
+
+    control->setIsActive(false);
+    emit mouseLeave();
 }
 
 void ControlItem::setPos(QPoint newPos) {

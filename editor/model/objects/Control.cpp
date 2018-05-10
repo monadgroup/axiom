@@ -3,6 +3,10 @@
 #include "ControlSurface.h"
 #include "Connection.h"
 #include "Node.h"
+#include "NumControl.h"
+#include "MidiControl.h"
+#include "ExtractControl.h"
+#include "PortalControl.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../../util.h"
@@ -38,8 +42,12 @@ std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &
     QString name; stream >> name;
 
     switch ((ControlType) controlTypeInt) {
-        case ControlType::NUM_SCALAR:break;
-        case ControlType::MIDI_SCALAR:break;
+        case ControlType::NUM_SCALAR: return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), root);
+        case ControlType::MIDI_SCALAR: return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), root);
+        case ControlType::NUM_EXTRACT: return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), ConnectionWire::WireType::NUM, root);
+        case ControlType::MIDI_EXTRACT: return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), ConnectionWire::WireType::MIDI, root);
+        case ControlType::NUM_PORTAL: return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), ConnectionWire::WireType::NUM, root);
+        case ControlType::MIDI_PORTAL: return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), ConnectionWire::WireType::MIDI, root);
     }
 
     unreachable;
@@ -57,6 +65,13 @@ void Control::setName(const QString &name) {
     if (name != _name) {
         _name = name;
         nameChanged.trigger(name);
+    }
+}
+
+void Control::setIsActive(bool isActive) {
+    if (isActive != _isActive) {
+        _isActive = isActive;
+        isActiveChanged.trigger(isActive);
     }
 }
 

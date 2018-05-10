@@ -15,11 +15,16 @@ namespace AxiomModel {
     public:
         enum class ControlType {
             NUM_SCALAR,
-            MIDI_SCALAR
+            MIDI_SCALAR,
+            NUM_EXTRACT,
+            MIDI_EXTRACT,
+            NUM_PORTAL,
+            MIDI_PORTAL
         };
 
         Event<const QString &> nameChanged;
         Event<QPointF> worldPosChanged;
+        Event<bool> isActiveChanged;
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
 
@@ -45,6 +50,10 @@ namespace AxiomModel {
 
         void setName(const QString &name);
 
+        bool isActive() const { return _isActive; }
+
+        void setIsActive(bool isActive);
+
         CollectionView<Connection *> &connections() { return _connections; }
 
         const CollectionView<Connection *> &connections() const { return _connections; }
@@ -62,6 +71,7 @@ namespace AxiomModel {
         ControlType _controlType;
         ConnectionWire::WireType _wireType;
         QString _name;
+        bool _isActive = false;
 
         CollectionView<Connection *> _connections;
         CollectionView<Control *> _connectedControls;
