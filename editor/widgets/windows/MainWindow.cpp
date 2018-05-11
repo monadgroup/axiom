@@ -5,6 +5,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtCore/QTimer>
+#include <iostream>
 
 #include "editor/resources/resource.h"
 #include "../surface/NodeSurfacePanel.h"
@@ -101,9 +102,15 @@ MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) : _project(
 
     showSchematic(nullptr, &project->root, false);*/
 
-    //auto rootUuid = QUuid::createUuid();
-    //_project->mainRoot().pool().registerObj(std::make_unique<AxiomModel::RootSurface>(QUuid::createUuid(), QPointF(0, 0), 0, &_project->mainRoot()));
-    //showSurface(nullptr, AxiomModel::find(_project->mainRoot().nodeSurfaces(), rootUuid), false);
+    auto rootUuid = QUuid::createUuid();
+    auto &pool = _project->mainRoot().pool();
+    pool.registerObj(std::make_unique<AxiomModel::RootSurface>(rootUuid, QPointF(0, 0), 0, &_project->mainRoot()));
+    for (const auto &item : pool) {
+
+        std::cout << item << std::endl;
+    }
+
+    showSurface(nullptr, AxiomModel::find(_project->mainRoot().nodeSurfaces(), rootUuid), false);
 }
 
 void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *surface, bool split) {

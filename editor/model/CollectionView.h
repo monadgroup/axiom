@@ -155,8 +155,8 @@ namespace AxiomModel {
         public:
 
             ConverterImpl(collection_type collection, filter_func filter)
-                : collection(collection), filter(filter) {
-                attachEvent(collection);
+                : collection(std::move(collection)), filter(std::move(filter)) {
+                attachEvent(this->collection);
             }
 
             iterator begin() {
@@ -231,18 +231,6 @@ namespace AxiomModel {
         }
 
         CollectionView(const CollectionView &a) : impl(a.impl->clone()) {}
-
-        CollectionView &operator=(const CollectionView &a) {
-            if (impl) {
-                impl->itemAdded.disconnect(&itemAdded);
-                impl->itemRemoved.disconnect(&itemRemoved);
-            }
-
-            impl = a.impl->clone();
-            impl->itemAdded.connect(&itemAdded);
-            impl->itemRemoved.connect(&itemRemoved);
-            return *this;
-        }
 
         iterator begin() { return impl->begin(); }
 

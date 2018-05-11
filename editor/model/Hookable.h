@@ -1,31 +1,38 @@
 #pragma once
 
-#include <functional>
-#include <map>
+#include <set>
 
 namespace AxiomModel {
+
+    class Hookable;
+
+    class HookNotifiable {
+    public:
+        virtual void hookableDestroyed(Hookable *hookable) = 0;
+    };
 
     class Hookable {
     public:
         Hookable() = default;
 
-        Hookable(const Hookable &a) noexcept = delete;
+        Hookable(const Hookable &a);
 
         Hookable(Hookable &&a) noexcept;
+
+        Hookable &operator=(const Hookable &a);
 
         Hookable &operator=(Hookable &&a) noexcept;
 
         virtual ~Hookable();
 
-        void addDestructHook(void *handle, std::function<void()> func);
+        void addDestructHook(HookNotifiable *handle);
 
-        void removeDestructHook(void *handle);
-
-    protected:
-        virtual void triggerDestruct(bool isFinal);
+        void removeDestructHook(HookNotifiable *handle);
 
     private:
-        std::map<void *, std::function<void()>> destructEvents;
+        std::set<HookNotifiable*> notifiables;
+
+        void doDestruct();
     };
 
 }

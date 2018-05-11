@@ -12,34 +12,60 @@
 namespace AxiomModel {
 
     template<class... Args>
-    class Event : public Hookable {
+    class Event : public Hookable, public HookNotifiable {
     public:
         using func_type = std::function<void(Args...)>;
 
-        Event() noexcept = default;
+        Event() {}
 
-        explicit Event(func_type func) noexcept : callback(func) {}
+        explicit Event(func_type callback) : callback(callback) {}
 
-        Event(const Event &a) = delete;
-
-        Event &operator=(const Event &a) = delete;
-
-        Event(Event &&a) noexcept {
-            callback = std::move(a.callback);
-            listeners = std::move(a.listeners);
+        Event(const Event &a) {
+            doCopy(a);
         }
 
-        Event &operator=(Event &&a) noexcept {
-            triggerDestruct(false);
-            callback = std::move(a.callback);
-            listeners = std::move(a.listeners);
+        Event(Event &&a) noexcept : Hookable(std::move(a)) {
+            doMove(a);
+        }
+
+        Event &operator=(const Event &a) {
+            Hookable::operator=(a);
+            destruct();
+            cleanup();
+            doCopy(a);
+
             return *this;
         }
 
-        void trigger(Args... params) const {
+        Event &operator=(Event &&a) noexcept {
+            Hookable::operator=(std::move(a));
+            destruct();
+            cleanup();
+            doMove(a);
+
+            return *this;
+        }
+
+        ~Event() override {
+            destruct();
+        }
+
+        void trigger(const Args&... params) const {
             if (callback) {
                 (*callback)(params...);
             }
+
+            // todo: handle children being added and removed from the array while we're looping
+            for (const auto &child : children) {
+                child.trigger(params...);
+            }
+        }
+
+        Event *connect(Event listener) {
+            children.push_back(std::move(listener));
+            auto ptr = &children.back();
+            ptr->parent = this;
+            return ptr;
         }
 
         Event *connect(Event *other) {
@@ -47,13 +73,6 @@ namespace AxiomModel {
                 other->trigger(std::forward<Args>(params)...);
             })));
             ptr->follow(other);
-            return ptr;
-        }
-
-        Event *connect(Event listener) {
-            listeners.push_back(std::move(listener));
-            auto ptr = &listeners.back();
-            ptr->parent = this;
             return ptr;
         }
 
@@ -100,44 +119,83 @@ namespace AxiomModel {
             })));
         };
 
+        // note: `other` will be invalidated by calling this method
         void disconnect(Event *other) {
-            auto iter = typename std::vector<Event>::iterator(other);
-            assert(iter >= listeners.begin() && iter < listeners.end());
-
-            // ensure the listener doesn't try and detach itself
-            other->parent = nullptr;
-            listeners.erase(iter);
+            destroyChild(other);
         }
 
-        void follow(Hookable *other) {
-            following.emplace(other);
-            other->addDestructHook(this, [this]() { triggerDestruct(false); });
+        void follow(Hookable *hookable) {
+            hookable->addDestructHook(this);
+            following.emplace(hookable);
         }
 
-        void unfollow(Hookable *other) {
-            following.erase(other);
-            other->removeDestructHook(this);
+        void unfollow(Hookable *hookable) {
+            hookable->removeDestructHook(this);
+            following.erase(hookable);
         }
 
-    protected:
-        void triggerDestruct(bool isFinal) override {
-            if (parent) {
-                // this will cause disconnect() to be called on the parent, resetting our parent ptr
-                // and triggering the code in else{}
-                parent->disconnect(this);
-            } else {
-                while (!following.empty()) {
-                    unfollow(*following.begin());
-                }
-                Hookable::triggerDestruct(isFinal);
-            }
+        // this is called when any hookables we're following are destructed
+        void hookableDestroyed(Hookable *hookable) override {
+            following.erase(hookable);
+            destroy();
         }
 
     private:
         std::optional<func_type> callback;
-        Event* parent = nullptr;
-        std::vector<Event> listeners;
+        std::vector<Event> children;
+        Event *parent = nullptr;
         std::set<Hookable*> following;
+
+        void destroyChild(Event *child) {
+            auto iter = typename std::vector<Event>::iterator(child);
+            assert(iter >= children.begin() && iter < children.end());
+            child->parent = nullptr;
+            children.erase(iter);
+        }
+
+        void destroy() {
+            assert(parent);
+
+            // this is going to end up calling our constructor
+            parent->destroyChild(this);
+        }
+
+        void destruct() {
+            //assert(!parent);
+
+            // remove ourselves from any hookables we're following
+            for (const auto &hookable : following) {
+                hookable->removeDestructHook(this);
+            }
+        }
+
+        void cleanup() {
+            children.clear();
+            following.clear();
+            parent = nullptr;
+            callback.reset();
+        }
+
+        void doCopy(const Event &a) {
+            // todo: do we want to copy children and following?
+            callback = a.callback;
+        }
+
+        void doMove(Event &a) {
+            callback = std::move(a.callback);
+            children = std::move(a.children);
+            for (const auto &hookable : a.following) {
+                hookable->removeDestructHook(&a);
+                follow(hookable);
+            }
+            a.following.clear();
+
+            if (a.parent) {
+                parent = a.parent;
+
+                // todo: is anything else needed to cleanup a?
+            }
+        }
 
         template<class Func, size_t... I, class... PassArgs>
         static void applyFuncIndexed(const Func &func, std::index_sequence<I...>, PassArgs&&... params) {
@@ -149,5 +207,4 @@ namespace AxiomModel {
             applyFuncIndexed(func, std::make_index_sequence<ArgCount>{}, std::forward<PassArgs>(params)...);
         }
     };
-
 }
