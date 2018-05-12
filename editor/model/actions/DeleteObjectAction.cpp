@@ -20,7 +20,7 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
     QByteArray buffer;
     QDataStream stream(&buffer, QIODevice::WriteOnly);
 
-    auto obj = find<ModelObject*>(root->pool(), uuid);
+    auto obj = find<ModelObject*>(root->pool().sequence(), uuid);
     obj->serialize(stream, obj->parentUuid(), false);
 
     return create(uuid, obj->parentUuid(), std::move(buffer), root);
@@ -41,7 +41,7 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
 }
 
 void DeleteObjectAction::forward() const {
-    find(root()->pool(), uuid)->remove();
+    find(root()->pool().sequence(), uuid)->remove();
 }
 
 void DeleteObjectAction::backward() const {

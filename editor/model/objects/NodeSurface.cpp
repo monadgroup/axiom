@@ -11,10 +11,11 @@
 
 using namespace AxiomModel;
 
-NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root)
+NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
+                         AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
-      _nodes(filterChildren(root->nodes(), uuid)), _connections(filterChildren(root->connections(), uuid)),
-      _grid(staticCast<GridItem*>(_nodes)), _pan(pan), _zoom(zoom) {
+      _nodes(findChildren(root->nodes(), uuid)), _connections(findChildren(root->connections(), uuid)),
+      _grid(staticCastWatch<GridItem*>(_nodes)), _pan(pan), _zoom(zoom) {
 }
 
 std::unique_ptr<NodeSurface> NodeSurface::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,

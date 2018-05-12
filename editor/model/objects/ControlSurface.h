@@ -11,7 +11,7 @@ namespace AxiomModel {
 
     class ControlSurface : public ModelObject {
     public:
-        using ChildCollection = CollectionView<Control*>;
+        using ChildCollection = WatchSequence<Control*>;
 
         ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 

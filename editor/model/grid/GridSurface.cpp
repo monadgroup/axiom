@@ -1,12 +1,12 @@
 #include "GridSurface.h"
 
 #include "GridItem.h"
-#include "../CollectionViewOperators.h"
+#include "../WatchSequenceOperators.h"
 
 using namespace AxiomModel;
 
-GridSurface::GridSurface(AxiomModel::GridSurface::ItemCollection view, QPoint minRect, QPoint maxRect)
-    : _grid(minRect, maxRect), _items(std::move(view)), _selectedItems(deriveFunc<GridItem*>(_items, &GridSurface::filterSelected)) {
+GridSurface::GridSurface(ItemCollection view, QPoint minRect, QPoint maxRect)
+    : _grid(minRect, maxRect), _items(std::move(view)), _selectedItems(filterWatch(_items, std::function([](GridItem *const &itm) { return itm->isSelected(); }))) {
     _items.itemAdded.connect(this, &GridSurface::handleItemAdded);
 }
 
@@ -74,10 +74,6 @@ void GridSurface::finishDragging() {
 
 void GridSurface::flushGrid() {
     gridChanged.trigger();
-}
-
-std::optional<GridItem*> GridSurface::filterSelected(AxiomModel::GridItem *const &item) {
-    return item->isSelected() ? item : std::optional<GridItem*>();
 }
 
 bool GridSurface::isAllDragAvailable(QPoint delta) {

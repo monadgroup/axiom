@@ -12,8 +12,8 @@ namespace AxiomModel {
 
     class NodeSurface : public ModelObject {
     public:
-        using ChildCollection = CollectionView<Node*>;
-        using ConnectionCollection = CollectionView<Connection*>;
+        using ChildCollection = WatchSequence<Node*>;
+        using ConnectionCollection = WatchSequence<Connection*>;
 
         Event<const QString &> nameChanged;
         Event<const QPointF &> panChanged;

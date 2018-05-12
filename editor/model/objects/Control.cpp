@@ -13,21 +13,21 @@
 
 using namespace AxiomModel;
 
-Control::Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid, QPoint pos,
-                 QSize size, bool selected, QString name, AxiomModel::ModelRoot *root)
+Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::ConnectionWire::WireType wireType,
+                 QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
+                 AxiomModel::ModelRoot *root)
     : GridItem(&find(root->controlSurfaces(), parentUuid)->grid(), pos, size, selected),
       ModelObject(ModelType::CONTROL, uuid, parentUuid, root), _surface(find(root->controlSurfaces(), parentUuid)),
       _controlType(controlType), _wireType(wireType), _name(std::move(name)),
-      _connections(derive<Connection*, Connection*>(root->connections(), [uuid](Connection *const &connection) -> std::optional<Connection*> {
-          if (connection->controlA()->uuid() == uuid || connection->controlB()->uuid() == uuid) return connection;
-          else return std::optional<Connection*>();
-      })), _connectedControls(derive<Control*, Connection*>(_connections, [uuid](Connection *const &connection) -> std::optional<Control*> {
+      _connections(filterWatch(root->connections(), std::function([uuid](Connection *const &connection) {
+          return connection->controlA()->uuid() == uuid || connection->controlB()->uuid() == uuid;
+      }))), _connectedControls(mapFilterWatch(_connections, std::function([uuid](Connection *const &connection) -> std::optional<Control*> {
           if (connection->controlA()->uuid() == uuid) return connection->controlB();
           if (connection->controlB()->uuid() == uuid) return connection->controlA();
           return std::optional<Control*>();
-      })) {
-    posChanged.connect([this](QPoint) { updateSinkPos(); });
-    _surface->node()->posChanged.connect([this](QPoint) { updateSinkPos(); });
+      }))) {
+    posChanged.connect(this, &Control::updateSinkPos);
+    _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
 }
 
 std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,

@@ -20,7 +20,7 @@ namespace AxiomModel {
     class GridSurface : public Hookable {
     public:
         using ItemGrid = Grid<GridItem>;
-        using ItemCollection = CollectionView<GridItem*>;
+        using ItemCollection = WatchSequence<GridItem*>;
         
         Event<GridItem*> itemAdded;
         Event<bool> hasSelectionChanged;
@@ -77,8 +77,6 @@ namespace AxiomModel {
         ItemCollection _selectedItems;
 
         QPoint lastDragDelta;
-
-        static std::optional<GridItem*> filterSelected(GridItem *const &item);
 
         bool isAllDragAvailable(QPoint delta);
 

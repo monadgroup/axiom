@@ -2,7 +2,7 @@
 
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
-#include "../CollectionView.h"
+#include "../WatchSequence.h"
 #include "../ConnectionWire.h"
 
 namespace AxiomModel {
@@ -54,13 +54,13 @@ namespace AxiomModel {
 
         void setIsActive(bool isActive);
 
-        CollectionView<Connection *> &connections() { return _connections; }
+        WatchSequence<Connection *> &connections() { return _connections; }
 
-        const CollectionView<Connection *> &connections() const { return _connections; }
+        const WatchSequence<Connection *> &connections() const { return _connections; }
 
-        CollectionView<Control *> &connectedControls() { return _connectedControls; }
+        WatchSequence<Control *> &connectedControls() { return _connectedControls; }
 
-        const CollectionView<Control *> &connectedControls() const { return _connectedControls; }
+        const WatchSequence<Control *> &connectedControls() const { return _connectedControls; }
 
         QPointF worldPos() const;
 
@@ -73,8 +73,8 @@ namespace AxiomModel {
         QString _name;
         bool _isActive = false;
 
-        CollectionView<Connection *> _connections;
-        CollectionView<Control *> _connectedControls;
+        WatchSequence<Connection *> _connections;
+        WatchSequence<Control *> _connectedControls;
 
         void updateSinkPos();
     };

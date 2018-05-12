@@ -1,40 +1,46 @@
 #pragma once
 
-#include "CollectionViewOperators.h"
+#include "WatchSequenceOperators.h"
 
 namespace AxiomModel {
 
-    template<class TO, class TI>
-    TO find(const CollectionView<TI> &input, const QUuid &uuid) {
-        for (const auto &item : input) {
+    template<class OutputItem, class InputIterator>
+    OutputItem find(InputIterator begin, InputIterator end, const QUuid &uuid) {
+        for (auto i = begin; i != end; i++) {
+            auto item = *i;
             if (item->uuid() == uuid) {
-                return dynamic_cast<TO>(item);
+                return dynamic_cast<OutputItem>(item);
             }
         }
         return nullptr;
+    };
+
+    template<class OutputItem, class InputCollection>
+    OutputItem find(const InputCollection &collection, const QUuid &uuid) {
+        return find<OutputItem>(collection.begin(), collection.end(), uuid);
+    };
+
+    template<class InputCollection>
+    typename InputCollection::value_type find(const InputCollection &collection, const QUuid &uuid) {
+        return find<typename InputCollection::value_type>(collection, uuid);
     }
 
-    template<class TI>
-    TI find(const CollectionView<TI> &input, const QUuid &uuid) {
-        return find<TI, TI>(input, uuid);
-    }
-
-    template<class TO, class TI>
-    Promise<TO> findLater(const CollectionView<TI> &input, QUuid uuid) {
-        return getFirst(derive<TO, TI>(input, [uuid](const TI &base) -> std::optional<TO> {
+    template<class OutputItem, class InputItem>
+    Promise<OutputItem> findLater(WatchSequence<InputItem> input, QUuid uuid) {
+        return getFirst(mapFilterWatch(std::move(input), std::function([uuid](const InputItem &base) -> std::optional<OutputItem> {
             if (base->uuid() == uuid) {
-                auto cast = dynamic_cast<TO>(base);
-                return cast ? cast : std::optional<TO>();
+                auto cast = dynamic_cast<OutputItem>(base);
+                return cast ? cast : std::optional<OutputItem>();
             }
-            return std::optional<TO>();
-        }));
-    }
+            return std::optional<OutputItem>();
+        })));
+    };
 
-    template<class TI>
-    CollectionView<TI> filterChildren(const CollectionView<TI> &input, QUuid parentUuid) {
-        return derive<TI, TI>(input, [parentUuid](const TI &base) -> std::optional<TI> {
-            return base->parentUuid() == parentUuid ? base : std::optional<TI>();
-        });
+    template<class Item>
+    WatchSequence<Item> findChildren(WatchSequence<Item> &input, QUuid parentUuid) {
+        return mapFilterWatch(input, std::function([parentUuid](const Item &base) -> std::optional<Item> {
+            return base->parentUuid() == parentUuid ? base : std::optional<Item>();
+        }));
     }
 
 }

@@ -4,7 +4,7 @@
 
 #include "ModelObject.h"
 #include "Pool.h"
-#include "CollectionViewOperators.h"
+#include "WatchSequenceOperators.h"
 
 #include "objects/NodeSurface.h"
 #include "objects/Node.h"
@@ -14,13 +14,11 @@
 
 using namespace AxiomModel;
 
-ModelRoot::ModelRoot() : _nodeSurfaces(filterType<NodeSurface*>(_pool)),
-                         _nodes(filterType<Node*>(_pool)),
-                         _controlSurfaces(filterType<ControlSurface*>(_pool)),
-                         _controls(filterType<Control*>(_pool)),
-                         _connections(filterType<Connection*>(_pool)) {
-
-}
+ModelRoot::ModelRoot() : _nodeSurfaces(dynamicCastWatch<NodeSurface*>(_pool.sequence())),
+                         _nodes(dynamicCastWatch<Node*>(_pool.sequence())),
+                         _controlSurfaces(dynamicCastWatch<ControlSurface*>(_pool.sequence())),
+                         _controls(dynamicCastWatch<Control*>(_pool.sequence())),
+                         _connections(dynamicCastWatch<Connection*>(_pool.sequence())) {}
 
 ModelRoot::ModelRoot(QDataStream &stream) : ModelRoot() {
     deserializeChunk(stream, QUuid());
@@ -28,7 +26,7 @@ ModelRoot::ModelRoot(QDataStream &stream) : ModelRoot() {
 }
 
 void ModelRoot::serialize(QDataStream &stream) {
-    serializeChunk(stream, QUuid(), filterType<ModelObject*>(_pool));
+    serializeChunk(stream, QUuid(), dynamicCast<ModelObject*>(_pool.sequence()));
     _history.serialize(stream);
 }
 

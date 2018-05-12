@@ -2,20 +2,16 @@
 
 #include <QtCore/QUuid>
 #include <unordered_set>
+#include <memory>
 
-#include "CollectionView.h"
 #include "PoolObject.h"
+#include "WatchSequence.h"
 
 namespace AxiomModel {
 
     class PoolObject;
 
-    using BasePoolView = CollectionView<PoolObject*>;
-
-    /**
-     * A Pool is the root PoolView that is in charge of maintaining the objects
-     */
-    class Pool : public CollectionView<PoolObject*> {
+    class Pool {
     public:
         Pool();
 
@@ -25,9 +21,14 @@ namespace AxiomModel {
 
         void removeObj(PoolObject *obj);
 
+        WatchSequence<PoolObject*> &sequence() { return _sequence; }
+
+        const WatchSequence<PoolObject*> &sequence() const { return _sequence; }
+
     private:
         std::vector<std::unique_ptr<PoolObject>> _ownedObjects;
         std::vector<PoolObject*> _objects;
+        WatchSequence<PoolObject*> _sequence;
     };
 
 }

@@ -5,7 +5,7 @@
 class QLineEdit;
 
 namespace AxiomModel {
-    class Schematic;
+    class NodeSurface;
 
     class LibraryEntry;
 }
@@ -16,7 +16,7 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        AddNodeMenu(AxiomModel::Schematic *schematic, const QString &search);
+        AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search);
 
     public slots:
 
@@ -32,7 +32,7 @@ namespace AxiomGui {
 
     private:
 
-        AxiomModel::Schematic *schematic;
+        AxiomModel::NodeSurface *surface;
         QLineEdit *contextSearch;
 
         std::map<AxiomModel::LibraryEntry *, QAction *> entryActions;

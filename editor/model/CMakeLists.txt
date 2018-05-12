@@ -23,7 +23,14 @@ set(SOURCE_FILES
         ModelRoot.cpp
         Pool.cpp
         PoolObject.cpp
-        Project.cpp)
+        Project.cpp
+        PoolOperators.h
+        SequenceMapFilter.h
+        Promise.h
+        Sequence.h
+        SequenceOperators.h
+        WatchSequence.h
+        WatchSequenceOperators.h)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${QT5_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

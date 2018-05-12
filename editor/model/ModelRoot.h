@@ -5,7 +5,7 @@
 
 #include "Pool.h"
 #include "HistoryList.h"
-#include "CollectionView.h"
+#include "WatchSequence.h"
 
 namespace AxiomModel {
 
@@ -25,11 +25,11 @@ namespace AxiomModel {
 
     class ModelRoot {
     public:
-        using NodeSurfaceCollection = CollectionView<NodeSurface*>;
-        using NodeCollection = CollectionView<Node*>;
-        using ControlSurfaceCollection = CollectionView<ControlSurface*>;
-        using ControlCollection = CollectionView<Control*>;
-        using ConnectionCollection = CollectionView<Connection*>;
+        using NodeSurfaceCollection = WatchSequence<NodeSurface*>;
+        using NodeCollection = WatchSequence<Node*>;
+        using ControlSurfaceCollection = WatchSequence<ControlSurface*>;
+        using ControlCollection = WatchSequence<Control*>;
+        using ConnectionCollection = WatchSequence<Connection*>;
 
         ModelRoot();
 

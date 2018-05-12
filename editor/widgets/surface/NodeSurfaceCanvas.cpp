@@ -275,8 +275,7 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
     QGraphicsScene::contextMenuEvent(event);
     if (event->isAccepted()) return;
 
-    // todo
-    /*auto scenePos = event->scenePos();
+    auto scenePos = event->scenePos();
     AddNodeMenu menu(surface, "");
 
     connect(&menu, &AddNodeMenu::newNodeAdded,
@@ -285,8 +284,8 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
                 addItem(editor);
                 connect(editor, &FloatingValueEditor::valueSubmitted,
                         this, [this, scenePos](QString value) {
-                            newNode(scenePos, value, false);
-                        });
+                        newNode(scenePos, value, false);
+                    });
             });
     connect(&menu, &AddNodeMenu::newGroupAdded,
             [this, scenePos]() {
@@ -294,11 +293,11 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
                 addItem(editor);
                 connect(editor, &FloatingValueEditor::valueSubmitted,
                         this, [this, scenePos](QString value) {
-                            newNode(scenePos, value, true);
-                        });
+                        newNode(scenePos, value, true);
+                    });
             });
 
-    menu.exec(event->screenPos());*/
+    menu.exec(event->screenPos());
 }
 
 void NodeSurfaceCanvas::leftMousePressEvent(QGraphicsSceneMouseEvent *event) {

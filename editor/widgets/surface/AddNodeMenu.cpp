@@ -7,7 +7,7 @@
 
 using namespace AxiomGui;
 
-AddNodeMenu::AddNodeMenu(AxiomModel::Schematic *schematic, const QString &search) : schematic(schematic) {
+AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search) : surface(surface) {
     contextSearch = new QLineEdit(this);
     contextSearch->setPlaceholderText("Search modules...");
     contextSearch->setText(search);
