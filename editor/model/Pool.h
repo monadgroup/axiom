@@ -25,6 +25,8 @@ namespace AxiomModel {
 
         const WatchSequence<PoolObject*> &sequence() const { return _sequence; }
 
+        void destroy();
+
     private:
         std::vector<std::unique_ptr<PoolObject>> _ownedObjects;
         std::vector<PoolObject*> _objects;

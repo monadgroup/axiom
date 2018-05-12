@@ -22,6 +22,10 @@ namespace AxiomGui {
     public:
         MainWindow(std::unique_ptr<AxiomModel::Project> project);
 
+        AxiomModel::Project *project() const { return _project.get(); }
+
+        void setProject(std::unique_ptr<AxiomModel::Project> project);
+
     public slots:
 
         void showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split);
@@ -32,9 +36,9 @@ namespace AxiomGui {
 
         void removeSurface(AxiomModel::NodeSurface *surface);
 
-        /*void openProject();
+        void openProject();
 
-        void saveProject();*/
+        void saveProject();
 
     private:
 

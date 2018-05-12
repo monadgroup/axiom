@@ -14,6 +14,8 @@ namespace AxiomModel {
 
         explicit Project(QDataStream &stream);
 
+        static std::unique_ptr<Project> deserialize(QDataStream &stream, uint32_t *versionOut);
+
         static void writeHeader(QDataStream &stream);
 
         static bool readHeader(QDataStream &stream, uint32_t *versionOut);
@@ -24,9 +26,10 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream);
 
+        void destroy();
+
     private:
         ModelRoot _mainRoot;
-
     };
 
 }

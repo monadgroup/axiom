@@ -78,6 +78,8 @@ namespace AxiomModel {
 
         void deserializeChunk(QDataStream &stream, const QUuid &parent);
 
+        void destroy();
+
     private:
         Pool _pool;
         HistoryList _history;

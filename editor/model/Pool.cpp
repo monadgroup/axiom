@@ -16,6 +16,8 @@ PoolObject* Pool::registerObj(std::unique_ptr<AxiomModel::PoolObject> obj) {
 }
 
 void Pool::registerObj(AxiomModel::PoolObject *obj) {
+    std::cout << "Registering object with UUID of " << obj->uuid().toString().toStdString() << " and parent of " << obj->parentUuid().toString().toStdString() << std::endl;
+
     _objects.push_back(obj);
     _sequence.itemAdded.trigger(obj);
 }
@@ -31,5 +33,11 @@ void Pool::removeObj(AxiomModel::PoolObject *obj) {
     auto ownedIndex = AxiomUtil::findUnique(_ownedObjects.begin(), _ownedObjects.end(), obj);
     if (ownedIndex != _ownedObjects.end()) {
         _ownedObjects.erase(ownedIndex);
+    }
+}
+
+void Pool::destroy() {
+    while (!_objects.empty()) {
+        _objects.back()->remove();
     }
 }

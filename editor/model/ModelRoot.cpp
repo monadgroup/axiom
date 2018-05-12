@@ -38,3 +38,7 @@ void ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent) {
         _pool.registerObj(ModelObject::deserialize(objectStream, parent, this));
     }
 }
+
+void ModelRoot::destroy() {
+    _pool.destroy();
+}

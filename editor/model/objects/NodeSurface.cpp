@@ -45,6 +45,7 @@ void NodeSurface::setPan(QPointF pan) {
 }
 
 void NodeSurface::setZoom(float zoom) {
+    zoom = zoom < -0.5f ? -0.5f : zoom > 0.5f ? 0.5f : zoom;
     if (zoom != _zoom) {
         _zoom = zoom;
         zoomChanged.trigger(zoom);
