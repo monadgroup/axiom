@@ -21,7 +21,11 @@ namespace AxiomModel {
 
         void registerObj(PoolObject *obj);
 
-        void removeObj(PoolObject *obj);
+        std::unique_ptr<PoolObject> removeObj(PoolObject *obj);
+
+        void refreshObj(PoolObject *obj);
+
+        void ensureObjSorted(PoolObject *obj);
 
         WatchSequence<PoolObject*> &sequence() { return _sequence; }
 

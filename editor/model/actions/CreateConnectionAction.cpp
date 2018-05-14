@@ -8,7 +8,7 @@ using namespace AxiomModel;
 
 CreateConnectionAction::CreateConnectionAction(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA,
                                                const QUuid &controlB, AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_CONNECTION, true, root), uuid(uuid), parentUuid(parentUuid), controlA(controlA), controlB(controlB) {
+    : Action(ActionType::CREATE_CONNECTION, root), uuid(uuid), parentUuid(parentUuid), controlA(controlA), controlB(controlB) {
 }
 
 std::unique_ptr<CreateConnectionAction> CreateConnectionAction::create(const QUuid &uuid, const QUuid &parentUuid,
@@ -40,7 +40,7 @@ void CreateConnectionAction::serialize(QDataStream &stream) const {
     stream << controlB;
 }
 
-void CreateConnectionAction::forward() const {
+void CreateConnectionAction::forward(bool) const {
     root()->pool().registerObj(Connection::create(uuid, parentUuid, controlA, controlB, root()));
 }
 

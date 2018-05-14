@@ -12,7 +12,7 @@ CreatePortalNodeAction::CreatePortalNodeAction(const QUuid &uuid, const QUuid &p
                                                const QUuid &controlsUuid, AxiomModel::ConnectionWire::WireType wireType,
                                                AxiomModel::PortalControl::PortalType portalType,
                                                const QUuid &controlUuid, AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_PORTAL_NODE, true, root), uuid(uuid), parentUuid(parentUuid), pos(pos),
+    : Action(ActionType::CREATE_PORTAL_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos),
       name(std::move(name)), controlsUuid(controlsUuid), wireType(wireType), portalType(portalType) {
 }
 
@@ -62,7 +62,7 @@ std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::deserialize(QDat
                   (PortalControl::PortalType) portalTypeInt, controlUuid, root);
 }
 
-void CreatePortalNodeAction::forward() const {
+void CreatePortalNodeAction::forward(bool) const {
     root()->pool().registerObj(PortalNode::create(uuid, parentUuid, pos, QSize(1, 1), false, name, controlsUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "", wireType, portalType, root()));

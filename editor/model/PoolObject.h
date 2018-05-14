@@ -18,6 +18,8 @@ namespace AxiomModel {
 
         Pool *pool() const { return _pool; }
 
+        void move(QUuid newParent);
+
         virtual void remove();
 
     private:

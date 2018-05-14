@@ -20,7 +20,7 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream) const override;
 
-        void forward() const override;
+        void forward(bool first) const override;
 
         void backward() const override;
 

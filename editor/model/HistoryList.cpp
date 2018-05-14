@@ -25,7 +25,7 @@ void HistoryList::serialize(QDataStream &stream) {
 
 void HistoryList::append(std::unique_ptr<AxiomModel::Action> action) {
     // run the action forward
-    if (action->exec()) action->forward();
+    action->forward(true);
 
     auto couldRedo = canRedo();
     auto actionType = action->actionType();
@@ -72,7 +72,7 @@ bool HistoryList::canRedo() const {
 void HistoryList::redo() {
     if (!canRedo()) return;
 
-    _stack[_stackPos]->forward();
+    _stack[_stackPos]->forward(false);
     _stackPos++;
 
     if (_stackPos == 1) canUndoChanged.trigger(true);

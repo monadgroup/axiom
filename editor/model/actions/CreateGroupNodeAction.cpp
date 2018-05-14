@@ -12,7 +12,7 @@ CreateGroupNodeAction::CreateGroupNodeAction(const QUuid &uuid, const QUuid &par
                                              bool selected, QString name, const QUuid &controlsUuid,
                                              const QUuid &innerUuid, QPointF innerPan, float innerZoom,
                                              AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_GROUP_NODE, true, root), uuid(uuid), parentUuid(parentUuid), pos(pos), size(size),
+    : Action(ActionType::CREATE_GROUP_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos), size(size),
       selected(selected), name(std::move(name)), controlsUuid(controlsUuid), innerUuid(innerUuid), innerPan(innerPan),
       innerZoom(innerZoom) {
 }
@@ -61,7 +61,7 @@ void CreateGroupNodeAction::serialize(QDataStream &stream) const {
     stream << innerZoom;
 }
 
-void CreateGroupNodeAction::forward() const {
+void CreateGroupNodeAction::forward(bool) const {
     root()->pool().registerObj(GroupNode::create(uuid, parentUuid, pos, size, selected, name, controlsUuid, innerUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(GroupSurface::create(innerUuid, uuid, innerPan, innerZoom, root()));

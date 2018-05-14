@@ -24,7 +24,7 @@ void Pool::registerObj(AxiomModel::PoolObject *obj) {
     _sequence.itemAdded.trigger(obj);
 }
 
-void Pool::removeObj(AxiomModel::PoolObject *obj) {
+std::unique_ptr<PoolObject> Pool::removeObj(AxiomModel::PoolObject *obj) {
     auto index = std::find(_objects.begin(), _objects.end(), obj);
     assert(index != _objects.end());
     _objects.erase(index);
@@ -34,8 +34,21 @@ void Pool::removeObj(AxiomModel::PoolObject *obj) {
 
     auto ownedIndex = AxiomUtil::findUnique(_ownedObjects.begin(), _ownedObjects.end(), obj);
     if (ownedIndex != _ownedObjects.end()) {
+        auto ownedObj = std::move(*ownedIndex);
         _ownedObjects.erase(ownedIndex);
+        return std::move(ownedObj);
+    } else {
+        return nullptr;
     }
+}
+
+void Pool::refreshObj(AxiomModel::PoolObject *obj) {
+    _sequence.itemRemoved.trigger(obj);
+    _sequence.itemAdded.trigger(obj);
+}
+
+void Pool::ensureObjSorted(AxiomModel::PoolObject *obj) {
+    // todo
 }
 
 void Pool::destroy() {

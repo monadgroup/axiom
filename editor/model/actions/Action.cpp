@@ -1,5 +1,6 @@
 #include "Action.h"
 
+#include "CompositeAction.h"
 #include "DeleteObjectAction.h"
 #include "CreateCustomNodeAction.h"
 #include "CreateGroupNodeAction.h"
@@ -9,13 +10,14 @@
 
 using namespace AxiomModel;
 
-Action::Action(AxiomModel::Action::ActionType actionType, bool exec, AxiomModel::ModelRoot *root)
-    : _actionType(actionType), _exec(exec), _root(root) {
+Action::Action(AxiomModel::Action::ActionType actionType, AxiomModel::ModelRoot *root)
+    : _actionType(actionType), _root(root) {
 }
 
 QString Action::typeToString(AxiomModel::Action::ActionType type) {
     switch (type) {
         case ActionType::NONE: return "";
+        case ActionType::COMPOSITE: return "Composite";
         case ActionType::DELETE_OBJECT: return "Delete Object";
         case ActionType::CREATE_CUSTOM_NODE: return "Create Custom Node";
         case ActionType::CREATE_GROUP_NODE: return "Create Group Node";
@@ -33,6 +35,7 @@ std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::Mod
     assert(actionType != ActionType::NONE);
 
     switch (actionType) {
+        case ActionType::COMPOSITE: return CompositeAction::deserialize(stream, root);
         case ActionType::DELETE_OBJECT: return DeleteObjectAction::deserialize(stream, root);
         case ActionType::CREATE_CUSTOM_NODE: return CreateCustomNodeAction::deserialize(stream, root);
         case ActionType::CREATE_GROUP_NODE: return CreateGroupNodeAction::deserialize(stream, root);

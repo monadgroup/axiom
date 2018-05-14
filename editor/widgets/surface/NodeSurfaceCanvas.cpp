@@ -13,14 +13,17 @@
 #include "compiler/runtime/Runtime.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/Project.h"
+#include "editor/model/PoolOperators.h"
 #include "editor/model/grid/GridItem.h"
 #include "editor/model/objects/NodeSurface.h"
 #include "editor/model/objects/Control.h"
 #include "editor/model/objects/Connection.h"
 #include "editor/model/objects/Node.h"
+#include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/CreateCustomNodeAction.h"
 #include "editor/model/actions/CreateGroupNodeAction.h"
 #include "editor/model/actions/CreateConnectionAction.h"
+#include "editor/model/actions/DeleteObjectAction.h"
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
 #include "../IConnectable.h"
@@ -64,6 +67,17 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
         addWire(&connection->wire());
     }));
+
+    // connect to global actions
+    connect(GlobalActions::editDelete, &QAction::triggered,
+            this, [surface]() {
+                std::vector<std::unique_ptr<Action>> deleteActions;
+                auto selectedNodes = filter(surface->nodes().sequence(), [](Node *const &node) { return node->isSelected(); });
+                for (const auto &node : selectedNodes) {
+                    deleteActions.push_back(DeleteObjectAction::create(node));
+                }
+                surface->root()->history().append(CompositeAction::create(std::move(deleteActions), surface->root()));
+            });
 
     // todo: select all and delete selected
 

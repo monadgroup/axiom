@@ -6,6 +6,8 @@
 
 namespace AxiomModel {
 
+    class ModelObject;
+
     class DeleteObjectAction : public Action {
     public:
         DeleteObjectAction(const QUuid &uuid, const QUuid &parentUuid, QByteArray buffer, AxiomModel::ModelRoot *root);
@@ -14,11 +16,13 @@ namespace AxiomModel {
 
         static std::unique_ptr<DeleteObjectAction> create(const QUuid &uuid, AxiomModel::ModelRoot *root);
 
+        static std::unique_ptr<DeleteObjectAction> create(const ModelObject *object);
+
         static std::unique_ptr<DeleteObjectAction> deserialize(QDataStream &stream, AxiomModel::ModelRoot *root);
 
         void serialize(QDataStream &stream) const override;
 
-        void forward() const override;
+        void forward(bool first) const override;
 
         void backward() const override;
 

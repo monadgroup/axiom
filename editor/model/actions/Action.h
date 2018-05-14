@@ -13,6 +13,7 @@ namespace AxiomModel {
     public:
         enum class ActionType {
             NONE,
+            COMPOSITE,
             DELETE_OBJECT,
             CREATE_CUSTOM_NODE,
             CREATE_GROUP_NODE,
@@ -20,7 +21,7 @@ namespace AxiomModel {
             CREATE_CONNECTION
         };
 
-        Action(ActionType actionType, bool exec, ModelRoot *root);
+        Action(ActionType actionType, ModelRoot *root);
 
         static QString typeToString(ActionType type);
 
@@ -32,15 +33,12 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
-        bool exec() const { return _exec; }
-
-        virtual void forward() const = 0;
+        virtual void forward(bool first) const = 0;
 
         virtual void backward() const = 0;
 
     private:
         ActionType _actionType;
-        bool _exec;
         ModelRoot *_root;
     };
 

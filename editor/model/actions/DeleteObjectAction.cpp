@@ -8,7 +8,7 @@
 using namespace AxiomModel;
 
 DeleteObjectAction::DeleteObjectAction(const QUuid &uuid, const QUuid &parentUuid, QByteArray buffer, AxiomModel::ModelRoot *root)
-    : Action(ActionType::DELETE_OBJECT, true, root), uuid(uuid), parentUuid(parentUuid), buffer(std::move(buffer)) {
+    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), parentUuid(parentUuid), buffer(std::move(buffer)) {
 }
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, const QUuid &parentUuid, QByteArray buffer,
@@ -26,6 +26,10 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
     return create(uuid, obj->parentUuid(), std::move(buffer), root);
 }
 
+std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const AxiomModel::ModelObject *object) {
+    return create(object->uuid(), object->root());
+}
+
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
     QUuid uuid; stream >> uuid;
     QUuid parentUuid; stream >> parentUuid;
@@ -40,7 +44,7 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
     stream << buffer;
 }
 
-void DeleteObjectAction::forward() const {
+void DeleteObjectAction::forward(bool) const {
     find(root()->pool().sequence(), uuid)->remove();
 }
 

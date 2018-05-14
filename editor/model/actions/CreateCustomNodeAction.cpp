@@ -10,7 +10,7 @@ using namespace AxiomModel;
 CreateCustomNodeAction::CreateCustomNodeAction(const QUuid &parentId, const QUuid &id, QPoint pos, QSize size,
                                                bool selected, QString name, const QUuid &controlsId, QString code,
                                                AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_CUSTOM_NODE, true, root), parentId(parentId), id(id), pos(pos), size(size),
+    : Action(ActionType::CREATE_CUSTOM_NODE, root), parentId(parentId), id(id), pos(pos), size(size),
       selected(selected), name(std::move(name)), controlsId(controlsId), code(std::move(code)) {
 
 }
@@ -54,7 +54,7 @@ void CreateCustomNodeAction::serialize(QDataStream &stream) const {
     stream << code;
 }
 
-void CreateCustomNodeAction::forward() const {
+void CreateCustomNodeAction::forward(bool) const {
     root()->pool().registerObj(CustomNode::create(id, parentId, pos, size, selected, name, controlsId, code, root()));
     root()->pool().registerObj(ControlSurface::create(controlsId, id, root()));
 }
