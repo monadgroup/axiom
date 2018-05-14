@@ -96,4 +96,13 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
     item->startedDragging.connect(this, &GridSurface::startDragging);
     item->draggedTo.connect(this, &GridSurface::dragTo);
     item->finishedDragging.connect(this, &GridSurface::finishDragging);
+    item->selected.connect(this, std::function([this, item](bool exclusive) {
+        if (exclusive) {
+            // get sequence of selected items that aren't this item
+            auto clearItems = filter(_selectedItems.sequence(), [item](AxiomModel::GridItem *const &filterItem) { return filterItem != item; });
+            while (!clearItems.empty()) {
+                (*clearItems.begin())->deselect();
+            }
+        }
+    }));
 }
