@@ -4,26 +4,26 @@
 
 namespace AxiomModel {
 
-    class Hookable;
+    class HookContext;
 
     class HookNotifiable {
     public:
-        virtual void hookableDestroyed(Hookable *hookable) = 0;
+        virtual void hookableDestroyed(HookContext *context) = 0;
     };
 
-    class Hookable {
+    class HookContext {
     public:
-        Hookable() = default;
+        HookContext() = default;
 
-        Hookable(const Hookable &a);
+        HookContext(const HookContext &a);
 
-        Hookable(Hookable &&a) noexcept;
+        HookContext(HookContext &&a) noexcept;
 
-        Hookable &operator=(const Hookable &a);
+        HookContext &operator=(const HookContext &a);
 
-        Hookable &operator=(Hookable &&a) noexcept;
+        HookContext &operator=(HookContext &&a) noexcept;
 
-        virtual ~Hookable();
+        ~HookContext();
 
         void addDestructHook(HookNotifiable *handle);
 
@@ -33,6 +33,21 @@ namespace AxiomModel {
         std::set<HookNotifiable*> notifiables;
 
         void doDestruct();
+    };
+
+    class AbstractHookable {
+    public:
+        virtual HookContext *getContext() = 0;
+    };
+
+    class Hookable : public AbstractHookable {
+    public:
+        virtual ~Hookable() = default;
+
+        HookContext *getContext() override { return &context; }
+
+    private:
+        HookContext context;
     };
 
 }

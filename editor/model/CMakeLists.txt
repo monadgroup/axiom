@@ -29,6 +29,7 @@ set(SOURCE_FILES
         Promise.h
         Sequence.h
         SequenceOperators.h
+        SharedHookable.cpp
         WatchSequence.h
         WatchSequenceOperators.h)
 

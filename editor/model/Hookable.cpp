@@ -13,34 +13,34 @@ using namespace AxiomModel;
  * be cleared.
  */
 
-Hookable::Hookable(const AxiomModel::Hookable &a) {}
+HookContext::HookContext(const AxiomModel::HookContext &a) {}
 
-Hookable::Hookable(AxiomModel::Hookable &&a) noexcept {
+HookContext::HookContext(AxiomModel::HookContext &&a) noexcept {
     a.doDestruct();
     a.notifiables.clear();
 }
 
-Hookable& Hookable::operator=(const AxiomModel::Hookable &a) { return *this; }
+HookContext& HookContext::operator=(const AxiomModel::HookContext &a) { return *this; }
 
-Hookable& Hookable::operator=(AxiomModel::Hookable &&a) noexcept {
+HookContext& HookContext::operator=(AxiomModel::HookContext &&a) noexcept {
     a.doDestruct();
     a.notifiables.clear();
     return *this;
 }
 
-Hookable::~Hookable() {
+HookContext::~HookContext() {
     doDestruct();
 }
 
-void Hookable::addDestructHook(AxiomModel::HookNotifiable *handle) {
+void HookContext::addDestructHook(AxiomModel::HookNotifiable *handle) {
     notifiables.emplace(handle);
 }
 
-void Hookable::removeDestructHook(AxiomModel::HookNotifiable *handle) {
+void HookContext::removeDestructHook(AxiomModel::HookNotifiable *handle) {
     notifiables.erase(handle);
 }
 
-void Hookable::doDestruct() {
+void HookContext::doDestruct() {
     if (notifiables.empty()) return;
     std::vector<HookNotifiable*> notifyCopy(notifiables.begin(), notifiables.end());
 

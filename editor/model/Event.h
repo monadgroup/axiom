@@ -9,12 +9,12 @@
 #include <tuple>
 #include <memory>
 
-#include "Hookable.h"
+#include "SharedHookable.h"
 
 namespace AxiomModel {
 
     template<class... Args>
-    class Event : public Hookable {
+    class Event : public SharedHookable {
     public:
         using func_type = std::function<void(Args...)>;
 
@@ -28,11 +28,11 @@ namespace AxiomModel {
             std::optional<func_type> callback;
             std::vector<shared_event> children;
             std::weak_ptr<SharedEvent> parent;
-            std::set<Hookable*> following;
+            std::set<HookContext*> following;
 
             SharedEvent() {}
 
-            ~SharedEvent() override {
+            ~SharedEvent() {
                 removeHooks();
             }
 
@@ -59,18 +59,18 @@ namespace AxiomModel {
                 assert(false);
             }
 
-            void follow(Hookable *hookable) {
+            void follow(HookContext *hookable) {
                 hookable->addDestructHook(this);
                 following.emplace(hookable);
             }
 
-            void unfollow(Hookable *hookable) {
+            void unfollow(HookContext *hookable) {
                 hookable->removeDestructHook(this);
                 following.erase(hookable);
             }
 
-            void hookableDestroyed(Hookable *hookable) override {
-                following.erase(hookable);
+            void hookableDestroyed(HookContext *context) override {
+                following.erase(context);
                 detach();
             }
 
@@ -123,24 +123,24 @@ namespace AxiomModel {
             return connect(Event(listener));
         }
 
-        Event connect(Hookable *follow, Event *listener) {
+        Event connect(AbstractHookable *follow, Event *listener) {
             auto link = connect(listener);
             link.follow(follow);
             return link;
         }
 
-        Event connect(Hookable *follow, Event listener) {
+        Event connect(AbstractHookable *follow, Event listener) {
             auto link = connect(std::move(listener));
             link.follow(follow);
             return link;
         }
 
-        Event connect(Hookable *follow, func_type listener) {
+        Event connect(AbstractHookable *follow, func_type listener) {
             return connect(follow, Event(listener));
         }
 
         template<class TR, class... TA>
-        Event connect(Hookable *follow, std::function<TR(TA...)> listener) {
+        Event connect(AbstractHookable *follow, std::function<TR(TA...)> listener) {
             return connect(follow, Event(std::function([listener](Args&&... params) {
                 applyFunc<sizeof...(TA)>(listener, std::forward<Args>(params)...);
             })));
@@ -166,12 +166,12 @@ namespace AxiomModel {
             impl->disconnect(other.impl.get());
         }
 
-        void follow(Hookable *hookable) {
-            impl->follow(hookable);
+        void follow(AbstractHookable *hookable) {
+            impl->follow(hookable->getContext());
         }
 
-        void unfollow(Hookable *hookable) {
-            impl->unfollow(hookable);
+        void unfollow(AbstractHookable *hookable) {
+            impl->unfollow(hookable->getContext());
         }
 
         void detach() {
