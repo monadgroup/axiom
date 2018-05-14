@@ -16,6 +16,7 @@ namespace AxiomModel {
             DELETE_OBJECT,
             CREATE_CUSTOM_NODE,
             CREATE_GROUP_NODE,
+            CREATE_PORTAL_NODE,
             CREATE_CONNECTION
         };
 

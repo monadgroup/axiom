@@ -108,6 +108,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     QColor darkColor, lightColor, outlineColor;
     switch (node->nodeType()) {
+        case Node::NodeType::PORTAL_NODE:
         case Node::NodeType::CUSTOM_NODE:
             darkColor = CommonColors::customNodeNormal;
             lightColor = CommonColors::customNodeActive;

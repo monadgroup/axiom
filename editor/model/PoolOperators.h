@@ -1,6 +1,7 @@
 #pragma once
 
 #include "WatchSequenceOperators.h"
+#include "../util.h"
 
 namespace AxiomModel {
 
@@ -12,7 +13,7 @@ namespace AxiomModel {
                 return dynamic_cast<OutputItem>(item);
             }
         }
-        return nullptr;
+        unreachable;
     };
 
     template<class OutputItem, class InputCollection>

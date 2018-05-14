@@ -3,6 +3,7 @@
 #include "DeleteObjectAction.h"
 #include "CreateCustomNodeAction.h"
 #include "CreateGroupNodeAction.h"
+#include "CreatePortalNodeAction.h"
 #include "CreateConnectionAction.h"
 #include "../../util.h"
 
@@ -18,6 +19,7 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
         case ActionType::DELETE_OBJECT: return "Delete Object";
         case ActionType::CREATE_CUSTOM_NODE: return "Create Custom Node";
         case ActionType::CREATE_GROUP_NODE: return "Create Group Node";
+        case ActionType::CREATE_PORTAL_NODE: return "Create Portal Node";
         case ActionType::CREATE_CONNECTION: return "Connect Controls";
     }
 
@@ -34,6 +36,7 @@ std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::Mod
         case ActionType::DELETE_OBJECT: return DeleteObjectAction::deserialize(stream, root);
         case ActionType::CREATE_CUSTOM_NODE: return CreateCustomNodeAction::deserialize(stream, root);
         case ActionType::CREATE_GROUP_NODE: return CreateGroupNodeAction::deserialize(stream, root);
+        case ActionType::CREATE_PORTAL_NODE: return CreatePortalNodeAction::deserialize(stream, root);
         case ActionType::CREATE_CONNECTION: return CreateConnectionAction::deserialize(stream, root);
         default: unreachable;
     }

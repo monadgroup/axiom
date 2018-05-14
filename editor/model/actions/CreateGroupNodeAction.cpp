@@ -1,5 +1,5 @@
 #include "CreateGroupNodeAction.h"
-
+#include <utility>
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../objects/GroupNode.h"
@@ -28,7 +28,8 @@ std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::create(const QUuid
 std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::create(const QUuid &parentUuid, QPoint pos, QSize size,
                                                                      bool selected, QString name, QPointF innerPan,
                                                                      float innerZoom, AxiomModel::ModelRoot *root) {
-    return create(QUuid::createUuid(), parentUuid, pos, size, selected, name, QUuid::createUuid(), QUuid::createUuid(), innerPan, innerZoom, root);
+    return create(QUuid::createUuid(), parentUuid, pos, size, selected, std::move(name), QUuid::createUuid(),
+                  QUuid::createUuid(), innerPan, innerZoom, root);
 }
 
 std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::deserialize(QDataStream &stream,

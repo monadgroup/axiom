@@ -62,6 +62,9 @@ MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) {
 
     editMenu->addAction(GlobalActions::editPreferences);
 
+    connect(GlobalActions::helpAbout, &QAction::triggered,
+            this, &MainWindow::showAbout);
+
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(GlobalActions::helpAbout);
 
@@ -72,6 +75,11 @@ MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) {
             this, &MainWindow::saveProject);
     connect(GlobalActions::fileQuit, &QAction::triggered,
             QApplication::quit);
+
+    connect(GlobalActions::editUndo, &QAction::triggered,
+            this, [this]() { if (_project) _project->mainRoot().history().undo(); });
+    connect(GlobalActions::editRedo, &QAction::triggered,
+            this, [this]() { if (_project) _project->mainRoot().history().redo(); });
 
     setProject(std::move(project));
 }
@@ -124,17 +132,12 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     history.undoTypeChanged.connect([](AxiomModel::Action::ActionType type) {
         GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(type));
     });
-    connect(GlobalActions::editUndo, &QAction::triggered, [&history]() { history.undo(); });
 
     GlobalActions::editRedo->setEnabled(history.canRedo());
     history.canRedoChanged.forward(GlobalActions::editRedo, &QAction::setEnabled);
     history.redoTypeChanged.connect([](AxiomModel::Action::ActionType type) {
         GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(type));
     });
-    connect(GlobalActions::editRedo, &QAction::triggered, [&history]() { history.redo(); });
-
-    connect(GlobalActions::helpAbout, &QAction::triggered,
-            this, &MainWindow::showAbout);
 
     // find root surface and show it
     auto defaultSurface = AxiomModel::getFirst(AxiomModel::findChildren(_project->mainRoot().nodeSurfaces(), QUuid()));

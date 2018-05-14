@@ -19,13 +19,21 @@ PortalControl::PortalControl(const QUuid &uuid, const QUuid &parentUuid, QPoint 
       _portalType(portalType) {
 }
 
+std::unique_ptr<PortalControl> PortalControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                                                     bool selected, QString name,
+                                                     AxiomModel::ConnectionWire::WireType wireType,
+                                                     AxiomModel::PortalControl::PortalType portalType,
+                                                     AxiomModel::ModelRoot *root) {
+    return std::make_unique<PortalControl>(uuid, parentUuid, pos, size, selected, std::move(name), wireType, portalType, root);
+}
+
 std::unique_ptr<PortalControl> PortalControl::deserialize(QDataStream &stream, const QUuid &uuid,
                                                           const QUuid &parentUuid, QPoint pos, QSize size,
                                                           bool selected, QString name,
                                                           AxiomModel::ConnectionWire::WireType wireType,
                                                           AxiomModel::ModelRoot *root) {
     uint8_t portalTypeInt; stream >> portalTypeInt;
-    return std::make_unique<PortalControl>(uuid, parentUuid, pos, size, selected, name, wireType, (PortalType) portalTypeInt, root);
+    return create(uuid, parentUuid, pos, size, selected, name, wireType, (PortalType) portalTypeInt, root);
 }
 
 void PortalControl::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {

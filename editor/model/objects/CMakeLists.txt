@@ -11,6 +11,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/NodeSurface.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/NumControl.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/PortalControl.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/PortalNode.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/RootSurface.cpp")
 
 target_sources(axiom_model PRIVATE ${SOURCE_FILES})

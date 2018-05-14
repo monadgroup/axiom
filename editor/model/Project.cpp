@@ -1,16 +1,19 @@
 #include "Project.h"
 
 #include "objects/RootSurface.h"
+#include "actions/CreatePortalNodeAction.h"
 
 using namespace AxiomModel;
 
 Project::Project() {
     // setup default project
     //  1. create default surface
-    mainRoot().pool().registerObj(std::make_unique<AxiomModel::RootSurface>(QUuid::createUuid(), QPointF(0, 0), 0, &mainRoot()));
+    auto surfaceId = QUuid::createUuid();
+    mainRoot().pool().registerObj(std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot()));
 
     //  2. add default inputs and outputs
-    // todo
+    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI, PortalControl::PortalType::INPUT, &mainRoot())->forward();
+    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM, PortalControl::PortalType::OUTPUT, &mainRoot())->forward();
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(stream) {

@@ -12,7 +12,8 @@ namespace AxiomModel {
     public:
         enum class NodeType {
             CUSTOM_NODE,
-            GROUP_NODE
+            GROUP_NODE,
+            PORTAL_NODE
         };
 
         Event<const QString &> nameChanged;

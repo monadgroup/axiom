@@ -11,7 +11,7 @@ CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
 std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                bool selected, QString name, const QUuid &controlsUuid, QString code,
                                                AxiomModel::ModelRoot *root) {
-    return std::make_unique<CustomNode>(uuid, parentUuid, pos, size, selected, name, controlsUuid, code, root);
+    return std::make_unique<CustomNode>(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, code, root);
 }
 
 std::unique_ptr<CustomNode> CustomNode::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
