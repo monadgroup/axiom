@@ -1,12 +1,16 @@
 #include "Pool.h"
 
 #include "PoolObject.h"
-#include "SequenceOperators.h"
+#include "PoolOperators.h"
 #include "../util.h"
 
 using namespace AxiomModel;
 
 Pool::Pool() : _sequence(wrap(_objects)) {}
+
+Pool::~Pool() {
+    destroy();
+}
 
 PoolObject* Pool::registerObj(std::unique_ptr<AxiomModel::PoolObject> obj) {
     _ownedObjects.push_back(std::move(obj));
@@ -35,7 +39,8 @@ void Pool::removeObj(AxiomModel::PoolObject *obj) {
 }
 
 void Pool::destroy() {
+    // objects are always sorted as a heap, so we're guaranteed to never remove an object before its parent here
     while (!_objects.empty()) {
-        _objects.back()->remove();
+        _objects.front()->remove();
     }
 }

@@ -27,6 +27,8 @@ namespace AxiomModel {
 
         GridItem(GridSurface *parent, QPoint pos, QSize size, bool selected);
 
+        virtual ~GridItem();
+
         static void deserialize(QDataStream &stream, QPoint &pos, QSize &size, bool &selected);
 
         void serialize(QDataStream &stream) const;

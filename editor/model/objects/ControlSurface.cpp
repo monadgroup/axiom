@@ -27,8 +27,8 @@ void ControlSurface::serialize(QDataStream &stream, const QUuid &parent, bool wi
 }
 
 void ControlSurface::remove() {
-    for (const auto &control : _controls) {
-        control->remove();
+    while (!_controls.empty()) {
+        (*_controls.begin())->remove();
     }
     ModelObject::remove();
 }

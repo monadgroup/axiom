@@ -12,6 +12,11 @@ GridItem::GridItem(GridSurface *parent, QPoint pos, QSize size, bool selected)
     parentSurface->flushGrid();
 }
 
+GridItem::~GridItem() {
+    parentSurface->grid().setRect(m_pos, m_size, nullptr);
+    parentSurface->flushGrid();
+}
+
 void GridItem::deserialize(QDataStream &stream, QPoint &pos, QSize &size, bool &selected) {
     stream >> pos;
     stream >> size;

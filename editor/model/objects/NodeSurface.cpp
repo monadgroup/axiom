@@ -53,11 +53,11 @@ void NodeSurface::setZoom(float zoom) {
 }
 
 void NodeSurface::remove() {
-    for (const auto &node : _nodes) {
-        node->remove();
+    while (!_nodes.empty()) {
+        (*_nodes.begin())->remove();
     }
-    for (const auto &connection : _connections) {
-        connection->remove();
+    while (!_connections.empty()) {
+        (*_connections.begin())->remove();
     }
     ModelObject::remove();
 }

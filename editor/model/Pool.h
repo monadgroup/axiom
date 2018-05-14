@@ -15,6 +15,8 @@ namespace AxiomModel {
     public:
         Pool();
 
+        virtual ~Pool();
+
         PoolObject *registerObj(std::unique_ptr<PoolObject> obj);
 
         void registerObj(PoolObject *obj);
