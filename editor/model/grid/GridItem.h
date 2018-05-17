@@ -3,6 +3,7 @@
 #include <QtCore/QString>
 #include <QtCore/QPoint>
 #include <QtCore/QSize>
+#include <QtCore/QRect>
 #include <memory>
 
 #include "../Event.h"
@@ -37,6 +38,8 @@ namespace AxiomModel {
 
         QSize size() const { return m_size; }
 
+        QRect rect() const { return QRect(m_pos, m_size); }
+
         bool isSelected() const { return m_selected; }
 
         bool isDragAvailable(QPoint delta);
@@ -58,6 +61,8 @@ namespace AxiomModel {
         void setPos(QPoint pos, bool updateGrid = true, bool checkPositions = true);
 
         void setSize(QSize size);
+
+        void setRect(QRect rect);
 
         virtual void setCorners(QPoint topLeft, QPoint bottomRight);
 

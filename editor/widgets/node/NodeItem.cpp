@@ -15,6 +15,7 @@
 #include "editor/model/objects/PortalControl.h"
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/GridItemMoveAction.h"
+#include "editor/model/actions/GridItemSizeAction.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "../surface/NodeSurfacePanel.h"
 #include "editor/widgets/controls/NumControlItem.h"
@@ -61,6 +62,8 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
                     this, &NodeItem::resizerStartDrag);
             connect(resizer, &ItemResizer::changed,
                     this, &NodeItem::resizerChanged);
+            connect(resizer, &ItemResizer::endDrag,
+                    this, &NodeItem::resizerEndDrag);
 
             node->controls().then([resizer](ControlSurface *surface) {
                 resizer->setVisible(!surface->grid().hasSelection());
@@ -331,6 +334,14 @@ void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
 
 void NodeItem::resizerStartDrag() {
     node->select(true);
+    startDragRect = node->rect();
+}
+
+void NodeItem::resizerEndDrag() {
+    auto endDragRect = node->rect();
+    if (startDragRect != endDragRect) {
+        node->root()->history().append(GridItemSizeAction::create(node->uuid(), startDragRect, endDragRect, node->root()));
+    }
 }
 
 void NodeItem::triggerUpdate() {

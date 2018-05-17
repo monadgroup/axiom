@@ -60,6 +60,8 @@ namespace AxiomGui {
 
         void resizerStartDrag();
 
+        void resizerEndDrag();
+
         void triggerUpdate();
 
         void triggerGeometryChange();
@@ -73,6 +75,7 @@ namespace AxiomGui {
     private:
         bool isDragging = false;
         QPoint mouseStartPoint;
+        QRect startDragRect;
 
         static const int textOffset = 15;
     };

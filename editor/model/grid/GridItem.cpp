@@ -47,6 +47,10 @@ void GridItem::setSize(QSize size) {
     }
 }
 
+void GridItem::setRect(QRect rect) {
+    setCorners(rect.topLeft(), rect.topLeft() + QPoint(rect.width(), rect.height()));
+}
+
 void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (!isResizable()) return;
 

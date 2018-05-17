@@ -2,7 +2,7 @@
 
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../objects/Node.h"
+#include "../grid/GridItem.h"
 
 using namespace AxiomModel;
 
