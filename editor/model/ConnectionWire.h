@@ -3,20 +3,20 @@
 #include <QtCore/QPointF>
 #include <deque>
 
-#include "Hookable.h"
-#include "Event.h"
+#include "common/Hookable.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
     class GridSurface;
 
-    class ConnectionWire : public Hookable {
+    class ConnectionWire : public AxiomCommon::Hookable {
     public:
-        Event<const QPointF &> startPosChanged;
-        Event<const QPointF &> endPosChanged;
-        Event<const std::deque<QPoint> &> routeChanged;
-        Event<bool> activeChanged;
-        Event<> removed;
+        AxiomCommon::Event<const QPointF &> startPosChanged;
+        AxiomCommon::Event<const QPointF &> endPosChanged;
+        AxiomCommon::Event<const std::deque<QPoint> &> routeChanged;
+        AxiomCommon::Event<bool> activeChanged;
+        AxiomCommon::Event<> removed;
 
         enum class WireType {
             NUM,

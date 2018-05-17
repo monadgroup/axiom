@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../ModelObject.h"
-#include "../Promise.h"
 #include "../ConnectionWire.h"
 
 namespace AxiomModel {

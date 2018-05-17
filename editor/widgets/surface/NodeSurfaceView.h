@@ -3,7 +3,7 @@
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QMenu>
 
-#include "editor/model/Hookable.h"
+#include "common/Hookable.h"
 
 namespace AxiomModel {
     class NodeSurface;
@@ -13,7 +13,7 @@ namespace AxiomGui {
 
     class NodeSurfacePanel;
 
-    class NodeSurfaceView : public QGraphicsView, public AxiomModel::Hookable {
+    class NodeSurfaceView : public QGraphicsView, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:

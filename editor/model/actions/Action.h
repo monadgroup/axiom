@@ -3,13 +3,13 @@
 #include <memory>
 #include <QtCore/QDataStream>
 
-#include "../Hookable.h"
+#include "common/Hookable.h"
 
 namespace AxiomModel {
 
     class ModelRoot;
 
-    class Action : public Hookable {
+    class Action : public AxiomCommon::Hookable {
     public:
         enum class ActionType {
             NONE,

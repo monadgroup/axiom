@@ -4,7 +4,7 @@
 
 #include "WatchSequence.h"
 #include "SequenceOperators.h"
-#include "Promise.h"
+#include "common/Promise.h"
 
 namespace AxiomModel {
 
@@ -34,12 +34,12 @@ namespace AxiomModel {
     };
 
     template<class Item>
-    Promise<Item> getFirst(WatchSequence<Item> input) {
+    AxiomCommon::Promise<Item> getFirst(WatchSequence<Item> input) {
         if (!input.empty()) {
-            return Promise<Item>::from(*input.begin());
+            return AxiomCommon::Promise<Item>::from(*input.begin());
         }
 
-        Promise<Item> result;
+        AxiomCommon::Promise<Item> result;
         input.itemAdded.connect([result](const Item &item) mutable {
             result.resolve(item);
         });

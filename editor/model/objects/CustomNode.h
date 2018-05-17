@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Event.h"
 #include "Node.h"
 
 namespace AxiomModel {
@@ -8,10 +9,10 @@ namespace AxiomModel {
     public:
         static constexpr float minPanelHeight = 40;
 
-        Event<const QString &> codeChanged;
-        Event<bool> panelOpenChanged;
-        Event<float> beforePanelHeightChanged;
-        Event<float> panelHeightChanged;
+        AxiomCommon::Event<const QString &> codeChanged;
+        AxiomCommon::Event<bool> panelOpenChanged;
+        AxiomCommon::Event<float> beforePanelHeightChanged;
+        AxiomCommon::Event<float> panelHeightChanged;
 
         CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, ModelRoot *root);
 

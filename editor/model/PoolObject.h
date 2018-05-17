@@ -2,13 +2,13 @@
 
 #include <QtCore/QUuid>
 
-#include "Hookable.h"
+#include "common/Hookable.h"
 
 namespace AxiomModel {
 
     class Pool;
 
-    class PoolObject : public Hookable {
+    class PoolObject : public AxiomCommon::Hookable {
     public:
         PoolObject(const QUuid &uuid, const QUuid &parentUuid, Pool *pool);
 

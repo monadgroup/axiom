@@ -8,23 +8,23 @@
 #include <QtCore/QString>
 #include <QtCore/QPointF>
 
+#include "common/Hookable.h"
+#include "common/Event.h"
 #include "Grid.h"
 #include "../Pool.h"
-#include "../Hookable.h"
-#include "../Event.h"
 
 namespace AxiomModel {
 
     class GridItem;
 
-    class GridSurface : public Hookable {
+    class GridSurface : public AxiomCommon::Hookable {
     public:
         using ItemGrid = Grid<GridItem>;
         using ItemCollection = WatchSequence<GridItem*>;
         
-        Event<GridItem*> itemAdded;
-        Event<bool> hasSelectionChanged;
-        Event<> gridChanged;
+        AxiomCommon::Event<GridItem*> itemAdded;
+        AxiomCommon::Event<bool> hasSelectionChanged;
+        AxiomCommon::Event<> gridChanged;
 
         explicit GridSurface(ItemCollection view, QPoint minRect = QPoint(INT_MIN, INT_MIN), QPoint maxRect = QPoint(INT_MAX, INT_MAX));
 

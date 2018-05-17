@@ -34,7 +34,7 @@ SoftControl *GroupNode::forwardControl(MaximRuntime::Control *control) {
     auto newControl = SoftControl::create(this, control);
     auto newControlPtr = newControl.get();
     _controls.push_back(std::move(newControl));
-    emit controlAdded(newControlPtr);
+    controlAdded.trigger(newControlPtr);
 
     control->node()->scheduleCompile();
     return newControlPtr;

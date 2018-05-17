@@ -21,6 +21,6 @@ void Node::scheduleCompile() {
 void Node::setExtracted(bool extracted) {
     if (extracted != _extracted) {
         _extracted = extracted;
-        emit extractedChanged(extracted);
+        extractedChanged.trigger(extracted);
     }
 }

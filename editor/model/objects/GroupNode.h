@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Promise.h"
 #include "Node.h"
 #include "NodeSurface.h"
 
@@ -15,14 +16,14 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        Promise<NodeSurface*> &nodes() { return _nodes; }
+        AxiomCommon::Promise<NodeSurface*> &nodes() { return _nodes; }
 
-        const Promise<NodeSurface*> &nodes() const { return _nodes; }
+        const AxiomCommon::Promise<NodeSurface*> &nodes() const { return _nodes; }
 
         void remove() override;
 
     private:
-        Promise<NodeSurface*> _nodes;
+        AxiomCommon::Promise<NodeSurface*> _nodes;
     };
 
 }

@@ -5,7 +5,7 @@
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QMenu>
 
-#include "editor/model/Hookable.h"
+#include "common/Hookable.h"
 #include "editor/model/ConnectionWire.h"
 
 namespace AxiomModel {
@@ -26,7 +26,7 @@ namespace AxiomGui {
 
     class NodeSurfacePanel;
 
-    class NodeSurfaceCanvas : public QGraphicsScene, public AxiomModel::Hookable {
+    class NodeSurfaceCanvas : public QGraphicsScene, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:

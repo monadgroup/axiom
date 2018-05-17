@@ -1,7 +1,7 @@
 #pragma once
 
+#include "common/Event.h"
 #include "../grid/GridSurface.h"
-#include "../Event.h"
 #include "../ModelObject.h"
 
 namespace AxiomModel {
@@ -15,9 +15,9 @@ namespace AxiomModel {
         using ChildCollection = WatchSequence<Node*>;
         using ConnectionCollection = WatchSequence<Connection*>;
 
-        Event<const QString &> nameChanged;
-        Event<const QPointF &> panChanged;
-        Event<float> zoomChanged;
+        AxiomCommon::Event<const QString &> nameChanged;
+        AxiomCommon::Event<const QPointF &> panChanged;
+        AxiomCommon::Event<float> zoomChanged;
 
         NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 

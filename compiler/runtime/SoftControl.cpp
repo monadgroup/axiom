@@ -9,10 +9,8 @@ SoftControl::SoftControl(MaximRuntime::GroupNode *node, MaximRuntime::Control *f
     : Control(node), _node(node), _forward(forward) {
     forward->setExposer(this);
 
-    connect(forward, &Control::removed,
-            this, &SoftControl::remove);
-    connect(forward, &Control::exposerChanged,
-            this, &SoftControl::remove);
+    forward->removed.connect(this, &SoftControl::remove);
+    forward->exposerChanged.connect(this, &SoftControl::remove);
 }
 
 std::unique_ptr<SoftControl> SoftControl::create(MaximRuntime::GroupNode *node, MaximRuntime::Control *forward) {

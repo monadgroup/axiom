@@ -43,8 +43,9 @@ include_directories(../ ${LLVM_INCLUDE_DIRS} ../vendor/vst ${Qt5Widgets_INCLUDE_
 add_definitions(${LLVM_DEFINITIONS})
 
 llvm_map_components_to_libnames(llvm_libs support core ipo irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
-set(LINK_LIBS axiom_widgets axiom_model maxim_runtime maxim_codegen maxim_common Qt5::Widgets ${llvm_libs})
+set(LINK_LIBS axiom_widgets axiom_model maxim_runtime maxim_codegen maxim_common axiom_common Qt5::Widgets ${llvm_libs})
 
+add_subdirectory(../common common)
 add_subdirectory(model)
 add_subdirectory(widgets)
 add_subdirectory(../compiler compiler)

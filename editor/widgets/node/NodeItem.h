@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QGraphicsObject>
 
-#include "editor/model/Hookable.h"
+#include "common/Hookable.h"
 
 namespace AxiomModel {
     class Node;
@@ -14,7 +14,7 @@ namespace AxiomGui {
 
     class NodeSurfaceCanvas;
 
-    class NodeItem : public QGraphicsObject, public AxiomModel::Hookable {
+    class NodeItem : public QGraphicsObject, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:

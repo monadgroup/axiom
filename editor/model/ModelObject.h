@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "PoolObject.h"
-#include "Event.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
@@ -20,7 +20,7 @@ namespace AxiomModel {
             CONNECTION
         };
 
-        Event<> removed;
+        AxiomCommon::Event<> removed;
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 

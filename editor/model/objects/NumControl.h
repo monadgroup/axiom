@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Event.h"
 #include "Control.h"
 #include "compiler/runtime/ValueOperator.h"
 
@@ -21,9 +22,9 @@ namespace AxiomModel {
             BOTH = LEFT | RIGHT
         };
 
-        Event<DisplayMode> displayModeChanged;
-        Event<Channel> channelChanged;
-        Event<const MaximRuntime::NumValue &> valueChanged;
+        AxiomCommon::Event<DisplayMode> displayModeChanged;
+        AxiomCommon::Event<Channel> channelChanged;
+        AxiomCommon::Event<const MaximRuntime::NumValue &> valueChanged;
 
         NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, DisplayMode displayMode, Channel channel, MaximRuntime::NumValue value, ModelRoot *root);
 

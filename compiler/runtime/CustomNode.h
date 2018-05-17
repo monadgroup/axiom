@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Event.h"
 #include "Node.h"
 #include "ErrorLog.h"
 #include "HardControl.h"
@@ -12,9 +13,10 @@ namespace MaximAst {
 namespace MaximRuntime {
 
     class CustomNode : public Node {
-    Q_OBJECT
-
     public:
+        AxiomCommon::Event<HardControl*> controlAdded;
+        AxiomCommon::Event<> finishedCodegen;
+
         explicit CustomNode(Surface *surface);
 
         ~CustomNode() override;
@@ -38,12 +40,6 @@ namespace MaximRuntime {
         ErrorLog &errorLog() { return _errorLog; }
 
         MaximCodegen::ModuleClass *moduleClass() override;
-
-    signals:
-
-        void controlAdded(HardControl *control);
-
-        void finishedCodegen();
 
     private:
 

@@ -36,7 +36,7 @@ void Control::disconnectFrom(MaximRuntime::Control *other) {
 void Control::setExposer(MaximRuntime::Control *control) {
     if (control != _exposer) {
         _exposer = control;
-        emit exposerChanged(control);
+        exposerChanged.trigger(control);
     }
 }
 
@@ -54,6 +54,6 @@ void Control::remove() {
 
     onRemove();
 
-    emit removed();
-    emit cleanup();
+    removed.trigger();
+    cleanup.trigger();
 }

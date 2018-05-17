@@ -30,7 +30,7 @@ namespace AxiomModel {
     }
 
     template<class OutputItem, class InputItem>
-    Promise<OutputItem> findLater(WatchSequence<InputItem> input, QUuid uuid) {
+    AxiomCommon::Promise<OutputItem> findLater(WatchSequence<InputItem> input, QUuid uuid) {
         return getFirst(mapFilterWatch(std::move(input), std::function([uuid](const InputItem &base) -> std::optional<OutputItem> {
             if (base->uuid() == uuid) {
                 auto cast = dynamic_cast<OutputItem>(base);

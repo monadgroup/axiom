@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Event.h"
 #include "Node.h"
 #include "Surface.h"
 #include "SoftControl.h"
@@ -11,9 +12,9 @@ namespace MaximRuntime {
     class GeneratableModuleClass;
 
     class GroupNode : public Node {
-    Q_OBJECT
-
     public:
+        AxiomCommon::Event<SoftControl*> controlAdded;
+
         explicit GroupNode(Surface *surface);
 
         GeneratableModuleClass *compile() override;
@@ -38,10 +39,6 @@ namespace MaximRuntime {
         void restoreValue() override;
 
         MaximCodegen::ModuleClass *moduleClass() override;
-
-    signals:
-
-        void controlAdded(SoftControl *control);
 
     private:
 

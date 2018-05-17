@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Event.h"
 #include "Control.h"
 
 namespace AxiomModel {
@@ -8,7 +9,7 @@ namespace AxiomModel {
     public:
         using ActiveSlotFlags = uint16_t;
 
-        Event<ActiveSlotFlags> activeSlotsChanged;
+        AxiomCommon::Event<ActiveSlotFlags> activeSlotsChanged;
 
         ExtractControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ConnectionWire::WireType wireType, ActiveSlotFlags activeSlots, ModelRoot *root);
 

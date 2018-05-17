@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Event.h"
 #include "Control.h"
 #include "compiler/runtime/ValueOperator.h"
 
@@ -7,7 +8,7 @@ namespace AxiomModel {
 
     class MidiControl : public Control {
     public:
-        Event<const MaximRuntime::MidiValue &> valueChanged;
+        AxiomCommon::Event<const MaximRuntime::MidiValue &> valueChanged;
 
         MidiControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
 

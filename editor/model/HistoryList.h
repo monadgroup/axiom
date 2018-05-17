@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory>
 
-#include "Event.h"
+#include "common/Event.h"
 #include "actions/Action.h"
 
 namespace AxiomModel {
@@ -12,12 +12,12 @@ namespace AxiomModel {
 
     class Action;
 
-    class HistoryList : public Hookable {
+    class HistoryList : public AxiomCommon::Hookable {
     public:
-        Event<bool> canUndoChanged;
-        Event<bool> canRedoChanged;
-        Event<Action::ActionType> undoTypeChanged;
-        Event<Action::ActionType> redoTypeChanged;
+        AxiomCommon::Event<bool> canUndoChanged;
+        AxiomCommon::Event<bool> canRedoChanged;
+        AxiomCommon::Event<Action::ActionType> undoTypeChanged;
+        AxiomCommon::Event<Action::ActionType> redoTypeChanged;
 
         size_t maxActions = 256;
 

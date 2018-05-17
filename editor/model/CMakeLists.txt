@@ -15,23 +15,14 @@ find_package(Qt5Core REQUIRED)
 get_target_property(QT5_INCLUDE_DIRS Qt5::Core INTERFACE_INCLUDE_DIRECTORIES)
 
 set(SOURCE_FILES
-        Event.h
         ConnectionWire.cpp
         HistoryList.cpp
-        Hookable.cpp
         ModelObject.cpp
         ModelRoot.cpp
         Pool.cpp
         PoolObject.cpp
         Project.cpp
-        PoolOperators.h
-        SequenceMapFilter.h
-        Promise.h
-        Sequence.h
-        SequenceOperators.h
-        SharedHookable.cpp
-        WatchSequence.h
-        WatchSequenceOperators.h)
+        ValueWriters.cpp)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${QT5_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

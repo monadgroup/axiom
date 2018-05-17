@@ -2,12 +2,12 @@
 
 #include <iostream>
 #include "SequenceMapFilter.h"
-#include "Event.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
     template<class Item>
-    class WatchSequence : public Hookable {
+    class WatchSequence : public AxiomCommon::Hookable {
     public:
         using sequence_type = Sequence<Item>;
         using value_type = typename sequence_type::value_type;
@@ -18,13 +18,13 @@ namespace AxiomModel {
         using iterator = typename sequence_type::iterator;
         using const_iterator = typename sequence_type::const_iterator;
 
-        Event<const Item &> itemAdded;
-        Event<const Item &> itemRemoved;
+        AxiomCommon::Event<const Item &> itemAdded;
+        AxiomCommon::Event<const Item &> itemRemoved;
 
         explicit WatchSequence(sequence_type sequence) : _sequence(std::move(sequence)) {}
 
         template<class InputItem>
-        WatchSequence(const SequenceMapFilter<Item, InputItem> &mapFilter, Event<const InputItem &> &parentAdded, Event<const InputItem &> &parentRemoved) : _sequence(mapFilter.sequence()) {
+        WatchSequence(const SequenceMapFilter<Item, InputItem> &mapFilter, AxiomCommon::Event<const InputItem &> &parentAdded, AxiomCommon::Event<const InputItem &> &parentRemoved) : _sequence(mapFilter.sequence()) {
             auto mapFilterNext = mapFilter.next();
             auto itemAddedEvent = itemAdded;
             auto itemRemovedEvent = itemRemoved;

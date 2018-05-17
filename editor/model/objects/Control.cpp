@@ -81,6 +81,17 @@ QPointF Control::worldPos() const {
     return ControlSurface::controlToNode(centerPos);
 }
 
+void Control::attachRuntime(MaximRuntime::Control *runtime) {
+    assert(!_runtime);
+
+    _runtime = runtime;
+    
+}
+
+void Control::detachRuntime() {
+
+}
+
 void Control::remove() {
     ModelObject::remove();
 }

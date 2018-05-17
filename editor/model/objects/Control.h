@@ -1,9 +1,16 @@
 #pragma once
 
+#include <optional>
+
+#include "common/Event.h"
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
 #include "../WatchSequence.h"
 #include "../ConnectionWire.h"
+
+namespace MaximRuntime {
+    class Control;
+}
 
 namespace AxiomModel {
 
@@ -22,9 +29,9 @@ namespace AxiomModel {
             MIDI_PORTAL
         };
 
-        Event<const QString &> nameChanged;
-        Event<QPointF> worldPosChanged;
-        Event<bool> isActiveChanged;
+        AxiomCommon::Event<const QString &> nameChanged;
+        AxiomCommon::Event<QPointF> worldPosChanged;
+        AxiomCommon::Event<bool> isActiveChanged;
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
 
@@ -64,6 +71,10 @@ namespace AxiomModel {
 
         QPointF worldPos() const;
 
+        void attachRuntime(MaximRuntime::Control *runtime);
+
+        void detachRuntime();
+
         void remove() override;
 
     private:
@@ -72,6 +83,8 @@ namespace AxiomModel {
         ConnectionWire::WireType _wireType;
         QString _name;
         bool _isActive = false;
+
+        std::optional<MaximRuntime::Control *> _runtime;
 
         WatchSequence<Connection *> _connections;
         WatchSequence<Control *> _connectedControls;

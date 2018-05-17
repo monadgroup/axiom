@@ -83,7 +83,7 @@ GeneratableModuleClass *CustomNode::compile() {
         setModule(std::move(oldModule));
     }
 
-    emit finishedCodegen();
+    finishedCodegen.trigger();
 
     return _moduleClass.get();
 }
@@ -145,7 +145,7 @@ void CustomNode::updateControls() {
     // add new controls - note: ordering is important here so the UI can free
     // grid space before allocating new controls
     for (const auto &newControl : newControls) {
-        emit controlAdded(newControl);
+        controlAdded.trigger(newControl);
     }
 }
 

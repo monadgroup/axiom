@@ -1,8 +1,9 @@
 #pragma once
 
+#include "common/Event.h"
+#include "common/Promise.h"
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
-#include "../Promise.h"
 
 namespace AxiomModel {
 
@@ -16,8 +17,8 @@ namespace AxiomModel {
             PORTAL_NODE
         };
 
-        Event<const QString &> nameChanged;
-        Event<bool> extractedChanged;
+        AxiomCommon::Event<const QString &> nameChanged;
+        AxiomCommon::Event<bool> extractedChanged;
 
         Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, ModelRoot *root);
 
@@ -25,9 +26,9 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        Promise<ControlSurface*> &controls() { return _controls; }
+        AxiomCommon::Promise<ControlSurface*> &controls() { return _controls; }
 
-        const Promise<ControlSurface*> &controls() const { return _controls; }
+        const AxiomCommon::Promise<ControlSurface*> &controls() const { return _controls; }
 
         NodeType nodeType() const { return _nodeType; }
 
@@ -53,7 +54,7 @@ namespace AxiomModel {
         NodeType _nodeType;
         QString _name;
         bool _isExtracted = false;
-        Promise<ControlSurface*> _controls;
+        AxiomCommon::Promise<ControlSurface*> _controls;
     };
 
 }

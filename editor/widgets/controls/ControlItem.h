@@ -3,7 +3,7 @@
 #include <QtWidgets/QGraphicsObject>
 
 #include "../IConnectable.h"
-#include "editor/model/Hookable.h"
+#include "common/Hookable.h"
 
 namespace AxiomModel {
     class Control;
@@ -13,7 +13,7 @@ namespace AxiomGui {
 
     class NodeSurfaceCanvas;
 
-    class ControlItem : public QGraphicsObject, public AxiomModel::Hookable, public IConnectable {
+    class ControlItem : public QGraphicsObject, public AxiomCommon::Hookable, public IConnectable {
     Q_OBJECT
     Q_PROPERTY(float hoverState READ hoverState WRITE setHoverState)
 

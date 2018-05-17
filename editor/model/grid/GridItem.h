@@ -6,7 +6,7 @@
 #include <QtCore/QRect>
 #include <memory>
 
-#include "../Event.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
@@ -15,16 +15,16 @@ namespace AxiomModel {
     class GridItem {
     public:
         GridSurface *parentSurface;
-        Event<QPoint> beforePosChanged;
-        Event<QPoint> posChanged;
-        Event<QSize> beforeSizeChanged;
-        Event<QSize> sizeChanged;
-        Event<bool> selectedChanged;
-        Event<bool> selected;
-        Event<> deselected;
-        Event<> startedDragging;
-        Event<QPoint> draggedTo;
-        Event<> finishedDragging;
+        AxiomCommon::Event<QPoint> beforePosChanged;
+        AxiomCommon::Event<QPoint> posChanged;
+        AxiomCommon::Event<QSize> beforeSizeChanged;
+        AxiomCommon::Event<QSize> sizeChanged;
+        AxiomCommon::Event<bool> selectedChanged;
+        AxiomCommon::Event<bool> selected;
+        AxiomCommon::Event<> deselected;
+        AxiomCommon::Event<> startedDragging;
+        AxiomCommon::Event<QPoint> draggedTo;
+        AxiomCommon::Event<> finishedDragging;
 
         GridItem(GridSurface *parent, QPoint pos, QSize size, bool selected);
 

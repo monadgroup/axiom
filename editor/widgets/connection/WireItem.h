@@ -4,7 +4,7 @@
 #include <QtWidgets/QGraphicsPathItem>
 #include <deque>
 
-#include "editor/model/Hookable.h"
+#include "common/Hookable.h"
 
 namespace AxiomModel {
     class ConnectionWire;
@@ -12,7 +12,7 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class WireItem : public QObject, public QGraphicsPathItem, public AxiomModel::Hookable {
+    class WireItem : public QObject, public QGraphicsPathItem, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:
