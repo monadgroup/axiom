@@ -6,7 +6,7 @@
 #include "CreateGroupNodeAction.h"
 #include "CreatePortalNodeAction.h"
 #include "CreateConnectionAction.h"
-#include "MoveNodeAction.h"
+#include "GridItemMoveAction.h"
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -24,7 +24,7 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
         case ActionType::CREATE_GROUP_NODE: return "Create Group Node";
         case ActionType::CREATE_PORTAL_NODE: return "Create Portal Node";
         case ActionType::CREATE_CONNECTION: return "Connect Controls";
-        case ActionType::MOVE_NODE: return "Move Node";
+        case ActionType::MOVE_GRID_ITEM: return "Move Grid Item";
     }
 
     unreachable;
@@ -43,7 +43,7 @@ std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::Mod
         case ActionType::CREATE_GROUP_NODE: return CreateGroupNodeAction::deserialize(stream, root);
         case ActionType::CREATE_PORTAL_NODE: return CreatePortalNodeAction::deserialize(stream, root);
         case ActionType::CREATE_CONNECTION: return CreateConnectionAction::deserialize(stream, root);
-        case ActionType::MOVE_NODE: return MoveNodeAction::deserialize(stream, root);
+        case ActionType::MOVE_GRID_ITEM: return GridItemMoveAction::deserialize(stream, root);
         default: unreachable;
     }
 }

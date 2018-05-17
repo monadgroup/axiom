@@ -14,7 +14,7 @@
 #include "editor/model/objects/ExtractControl.h"
 #include "editor/model/objects/PortalControl.h"
 #include "editor/model/actions/CompositeAction.h"
-#include "editor/model/actions/MoveNodeAction.h"
+#include "editor/model/actions/GridItemMoveAction.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "../surface/NodeSurfacePanel.h"
 #include "editor/widgets/controls/NumControlItem.h"
@@ -202,7 +202,7 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         auto afterPos = selectedNode->pos();
 
         if (beforePos != afterPos) {
-            dragEvents.push_back(MoveNodeAction::create(selectedNode->uuid(), beforePos, afterPos, node->root()));
+            dragEvents.push_back(GridItemMoveAction::create(selectedNode->uuid(), beforePos, afterPos, node->root()));
         }
     }
 

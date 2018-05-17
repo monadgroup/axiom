@@ -6,6 +6,6 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/CreateGroupNodeAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CreatePortalNodeAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/DeleteObjectAction.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/MoveNodeAction.cpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/GridItemMoveAction.cpp")
 
 target_sources(axiom_model PRIVATE ${SOURCE_FILES})
