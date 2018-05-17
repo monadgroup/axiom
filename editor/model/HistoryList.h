@@ -18,6 +18,7 @@ namespace AxiomModel {
         AxiomCommon::Event<bool> canRedoChanged;
         AxiomCommon::Event<Action::ActionType> undoTypeChanged;
         AxiomCommon::Event<Action::ActionType> redoTypeChanged;
+        AxiomCommon::Event<> rebuildRequested;
 
         size_t maxActions = 256;
 

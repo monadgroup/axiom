@@ -36,6 +36,8 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
+        virtual bool needsRebuild() const { return false; }
+
         virtual void forward(bool first) = 0;
 
         virtual void backward() = 0;

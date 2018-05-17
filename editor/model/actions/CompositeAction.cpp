@@ -33,6 +33,13 @@ void CompositeAction::serialize(QDataStream &stream) const {
     }
 }
 
+bool CompositeAction::needsRebuild() const {
+    for (const auto &action : _actions) {
+        if (action->needsRebuild()) return true;
+    }
+    return false;
+}
+
 void CompositeAction::forward(bool first) {
     for (const auto &action : _actions) {
         action->forward(first);

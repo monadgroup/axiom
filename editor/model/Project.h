@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "ModelRoot.h"
 
 namespace MaximRuntime {
@@ -34,11 +36,14 @@ namespace AxiomModel {
 
         void attachRuntime(MaximRuntime::Runtime *runtime);
 
+        void rebuild() const;
+
         void destroy();
 
     private:
         ModelRoot _mainRoot;
         RootSurface *_rootSurface;
+        std::optional<MaximRuntime::Runtime *> _runtime;
     };
 
 }

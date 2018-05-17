@@ -27,6 +27,8 @@ void HistoryList::append(std::unique_ptr<AxiomModel::Action> action) {
     // run the action forward
     action->forward(true);
 
+    if (action->needsRebuild()) rebuildRequested.trigger();
+
     auto couldRedo = canRedo();
     auto actionType = action->actionType();
 
@@ -56,13 +58,17 @@ void HistoryList::undo() {
     if (!canUndo()) return;
 
     _stackPos--;
-    _stack[_stackPos]->backward();
+    auto undoAction = _stack[_stackPos].get();
+    undoAction->backward();
+    auto needsRebuild = undoAction->needsRebuild();
 
     if (_stackPos == 0) canUndoChanged.trigger(false);
     if (_stackPos == _stack.size() - 1) canRedoChanged.trigger(true);
 
     undoTypeChanged.trigger(_stackPos == 0 ? Action::ActionType::NONE : _stack[_stackPos - 1]->actionType());
     redoTypeChanged.trigger(_stack[_stackPos]->actionType());
+
+    if (needsRebuild) rebuildRequested.trigger();
 }
 
 bool HistoryList::canRedo() const {
@@ -72,7 +78,9 @@ bool HistoryList::canRedo() const {
 void HistoryList::redo() {
     if (!canRedo()) return;
 
-    _stack[_stackPos]->forward(false);
+    auto redoAction = _stack[_stackPos].get();
+    redoAction->forward(false);
+    auto needsRebuild = redoAction->needsRebuild();
     _stackPos++;
 
     if (_stackPos == 1) canUndoChanged.trigger(true);
@@ -80,4 +88,6 @@ void HistoryList::redo() {
 
     undoTypeChanged.trigger(_stack[_stackPos - 1]->actionType());
     redoTypeChanged.trigger(_stackPos == _stack.size() ? Action::ActionType::NONE : _stack[_stackPos]->actionType());
+
+    if (needsRebuild) rebuildRequested.trigger();
 }

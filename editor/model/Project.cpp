@@ -7,10 +7,12 @@
 using namespace AxiomModel;
 
 Project::Project() {
+    _mainRoot.history().rebuildRequested.connect([this]() { rebuild(); });
+
     // setup default project
     //  1. create default surface
     auto surfaceId = QUuid::createUuid();
-    _rootSurface = static_cast<RootSurface*>(mainRoot().pool().registerObj(std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot())));
+    _rootSurface = dynamic_cast<RootSurface*>(mainRoot().pool().registerObj(std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot())));
 
     //  2. add default inputs and outputs
     CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI, PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
@@ -47,7 +49,13 @@ void Project::serialize(QDataStream &stream) {
 }
 
 void Project::attachRuntime(MaximRuntime::Runtime *runtime) {
+    assert(!_runtime);
+    _runtime = runtime;
     _rootSurface->attachRuntime(runtime->mainSurface());
+}
+
+void Project::rebuild() const {
+    if (_runtime) (*_runtime)->compile();
 }
 
 void Project::destroy() {
