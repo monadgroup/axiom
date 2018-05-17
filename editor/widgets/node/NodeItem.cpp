@@ -193,9 +193,11 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     event->accept();
 
-    /*if (auto groupNode = dynamic_cast<GroupNode *>(node)) {
-        // todo: show surface
-    } else if (auto customNode = dynamic_cast<CustomNode *>(node)) {
+    if (auto groupNode = dynamic_cast<GroupNode *>(node); groupNode->nodes().value()) {
+        canvas->panel->window->showSurface(canvas->panel, *groupNode->nodes().value(), false);
+    }
+
+    /*if (auto customNode = dynamic_cast<CustomNode *>(node)) {
         // todo: open panel
     }*/
 }
