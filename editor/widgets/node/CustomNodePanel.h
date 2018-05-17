@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QtWidgets/QGraphicsObject>
-#include <QtWidgets/QTextEdit>
+#include <QtWidgets/QPlainTextEdit>
 
 #include "compiler/runtime/ErrorLog.h"
 #include "editor/model/Hookable.h"
@@ -56,7 +56,7 @@ namespace AxiomGui {
     private:
 
         QGraphicsProxyWidget *textProxy;
-        QTextEdit *textEditor;
+        QPlainTextEdit *textEditor;
         bool hasErrors = false;
         bool showingErrors = false;
 

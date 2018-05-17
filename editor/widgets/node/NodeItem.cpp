@@ -70,7 +70,11 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
         }
     }
 
-    // todo: custom node panel
+    if (auto customNode = dynamic_cast<CustomNode*>(node)) {
+        auto panel = new CustomNodePanel(customNode);
+        panel->setParentItem(this);
+        panel->setFlag(QGraphicsItem::ItemStacksBehindParent);
+    }
 
     // set initial state
     setPos(node->pos());
@@ -191,15 +195,14 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-    event->accept();
 
-    if (auto groupNode = dynamic_cast<GroupNode *>(node); groupNode->nodes().value()) {
+    if (auto groupNode = dynamic_cast<GroupNode *>(node); groupNode && groupNode->nodes().value()) {
+        event->accept();
         canvas->panel->window->showSurface(canvas->panel, *groupNode->nodes().value(), false);
+    } else if (auto customNode = dynamic_cast<CustomNode *>(node)) {
+        event->accept();
+        customNode->setPanelOpen(!customNode->isPanelOpen());
     }
-
-    /*if (auto customNode = dynamic_cast<CustomNode *>(node)) {
-        // todo: open panel
-    }*/
 }
 
 void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {

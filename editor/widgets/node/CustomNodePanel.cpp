@@ -17,31 +17,15 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
     node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
 
-    // todo: panel events, parse/compile errors, code changed event:
-    /*connect(node, &CustomNode::beforeSizeChanged,
-            this, &CustomNodePanel::triggerGeometryChange);
-    connect(node, &CustomNode::sizeChanged,
-            this, &CustomNodePanel::updateSize);
-    connect(node, &CustomNode::panelOpenChanged,
-            this, &CustomNodePanel::setOpen);
-    connect(node, &CustomNode::beforePanelHeightChanged,
-            this, &CustomNodePanel::triggerGeometryChange);
-    connect(node, &CustomNode::panelHeightChanged,
-            this, &CustomNodePanel::updateSize);
-    connect(node, &CustomNode::compileFailed,
-            this, &CustomNodePanel::setError);
-    connect(node, &CustomNode::parseFailed,
-            this, &CustomNodePanel::setError);
-    connect(node, &CustomNode::compileSucceeded,
-            this, &CustomNodePanel::clearError);
-    connect(node, &CustomNode::parseSucceeded,
-            this, &CustomNodePanel::clearError);
-    connect(node, &CustomNode::compileFinished,
-            this, &CustomNodePanel::compileFinished);
-    connect(node, &CustomNode::codeChanged,
-            this, &CustomNodePanel::codeChanged);*/
+    // todo: panel events, parse/compile errors, code changed event
+    node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
+    node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
+    node->panelOpenChanged.connect(this, &CustomNodePanel::setOpen);
+    node->beforePanelHeightChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
+    node->panelHeightChanged.connect(this, &CustomNodePanel::updateSize);
+    node->codeChanged.connect(this, &CustomNodePanel::codeChanged);
 
-    /*auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, Node::minPanelHeight));
+    auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, CustomNode::minPanelHeight));
     connect(this, &CustomNodePanel::resizerSizeChanged,
             resizer, &ItemResizer::setSize);
     connect(resizer, &ItemResizer::changed,
@@ -49,23 +33,24 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     resizer->setParentItem(this);
     resizer->setZValue(0);
 
-    textEditor = new QTextEdit();
+    textEditor = new QPlainTextEdit();
     textProxy = new QGraphicsProxyWidget();
     textProxy->setWidget(textEditor);
     textProxy->setParentItem(this);
     textProxy->setZValue(1);
 
     textEditor->installEventFilter(this);
-    textEditor->setText(node->code());
-    connect(textEditor, &QTextEdit::textChanged,
+    textEditor->setWordWrapMode(QTextOption::NoWrap);
+    textEditor->setPlainText(node->code());
+    connect(textEditor, &QPlainTextEdit::textChanged,
             this, &CustomNodePanel::controlTextChanged);
 
-    setOpen(node->isPanelOpen());*/
+    setOpen(node->isPanelOpen());
     updateSize();
 }
 
 QRectF CustomNodePanel::boundingRect() const {
-    QRectF rect = {QPointF(0, 0), NodeSurfaceCanvas::nodeRealSize(node->size())};
+    QRectF rect = {QPointF(0, 0), NodeSurfaceCanvas::nodeRealSize(node->size()) + QSizeF(1, node->panelHeight())};
     return rect.marginsAdded(QMarginsF(5, 5, 5, 5));
 }
 
@@ -83,12 +68,12 @@ void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 void CustomNodePanel::updateSize() {
     auto br = boundingRect();
-    //auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
+    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
 
-    /*textProxy->setGeometry(QRectF(
+    textProxy->setGeometry(QRectF(
         QPointF(0, nodeSize.height() + 5),
         QSizeF(br.width() - 10, node->panelHeight() - 5)
-    ));*/
+    ));
 
     emit resizerSizeChanged(br.size() - QSizeF(5, 5));
 }
@@ -137,12 +122,12 @@ void CustomNodePanel::triggerGeometryChange() {
 }
 
 void CustomNodePanel::resizerChanged(QPointF topLeft, QPointF bottomRight) {
-    //auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
-    //node->setPanelHeight((float) bottomRight.y() - nodeSize.height() - 5);
+    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
+    node->setPanelHeight((float) bottomRight.y() - nodeSize.height() - 5);
 }
 
 void CustomNodePanel::compileFinished() {
-    textEditor->setText(node->code());
+    textEditor->setPlainText(node->code());
 }
 
 bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
@@ -161,7 +146,7 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
             auto keyEvent = (QKeyEvent *) event;
 
             if (keyEvent->key() == Qt::Key_Escape) {
-                //node->setPanelOpen(false);
+                node->setPanelOpen(false);
             }
         }
     }
@@ -170,7 +155,7 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
 }
 
 void CustomNodePanel::controlTextChanged() {
-    //node->setCode(textEditor->toPlainText());
+    node->setCode(textEditor->toPlainText());
 }
 
 void CustomNodePanel::moveCursor(QTextCursor &cursor, SourcePos pos, QTextCursor::MoveMode mode) {
