@@ -70,16 +70,9 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
 
     // connect to global actions
     connect(GlobalActions::editDelete, &QAction::triggered,
-            this, [surface]() {
-                std::vector<std::unique_ptr<Action>> deleteActions;
-                auto selectedNodes = filter(surface->nodes().sequence(), [](Node *const &node) { return node->isSelected(); });
-                for (const auto &node : selectedNodes) {
-                    deleteActions.push_back(DeleteObjectAction::create(node));
-                }
-                surface->root()->history().append(CompositeAction::create(std::move(deleteActions), surface->root()));
-            });
-
-    // todo: select all and delete selected
+            this, &NodeSurfaceCanvas::deleteSelected);
+    connect(GlobalActions::editSelectAll, &QAction::triggered,
+            this, &NodeSurfaceCanvas::selectAll);
 
     auto timer = new QTimer(this);
     connect(timer, &QTimer::timeout,
@@ -203,6 +196,23 @@ void NodeSurfaceCanvas::addWire(AxiomModel::ConnectionWire *wire) {
     auto item = new WireItem(this, wire);
     item->setZValue(wireZVal);
     addItem(item);
+}
+
+void NodeSurfaceCanvas::deleteSelected() {
+    if (!hasFocus()) return;
+
+    std::vector<std::unique_ptr<Action>> deleteActions;
+    auto selectedNodes = filter(surface->nodes().sequence(), [](Node *const &node) { return node->isSelected(); });
+    for (const auto &node : selectedNodes) {
+        deleteActions.push_back(DeleteObjectAction::create(node));
+    }
+    surface->root()->history().append(CompositeAction::create(std::move(deleteActions), surface->root()));
+}
+
+void NodeSurfaceCanvas::selectAll() {
+    if (!hasFocus()) return;
+
+    surface->grid().selectAll();
 }
 
 void NodeSurfaceCanvas::doRuntimeUpdate() {

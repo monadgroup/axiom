@@ -84,6 +84,10 @@ namespace AxiomGui {
 
         void addWire(AxiomModel::ConnectionWire *wire);
 
+        void deleteSelected();
+
+        void selectAll();
+
         void doRuntimeUpdate();
 
     private:
