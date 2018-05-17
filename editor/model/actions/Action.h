@@ -20,7 +20,8 @@ namespace AxiomModel {
             CREATE_PORTAL_NODE,
             CREATE_CONNECTION,
             MOVE_GRID_ITEM,
-            SIZE_GRID_ITEM
+            SIZE_GRID_ITEM,
+            RENAME_NODE
         };
 
         Action(ActionType actionType, ModelRoot *root);

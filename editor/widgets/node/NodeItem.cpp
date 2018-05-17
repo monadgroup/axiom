@@ -4,7 +4,7 @@
 #include <QtWidgets/QGraphicsProxyWidget>
 #include <QtCore/QTimer>
 
-#include "editor/model/SequenceOperators.h"
+#include "editor/model/PoolOperators.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/GroupNode.h"
 #include "editor/model/objects/CustomNode.h"
@@ -14,8 +14,10 @@
 #include "editor/model/objects/ExtractControl.h"
 #include "editor/model/objects/PortalControl.h"
 #include "editor/model/actions/CompositeAction.h"
+#include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/GridItemMoveAction.h"
 #include "editor/model/actions/GridItemSizeAction.h"
+#include "editor/model/actions/RenameNodeAction.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "../surface/NodeSurfacePanel.h"
 #include "editor/widgets/controls/NumControlItem.h"
@@ -229,6 +231,36 @@ void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
 
 void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     if (!node->isSelected()) node->select(true);
+
+    event->accept();
+
+    auto copyableItems = AxiomModel::filter(AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()), [](Node *const &node) { return node->isCopyable(); });
+
+    QMenu menu;
+
+    auto renameAction = menu.addAction(tr("&Rename..."));
+    renameAction->setVisible(node->parentSurface->selectedItems().size() == 1);
+    menu.addSeparator();
+    auto groupAction = menu.addAction(tr("&Group..."));
+    groupAction->setEnabled(!copyableItems.empty());
+    auto saveModuleAction = menu.addAction(tr("&Save as Module..."));
+    saveModuleAction->setEnabled(!copyableItems.empty());
+    menu.addSeparator();
+    auto deleteAction = menu.addAction(tr("&Delete"));
+    deleteAction->setEnabled(node->isDeletable());
+    auto selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == renameAction) {
+        auto editor = new FloatingValueEditor(node->name(), event->scenePos());
+        scene()->addItem(editor);
+
+        connect(editor, &FloatingValueEditor::valueSubmitted,
+                this, [this](QString name) {
+                    node->root()->history().append(RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
+                });
+    } else if (selectedAction == deleteAction) {
+        node->root()->history().append(DeleteObjectAction::create(node));
+    }
 
     /*event->accept();
 

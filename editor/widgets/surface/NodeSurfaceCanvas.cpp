@@ -200,9 +200,14 @@ void NodeSurfaceCanvas::deleteSelected() {
     std::vector<std::unique_ptr<Action>> deleteActions;
     auto selectedNodes = filter(surface->nodes().sequence(), [](Node *const &node) { return node->isSelected(); });
     for (const auto &node : selectedNodes) {
-        deleteActions.push_back(DeleteObjectAction::create(node));
+        if (node->isDeletable()) {
+            deleteActions.push_back(DeleteObjectAction::create(node));
+        }
     }
-    surface->root()->history().append(CompositeAction::create(std::move(deleteActions), surface->root()));
+
+    if (!deleteActions.empty()) {
+        surface->root()->history().append(CompositeAction::create(std::move(deleteActions), surface->root()));
+    }
 }
 
 void NodeSurfaceCanvas::selectAll() {

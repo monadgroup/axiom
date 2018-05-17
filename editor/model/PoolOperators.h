@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore/QSet>
+#include <QtCore/QUuid>
 
 #include "WatchSequenceOperators.h"
 #include "../util.h"
