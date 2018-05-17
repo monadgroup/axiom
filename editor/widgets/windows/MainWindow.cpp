@@ -140,7 +140,8 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     });
 
     // find root surface and show it
-    auto defaultSurface = AxiomModel::getFirst(AxiomModel::findChildren(_project->mainRoot().nodeSurfaces(), QUuid()));
+    auto defaultSurface = AxiomModel::getFirst(
+        AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
     assert(defaultSurface.value());
     showSurface(nullptr, *defaultSurface.value(), false);
 }

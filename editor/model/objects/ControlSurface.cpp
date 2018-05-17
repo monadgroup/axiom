@@ -9,7 +9,7 @@ using namespace AxiomModel;
 
 ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::CONTROL_SURFACE, uuid, parentUuid, root), _node(find(root->nodes(), parentUuid)),
-      _controls(findChildren(root->controls(), uuid)), _grid(staticCastWatch<GridItem*>(_controls)) {
+      _controls(findChildrenWatch(root->controls(), uuid)), _grid(staticCastWatch<GridItem*>(_controls)) {
 }
 
 std::unique_ptr<ControlSurface> ControlSurface::create(const QUuid &uuid, const QUuid &parentUuid,

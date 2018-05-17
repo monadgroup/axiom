@@ -42,15 +42,6 @@ std::unique_ptr<PoolObject> Pool::removeObj(AxiomModel::PoolObject *obj) {
     }
 }
 
-void Pool::refreshObj(AxiomModel::PoolObject *obj) {
-    _sequence.itemRemoved.trigger(obj);
-    _sequence.itemAdded.trigger(obj);
-}
-
-void Pool::ensureObjSorted(AxiomModel::PoolObject *obj) {
-    // todo
-}
-
 void Pool::destroy() {
     // objects are always sorted as a heap, so we're guaranteed to never remove an object before its parent here
     while (!_objects.empty()) {

@@ -14,7 +14,7 @@ using namespace AxiomModel;
 NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                          AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
-      _nodes(findChildren(root->nodes(), uuid)), _connections(findChildren(root->connections(), uuid)),
+      _nodes(findChildrenWatch(root->nodes(), uuid)), _connections(findChildrenWatch(root->connections(), uuid)),
       _grid(staticCastWatch<GridItem*>(_nodes)), _pan(pan), _zoom(zoom) {
 }
 
