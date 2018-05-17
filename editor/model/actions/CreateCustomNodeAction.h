@@ -20,9 +20,9 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream) const override;
 
-        void forward(bool first) const override;
+        void forward(bool first) override;
 
-        void backward() const override;
+        void backward() override;
 
     private:
         QUuid parentId;

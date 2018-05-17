@@ -20,9 +20,9 @@ namespace AxiomModel {
 
         const std::vector<std::unique_ptr<Action>> &actions() const { return _actions; }
 
-        void forward(bool first) const override;
+        void forward(bool first) override;
 
-        void backward() const override;
+        void backward() override;
 
     private:
         std::vector<std::unique_ptr<Action>> _actions;

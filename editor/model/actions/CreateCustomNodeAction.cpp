@@ -54,11 +54,11 @@ void CreateCustomNodeAction::serialize(QDataStream &stream) const {
     stream << code;
 }
 
-void CreateCustomNodeAction::forward(bool) const {
+void CreateCustomNodeAction::forward(bool) {
     root()->pool().registerObj(CustomNode::create(id, parentId, pos, size, selected, name, controlsId, code, root()));
     root()->pool().registerObj(ControlSurface::create(controlsId, id, root()));
 }
 
-void CreateCustomNodeAction::backward() const {
+void CreateCustomNodeAction::backward() {
     find(root()->nodes(), id)->remove();
 }

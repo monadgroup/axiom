@@ -33,9 +33,9 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
-        virtual void forward(bool first) const = 0;
+        virtual void forward(bool first) = 0;
 
-        virtual void backward() const = 0;
+        virtual void backward() = 0;
 
     private:
         ActionType _actionType;

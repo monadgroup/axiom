@@ -37,6 +37,8 @@ std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::create(const QUu
 }
 
 void CreatePortalNodeAction::serialize(QDataStream &stream) const {
+    Action::serialize(stream);
+
     stream << uuid;
     stream << parentUuid;
     stream << pos;
@@ -62,12 +64,12 @@ std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::deserialize(QDat
                   (PortalControl::PortalType) portalTypeInt, controlUuid, root);
 }
 
-void CreatePortalNodeAction::forward(bool) const {
+void CreatePortalNodeAction::forward(bool) {
     root()->pool().registerObj(PortalNode::create(uuid, parentUuid, pos, QSize(1, 1), false, name, controlsUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "", wireType, portalType, root()));
 }
 
-void CreatePortalNodeAction::backward() const {
+void CreatePortalNodeAction::backward() {
     find(root()->nodes(), uuid)->remove();
 }

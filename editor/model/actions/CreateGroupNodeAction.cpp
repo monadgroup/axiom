@@ -49,6 +49,8 @@ std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::deserialize(QDataS
 }
 
 void CreateGroupNodeAction::serialize(QDataStream &stream) const {
+    Action::serialize(stream);
+
     stream << uuid;
     stream << parentUuid;
     stream << pos;
@@ -61,12 +63,12 @@ void CreateGroupNodeAction::serialize(QDataStream &stream) const {
     stream << innerZoom;
 }
 
-void CreateGroupNodeAction::forward(bool) const {
+void CreateGroupNodeAction::forward(bool) {
     root()->pool().registerObj(GroupNode::create(uuid, parentUuid, pos, size, selected, name, controlsUuid, innerUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(GroupSurface::create(innerUuid, uuid, innerPan, innerZoom, root()));
 }
 
-void CreateGroupNodeAction::backward() const {
+void CreateGroupNodeAction::backward() {
     find(root()->nodes(), uuid)->remove();
 }

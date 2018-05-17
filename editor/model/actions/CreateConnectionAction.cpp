@@ -34,16 +34,17 @@ std::unique_ptr<CreateConnectionAction> CreateConnectionAction::deserialize(QDat
 }
 
 void CreateConnectionAction::serialize(QDataStream &stream) const {
+    Action::serialize(stream);
     stream << uuid;
     stream << parentUuid;
     stream << controlA;
     stream << controlB;
 }
 
-void CreateConnectionAction::forward(bool) const {
+void CreateConnectionAction::forward(bool) {
     root()->pool().registerObj(Connection::create(uuid, parentUuid, controlA, controlB, root()));
 }
 
-void CreateConnectionAction::backward() const {
+void CreateConnectionAction::backward() {
     find(root()->connections(), uuid)->remove();
 }

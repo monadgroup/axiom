@@ -26,19 +26,20 @@ std::unique_ptr<CompositeAction> CompositeAction::deserialize(QDataStream &strea
 }
 
 void CompositeAction::serialize(QDataStream &stream) const {
+    Action::serialize(stream);
     stream << (uint32_t) _actions.size();
     for (const auto &action : _actions) {
         action->serialize(stream);
     }
 }
 
-void CompositeAction::forward(bool first) const {
+void CompositeAction::forward(bool first) {
     for (const auto &action : _actions) {
         action->forward(first);
     }
 }
 
-void CompositeAction::backward() const {
+void CompositeAction::backward() {
     for (auto i = _actions.end() - 1; i >= _actions.begin(); i--) {
         (*i)->backward();
     }

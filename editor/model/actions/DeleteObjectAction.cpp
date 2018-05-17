@@ -7,48 +7,45 @@
 
 using namespace AxiomModel;
 
-DeleteObjectAction::DeleteObjectAction(const QUuid &uuid, const QUuid &parentUuid, QByteArray buffer, AxiomModel::ModelRoot *root)
-    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), parentUuid(parentUuid), buffer(std::move(buffer)) {
+DeleteObjectAction::DeleteObjectAction(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root)
+    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), buffer(std::move(buffer)) {
 }
 
-std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, const QUuid &parentUuid, QByteArray buffer,
+std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, QByteArray buffer,
                                                                AxiomModel::ModelRoot *root) {
-    return std::make_unique<DeleteObjectAction>(uuid, parentUuid, std::move(buffer), root);
-}
-
-std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, AxiomModel::ModelRoot *root) {
-    QByteArray buffer;
-    QDataStream stream(&buffer, QIODevice::WriteOnly);
-
-    auto obj = find<ModelObject*>(root->pool().sequence(), uuid);
-    obj->serialize(stream, obj->parentUuid(), false);
-
-    return create(uuid, obj->parentUuid(), std::move(buffer), root);
+    return std::make_unique<DeleteObjectAction>(uuid, std::move(buffer), root);
 }
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const AxiomModel::ModelObject *object) {
-    return create(object->uuid(), object->root());
+    return create(object->uuid(), QByteArray(), object->root());
 }
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
     QUuid uuid; stream >> uuid;
-    QUuid parentUuid; stream >> parentUuid;
     QByteArray buffer; stream >> buffer;
 
-    return create(uuid, parentUuid, std::move(buffer), root);
+    return create(uuid, std::move(buffer), root);
 }
 
 void DeleteObjectAction::serialize(QDataStream &stream) const {
+    Action::serialize(stream);
     stream << uuid;
-    stream << parentUuid;
     stream << buffer;
 }
 
-void DeleteObjectAction::forward(bool) const {
-    find(root()->pool().sequence(), uuid)->remove();
+void DeleteObjectAction::forward(bool) {
+    auto dependents = findDependents(dynamicCast<ModelObject*>(root()->pool().sequence()), uuid);
+
+    QDataStream stream(&buffer, QIODevice::WriteOnly);
+    ModelRoot::serializeChunk(stream, QUuid(), dependents);
+
+    // this should cascade and remove all sub-dependents
+    (*dependents.begin())->remove();
+    assert(dependents.empty());
 }
 
-void DeleteObjectAction::backward() const {
-    QDataStream stream(const_cast<QByteArray*>(&buffer), QIODevice::ReadOnly);
-    root()->pool().registerObj(ModelObject::deserialize(stream, uuid, parentUuid, root()));
+void DeleteObjectAction::backward() {
+    QDataStream stream(&buffer, QIODevice::ReadOnly);
+    root()->deserializeChunk(stream, QUuid());
+    buffer.clear();
 }
