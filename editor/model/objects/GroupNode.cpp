@@ -47,7 +47,9 @@ void GroupNode::attachRuntime(MaximRuntime::GroupNode *runtime) {
 
     removed.connect(this, &GroupNode::detachRuntime);
 
-    if (_nodes.value()) (*_nodes.value())->attachRuntime(runtime->subsurface());
+    _nodes.then([runtime](NodeSurface *const &nodes) {
+        nodes->attachRuntime(runtime->subsurface());
+    });
 
     // todo: add any controls that already exist from the runtime?
 }
