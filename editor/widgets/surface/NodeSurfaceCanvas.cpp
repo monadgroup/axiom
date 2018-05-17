@@ -88,6 +88,13 @@ QPoint NodeSurfaceCanvas::nodeRealPos(const QPoint &p) {
     };
 }
 
+QPointF NodeSurfaceCanvas::nodeRealPos(const QPointF &p) {
+    return {
+        p.x() * NodeSurfaceCanvas::nodeGridSize.width(),
+        p.y() * NodeSurfaceCanvas::nodeGridSize.height()
+    };
+}
+
 QSize NodeSurfaceCanvas::nodeRealSize(const QSize &s) {
     return {
         s.width() * NodeSurfaceCanvas::nodeGridSize.width(),
@@ -120,7 +127,7 @@ void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
     if (connectionWire) return;
 
     sourceControl = control->sink();
-    auto startPos = sourceControl->worldPos().toPoint();
+    auto startPos = sourceControl->worldPos();
     connectionWire = ConnectionWire(&surface->grid(), sourceControl->wireType(), startPos, startPos);
     connectionWire->setStartActive(true);
     addWire(&*connectionWire);
@@ -134,13 +141,13 @@ void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     auto currentItem = itemAt(mousePos, QTransform());
 
     // snap to the connectable if it's not the one we started with, and it has the same type
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable->sink()->wireType() == connectionWire->wireType() && connectable->sink() != sourceControl) {
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() == connectionWire->wireType() && connectable->sink() != sourceControl) {
         connectionWire->setEndPos(connectable->sink()->worldPos().toPoint());
     } else {
         connectionWire->setEndPos(
-            QPoint(
-                (int) (mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-                (int) (mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
+            QPointF(
+                mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width(),
+                mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height()
             )
         );
     }
@@ -159,12 +166,6 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
     } else {
         // todo: do something?
     }
-
-    connectionWire->remove();
-}
-
-void NodeSurfaceCanvas::cancelConnecting() {
-    if (!connectionWire) return;
 
     connectionWire->remove();
 }

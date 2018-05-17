@@ -12,8 +12,8 @@ namespace AxiomModel {
 
     class ConnectionWire : public Hookable {
     public:
-        Event<const QPoint &> startPosChanged;
-        Event<const QPoint &> endPosChanged;
+        Event<const QPointF &> startPosChanged;
+        Event<const QPointF &> endPosChanged;
         Event<const std::deque<QPoint> &> routeChanged;
         Event<bool> activeChanged;
         Event<> removed;
@@ -23,19 +23,19 @@ namespace AxiomModel {
             MIDI
         };
 
-        ConnectionWire(const GridSurface *grid, WireType wireType, const QPoint &startPos, const QPoint &endPos);
+        ConnectionWire(const GridSurface *grid, WireType wireType, const QPointF &startPos, const QPointF &endPos);
 
         const GridSurface *grid() const { return _grid; }
 
         WireType wireType() const { return _wireType; }
 
-        const QPoint &startPos() const { return _startPos; }
+        const QPointF &startPos() const { return _startPos; }
 
-        void setStartPos(const QPoint &startPos);
+        void setStartPos(const QPointF &startPos);
 
-        const QPoint &endPos() const { return _endPos; }
+        const QPointF &endPos() const { return _endPos; }
 
-        void setEndPos(const QPoint &endPos);
+        void setEndPos(const QPointF &endPos);
 
         const std::deque<QPoint> &route() const { return _route; }
 
@@ -60,8 +60,8 @@ namespace AxiomModel {
 
         const GridSurface *_grid;
         WireType _wireType;
-        QPoint _startPos;
-        QPoint _endPos;
+        QPointF _startPos;
+        QPointF _endPos;
         std::deque<QPoint> _route;
         ActiveState activeState = ActiveState::NONE;
         bool _startActive = false;

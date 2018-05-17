@@ -47,6 +47,8 @@ namespace AxiomGui {
 
         static QPoint nodeRealPos(const QPoint &p);
 
+        static QPointF nodeRealPos(const QPointF &p);
+
         static QSize nodeRealSize(const QSize &s);
 
         static QPoint controlRealPos(const QPoint &p);
@@ -62,8 +64,6 @@ namespace AxiomGui {
         void updateConnecting(QPointF mousePos);
 
         void endConnecting(QPointF mousePos);
-
-        void cancelConnecting();
 
     protected:
         void drawBackground(QPainter *painter, const QRectF &rect) override;

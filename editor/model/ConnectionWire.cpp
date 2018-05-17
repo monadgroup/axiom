@@ -4,12 +4,12 @@
 
 using namespace AxiomModel;
 
-ConnectionWire::ConnectionWire(const AxiomModel::GridSurface *grid, WireType wireType, const QPoint &startPos, const QPoint &endPos)
+ConnectionWire::ConnectionWire(const AxiomModel::GridSurface *grid, WireType wireType, const QPointF &startPos, const QPointF &endPos)
     : _grid(grid), _wireType(wireType), _startPos(startPos), _endPos(endPos) {
     updateRoute();
 }
 
-void ConnectionWire::setStartPos(const QPoint &startPos) {
+void ConnectionWire::setStartPos(const QPointF &startPos) {
     if (startPos != _startPos) {
         _startPos = startPos;
         startPosChanged.trigger(startPos);
@@ -17,7 +17,7 @@ void ConnectionWire::setStartPos(const QPoint &startPos) {
     }
 }
 
-void ConnectionWire::setEndPos(const QPoint &endPos) {
+void ConnectionWire::setEndPos(const QPointF &endPos) {
     if (endPos != _endPos) {
         _endPos = endPos;
         endPosChanged.trigger(endPos);
@@ -73,6 +73,6 @@ void ConnectionWire::updateActive() {
 }
 
 void ConnectionWire::updateRoute() {
-    _route = _grid->grid().findPath(_startPos, _endPos, 1, 10, 4);
+    _route = _grid->grid().findPath(_startPos.toPoint(), _endPos.toPoint(), 1, 10, 4);
     routeChanged.trigger(_route);
 }
