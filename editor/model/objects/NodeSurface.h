@@ -4,6 +4,10 @@
 #include "../grid/GridSurface.h"
 #include "../ModelObject.h"
 
+namespace MaximRuntime {
+    class Surface;
+}
+
 namespace AxiomModel {
 
     class Node;
@@ -47,6 +51,8 @@ namespace AxiomModel {
 
         void setZoom(float zoom);
 
+        void attachRuntime(MaximRuntime::Surface *runtime);
+
         void remove() override;
 
     private:
@@ -55,6 +61,10 @@ namespace AxiomModel {
         GridSurface _grid;
         QPointF _pan;
         float _zoom;
+
+        std::optional<MaximRuntime::Surface*> _runtime;
+
+        void nodeAdded(Node *node) const;
     };
 
 }

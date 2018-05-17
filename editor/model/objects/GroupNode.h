@@ -1,8 +1,14 @@
 #pragma once
 
+#include <optional>
+
 #include "common/Promise.h"
 #include "Node.h"
 #include "NodeSurface.h"
+
+namespace MaximRuntime {
+    class GroupNode;
+}
 
 namespace AxiomModel {
 
@@ -20,10 +26,18 @@ namespace AxiomModel {
 
         const AxiomCommon::Promise<NodeSurface*> &nodes() const { return _nodes; }
 
+        void createAndAttachRuntime(MaximRuntime::Surface *parent) override;
+
+        void attachRuntime(MaximRuntime::GroupNode *runtime);
+
+        void detachRuntime();
+
         void remove() override;
 
     private:
         AxiomCommon::Promise<NodeSurface*> _nodes;
+
+        std::optional<MaximRuntime::GroupNode*> _runtime;
     };
 
 }

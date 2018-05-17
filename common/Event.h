@@ -155,6 +155,14 @@ namespace AxiomCommon {
         }
 
         template<class TB, class TFB, class TR, class... TA>
+        Event connect(TB *follow, TR (TFB::*listener)(TA...) const) {
+            auto wrapper = std::mem_fn(listener);
+            return connect(follow, Event(std::function([follow, wrapper](Args&&... params) {
+                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+            })));
+        };
+
+        template<class TB, class TFB, class TR, class... TA>
         Event forward(TB *object, TR (TFB::*listener)(TA...)) {
             auto wrapper = std::mem_fn(listener);
             return connect(Event(std::function([object, wrapper](Args&&... params) {

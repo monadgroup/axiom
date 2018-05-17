@@ -1,7 +1,14 @@
 #pragma once
 
+#include <optional>
+
 #include "common/Event.h"
 #include "Node.h"
+
+namespace MaximRuntime {
+    class CustomNode;
+    class Control;
+}
 
 namespace AxiomModel {
 
@@ -34,10 +41,22 @@ namespace AxiomModel {
 
         void setPanelHeight(float panelHeight);
 
+        void createAndAttachRuntime(MaximRuntime::Surface *parent) override;
+
+        void attachRuntime(MaximRuntime::CustomNode *runtime);
+
+        void detachRuntime();
+
     private:
         QString _code;
         bool _isPanelOpen;
         float _panelHeight;
+
+        std::optional<MaximRuntime::CustomNode*> _runtime;
+
+        void runtimeAddedControl(MaximRuntime::Control *control);
+
+        void runtimeFinishedCodegen();
     };
 
 }

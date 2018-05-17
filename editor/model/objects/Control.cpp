@@ -10,6 +10,7 @@
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../../util.h"
+#include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
 
@@ -85,11 +86,15 @@ void Control::attachRuntime(MaximRuntime::Control *runtime) {
     assert(!_runtime);
 
     _runtime = runtime;
-    
+    runtime->removed.connect(this, &Control::detachRuntime);
+
+    // todo: connect wires in the runtime?
+
+    // todo: handle needing to be exposed
 }
 
 void Control::detachRuntime() {
-
+    // todo
 }
 
 void Control::remove() {

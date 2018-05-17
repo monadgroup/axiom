@@ -2,7 +2,13 @@
 
 #include "ModelRoot.h"
 
+namespace MaximRuntime {
+    class Runtime;
+}
+
 namespace AxiomModel {
+
+    class RootSurface;
 
     class Project {
     public:
@@ -26,10 +32,13 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream);
 
+        void attachRuntime(MaximRuntime::Runtime *runtime);
+
         void destroy();
 
     private:
         ModelRoot _mainRoot;
+        RootSurface *_rootSurface;
     };
 
 }

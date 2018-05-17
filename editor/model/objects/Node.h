@@ -5,6 +5,10 @@
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
 
+namespace MaximRuntime {
+    class Surface;
+}
+
 namespace AxiomModel {
 
     class ControlSurface;
@@ -36,7 +40,9 @@ namespace AxiomModel {
 
         void setName(const QString &name);
 
-        bool isExtracted() { return _isExtracted; }
+        bool isExtracted() const { return _isExtracted; }
+
+        void setExtracted(bool extracted);
 
         bool isMovable() const override { return true; }
 
@@ -47,6 +53,8 @@ namespace AxiomModel {
         bool isDeletable() const override { return true; }
 
         void setCorners(QPoint topLeft, QPoint bottomRight) override;
+
+        virtual void createAndAttachRuntime(MaximRuntime::Surface *parent) = 0;
 
         void remove() override;
 

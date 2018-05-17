@@ -2,6 +2,8 @@
 
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "compiler/runtime/Surface.h"
+#include "compiler/runtime/GroupNode.h"
 
 using namespace AxiomModel;
 
@@ -28,6 +30,30 @@ std::unique_ptr<GroupNode> GroupNode::deserialize(QDataStream &stream, const QUu
 void GroupNode::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
     Node::serialize(stream, parent, withContext);
     stream << (*_nodes.value())->uuid();
+}
+
+void GroupNode::createAndAttachRuntime(MaximRuntime::Surface *parent) {
+    auto runtime = std::make_unique<MaximRuntime::GroupNode>(parent);
+    attachRuntime(runtime.get());
+    parent->addNode(std::move(runtime));
+}
+
+void GroupNode::attachRuntime(MaximRuntime::GroupNode *runtime) {
+    assert(!_runtime);
+    _runtime = runtime;
+
+    runtime->extractedChanged.connect(this, &GroupNode::setExtracted);
+
+    removed.connect(this, &GroupNode::detachRuntime);
+
+    if (_nodes.value()) (*_nodes.value())->attachRuntime(runtime->subsurface());
+
+    // todo: add any controls that already exist from the runtime?
+}
+
+void GroupNode::detachRuntime() {
+    if (_runtime) (*_runtime)->remove();
+    _runtime.reset();
 }
 
 void GroupNode::remove() {

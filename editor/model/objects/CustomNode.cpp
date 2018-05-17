@@ -1,5 +1,8 @@
 #include "CustomNode.h"
 
+#include "compiler/runtime/Surface.h"
+#include "compiler/runtime/CustomNode.h"
+
 using namespace AxiomModel;
 
 CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
@@ -52,4 +55,39 @@ void CustomNode::setPanelHeight(float panelHeight) {
         _panelHeight = panelHeight;
         panelHeightChanged.trigger(panelHeight);
     }
+}
+
+void CustomNode::createAndAttachRuntime(MaximRuntime::Surface *parent) {
+    auto runtime = std::make_unique<MaximRuntime::CustomNode>(parent);
+    attachRuntime(runtime.get());
+    parent->addNode(std::move(runtime));
+}
+
+void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
+    assert(!_runtime);
+    _runtime = runtime;
+
+    runtime->controlAdded.connect(this, &CustomNode::runtimeAddedControl);
+    runtime->extractedChanged.connect(this, &CustomNode::setExtracted);
+    runtime->finishedCodegen.connect(this, &CustomNode::runtimeFinishedCodegen);
+
+    removed.connect(this, &CustomNode::detachRuntime);
+
+    // add any controls that might already exist in the runtime
+    for (const auto &control : *runtime) {
+        runtimeAddedControl(control.get());
+    }
+}
+
+void CustomNode::detachRuntime() {
+    if (_runtime) (*_runtime)->remove();
+    _runtime.reset();
+}
+
+void CustomNode::runtimeAddedControl(MaximRuntime::Control *control) {
+    // todo
+}
+
+void CustomNode::runtimeFinishedCodegen() {
+    // todo
 }

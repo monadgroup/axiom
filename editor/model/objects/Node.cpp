@@ -58,6 +58,13 @@ void Node::setName(const QString &name) {
     }
 }
 
+void Node::setExtracted(bool extracted) {
+    if (extracted != _isExtracted) {
+        _isExtracted = extracted;
+        extractedChanged.trigger(extracted);
+    }
+}
+
 void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (!_controls.value()) {
         return GridItem::setCorners(topLeft, bottomRight);

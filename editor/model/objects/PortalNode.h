@@ -16,6 +16,8 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
+        void createAndAttachRuntime(MaximRuntime::Surface *parent) override {}
+
         bool isResizable() const override { return false; }
 
         bool isCopyable() const override { return false; }
