@@ -27,11 +27,16 @@ std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUu
 
 std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::deserialize(QDataStream &stream,
                                                                             AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    QUuid parentUuid; stream >> parentUuid;
-    QPoint pos; stream >> pos;
-    QString name; stream >> name;
-    QUuid controlsUuid; stream >> controlsUuid;
+    QUuid uuid;
+    stream >> uuid;
+    QUuid parentUuid;
+    stream >> parentUuid;
+    QPoint pos;
+    stream >> pos;
+    QString name;
+    stream >> name;
+    QUuid controlsUuid;
+    stream >> controlsUuid;
 
     return create(uuid, parentUuid, pos, name, controlsUuid, root);
 }
@@ -47,7 +52,9 @@ void CreateCustomNodeAction::serialize(QDataStream &stream) const {
 }
 
 void CreateCustomNodeAction::forward(bool) {
-    root()->pool().registerObj(CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "", false, CustomNode::minPanelHeight, root()));
+    root()->pool().registerObj(
+        CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "", false,
+                           CustomNode::minPanelHeight, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
 }
 

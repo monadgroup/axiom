@@ -28,7 +28,7 @@ namespace AxiomCommon {
             std::optional<func_type> callback;
             std::vector<shared_event> children;
             std::weak_ptr<SharedEvent> parent;
-            std::set<HookContext*> following;
+            std::set<HookContext *> following;
 
             SharedEvent() {}
 
@@ -38,7 +38,7 @@ namespace AxiomCommon {
 
             explicit SharedEvent(func_type callback) : callback(callback) {}
 
-            void trigger(const Args&... params) const {
+            void trigger(const Args &... params) const {
                 if (callback) {
                     (*callback)(params...);
                 }
@@ -101,7 +101,7 @@ namespace AxiomCommon {
 
         bool operator!=(const Event &other) const { return impl != other.impl; }
 
-        void trigger(const Args&... params) const {
+        void trigger(const Args &... params) const {
             impl->trigger(params...);
         }
 
@@ -112,7 +112,7 @@ namespace AxiomCommon {
         }
 
         Event connect(Event *other) {
-            auto evt = connect(Event(std::function([other](Args&&... params) {
+            auto evt = connect(Event(std::function([other](Args &&... params) {
                 other->trigger(std::forward<Args>(params)...);
             })));
             evt.follow(other);
@@ -141,7 +141,7 @@ namespace AxiomCommon {
 
         template<class TR, class... TA>
         Event connect(AbstractHookable *follow, std::function<TR(TA...)> listener) {
-            return connect(follow, Event(std::function([listener](Args&&... params) {
+            return connect(follow, Event(std::function([listener](Args &&... params) {
                 applyFunc<sizeof...(TA)>(listener, std::forward<Args>(params)...);
             })));
         }
@@ -149,7 +149,7 @@ namespace AxiomCommon {
         template<class TB, class TFB, class TR, class... TA>
         Event connect(TB *follow, TR (TFB::*listener)(TA...)) {
             auto wrapper = std::mem_fn(listener);
-            return connect(follow, Event(std::function([follow, wrapper](Args&&... params) {
+            return connect(follow, Event(std::function([follow, wrapper](Args &&... params) {
                 applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
             })));
         }
@@ -157,7 +157,7 @@ namespace AxiomCommon {
         template<class TB, class TFB, class TR, class... TA>
         Event connect(TB *follow, TR (TFB::*listener)(TA...) const) {
             auto wrapper = std::mem_fn(listener);
-            return connect(follow, Event(std::function([follow, wrapper](Args&&... params) {
+            return connect(follow, Event(std::function([follow, wrapper](Args &&... params) {
                 applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
             })));
         };
@@ -165,7 +165,7 @@ namespace AxiomCommon {
         template<class TB, class TFB, class TR, class... TA>
         Event forward(TB *object, TR (TFB::*listener)(TA...)) {
             auto wrapper = std::mem_fn(listener);
-            return connect(Event(std::function([object, wrapper](Args&&... params) {
+            return connect(Event(std::function([object, wrapper](Args &&... params) {
                 applyFunc<sizeof...(TA) + 1>(wrapper, object, std::forward<Args>(params)...);
             })));
         }
@@ -198,12 +198,12 @@ namespace AxiomCommon {
         shared_event impl;
 
         template<class Func, size_t... I, class... PassArgs>
-        static void applyFuncIndexed(const Func &func, std::index_sequence<I...>, PassArgs&&... params) {
+        static void applyFuncIndexed(const Func &func, std::index_sequence<I...>, PassArgs &&... params) {
             func(std::get<I>(std::make_tuple(std::forward<PassArgs>(params)...))...);
         }
 
         template<size_t ArgCount, class Func, class... PassArgs>
-        static void applyFunc(const Func &func, PassArgs&&... params) {
+        static void applyFunc(const Func &func, PassArgs &&... params) {
             applyFuncIndexed(func, std::make_index_sequence<ArgCount>{}, std::forward<PassArgs>(params)...);
         }
     };

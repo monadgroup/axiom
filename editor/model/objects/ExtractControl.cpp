@@ -6,8 +6,10 @@ using namespace AxiomModel;
 
 static Control::ControlType typeFromWireType(ConnectionWire::WireType wireType) {
     switch (wireType) {
-        case ConnectionWire::WireType::NUM: return Control::ControlType::NUM_EXTRACT;
-        case ConnectionWire::WireType::MIDI: return Control::ControlType::MIDI_EXTRACT;
+        case ConnectionWire::WireType::NUM:
+            return Control::ControlType::NUM_EXTRACT;
+        case ConnectionWire::WireType::MIDI:
+            return Control::ControlType::MIDI_EXTRACT;
     }
 
     unreachable;
@@ -25,7 +27,8 @@ std::unique_ptr<ExtractControl> ExtractControl::deserialize(QDataStream &stream,
                                                             bool selected, QString name,
                                                             AxiomModel::ConnectionWire::WireType wireType,
                                                             AxiomModel::ModelRoot *root) {
-    ActiveSlotFlags activeSlots; stream >> activeSlots;
+    ActiveSlotFlags activeSlots;
+    stream >> activeSlots;
     return std::make_unique<ExtractControl>(uuid, parentUuid, pos, size, selected, name, wireType, activeSlots, root);
 }
 

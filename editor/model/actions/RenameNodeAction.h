@@ -11,7 +11,8 @@ namespace AxiomModel {
     public:
         RenameNodeAction(const QUuid &uuid, QString oldName, QString newName, ModelRoot *root);
 
-        static std::unique_ptr<RenameNodeAction> create(const QUuid &uuid, QString oldName, QString newName, ModelRoot *root);
+        static std::unique_ptr<RenameNodeAction>
+        create(const QUuid &uuid, QString oldName, QString newName, ModelRoot *root);
 
         static std::unique_ptr<RenameNodeAction> deserialize(QDataStream &stream, ModelRoot *root);
 

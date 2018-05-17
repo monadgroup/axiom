@@ -1,6 +1,7 @@
 #pragma once
 
 #define _USE_MATH_DEFINES
+
 #include <QtCore/QPoint>
 #include <unordered_map>
 #include <memory>

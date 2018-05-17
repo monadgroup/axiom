@@ -9,7 +9,6 @@
 #include "PortalControl.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../../util.h"
 #include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
@@ -22,33 +21,46 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
       _controlType(controlType), _wireType(wireType), _name(std::move(name)),
       _connections(filterWatch(root->connections(), std::function([uuid](Connection *const &connection) {
           return connection->controlA()->uuid() == uuid || connection->controlB()->uuid() == uuid;
-      }))), _connectedControls(mapFilterWatch(_connections, std::function([uuid](Connection *const &connection) -> std::optional<Control*> {
-          if (connection->controlA()->uuid() == uuid) return connection->controlB();
-          if (connection->controlB()->uuid() == uuid) return connection->controlA();
-          return std::optional<Control*>();
-      }))) {
+      }))), _connectedControls(
+        mapFilterWatch(_connections, std::function([uuid](Connection *const &connection) -> std::optional<Control *> {
+            if (connection->controlA()->uuid() == uuid) return connection->controlB();
+            if (connection->controlB()->uuid() == uuid) return connection->controlA();
+            return std::optional<Control *>();
+        }))) {
     posChanged.connect(this, &Control::updateSinkPos);
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
 }
 
 std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                               AxiomModel::ModelRoot *root) {
-    uint8_t controlTypeInt; stream >> controlTypeInt;
+    uint8_t controlTypeInt;
+    stream >> controlTypeInt;
 
     QPoint pos;
     QSize size;
     bool selected;
     GridItem::deserialize(stream, pos, size, selected);
 
-    QString name; stream >> name;
+    QString name;
+    stream >> name;
 
     switch ((ControlType) controlTypeInt) {
-        case ControlType::NUM_SCALAR: return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), root);
-        case ControlType::MIDI_SCALAR: return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), root);
-        case ControlType::NUM_EXTRACT: return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), ConnectionWire::WireType::NUM, root);
-        case ControlType::MIDI_EXTRACT: return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), ConnectionWire::WireType::MIDI, root);
-        case ControlType::NUM_PORTAL: return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), ConnectionWire::WireType::NUM, root);
-        case ControlType::MIDI_PORTAL: return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), ConnectionWire::WireType::MIDI, root);
+        case ControlType::NUM_SCALAR:
+            return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), root);
+        case ControlType::MIDI_SCALAR:
+            return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), root);
+        case ControlType::NUM_EXTRACT:
+            return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
+                                               ConnectionWire::WireType::NUM, root);
+        case ControlType::MIDI_EXTRACT:
+            return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
+                                               ConnectionWire::WireType::MIDI, root);
+        case ControlType::NUM_PORTAL:
+            return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
+                                              ConnectionWire::WireType::NUM, root);
+        case ControlType::MIDI_PORTAL:
+            return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
+                                              ConnectionWire::WireType::MIDI, root);
     }
 
     unreachable;

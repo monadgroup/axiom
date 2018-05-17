@@ -1,6 +1,7 @@
 #include "KnobPainter.h"
 
 #define _USE_MATH_DEFINES
+
 #include <math.h>
 
 #include "editor/util.h"

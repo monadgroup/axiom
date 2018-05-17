@@ -5,7 +5,6 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtCore/QTimer>
-#include <iostream>
 
 #include "editor/resources/resource.h"
 #include "../surface/NodeSurfacePanel.h"
@@ -13,7 +12,6 @@
 #include "../history/HistoryPanel.h"
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
-#include "editor/model/Project.h"
 #include "editor/model/objects/RootSurface.h"
 #include "editor/model/PoolOperators.h"
 #include "../GlobalActions.h"

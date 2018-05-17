@@ -2,13 +2,9 @@
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtGui/QGuiApplication>
-#include <QtWidgets/QLineEdit>
-#include <QtWidgets/QWidgetAction>
-#include <QtWidgets/QMenu>
 
 #include "editor/model/Project.h"
 #include "editor/model/objects/MidiControl.h"
-#include "../../util.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;

@@ -16,9 +16,12 @@ std::unique_ptr<RenameNodeAction> RenameNodeAction::create(const QUuid &uuid, QS
 }
 
 std::unique_ptr<RenameNodeAction> RenameNodeAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    QString oldName; stream >> oldName;
-    QString newName; stream >> newName;
+    QUuid uuid;
+    stream >> uuid;
+    QString oldName;
+    stream >> oldName;
+    QString newName;
+    stream >> newName;
 
     return create(uuid, std::move(oldName), std::move(newName), root);
 }

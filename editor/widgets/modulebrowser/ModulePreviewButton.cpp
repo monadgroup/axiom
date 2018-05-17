@@ -2,13 +2,14 @@
 
 #include <QtWidgets/QGridLayout>
 #include <QtGui/QContextMenuEvent>
-#include <QMenu>
 
 #include "ModulePreviewView.h"
 
 using namespace AxiomGui;
 
-ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent) : QFrame(parent), entry(entry) {
+ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library *library,
+                                         AxiomModel::LibraryEntry *entry, QWidget *parent) : QFrame(parent),
+                                                                                             entry(entry) {
     auto mainLayout = new QGridLayout(this);
 
     mainLayout->setContentsMargins(0, 0, 0, 0);

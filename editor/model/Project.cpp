@@ -12,11 +12,14 @@ Project::Project() {
     // setup default project
     //  1. create default surface
     auto surfaceId = QUuid::createUuid();
-    _rootSurface = dynamic_cast<RootSurface*>(mainRoot().pool().registerObj(std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot())));
+    _rootSurface = dynamic_cast<RootSurface *>(mainRoot().pool().registerObj(
+        std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot())));
 
     //  2. add default inputs and outputs
-    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI, PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
-    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM, PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
+    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
+                                   PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
+    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
+                                   PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(stream) {
@@ -34,10 +37,12 @@ void Project::writeHeader(QDataStream &stream) {
 }
 
 bool Project::readHeader(QDataStream &stream, uint32_t *versionOut) {
-    uint32_t magic; stream >> magic;
+    uint32_t magic;
+    stream >> magic;
     if (magic != schemaMagic) return false;
 
-    uint32_t version; stream >> version;
+    uint32_t version;
+    stream >> version;
     if (versionOut) *versionOut = version;
     return version >= minSchemaVersion && version <= schemaVersion;
 

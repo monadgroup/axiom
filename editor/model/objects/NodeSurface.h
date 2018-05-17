@@ -16,8 +16,8 @@ namespace AxiomModel {
 
     class NodeSurface : public ModelObject {
     public:
-        using ChildCollection = WatchSequence<Node*>;
-        using ConnectionCollection = WatchSequence<Connection*>;
+        using ChildCollection = WatchSequence<Node *>;
+        using ConnectionCollection = WatchSequence<Connection *>;
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<const QPointF &> panChanged;
@@ -25,7 +25,8 @@ namespace AxiomModel {
 
         NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<NodeSurface> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<NodeSurface>
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -62,7 +63,7 @@ namespace AxiomModel {
         QPointF _pan;
         float _zoom;
 
-        std::optional<MaximRuntime::Surface*> _runtime;
+        std::optional<MaximRuntime::Surface *> _runtime;
 
         void nodeAdded(Node *node) const;
     };

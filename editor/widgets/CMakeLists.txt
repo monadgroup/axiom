@@ -9,7 +9,7 @@ message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
 set(CMAKE_CXX_STANDARD 17)
 if (NOT MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
-endif()
+endif ()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)

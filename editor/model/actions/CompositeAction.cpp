@@ -13,7 +13,8 @@ std::unique_ptr<CompositeAction> CompositeAction::create(std::vector<std::unique
 }
 
 std::unique_ptr<CompositeAction> CompositeAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    uint32_t actionCount; stream >> actionCount;
+    uint32_t actionCount;
+    stream >> actionCount;
 
     std::vector<std::unique_ptr<Action>> actions;
     actions.reserve(actionCount);

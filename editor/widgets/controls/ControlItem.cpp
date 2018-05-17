@@ -157,16 +157,20 @@ QRectF ControlItem::drawBoundingRect() const {
 
 QColor ControlItem::outlineNormalColor() const {
     switch (control->wireType()) {
-        case ConnectionWire::WireType::NUM: return CommonColors::numNormal;
-        case ConnectionWire::WireType::MIDI: return CommonColors::midiNormal;
+        case ConnectionWire::WireType::NUM:
+            return CommonColors::numNormal;
+        case ConnectionWire::WireType::MIDI:
+            return CommonColors::midiNormal;
     }
     unreachable;
 }
 
 QColor ControlItem::outlineActiveColor() const {
     switch (control->wireType()) {
-        case ConnectionWire::WireType::NUM: return CommonColors::numActive;
-        case ConnectionWire::WireType::MIDI: return CommonColors::midiActive;
+        case ConnectionWire::WireType::NUM:
+            return CommonColors::numActive;
+        case ConnectionWire::WireType::MIDI:
+            return CommonColors::midiActive;
     }
     unreachable;
 }

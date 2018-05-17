@@ -6,7 +6,8 @@
 using namespace AxiomModel;
 
 GridSurface::GridSurface(ItemCollection view, QPoint minRect, QPoint maxRect)
-    : _grid(minRect, maxRect), _items(std::move(view)), _selectedItems(filterWatch(_items, std::function([](GridItem *const &itm) { return itm->isSelected(); }))) {
+    : _grid(minRect, maxRect), _items(std::move(view)),
+      _selectedItems(filterWatch(_items, std::function([](GridItem *const &itm) { return itm->isSelected(); }))) {
     _items.itemAdded.connect(this, &GridSurface::handleItemAdded);
 }
 
@@ -99,7 +100,8 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
     item->selected.connect(this, std::function([this, item](bool exclusive) {
         if (exclusive) {
             // get sequence of selected items that aren't this item
-            auto clearItems = filter(_selectedItems.sequence(), [item](AxiomModel::GridItem *const &filterItem) { return filterItem != item; });
+            auto clearItems = filter(_selectedItems.sequence(),
+                                     [item](AxiomModel::GridItem *const &filterItem) { return filterItem != item; });
             while (!clearItems.empty()) {
                 (*clearItems.begin())->deselect();
             }

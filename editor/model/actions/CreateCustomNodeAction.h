@@ -10,11 +10,15 @@ namespace AxiomModel {
 
     class CreateCustomNodeAction : public Action {
     public:
-        CreateCustomNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name, const QUuid &controlsUuid, ModelRoot *root);
+        CreateCustomNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name,
+                               const QUuid &controlsUuid, ModelRoot *root);
 
-        static std::unique_ptr<CreateCustomNodeAction> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name, const QUuid &controlsUuid, ModelRoot *root);
+        static std::unique_ptr<CreateCustomNodeAction>
+        create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name, const QUuid &controlsUuid,
+               ModelRoot *root);
 
-        static std::unique_ptr<CreateCustomNodeAction> create(const QUuid &parentUuid, QPoint pos, QString name, ModelRoot *root);
+        static std::unique_ptr<CreateCustomNodeAction>
+        create(const QUuid &parentUuid, QPoint pos, QString name, ModelRoot *root);
 
         static std::unique_ptr<CreateCustomNodeAction> deserialize(QDataStream &stream, ModelRoot *root);
 

@@ -20,17 +20,17 @@ namespace AxiomModel {
         template<class InputCollection>
         SequenceMapFilter(InputCollection input, next_functor next)
             : _next(next), _sequence([next, input]() {
-                auto begin = input.begin();
-                auto end = input.end();
-                return [next, begin, end]() mutable -> std::optional<OutputItem> {
-                    while (begin != end) {
-                        auto newVal = next(*begin);
-                        begin++;
-                        if(newVal) return *newVal;
-                    }
-                    return std::optional<OutputItem>();
-                };
-            }) {}
+            auto begin = input.begin();
+            auto end = input.end();
+            return [next, begin, end]() mutable -> std::optional<OutputItem> {
+                while (begin != end) {
+                    auto newVal = next(*begin);
+                    begin++;
+                    if (newVal) return *newVal;
+                }
+                return std::optional<OutputItem>();
+            };
+        }) {}
 
         const next_functor &next() const { return _next; }
 

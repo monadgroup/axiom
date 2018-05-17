@@ -9,9 +9,9 @@ namespace AxiomModel {
     class Sequence {
     public:
         using value_type = Item;
-        using reference = value_type&;
+        using reference = value_type &;
         using const_reference = const reference;
-        using pointer = value_type*;
+        using pointer = value_type *;
         using const_pointer = const pointer;
 
         using next_functor = std::function<std::optional<Item>()>;

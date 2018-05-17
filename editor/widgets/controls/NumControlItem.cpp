@@ -4,7 +4,6 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QWidgetAction>
 
 #include "editor/model/Project.h"
 #include "editor/model/objects/NumControl.h"
@@ -102,7 +101,8 @@ QPainterPath NumControlItem::controlPath() const {
 
 void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mousePressEvent(event);
-    if (event->isAccepted() || event->button() != Qt::LeftButton || control->displayMode() == NumControl::DisplayMode::PLUG) {
+    if (event->isAccepted() || event->button() != Qt::LeftButton ||
+        control->displayMode() == NumControl::DisplayMode::PLUG) {
         return;
     }
     event->accept();
@@ -157,7 +157,8 @@ void NumControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void NumControlItem::wheelEvent(QGraphicsSceneWheelEvent *event) {
-    if (control->displayMode() == NumControl::DisplayMode::TOGGLE || control->displayMode() == NumControl::DisplayMode::PLUG) {
+    if (control->displayMode() == NumControl::DisplayMode::TOGGLE ||
+        control->displayMode() == NumControl::DisplayMode::PLUG) {
         return;
     }
 

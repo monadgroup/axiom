@@ -8,7 +8,7 @@ using namespace AxiomModel;
 
 GroupSurface::GroupSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                            AxiomModel::ModelRoot *root)
-    : NodeSurface(uuid, parentUuid, pan, zoom, root), _node(find<GroupNode*>(root->nodes(), parentUuid)) {
+    : NodeSurface(uuid, parentUuid, pan, zoom, root), _node(find<GroupNode *>(root->nodes(), parentUuid)) {
     _node->nameChanged.connect(&nameChanged);
 }
 

@@ -8,11 +8,18 @@ namespace AxiomModel {
 
     class CreatePortalNodeAction : public Action {
     public:
-        CreatePortalNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name, const QUuid &controlsUuid, ConnectionWire::WireType wireType, PortalControl::PortalType portalType, const QUuid &controlUuid, ModelRoot *root);
+        CreatePortalNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name,
+                               const QUuid &controlsUuid, ConnectionWire::WireType wireType,
+                               PortalControl::PortalType portalType, const QUuid &controlUuid, ModelRoot *root);
 
-        static std::unique_ptr<CreatePortalNodeAction> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name, const QUuid &controlsUuid, ConnectionWire::WireType wireType, PortalControl::PortalType portalType, const QUuid &controlUuid, ModelRoot *root);
+        static std::unique_ptr<CreatePortalNodeAction>
+        create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name, const QUuid &controlsUuid,
+               ConnectionWire::WireType wireType, PortalControl::PortalType portalType, const QUuid &controlUuid,
+               ModelRoot *root);
 
-        static std::unique_ptr<CreatePortalNodeAction> create(const QUuid &parentUuid, QPoint pos, QString name, ConnectionWire::WireType wireType, PortalControl::PortalType portalType, ModelRoot *root);
+        static std::unique_ptr<CreatePortalNodeAction>
+        create(const QUuid &parentUuid, QPoint pos, QString name, ConnectionWire::WireType wireType,
+               PortalControl::PortalType portalType, ModelRoot *root);
 
         static std::unique_ptr<CreatePortalNodeAction> deserialize(QDataStream &stream, ModelRoot *root);
 

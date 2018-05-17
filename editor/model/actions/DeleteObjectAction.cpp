@@ -3,7 +3,6 @@
 #include "../ModelObject.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../Pool.h"
 
 using namespace AxiomModel;
 
@@ -21,8 +20,10 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const AxiomModel:
 }
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    QByteArray buffer; stream >> buffer;
+    QUuid uuid;
+    stream >> uuid;
+    QByteArray buffer;
+    stream >> buffer;
 
     return create(uuid, std::move(buffer), root);
 }
@@ -34,7 +35,7 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
 }
 
 void DeleteObjectAction::forward(bool) {
-    auto dependents = findDependents(dynamicCast<ModelObject*>(root()->pool().sequence()), uuid);
+    auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
 
     QDataStream stream(&buffer, QIODevice::WriteOnly);
     ModelRoot::serializeChunk(stream, QUuid(), dependents);

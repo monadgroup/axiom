@@ -14,7 +14,7 @@ namespace MaximRuntime {
 
     class CustomNode : public Node {
     public:
-        AxiomCommon::Event<HardControl*> controlAdded;
+        AxiomCommon::Event<HardControl *> controlAdded;
         AxiomCommon::Event<> finishedCodegen;
 
         explicit CustomNode(Surface *surface);

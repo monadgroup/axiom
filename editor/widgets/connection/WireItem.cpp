@@ -71,8 +71,10 @@ void WireItem::updateRoute(const std::deque<QPoint> &route) {
 }
 
 void WireItem::setIsActive(bool active) {
-    auto normalColor = wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numNormal : CommonColors::midiNormal;
-    auto activeColor = wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numActive : CommonColors::midiActive;
+    auto normalColor =
+        wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numNormal : CommonColors::midiNormal;
+    auto activeColor =
+        wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numActive : CommonColors::midiActive;
 
     QPen pen(active ? activeColor : normalColor, 2);
     pen.setJoinStyle(Qt::MiterJoin);

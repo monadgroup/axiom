@@ -30,7 +30,7 @@ namespace AxiomCommon {
         void removeDestructHook(HookNotifiable *handle);
 
     private:
-        std::set<HookNotifiable*> notifiables;
+        std::set<HookNotifiable *> notifiables;
 
         void doDestruct();
     };

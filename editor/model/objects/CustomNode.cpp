@@ -6,7 +6,8 @@
 using namespace AxiomModel;
 
 CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                       const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, AxiomModel::ModelRoot *root)
+                       const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight,
+                       AxiomModel::ModelRoot *root)
     : Node(NodeType::CUSTOM_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
       _code(std::move(code)), _isPanelOpen(panelOpen), _panelHeight(panelHeight) {
 }
@@ -14,17 +15,22 @@ CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
 std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                bool selected, QString name, const QUuid &controlsUuid, QString code,
                                                bool panelOpen, float panelHeight, AxiomModel::ModelRoot *root) {
-    return std::make_unique<CustomNode>(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, code, panelOpen, panelHeight, root);
+    return std::make_unique<CustomNode>(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, code,
+                                        panelOpen, panelHeight, root);
 }
 
 std::unique_ptr<CustomNode> CustomNode::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                                     QPoint pos, QSize size, bool selected, QString name,
                                                     const QUuid &controlsUuid, AxiomModel::ModelRoot *root) {
-    QString code; stream >> code;
-    bool isPanelOpen; stream >> isPanelOpen;
-    float panelHeight; stream >> panelHeight;
+    QString code;
+    stream >> code;
+    bool isPanelOpen;
+    stream >> isPanelOpen;
+    float panelHeight;
+    stream >> panelHeight;
 
-    return create(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, code, isPanelOpen, panelHeight, root);
+    return create(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, code, isPanelOpen, panelHeight,
+                  root);
 }
 
 void CustomNode::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {

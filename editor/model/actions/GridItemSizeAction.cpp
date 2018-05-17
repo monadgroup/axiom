@@ -17,9 +17,12 @@ std::unique_ptr<GridItemSizeAction> GridItemSizeAction::create(const QUuid &uuid
 }
 
 std::unique_ptr<GridItemSizeAction> GridItemSizeAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    QRect beforeRect; stream >> beforeRect;
-    QRect afterRect; stream >> afterRect;
+    QUuid uuid;
+    stream >> uuid;
+    QRect beforeRect;
+    stream >> beforeRect;
+    QRect afterRect;
+    stream >> afterRect;
 
     return create(uuid, beforeRect, afterRect, root);
 }
@@ -33,9 +36,9 @@ void GridItemSizeAction::serialize(QDataStream &stream) const {
 }
 
 void GridItemSizeAction::forward(bool) {
-    find<GridItem*>(root()->pool().sequence(), uuid)->setRect(afterRect);
+    find<GridItem *>(root()->pool().sequence(), uuid)->setRect(afterRect);
 }
 
 void GridItemSizeAction::backward() {
-    find<GridItem*>(root()->pool().sequence(), uuid)->setRect(beforeRect);
+    find<GridItem *>(root()->pool().sequence(), uuid)->setRect(beforeRect);
 }

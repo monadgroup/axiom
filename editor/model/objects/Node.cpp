@@ -1,5 +1,4 @@
 #include "Node.h"
-#include <utility>
 
 #include "NodeSurface.h"
 #include "ControlSurface.h"
@@ -8,9 +7,7 @@
 #include "GroupNode.h"
 #include "PortalNode.h"
 #include "../ModelRoot.h"
-#include "../Pool.h"
 #include "../PoolOperators.h"
-#include "../../util.h"
 
 using namespace AxiomModel;
 
@@ -18,25 +15,31 @@ Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint
            QString name, const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
     : GridItem(&find(root->nodeSurfaces(), parentUuid)->grid(), pos, size, selected),
       ModelObject(ModelType::NODE, uuid, parentUuid, root), _nodeType(nodeType), _name(std::move(name)),
-      _controls(findLater<ControlSurface*>(root->controlSurfaces(), controlsUuid)) {
+      _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {
 }
 
 std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                         AxiomModel::ModelRoot *root) {
-    uint8_t nodeTypeInt; stream >> nodeTypeInt;
+    uint8_t nodeTypeInt;
+    stream >> nodeTypeInt;
 
     QPoint pos;
     QSize size;
     bool selected;
     GridItem::deserialize(stream, pos, size, selected);
 
-    QString name; stream >> name;
-    QUuid controlsUuid; stream >> controlsUuid;
+    QString name;
+    stream >> name;
+    QUuid controlsUuid;
+    stream >> controlsUuid;
 
     switch ((NodeType) nodeTypeInt) {
-        case NodeType::CUSTOM_NODE: return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
-        case NodeType::GROUP_NODE: return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
-        case NodeType::PORTAL_NODE: return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
+        case NodeType::CUSTOM_NODE:
+            return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
+        case NodeType::GROUP_NODE:
+            return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
+        case NodeType::PORTAL_NODE:
+            return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
     }
 
     unreachable;

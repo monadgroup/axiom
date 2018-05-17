@@ -10,7 +10,8 @@ namespace AxiomModel {
     public:
         GroupSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<GroupSurface> create(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<GroupSurface>
+        create(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 
         QString name() override;
 

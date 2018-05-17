@@ -25,11 +25,11 @@ namespace AxiomModel {
 
     class ModelRoot {
     public:
-        using NodeSurfaceCollection = WatchSequence<NodeSurface*>;
-        using NodeCollection = WatchSequence<Node*>;
-        using ControlSurfaceCollection = WatchSequence<ControlSurface*>;
-        using ControlCollection = WatchSequence<Control*>;
-        using ConnectionCollection = WatchSequence<Connection*>;
+        using NodeSurfaceCollection = WatchSequence<NodeSurface *>;
+        using NodeCollection = WatchSequence<Node *>;
+        using ControlSurfaceCollection = WatchSequence<ControlSurface *>;
+        using ControlCollection = WatchSequence<Control *>;
+        using ConnectionCollection = WatchSequence<Connection *>;
 
         ModelRoot();
 
@@ -84,10 +84,10 @@ namespace AxiomModel {
         Pool _pool;
         HistoryList _history;
         NodeSurfaceCollection _nodeSurfaces;
-        NodeCollection  _nodes;
+        NodeCollection _nodes;
         ControlSurfaceCollection _controlSurfaces;
-        ControlCollection  _controls;
-        ConnectionCollection  _connections;
+        ControlCollection _controls;
+        ConnectionCollection _connections;
     };
 
 }

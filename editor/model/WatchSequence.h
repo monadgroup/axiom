@@ -24,7 +24,9 @@ namespace AxiomModel {
         explicit WatchSequence(sequence_type sequence) : _sequence(std::move(sequence)) {}
 
         template<class InputItem>
-        WatchSequence(const SequenceMapFilter<Item, InputItem> &mapFilter, AxiomCommon::Event<const InputItem &> &parentAdded, AxiomCommon::Event<const InputItem &> &parentRemoved) : _sequence(mapFilter.sequence()) {
+        WatchSequence(const SequenceMapFilter<Item, InputItem> &mapFilter,
+                      AxiomCommon::Event<const InputItem &> &parentAdded,
+                      AxiomCommon::Event<const InputItem &> &parentRemoved) : _sequence(mapFilter.sequence()) {
             auto mapFilterNext = mapFilter.next();
             auto itemAddedEvent = itemAdded;
             auto itemRemovedEvent = itemRemoved;
@@ -32,10 +34,11 @@ namespace AxiomModel {
                 auto result = mapFilterNext(input);
                 if (result) itemAddedEvent.trigger(*result);
             }));
-            parentRemoved.connect(&itemRemoved, std::function([itemRemovedEvent, mapFilterNext](const InputItem &input) {
-                auto result = mapFilterNext(input);
-                if (result) itemRemovedEvent.trigger(*result);
-            }));
+            parentRemoved.connect(&itemRemoved,
+                                  std::function([itemRemovedEvent, mapFilterNext](const InputItem &input) {
+                                      auto result = mapFilterNext(input);
+                                      if (result) itemRemovedEvent.trigger(*result);
+                                  }));
         }
 
         template<class InputItem>

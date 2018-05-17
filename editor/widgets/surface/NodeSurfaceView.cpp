@@ -4,7 +4,6 @@
 #include <QtWidgets/QGraphicsItem>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsSceneWheelEvent>
-#include <QtCore/QMimeData>
 
 #include "editor/model/objects/NodeSurface.h"
 #include "editor/model/Project.h"

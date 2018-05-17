@@ -31,17 +31,19 @@ namespace AxiomModel {
 
     template<class OutputItem, class InputItem>
     AxiomCommon::Promise<OutputItem> findLater(WatchSequence<InputItem> input, QUuid uuid) {
-        return getFirst(mapFilterWatch(std::move(input), std::function([uuid](const InputItem &base) -> std::optional<OutputItem> {
-            if (base->uuid() == uuid) {
-                auto cast = dynamic_cast<OutputItem>(base);
-                return cast ? cast : std::optional<OutputItem>();
-            }
-            return std::optional<OutputItem>();
-        })));
+        return getFirst(
+            mapFilterWatch(std::move(input), std::function([uuid](const InputItem &base) -> std::optional<OutputItem> {
+                if (base->uuid() == uuid) {
+                    auto cast = dynamic_cast<OutputItem>(base);
+                    return cast ? cast : std::optional<OutputItem>();
+                }
+                return std::optional<OutputItem>();
+            })));
     };
 
     template<class InputCollection>
-    SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type> findChildren(InputCollection collection, QUuid parentUuid) {
+    SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type>
+    findChildren(InputCollection collection, QUuid parentUuid) {
         return filter(collection, std::function([parentUuid](const typename InputCollection::value_type &base) -> bool {
             return base->parentUuid() == parentUuid;
         }));

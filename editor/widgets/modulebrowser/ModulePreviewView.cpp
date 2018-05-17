@@ -1,23 +1,17 @@
 #include "ModulePreviewView.h"
 
-#include <QtGui/QPainter>
 #include <QtWidgets/QGraphicsItem>
 #include <QtGui/QMouseEvent>
-#include <QtGui/QDrag>
-#include <QtCore/QMimeData>
-#include <QtWidgets/QMenu>
-#include <QtWidgets/QMessageBox>
-#include <iostream>
 
 #include "ModulePreviewCanvas.h"
 #include "../node/NodeItem.h"
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
-#include "../../util.h"
 
 using namespace AxiomGui;
 
-ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent)
+ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry,
+                                     QWidget *parent)
     : QGraphicsView(parent), window(window), library(library), entry(entry) {
     /*auto moduleScene = new ModulePreviewCanvas(&entry->schematic());
     setScene(moduleScene);

@@ -15,15 +15,18 @@ ModelObject::ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &pa
 }
 
 std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &parent, ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    QUuid parentUuid; stream >> parentUuid;
+    QUuid uuid;
+    stream >> uuid;
+    QUuid parentUuid;
+    stream >> parentUuid;
     if (parentUuid.isNull()) parentUuid = parent;
     return deserialize(stream, uuid, parentUuid, root);
 }
 
 std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                                       AxiomModel::ModelRoot *root) {
-    uint8_t typeInt; stream >> typeInt;
+    uint8_t typeInt;
+    stream >> typeInt;
     switch ((ModelType) typeInt) {
         case ModelType::NODE_SURFACE:
             return NodeSurface::deserialize(stream, uuid, parentUuid, root);

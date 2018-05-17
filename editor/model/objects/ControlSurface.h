@@ -11,13 +11,15 @@ namespace AxiomModel {
 
     class ControlSurface : public ModelObject {
     public:
-        using ChildCollection = WatchSequence<Control*>;
+        using ChildCollection = WatchSequence<Control *>;
 
         ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<ControlSurface> create(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<ControlSurface>
+        create(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<ControlSurface> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<ControlSurface>
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
         static QPoint nodeToControl(QPoint p) { return p * 2; }
 
@@ -32,7 +34,7 @@ namespace AxiomModel {
         }
 
         static QPointF controlToNode(QPointF p) {
-            return { p.x() / 2., p.y() / 2. };
+            return {p.x() / 2., p.y() / 2.};
         }
 
         static QSize controlToNodeFloor(QSize s) {
@@ -44,7 +46,7 @@ namespace AxiomModel {
         }
 
         static QSizeF controlToNode(QSizeF p) {
-            return { p.width() / 2., p.height() / 2. };
+            return {p.width() / 2., p.height() / 2.};
         }
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;

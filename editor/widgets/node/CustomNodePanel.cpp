@@ -1,7 +1,6 @@
 #include "CustomNodePanel.h"
 
 #include <QtWidgets/QGraphicsProxyWidget>
-#include <iostream>
 
 #include "editor/model/Project.h"
 #include "editor/model/objects/CustomNode.h"

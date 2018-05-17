@@ -7,6 +7,7 @@
 
 namespace MaximRuntime {
     class CustomNode;
+
     class Control;
 }
 
@@ -21,11 +22,16 @@ namespace AxiomModel {
         AxiomCommon::Event<float> beforePanelHeightChanged;
         AxiomCommon::Event<float> panelHeightChanged;
 
-        CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, ModelRoot *root);
+        CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
+                   const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, ModelRoot *root);
 
-        static std::unique_ptr<CustomNode> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, ModelRoot *root);
+        static std::unique_ptr<CustomNode>
+        create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
+               const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, ModelRoot *root);
 
-        static std::unique_ptr<CustomNode> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, ModelRoot *root);
+        static std::unique_ptr<CustomNode>
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                    bool selected, QString name, const QUuid &controlsUuid, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -52,7 +58,7 @@ namespace AxiomModel {
         bool _isPanelOpen;
         float _panelHeight;
 
-        std::optional<MaximRuntime::CustomNode*> _runtime;
+        std::optional<MaximRuntime::CustomNode *> _runtime;
 
         void runtimeAddedControl(MaximRuntime::Control *control);
 

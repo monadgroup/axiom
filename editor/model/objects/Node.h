@@ -24,15 +24,17 @@ namespace AxiomModel {
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> extractedChanged;
 
-        Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, ModelRoot *root);
+        Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
+             QString name, const QUuid &controlsUuid, ModelRoot *root);
 
-        static std::unique_ptr<Node> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
+        static std::unique_ptr<Node>
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        AxiomCommon::Promise<ControlSurface*> &controls() { return _controls; }
+        AxiomCommon::Promise<ControlSurface *> &controls() { return _controls; }
 
-        const AxiomCommon::Promise<ControlSurface*> &controls() const { return _controls; }
+        const AxiomCommon::Promise<ControlSurface *> &controls() const { return _controls; }
 
         NodeType nodeType() const { return _nodeType; }
 
@@ -62,7 +64,7 @@ namespace AxiomModel {
         NodeType _nodeType;
         QString _name;
         bool _isExtracted = false;
-        AxiomCommon::Promise<ControlSurface*> _controls;
+        AxiomCommon::Promise<ControlSurface *> _controls;
     };
 
 }

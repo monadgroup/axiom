@@ -1,7 +1,5 @@
 #include "NodeSurface.h"
 
-#include <QtCore/QDataStream>
-
 #include "RootSurface.h"
 #include "GroupSurface.h"
 #include "Node.h"
@@ -16,14 +14,16 @@ NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan
                          AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
       _nodes(findChildrenWatch(root->nodes(), uuid)), _connections(findChildrenWatch(root->connections(), uuid)),
-      _grid(staticCastWatch<GridItem*>(_nodes)), _pan(pan), _zoom(zoom) {
+      _grid(staticCastWatch<GridItem *>(_nodes)), _pan(pan), _zoom(zoom) {
     _nodes.itemAdded.connect(this, &NodeSurface::nodeAdded);
 }
 
 std::unique_ptr<NodeSurface> NodeSurface::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                              AxiomModel::ModelRoot *root) {
-    QPointF pan; stream >> pan;
-    float zoom; stream >> zoom;
+                                                      AxiomModel::ModelRoot *root) {
+    QPointF pan;
+    stream >> pan;
+    float zoom;
+    stream >> zoom;
 
     if (parentUuid.isNull()) {
         return std::make_unique<RootSurface>(uuid, pan, zoom, root);

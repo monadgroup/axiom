@@ -15,7 +15,11 @@ namespace AxiomGui {
 
     class ControlItem : public QGraphicsObject, public AxiomCommon::Hookable, public IConnectable {
     Q_OBJECT
-    Q_PROPERTY(float hoverState READ hoverState WRITE setHoverState)
+        Q_PROPERTY(float hoverState
+                       READ
+                       hoverState
+                       WRITE
+                       setHoverState)
 
     public:
         AxiomModel::Control *control;

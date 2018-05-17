@@ -1,9 +1,6 @@
 #include "ModelRoot.h"
 
-#include <cassert>
-
 #include "ModelObject.h"
-#include "Pool.h"
 #include "WatchSequenceOperators.h"
 
 #include "objects/NodeSurface.h"
@@ -14,11 +11,11 @@
 
 using namespace AxiomModel;
 
-ModelRoot::ModelRoot() : _nodeSurfaces(dynamicCastWatch<NodeSurface*>(_pool.sequence())),
-                         _nodes(dynamicCastWatch<Node*>(_pool.sequence())),
-                         _controlSurfaces(dynamicCastWatch<ControlSurface*>(_pool.sequence())),
-                         _controls(dynamicCastWatch<Control*>(_pool.sequence())),
-                         _connections(dynamicCastWatch<Connection*>(_pool.sequence())) {}
+ModelRoot::ModelRoot() : _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.sequence())),
+                         _nodes(dynamicCastWatch<Node *>(_pool.sequence())),
+                         _controlSurfaces(dynamicCastWatch<ControlSurface *>(_pool.sequence())),
+                         _controls(dynamicCastWatch<Control *>(_pool.sequence())),
+                         _connections(dynamicCastWatch<Connection *>(_pool.sequence())) {}
 
 ModelRoot::ModelRoot(QDataStream &stream) : ModelRoot() {
     deserializeChunk(stream, QUuid());
@@ -26,14 +23,16 @@ ModelRoot::ModelRoot(QDataStream &stream) : ModelRoot() {
 }
 
 void ModelRoot::serialize(QDataStream &stream) {
-    serializeChunk(stream, QUuid(), dynamicCast<ModelObject*>(_pool.sequence()));
+    serializeChunk(stream, QUuid(), dynamicCast<ModelObject *>(_pool.sequence()));
     _history.serialize(stream);
 }
 
 void ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent) {
-    uint32_t objectCount; stream >> objectCount;
+    uint32_t objectCount;
+    stream >> objectCount;
     for (uint32_t i = 0; i < objectCount; i++) {
-        QByteArray objectBuffer; stream >> objectBuffer;
+        QByteArray objectBuffer;
+        stream >> objectBuffer;
         QDataStream objectStream(&objectBuffer, QIODevice::ReadOnly);
         _pool.registerObj(ModelObject::deserialize(objectStream, parent, this));
     }

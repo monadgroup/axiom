@@ -1,8 +1,6 @@
 #include "Pool.h"
 
-#include "PoolObject.h"
 #include "PoolOperators.h"
-#include "../util.h"
 
 using namespace AxiomModel;
 
@@ -12,7 +10,7 @@ Pool::~Pool() {
     destroy();
 }
 
-PoolObject* Pool::registerObj(std::unique_ptr<AxiomModel::PoolObject> obj) {
+PoolObject *Pool::registerObj(std::unique_ptr<AxiomModel::PoolObject> obj) {
     _ownedObjects.push_back(std::move(obj));
     auto ptr = _ownedObjects.back().get();
     registerObj(ptr);

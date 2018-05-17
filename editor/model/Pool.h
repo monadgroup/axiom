@@ -23,16 +23,16 @@ namespace AxiomModel {
 
         std::unique_ptr<PoolObject> removeObj(PoolObject *obj);
 
-        WatchSequence<PoolObject*> &sequence() { return _sequence; }
+        WatchSequence<PoolObject *> &sequence() { return _sequence; }
 
-        const WatchSequence<PoolObject*> &sequence() const { return _sequence; }
+        const WatchSequence<PoolObject *> &sequence() const { return _sequence; }
 
         void destroy();
 
     private:
         std::vector<std::unique_ptr<PoolObject>> _ownedObjects;
-        std::vector<PoolObject*> _objects;
-        WatchSequence<PoolObject*> _sequence;
+        std::vector<PoolObject *> _objects;
+        WatchSequence<PoolObject *> _sequence;
     };
 
 }

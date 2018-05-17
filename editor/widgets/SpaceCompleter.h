@@ -7,7 +7,7 @@ class QLineEdit;
 namespace AxiomGui {
 
     class SpaceCompleter : public QCompleter {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         explicit SpaceCompleter(const QStringList &tags, QLineEdit *editor, QObject *parent = nullptr);

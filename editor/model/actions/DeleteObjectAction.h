@@ -12,7 +12,8 @@ namespace AxiomModel {
     public:
         DeleteObjectAction(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<DeleteObjectAction> create(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<DeleteObjectAction>
+        create(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root);
 
         static std::unique_ptr<DeleteObjectAction> create(const ModelObject *object);
 

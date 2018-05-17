@@ -78,7 +78,7 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
         }
     }
 
-    if (auto customNode = dynamic_cast<CustomNode*>(node)) {
+    if (auto customNode = dynamic_cast<CustomNode *>(node)) {
         auto panel = new CustomNodePanel(customNode);
         panel->setParentItem(this);
         panel->setFlag(QGraphicsItem::ItemStacksBehindParent);
@@ -201,7 +201,7 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     node->finishedDragging.trigger();
 
     std::vector<std::unique_ptr<Action>> dragEvents;
-    auto selectedNodes = staticCast<Node*>(node->parentSurface->selectedItems().sequence());
+    auto selectedNodes = staticCast<Node *>(node->parentSurface->selectedItems().sequence());
     for (const auto &selectedNode : selectedNodes) {
         auto beforePos = selectedNode->dragStartPos();
         auto afterPos = selectedNode->pos();
@@ -234,7 +234,9 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
     event->accept();
 
-    auto copyableItems = AxiomModel::filter(AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()), [](Node *const &node) { return node->isCopyable(); });
+    auto copyableItems = AxiomModel::filter(
+        AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()),
+        [](Node *const &node) { return node->isCopyable(); });
 
     QMenu menu;
 
@@ -256,8 +258,9 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
         connect(editor, &FloatingValueEditor::valueSubmitted,
                 this, [this](QString name) {
-                    node->root()->history().append(RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
-                });
+                node->root()->history().append(
+                    RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
+            });
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node));
     }
@@ -372,7 +375,8 @@ void NodeItem::resizerStartDrag() {
 void NodeItem::resizerEndDrag() {
     auto endDragRect = node->rect();
     if (startDragRect != endDragRect) {
-        node->root()->history().append(GridItemSizeAction::create(node->uuid(), startDragRect, endDragRect, node->root()));
+        node->root()->history().append(
+            GridItemSizeAction::create(node->uuid(), startDragRect, endDragRect, node->root()));
     }
 }
 

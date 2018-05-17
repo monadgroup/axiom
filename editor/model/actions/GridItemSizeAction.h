@@ -11,7 +11,8 @@ namespace AxiomModel {
     public:
         GridItemSizeAction(const QUuid &uuid, QRect beforeRect, QRect afterRect, ModelRoot *root);
 
-        static std::unique_ptr<GridItemSizeAction> create(const QUuid &uuid, QRect beforeRect, QRect afterRect, ModelRoot *root);
+        static std::unique_ptr<GridItemSizeAction>
+        create(const QUuid &uuid, QRect beforeRect, QRect afterRect, ModelRoot *root);
 
         static std::unique_ptr<GridItemSizeAction> deserialize(QDataStream &stream, ModelRoot *root);
 

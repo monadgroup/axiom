@@ -3,7 +3,6 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtGui/QIcon>
-#include <QtCore/QDateTime>
 #include <QtWidgets/QCompleter>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
@@ -14,7 +13,9 @@
 
 using namespace AxiomGui;
 
-ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library) : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
+ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library) : QDialog(nullptr, Qt::WindowTitleHint |
+                                                                                                Qt::WindowSystemMenuHint |
+                                                                                                Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("Add Module"));
     setStyleSheet(AxiomUtil::loadStylesheet(":/SaveModuleWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));

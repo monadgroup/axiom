@@ -11,7 +11,8 @@ namespace AxiomModel {
     public:
         GridItemMoveAction(const QUuid &uuid, QPoint beforePos, QPoint afterPos, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<GridItemMoveAction> create(const QUuid &uuid, QPoint beforePos, QPoint afterPos, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<GridItemMoveAction>
+        create(const QUuid &uuid, QPoint beforePos, QPoint afterPos, AxiomModel::ModelRoot *root);
 
         static std::unique_ptr<GridItemMoveAction> deserialize(QDataStream &stream, AxiomModel::ModelRoot *root);
 

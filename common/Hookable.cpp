@@ -20,9 +20,9 @@ HookContext::HookContext(HookContext &&a) noexcept {
     a.notifiables.clear();
 }
 
-HookContext& HookContext::operator=(const HookContext &a) { return *this; }
+HookContext &HookContext::operator=(const HookContext &a) { return *this; }
 
-HookContext& HookContext::operator=(HookContext &&a) noexcept {
+HookContext &HookContext::operator=(HookContext &&a) noexcept {
     a.doDestruct();
     a.notifiables.clear();
     return *this;
@@ -42,7 +42,7 @@ void HookContext::removeDestructHook(HookNotifiable *handle) {
 
 void HookContext::doDestruct() {
     if (notifiables.empty()) return;
-    std::vector<HookNotifiable*> notifyCopy(notifiables.begin(), notifiables.end());
+    std::vector<HookNotifiable *> notifyCopy(notifiables.begin(), notifiables.end());
 
     for (const auto &notifiable : notifyCopy) {
         notifiable->hookableDestroyed(this);

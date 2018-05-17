@@ -1,12 +1,8 @@
 #include "ExtractControlItem.h"
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtWidgets/QMenu>
-#include <cassert>
 
 #include "editor/model/Project.h"
-#include "editor/model/objects/ExtractControl.h"
-#include "../../util.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;

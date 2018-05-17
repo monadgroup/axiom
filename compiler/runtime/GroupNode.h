@@ -13,7 +13,7 @@ namespace MaximRuntime {
 
     class GroupNode : public Node {
     public:
-        AxiomCommon::Event<SoftControl*> controlAdded;
+        AxiomCommon::Event<SoftControl *> controlAdded;
 
         explicit GroupNode(Surface *surface);
 

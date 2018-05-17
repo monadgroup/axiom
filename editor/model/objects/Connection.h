@@ -11,11 +11,15 @@ namespace AxiomModel {
 
     class Connection : public ModelObject {
     public:
-        Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB, ModelRoot *root);
+        Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB,
+                   ModelRoot *root);
 
-        static std::unique_ptr<Connection> create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB, ModelRoot *root);
+        static std::unique_ptr<Connection>
+        create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB,
+               ModelRoot *root);
 
-        static std::unique_ptr<Connection> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
+        static std::unique_ptr<Connection>
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -33,8 +37,8 @@ namespace AxiomModel {
 
     private:
         NodeSurface *_surface;
-        Control* _controlA;
-        Control* _controlB;
+        Control *_controlA;
+        Control *_controlB;
         ConnectionWire _wire;
     };
 

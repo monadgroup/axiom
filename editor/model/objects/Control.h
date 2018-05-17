@@ -33,9 +33,11 @@ namespace AxiomModel {
         AxiomCommon::Event<QPointF> worldPosChanged;
         AxiomCommon::Event<bool> isActiveChanged;
 
-        Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
+        Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid,
+                QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
 
-        static std::unique_ptr<Control> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
+        static std::unique_ptr<Control>
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 

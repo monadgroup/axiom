@@ -11,17 +11,22 @@ QString iconNameFromType(PortalControl::PortalType type, ConnectionWire::WireTyp
     switch (type) {
         case PortalControl::PortalType::INPUT:
             switch (wireType) {
-                case ConnectionWire::WireType::NUM: return "input-num-portal.png";
-                case ConnectionWire::WireType::MIDI: return "input-midi-portal.png";
+                case ConnectionWire::WireType::NUM:
+                    return "input-num-portal.png";
+                case ConnectionWire::WireType::MIDI:
+                    return "input-midi-portal.png";
             }
             break;
         case PortalControl::PortalType::OUTPUT:
             switch (wireType) {
-                case ConnectionWire::WireType::NUM: return "output-num-portal.png";
-                case ConnectionWire::WireType::MIDI: return "output-midi-portal.png";
+                case ConnectionWire::WireType::NUM:
+                    return "output-num-portal.png";
+                case ConnectionWire::WireType::MIDI:
+                    return "output-midi-portal.png";
             }
             break;
-        case PortalControl::PortalType::AUTOMATION: return "automation-portal.png";
+        case PortalControl::PortalType::AUTOMATION:
+            return "automation-portal.png";
     }
     unreachable;
 }

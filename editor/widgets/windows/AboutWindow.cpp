@@ -3,7 +3,6 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtGui/QIcon>
-#include <QtCore/QDateTime>
 
 #include "editor/util.h"
 #include "editor/resources/resource.h"
@@ -48,7 +47,8 @@ AboutWindow::AboutWindow() : QDialog(nullptr,
     mainLayout->addWidget(contribLabel, 4, 0);
     mainLayout->addWidget(new QLabel(tr("PoroCYon"), this), 4, 1);
     auto couldBeYouLabel = new QLabel(
-        tr("You could be here too! Help out by contributing to the project on Github: github.com/monadgroup/axiom"), this);
+        tr("You could be here too! Help out by contributing to the project on Github: github.com/monadgroup/axiom"),
+        this);
     couldBeYouLabel->setWordWrap(true);
     couldBeYouLabel->setObjectName("about-none");
     mainLayout->addWidget(couldBeYouLabel, 5, 1);

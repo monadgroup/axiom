@@ -1,8 +1,8 @@
 #include "NodeSurfaceCanvas.h"
 
 #define _USE_MATH_DEFINES
+
 #include <cmath>
-#include <cassert>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsPathItem>
 #include <QtWidgets/QLineEdit>
@@ -12,7 +12,6 @@
 #include "AddNodeMenu.h"
 #include "compiler/runtime/Runtime.h"
 #include "editor/AxiomApplication.h"
-#include "editor/model/Project.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/grid/GridItem.h"
 #include "editor/model/objects/NodeSurface.h"
@@ -141,7 +140,9 @@ void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     auto currentItem = itemAt(mousePos, QTransform());
 
     // snap to the connectable if it's not the one we started with, and it has the same type
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() == connectionWire->wireType() && connectable->sink() != sourceControl) {
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() ==
+                                                                                     connectionWire->wireType() &&
+                                                                      connectable->sink() != sourceControl) {
         connectionWire->setEndPos(connectable->sink()->worldPos().toPoint());
     } else {
         connectionWire->setEndPos(
@@ -162,7 +163,9 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
         // if the sinks are already connected, remove the connection
         // todo
 
-        surface->root()->history().append(CreateConnectionAction::create(surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(), surface->root()));
+        surface->root()->history().append(
+            CreateConnectionAction::create(surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(),
+                                           surface->root()));
     } else {
         // todo: do something?
     }
@@ -183,9 +186,11 @@ void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, bool group) {
     );
 
     if (group) {
-        surface->root()->history().append(CreateGroupNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
+        surface->root()->history().append(
+            CreateGroupNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
     } else {
-        surface->root()->history().append(CreateCustomNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
+        surface->root()->history().append(
+            CreateCustomNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
     }
 }
 
@@ -350,7 +355,7 @@ void NodeSurfaceCanvas::leftMouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void NodeSurfaceCanvas::drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color,
-                               qreal pointSize) {
+                                 qreal pointSize) {
     QPointF topLeft = rect.topLeft();
     topLeft.setX(std::floor(topLeft.x() / size.width()) * size.width());
     topLeft.setY(std::floor(topLeft.y() / size.height()) * size.height());

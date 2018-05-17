@@ -47,7 +47,7 @@ namespace AxiomCommon {
         }
 
     private:
-        Event<A> event;
+        Event <A> event;
         std::shared_ptr<std::optional<A>> _value;
     };
 

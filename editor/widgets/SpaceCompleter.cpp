@@ -6,7 +6,8 @@ using namespace AxiomGui;
 
 QRegExp spaceRegex("\\s");
 
-SpaceCompleter::SpaceCompleter(const QStringList &tags, QLineEdit *editor, QObject *parent) : QCompleter(tags, parent), editor(editor) {
+SpaceCompleter::SpaceCompleter(const QStringList &tags, QLineEdit *editor, QObject *parent) : QCompleter(tags, parent),
+                                                                                              editor(editor) {
 }
 
 QStringList SpaceCompleter::splitPath(const QString &path) const {
@@ -14,5 +15,5 @@ QStringList SpaceCompleter::splitPath(const QString &path) const {
     auto currentWordEnd = path.indexOf(spaceRegex, currentWordStart);
     if (currentWordEnd == -1) currentWordEnd = path.size();
 
-    return { path.mid(currentWordStart, currentWordEnd - currentWordStart) };
+    return {path.mid(currentWordStart, currentWordEnd - currentWordStart)};
 }

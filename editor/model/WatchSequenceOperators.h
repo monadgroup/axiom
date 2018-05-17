@@ -9,7 +9,8 @@
 namespace AxiomModel {
 
     template<class OutputItem, class InputItem>
-    WatchSequence<OutputItem> mapFilterWatch(WatchSequence<InputItem> input, std::function<std::optional<OutputItem>(const InputItem &)> next) {
+    WatchSequence<OutputItem>
+    mapFilterWatch(WatchSequence<InputItem> input, std::function<std::optional<OutputItem>(const InputItem &)> next) {
         return WatchSequence(mapFilter(input.sequence(), std::move(next)), input);
     };
 

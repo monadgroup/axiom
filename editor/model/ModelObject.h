@@ -26,7 +26,8 @@ namespace AxiomModel {
 
         static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, const QUuid &parent, ModelRoot *root);
 
-        static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
+        static std::unique_ptr<ModelObject>
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
         virtual void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const;
 

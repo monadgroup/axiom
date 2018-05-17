@@ -1,5 +1,4 @@
 #include "CreateGroupNodeAction.h"
-#include <utility>
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../objects/GroupNode.h"
@@ -19,22 +18,30 @@ std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::create(const QUuid
                                                                      QPoint pos, QString name,
                                                                      const QUuid &controlsUuid, const QUuid &innerUuid,
                                                                      AxiomModel::ModelRoot *root) {
-    return std::make_unique<CreateGroupNodeAction>(uuid, parentUuid, pos, std::move(name), controlsUuid, innerUuid, root);
+    return std::make_unique<CreateGroupNodeAction>(uuid, parentUuid, pos, std::move(name), controlsUuid, innerUuid,
+                                                   root);
 }
 
 std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::create(const QUuid &parentUuid, QPoint pos, QString name,
                                                                      AxiomModel::ModelRoot *root) {
-    return create(QUuid::createUuid(), parentUuid, pos, std::move(name), QUuid::createUuid(), QUuid::createUuid(), root);
+    return create(QUuid::createUuid(), parentUuid, pos, std::move(name), QUuid::createUuid(), QUuid::createUuid(),
+                  root);
 }
 
 std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::deserialize(QDataStream &stream,
                                                                           AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    QUuid parentUuid; stream >> parentUuid;
-    QPoint pos; stream >> pos;
-    QString name; stream >> name;
-    QUuid controlsUuid; stream >> controlsUuid;
-    QUuid innerUuid; stream >> innerUuid;
+    QUuid uuid;
+    stream >> uuid;
+    QUuid parentUuid;
+    stream >> parentUuid;
+    QPoint pos;
+    stream >> pos;
+    QString name;
+    stream >> name;
+    QUuid controlsUuid;
+    stream >> controlsUuid;
+    QUuid innerUuid;
+    stream >> innerUuid;
 
     return create(uuid, parentUuid, pos, std::move(name), controlsUuid, innerUuid, root);
 }
@@ -51,7 +58,8 @@ void CreateGroupNodeAction::serialize(QDataStream &stream) const {
 }
 
 void CreateGroupNodeAction::forward(bool) {
-    root()->pool().registerObj(GroupNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, innerUuid, root()));
+    root()->pool().registerObj(
+        GroupNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, innerUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(GroupSurface::create(innerUuid, uuid, QPoint(0, 0), 0, root()));
 }

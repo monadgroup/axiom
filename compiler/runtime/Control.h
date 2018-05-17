@@ -18,7 +18,7 @@ namespace MaximRuntime {
 
     class Control {
     public:
-        AxiomCommon::Event<Control*> exposerChanged;
+        AxiomCommon::Event<Control *> exposerChanged;
         AxiomCommon::Event<> removed;
         AxiomCommon::Event<> cleanup;
 

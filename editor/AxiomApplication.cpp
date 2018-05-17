@@ -2,7 +2,6 @@
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/Support/TargetSelect.h>
-#include <iostream>
 #include <QtCore/QtCore>
 
 #include "util.h"

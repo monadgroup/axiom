@@ -14,17 +14,22 @@ namespace AxiomModel {
 
     class GroupNode : public Node {
     public:
-        GroupNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, const QUuid &innerUuid, ModelRoot *root);
+        GroupNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
+                  const QUuid &controlsUuid, const QUuid &innerUuid, ModelRoot *root);
 
-        static std::unique_ptr<GroupNode> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, const QUuid &innerUuid, ModelRoot *root);
+        static std::unique_ptr<GroupNode>
+        create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
+               const QUuid &controlsUuid, const QUuid &innerUuid, ModelRoot *root);
 
-        static std::unique_ptr<GroupNode> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, const QUuid &controlsUuid, ModelRoot *root);
+        static std::unique_ptr<GroupNode>
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                    bool selected, QString name, const QUuid &controlsUuid, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        AxiomCommon::Promise<NodeSurface*> &nodes() { return _nodes; }
+        AxiomCommon::Promise<NodeSurface *> &nodes() { return _nodes; }
 
-        const AxiomCommon::Promise<NodeSurface*> &nodes() const { return _nodes; }
+        const AxiomCommon::Promise<NodeSurface *> &nodes() const { return _nodes; }
 
         void createAndAttachRuntime(MaximRuntime::Surface *parent) override;
 
@@ -35,9 +40,9 @@ namespace AxiomModel {
         void remove() override;
 
     private:
-        AxiomCommon::Promise<NodeSurface*> _nodes;
+        AxiomCommon::Promise<NodeSurface *> _nodes;
 
-        std::optional<MaximRuntime::GroupNode*> _runtime;
+        std::optional<MaximRuntime::GroupNode *> _runtime;
     };
 
 }

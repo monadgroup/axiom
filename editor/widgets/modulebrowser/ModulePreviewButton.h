@@ -5,6 +5,7 @@
 
 namespace AxiomModel {
     class Library;
+
     class LibraryEntry;
 }
 
@@ -16,7 +17,8 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        explicit ModulePreviewButton(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
+        explicit ModulePreviewButton(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry,
+                                     QWidget *parent = nullptr);
 
     private slots:
 

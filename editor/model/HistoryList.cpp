@@ -5,8 +5,10 @@ using namespace AxiomModel;
 HistoryList::HistoryList() = default;
 
 HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
-    uint32_t stackPos; stream >> stackPos;
-    uint32_t stackSize; stream >> stackSize;
+    uint32_t stackPos;
+    stream >> stackPos;
+    uint32_t stackSize;
+    stream >> stackSize;
 
     _stackPos = stackPos;
     _stack.reserve(stackSize);
