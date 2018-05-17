@@ -4,6 +4,7 @@
 #include <QtWidgets/QGraphicsProxyWidget>
 #include <QtCore/QTimer>
 
+#include "editor/model/SequenceOperators.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/GroupNode.h"
 #include "editor/model/objects/CustomNode.h"
@@ -12,6 +13,8 @@
 #include "editor/model/objects/MidiControl.h"
 #include "editor/model/objects/ExtractControl.h"
 #include "editor/model/objects/PortalControl.h"
+#include "editor/model/actions/CompositeAction.h"
+#include "editor/model/actions/MoveNodeAction.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "../surface/NodeSurfacePanel.h"
 #include "editor/widgets/controls/NumControlItem.h"
@@ -166,6 +169,7 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
 
+        // todo: clean up how drag works
         isDragging = true;
         mouseStartPoint = event->screenPos();
         node->startedDragging.trigger();
@@ -190,6 +194,21 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
     isDragging = false;
     node->finishedDragging.trigger();
+
+    std::vector<std::unique_ptr<Action>> dragEvents;
+    auto selectedNodes = staticCast<Node*>(node->parentSurface->selectedItems().sequence());
+    for (const auto &selectedNode : selectedNodes) {
+        auto beforePos = selectedNode->dragStartPos();
+        auto afterPos = selectedNode->pos();
+
+        if (beforePos != afterPos) {
+            dragEvents.push_back(MoveNodeAction::create(selectedNode->uuid(), beforePos, afterPos, node->root()));
+        }
+    }
+
+    if (!dragEvents.empty()) {
+        node->root()->history().append(CompositeAction::create(std::move(dragEvents), node->root()));
+    }
 
     event->accept();
 }

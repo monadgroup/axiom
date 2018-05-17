@@ -18,7 +18,8 @@ namespace AxiomModel {
             CREATE_CUSTOM_NODE,
             CREATE_GROUP_NODE,
             CREATE_PORTAL_NODE,
-            CREATE_CONNECTION
+            CREATE_CONNECTION,
+            MOVE_NODE
         };
 
         Action(ActionType actionType, ModelRoot *root);

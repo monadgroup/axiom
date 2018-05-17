@@ -30,7 +30,7 @@ void GridItem::serialize(QDataStream &stream) const {
 }
 
 bool GridItem::isDragAvailable(QPoint delta) {
-    return parentSurface->grid().isRectAvailable(dragStartPos + delta, m_size, this);
+    return parentSurface->grid().isRectAvailable(_dragStartPos + delta, m_size, this);
 }
 
 void GridItem::setSize(QSize size) {
@@ -96,11 +96,11 @@ void GridItem::deselect() {
 }
 
 void GridItem::startDragging() {
-    dragStartPos = m_pos;
+    _dragStartPos = m_pos;
 }
 
 void GridItem::dragTo(QPoint delta) {
-    setPos(dragStartPos + delta, false, false);
+    setPos(_dragStartPos + delta, false, false);
 }
 
 void GridItem::finishDragging() {

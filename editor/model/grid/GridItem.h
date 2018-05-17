@@ -71,12 +71,14 @@ namespace AxiomModel {
 
         virtual void finishDragging();
 
+        const QPoint &dragStartPos() const { return _dragStartPos; }
+
     private:
         QPoint m_pos;
         QSize m_size;
         bool m_selected;
 
-        QPoint dragStartPos;
+        QPoint _dragStartPos;
     };
 
 }
