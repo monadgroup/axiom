@@ -182,13 +182,9 @@ void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, bool group) {
     );
 
     if (group) {
-        surface->root()->history().append(CreateGroupNodeAction::create(
-            surface->uuid(), targetPos, QSize(3, 2), false, name, QPointF(0, 0), 0, surface->root()
-        ));
+        surface->root()->history().append(CreateGroupNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
     } else {
-        surface->root()->history().append(CreateCustomNodeAction::create(
-            surface->uuid(), targetPos, QSize(3, 2), false, name, "", surface->root()
-        ));
+        surface->root()->history().append(CreateCustomNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
     }
 }
 

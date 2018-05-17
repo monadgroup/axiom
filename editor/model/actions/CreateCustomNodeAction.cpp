@@ -7,58 +7,50 @@
 
 using namespace AxiomModel;
 
-CreateCustomNodeAction::CreateCustomNodeAction(const QUuid &parentId, const QUuid &id, QPoint pos, QSize size,
-                                               bool selected, QString name, const QUuid &controlsId, QString code,
-                                               AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_CUSTOM_NODE, root), parentId(parentId), id(id), pos(pos), size(size),
-      selected(selected), name(std::move(name)), controlsId(controlsId), code(std::move(code)) {
-
+CreateCustomNodeAction::CreateCustomNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name,
+                                               const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
+    : Action(ActionType::CREATE_CUSTOM_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos), name(std::move(name)),
+      controlsUuid(controlsUuid) {
 }
 
-std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUuid &parentId, const QUuid &id,
-                                                                       QPoint pos, QSize size, bool selected,
-                                                                       QString name, const QUuid &controlsUuid,
-                                                                       QString code, AxiomModel::ModelRoot *root) {
-    return std::make_unique<CreateCustomNodeAction>(parentId, id, pos, size, selected, name, controlsUuid, code, root);
-}
-
-std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUuid &parentId, QPoint pos, QSize size,
-                                                                       bool selected, QString name, QString code,
+std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUuid &uuid, const QUuid &parentUuid,
+                                                                       QPoint pos, QString name,
+                                                                       const QUuid &controlsUuid,
                                                                        AxiomModel::ModelRoot *root) {
-    return create(parentId, QUuid::createUuid(), pos, size, selected, name, QUuid::createUuid(), code, root);
+    return std::make_unique<CreateCustomNodeAction>(uuid, parentUuid, pos, std::move(name), controlsUuid, root);
 }
 
-std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid parentId; stream >> parentId;
-    QUuid id; stream >> id;
-    QPoint pos; stream >> pos;
-    QSize size; stream >> size;
-    bool selected; stream >> selected;
-    QString name; stream >> name;
-    QUuid controlsId; stream >> controlsId;
-    QString code; stream >> code;
+std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUuid &parentUuid, QPoint pos,
+                                                                       QString name, AxiomModel::ModelRoot *root) {
+    return create(QUuid::createUuid(), parentUuid, pos, std::move(name), QUuid::createUuid(), root);
+}
 
-    return create(parentId, id, pos, size, selected, name, controlsId, code, root);
+std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::deserialize(QDataStream &stream,
+                                                                            AxiomModel::ModelRoot *root) {
+    QUuid uuid; stream >> uuid;
+    QUuid parentUuid; stream >> parentUuid;
+    QPoint pos; stream >> pos;
+    QString name; stream >> name;
+    QUuid controlsUuid; stream >> controlsUuid;
+
+    return create(uuid, parentUuid, pos, name, controlsUuid, root);
 }
 
 void CreateCustomNodeAction::serialize(QDataStream &stream) const {
     Action::serialize(stream);
 
-    stream << parentId;
-    stream << id;
+    stream << uuid;
+    stream << parentUuid;
     stream << pos;
-    stream << size;
-    stream << selected;
     stream << name;
-    stream << controlsId;
-    stream << code;
+    stream << controlsUuid;
 }
 
 void CreateCustomNodeAction::forward(bool) {
-    root()->pool().registerObj(CustomNode::create(id, parentId, pos, size, selected, name, controlsId, code, root()));
-    root()->pool().registerObj(ControlSurface::create(controlsId, id, root()));
+    root()->pool().registerObj(CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "", false, CustomNode::minPanelHeight, root()));
+    root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
 }
 
 void CreateCustomNodeAction::backward() {
-    find(root()->nodes(), id)->remove();
+    find(root()->nodes(), uuid)->remove();
 }
