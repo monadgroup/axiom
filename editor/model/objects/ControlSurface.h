@@ -67,6 +67,8 @@ namespace AxiomModel {
         Node *_node;
         ChildCollection _controls;
         GridSurface _grid;
+
+        void setSize(QSize size);
     };
 
 }

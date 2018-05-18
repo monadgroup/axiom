@@ -4,9 +4,10 @@
 
 using namespace AxiomModel;
 
-ConnectionWire::ConnectionWire(const AxiomModel::GridSurface *grid, WireType wireType, const QPointF &startPos,
+ConnectionWire::ConnectionWire(AxiomModel::GridSurface *grid, WireType wireType, const QPointF &startPos,
                                const QPointF &endPos)
     : _grid(grid), _wireType(wireType), _startPos(startPos), _endPos(endPos) {
+    _grid->gridChanged.connect(this, &ConnectionWire::updateRoute);
     updateRoute();
 }
 

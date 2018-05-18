@@ -43,6 +43,10 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
     node->deselected.connect(this, &NodeItem::triggerUpdate);
     node->removed.connect(this, &NodeItem::remove);
 
+    node->controls().then([this](ControlSurface *surface) {
+        surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
+    });
+
     // create resize items
     if (node->isResizable()) {
         ItemResizer::Direction directions[] = {

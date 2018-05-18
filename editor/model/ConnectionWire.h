@@ -23,9 +23,9 @@ namespace AxiomModel {
             MIDI
         };
 
-        ConnectionWire(const GridSurface *grid, WireType wireType, const QPointF &startPos, const QPointF &endPos);
+        ConnectionWire(GridSurface *grid, WireType wireType, const QPointF &startPos, const QPointF &endPos);
 
-        const GridSurface *grid() const { return _grid; }
+        GridSurface *grid() const { return _grid; }
 
         WireType wireType() const { return _wireType; }
 
@@ -58,7 +58,7 @@ namespace AxiomModel {
             END
         };
 
-        const GridSurface *_grid;
+        GridSurface *_grid;
         WireType _wireType;
         QPointF _startPos;
         QPointF _endPos;

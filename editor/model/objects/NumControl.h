@@ -49,7 +49,7 @@ namespace AxiomModel {
 
         const MaximRuntime::NumValue &value() const { return _value; }
 
-        void setValue(const MaximRuntime::NumValue &value);
+        void setValue(MaximRuntime::NumValue value);
 
     private:
         DisplayMode _displayMode;

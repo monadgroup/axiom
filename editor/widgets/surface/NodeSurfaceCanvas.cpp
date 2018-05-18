@@ -143,7 +143,7 @@ void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() ==
                                                                                      connectionWire->wireType() &&
                                                                       connectable->sink() != sourceControl) {
-        connectionWire->setEndPos(connectable->sink()->worldPos().toPoint());
+        connectionWire->setEndPos(connectable->sink()->worldPos());
     } else {
         connectionWire->setEndPos(
             QPointF(

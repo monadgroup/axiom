@@ -54,7 +54,10 @@ void NumControl::setChannel(AxiomModel::NumControl::Channel channel) {
     }
 }
 
-void NumControl::setValue(const MaximRuntime::NumValue &value) {
+void NumControl::setValue(MaximRuntime::NumValue value) {
+    value.left = value.left < 0 ? 0 : value.left > 1 ? 1 : value.left;
+    value.right = value.right < 0 ? 0 : value.right > 1 ? 1 : value.right;
+
     if (value != _value) {
         _value = value;
         valueChanged.trigger(value);

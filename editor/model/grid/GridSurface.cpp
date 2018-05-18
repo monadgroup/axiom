@@ -106,5 +106,13 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
                 (*clearItems.begin())->deselect();
             }
         }
+        if (_selectedItems.size() == 1) {
+            hasSelectionChanged.trigger(true);
+        }
+    }));
+    item->deselected.connect(this, std::function([this]() {
+        if (_selectedItems.empty()) {
+            hasSelectionChanged.trigger(false);
+        }
     }));
 }
