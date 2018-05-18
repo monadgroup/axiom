@@ -10,6 +10,8 @@
 #include "editor/model/Project.h"
 #include "editor/model/objects/Control.h"
 #include "editor/model/objects/ControlSurface.h"
+#include "editor/model/actions/GridItemMoveAction.h"
+#include "editor/model/actions/GridItemSizeAction.h"
 #include "editor/util.h"
 #include "../ItemResizer.h"
 #include "../CommonColors.h"
@@ -51,6 +53,8 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
                     this, &ControlItem::resizerStartDrag);
             connect(resizer, &ItemResizer::changed,
                     this, &ControlItem::resizerChanged);
+            connect(resizer, &ItemResizer::endDrag,
+                    this, &ControlItem::resizerEndDrag);
 
             control->selected.connect(this, std::function([resizer]() { resizer->setVisible(true); }));
             control->deselected.connect(this, std::function([resizer]() { resizer->setVisible(false); }));
@@ -222,6 +226,10 @@ void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
         isMoving = false;
         control->finishedDragging.trigger();
+
+        if (control->dragStartPos() != control->pos()) {
+            control->root()->history().append(GridItemMoveAction::create(control->uuid(), control->dragStartPos(), control->pos(), control->root()));
+        }
     } else {
         event->ignore();
     }
@@ -282,6 +290,14 @@ void ControlItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
 
 void ControlItem::resizerStartDrag() {
     control->select(true);
+    startDragRect = control->rect();
+}
+
+void ControlItem::resizerEndDrag() {
+    auto endDragRect = control->rect();
+    if (startDragRect != endDragRect) {
+        control->root()->history().append(GridItemSizeAction::create(control->uuid(), startDragRect, endDragRect, control->root()));
+    }
 }
 
 void ControlItem::triggerGeometryChange() {

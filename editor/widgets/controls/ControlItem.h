@@ -96,11 +96,14 @@ namespace AxiomGui {
 
         void resizerStartDrag();
 
+        void resizerEndDrag();
+
     private:
         bool isMoving = false;
         bool isConnecting = false;
         QPointF mouseStartPoint;
         float _hoverState = 0;
+        QRect startDragRect;
     };
 
 }
