@@ -50,7 +50,7 @@ bool CreateControlAction::forward(bool) {
             root()->pool().registerObj(NumControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, NumControl::DisplayMode::KNOB, NumControl::Channel::BOTH, MaximRuntime::NumValue(), root()));
             break;
         case Control::ControlType::MIDI_SCALAR:
-            root()->pool().registerObj(MidiControl::create(uuid, parentUuid, QPoint(0, 0), QSize(0, 0), false, name, true, root()));
+            root()->pool().registerObj(MidiControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, root()));
             break;
         case Control::ControlType::NUM_EXTRACT:
             root()->pool().registerObj(ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, ConnectionWire::WireType::NUM, 0, root()));
