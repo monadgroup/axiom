@@ -5,6 +5,7 @@
 #include "editor/model/Project.h"
 #include "editor/model/objects/CustomNode.h"
 #include "editor/model/grid/GridSurface.h"
+#include "editor/model/actions/SetCodeAction.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "../CommonColors.h"
 #include "../ItemResizer.h"
@@ -44,6 +45,7 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     connect(textEditor, &QPlainTextEdit::textChanged,
             this, &CustomNodePanel::controlTextChanged);
 
+    codeChanged(node->code());
     setOpen(node->isPanelOpen());
     updateSize();
 }
@@ -55,11 +57,12 @@ QRectF CustomNodePanel::boundingRect() const {
 
 void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     auto br = boundingRect();
-    if (showingErrors) {
-        painter->setPen(QPen(CommonColors::errorNodeBorder, 1));
-    } else {
-        painter->setPen(QPen(CommonColors::customNodeBorder, 1));
-    }
+    //if (showingErrors) {
+    //    painter->setPen(QPen(CommonColors::errorNodeBorder, 1));
+    //} else {
+    //    painter->setPen(QPen(CommonColors::customNodeBorder, 1));
+    //}
+    painter->setPen(QPen(CommonColors::customNodeBorder, 1));
     painter->setBrush(QBrush(CommonColors::customNodeNormal));
 
     painter->drawRoundedRect(br, 5, 5);
@@ -82,26 +85,26 @@ void CustomNodePanel::setOpen(bool open) {
 }
 
 void CustomNodePanel::setError(const MaximRuntime::ErrorLog &log) {
-    hasErrors = true;
-    QList<QTextEdit::ExtraSelection> selections;
-    for (const auto &err : log.errors) {
-        QTextCursor cursor(textEditor->document());
-        moveCursor(cursor, err.start, QTextCursor::MoveAnchor);
-        moveCursor(cursor, err.end, QTextCursor::KeepAnchor);
+    //hasErrors = true;
+    //QList<QTextEdit::ExtraSelection> selections;
+    //for (const auto &err : log.errors) {
+    //    QTextCursor cursor(textEditor->document());
+    //    moveCursor(cursor, err.start, QTextCursor::MoveAnchor);
+    //    moveCursor(cursor, err.end, QTextCursor::KeepAnchor);
 
-        QTextCharFormat squigglyFormat;
-        squigglyFormat.setUnderlineColor(QColor::fromRgb(255, 0, 0));
-        squigglyFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    //    QTextCharFormat squigglyFormat;
+    //    squigglyFormat.setUnderlineColor(QColor::fromRgb(255, 0, 0));
+    //    squigglyFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
 
-        selections.push_back({cursor, squigglyFormat});
-    }
-    textEditor->setExtraSelections(selections);
-    update();
+    //    selections.push_back({cursor, squigglyFormat});
+    //}
+    //textEditor->setExtraSelections(selections);
+    //update();
 }
 
 void CustomNodePanel::clearError() {
-    hasErrors = false;
-    showingErrors = false;
+    //hasErrors = false;
+    //showingErrors = false;
     textEditor->setExtraSelections({});
     update();
 }
@@ -132,15 +135,14 @@ void CustomNodePanel::compileFinished() {
 bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
     if (object == textEditor) {
         if (event->type() == QEvent::FocusOut) {
-            showingErrors = hasErrors;
-            update();
-
-            /*DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_CODE, {
-                node->recompile();
-            });*/
-            return true;
+            if (beforeCode != node->code()) {
+                node->root()->history().append(
+                    SetCodeAction::create(node->uuid(), beforeCode, node->code(), node->root()));
+                beforeCode = node->code();
+            }
         } else if (event->type() == QEvent::FocusIn) {
             node->parentSurface->deselectAll();
+            beforeCode = node->code();
         } else if (event->type() == QEvent::KeyPress) {
             auto keyEvent = (QKeyEvent *) event;
 

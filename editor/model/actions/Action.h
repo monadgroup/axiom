@@ -21,7 +21,8 @@ namespace AxiomModel {
             CREATE_CONNECTION,
             MOVE_GRID_ITEM,
             SIZE_GRID_ITEM,
-            RENAME_NODE
+            RENAME_NODE,
+            SET_CODE
         };
 
         Action(ActionType actionType, ModelRoot *root);

@@ -57,8 +57,9 @@ namespace AxiomGui {
 
         QGraphicsProxyWidget *textProxy;
         QPlainTextEdit *textEditor;
-        bool hasErrors = false;
-        bool showingErrors = false;
+        QString beforeCode;
+        //bool hasErrors = false;
+        //bool showingErrors = false;
 
         bool eventFilter(QObject *object, QEvent *event) override;
 

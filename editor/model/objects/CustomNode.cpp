@@ -44,6 +44,8 @@ void CustomNode::setCode(const QString &code) {
     if (_code != code) {
         _code = code;
         codeChanged.trigger(code);
+
+        if (_runtime) (*_runtime)->setCode(code.toStdString());
     }
 }
 
