@@ -29,8 +29,6 @@ namespace AxiomGui {
 
         QPainterPath controlPath() const override;
 
-        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
     private:

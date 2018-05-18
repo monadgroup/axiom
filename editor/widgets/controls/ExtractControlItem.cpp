@@ -1,6 +1,7 @@
 #include "ExtractControlItem.h"
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
+#include <QtWidgets/QMenu>
 
 #include "editor/model/Project.h"
 
@@ -36,42 +37,13 @@ QPainterPath ExtractControlItem::controlPath() const {
     return path;
 }
 
-void ExtractControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    event->accept();
-}
-
 void ExtractControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 
-    // todo
-    /*QMenu menu;
-    auto clearAction = menu.addAction(tr("C&lear Connections"));
+    QMenu menu;
+    buildMenuStart(menu);
     menu.addSeparator();
-    auto moveAction = menu.addAction(tr("&Move"));
-    auto nameShownAction = menu.addAction(tr("Show &Name"));
-    nameShownAction->setCheckable(true);
-    nameShownAction->setChecked(control->showName());
+    buildMenuEnd(menu);
 
-    QAction *exposedAction = nullptr;
-    if (control->node->parentSchematic->canExposeControl()) {
-        // todo: make this checkable
-        exposedAction = menu.addAction(tr("&Expose"));
-    }
-
-    auto selectedAction = menu.exec(event->screenPos());
-
-    if (selectedAction == clearAction) {
-        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::DISCONNECT_ALL, {
-            control->sink()->clearConnections();
-        });
-    } else if (selectedAction == moveAction) {
-        control->select(true);
-    } else if (selectedAction == nameShownAction) {
-        auto actionType = nameShownAction->isChecked() ? HistoryList::ActionType::SHOW_CONTROL_NAME : HistoryList::ActionType::HIDE_CONTROL_NAME;
-        DO_ACTION(control->node->parentSchematic->project()->history, actionType, {
-            control->setShowName(nameShownAction->isChecked());
-        });
-    } else if (exposedAction && selectedAction == exposedAction) {
-        control->node->parentSchematic->exposeControl(control);
-    }*/
+    menu.exec(event->screenPos());
 }
