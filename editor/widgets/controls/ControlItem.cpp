@@ -275,7 +275,9 @@ void ControlItem::updateSelected(bool selected) {
 }
 
 void ControlItem::remove() {
-    scene()->removeItem(this);
+    if (scene()) {
+        scene()->removeItem(this);
+    }
 }
 
 void ControlItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {

@@ -63,11 +63,13 @@ namespace AxiomModel {
         QString _code;
         bool _isPanelOpen;
         float _panelHeight;
-        CompositeAction *createControlsAction = nullptr;
+        CompositeAction *changeCodeAction = nullptr;
 
         std::optional<MaximRuntime::CustomNode *> _runtime;
 
         void runtimeAddedControl(MaximRuntime::Control *control);
+
+        void runtimeRemovedControl(Control *control);
 
         void runtimeFinishedCodegen();
 

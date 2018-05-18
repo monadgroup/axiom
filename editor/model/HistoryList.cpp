@@ -50,6 +50,7 @@ void HistoryList::append(std::unique_ptr<AxiomModel::Action> action) {
 
     undoTypeChanged.trigger(actionType);
     redoTypeChanged.trigger(Action::ActionType::NONE);
+    stackChanged.trigger();
 }
 
 bool HistoryList::canUndo() const {
@@ -71,6 +72,8 @@ void HistoryList::undo() {
     redoTypeChanged.trigger(_stack[_stackPos]->actionType());
 
     if (needsRebuild) rebuildRequested.trigger();
+
+    stackChanged.trigger();
 }
 
 bool HistoryList::canRedo() const {
@@ -92,4 +95,6 @@ void HistoryList::redo() {
     redoTypeChanged.trigger(_stackPos == _stack.size() ? Action::ActionType::NONE : _stack[_stackPos]->actionType());
 
     if (needsRebuild) rebuildRequested.trigger();
+
+    stackChanged.trigger();
 }

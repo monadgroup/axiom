@@ -14,6 +14,7 @@
 #include "../actions/CompositeAction.h"
 #include "../actions/SetCodeAction.h"
 #include "../actions/CreateControlAction.h"
+#include "../actions/DeleteObjectAction.h"
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -66,8 +67,9 @@ void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
     std::vector<std::unique_ptr<Action>> actions;
     actions.push_back(SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), root()));
     auto action = CompositeAction::create(std::move(actions), root());
-    createControlsAction = action.get();
+    changeCodeAction = action.get();
     root()->history().append(std::move(action));
+    changeCodeAction = nullptr;
 }
 
 void CustomNode::setPanelOpen(bool panelOpen) {
@@ -126,18 +128,26 @@ void CustomNode::runtimeAddedControl(MaximRuntime::Control *control) {
         for (const auto &existingControl : controlList) {
             if (!existingControl->canAttachRuntime(control)) continue;
 
+            std::cout << "Runtime added control, linking to " << existingControl << std::endl;
             existingControl->attachRuntime(control);
-            control->removed.connect(existingControl, &Control::remove);
+            control->removed.connect(existingControl, std::function([this, existingControl]() { runtimeRemovedControl(existingControl); }));
             return;
         }
     }
 
     // no control found, we need to create a new one
     // note: this will trigger `surfaceControlAdded`, which will attach a runtime to the control
-    assert(createControlsAction);
+    assert(changeCodeAction);
     auto action = CreateControlAction::create((*controls().value())->uuid(), Control::fromRuntimeType(control->type()->type()), QString::fromStdString(control->name()), root());
     action->forward(true);
-    createControlsAction->actions().push_back(std::move(action));
+    changeCodeAction->actions().push_back(std::move(action));
+}
+
+void CustomNode::runtimeRemovedControl(AxiomModel::Control *control) {
+    assert(changeCodeAction);
+    auto action = DeleteObjectAction::create(control);
+    action->forward(true);
+    changeCodeAction->actions().push_back(std::move(action));
 }
 
 void CustomNode::runtimeFinishedCodegen() {
@@ -147,12 +157,14 @@ void CustomNode::runtimeFinishedCodegen() {
 void CustomNode::surfaceControlAdded(AxiomModel::Control *control) {
     if (!_runtime) return;
 
+    std::cout << "Control added to surface, linking to runtime" << std::endl;
+
     // find a runtime control to attach
     for (const std::unique_ptr<MaximRuntime::Control> &runtimeControl : **_runtime) {
         if (!control->canAttachRuntime(runtimeControl.get())) continue;
 
         control->attachRuntime(runtimeControl.get());
-        runtimeControl->removed.connect(control, &Control::remove);
+        runtimeControl->removed.connect(control, std::function([this, control]() { runtimeRemovedControl(control); }));
         return;
     }
 }

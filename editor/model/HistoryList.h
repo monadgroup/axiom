@@ -19,6 +19,7 @@ namespace AxiomModel {
         AxiomCommon::Event<Action::ActionType> undoTypeChanged;
         AxiomCommon::Event<Action::ActionType> redoTypeChanged;
         AxiomCommon::Event<> rebuildRequested;
+        AxiomCommon::Event<> stackChanged;
 
         size_t maxActions = 256;
 
@@ -27,6 +28,8 @@ namespace AxiomModel {
         explicit HistoryList(QDataStream &stream, ModelRoot *root);
 
         void serialize(QDataStream &stream);
+
+        const std::vector<std::unique_ptr<Action>> &stack() const { return _stack; }
 
         size_t stackPos() const { return _stackPos; }
 
