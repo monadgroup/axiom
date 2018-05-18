@@ -72,7 +72,28 @@ namespace AxiomModel {
                     begin++;
                     if (obj->uuid() == uuid || visitedIds.contains(obj->parentUuid())) {
                         visitedIds.insert(obj->uuid());
-                        return obj;
+                        return std::move(obj);
+                    }
+                }
+                return std::optional<typename InputCollection::value_type>();
+            };
+        });
+    }
+
+    template<class InputCollection>
+    Sequence<typename InputCollection::value_type> distinctByUuid(InputCollection input) {
+        return Sequence<typename InputCollection::value_type>([input]() {
+            auto begin = input.begin();
+            auto end = input.end();
+            QSet<QUuid> seenIds;
+            return [begin, end, seenIds]() mutable -> std::optional<typename InputCollection::value_type> {
+                while (begin != end) {
+                    auto obj = *begin;
+                    begin++;
+
+                    if (!seenIds.contains(obj->uuid())) {
+                        seenIds.insert(obj->uuid());
+                        return std::move(obj);
                     }
                 }
                 return std::optional<typename InputCollection::value_type>();

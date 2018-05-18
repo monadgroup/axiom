@@ -37,12 +37,19 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
 void DeleteObjectAction::forward(bool) {
     auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
 
-    QDataStream stream(&buffer, QIODevice::WriteOnly);
-    ModelRoot::serializeChunk(stream, QUuid(), dependents);
+    // remove all dependents, and any other linked items
+    auto removeItems = distinctByUuid(flatten(std::array<Sequence<ModelObject*>, 2> {
+        dependents,
+        flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })))
+    }));
 
-    // this should cascade and remove all sub-dependents
-    (*dependents.begin())->remove();
-    assert(dependents.empty());
+    QDataStream stream(&buffer, QIODevice::WriteOnly);
+    ModelRoot::serializeChunk(stream, QUuid(), removeItems);
+
+    // remove all items
+    while (!removeItems.empty()) {
+        (*removeItems.begin())->remove();
+    }
 }
 
 void DeleteObjectAction::backward() {

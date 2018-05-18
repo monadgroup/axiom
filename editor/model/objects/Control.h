@@ -77,6 +77,8 @@ namespace AxiomModel {
 
         void detachRuntime();
 
+        Sequence<ModelObject*> links() override;
+
         void remove() override;
 
     private:

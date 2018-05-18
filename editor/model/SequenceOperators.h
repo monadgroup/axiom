@@ -4,6 +4,15 @@
 
 namespace AxiomModel {
 
+    template<class ItemType>
+    Sequence<ItemType> blank() {
+        return Sequence(std::function([]() -> std::function<std::optional<ItemType>()> {
+            return []() -> std::optional<ItemType> {
+                return std::optional<ItemType>();
+            };
+        }));
+    }
+
     template<class Collection>
     Sequence<typename Collection::value_type> wrap(const Collection &collection) {
         return Sequence(
@@ -18,6 +27,31 @@ namespace AxiomModel {
                 };
             }));
     };
+
+    template<class Collection>
+    Sequence<typename Collection::value_type::value_type> flatten(Collection collection) {
+        return Sequence(
+            std::function([collection]() -> std::function<std::optional<typename Collection::value_type::value_type>()> {
+                auto begin = collection.begin();
+                auto end = collection.end();
+                std::optional<typename Collection::value_type::iterator> innerBegin;
+                std::optional<typename Collection::value_type::iterator> innerEnd;
+                return [begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
+                    while (!innerBegin || !innerEnd || *innerBegin == *innerEnd) {
+                        if (begin == end) return std::optional<typename Collection::value_type::value_type>();
+                        auto &nextCollection = *begin;
+                        innerBegin = nextCollection.begin();
+                        innerEnd = nextCollection.end();
+                        begin++;
+                    }
+
+                    auto result = **innerBegin;
+                    (*innerBegin)++;
+                    return std::move(result);
+                };
+            })
+        );
+    }
 
     template<class OutputItem, class InputCollection>
     SequenceMapFilter<OutputItem, typename InputCollection::value_type> mapFilter(InputCollection collection,

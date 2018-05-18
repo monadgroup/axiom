@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "PoolObject.h"
+#include "Sequence.h"
 #include "common/Event.h"
 
 namespace AxiomModel {
@@ -34,6 +35,8 @@ namespace AxiomModel {
         ModelType modelType() const { return _modelType; }
 
         ModelRoot *root() const { return _root; }
+
+        virtual Sequence<ModelObject*> links();
 
         void remove() override;
 

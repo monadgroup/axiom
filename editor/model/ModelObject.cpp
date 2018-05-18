@@ -1,6 +1,7 @@
 #include "ModelObject.h"
 
 #include "ModelRoot.h"
+#include "SequenceOperators.h"
 #include "objects/NodeSurface.h"
 #include "objects/CustomNode.h"
 #include "objects/ControlSurface.h"
@@ -50,6 +51,10 @@ void ModelObject::serialize(QDataStream &stream, const QUuid &parent, bool withC
     }
 
     stream << (uint8_t) modelType();
+}
+
+Sequence<ModelObject*> ModelObject::links() {
+    return blank<ModelObject*>();
 }
 
 void ModelObject::remove() {

@@ -109,6 +109,10 @@ void Control::detachRuntime() {
     // todo
 }
 
+Sequence<ModelObject*> Control::links() {
+    return staticCast<ModelObject*>(_connections.sequence()).sequence();
+}
+
 void Control::remove() {
     ModelObject::remove();
 }
