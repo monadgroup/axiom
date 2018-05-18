@@ -16,29 +16,29 @@ static Control::ControlType typeFromWireType(ConnectionWire::WireType wireType) 
 }
 
 ExtractControl::ExtractControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
-                               QString name, ConnectionWire::WireType wireType, ActiveSlotFlags activeSlots,
-                               ModelRoot *root)
-    : Control(typeFromWireType(wireType), wireType, uuid, parentUuid, pos, size, selected, std::move(name), root),
+                               QString name, bool showName, ConnectionWire::WireType wireType,
+                               ActiveSlotFlags activeSlots, ModelRoot *root)
+    : Control(typeFromWireType(wireType), wireType, uuid, parentUuid, pos, size, selected, std::move(name), showName, root),
       _activeSlots(activeSlots) {
 }
 
 std::unique_ptr<ExtractControl> ExtractControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos,
-                                                       QSize size, bool selected, QString name,
+                                                       QSize size, bool selected, QString name, bool showName,
                                                        AxiomModel::ConnectionWire::WireType wireType,
                                                        AxiomModel::ExtractControl::ActiveSlotFlags activeSlots,
                                                        AxiomModel::ModelRoot *root) {
-    return std::make_unique<ExtractControl>(uuid, parentUuid, pos, size, selected, std::move(name), wireType,
+    return std::make_unique<ExtractControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName, wireType,
                                             activeSlots, root);
 }
 
 std::unique_ptr<ExtractControl> ExtractControl::deserialize(QDataStream &stream, const QUuid &uuid,
                                                             const QUuid &parentUuid, QPoint pos, QSize size,
-                                                            bool selected, QString name,
+                                                            bool selected, QString name, bool showName,
                                                             AxiomModel::ConnectionWire::WireType wireType,
                                                             AxiomModel::ModelRoot *root) {
     ActiveSlotFlags activeSlots;
     stream >> activeSlots;
-    return create(uuid, parentUuid, pos, size, selected, std::move(name), wireType, activeSlots, root);
+    return create(uuid, parentUuid, pos, size, selected, std::move(name), showName, wireType, activeSlots, root);
 }
 
 void ExtractControl::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {

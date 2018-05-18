@@ -31,13 +31,14 @@ namespace AxiomModel {
         };
 
         AxiomCommon::Event<const QString &> nameChanged;
+        AxiomCommon::Event<bool> showNameChanged;
         AxiomCommon::Event<QPointF> worldPosChanged;
         AxiomCommon::Event<bool> isActiveChanged;
         AxiomCommon::Event<MaximRuntime::Control*> runtimeAttached;
         AxiomCommon::Event<> runtimeAboutToDetach;
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid,
-                QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
+                QPoint pos, QSize size, bool selected, QString name, bool showName, ModelRoot *root);
 
         static ControlType fromRuntimeType(MaximCommon::ControlType type);
 
@@ -63,6 +64,10 @@ namespace AxiomModel {
         const QString &name() const { return _name; }
 
         void setName(const QString &name);
+
+        bool showName() const { return _showName; }
+
+        void setShowName(bool showName);
 
         bool isActive() const { return _isActive; }
 
@@ -95,6 +100,7 @@ namespace AxiomModel {
         ControlType _controlType;
         ConnectionWire::WireType _wireType;
         QString _name;
+        bool _showName = true;
         bool _isActive = false;
 
         std::optional<MaximRuntime::Control *> _runtime;

@@ -27,15 +27,16 @@ namespace AxiomModel {
         AxiomCommon::Event<const MaximRuntime::NumValue &> valueChanged;
 
         NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                   DisplayMode displayMode, Channel channel, MaximRuntime::NumValue value, ModelRoot *root);
+                   bool showName, DisplayMode displayMode, Channel channel, MaximRuntime::NumValue value,
+                   ModelRoot *root);
 
         static std::unique_ptr<NumControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                                                  bool selected, QString name, DisplayMode displayMode, Channel channel,
-                                                  MaximRuntime::NumValue value, ModelRoot *root);
+                                                  bool selected, QString name, bool showName, DisplayMode displayMode,
+                                                  Channel channel, MaximRuntime::NumValue value, ModelRoot *root);
 
         static std::unique_ptr<NumControl>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, ModelRoot *root);
+                    bool selected, QString name, bool showName, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 

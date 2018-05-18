@@ -16,10 +16,10 @@ using namespace AxiomModel;
 
 Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::ConnectionWire::WireType wireType,
                  QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                 AxiomModel::ModelRoot *root)
+                 bool showName, AxiomModel::ModelRoot *root)
     : GridItem(&find(root->controlSurfaces(), parentUuid)->grid(), pos, size, selected),
       ModelObject(ModelType::CONTROL, uuid, parentUuid, root), _surface(find(root->controlSurfaces(), parentUuid)),
-      _controlType(controlType), _wireType(wireType), _name(std::move(name)),
+      _controlType(controlType), _wireType(wireType), _name(std::move(name)), _showName(showName),
       _connections(filterWatch(root->connections(), std::function([uuid](Connection *const &connection) {
           return connection->controlA()->uuid() == uuid || connection->controlB()->uuid() == uuid;
       }))), _connectedControls(
@@ -55,22 +55,25 @@ std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &
     QString name;
     stream >> name;
 
+    bool showName;
+    stream >> showName;
+
     switch ((ControlType) controlTypeInt) {
         case ControlType::NUM_SCALAR:
-            return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), root);
+            return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName, root);
         case ControlType::MIDI_SCALAR:
-            return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), root);
+            return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName, root);
         case ControlType::NUM_EXTRACT:
             return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
-                                               ConnectionWire::WireType::NUM, root);
+                                               showName, ConnectionWire::WireType::NUM, root);
         case ControlType::MIDI_EXTRACT:
             return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
-                                               ConnectionWire::WireType::MIDI, root);
+                                               showName, ConnectionWire::WireType::MIDI, root);
         case ControlType::NUM_PORTAL:
-            return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
+            return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
                                               ConnectionWire::WireType::NUM, root);
         case ControlType::MIDI_PORTAL:
-            return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
+            return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
                                               ConnectionWire::WireType::MIDI, root);
     }
 
@@ -83,12 +86,20 @@ void Control::serialize(QDataStream &stream, const QUuid &parent, bool withConte
     stream << (uint8_t) _controlType;
     GridItem::serialize(stream);
     stream << _name;
+    stream << _showName;
 }
 
 void Control::setName(const QString &name) {
     if (name != _name) {
         _name = name;
         nameChanged.trigger(name);
+    }
+}
+
+void Control::setShowName(bool showName) {
+    if (showName != _showName) {
+        _showName = showName;
+        showNameChanged.trigger(showName);
     }
 }
 

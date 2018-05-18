@@ -25,7 +25,8 @@ namespace AxiomModel {
             SET_CODE,
             CREATE_CONTROL,
             SET_NUM_MODE,
-            SET_NUM_VALUE
+            SET_NUM_VALUE,
+            SET_SHOW_NAME
         };
 
         Action(ActionType actionType, ModelRoot *root);

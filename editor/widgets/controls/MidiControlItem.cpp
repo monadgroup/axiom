@@ -1,7 +1,7 @@
 #include "MidiControlItem.h"
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtGui/QGuiApplication>
+#include <QtWidgets/QMenu>
 
 #include "editor/model/Project.h"
 #include "editor/model/objects/MidiControl.h"
@@ -43,6 +43,16 @@ QPainterPath MidiControlItem::controlPath() const {
 
 void MidiControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
+
+    QMenu menu;
+    buildMenuStart(menu);
+
+    // todo: display mode
+
+    buildMenuEnd(menu);
+
+    menu.exec(event->screenPos());
+
 
     // todo
     /*QMenu menu;

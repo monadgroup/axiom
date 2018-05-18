@@ -13,15 +13,15 @@ namespace AxiomModel {
         };
 
         PortalControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                      ConnectionWire::WireType wireType, PortalType portalType, ModelRoot *root);
+                      bool showName, ConnectionWire::WireType wireType, PortalType portalType, ModelRoot *root);
 
         static std::unique_ptr<PortalControl>
         create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-               ConnectionWire::WireType wireType, PortalType portalType, ModelRoot *root);
+               bool showName, ConnectionWire::WireType wireType, PortalType portalType, ModelRoot *root);
 
         static std::unique_ptr<PortalControl>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, ConnectionWire::WireType wireType, ModelRoot *root);
+                    bool selected, QString name, bool showName, ConnectionWire::WireType wireType, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 

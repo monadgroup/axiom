@@ -17,6 +17,7 @@
 #include "editor/model/actions/GridItemMoveAction.h"
 #include "editor/model/actions/GridItemSizeAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
+#include "editor/model/actions/SetShowNameAction.h"
 #include "editor/util.h"
 #include "../ItemResizer.h"
 #include "../CommonColors.h"
@@ -33,6 +34,7 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
     control->sizeChanged.connect(this, &ControlItem::setSize);
     control->selectedChanged.connect(this, &ControlItem::updateSelected);
     control->isActiveChanged.connect(this, &ControlItem::triggerUpdate);
+    control->showNameChanged.connect(this, &ControlItem::triggerUpdate);
     control->removed.connect(this, &ControlItem::remove);
 
     // create resize items
@@ -135,7 +137,7 @@ void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
         painter->drawPath(bounds);
     }
 
-    //if (!control->showName()) return;
+    if (!control->showName()) return;
 
     auto br = boundingRect();
     auto pathBr = useBoundingRect();
@@ -330,5 +332,18 @@ void ControlItem::buildMenuStart(QMenu &menu) {
 }
 
 void ControlItem::buildMenuEnd(QMenu &menu) {
-    // todo
+    auto moveAction = menu.addAction("&Move");
+    connect(moveAction, &QAction::triggered,
+            this, [this]() { control->select(true); });
+
+    auto nameShownAction = menu.addAction("Show &Name");
+    nameShownAction->setCheckable(true);
+    nameShownAction->setChecked(control->showName());
+    connect(nameShownAction, &QAction::triggered,
+            this, [this, nameShownAction]() {
+                control->root()->history().append(SetShowNameAction::create(control->uuid(), control->showName(), nameShownAction->isChecked(), control->root()));
+            });
+
+
+    // todo: extract
 }
