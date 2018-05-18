@@ -37,7 +37,7 @@ void Project::writeHeader(QDataStream &stream) {
 }
 
 bool Project::readHeader(QDataStream &stream, uint32_t *versionOut) {
-    uint32_t magic;
+    uint64_t magic;
     stream >> magic;
     if (magic != schemaMagic) return false;
 

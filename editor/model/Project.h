@@ -15,7 +15,7 @@ namespace AxiomModel {
     class Project {
     public:
         static constexpr uint32_t schemaVersion = 2;
-        static constexpr uint32_t schemaMagic = 0xDEFACED;
+        static constexpr uint64_t schemaMagic = 0x4D4F4E4144202020;
         static constexpr uint32_t minSchemaVersion = 2;
 
         Project();

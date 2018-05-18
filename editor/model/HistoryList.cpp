@@ -13,7 +13,9 @@ HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
     _stackPos = stackPos;
     _stack.reserve(stackSize);
     for (uint32_t i = 0; i < stackSize; i++) {
-        _stack.push_back(Action::deserialize(stream, root));
+        QByteArray actionBuffer; stream >> actionBuffer;
+        QDataStream actionStream(&actionBuffer, QIODevice::ReadOnly);
+        _stack.push_back(Action::deserialize(actionStream, root));
     }
 }
 
@@ -21,7 +23,10 @@ void HistoryList::serialize(QDataStream &stream) {
     stream << (uint32_t) _stackPos;
     stream << (uint32_t) _stack.size();
     for (const auto &action : _stack) {
-        action->serialize(stream);
+        QByteArray actionBuffer;
+        QDataStream actionStream(&actionBuffer, QIODevice::WriteOnly);
+        action->serialize(actionStream);
+        stream << actionBuffer;
     }
 }
 

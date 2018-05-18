@@ -12,7 +12,8 @@ CreatePortalNodeAction::CreatePortalNodeAction(const QUuid &uuid, const QUuid &p
                                                AxiomModel::PortalControl::PortalType portalType,
                                                const QUuid &controlUuid, AxiomModel::ModelRoot *root)
     : Action(ActionType::CREATE_PORTAL_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos),
-      name(std::move(name)), controlsUuid(controlsUuid), wireType(wireType), portalType(portalType) {
+      name(std::move(name)), controlsUuid(controlsUuid), wireType(wireType), portalType(portalType),
+      controlUuid(controlUuid) {
 }
 
 std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::create(const QUuid &uuid, const QUuid &parentUuid,
