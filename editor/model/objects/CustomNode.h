@@ -13,6 +13,8 @@ namespace MaximRuntime {
 
 namespace AxiomModel {
 
+    class Control;
+
     class CustomNode : public Node {
     public:
         static constexpr float minPanelHeight = 40;
@@ -63,6 +65,8 @@ namespace AxiomModel {
         void runtimeAddedControl(MaximRuntime::Control *control);
 
         void runtimeFinishedCodegen();
+
+        void surfaceControlAdded(Control *control);
     };
 
 }

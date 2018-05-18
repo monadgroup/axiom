@@ -7,6 +7,7 @@
 #include "../grid/GridItem.h"
 #include "../WatchSequence.h"
 #include "../ConnectionWire.h"
+#include "compiler/common/ControlType.h"
 
 namespace MaximRuntime {
     class Control;
@@ -35,6 +36,8 @@ namespace AxiomModel {
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid,
                 QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
+
+        static ControlType fromRuntimeType(MaximCommon::ControlType type);
 
         static std::unique_ptr<Control>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
@@ -72,6 +75,8 @@ namespace AxiomModel {
         const WatchSequence<Control *> &connectedControls() const { return _connectedControls; }
 
         QPointF worldPos() const;
+
+        bool canAttachRuntime(MaximRuntime::Control *runtime);
 
         void attachRuntime(MaximRuntime::Control *runtime);
 

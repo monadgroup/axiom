@@ -22,7 +22,8 @@ namespace AxiomModel {
             MOVE_GRID_ITEM,
             SIZE_GRID_ITEM,
             RENAME_NODE,
-            SET_CODE
+            SET_CODE,
+            CREATE_CONTROL
         };
 
         Action(ActionType actionType, ModelRoot *root);

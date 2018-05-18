@@ -22,6 +22,15 @@ ExtractControl::ExtractControl(const QUuid &uuid, const QUuid &parentUuid, QPoin
       _activeSlots(activeSlots) {
 }
 
+std::unique_ptr<ExtractControl> ExtractControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos,
+                                                       QSize size, bool selected, QString name,
+                                                       AxiomModel::ConnectionWire::WireType wireType,
+                                                       AxiomModel::ExtractControl::ActiveSlotFlags activeSlots,
+                                                       AxiomModel::ModelRoot *root) {
+    return std::make_unique<ExtractControl>(uuid, parentUuid, pos, size, selected, std::move(name), wireType,
+                                            activeSlots, root);
+}
+
 std::unique_ptr<ExtractControl> ExtractControl::deserialize(QDataStream &stream, const QUuid &uuid,
                                                             const QUuid &parentUuid, QPoint pos, QSize size,
                                                             bool selected, QString name,
@@ -29,7 +38,7 @@ std::unique_ptr<ExtractControl> ExtractControl::deserialize(QDataStream &stream,
                                                             AxiomModel::ModelRoot *root) {
     ActiveSlotFlags activeSlots;
     stream >> activeSlots;
-    return std::make_unique<ExtractControl>(uuid, parentUuid, pos, size, selected, name, wireType, activeSlots, root);
+    return create(uuid, parentUuid, pos, size, selected, std::move(name), wireType, activeSlots, root);
 }
 
 void ExtractControl::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {

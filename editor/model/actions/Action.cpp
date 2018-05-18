@@ -10,6 +10,7 @@
 #include "GridItemSizeAction.h"
 #include "RenameNodeAction.h"
 #include "SetCodeAction.h"
+#include "CreateControlAction.h"
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -42,6 +43,8 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
             return "Rename Node";
         case ActionType::SET_CODE:
             return "Set Code";
+        case ActionType::CREATE_CONTROL:
+            return "Create Control";
     }
 
     unreachable;
@@ -75,6 +78,8 @@ std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::Mod
             return RenameNodeAction::deserialize(stream, root);
         case ActionType::SET_CODE:
             return SetCodeAction::deserialize(stream, root);
+        case ActionType::CREATE_CONTROL:
+            return CreateControlAction::deserialize(stream, root);
         default:
         unreachable;
     }

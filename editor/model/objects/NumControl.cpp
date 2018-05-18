@@ -1,5 +1,5 @@
 #include "NumControl.h"
-
+#include <utility>
 #include "../ValueWriters.h"
 
 using namespace AxiomModel;
@@ -9,6 +9,14 @@ NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
     : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, uuid, parentUuid, pos, size, selected,
               std::move(name), root),
       _displayMode(displayMode), _channel(channel), _value(value) {
+}
+
+std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                                               bool selected, QString name,
+                                               AxiomModel::NumControl::DisplayMode displayMode,
+                                               AxiomModel::NumControl::Channel channel, MaximRuntime::NumValue value,
+                                               AxiomModel::ModelRoot *root) {
+    return std::make_unique<NumControl>(uuid, parentUuid, pos, size, selected, std::move(name), displayMode, channel, value, root);
 }
 
 std::unique_ptr<NumControl> NumControl::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
@@ -21,8 +29,8 @@ std::unique_ptr<NumControl> NumControl::deserialize(QDataStream &stream, const Q
     MaximRuntime::NumValue value;
     stream >> value;
 
-    return std::make_unique<NumControl>(uuid, parentUuid, pos, size, selected, name, (DisplayMode) displayModeInt,
-                                        (Channel) channelInt, value, root);
+    return create(uuid, parentUuid, pos, size, selected,
+                  std::move(name), (DisplayMode) displayModeInt, (Channel) channelInt, value, root);
 }
 
 void NumControl::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {

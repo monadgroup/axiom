@@ -13,6 +13,9 @@ namespace AxiomModel {
         MidiControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                     ModelRoot *root);
 
+        static std::unique_ptr<MidiControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                                                   bool selected, QString name, ModelRoot *root);
+
         static std::unique_ptr<MidiControl>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                     bool selected, QString name, ModelRoot *root);

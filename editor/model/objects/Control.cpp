@@ -9,6 +9,7 @@
 #include "PortalControl.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "compiler/codegen/Control.h"
 #include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
@@ -29,6 +30,16 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
         }))) {
     posChanged.connect(this, &Control::updateSinkPos);
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
+}
+
+Control::ControlType Control::fromRuntimeType(MaximCommon::ControlType type) {
+    switch (type) {
+        case MaximCommon::ControlType::NUMBER: return Control::ControlType::NUM_SCALAR;
+        case MaximCommon::ControlType::MIDI: return Control::ControlType::MIDI_SCALAR;
+        case MaximCommon::ControlType::NUM_EXTRACT: return Control::ControlType::NUM_EXTRACT;
+        case MaximCommon::ControlType::MIDI_EXTRACT: return Control::ControlType::MIDI_EXTRACT;
+        default: unreachable;
+    }
 }
 
 std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
@@ -94,6 +105,10 @@ QPointF Control::worldPos() const {
     return ControlSurface::controlToNode(centerPos);
 }
 
+bool Control::canAttachRuntime(MaximRuntime::Control *runtime) {
+    return fromRuntimeType(runtime->type()->type()) == controlType() && name() == QString::fromStdString(runtime->name()) && !_runtime;
+}
+
 void Control::attachRuntime(MaximRuntime::Control *runtime) {
     assert(!_runtime);
 
@@ -106,7 +121,7 @@ void Control::attachRuntime(MaximRuntime::Control *runtime) {
 }
 
 void Control::detachRuntime() {
-    // todo
+    _runtime.reset();
 }
 
 Sequence<ModelObject*> Control::links() {

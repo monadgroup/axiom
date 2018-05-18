@@ -29,6 +29,10 @@ namespace AxiomModel {
         NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                    DisplayMode displayMode, Channel channel, MaximRuntime::NumValue value, ModelRoot *root);
 
+        static std::unique_ptr<NumControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                                                  bool selected, QString name, DisplayMode displayMode, Channel channel,
+                                                  MaximRuntime::NumValue value, ModelRoot *root);
+
         static std::unique_ptr<NumControl>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                     bool selected, QString name, ModelRoot *root);

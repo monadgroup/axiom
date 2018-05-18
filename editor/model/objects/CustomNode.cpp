@@ -1,7 +1,18 @@
 #include "CustomNode.h"
 
+#include <iostream>
+
+#include "ControlSurface.h"
+#include "NumControl.h"
+#include "MidiControl.h"
+#include "ExtractControl.h"
 #include "compiler/runtime/Surface.h"
 #include "compiler/runtime/CustomNode.h"
+#include "compiler/codegen/Control.h"
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
+#include "../actions/CreateControlAction.h"
+#include "../../util.h"
 
 using namespace AxiomModel;
 
@@ -79,6 +90,8 @@ void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
     runtime->extractedChanged.connect(this, &CustomNode::setExtracted);
     runtime->finishedCodegen.connect(this, &CustomNode::runtimeFinishedCodegen);
 
+    controls().then([this](ControlSurface *const &controls) { controls->controls().itemAdded.connect(this, &CustomNode::surfaceControlAdded); });
+
     removed.connect(this, &CustomNode::detachRuntime);
 
     // add any controls that might already exist in the runtime
@@ -93,9 +106,41 @@ void CustomNode::detachRuntime() {
 }
 
 void CustomNode::runtimeAddedControl(MaximRuntime::Control *control) {
-    // todo
+    // note: CustomNodes rely on the runtime to create and destroy controls, as controls are based on
+    // the compiled code. This is different to GroupNodes, whose controls are never created or destroyed
+    // by the runtime but rather attached and detached to it when necessary.
+
+    // find a control that we can attach to
+    if (controls().value()) {
+        auto controlList = (*controls().value())->controls();
+        for (const auto &existingControl : controlList) {
+            if (!existingControl->canAttachRuntime(control)) continue;
+
+            existingControl->attachRuntime(control);
+            control->removed.connect(existingControl, &Control::remove);
+            return;
+        }
+    }
+
+    // no control found, we need to create a new one
+    // note: this will trigger `surfaceControlAdded`, which will attach a runtime to the control
+    CreateControlAction::create((*controls().value())->uuid(), Control::fromRuntimeType(control->type()->type()), QString::fromStdString(control->name()), root())->forward(true);
 }
 
 void CustomNode::runtimeFinishedCodegen() {
     // todo
+}
+
+void CustomNode::surfaceControlAdded(AxiomModel::Control *control) {
+    if (!_runtime) return;
+
+    // find a runtime control to attach
+    for (const std::unique_ptr<MaximRuntime::Control> &runtimeControl : **_runtime) {
+        if (!control->canAttachRuntime(runtimeControl.get())) continue;
+
+        control->attachRuntime(runtimeControl.get());
+        runtimeControl->removed.connect(control, &Control::remove);
+        return;
+    }
+    unreachable;
 }

@@ -1,5 +1,5 @@
 #include "PortalControl.h"
-
+#include <utility>
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -37,7 +37,7 @@ std::unique_ptr<PortalControl> PortalControl::deserialize(QDataStream &stream, c
                                                           AxiomModel::ModelRoot *root) {
     uint8_t portalTypeInt;
     stream >> portalTypeInt;
-    return create(uuid, parentUuid, pos, size, selected, name, wireType, (PortalType) portalTypeInt, root);
+    return create(uuid, parentUuid, pos, size, selected, std::move(name), wireType, (PortalType) portalTypeInt, root);
 }
 
 void PortalControl::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
