@@ -7,8 +7,12 @@ class AxiomVstPlugin;
 
 class AxiomVstEditor : public AEffEditor {
 public:
-    explicit AxiomVstEditor(AxiomVstPlugin *plugin);
+    explicit AxiomVstEditor(std::unique_ptr<AxiomModel::Project> project);
 
+    AxiomModel::Project *project() const;
+    
+    void setProject(std::unique_ptr<AxiomModel::Project> project);
+    
     bool open(void *ptr) override;
 
     void close() override;
@@ -16,8 +20,6 @@ public:
     void idle() override;
 
 private:
-
-    AxiomVstPlugin *plugin;
 
     AxiomGui::MainWindow window;
 

@@ -4,11 +4,13 @@
 #include "AxiomApplication.h"
 #include "compiler/runtime/Runtime.h"
 #include "model/Project.h"
+#include "AxiomVstEditor.h"
+
+class AxiomVstEditor;
 
 class AxiomVstPlugin : public AudioEffectX {
 public:
     MaximRuntime::Runtime runtime;
-    AxiomModel::Project project;
 
     explicit AxiomVstPlugin(audioMasterCallback audioMaster);
 
@@ -58,6 +60,7 @@ public:
 
 private:
 
+    AxiomVstEditor _editor;
     std::unique_ptr<QByteArray> saveBuffer;
 
 };

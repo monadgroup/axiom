@@ -1,8 +1,17 @@
 #include "AxiomVstEditor.h"
 
 #include "AxiomVstPlugin.h"
+#include "widgets/surface/NodeSurfacePanel.h"
 
-AxiomVstEditor::AxiomVstEditor(AxiomVstPlugin *plugin) : plugin(plugin), window(&plugin->project) {
+AxiomVstEditor::AxiomVstEditor(std::unique_ptr<AxiomModel::Project> project) : window(std::move(project)) {
+}
+
+AxiomModel::Project* AxiomVstEditor::project() const {
+    return window.project();
+}
+
+void AxiomVstEditor::setProject(std::unique_ptr<AxiomModel::Project> project) {
+    window.setProject(std::move(project));
 }
 
 bool AxiomVstEditor::open(void *ptr) {
