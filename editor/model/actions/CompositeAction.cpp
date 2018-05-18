@@ -34,21 +34,18 @@ void CompositeAction::serialize(QDataStream &stream) const {
     }
 }
 
-bool CompositeAction::needsRebuild() const {
+bool CompositeAction::forward(bool first) {
+    auto needsRebuild = false;
     for (const auto &action : _actions) {
-        if (action->needsRebuild()) return true;
+        if (action->forward(first)) needsRebuild = true;
     }
-    return false;
+    return needsRebuild;
 }
 
-void CompositeAction::forward(bool first) {
-    for (const auto &action : _actions) {
-        action->forward(first);
-    }
-}
-
-void CompositeAction::backward() {
+bool CompositeAction::backward() {
+    auto needsRebuild = false;
     for (auto i = _actions.end() - 1; i >= _actions.begin(); i--) {
-        (*i)->backward();
+        if ((*i)->backward()) needsRebuild = true;
     }
+    return needsRebuild;
 }

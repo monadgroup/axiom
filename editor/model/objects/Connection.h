@@ -23,6 +23,8 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
+        bool buildOnRemove() const override { return true; }
+
         NodeSurface *surface() const { return _surface; }
 
         Control *controlA() const { return _controlA; }

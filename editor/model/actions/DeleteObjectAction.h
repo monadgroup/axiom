@@ -3,6 +3,7 @@
 #include <QtCore/QUuid>
 
 #include "Action.h"
+#include "../Sequence.h"
 
 namespace AxiomModel {
 
@@ -21,14 +22,18 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream) const override;
 
-        void forward(bool first) override;
+        bool forward(bool first) override;
 
-        void backward() override;
+        bool backward() override;
 
     private:
 
         QUuid uuid;
         QByteArray buffer;
+
+        Sequence<ModelObject*> getRemoveItems() const;
+
+        bool anyNeedRebuild(const Sequence<ModelObject*> &sequence) const;
     };
 
 }

@@ -31,10 +31,12 @@ void SetCodeAction::serialize(QDataStream &stream) const {
     stream << newCode;
 }
 
-void SetCodeAction::forward(bool) {
+bool SetCodeAction::forward(bool) {
     find<CustomNode*>(root()->nodes(), uuid)->setCode(newCode);
+    return true;
 }
 
-void SetCodeAction::backward() {
+bool SetCodeAction::backward() {
     find<CustomNode*>(root()->nodes(), uuid)->setCode(oldCode);
+    return true;
 }

@@ -57,13 +57,15 @@ void CreateGroupNodeAction::serialize(QDataStream &stream) const {
     stream << innerUuid;
 }
 
-void CreateGroupNodeAction::forward(bool) {
+bool CreateGroupNodeAction::forward(bool) {
     root()->pool().registerObj(
         GroupNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, innerUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(GroupSurface::create(innerUuid, uuid, QPoint(0, 0), 0, root()));
+    return false;
 }
 
-void CreateGroupNodeAction::backward() {
+bool CreateGroupNodeAction::backward() {
     find(root()->nodes(), uuid)->remove();
+    return false;
 }

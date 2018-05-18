@@ -51,13 +51,15 @@ void CreateCustomNodeAction::serialize(QDataStream &stream) const {
     stream << controlsUuid;
 }
 
-void CreateCustomNodeAction::forward(bool) {
+bool CreateCustomNodeAction::forward(bool) {
     root()->pool().registerObj(
         CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "", false,
                            CustomNode::minPanelHeight, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
+    return false;
 }
 
-void CreateCustomNodeAction::backward() {
+bool CreateCustomNodeAction::backward() {
     find(root()->nodes(), uuid)->remove();
+    return false;
 }

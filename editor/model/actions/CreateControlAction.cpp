@@ -44,7 +44,7 @@ void CreateControlAction::serialize(QDataStream &stream) const {
     stream << name;
 }
 
-void CreateControlAction::forward(bool) {
+bool CreateControlAction::forward(bool) {
     switch (type) {
         case Control::ControlType::NUM_SCALAR:
             root()->pool().registerObj(NumControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, NumControl::DisplayMode::KNOB, NumControl::Channel::BOTH, MaximRuntime::NumValue(), root()));
@@ -60,8 +60,10 @@ void CreateControlAction::forward(bool) {
             break;
         default: unreachable;
     }
+    return false;
 }
 
-void CreateControlAction::backward() {
+bool CreateControlAction::backward() {
     find(root()->controls(), uuid)->remove();
+    return false;
 }

@@ -35,10 +35,12 @@ void GridItemMoveAction::serialize(QDataStream &stream) const {
     stream << afterPos;
 }
 
-void GridItemMoveAction::forward(bool) {
+bool GridItemMoveAction::forward(bool) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setPos(afterPos);
+    return false;
 }
 
-void GridItemMoveAction::backward() {
+bool GridItemMoveAction::backward() {
     find<GridItem *>(root()->pool().sequence(), uuid)->setPos(beforePos);
+    return false;
 }

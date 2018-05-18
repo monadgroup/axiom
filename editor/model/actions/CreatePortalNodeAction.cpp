@@ -71,15 +71,17 @@ std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::deserialize(QDat
                   (PortalControl::PortalType) portalTypeInt, controlUuid, root);
 }
 
-void CreatePortalNodeAction::forward(bool) {
+bool CreatePortalNodeAction::forward(bool) {
     root()->pool().registerObj(
         PortalNode::create(uuid, parentUuid, pos, QSize(1, 1), false, name, controlsUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(
         PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "", wireType, portalType,
                               root()));
+    return false;
 }
 
-void CreatePortalNodeAction::backward() {
+bool CreatePortalNodeAction::backward() {
     find(root()->nodes(), uuid)->remove();
+    return false;
 }

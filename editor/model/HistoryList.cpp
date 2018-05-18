@@ -27,9 +27,7 @@ void HistoryList::serialize(QDataStream &stream) {
 
 void HistoryList::append(std::unique_ptr<AxiomModel::Action> action) {
     // run the action forward
-    action->forward(true);
-
-    if (action->needsRebuild()) rebuildRequested.trigger();
+    if (action->forward(true)) rebuildRequested.trigger();
 
     auto couldRedo = canRedo();
     auto actionType = action->actionType();
@@ -62,8 +60,7 @@ void HistoryList::undo() {
 
     _stackPos--;
     auto undoAction = _stack[_stackPos].get();
-    undoAction->backward();
-    auto needsRebuild = undoAction->needsRebuild();
+    auto needsRebuild = undoAction->backward();
 
     if (_stackPos == 0) canUndoChanged.trigger(false);
     if (_stackPos == _stack.size() - 1) canRedoChanged.trigger(true);
@@ -84,8 +81,7 @@ void HistoryList::redo() {
     if (!canRedo()) return;
 
     auto redoAction = _stack[_stackPos].get();
-    redoAction->forward(false);
-    auto needsRebuild = redoAction->needsRebuild();
+    auto needsRebuild = redoAction->forward(false);
     _stackPos++;
 
     if (_stackPos == 1) canUndoChanged.trigger(true);

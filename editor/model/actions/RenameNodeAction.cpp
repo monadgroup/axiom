@@ -34,10 +34,12 @@ void RenameNodeAction::serialize(QDataStream &stream) const {
     stream << newName;
 }
 
-void RenameNodeAction::forward(bool) {
+bool RenameNodeAction::forward(bool) {
     find(root()->nodes(), uuid)->setName(newName);
+    return false;
 }
 
-void RenameNodeAction::backward() {
+bool RenameNodeAction::backward() {
     find(root()->nodes(), uuid)->setName(oldName);
+    return false;
 }

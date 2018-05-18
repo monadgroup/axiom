@@ -35,10 +35,12 @@ void GridItemSizeAction::serialize(QDataStream &stream) const {
     stream << afterRect;
 }
 
-void GridItemSizeAction::forward(bool) {
+bool GridItemSizeAction::forward(bool) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setRect(afterRect);
+    return false;
 }
 
-void GridItemSizeAction::backward() {
+bool GridItemSizeAction::backward() {
     find<GridItem *>(root()->pool().sequence(), uuid)->setRect(beforeRect);
+    return false;
 }

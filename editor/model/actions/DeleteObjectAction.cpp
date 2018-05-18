@@ -34,14 +34,10 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
     stream << buffer;
 }
 
-void DeleteObjectAction::forward(bool) {
-    auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
+bool DeleteObjectAction::forward(bool) {
+    auto removeItems = getRemoveItems();
 
-    // remove all dependents, and any other linked items
-    auto removeItems = distinctByUuid(flatten(std::array<Sequence<ModelObject*>, 2> {
-        dependents,
-        flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })))
-    }));
+    auto needsRebuild = anyNeedRebuild(removeItems);
 
     QDataStream stream(&buffer, QIODevice::WriteOnly);
     ModelRoot::serializeChunk(stream, QUuid(), removeItems);
@@ -50,10 +46,30 @@ void DeleteObjectAction::forward(bool) {
     while (!removeItems.empty()) {
         (*removeItems.begin())->remove();
     }
+    return needsRebuild;
 }
 
-void DeleteObjectAction::backward() {
+bool DeleteObjectAction::backward() {
     QDataStream stream(&buffer, QIODevice::ReadOnly);
     root()->deserializeChunk(stream, QUuid());
     buffer.clear();
+
+    return anyNeedRebuild(getRemoveItems());
+}
+
+Sequence<ModelObject*> DeleteObjectAction::getRemoveItems() const {
+    auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
+
+    // remove all dependents, and any other linked items
+    return distinctByUuid(flatten(std::array<Sequence<ModelObject*>, 2> {
+        dependents,
+        flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })))
+    }));
+}
+
+bool DeleteObjectAction::anyNeedRebuild(const AxiomModel::Sequence<AxiomModel::ModelObject *> &sequence) const {
+    for (const auto &itm : sequence) {
+        if (itm->buildOnRemove()) return true;
+    }
+    return false;
 }
