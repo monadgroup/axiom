@@ -11,6 +11,8 @@
 #include "compiler/codegen/Control.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../actions/CompositeAction.h"
+#include "../actions/SetCodeAction.h"
 #include "../actions/CreateControlAction.h"
 #include "../../util.h"
 
@@ -58,6 +60,14 @@ void CustomNode::setCode(const QString &code) {
 
         if (_runtime) (*_runtime)->setCode(code.toStdString());
     }
+}
+
+void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
+    std::vector<std::unique_ptr<Action>> actions;
+    actions.push_back(SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), root()));
+    auto action = CompositeAction::create(std::move(actions), root());
+    createControlsAction = action.get();
+    root()->history().append(std::move(action));
 }
 
 void CustomNode::setPanelOpen(bool panelOpen) {
@@ -124,7 +134,10 @@ void CustomNode::runtimeAddedControl(MaximRuntime::Control *control) {
 
     // no control found, we need to create a new one
     // note: this will trigger `surfaceControlAdded`, which will attach a runtime to the control
-    CreateControlAction::create((*controls().value())->uuid(), Control::fromRuntimeType(control->type()->type()), QString::fromStdString(control->name()), root())->forward(true);
+    assert(createControlsAction);
+    auto action = CreateControlAction::create((*controls().value())->uuid(), Control::fromRuntimeType(control->type()->type()), QString::fromStdString(control->name()), root());
+    action->forward(true);
+    createControlsAction->actions().push_back(std::move(action));
 }
 
 void CustomNode::runtimeFinishedCodegen() {
@@ -142,5 +155,4 @@ void CustomNode::surfaceControlAdded(AxiomModel::Control *control) {
         runtimeControl->removed.connect(control, &Control::remove);
         return;
     }
-    unreachable;
 }

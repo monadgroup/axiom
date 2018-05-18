@@ -15,6 +15,8 @@ namespace AxiomModel {
 
     class Control;
 
+    class CompositeAction;
+
     class CustomNode : public Node {
     public:
         static constexpr float minPanelHeight = 40;
@@ -41,6 +43,8 @@ namespace AxiomModel {
 
         void setCode(const QString &code);
 
+        void doSetCodeAction(QString beforeCode, QString afterCode);
+
         bool isPanelOpen() const { return _isPanelOpen; }
 
         void setPanelOpen(bool panelOpen);
@@ -59,6 +63,7 @@ namespace AxiomModel {
         QString _code;
         bool _isPanelOpen;
         float _panelHeight;
+        CompositeAction *createControlsAction = nullptr;
 
         std::optional<MaximRuntime::CustomNode *> _runtime;
 
