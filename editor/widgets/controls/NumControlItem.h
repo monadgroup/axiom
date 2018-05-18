@@ -42,7 +42,9 @@ namespace AxiomGui {
 
     private slots:
 
-        void setValue(QString value);
+        void setStringValue(QString value);
+
+        void setValue(MaximRuntime::NumValue value);
 
     private:
         bool isDragging = false;

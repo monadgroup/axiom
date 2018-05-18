@@ -23,7 +23,9 @@ namespace AxiomModel {
             SIZE_GRID_ITEM,
             RENAME_NODE,
             SET_CODE,
-            CREATE_CONTROL
+            CREATE_CONTROL,
+            SET_NUM_MODE,
+            SET_NUM_VALUE
         };
 
         Action(ActionType actionType, ModelRoot *root);

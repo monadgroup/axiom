@@ -11,6 +11,8 @@
 #include "RenameNodeAction.h"
 #include "SetCodeAction.h"
 #include "CreateControlAction.h"
+#include "SetNumModeAction.h"
+#include "SetNumValueAction.h"
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -45,6 +47,10 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
             return "Set Code";
         case ActionType::CREATE_CONTROL:
             return "Create Control";
+        case ActionType::SET_NUM_MODE:
+            return "Change Display Mode";
+        case ActionType::SET_NUM_VALUE:
+            return "Change Value";
     }
 
     unreachable;
@@ -80,6 +86,10 @@ std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::Mod
             return SetCodeAction::deserialize(stream, root);
         case ActionType::CREATE_CONTROL:
             return CreateControlAction::deserialize(stream, root);
+        case ActionType::SET_NUM_MODE:
+            return SetNumModeAction::deserialize(stream, root);
+        case ActionType::SET_NUM_VALUE:
+            return SetNumValueAction::deserialize(stream, root);
         default:
         unreachable;
     }

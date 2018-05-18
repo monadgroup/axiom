@@ -36,6 +36,10 @@ QPainterPath ExtractControlItem::controlPath() const {
     return path;
 }
 
+void ExtractControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    event->accept();
+}
+
 void ExtractControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 

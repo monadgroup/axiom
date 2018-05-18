@@ -10,6 +10,8 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/GridItemMoveAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/GridItemSizeAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/RenameNodeAction.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/SetCodeAction.cpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/SetCodeAction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SetNumModeAction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SetNumValueAction.cpp")
 
 target_sources(axiom_model PRIVATE ${SOURCE_FILES})

@@ -1,12 +1,16 @@
 #include "NumControlItem.h"
 
+#include <QtWidgets/QGraphicsScene>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QMenu>
 
 #include "editor/model/Project.h"
 #include "editor/model/objects/NumControl.h"
+#include "editor/model/actions/SetNumModeAction.h"
+#include "editor/model/actions/SetNumValueAction.h"
 #include "../node/NodeItem.h"
 #include "../CommonColors.h"
 #include "../FloatingValueEditor.h"
@@ -153,6 +157,9 @@ void NumControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
     if (isDragging) {
         isDragging = false;
+        if (control->value() != beforeDragVal) {
+            control->root()->history().append(SetNumValueAction::create(control->uuid(), beforeDragVal, control->value(), control->root()));
+        }
     }
 }
 
@@ -172,6 +179,48 @@ void NumControlItem::wheelEvent(QGraphicsSceneWheelEvent *event) {
 
 void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
+
+    auto clipboard = QGuiApplication::clipboard();
+
+    QMenu menu;
+    //auto clearAction = menu.addAction("&Clear Connections");
+
+    auto modeMenu = menu.addMenu("&Display as...");
+    for (const auto &modePair : modes) {
+        auto action = modeMenu->addAction(modePair.first);
+        action->setCheckable(true);
+        action->setChecked(control->displayMode() == modePair.second);
+
+        connect(action, &QAction::triggered,
+                [this, modePair]() {
+                    control->root()->history().append(SetNumModeAction::create(control->uuid(), control->displayMode(), modePair.second, control->root()));
+                });
+    }
+
+    menu.addSeparator();
+    auto setValAction = menu.addAction("&Set Value...");
+    auto copyValAction = menu.addAction("&Copy Value");
+    auto pasteValAction = menu.addAction("&Paste Value");
+    menu.addSeparator();
+    auto zeroAction = menu.addAction("Set to &0");
+    auto oneAction = menu.addAction("Set to &1");
+
+    auto selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == setValAction) {
+        auto editor = new FloatingValueEditor(valueAsString(getCVal()), event->scenePos());
+        scene()->addItem(editor);
+        connect(editor, &FloatingValueEditor::valueSubmitted,
+                this, &NumControlItem::setStringValue);
+    } else if (selectedAction == copyValAction) {
+        clipboard->setText(valueAsString(getCVal()));
+    } else if (selectedAction == pasteValAction) {
+        setStringValue(clipboard->text());
+    } else if (selectedAction == zeroAction) {
+        setValue(control->value().withLR(0, 0));
+    } else if (selectedAction == oneAction) {
+        setValue(control->value().withLR(1, 1));
+    }
 
     // todo
     /*auto clipboard = QGuiApplication::clipboard();
@@ -248,8 +297,14 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     }*/
 }
 
-void NumControlItem::setValue(QString value) {
-    setCVal(stringAsValue(value, getCVal()));
+void NumControlItem::setStringValue(QString value) {
+    setValue(stringAsValue(value, getCVal()));
+}
+
+void NumControlItem::setValue(MaximRuntime::NumValue value) {
+    if (value != control->value()) {
+        control->root()->history().append(SetNumValueAction::create(control->uuid(), control->value(), value, control->root()));
+    }
 }
 
 QString NumControlItem::valueAsString(MaximRuntime::NumValue num) {
