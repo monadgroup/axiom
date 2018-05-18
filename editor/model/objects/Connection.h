@@ -33,6 +33,10 @@ namespace AxiomModel {
 
         const ConnectionWire &wire() const { return _wire; }
 
+        void attachRuntime();
+
+        void detachRuntime();
+
         void remove() override;
 
     private:

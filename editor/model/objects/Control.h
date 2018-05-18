@@ -33,6 +33,8 @@ namespace AxiomModel {
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<QPointF> worldPosChanged;
         AxiomCommon::Event<bool> isActiveChanged;
+        AxiomCommon::Event<MaximRuntime::Control*> runtimeAttached;
+        AxiomCommon::Event<> runtimeAboutToDetach;
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid,
                 QPoint pos, QSize size, bool selected, QString name, ModelRoot *root);
@@ -75,6 +77,8 @@ namespace AxiomModel {
         const WatchSequence<Control *> &connectedControls() const { return _connectedControls; }
 
         QPointF worldPos() const;
+
+        std::optional<MaximRuntime::Control *> runtime() const { return _runtime; }
 
         bool canAttachRuntime(MaximRuntime::Control *runtime);
 

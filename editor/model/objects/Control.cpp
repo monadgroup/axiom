@@ -115,12 +115,13 @@ void Control::attachRuntime(MaximRuntime::Control *runtime) {
     _runtime = runtime;
     runtime->removed.connect(this, &Control::detachRuntime);
 
-    // todo: connect wires in the runtime?
+    runtimeAttached.trigger(runtime);
 
     // todo: handle needing to be exposed
 }
 
 void Control::detachRuntime() {
+    runtimeAboutToDetach.trigger();
     _runtime.reset();
 }
 

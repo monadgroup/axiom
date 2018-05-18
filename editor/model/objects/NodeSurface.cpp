@@ -63,8 +63,6 @@ void NodeSurface::attachRuntime(MaximRuntime::Surface *runtime) {
     for (const auto &node : nodes()) {
         node->createAndAttachRuntime(runtime);
     }
-
-    // todo: attach nodes that already exist in the runtime to nodes here?
 }
 
 void NodeSurface::remove() {
