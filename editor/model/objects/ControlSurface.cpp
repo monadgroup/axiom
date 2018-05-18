@@ -42,3 +42,21 @@ void ControlSurface::remove() {
 void ControlSurface::setSize(QSize size) {
     _grid.grid().maxRect = nodeToControl(QPoint(size.width(), size.height()));
 }
+
+void ControlSurface::doRuntimeUpdate() {
+    for (const auto &control : controls()) {
+        control->doRuntimeUpdate();
+    }
+}
+
+void ControlSurface::saveValue() {
+    for (const auto &control : controls()) {
+        control->saveValue();
+    }
+}
+
+void ControlSurface::restoreValue() {
+    for (const auto &control : controls()) {
+        control->restoreValue();
+    }
+}

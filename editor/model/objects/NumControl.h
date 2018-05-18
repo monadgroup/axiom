@@ -52,10 +52,18 @@ namespace AxiomModel {
 
         void setValue(MaximRuntime::NumValue value);
 
+        void doRuntimeUpdate() override;
+
+        void saveValue() override;
+
+        void restoreValue() override;
+
     private:
         DisplayMode _displayMode;
         Channel _channel;
         MaximRuntime::NumValue _value;
+
+        void setInternalValue(MaximRuntime::NumValue value);
     };
 
 }

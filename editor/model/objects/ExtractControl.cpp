@@ -1,6 +1,8 @@
 #include "ExtractControl.h"
 
 #include "../../util.h"
+#include "compiler/runtime/Control.h"
+#include "compiler/runtime/ControlGroup.h"
 
 using namespace AxiomModel;
 
@@ -51,4 +53,9 @@ void ExtractControl::setActiveSlots(AxiomModel::ExtractControl::ActiveSlotFlags 
         _activeSlots = activeSlots;
         activeSlotsChanged.trigger(activeSlots);
     }
+}
+
+void ExtractControl::doRuntimeUpdate() {
+    if (!runtime() || !(*runtime())->group()) return;
+    setActiveSlots((*runtime())->group()->getActiveFlags());
 }

@@ -65,6 +65,24 @@ void NodeSurface::attachRuntime(MaximRuntime::Surface *runtime) {
     }
 }
 
+void NodeSurface::doRuntimeUpdate() {
+    for (const auto &node : nodes()) {
+        node->doRuntimeUpdate();
+    }
+}
+
+void NodeSurface::saveValue() {
+    for (const auto &node : nodes()) {
+        node->saveValue();
+    }
+}
+
+void NodeSurface::restoreValue() {
+    for (const auto &node : nodes()) {
+        node->restoreValue();
+    }
+}
+
 void NodeSurface::remove() {
     while (!_nodes.empty()) {
         (*_nodes.begin())->remove();

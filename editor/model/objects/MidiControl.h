@@ -26,8 +26,16 @@ namespace AxiomModel {
 
         void setValue(const MaximRuntime::MidiValue &value);
 
+        void doRuntimeUpdate() override;
+
+        void saveValue() override;
+
+        void restoreValue() override;
+
     private:
         MaximRuntime::MidiValue _value;
+
+        void setInternalValue(MaximRuntime::MidiValue value);
     };
 
 }

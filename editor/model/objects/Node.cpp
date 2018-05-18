@@ -127,6 +127,18 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     controlSurface->grid().flushGrid();
 }
 
+void Node::doRuntimeUpdate() {
+    if (_controls.value()) (*_controls.value())->doRuntimeUpdate();
+}
+
+void Node::saveValue() {
+    if (_controls.value()) (*_controls.value())->saveValue();
+}
+
+void Node::restoreValue() {
+    if (_controls.value()) (*_controls.value())->restoreValue();
+}
+
 void Node::remove() {
     if (_controls.value()) (*_controls.value())->remove();
     ModelObject::remove();

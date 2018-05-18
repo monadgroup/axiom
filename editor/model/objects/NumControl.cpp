@@ -1,6 +1,8 @@
 #include "NumControl.h"
-#include <utility>
+
 #include "../ValueWriters.h"
+#include "compiler/runtime/Control.h"
+#include "compiler/runtime/ControlGroup.h"
 
 using namespace AxiomModel;
 
@@ -56,6 +58,25 @@ void NumControl::setChannel(AxiomModel::NumControl::Channel channel) {
 }
 
 void NumControl::setValue(MaximRuntime::NumValue value) {
+    setInternalValue(value);
+    restoreValue();
+}
+
+void NumControl::doRuntimeUpdate() {
+    saveValue();
+}
+
+void NumControl::saveValue() {
+    if (!runtime() || !(*runtime())->group()) return;
+    setInternalValue((*runtime())->group()->getNumValue());
+}
+
+void NumControl::restoreValue() {
+    if (!runtime() || !(*runtime())->group()) return;
+    (*runtime())->group()->setNumValue(_value);
+}
+
+void NumControl::setInternalValue(MaximRuntime::NumValue value) {
     value.left = value.left < 0 ? 0 : value.left > 1 ? 1 : value.left;
     value.right = value.right < 0 ? 0 : value.right > 1 ? 1 : value.right;
 

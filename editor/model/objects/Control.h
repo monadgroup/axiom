@@ -91,6 +91,12 @@ namespace AxiomModel {
 
         void detachRuntime();
 
+        virtual void doRuntimeUpdate() = 0;
+
+        virtual void saveValue() = 0;
+
+        virtual void restoreValue() = 0;
+
         Sequence<ModelObject*> links() override;
 
         void remove() override;

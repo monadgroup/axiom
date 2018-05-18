@@ -54,6 +54,12 @@ namespace AxiomModel {
 
         void attachRuntime(MaximRuntime::Surface *runtime);
 
+        void doRuntimeUpdate();
+
+        void saveValue();
+
+        void restoreValue();
+
         void remove() override;
 
     private:

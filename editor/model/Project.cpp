@@ -60,7 +60,9 @@ void Project::attachRuntime(MaximRuntime::Runtime *runtime) {
 }
 
 void Project::rebuild() const {
+    _rootSurface->saveValue();
     if (_runtime) (*_runtime)->compile();
+    _rootSurface->restoreValue();
 }
 
 void Project::destroy() {

@@ -11,24 +11,6 @@ GridSurface::GridSurface(ItemCollection view, QPoint minRect, QPoint maxRect)
     _items.itemAdded.connect(this, &GridSurface::handleItemAdded);
 }
 
-void GridSurface::doRuntimeUpdate() {
-    for (const auto &item : items()) {
-        item->doRuntimeUpdate();
-    }
-}
-
-void GridSurface::saveValue() {
-    for (const auto &item : items()) {
-        item->saveValue();
-    }
-}
-
-void GridSurface::restoreValue() {
-    for (const auto &item : items()) {
-        item->restoreValue();
-    }
-}
-
 void GridSurface::selectAll() {
     for (const auto &item : items()) {
         item->select(false);

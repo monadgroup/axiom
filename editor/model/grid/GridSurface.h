@@ -54,12 +54,6 @@ namespace AxiomModel {
 
         bool hasSelection() const { return !_selectedItems.empty(); }
 
-        void doRuntimeUpdate();
-
-        void saveValue();
-
-        void restoreValue();
-
         void selectAll();
 
         void deselectAll();

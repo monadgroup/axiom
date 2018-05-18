@@ -37,6 +37,10 @@ namespace AxiomModel {
 
         void detachRuntime();
 
+        void saveValue() override;
+
+        void restoreValue() override;
+
         void remove() override;
 
     private:

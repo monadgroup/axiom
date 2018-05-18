@@ -223,7 +223,7 @@ void NodeSurfaceCanvas::selectAll() {
 }
 
 void NodeSurfaceCanvas::doRuntimeUpdate() {
-    //schematic->doRuntimeUpdate();
+    surface->doRuntimeUpdate();
 }
 
 void NodeSurfaceCanvas::drawBackground(QPainter *painter, const QRectF &rect) {

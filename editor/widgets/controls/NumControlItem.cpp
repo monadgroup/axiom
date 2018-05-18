@@ -105,7 +105,7 @@ QPainterPath NumControlItem::controlPath() const {
 
 void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mousePressEvent(event);
-    if (event->isAccepted() || event->button() != Qt::LeftButton ||
+    if (!isEditable() || event->button() != Qt::LeftButton ||
         control->displayMode() == NumControl::DisplayMode::PLUG) {
         return;
     }
