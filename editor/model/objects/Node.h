@@ -11,6 +11,8 @@ namespace MaximRuntime {
 
 namespace AxiomModel {
 
+    class NodeSurface;
+
     class ControlSurface;
 
     class Node : public GridItem, public ModelObject {
@@ -31,6 +33,8 @@ namespace AxiomModel {
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
+
+        NodeSurface *surface() const { return _surface; }
 
         AxiomCommon::Promise<ControlSurface *> &controls() { return _controls; }
 
@@ -61,6 +65,7 @@ namespace AxiomModel {
         void remove() override;
 
     private:
+        NodeSurface *_surface;
         NodeType _nodeType;
         QString _name;
         bool _isExtracted = false;

@@ -183,7 +183,7 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto clipboard = QGuiApplication::clipboard();
 
     QMenu menu;
-    //auto clearAction = menu.addAction("&Clear Connections");
+    buildMenuStart(menu);
 
     auto modeMenu = menu.addMenu("&Display as...");
     for (const auto &modePair : modes) {
@@ -204,6 +204,8 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     menu.addSeparator();
     auto zeroAction = menu.addAction("Set to &0");
     auto oneAction = menu.addAction("Set to &1");
+    menu.addSeparator();
+    buildMenuEnd(menu);
 
     auto selectedAction = menu.exec(event->screenPos());
 
@@ -221,80 +223,6 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == oneAction) {
         setValue(control->value().withLR(1, 1));
     }
-
-    // todo
-    /*auto clipboard = QGuiApplication::clipboard();
-    // todo: make this usable with new paste system
-    //float pasteVal = 0;
-    //auto canPaste = AxiomUtil::strToFloat(clipboard->text(), pasteVal);
-
-    QMenu menu;
-    auto clearAction = menu.addAction(tr("C&lear Connections"));
-
-    auto modeMenu = menu.addMenu(tr("&Display as..."));
-    for (const auto &modePair : modes) {
-        auto action = modeMenu->addAction(modePair.first);
-        action->setCheckable(true);
-        action->setChecked(control->mode() == modePair.second);
-
-        connect(action, &QAction::triggered,
-                [this, modePair]() {
-                    DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_MODE,
-                              {
-                                  control->setMode(modePair.second);
-                              });
-                });
-    }
-
-    menu.addSeparator();
-    auto setValAction = menu.addAction(tr("&Set Value..."));
-    auto copyValAction = menu.addAction(tr("&Copy Value"));
-    auto pasteValAction = menu.addAction(tr("&Paste Value"));
-    //pasteValAction->setEnabled(canPaste);
-    menu.addSeparator();
-    auto zeroAction = menu.addAction(tr("Set to &0"));
-    auto oneAction = menu.addAction(tr("Set to &1"));
-    menu.addSeparator();
-    auto moveAction = menu.addAction(tr("&Move"));
-    auto nameShownAction = menu.addAction(tr("Show &Name"));
-    nameShownAction->setCheckable(true);
-    nameShownAction->setChecked(control->showName());
-
-    QAction *exposedAction = nullptr;
-    if (control->node->parentSchematic->canExposeControl()) {
-        // todo: make this checkable
-        exposedAction = menu.addAction(tr("&Expose"));
-    }
-
-    auto selectedAction = menu.exec(event->screenPos());
-
-    if (selectedAction == clearAction) {
-        DO_ACTION(control->node->parentSchematic->project()->history, HistoryList::ActionType::DISCONNECT_ALL, {
-            control->sink()->clearConnections();
-        });
-    } else if (selectedAction == setValAction) {
-        auto editor = new FloatingValueEditor(valueAsString(getCVal()), event->scenePos());
-        scene()->addItem(editor);
-        connect(editor, &FloatingValueEditor::valueSubmitted,
-                this, &NumControlItem::setValue);
-    } else if (selectedAction == copyValAction) {
-        clipboard->setText(valueAsString(getCVal()));
-    } else if (selectedAction == pasteValAction) {
-        setCVal(stringAsValue(clipboard->text(), getCVal()));
-    } else if (selectedAction == zeroAction) {
-        setCVal(getCVal().withLR(0, 0));
-    } else if (selectedAction == oneAction) {
-        setCVal(getCVal().withLR(1, 1));
-    } else if (selectedAction == moveAction) {
-        control->select(true);
-    } else if (selectedAction == nameShownAction) {
-        auto actionType = nameShownAction->isChecked() ? HistoryList::ActionType::SHOW_CONTROL_NAME : HistoryList::ActionType::HIDE_CONTROL_NAME;
-        DO_ACTION(control->node->parentSchematic->project()->history, actionType, {
-            control->setShowName(nameShownAction->isChecked());
-        });
-    } else if (exposedAction && selectedAction == exposedAction) {
-        control->node->parentSchematic->exposeControl(control);
-    }*/
 }
 
 void NumControlItem::setStringValue(QString value) {

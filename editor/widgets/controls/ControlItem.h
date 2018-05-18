@@ -82,6 +82,10 @@ namespace AxiomGui {
 
         void triggerUpdate();
 
+        void buildMenuStart(QMenu &menu);
+
+        void buildMenuEnd(QMenu &menu);
+
     private slots:
 
         void setPos(QPoint newPos);

@@ -10,8 +10,13 @@
 #include "editor/model/Project.h"
 #include "editor/model/objects/Control.h"
 #include "editor/model/objects/ControlSurface.h"
+#include "editor/model/objects/Connection.h"
+#include "editor/model/objects/Node.h"
+#include "editor/model/objects/NodeSurface.h"
+#include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/GridItemMoveAction.h"
 #include "editor/model/actions/GridItemSizeAction.h"
+#include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/util.h"
 #include "../ItemResizer.h"
 #include "../CommonColors.h"
@@ -308,4 +313,22 @@ void ControlItem::triggerGeometryChange() {
 
 void ControlItem::triggerUpdate() {
     update();
+}
+
+void ControlItem::buildMenuStart(QMenu &menu) {
+    auto clearAction = menu.addAction("&Clear Connections");
+    clearAction->setEnabled(!control->connections().empty());
+
+    connect(clearAction, &QAction::triggered,
+            this, [this]() {
+                std::vector<std::unique_ptr<Action>> clearActions;
+                for (const auto &connection : control->connections()) {
+                    clearActions.push_back(DeleteObjectAction::create(connection));
+                }
+                control->root()->history().append(CompositeAction::create(std::move(clearActions), control->root()));
+            });
+}
+
+void ControlItem::buildMenuEnd(QMenu &menu) {
+    // todo
 }
