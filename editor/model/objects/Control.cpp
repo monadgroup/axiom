@@ -169,15 +169,10 @@ void Control::detachRuntime() {
 }
 
 Sequence<ModelObject*> Control::links() {
-    /*auto expUuid = exposerUuid();
-    std::vector<Sequence<ModelObject*>> sequences;
-    sequences.push_back(staticCast<ModelObject*>(filter(root()->controls(), std::function([expUuid](Control *const &control) {
-        return !expUuid.isNull() && expUuid == control->uuid();
-    }))).sequence());
-    sequences.push_back(staticCast<ModelObject*>(_connections.sequence()).sequence());
-    return flatten(std::move(sequences));*/
-
-    return staticCast<ModelObject*>(_connections.sequence()).sequence();
+    return flatten(std::array<Sequence<ModelObject*>, 2> {
+        staticCast<ModelObject*>(findSeq(root()->controls(), exposerUuid())).sequence(),
+        staticCast<ModelObject*>(_connections.sequence()).sequence()
+    });
 }
 
 void Control::remove() {

@@ -60,14 +60,13 @@ bool DeleteObjectAction::backward() {
 Sequence<ModelObject*> DeleteObjectAction::getRemoveItems() const {
     auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
 
-    // remove all dependents, and any other linked items
     return distinctByUuid(flatten(std::array<Sequence<ModelObject*>, 2> {
         dependents,
         flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })))
     }));
 }
 
-bool DeleteObjectAction::anyNeedRebuild(const AxiomModel::Sequence<AxiomModel::ModelObject *> &sequence) const {
+bool DeleteObjectAction::anyNeedRebuild(const Sequence<AxiomModel::ModelObject *> &sequence) const {
     for (const auto &itm : sequence) {
         if (itm->buildOnRemove()) return true;
     }

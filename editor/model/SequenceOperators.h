@@ -32,20 +32,17 @@ namespace AxiomModel {
     Sequence<typename Collection::value_type::value_type> flatten(Collection collection) {
         return Sequence(
             std::function([collection]() -> std::function<std::optional<typename Collection::value_type::value_type>()> {
-                std::optional<typename Collection::const_iterator> begin;
-                std::optional<typename Collection::const_iterator> end;
-                std::optional<typename Collection::value_type::const_iterator> innerBegin;
-                std::optional<typename Collection::value_type::const_iterator> innerEnd;
-                return [collection, begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
-                    if (!begin || !end) {
-                        begin = collection.begin();
-                        end = collection.end();
-                    }
+                auto begin = collection.begin();
+                auto end = collection.end();
+                std::optional<typename Collection::value_type::iterator> innerBegin;
+                std::optional<typename Collection::value_type::iterator> innerEnd;
+                return [begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
                     while (!innerBegin || !innerEnd || *innerBegin == *innerEnd) {
-                        if (*begin == *end) return std::optional<typename Collection::value_type::value_type>();
-                        innerBegin = (*begin)->begin();
-                        innerEnd = (*begin)->end();
-                        (*begin)++;
+                        if (begin == end) return std::optional<typename Collection::value_type::value_type>();
+                        auto &nextCollection = *begin;
+                        innerBegin = nextCollection.begin();
+                        innerEnd = nextCollection.end();
+                        begin++;
                     }
 
                     auto result = **innerBegin;
@@ -104,5 +101,14 @@ namespace AxiomModel {
             return reinterpret_cast<OutputItem>(base);
         }));
     };
+
+    template<class InputCollection>
+    std::vector<typename InputCollection::value_type> collect(const InputCollection &collection) {
+        std::vector<typename InputCollection::value_type> result;
+        for (const auto &itm : collection) {
+            result.push_back(itm);
+        }
+        return std::move(result);
+    }
 
 };
