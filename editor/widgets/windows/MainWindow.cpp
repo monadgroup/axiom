@@ -156,11 +156,11 @@ void MainWindow::openProject() {
     QDataStream stream(&file);
     try {
         _project->load(stream);
-    } catch (AxiomModel::DeserializeInvalidFileException) {
+    } catch (AxiomModel::DeserializeInvalidFileException&) {
         QMessageBox(QMessageBox::Critical, "Failed to load project",
                     "The file you selected is an invalid project file (bad magic header).\n"
                     "Maybe it's corrupt?", QMessageBox::Ok).exec();
-    } catch (AxiomModel::DeserializeInvalidSchemaException) {
+    } catch (AxiomModel::DeserializeInvalidSchemaException&) {
         QMessageBox(QMessageBox::Critical, "Failed to load project",
                     "The file you selected is saved with an outdated project format.\n\n"
                     "Unfortunately Axiom currently doesn't support loading old project formats.\n"
