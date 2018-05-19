@@ -373,15 +373,11 @@ void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
 
 void NodeItem::resizerStartDrag() {
     node->select(true);
-    startDragRect = node->rect();
+    node->startSize();
 }
 
 void NodeItem::resizerEndDrag() {
-    auto endDragRect = node->rect();
-    if (startDragRect != endDragRect) {
-        node->root()->history().append(
-            GridItemSizeAction::create(node->uuid(), startDragRect, endDragRect, node->root()));
-    }
+    node->doSizeAction();
 }
 
 void NodeItem::triggerUpdate() {

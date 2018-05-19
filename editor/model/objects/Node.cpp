@@ -8,6 +8,9 @@
 #include "PortalNode.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../actions/CompositeAction.h"
+#include "../actions/GridItemSizeAction.h"
+#include "../actions/GridItemMoveAction.h"
 
 using namespace AxiomModel;
 
@@ -69,6 +72,15 @@ void Node::setExtracted(bool extracted) {
     }
 }
 
+void Node::startSize() {
+    sizeStartRect = rect();
+    if (_controls.value()) {
+        for (const auto &control : (*_controls.value())->controls()) {
+            control->startDragging();
+        }
+    }
+}
+
 void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (!_controls.value()) {
         return GridItem::setCorners(topLeft, bottomRight);
@@ -125,6 +137,29 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
         controlSurface->grid().grid().setRect(item->pos(), item->size(), item);
     }
     controlSurface->grid().flushGrid();
+}
+
+void Node::doSizeAction() {
+    std::vector<std::unique_ptr<Action>> actions;
+
+    if (_controls.value()) {
+        for (const auto &control : (*_controls.value())->controls()) {
+            auto startSurfacePos = sizeStartRect.topLeft() * 2 + control->dragStartPos();
+            auto endSurfacePos = pos() * 2 + control->pos();
+
+            if (startSurfacePos != endSurfacePos) {
+                actions.push_back(GridItemMoveAction::create(control->uuid(), control->dragStartPos(), control->pos(), root()));
+            }
+        }
+    }
+
+    if (rect() != sizeStartRect) {
+        actions.push_back(GridItemSizeAction::create(uuid(), sizeStartRect, rect(), root()));
+    }
+
+    if (!actions.empty()) {
+        root()->history().append(CompositeAction::create(std::move(actions), root()));
+    }
 }
 
 void Node::doRuntimeUpdate() {

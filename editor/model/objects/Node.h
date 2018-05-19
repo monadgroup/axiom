@@ -58,7 +58,11 @@ namespace AxiomModel {
 
         bool isDeletable() const override { return true; }
 
+        void startSize();
+
         void setCorners(QPoint topLeft, QPoint bottomRight) override;
+
+        void doSizeAction();
 
         virtual void createAndAttachRuntime(MaximRuntime::Surface *parent) = 0;
 
@@ -76,6 +80,7 @@ namespace AxiomModel {
         QString _name;
         bool _isExtracted = false;
         AxiomCommon::Promise<ControlSurface *> _controls;
+        QRect sizeStartRect;
     };
 
 }
