@@ -47,6 +47,8 @@ namespace AxiomModel {
         AxiomCommon::Promise<NodeSurface *> _nodes;
 
         std::optional<MaximRuntime::GroupNode *> _runtime;
+
+        void surfaceControlAdded(AxiomModel::Control *control);
     };
 
 }

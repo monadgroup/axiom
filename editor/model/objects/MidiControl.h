@@ -11,14 +11,16 @@ namespace AxiomModel {
         AxiomCommon::Event<const MaximRuntime::MidiValue &> valueChanged;
 
         MidiControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                    bool showName, ModelRoot *root);
+                    bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, ModelRoot *root);
 
         static std::unique_ptr<MidiControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                                                   bool selected, QString name, bool showName, ModelRoot *root);
+                                                   bool selected, QString name, bool showName,
+                                                   const QUuid &exposerUuid, const QUuid &exposingUuid, ModelRoot *root);
 
         static std::unique_ptr<MidiControl>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, bool showName, ModelRoot *root);
+                    bool selected, QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
+                    ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 

@@ -15,8 +15,8 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
     return std::make_unique<DeleteObjectAction>(uuid, std::move(buffer), root);
 }
 
-std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const AxiomModel::ModelObject *object) {
-    return create(object->uuid(), QByteArray(), object->root());
+std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, AxiomModel::ModelRoot *root) {
+    return create(uuid, QByteArray(), root);
 }
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {

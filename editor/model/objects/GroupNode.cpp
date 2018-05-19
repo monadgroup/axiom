@@ -1,5 +1,7 @@
 #include "GroupNode.h"
 
+#include "Control.h"
+#include "ControlSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "compiler/runtime/Surface.h"
@@ -25,7 +27,7 @@ std::unique_ptr<GroupNode> GroupNode::deserialize(QDataStream &stream, const QUu
     QUuid innerUuid;
     stream >> innerUuid;
 
-    return create(uuid, parentUuid, pos, size, selected, name, controlsUuid, innerUuid, root);
+    return create(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, innerUuid, root);
 }
 
 void GroupNode::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
@@ -44,6 +46,13 @@ void GroupNode::attachRuntime(MaximRuntime::GroupNode *runtime) {
     _runtime = runtime;
 
     runtime->extractedChanged.connect(this, &GroupNode::setExtracted);
+
+    controls().then([this](ControlSurface *const &controls) {
+        controls->controls().itemAdded.connect(this, &GroupNode::surfaceControlAdded);
+        for (const auto &control : controls->controls()) {
+            surfaceControlAdded(control);
+        }
+    });
 
     removed.connect(this, &GroupNode::detachRuntime);
 
@@ -70,4 +79,16 @@ void GroupNode::restoreValue() {
 void GroupNode::remove() {
     if (_nodes.value()) (*_nodes.value())->remove();
     Node::remove();
+}
+
+void GroupNode::surfaceControlAdded(AxiomModel::Control *control) {
+    if (!_runtime) return;
+
+    // find a runtime control to attach
+    for (const std::unique_ptr<MaximRuntime::Control> &runtimeControl : **_runtime) {
+        if (!control->canAttachRuntime(runtimeControl.get())) continue;
+
+        control->attachRuntime(runtimeControl.get());
+        return;
+    }
 }

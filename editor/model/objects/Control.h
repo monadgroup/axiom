@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "common/Event.h"
+#include "common/Promise.h"
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
 #include "../WatchSequence.h"
@@ -34,13 +35,17 @@ namespace AxiomModel {
         AxiomCommon::Event<bool> showNameChanged;
         AxiomCommon::Event<QPointF> worldPosChanged;
         AxiomCommon::Event<bool> isActiveChanged;
+        AxiomCommon::Event<QUuid> exposerUuidChanged;
         AxiomCommon::Event<MaximRuntime::Control*> runtimeAttached;
         AxiomCommon::Event<> runtimeAboutToDetach;
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid,
-                QPoint pos, QSize size, bool selected, QString name, bool showName, ModelRoot *root);
+                QPoint pos, QSize size, bool selected, QString name, bool showName, const QUuid &exposerUuid,
+                const QUuid &exposingUuid, ModelRoot *root);
 
         static ControlType fromRuntimeType(MaximCommon::ControlType type);
+
+        static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid, const QString &name, const QUuid &exposingUuid, ModelRoot *root);
 
         static std::unique_ptr<Control>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
@@ -68,6 +73,12 @@ namespace AxiomModel {
         bool showName() const { return _showName; }
 
         void setShowName(bool showName);
+
+        QUuid exposerUuid() const { return _exposerUuid; }
+
+        void setExposerUuid(QUuid exposerUuid);
+
+        QUuid exposingUuid() const { return _exposingUuid; }
 
         bool isActive() const { return _isActive; }
 
@@ -107,6 +118,8 @@ namespace AxiomModel {
         ConnectionWire::WireType _wireType;
         QString _name;
         bool _showName = true;
+        QUuid _exposerUuid;
+        QUuid _exposingUuid;
         bool _isActive = false;
 
         std::optional<MaximRuntime::Control *> _runtime;

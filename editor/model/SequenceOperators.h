@@ -32,17 +32,20 @@ namespace AxiomModel {
     Sequence<typename Collection::value_type::value_type> flatten(Collection collection) {
         return Sequence(
             std::function([collection]() -> std::function<std::optional<typename Collection::value_type::value_type>()> {
-                auto begin = collection.begin();
-                auto end = collection.end();
-                std::optional<typename Collection::value_type::iterator> innerBegin;
-                std::optional<typename Collection::value_type::iterator> innerEnd;
-                return [begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
+                std::optional<typename Collection::const_iterator> begin;
+                std::optional<typename Collection::const_iterator> end;
+                std::optional<typename Collection::value_type::const_iterator> innerBegin;
+                std::optional<typename Collection::value_type::const_iterator> innerEnd;
+                return [collection, begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
+                    if (!begin || !end) {
+                        begin = collection.begin();
+                        end = collection.end();
+                    }
                     while (!innerBegin || !innerEnd || *innerBegin == *innerEnd) {
-                        if (begin == end) return std::optional<typename Collection::value_type::value_type>();
-                        auto &nextCollection = *begin;
-                        innerBegin = nextCollection.begin();
-                        innerEnd = nextCollection.end();
-                        begin++;
+                        if (*begin == *end) return std::optional<typename Collection::value_type::value_type>();
+                        innerBegin = (*begin)->begin();
+                        innerEnd = (*begin)->end();
+                        (*begin)++;
                     }
 
                     auto result = **innerBegin;

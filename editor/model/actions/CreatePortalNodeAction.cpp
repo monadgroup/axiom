@@ -77,8 +77,8 @@ bool CreatePortalNodeAction::forward(bool) {
         PortalNode::create(uuid, parentUuid, pos, QSize(1, 1), false, name, controlsUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(
-        PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "", false, wireType, portalType,
-                              root()));
+        PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "", false, QUuid(), QUuid(),
+                              wireType, portalType, root()));
     return false;
 }
 

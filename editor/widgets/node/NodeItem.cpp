@@ -266,7 +266,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                     RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
             });
     } else if (selectedAction == deleteAction) {
-        node->root()->history().append(DeleteObjectAction::create(node));
+        node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
     }
 
     /*event->accept();

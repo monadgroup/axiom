@@ -45,21 +45,7 @@ void CreateControlAction::serialize(QDataStream &stream) const {
 }
 
 bool CreateControlAction::forward(bool) {
-    switch (type) {
-        case Control::ControlType::NUM_SCALAR:
-            root()->pool().registerObj(NumControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, NumControl::DisplayMode::KNOB, NumControl::Channel::BOTH, MaximRuntime::NumValue(), root()));
-            break;
-        case Control::ControlType::MIDI_SCALAR:
-            root()->pool().registerObj(MidiControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, root()));
-            break;
-        case Control::ControlType::NUM_EXTRACT:
-            root()->pool().registerObj(ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, ConnectionWire::WireType::NUM, 0, root()));
-            break;
-        case Control::ControlType::MIDI_EXTRACT:
-            root()->pool().registerObj(ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, ConnectionWire::WireType::MIDI, 0, root()));
-            break;
-        default: unreachable;
-    }
+    root()->pool().registerObj(Control::createDefault(type, uuid, parentUuid, name, QUuid(), root()));
     return false;
 }
 

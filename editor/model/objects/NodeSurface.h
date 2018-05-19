@@ -12,6 +12,8 @@ namespace AxiomModel {
 
     class Node;
 
+    class Control;
+
     class Connection;
 
     class NodeSurface : public ModelObject {
@@ -43,6 +45,8 @@ namespace AxiomModel {
         const GridSurface &grid() const { return _grid; }
 
         virtual QString name() = 0;
+
+        virtual bool canExposeControl() const = 0;
 
         QPointF pan() const { return _pan; }
 

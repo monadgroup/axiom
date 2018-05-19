@@ -145,7 +145,7 @@ void CustomNode::runtimeAddedControl(MaximRuntime::Control *control) {
 
 void CustomNode::runtimeRemovedControl(AxiomModel::Control *control) {
     assert(changeCodeAction);
-    auto action = DeleteObjectAction::create(control);
+    auto action = DeleteObjectAction::create(control->uuid(), control->root());
     action->forward(true);
     changeCodeAction->actions().push_back(std::move(action));
 }

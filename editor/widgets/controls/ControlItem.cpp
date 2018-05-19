@@ -18,6 +18,7 @@
 #include "editor/model/actions/GridItemSizeAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/SetShowNameAction.h"
+#include "editor/model/actions/ExposeControlAction.h"
 #include "editor/util.h"
 #include "../ItemResizer.h"
 #include "../CommonColors.h"
@@ -322,7 +323,7 @@ void ControlItem::buildMenuStart(QMenu &menu) {
             this, [this]() {
                 std::vector<std::unique_ptr<Action>> clearActions;
                 for (const auto &connection : control->connections()) {
-                    clearActions.push_back(DeleteObjectAction::create(connection));
+                    clearActions.push_back(DeleteObjectAction::create(connection->uuid(), connection->root()));
                 }
                 control->root()->history().append(CompositeAction::create(std::move(clearActions), control->root()));
             });
@@ -341,6 +342,18 @@ void ControlItem::buildMenuEnd(QMenu &menu) {
                 control->root()->history().append(SetShowNameAction::create(control->uuid(), control->showName(), nameShownAction->isChecked(), control->root()));
             });
 
-
-    // todo: extract
+    menu.addSeparator();
+    auto exposedAction = menu.addAction("&Exposed");
+    exposedAction->setEnabled(control->surface()->node()->surface()->canExposeControl());
+    exposedAction->setCheckable(true);
+    exposedAction->setChecked(!control->exposerUuid().isNull());
+    connect(exposedAction, &QAction::triggered,
+            this, [this, exposedAction]() {
+                assert(exposedAction->isChecked() == control->exposerUuid().isNull());
+                if (exposedAction->isChecked()) {
+                    control->root()->history().append(ExposeControlAction::create(control->uuid(), control->root()));
+                } else {
+                    control->root()->history().append(DeleteObjectAction::create(control->exposerUuid(), control->root()));
+                }
+            });
 }

@@ -15,6 +15,8 @@ namespace AxiomModel {
 
         QString name() override;
 
+        bool canExposeControl() const override { return true; }
+
         GroupNode *node() const { return _node; }
 
     private:

@@ -16,7 +16,7 @@ namespace AxiomModel {
         static std::unique_ptr<DeleteObjectAction>
         create(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<DeleteObjectAction> create(const ModelObject *object);
+        static std::unique_ptr<DeleteObjectAction> create(const QUuid &uuid, AxiomModel::ModelRoot *root);
 
         static std::unique_ptr<DeleteObjectAction> deserialize(QDataStream &stream, AxiomModel::ModelRoot *root);
 

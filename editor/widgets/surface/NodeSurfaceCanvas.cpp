@@ -207,7 +207,7 @@ void NodeSurfaceCanvas::deleteSelected() {
     auto selectedNodes = filter(surface->nodes().sequence(), [](Node *const &node) { return node->isSelected(); });
     for (const auto &node : selectedNodes) {
         if (node->isDeletable()) {
-            deleteActions.push_back(DeleteObjectAction::create(node));
+            deleteActions.push_back(DeleteObjectAction::create(node->uuid(), node->root()));
         }
     }
 

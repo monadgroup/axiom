@@ -9,6 +9,8 @@ namespace AxiomModel {
         RootSurface(const QUuid &uuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 
         QString name() override { return "Root"; }
+
+        bool canExposeControl() const override { return false; }
     };
 
 }
