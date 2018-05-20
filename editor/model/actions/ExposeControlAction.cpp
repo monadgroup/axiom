@@ -49,11 +49,10 @@ bool ExposeControlAction::forward(bool) {
 
     auto newControl = Control::createDefault(controlToExpose->controlType(), exposeUuid, exposeSurface->uuid(), controlToExpose->name(), controlUuid, root());
     root()->pool().registerObj(std::move(newControl));
-    return false;
+    return true;
 }
 
 bool ExposeControlAction::backward() {
-    find(root()->controls(), controlUuid)->setExposerUuid(QUuid());
     find(root()->controls(), exposeUuid)->remove();
-    return false;
+    return true;
 }

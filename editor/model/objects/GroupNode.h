@@ -31,6 +31,8 @@ namespace AxiomModel {
 
         const AxiomCommon::Promise<NodeSurface *> &nodes() const { return _nodes; }
 
+        std::optional<MaximRuntime::GroupNode *> runtime() const { return _runtime; }
+
         void createAndAttachRuntime(MaximRuntime::Surface *parent) override;
 
         void attachRuntime(MaximRuntime::GroupNode *runtime);
@@ -47,8 +49,6 @@ namespace AxiomModel {
         AxiomCommon::Promise<NodeSurface *> _nodes;
 
         std::optional<MaximRuntime::GroupNode *> _runtime;
-
-        void surfaceControlAdded(AxiomModel::Control *control);
     };
 
 }

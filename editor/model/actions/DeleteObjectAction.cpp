@@ -59,10 +59,9 @@ bool DeleteObjectAction::backward() {
 
 Sequence<ModelObject*> DeleteObjectAction::getRemoveItems() const {
     auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
-
     return distinctByUuid(flatten(std::array<Sequence<ModelObject*>, 2> {
-        dependents,
-        flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })))
+        flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); }))),
+        dependents
     }));
 }
 

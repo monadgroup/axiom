@@ -13,6 +13,18 @@ namespace AxiomModel {
         }));
     }
 
+    template<class ItemType>
+    Sequence<ItemType> oneShot(ItemType item) {
+        return Sequence(std::function([item]() -> std::function<std::optional<ItemType>()> {
+            bool hasEmitted = false;
+            return [hasEmitted, item]() mutable -> std::optional<ItemType> {
+                if (hasEmitted) return std::optional<ItemType>();
+                hasEmitted = false;
+                return std::move(item);
+            };
+        }));
+    }
+
     template<class Collection>
     Sequence<typename Collection::value_type> wrap(const Collection &collection) {
         return Sequence(
@@ -32,17 +44,22 @@ namespace AxiomModel {
     Sequence<typename Collection::value_type::value_type> flatten(Collection collection) {
         return Sequence(
             std::function([collection]() -> std::function<std::optional<typename Collection::value_type::value_type>()> {
-                auto begin = collection.begin();
-                auto end = collection.end();
-                std::optional<typename Collection::value_type::iterator> innerBegin;
-                std::optional<typename Collection::value_type::iterator> innerEnd;
-                return [begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
+                std::optional<typename Collection::const_iterator> begin;
+                std::optional<typename Collection::const_iterator> end;
+                std::optional<typename Collection::value_type::const_iterator> innerBegin;
+                std::optional<typename Collection::value_type::const_iterator> innerEnd;
+                return [collection, begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
+                    if (!begin || !end) {
+                        begin = collection.begin();
+                        end = collection.end();
+                    }
+
                     while (!innerBegin || !innerEnd || *innerBegin == *innerEnd) {
-                        if (begin == end) return std::optional<typename Collection::value_type::value_type>();
-                        auto &nextCollection = *begin;
+                        if (*begin == *end) return std::optional<typename Collection::value_type::value_type>();
+                        auto &nextCollection = **begin;
                         innerBegin = nextCollection.begin();
                         innerEnd = nextCollection.end();
-                        begin++;
+                        (*begin)++;
                     }
 
                     auto result = **innerBegin;

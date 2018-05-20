@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <optional>
+#include <memory>
 
 namespace AxiomModel {
 
@@ -18,16 +19,39 @@ namespace AxiomModel {
         using iter_functor = std::function<next_functor()>;
 
         class iterator {
+        private:
+            class SequenceStorage {
+            public:
+                next_functor next;
+                std::optional<Item> currentVal;
+                size_t index = 0;
+
+                SequenceStorage(next_functor next) : next(std::move(next)), currentVal(this->next()) {}
+
+                void increment() {
+                    currentVal = next();
+                    index++;
+                }
+            };
+
         public:
             using self_type = iterator;
             using iterator_category = std::forward_iterator_tag;
 
-            explicit iterator(next_functor next) : next(std::move(next)), currentVal((*this->next)()) {}
+            explicit iterator(next_functor next) {
+                if (auto newImpl = std::make_shared<SequenceStorage>(std::move(next)); newImpl->currentVal) {
+                    impl = std::move(newImpl);
+                }
+            }
 
             iterator() {}
 
-            bool hasEnded() const {
-                return !currentVal.has_value();
+            bool ended() const {
+                return !impl;
+            }
+
+            size_t index() const {
+                return impl->index;
             }
 
             self_type operator++() {
@@ -42,13 +66,13 @@ namespace AxiomModel {
             }
 
             bool operator==(const iterator &rhs) const {
-                // if either iterator has ended (currentVal == null), iterators are only equal if both have ended
-                if (hasEnded() || rhs.hasEnded()) {
-                    return hasEnded() && rhs.hasEnded();
+                // if either iterator has ended, iterators are only equal if both have ended
+                if (ended() || rhs.ended()) {
+                    return ended() && rhs.ended();
                 }
 
-                // otherwise, it's safe to just compare indexes
-                return index == rhs.index;
+                // otherwise, just compare indexes
+                return index() == rhs.index();
             }
 
             bool operator!=(const iterator &rhs) const {
@@ -56,22 +80,21 @@ namespace AxiomModel {
             }
 
             reference operator*() {
-                return *currentVal;
+                return *impl->currentVal;
             }
 
             pointer operator->() {
-                return &*currentVal;
+                return &*impl->currentVal;
             }
 
         private:
-            std::optional<next_functor> next;
-            std::optional<Item> currentVal;
-            size_t index = 0;
+            std::shared_ptr<SequenceStorage> impl;
 
             void increment() {
-                if (next) {
-                    currentVal = (*next)();
-                    index++;
+                if (impl) {
+                    impl->increment();
+
+                    if (!impl->currentVal) impl.reset();
                 }
             }
         };

@@ -27,15 +27,22 @@ void ModelRoot::serialize(QDataStream &stream) {
     _history.serialize(stream);
 }
 
-void ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent) {
+std::vector<ModelObject*> ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent) {
+    std::vector<ModelObject*> usedObjects;
+
     uint32_t objectCount;
     stream >> objectCount;
+    usedObjects.reserve(objectCount);
     for (uint32_t i = 0; i < objectCount; i++) {
         QByteArray objectBuffer;
         stream >> objectBuffer;
         QDataStream objectStream(&objectBuffer, QIODevice::ReadOnly);
-        _pool.registerObj(ModelObject::deserialize(objectStream, parent, this));
+        auto newObject = ModelObject::deserialize(objectStream, parent, this);
+        usedObjects.push_back(newObject.get());
+        _pool.registerObj(std::move(newObject));
     }
+
+    return std::move(usedObjects);
 }
 
 void ModelRoot::destroy() {

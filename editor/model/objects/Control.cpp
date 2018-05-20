@@ -2,7 +2,7 @@
 
 #include "ControlSurface.h"
 #include "Connection.h"
-#include "Node.h"
+#include "GroupNode.h"
 #include "NumControl.h"
 #include "MidiControl.h"
 #include "ExtractControl.h"
@@ -11,6 +11,7 @@
 #include "../PoolOperators.h"
 #include "compiler/codegen/Control.h"
 #include "compiler/runtime/Control.h"
+#include "compiler/runtime/GroupNode.h"
 
 using namespace AxiomModel;
 
@@ -30,6 +31,7 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
             return std::optional<Control *>();
         }))) {
     posChanged.connect(this, &Control::updateSinkPos);
+    removed.connect(this, &Control::updateExposerRemoved);
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
 }
 
@@ -132,6 +134,8 @@ void Control::setExposerUuid(QUuid exposerUuid) {
     if (exposerUuid != _exposerUuid) {
         _exposerUuid = exposerUuid;
         exposerUuidChanged.trigger(exposerUuid);
+
+        updateExposerRuntime();
     }
 }
 
@@ -159,8 +163,7 @@ void Control::attachRuntime(MaximRuntime::Control *runtime) {
     runtime->removed.connect(this, &Control::detachRuntime);
 
     runtimeAttached.trigger(runtime);
-
-    // todo: handle needing to be exposed
+    updateExposerRuntime();
 }
 
 void Control::detachRuntime() {
@@ -169,8 +172,9 @@ void Control::detachRuntime() {
 }
 
 Sequence<ModelObject*> Control::links() {
+    auto expId = exposerUuid();
     return flatten(std::array<Sequence<ModelObject*>, 2> {
-        staticCast<ModelObject*>(findSeq(root()->controls(), exposerUuid())).sequence(),
+        staticCast<ModelObject*>(filter(root()->controls(), std::function([expId](Control *const &obj) -> bool { return obj->uuid() == expId; }))).sequence(),
         staticCast<ModelObject*>(_connections.sequence()).sequence()
     });
 }
@@ -181,4 +185,25 @@ void Control::remove() {
 
 void Control::updateSinkPos() {
     worldPosChanged.trigger(worldPos());
+}
+
+void Control::updateExposerRuntime() {
+    //if (_runtime && !_exposerUuid.isNull()) {
+    //    std::cout << "Attaching runtime when control becomes available..." << std::endl;
+    //    findLater<Control*>(root()->controls(), _exposerUuid).then([this](Control *const &control) {
+    //        auto controlNode = dynamic_cast<GroupNode*>(control->surface()->node());
+    //        assert(controlNode);
+    //        assert(controlNode->runtime());
+
+    //        std::cout << "Attaching runtime!" << std::endl;
+    //        auto newRuntime = (*controlNode->runtime())->forwardControl(*_runtime);
+    //        control->attachRuntime(newRuntime);
+    //        control->removed.connect([newRuntime]() { newRuntime->remove(); });
+    //        std::cout << "Finished attaching runtime" << std::endl;
+    //    });
+    //}
+}
+
+void Control::updateExposerRemoved() {
+    //if (!_exposingUuid.isNull()) find(root()->controls(), _exposingUuid)->setExposerUuid(QUuid());
 }

@@ -128,6 +128,10 @@ namespace AxiomModel {
         WatchSequence<Control *> _connectedControls;
 
         void updateSinkPos();
+
+        void updateExposerRemoved();
+
+        void updateExposerRuntime();
     };
 
 }

@@ -47,13 +47,6 @@ void GroupNode::attachRuntime(MaximRuntime::GroupNode *runtime) {
 
     runtime->extractedChanged.connect(this, &GroupNode::setExtracted);
 
-    controls().then([this](ControlSurface *const &controls) {
-        controls->controls().itemAdded.connect(this, &GroupNode::surfaceControlAdded);
-        for (const auto &control : controls->controls()) {
-            surfaceControlAdded(control);
-        }
-    });
-
     removed.connect(this, &GroupNode::detachRuntime);
 
     _nodes.then([runtime](NodeSurface *const &nodes) {
@@ -79,16 +72,4 @@ void GroupNode::restoreValue() {
 void GroupNode::remove() {
     if (_nodes.value()) (*_nodes.value())->remove();
     Node::remove();
-}
-
-void GroupNode::surfaceControlAdded(AxiomModel::Control *control) {
-    if (!_runtime) return;
-
-    // find a runtime control to attach
-    for (const std::unique_ptr<MaximRuntime::Control> &runtimeControl : **_runtime) {
-        if (!control->canAttachRuntime(runtimeControl.get())) continue;
-
-        control->attachRuntime(runtimeControl.get());
-        return;
-    }
 }

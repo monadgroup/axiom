@@ -29,12 +29,12 @@ namespace AxiomModel {
         return find<typename InputCollection::value_type>(collection, uuid);
     }
 
-    template<class InputCollection>
-    SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type> findSeq(InputCollection collection, QUuid uuid) {
-        return filter(collection, std::function([uuid](const typename InputCollection::value_type &base) -> bool {
-            return base->uuid() == uuid;
+    template<class InputCollection, class IdCollection>
+    SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type> findAll(InputCollection collection, IdCollection uuids) {
+        return filter(collection, std::function([uuids](const typename InputCollection::value_type &base) -> bool {
+            return uuids.find(base->uuid()) != uuids.end();
         }));
-    }
+    };
 
     template<class OutputItem, class InputItem>
     AxiomCommon::Promise<OutputItem> findLater(WatchSequence<InputItem> input, QUuid uuid) {
