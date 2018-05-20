@@ -7,6 +7,7 @@
 #include "MidiControl.h"
 #include "ExtractControl.h"
 #include "PortalControl.h"
+#include "GroupSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "compiler/codegen/Control.h"
@@ -188,20 +189,20 @@ void Control::updateSinkPos() {
 }
 
 void Control::updateExposerRuntime() {
-    //if (_runtime && !_exposerUuid.isNull()) {
-    //    std::cout << "Attaching runtime when control becomes available..." << std::endl;
-    //    findLater<Control*>(root()->controls(), _exposerUuid).then([this](Control *const &control) {
-    //        auto controlNode = dynamic_cast<GroupNode*>(control->surface()->node());
-    //        assert(controlNode);
-    //        assert(controlNode->runtime());
+    if (_runtime && !_exposerUuid.isNull()) {
+        std::cout << "Attaching runtime when control becomes available..." << std::endl;
+        findLater<Control*>(root()->controls(), _exposerUuid).then([this](Control *const &control) {
+            auto controlNode = dynamic_cast<GroupNode*>(control->surface()->node());
+            assert(controlNode);
+            assert(controlNode->runtime());
 
-    //        std::cout << "Attaching runtime!" << std::endl;
-    //        auto newRuntime = (*controlNode->runtime())->forwardControl(*_runtime);
-    //        control->attachRuntime(newRuntime);
-    //        control->removed.connect([newRuntime]() { newRuntime->remove(); });
-    //        std::cout << "Finished attaching runtime" << std::endl;
-    //    });
-    //}
+            std::cout << "Attaching runtime!" << std::endl;
+            auto newRuntime = (*controlNode->runtime())->forwardControl(*_runtime);
+            control->attachRuntime(newRuntime);
+            //control->removed.connect([newRuntime]() { newRuntime->remove(); });
+            std::cout << "Finished attaching runtime" << std::endl;
+        });
+    }
 }
 
 void Control::updateExposerRemoved() {
