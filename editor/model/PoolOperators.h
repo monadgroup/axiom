@@ -70,13 +70,18 @@ namespace AxiomModel {
         // set.
 
         return Sequence<typename InputCollection::value_type>([input, uuid]() {
-            auto begin = input.begin();
-            auto end = input.end();
+            std::optional<typename InputCollection::const_iterator> begin;
+            std::optional<typename InputCollection::const_iterator> end;
             QSet<QUuid> visitedIds;
-            return [uuid, begin, end, visitedIds]() mutable -> std::optional<typename InputCollection::value_type> {
-                while (begin != end) {
-                    auto obj = *begin;
-                    begin++;
+            return [uuid, input, begin, end, visitedIds]() mutable -> std::optional<typename InputCollection::value_type> {
+                if (!begin || !end) {
+                    begin = input.begin();
+                    end = input.end();
+                }
+
+                while (*begin != *end) {
+                    auto obj = **begin;
+                    (*begin)++;
                     if (obj->uuid() == uuid || visitedIds.contains(obj->parentUuid())) {
                         visitedIds.insert(obj->uuid());
                         return std::move(obj);
