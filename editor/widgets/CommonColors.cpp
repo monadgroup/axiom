@@ -17,3 +17,5 @@ const QColor CommonColors::numActive = QColor(153, 203, 236);
 
 const QColor CommonColors::midiNormal = QColor(230, 126, 34);
 const QColor CommonColors::midiActive = QColor(242, 190, 144);
+
+const QColor CommonColors::exposedBorder = QColor(155, 89, 182);

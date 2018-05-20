@@ -36,6 +36,7 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
     control->selectedChanged.connect(this, &ControlItem::updateSelected);
     control->isActiveChanged.connect(this, &ControlItem::triggerUpdate);
     control->showNameChanged.connect(this, &ControlItem::triggerUpdate);
+    control->exposerUuidChanged.connect(this, &ControlItem::triggerUpdate);
     control->removed.connect(this, &ControlItem::remove);
 
     // create resize items
@@ -129,6 +130,20 @@ QRectF ControlItem::aspectBoundingRect() const {
 }
 
 void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    // draw an outline if we're exposed
+    if (!control->exposerUuid().isNull()) {
+        auto bounds = controlPath();
+        painter->setPen(QPen(CommonColors::exposedBorder, control->connections().empty() ? 3 : 7));
+        painter->setBrush(QBrush(CommonColors::exposedBorder));
+        painter->drawPath(bounds);
+
+        if (!control->connections().empty()) {
+            painter->setPen(QPen(Qt::black, 4));
+            painter->setBrush(QBrush(Qt::black));
+            painter->drawPath(bounds);
+        }
+    }
+
     // draw an outline if we're connected to something
     if (!control->connections().empty()) {
         auto bounds = controlPath();
@@ -342,8 +357,7 @@ void ControlItem::buildMenuEnd(QMenu &menu) {
                 control->root()->history().append(SetShowNameAction::create(control->uuid(), control->showName(), nameShownAction->isChecked(), control->root()));
             });
 
-    menu.addSeparator();
-    auto exposedAction = menu.addAction("&Exposed");
+    auto exposedAction = menu.addAction("&Expose");
     exposedAction->setEnabled(control->surface()->node()->surface()->canExposeControl());
     exposedAction->setCheckable(true);
     exposedAction->setChecked(!control->exposerUuid().isNull());
