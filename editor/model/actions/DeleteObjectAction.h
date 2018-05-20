@@ -31,6 +31,8 @@ namespace AxiomModel {
         QUuid uuid;
         QByteArray buffer;
 
+        Sequence<ModelObject*> getLinkedItems(const QUuid &seed) const;
+
         Sequence<ModelObject*> getRemoveItems() const;
 
         bool anyNeedRebuild(const Sequence<ModelObject*> &sequence) const;

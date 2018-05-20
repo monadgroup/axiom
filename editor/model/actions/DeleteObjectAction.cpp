@@ -57,12 +57,19 @@ bool DeleteObjectAction::backward() {
     return anyNeedRebuild(getRemoveItems());
 }
 
-Sequence<ModelObject*> DeleteObjectAction::getRemoveItems() const {
+Sequence<ModelObject*> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
     auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
+    auto links = flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })));
+    auto linkDependents = flatten(map(links, std::function([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
+
     return distinctByUuid(flatten(std::array<Sequence<ModelObject*>, 2> {
-        flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); }))),
+        linkDependents,
         dependents
     }));
+}
+
+Sequence<ModelObject*> DeleteObjectAction::getRemoveItems() const {
+    return getLinkedItems(uuid);
 }
 
 bool DeleteObjectAction::anyNeedRebuild(const Sequence<AxiomModel::ModelObject *> &sequence) const {
