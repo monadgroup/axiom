@@ -4,6 +4,7 @@
 
 namespace AxiomModel {
     class Library;
+
     class LibraryEntry;
 }
 
@@ -15,7 +16,8 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        explicit ModulePreviewView(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent = nullptr);
+        explicit ModulePreviewView(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry,
+                                   QWidget *parent = nullptr);
 
     protected:
         void mousePressEvent(QMouseEvent *event) override;

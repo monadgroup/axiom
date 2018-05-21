@@ -2,15 +2,18 @@
 
 #include <QtWidgets/QListWidget>
 
+#include "common/Hookable.h"
 #include "../dock/DockPanel.h"
 
 namespace AxiomModel {
+    class Action;
+
     class HistoryList;
 }
 
 namespace AxiomGui {
 
-    class HistoryPanel : public DockPanel {
+    class HistoryPanel : public DockPanel, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:
@@ -24,6 +27,8 @@ namespace AxiomGui {
 
         AxiomModel::HistoryList *list;
         QListWidget *listWidget;
+
+        void appendItem(size_t i, AxiomModel::Action *action, QString prepend);
     };
 
 }

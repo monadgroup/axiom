@@ -1,64 +1,51 @@
 #pragma once
 
-#include <QtCore/QString>
-#include <QtCore/QObject>
+#include <optional>
 
-#include "history/HistoryList.h"
-#include "Library.h"
-#include "schematic/RootSchematic.h"
-#include "Ref.h"
+#include "ModelRoot.h"
 
 namespace MaximRuntime {
-
     class Runtime;
-
 }
 
 namespace AxiomModel {
 
-    class Node;
-
-    class NodeControl;
-
-    class DeserializeInvalidFileException : public std::exception {
-    };
-
-    class DeserializeInvalidSchemaException : public std::exception {
-    };
+    class RootSurface;
 
     class Project {
     public:
-        HistoryList history;
-        Library library;
-        RootSchematic root;
+        static constexpr uint32_t schemaVersion = 2;
+        static constexpr uint64_t schemaMagic = 0x4D4F4E4144202020;
+        static constexpr uint32_t minSchemaVersion = 2;
 
-        static constexpr quint32 schemaMagic = 0xDEFACED;
-        static constexpr quint32 schemaRevision = 1;
+        Project();
 
-        explicit Project(MaximRuntime::Runtime *runtime);
+        explicit Project(QDataStream &stream);
 
-        void serialize(QDataStream &stream) const;
+        static std::unique_ptr<Project> deserialize(QDataStream &stream, uint32_t *versionOut);
 
-        void deserialize(QDataStream &stream);
+        static void writeHeader(QDataStream &stream);
 
-        void load(QDataStream &stream);
+        static bool readHeader(QDataStream &stream, uint32_t *versionOut);
 
-        void clear();
+        ModelRoot &mainRoot() { return _mainRoot; }
 
-        void build();
+        const ModelRoot &mainRoot() const { return _mainRoot; }
 
-        Schematic *findSurface(const SurfaceRef &ref);
+        void serialize(QDataStream &stream);
 
-        Node *findNode(const NodeRef &ref);
+        void attachRuntime(MaximRuntime::Runtime *runtime);
 
-        NodeControl *findControl(const ControlRef &ref);
+        void rebuild() const;
 
-        MaximRuntime::Runtime *runtime() const { return _runtime; }
+        void destroy();
 
     private:
+        ModelRoot _mainRoot;
+        RootSurface *_rootSurface;
+        std::optional<MaximRuntime::Runtime *> _runtime;
 
-        MaximRuntime::Runtime *_runtime;
-
+        void init();
     };
 
 }

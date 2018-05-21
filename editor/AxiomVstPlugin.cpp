@@ -1,13 +1,11 @@
 #include "AxiomVstPlugin.h"
 
 #include <QtCore/QBuffer>
-#include <iostream>
 #include <QtWidgets/QMessageBox>
 
 #include "resources/resource.h"
 #include "AxiomVstEditor.h"
-#include "compiler/runtime/GeneratableModuleClass.h"
-#include "compiler/runtime/ControlGroup.h"
+#include "widgets/surface/NodeSurfacePanel.h"
 #include "compiler/codegen/Operator.h"
 #include "compiler/codegen/Converter.h"
 #include "compiler/codegen/Control.h"
@@ -18,14 +16,15 @@ AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
 }
 
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 0), project(&runtime) {
+    : AudioEffectX(audioMaster, 1, 0), _editor(&runtime, std::make_unique<AxiomModel::Project>()) {
     isSynth();
     programsAreChunks();
     canProcessReplacing();
     setNumInputs(0);
     setNumOutputs(2);
     setUniqueID(0x41584F4D); // 'AXOM'
-    setEditor(new AxiomVstEditor(this));
+
+    setEditor(&_editor);
 }
 
 void AxiomVstPlugin::open() {
@@ -139,7 +138,7 @@ VstInt32 AxiomVstPlugin::getChunk(void **data, bool isPreset) {
     QDataStream stream(&buffer);
 
     std::cout << "Serializing chunk" << std::endl;
-    project.serialize(stream);
+    _editor.project()->serialize(stream);
     std::cout << "Finished serializing, with " << saveBuffer->size() << " bytes" << std::endl;
 
     buffer.close();
@@ -151,19 +150,23 @@ VstInt32 AxiomVstPlugin::getChunk(void **data, bool isPreset) {
 VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) {
     QByteArray byteArray = QByteArray::fromRawData((char *) data, byteSize);
     QDataStream stream(&byteArray, QIODevice::ReadOnly);
+    uint32_t readVersion = 0;
+    auto newProject = AxiomModel::Project::deserialize(stream, &readVersion);
 
-    try {
-        project.load(stream);
-    } catch (AxiomModel::DeserializeInvalidFileException) {
-        QMessageBox(QMessageBox::Critical, "Failed to load data",
-                    "Your DAW just gave Axiom an invalid project file (bad magic header).\n"
-                    "Maybe it's corrupt?", QMessageBox::Ok).exec();
-    } catch (AxiomModel::DeserializeInvalidSchemaException) {
-        QMessageBox(QMessageBox::Critical, "Failed to load data",
-                    "Your DAW just gave Axiom a project file saved with an outdated project format.\n\n"
-                    "Unfortunately Axiom currently doesn't support loading old project formats.\n"
-                    "If you really want this feature, maybe make a pull request (https://github.com/monadgroup/axiom/pulls)"
-                    " or report an issue (https://github.com/monadgroup/axiom/issues).", QMessageBox::Ok).exec();
+    if (!newProject) {
+        if (readVersion) {
+            QMessageBox(QMessageBox::Critical, "Failed to load project",
+                        "This project was created with an incompatible version of Axiom.\n\n"
+                        "Expected version: between " + QString::number(AxiomModel::Project::minSchemaVersion) +
+                        " and " + QString::number(AxiomModel::Project::schemaVersion) + ", actual version: " +
+                        QString::number(readVersion) + ".", QMessageBox::Ok).exec();
+        } else {
+            QMessageBox(QMessageBox::Critical, "Failed to load project",
+                        "This project is an invalid project file (bad magic header).\n"
+                        "Maybe it's corrupt?", QMessageBox::Ok).exec();
+        }
+    } else {
+        _editor.setProject(std::move(newProject));
     }
 
     return 0;

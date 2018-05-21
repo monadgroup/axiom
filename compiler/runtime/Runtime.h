@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QtCore/QMutex>
 #include <mutex>
 
 #include "Jit.h"

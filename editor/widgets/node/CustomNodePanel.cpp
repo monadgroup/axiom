@@ -1,43 +1,31 @@
 #include "CustomNodePanel.h"
 
 #include <QtWidgets/QGraphicsProxyWidget>
-#include <iostream>
 
-#include "editor/model/node/CustomNode.h"
-#include "editor/model/schematic/Schematic.h"
 #include "editor/model/Project.h"
-#include "editor/widgets/CommonColors.h"
-#include "../schematic/SchematicCanvas.h"
+#include "editor/model/objects/CustomNode.h"
+#include "editor/model/grid/GridSurface.h"
+#include "editor/model/actions/SetCodeAction.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "../CommonColors.h"
 #include "../ItemResizer.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
 CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
-    connect(node, &CustomNode::beforeSizeChanged,
-            this, &CustomNodePanel::triggerGeometryChange);
-    connect(node, &CustomNode::sizeChanged,
-            this, &CustomNodePanel::updateSize);
-    connect(node, &CustomNode::panelOpenChanged,
-            this, &CustomNodePanel::setOpen);
-    connect(node, &CustomNode::beforePanelHeightChanged,
-            this, &CustomNodePanel::triggerGeometryChange);
-    connect(node, &CustomNode::panelHeightChanged,
-            this, &CustomNodePanel::updateSize);
-    connect(node, &CustomNode::compileFailed,
-            this, &CustomNodePanel::setError);
-    connect(node, &CustomNode::parseFailed,
-            this, &CustomNodePanel::setError);
-    connect(node, &CustomNode::compileSucceeded,
-            this, &CustomNodePanel::clearError);
-    connect(node, &CustomNode::parseSucceeded,
-            this, &CustomNodePanel::clearError);
-    connect(node, &CustomNode::compileFinished,
-            this, &CustomNodePanel::compileFinished);
-    connect(node, &CustomNode::codeChanged,
-            this, &CustomNodePanel::codeChanged);
+    node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
+    node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
 
-    auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, Node::minPanelHeight));
+    // todo: panel events, parse/compile errors, code changed event
+    node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
+    node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
+    node->panelOpenChanged.connect(this, &CustomNodePanel::setOpen);
+    node->beforePanelHeightChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
+    node->panelHeightChanged.connect(this, &CustomNodePanel::updateSize);
+    node->codeChanged.connect(this, &CustomNodePanel::codeChanged);
+
+    auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, CustomNode::minPanelHeight));
     connect(this, &CustomNodePanel::resizerSizeChanged,
             resizer, &ItemResizer::setSize);
     connect(resizer, &ItemResizer::changed,
@@ -45,33 +33,36 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     resizer->setParentItem(this);
     resizer->setZValue(0);
 
-    textEditor = new QTextEdit();
+    textEditor = new QPlainTextEdit();
     textProxy = new QGraphicsProxyWidget();
     textProxy->setWidget(textEditor);
     textProxy->setParentItem(this);
     textProxy->setZValue(1);
 
     textEditor->installEventFilter(this);
-    textEditor->setText(node->code());
-    connect(textEditor, &QTextEdit::textChanged,
+    textEditor->setWordWrapMode(QTextOption::NoWrap);
+    textEditor->setPlainText(node->code());
+    connect(textEditor, &QPlainTextEdit::textChanged,
             this, &CustomNodePanel::controlTextChanged);
 
+    codeChanged(node->code());
     setOpen(node->isPanelOpen());
     updateSize();
 }
 
 QRectF CustomNodePanel::boundingRect() const {
-    QRectF rect = {QPointF(0, 0), SchematicCanvas::nodeRealSize(node->size()) + QSizeF(1, node->panelHeight())};
+    QRectF rect = {QPointF(0, 0), NodeSurfaceCanvas::nodeRealSize(node->size()) + QSizeF(1, node->panelHeight())};
     return rect.marginsAdded(QMarginsF(5, 5, 5, 5));
 }
 
 void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     auto br = boundingRect();
-    if (showingErrors) {
-        painter->setPen(QPen(CommonColors::errorNodeBorder, 1));
-    } else {
-        painter->setPen(QPen(CommonColors::customNodeBorder, 1));
-    }
+    //if (showingErrors) {
+    //    painter->setPen(QPen(CommonColors::errorNodeBorder, 1));
+    //} else {
+    //    painter->setPen(QPen(CommonColors::customNodeBorder, 1));
+    //}
+    painter->setPen(QPen(CommonColors::customNodeBorder, 1));
     painter->setBrush(QBrush(CommonColors::customNodeNormal));
 
     painter->drawRoundedRect(br, 5, 5);
@@ -79,7 +70,7 @@ void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 void CustomNodePanel::updateSize() {
     auto br = boundingRect();
-    auto nodeSize = SchematicCanvas::nodeRealSize(node->size());
+    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
 
     textProxy->setGeometry(QRectF(
         QPointF(0, nodeSize.height() + 5),
@@ -94,26 +85,26 @@ void CustomNodePanel::setOpen(bool open) {
 }
 
 void CustomNodePanel::setError(const MaximRuntime::ErrorLog &log) {
-    hasErrors = true;
-    QList<QTextEdit::ExtraSelection> selections;
-    for (const auto &err : log.errors) {
-        QTextCursor cursor(textEditor->document());
-        moveCursor(cursor, err.start, QTextCursor::MoveAnchor);
-        moveCursor(cursor, err.end, QTextCursor::KeepAnchor);
+    //hasErrors = true;
+    //QList<QTextEdit::ExtraSelection> selections;
+    //for (const auto &err : log.errors) {
+    //    QTextCursor cursor(textEditor->document());
+    //    moveCursor(cursor, err.start, QTextCursor::MoveAnchor);
+    //    moveCursor(cursor, err.end, QTextCursor::KeepAnchor);
 
-        QTextCharFormat squigglyFormat;
-        squigglyFormat.setUnderlineColor(QColor::fromRgb(255, 0, 0));
-        squigglyFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    //    QTextCharFormat squigglyFormat;
+    //    squigglyFormat.setUnderlineColor(QColor::fromRgb(255, 0, 0));
+    //    squigglyFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
 
-        selections.push_back({cursor, squigglyFormat});
-    }
-    textEditor->setExtraSelections(selections);
-    update();
+    //    selections.push_back({cursor, squigglyFormat});
+    //}
+    //textEditor->setExtraSelections(selections);
+    //update();
 }
 
 void CustomNodePanel::clearError() {
-    hasErrors = false;
-    showingErrors = false;
+    //hasErrors = false;
+    //showingErrors = false;
     textEditor->setExtraSelections({});
     update();
 }
@@ -133,26 +124,24 @@ void CustomNodePanel::triggerGeometryChange() {
 }
 
 void CustomNodePanel::resizerChanged(QPointF topLeft, QPointF bottomRight) {
-    auto nodeSize = SchematicCanvas::nodeRealSize(node->size());
+    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
     node->setPanelHeight((float) bottomRight.y() - nodeSize.height() - 5);
 }
 
 void CustomNodePanel::compileFinished() {
-    textEditor->setText(node->code());
+    textEditor->setPlainText(node->code());
 }
 
 bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
     if (object == textEditor) {
         if (event->type() == QEvent::FocusOut) {
-            showingErrors = hasErrors;
-            update();
-
-            DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::CHANGE_CODE, {
-                node->recompile();
-            });
-            return true;
+            if (beforeCode != node->code()) {
+                node->doSetCodeAction(std::move(beforeCode), node->code());
+                beforeCode = node->code();
+            }
         } else if (event->type() == QEvent::FocusIn) {
             node->parentSurface->deselectAll();
+            beforeCode = node->code();
         } else if (event->type() == QEvent::KeyPress) {
             auto keyEvent = (QKeyEvent *) event;
 

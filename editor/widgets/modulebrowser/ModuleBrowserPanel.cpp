@@ -6,7 +6,6 @@
 
 #include "editor/util.h"
 #include "ModulePreviewList.h"
-#include "editor/model/Library.h"
 
 using namespace AxiomGui;
 
@@ -41,7 +40,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
     mainWidget->setLayout(mainLayout);
     setWidget(mainWidget);
 
-    auto tags = library->tags();
+    /*auto tags = library->tags();
     for (const auto &tag : tags) {
         addTag(tag);
     }
@@ -50,7 +49,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
     connect(library, &AxiomModel::Library::tagRemoved,
             this, &ModuleBrowserPanel::removeTag);
     connect(filterTabs, &QTabBar::currentChanged,
-            this, &ModuleBrowserPanel::changeTag);
+            this, &ModuleBrowserPanel::changeTag);*/
 }
 
 void ModuleBrowserPanel::addTag(const QString &tag) {
@@ -68,10 +67,10 @@ void ModuleBrowserPanel::removeTag(const QString &tag) {
 }
 
 void ModuleBrowserPanel::changeTag(int tag) {
-    if (tag == 0) library->setActiveTag("");
+    /*if (tag == 0) library->setActiveTag("");
     else {
         auto index = indexTabs.find(tag);
         assert(index != indexTabs.end());
         library->setActiveTag(index->second);
-    }
+    }*/
 }

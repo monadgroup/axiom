@@ -1,5 +1,6 @@
-#include <iostream>
 #include "Runtime.h"
+
+#include <iostream>
 
 #include "../codegen/Operator.h"
 #include "../codegen/Converter.h"

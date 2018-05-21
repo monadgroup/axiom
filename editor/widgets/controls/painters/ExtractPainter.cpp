@@ -1,6 +1,7 @@
 #include "ExtractPainter.h"
 
 #define _USE_MATH_DEFINES
+
 #include <math.h>
 #include <bitset>
 
@@ -9,7 +10,7 @@
 using namespace AxiomGui;
 
 void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState,
-                           AxiomModel::ExtractConnectionSink::ActiveSlotFlags activeFlags, const QColor &baseColor,
+                           AxiomModel::ExtractControl::ActiveSlotFlags activeFlags, const QColor &baseColor,
                            const QColor &activeColor) {
     auto scaledBorder = 0.06f * aspectBoundingRect.width();
     auto externBr = getBounds(aspectBoundingRect);
@@ -28,7 +29,7 @@ void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, 
 
     const auto markerCount = sizeof(activeFlags) * CHAR_BIT;
     auto activeMarkerPen = QPen(QColor(0, 0, 0), scaledMarkerThickness);
-    for (AxiomModel::ExtractConnectionSink::ActiveSlotFlags i = 0; i < markerCount; i++) {
+    for (AxiomModel::ExtractControl::ActiveSlotFlags i = 0; i < markerCount; i++) {
         if (activeFlags & (1u << i)) {
             activeMarkerPen.setColor(currentColor);
         } else {

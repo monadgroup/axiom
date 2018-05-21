@@ -3,19 +3,19 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtGui/QIcon>
-#include <QtCore/QDateTime>
 #include <QtWidgets/QCompleter>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
 
 #include "editor/util.h"
-#include "editor/model/Library.h"
 #include "../SpaceCompleter.h"
 
 using namespace AxiomGui;
 
-ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library) : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
+ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library) : QDialog(nullptr, Qt::WindowTitleHint |
+                                                                                                Qt::WindowSystemMenuHint |
+                                                                                                Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("Add Module"));
     setStyleSheet(AxiomUtil::loadStylesheet(":/SaveModuleWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));
@@ -41,7 +41,7 @@ ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library) : Q
     mainLayout->addWidget(tagsLabel, 2, 0);
 
     // generate a few random tags
-    tagsInput = new QLineEdit(this);
+    /*tagsInput = new QLineEdit(this);
     auto tagList = library->tags();
     auto completer = new SpaceCompleter(tagList, tagsInput, this);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
@@ -55,7 +55,7 @@ ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library) : Q
     }
 
     tagsInput->setCompleter(completer);
-    tagsInput->setPlaceholderText(randomTags);
+    tagsInput->setPlaceholderText(randomTags);*/
     mainLayout->addWidget(tagsInput, 3, 0);
 
     mainLayout->setRowStretch(4, 1);

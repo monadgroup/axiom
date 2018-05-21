@@ -4,33 +4,41 @@
 #include <unordered_map>
 #include <memory>
 
-#include "../schematic/SchematicPanel.h"
+#include "editor/model/Project.h"
 
 namespace AxiomModel {
     class Project;
 
-    class Schematic;
+    class NodeSurface;
 }
 
 namespace AxiomGui {
 
-    class SchematicPanel;
+    class NodeSurfacePanel;
+
+    class HistoryPanel;
 
     class MainWindow : public QMainWindow {
     Q_OBJECT
 
     public:
-        MainWindow(AxiomModel::Project *project);
+        MainWindow(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomModel::Project> project);
+
+        ~MainWindow() override;
+
+        AxiomModel::Project *project() const { return _project.get(); }
+
+        void setProject(std::unique_ptr<AxiomModel::Project> project);
 
     public slots:
 
-        void showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic *schematic, bool split);
+        void showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split);
 
         void showAbout();
 
     private slots:
 
-        void removeSchematic(AxiomModel::Schematic *schematic);
+        void removeSurface(AxiomModel::NodeSurface *surface);
 
         void openProject();
 
@@ -38,8 +46,10 @@ namespace AxiomGui {
 
     private:
 
-        AxiomModel::Project *_project;
-        std::unordered_map<AxiomModel::Schematic *, std::unique_ptr<SchematicPanel>> _openPanels;
+        MaximRuntime::Runtime *runtime;
+        std::unique_ptr<AxiomModel::Project> _project;
+        std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
+        std::unique_ptr<HistoryPanel> _historyPanel;
     };
 
 }

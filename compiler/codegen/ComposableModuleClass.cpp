@@ -12,6 +12,8 @@ ComposableModuleClass::ComposableModuleClass(MaximContext *ctx, llvm::Module *mo
     _destructor = std::make_unique<ComposableModuleClassMethod>(this, "destructor", nullptr);
 }
 
+ComposableModuleClass::~ComposableModuleClass() = default;
+
 ModuleClassMethod *ComposableModuleClass::constructor() {
     return _constructor.get();
 }

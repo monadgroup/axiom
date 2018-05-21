@@ -45,6 +45,14 @@ void CustomNode::remove() {
     Node::remove();
 }
 
+std::vector<Control*> CustomNode::controls() const {
+    std::vector<Control*> result;
+    for (const auto &control : _controls) {
+        result.push_back(control.get());
+    }
+    return std::move(result);
+}
+
 GeneratableModuleClass *CustomNode::compile() {
     if (!_needsCompile && _moduleClass) {
         std::cout << "Skipping CustomNode compile, nothing's changed" << std::endl;
@@ -83,7 +91,7 @@ GeneratableModuleClass *CustomNode::compile() {
         setModule(std::move(oldModule));
     }
 
-    emit finishedCodegen();
+    finishedCodegen.trigger();
 
     return _moduleClass.get();
 }
@@ -145,7 +153,7 @@ void CustomNode::updateControls() {
     // add new controls - note: ordering is important here so the UI can free
     // grid space before allocating new controls
     for (const auto &newControl : newControls) {
-        emit controlAdded(newControl);
+        controlAdded.trigger(newControl);
     }
 }
 

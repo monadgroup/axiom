@@ -1,92 +1,90 @@
-#include <iostream>
-
 #include "Project.h"
-#include "LibraryEntry.h"
-#include "node/GroupNode.h"
-#include "control/NodeControl.h"
+
+#include "SequenceOperators.h"
+#include "objects/RootSurface.h"
+#include "objects/PortalNode.h"
+#include "actions/CreatePortalNodeAction.h"
 #include "compiler/runtime/Runtime.h"
 
 using namespace AxiomModel;
 
-Project::Project(MaximRuntime::Runtime *runtime) : history(this), library(this), root(this),
-                                                   _runtime(runtime) {
-    root.attachRuntime(runtime->mainSurface());
-    build();
+Project::Project() {
+    init();
 }
 
-void Project::serialize(QDataStream &stream) const {
+Project::Project(QDataStream &stream) : _mainRoot(stream) {
+    init();
+}
+
+std::unique_ptr<Project> Project::deserialize(QDataStream &stream, uint32_t *versionOut) {
+    if (!readHeader(stream, versionOut)) return nullptr;
+
+    return std::make_unique<Project>(stream);
+}
+
+void Project::writeHeader(QDataStream &stream) {
     stream << schemaMagic;
-    stream << schemaRevision;
-
-    library.serialize(stream);
-    root.serialize(stream);
-    history.serialize(stream);
+    stream << schemaVersion;
 }
 
-void Project::deserialize(QDataStream &stream) {
-    quint32 readMagic;
-    stream >> readMagic;
-    if (readMagic != schemaMagic) throw DeserializeInvalidFileException();
+bool Project::readHeader(QDataStream &stream, uint32_t *versionOut) {
+    uint64_t magic;
+    stream >> magic;
+    if (magic != schemaMagic) return false;
 
-    // todo: format upgrade system? maybe a file format that upgrades better?
-    quint32 readRevision;
-    stream >> readRevision;
-    if (readRevision != schemaRevision) throw DeserializeInvalidSchemaException();
+    uint32_t version;
+    stream >> version;
+    if (versionOut) *versionOut = version;
+    return version >= minSchemaVersion && version <= schemaVersion;
 
-    library.deserialize(stream);
-    root.deserialize(stream);
-    history.deserialize(stream);
 }
 
-void Project::load(QDataStream &stream) {
-    clear();
-    deserialize(stream);
-    _runtime->compile();
-    root.restoreValue();
+void Project::serialize(QDataStream &stream) {
+    writeHeader(stream);
+    _mainRoot.serialize(stream);
 }
 
-void Project::clear() {
-    library.clear();
-    root.deleteAll();
+void Project::attachRuntime(MaximRuntime::Runtime *runtime) {
+    assert(!_runtime);
+    _runtime = runtime;
+    _rootSurface->attachRuntime(runtime->mainSurface());
+
+    // todo: make this not hardcoded!
+    auto t = takeAt(_rootSurface->nodes(), 0);
+    auto inputNode = dynamic_cast<PortalNode*>(t);
+    assert(inputNode);
+    inputNode->attachRuntime(runtime->mainSurface()->input);
+
+    auto outputNode = dynamic_cast<PortalNode*>(takeAt(_rootSurface->nodes(), 1));
+    assert(outputNode);
+    outputNode->attachRuntime(runtime->mainSurface()->output);
+
+    rebuild();
 }
 
-void Project::build() {
-    root.saveValue();
-    _runtime->compile();
-    root.restoreValue();
+void Project::rebuild() const {
+    _rootSurface->saveValue();
+    if (_runtime) (*_runtime)->compile();
+    _rootSurface->restoreValue();
 }
 
-Schematic *Project::findSurface(const AxiomModel::SurfaceRef &ref) {
-    // base surface can either be the project root, or one of the library surfaces.
-    // this is determined by the ref.root UUID, which is null for the project root, or a library entry
-    // UUID for those.
-    Schematic *currentSurface;
-    if (ref.root.isNull()) currentSurface = &root;
-    else {
-        auto libraryEntry = library.findById(ref.root);
-        if (!libraryEntry) return nullptr;
-        currentSurface = &libraryEntry->schematic();
-    }
-
-    for (const auto &index : ref.path) {
-        auto targetNode = dynamic_cast<GroupNode *>(currentSurface->items()[index].get());
-        if (!targetNode) return nullptr;
-        currentSurface = targetNode->schematic.get();
-    }
-
-    return currentSurface;
+void Project::destroy() {
+    _mainRoot.destroy();
 }
 
-Node *Project::findNode(const AxiomModel::NodeRef &ref) {
-    auto surface = findSurface(ref.surface);
-    if (!surface) return nullptr;
+void Project::init() {
+    _mainRoot.history().rebuildRequested.connect([this]() { rebuild(); });
 
-    return dynamic_cast<Node *>(surface->items()[ref.index].get());
-}
+    // setup default project
+    //  1. create default surface
+    auto surfaceId = QUuid::createUuid();
+    auto rootSurface = std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot());
+    _rootSurface = rootSurface.get();
+    mainRoot().pool().registerObj(std::move(rootSurface));
 
-NodeControl *Project::findControl(const AxiomModel::ControlRef &ref) {
-    auto node = findNode(ref.node);
-    if (!node) return nullptr;
-
-    return dynamic_cast<NodeControl *>(node->surface.items()[ref.index].get());
+    //  2. add default inputs and outputs
+    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
+                                   PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
+    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
+                                   PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
 }

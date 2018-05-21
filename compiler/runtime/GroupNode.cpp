@@ -12,11 +12,6 @@ GroupNode::GroupNode(Surface *surface) : Node(surface), _subsurface(surface->run
 GeneratableModuleClass *GroupNode::compile() {
     auto result = _subsurface.compile();
 
-    std::string type_str;
-    llvm::raw_string_ostream rso(type_str);
-    result->storageType()->print(rso);
-    //std::cout << "GroupNode type: " << rso.str() << std::endl;
-
     for (auto &control : _controls) {
         auto targetGroup = control->forward()->group();
         auto targetIndex = _subsurface.groupPtrIndexes().find(targetGroup);
@@ -28,13 +23,22 @@ GeneratableModuleClass *GroupNode::compile() {
     return result;
 }
 
+std::vector<Control*> GroupNode::controls() const {
+    std::vector<Control*> result;
+    for (const auto &control : _controls) {
+        result.push_back(control.get());
+    }
+    return std::move(result);
+}
+
 SoftControl *GroupNode::forwardControl(MaximRuntime::Control *control) {
     assert(control->node()->surface() == &_subsurface);
 
     auto newControl = SoftControl::create(this, control);
     auto newControlPtr = newControl.get();
     _controls.push_back(std::move(newControl));
-    emit controlAdded(newControlPtr);
+    controlAdded.trigger(newControlPtr);
+    control->cleanup.connect(this, std::function([this, newControlPtr]() { removeControl(newControlPtr); }));
 
     control->node()->scheduleCompile();
     return newControlPtr;
@@ -62,4 +66,14 @@ void GroupNode::restoreValue() {
 
 MaximCodegen::ModuleClass *GroupNode::moduleClass() {
     return _subsurface.moduleClass();
+}
+
+void GroupNode::removeControl(MaximRuntime::SoftControl *control) {
+    for (auto i = _controls.begin(); i < _controls.end(); i++) {
+        if (i->get() == control) {
+            _controls.erase(i);
+            return;
+        }
+    }
+    assert(false);
 }

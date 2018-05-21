@@ -2,25 +2,27 @@
 
 #include <QtWidgets/QGraphicsObject>
 
+#include "common/Hookable.h"
+
 namespace AxiomModel {
     class Node;
 
-    class NodeControl;
+    class Control;
 }
 
 namespace AxiomGui {
 
-    class SchematicCanvas;
+    class NodeSurfaceCanvas;
 
-    class NodeItem : public QGraphicsObject {
+    class NodeItem : public QGraphicsObject, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:
-        SchematicCanvas *canvas;
+        NodeSurfaceCanvas *canvas;
 
         AxiomModel::Node *node;
 
-        NodeItem(AxiomModel::Node *node, SchematicCanvas *canvas);
+        NodeItem(AxiomModel::Node *node, NodeSurfaceCanvas *canvas);
 
         QRectF boundingRect() const override;
 
@@ -48,7 +50,7 @@ namespace AxiomGui {
 
         void setSize(QSize newSize);
 
-        void addControl(AxiomModel::NodeControl *control);
+        void addControl(AxiomModel::Control *control);
 
         void setIsSelected(bool selected);
 
@@ -57,6 +59,8 @@ namespace AxiomGui {
         void resizerChanged(QPointF topLeft, QPointF bottomRight);
 
         void resizerStartDrag();
+
+        void resizerEndDrag();
 
         void triggerUpdate();
 

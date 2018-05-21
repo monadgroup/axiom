@@ -1,6 +1,6 @@
 #include "compiler/runtime/Runtime.h"
 #include "widgets/windows/MainWindow.h"
-#include "model/Project.h"
+#include "widgets/surface/NodeSurfacePanel.h"
 #include "AxiomApplication.h"
 #include "compiler/runtime/GeneratableModuleClass.h"
 #include "compiler/runtime/ControlGroup.h"
@@ -11,9 +11,8 @@
 
 int main(int argc, char *argv[]) {
     MaximRuntime::Runtime runtime;
-    AxiomModel::Project project(&runtime);
-    AxiomGui::MainWindow window(&project);
-
+    auto project = std::make_unique<AxiomModel::Project>();
+    AxiomGui::MainWindow window(&runtime, std::move(project));
     window.show();
     return AxiomApplication::main.exec();
 }

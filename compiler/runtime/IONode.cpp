@@ -22,6 +22,10 @@ void IONode::remove() {
     Node::remove();
 }
 
+std::vector<Control*> IONode::controls() const {
+    return std::vector<Control*> {_control.get()};
+}
+
 MaximCodegen::ModuleClass *IONode::moduleClass() {
     return _moduleClass.get();
 }

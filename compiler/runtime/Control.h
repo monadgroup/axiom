@@ -1,10 +1,9 @@
 #pragma once
 
-#include <QtCore/QObject>
-
 #include <vector>
 #include <set>
 
+#include "common/Event.h"
 #include "RuntimeUnit.h"
 
 namespace MaximCodegen {
@@ -17,10 +16,12 @@ namespace MaximRuntime {
 
     class ControlGroup;
 
-    class Control : public QObject {
-    Q_OBJECT
-
+    class Control {
     public:
+        AxiomCommon::Event<Control *> exposerChanged;
+        AxiomCommon::Event<> removed;
+        AxiomCommon::Event<> cleanup;
+
         explicit Control(Node *node);
 
         Node *node() const { return _node; }
@@ -53,17 +54,7 @@ namespace MaximRuntime {
 
         void exposerCleared(Control *exposer);
 
-    public slots:
-
         void remove();
-
-    signals:
-
-        void exposerChanged(Control *newExposer);
-
-        void removed();
-
-        void cleanup();
 
     protected:
 

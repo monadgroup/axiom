@@ -15,14 +15,14 @@ QLineEdit:focus {
     border-color: #444;
 }
 
-QTextEdit {
+QTextEdit, QPlainTextEdit {
     background: #0A0A0A;
     border: 1px solid #333;
     padding: 2px;
     font-family: 'Consolas', monospace;
 }
 
-QTextEdit:focus {
+QTextEdit:focus, QPlainTextEdit:focus {
     background: #111;
 }
 

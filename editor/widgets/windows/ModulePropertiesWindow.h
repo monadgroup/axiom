@@ -11,7 +11,7 @@ namespace AxiomModel {
 namespace AxiomGui {
 
     class ModulePropertiesWindow : public QDialog {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         ModulePropertiesWindow(AxiomModel::Library *library);

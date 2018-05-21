@@ -6,7 +6,7 @@ namespace MaximRuntime {
 
     class GroupNode;
 
-    class SoftControl : public Control {
+    class SoftControl : public AxiomCommon::Hookable, public Control {
     public:
         SoftControl(GroupNode *node, Control *forward);
 

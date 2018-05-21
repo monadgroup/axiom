@@ -1,8 +1,8 @@
 #pragma once
 
 #include <set>
-#include <QtCore/QObject>
 
+#include "common/Event.h"
 #include "ModuleRuntimeUnit.h"
 
 namespace MaximRuntime {
@@ -13,10 +13,10 @@ namespace MaximRuntime {
 
     class Control;
 
-    class Node : public QObject, public ModuleRuntimeUnit {
-    Q_OBJECT
-
+    class Node : public ModuleRuntimeUnit {
     public:
+        AxiomCommon::Event<bool> extractedChanged;
+
         explicit Node(Surface *surface);
 
         virtual GeneratableModuleClass *compile() = 0;
@@ -25,9 +25,7 @@ namespace MaximRuntime {
 
         Surface *surface() const { return _surface; }
 
-        virtual const std::unique_ptr<Control> *begin() const = 0;
-
-        virtual const std::unique_ptr<Control> *end() const = 0;
+        virtual std::vector<Control*> controls() const = 0;
 
         void scheduleCompile();
 
@@ -35,13 +33,7 @@ namespace MaximRuntime {
 
         bool extracted() const { return _extracted; }
 
-    public slots:
-
         void setExtracted(bool extracted);
-
-    signals:
-
-        void extractedChanged(bool newExtracted);
 
     protected:
 

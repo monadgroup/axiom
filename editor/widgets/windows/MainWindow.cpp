@@ -4,18 +4,22 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
+#include <QtCore/QTimer>
 
 #include "editor/resources/resource.h"
+#include "../surface/NodeSurfacePanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
 #include "../history/HistoryPanel.h"
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
-#include "editor/model/Project.h"
+#include "editor/model/objects/RootSurface.h"
+#include "editor/model/PoolOperators.h"
+#include "compiler/runtime/Runtime.h"
 #include "../GlobalActions.h"
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
+MainWindow::MainWindow(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomModel::Project> project) : runtime(runtime) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -57,6 +61,9 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
 
     editMenu->addAction(GlobalActions::editPreferences);
 
+    connect(GlobalActions::helpAbout, &QAction::triggered,
+            this, &MainWindow::showAbout);
+
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(GlobalActions::helpAbout);
 
@@ -68,48 +75,24 @@ MainWindow::MainWindow(AxiomModel::Project *project) : _project(project) {
     connect(GlobalActions::fileQuit, &QAction::triggered,
             QApplication::quit);
 
-    GlobalActions::editUndo->setEnabled(project->history.canUndo());
-    connect(&project->history, &AxiomModel::HistoryList::canUndoChanged,
-            GlobalActions::editUndo, &QAction::setEnabled);
-    connect(&project->history, &AxiomModel::HistoryList::undoTypeChanged,
-            [](AxiomModel::HistoryList::ActionType type) {
-                GlobalActions::editUndo->setText("&Undo " + AxiomModel::HistoryList::typeToString(type));
-            });
     connect(GlobalActions::editUndo, &QAction::triggered,
-            &project->history, &AxiomModel::HistoryList::undo);
-
-    GlobalActions::editRedo->setEnabled(project->history.canRedo());
-    connect(&project->history, &AxiomModel::HistoryList::canRedoChanged,
-            GlobalActions::editRedo, &QAction::setEnabled);
-    connect(&project->history, &AxiomModel::HistoryList::undoTypeChanged,
-            [](AxiomModel::HistoryList::ActionType type) {
-                GlobalActions::editRedo->setText("&Redo " + AxiomModel::HistoryList::typeToString(type));
-            });
+            this, [this]() { if (_project) _project->mainRoot().history().undo(); });
     connect(GlobalActions::editRedo, &QAction::triggered,
-            &project->history, &AxiomModel::HistoryList::redo);
+            this, [this]() { if (_project) _project->mainRoot().history().redo(); });
 
-    connect(GlobalActions::helpAbout, &QAction::triggered,
-            this, &MainWindow::showAbout);
-
-    auto historyList = new HistoryPanel(&project->history, this);
-    historyList->setAllowedAreas(Qt::AllDockWidgetAreas);
-    addDockWidget(Qt::RightDockWidgetArea, historyList);
-
-    auto moduleBrowser = new ModuleBrowserPanel(this, &project->library, this);
-    moduleBrowser->setAllowedAreas(Qt::AllDockWidgetAreas);
-    addDockWidget(Qt::BottomDockWidgetArea, moduleBrowser);
-
-    showSchematic(nullptr, &project->root, false);
+    setProject(std::move(project));
 }
 
-void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic *schematic, bool split) {
-    auto openPanel = _openPanels.find(schematic);
+MainWindow::~MainWindow() = default;
+
+void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *surface, bool split) {
+    auto openPanel = _openPanels.find(surface);
     if (openPanel != _openPanels.end()) {
         openPanel->second->raise();
         return;
     }
 
-    auto newDock = std::make_unique<SchematicPanel>(this, schematic);
+    auto newDock = std::make_unique<NodeSurfacePanel>(this, surface);
     auto newDockPtr = newDock.get();
     newDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     if (!fromPanel) {
@@ -127,53 +110,58 @@ void MainWindow::showSchematic(SchematicPanel *fromPanel, AxiomModel::Schematic 
         });
     }
 
-    connect(newDockPtr, &SchematicPanel::closed,
-            this, [this, schematic]() { removeSchematic(schematic); });
-
-    _openPanels.emplace(schematic, std::move(newDock));
+    connect(newDockPtr, &NodeSurfacePanel::closed,
+            this, [this, surface]() { removeSurface(surface); });
+    _openPanels.emplace(surface, std::move(newDock));
 }
 
 void MainWindow::showAbout() {
     AboutWindow().exec();
 }
 
-void MainWindow::removeSchematic(AxiomModel::Schematic *schematic) {
-    _openPanels.erase(schematic);
+void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
+    // cleanup old project state
+    if (_project) {
+        _project->destroy();
+    }
+    if (_historyPanel) {
+        _historyPanel->close();
+    }
+
+    _project = std::move(project);
+    _project->attachRuntime(runtime);
+    auto &history = _project->mainRoot().history();
+
+    GlobalActions::editUndo->setEnabled(history.canUndo());
+    history.canUndoChanged.forward(GlobalActions::editUndo, &QAction::setEnabled);
+    history.undoTypeChanged.connect([](AxiomModel::Action::ActionType type) {
+        GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(type));
+    });
+
+    GlobalActions::editRedo->setEnabled(history.canRedo());
+    history.canRedoChanged.forward(GlobalActions::editRedo, &QAction::setEnabled);
+    history.redoTypeChanged.connect([](AxiomModel::Action::ActionType type) {
+        GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(type));
+    });
+
+    // find root surface and show it
+    auto defaultSurface = AxiomModel::getFirst(
+        AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
+    assert(defaultSurface.value());
+    showSurface(nullptr, *defaultSurface.value(), false);
+
+    _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
+    addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
 }
 
-void MainWindow::openProject() {
-    auto selectedFile = QFileDialog::getOpenFileName(this, "Open Project", QString(),
-                                                     tr("Axiom Project Files (*.axp);;All Files (*.*)"));
-    if (selectedFile == QString()) return;
-
-    QFile file(selectedFile);
-    if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox(QMessageBox::Critical, "Failed to open project", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok).exec();
-        return;
-    }
-
-    QDataStream stream(&file);
-    try {
-        _project->load(stream);
-    } catch (AxiomModel::DeserializeInvalidFileException&) {
-        QMessageBox(QMessageBox::Critical, "Failed to load project",
-                    "The file you selected is an invalid project file (bad magic header).\n"
-                    "Maybe it's corrupt?", QMessageBox::Ok).exec();
-    } catch (AxiomModel::DeserializeInvalidSchemaException&) {
-        QMessageBox(QMessageBox::Critical, "Failed to load project",
-                    "The file you selected is saved with an outdated project format.\n\n"
-                    "Unfortunately Axiom currently doesn't support loading old project formats.\n"
-                    "If you really want this feature, maybe make a pull request (https://github.com/monadgroup/axiom/pulls)"
-                    " or report an issue (https://github.com/monadgroup/axiom/issues).", QMessageBox::Ok).exec();
-    }
-    file.close();
+void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {
+    _openPanels.erase(surface);
 }
 
 void MainWindow::saveProject() {
     auto selectedFile = QFileDialog::getSaveFileName(this, "Save Project", QString(),
-                                                     tr("Axiom Project Files (*.axp);;All Files (*.*)"));
-    if (selectedFile == QString()) return;
+                                                     tr("Axiom Project Files (*.axp);;All Files(*.*)"));
+    if (selectedFile.isNull()) return;
 
     QFile file(selectedFile);
     if (!file.open(QIODevice::WriteOnly)) {
@@ -185,4 +173,38 @@ void MainWindow::saveProject() {
     QDataStream stream(&file);
     _project->serialize(stream);
     file.close();
+}
+
+void MainWindow::openProject() {
+    auto selectedFile = QFileDialog::getOpenFileName(this, "Open Project", QString(),
+                                                     tr("Axiom Project Files (*.axp);;All Files (*.*)"));
+    if (selectedFile.isNull()) return;
+
+    QFile file(selectedFile);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox(QMessageBox::Critical, "Failed to open project", "The file you selected couldn't be opened.",
+                    QMessageBox::Ok).exec();
+        return;
+    }
+
+    QDataStream stream(&file);
+    uint32_t readVersion = 0;
+    auto newProject = AxiomModel::Project::deserialize(stream, &readVersion);
+    file.close();
+
+    if (!newProject) {
+        if (readVersion) {
+            QMessageBox(QMessageBox::Critical, "Failed to load project",
+                        "The file you selected was created with an incompatible version of Axiom.\n\n"
+                        "Expected version: between " + QString::number(AxiomModel::Project::minSchemaVersion) +
+                        " and " + QString::number(AxiomModel::Project::schemaVersion) + ", actual version: " +
+                        QString::number(readVersion) + ".", QMessageBox::Ok).exec();
+        } else {
+            QMessageBox(QMessageBox::Critical, "Failed to load project",
+                        "The file you selected is an invalid project file (bad magic header).\n"
+                        "Maybe it's corrupt?", QMessageBox::Ok).exec();
+        }
+    } else {
+        setProject(std::move(newProject));
+    }
 }

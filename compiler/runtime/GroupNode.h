@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Event.h"
 #include "Node.h"
 #include "Surface.h"
 #include "SoftControl.h"
@@ -10,19 +11,15 @@ namespace MaximRuntime {
 
     class GeneratableModuleClass;
 
-    class GroupNode : public Node {
-    Q_OBJECT
-
+    class GroupNode : public Node, public AxiomCommon::Hookable {
     public:
+        AxiomCommon::Event<SoftControl *> controlAdded;
+
         explicit GroupNode(Surface *surface);
 
         GeneratableModuleClass *compile() override;
 
-        const std::unique_ptr<Control> *
-        begin() const override { return (const std::unique_ptr<Control> *) &_controls[0]; }
-
-        const std::unique_ptr<Control> *
-        end() const override { return (const std::unique_ptr<Control> *) &_controls[_controls.size()]; }
+        std::vector<Control*> controls() const override;
 
         Surface *subsurface() { return &_subsurface; }
 
@@ -39,15 +36,13 @@ namespace MaximRuntime {
 
         MaximCodegen::ModuleClass *moduleClass() override;
 
-    signals:
-
-        void controlAdded(SoftControl *control);
-
     private:
 
         Surface _subsurface;
 
         std::vector<std::unique_ptr<SoftControl>> _controls;
+
+        void removeControl(SoftControl *control);
     };
 
 }

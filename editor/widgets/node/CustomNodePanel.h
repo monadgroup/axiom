@@ -1,9 +1,10 @@
 #pragma once
 
 #include <QtWidgets/QGraphicsObject>
-#include <QtWidgets/QTextEdit>
+#include <QtWidgets/QPlainTextEdit>
 
 #include "compiler/runtime/ErrorLog.h"
+#include "common/Hookable.h"
 
 class QGraphicsProxyWidget;
 
@@ -15,7 +16,7 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class CustomNodePanel : public QGraphicsObject {
+    class CustomNodePanel : public QGraphicsObject, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:
@@ -55,9 +56,10 @@ namespace AxiomGui {
     private:
 
         QGraphicsProxyWidget *textProxy;
-        QTextEdit *textEditor;
-        bool hasErrors = false;
-        bool showingErrors = false;
+        QPlainTextEdit *textEditor;
+        QString beforeCode;
+        //bool hasErrors = false;
+        //bool showingErrors = false;
 
         bool eventFilter(QObject *object, QEvent *event) override;
 

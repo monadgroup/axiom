@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.4.3)
 project(axiom)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
 message("Debug flags: ${CMAKE_CXX_FLAGS_DEBUG}")
 message("Reldeb flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
@@ -18,14 +20,14 @@ message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-if(AXIOM_STATIC_LINK)
+if (AXIOM_STATIC_LINK)
     set(Qt5_USE_STATIC_LIBS ON)
     set(Qt5_USE_STATIC_RUNTIME ON)
     add_definitions(-DAXIOM_STATIC_BUILD=1)
     set(AXIOM_LINK_FLAGS -static -static-libgcc -static-libstdc++)
-else()
+else ()
     set(AXIOM_LINK_FLAGS "")
-endif()
+endif ()
 find_package(Qt5Widgets REQUIRED)
 
 set(SOURCE_FILES AxiomApplication.cpp util.cpp)
@@ -43,8 +45,9 @@ include_directories(../ ${LLVM_INCLUDE_DIRS} ../vendor/vst ${Qt5Widgets_INCLUDE_
 add_definitions(${LLVM_DEFINITIONS})
 
 llvm_map_components_to_libnames(llvm_libs support core ipo irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
-set(LINK_LIBS axiom_widgets axiom_model maxim_runtime maxim_codegen maxim_common Qt5::Widgets ${llvm_libs})
+set(LINK_LIBS axiom_widgets axiom_model maxim_runtime maxim_codegen maxim_common axiom_common Qt5::Widgets ${llvm_libs})
 
+add_subdirectory(../common common)
 add_subdirectory(model)
 add_subdirectory(widgets)
 add_subdirectory(../compiler compiler)

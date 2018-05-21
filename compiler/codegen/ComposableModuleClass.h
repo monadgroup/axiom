@@ -11,6 +11,8 @@ namespace MaximCodegen {
         ComposableModuleClass(MaximContext *ctx, llvm::Module *module, const std::string &name,
                               const std::vector<llvm::Type *> &constructorParams = {});
 
+        ~ComposableModuleClass();
+
         ModuleClassMethod *constructor() override;
 
         ModuleClassMethod *destructor() override;

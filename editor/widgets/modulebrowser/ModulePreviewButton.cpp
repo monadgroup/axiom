@@ -2,15 +2,14 @@
 
 #include <QtWidgets/QGridLayout>
 #include <QtGui/QContextMenuEvent>
-#include <QMenu>
 
 #include "ModulePreviewView.h"
-#include "editor/model/Library.h"
-#include "editor/model/LibraryEntry.h"
 
 using namespace AxiomGui;
 
-ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry, QWidget *parent) : QFrame(parent), entry(entry) {
+ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library *library,
+                                         AxiomModel::LibraryEntry *entry, QWidget *parent) : QFrame(parent),
+                                                                                             entry(entry) {
     auto mainLayout = new QGridLayout(this);
 
     mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -25,13 +24,13 @@ ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library
 
     setLayout(mainLayout);
 
-    connect(entry, &AxiomModel::LibraryEntry::nameChanged,
+    /*connect(entry, &AxiomModel::LibraryEntry::nameChanged,
             this, &ModulePreviewButton::setName);
     setName(entry->name());
 
     connect(library, &AxiomModel::Library::activeTagChanged,
             this, &ModulePreviewButton::setVisibleTag);
-    setVisibleTag(library->activeTag());
+    setVisibleTag(library->activeTag());*/
 }
 
 void ModulePreviewButton::setName(QString name) {
@@ -39,6 +38,6 @@ void ModulePreviewButton::setName(QString name) {
 }
 
 void ModulePreviewButton::setVisibleTag(const QString &tag) {
-    auto hasTag = tag == "" || entry->tags().find(tag) != entry->tags().end();
-    setVisible(hasTag);
+    //auto hasTag = tag == "" || entry->tags().find(tag) != entry->tags().end();
+    //setVisible(hasTag);
 }
