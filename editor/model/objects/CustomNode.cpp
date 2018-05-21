@@ -107,8 +107,9 @@ void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
     removed.connect(this, &CustomNode::detachRuntime);
 
     // add any controls that might already exist in the runtime
-    for (const auto &control : *runtime) {
-        runtimeAddedControl(control.get());
+    auto controls = runtime->controls();
+    for (const auto &control : controls) {
+        runtimeAddedControl(control);
     }
 }
 
@@ -160,10 +161,11 @@ void CustomNode::surfaceControlAdded(AxiomModel::Control *control) {
     std::cout << "Control added to surface, linking to runtime" << std::endl;
 
     // find a runtime control to attach
-    for (const std::unique_ptr<MaximRuntime::Control> &runtimeControl : **_runtime) {
-        if (!control->canAttachRuntime(runtimeControl.get())) continue;
+    auto controls = (*_runtime)->controls();
+    for (const auto &runtimeControl : controls) {
+        if (!control->canAttachRuntime(runtimeControl)) continue;
 
-        control->attachRuntime(runtimeControl.get());
+        control->attachRuntime(runtimeControl);
         runtimeControl->removed.connect(control, std::function([this, control]() { runtimeRemovedControl(control); }));
         return;
     }

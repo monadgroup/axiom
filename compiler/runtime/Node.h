@@ -25,9 +25,7 @@ namespace MaximRuntime {
 
         Surface *surface() const { return _surface; }
 
-        virtual const std::unique_ptr<Control> *begin() const = 0;
-
-        virtual const std::unique_ptr<Control> *end() const = 0;
+        virtual std::vector<Control*> controls() const = 0;
 
         void scheduleCompile();
 

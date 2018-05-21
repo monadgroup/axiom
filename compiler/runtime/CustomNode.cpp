@@ -45,6 +45,14 @@ void CustomNode::remove() {
     Node::remove();
 }
 
+std::vector<Control*> CustomNode::controls() const {
+    std::vector<Control*> result;
+    for (const auto &control : _controls) {
+        result.push_back(control.get());
+    }
+    return std::move(result);
+}
+
 GeneratableModuleClass *CustomNode::compile() {
     if (!_needsCompile && _moduleClass) {
         std::cout << "Skipping CustomNode compile, nothing's changed" << std::endl;

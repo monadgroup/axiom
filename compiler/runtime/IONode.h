@@ -15,9 +15,7 @@ namespace MaximRuntime {
 
         IOControl *control() { return _control.get(); }
 
-        const std::unique_ptr<Control> *begin() const override { return (std::unique_ptr<Control> *) &_control; }
-
-        const std::unique_ptr<Control> *end() const override { return (std::unique_ptr<Control> *) &_control + 1; }
+        std::vector<Control*> controls() const override;
 
         MaximCodegen::ModuleClass *moduleClass() override;
 

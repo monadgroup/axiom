@@ -12,11 +12,6 @@ GroupNode::GroupNode(Surface *surface) : Node(surface), _subsurface(surface->run
 GeneratableModuleClass *GroupNode::compile() {
     auto result = _subsurface.compile();
 
-    std::string type_str;
-    llvm::raw_string_ostream rso(type_str);
-    result->storageType()->print(rso);
-    //std::cout << "GroupNode type: " << rso.str() << std::endl;
-
     for (auto &control : _controls) {
         auto targetGroup = control->forward()->group();
         auto targetIndex = _subsurface.groupPtrIndexes().find(targetGroup);
@@ -26,6 +21,14 @@ GeneratableModuleClass *GroupNode::compile() {
     }
 
     return result;
+}
+
+std::vector<Control*> GroupNode::controls() const {
+    std::vector<Control*> result;
+    for (const auto &control : _controls) {
+        result.push_back(control.get());
+    }
+    return std::move(result);
 }
 
 SoftControl *GroupNode::forwardControl(MaximRuntime::Control *control) {

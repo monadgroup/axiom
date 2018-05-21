@@ -59,7 +59,8 @@ GeneratableModuleClass *Surface::compile() {
     // walk through new groups
     std::vector<std::unique_ptr<ControlGroup>> newGroups;
     for (const auto &node : _nodes) {
-        for (const std::unique_ptr<Control> &control : *node) {
+        auto controls = node->controls();
+        for (const auto &control : controls) {
             auto newGroup = std::make_unique<ControlGroup>(this, control->type());
             auto newGroupPtr = newGroup.get();
             newGroups.emplace_back(std::move(newGroup));
@@ -79,8 +80,8 @@ GeneratableModuleClass *Surface::compile() {
     _controlGroups = std::move(newGroups);
 
     for (const auto &node : _nodes) {
-        for (const std::unique_ptr<Control> &control : *node) {
-
+        auto controls = node->controls();
+        for (const auto &control : controls) {
             // first absorb groups from real connections
             for (const auto &connectedControl : control->connections()) {
                 control->group()->absorb(connectedControl->group());
@@ -105,10 +106,11 @@ GeneratableModuleClass *Surface::compile() {
 
     // step 1: find extractor controls
     for (const auto &node : _nodes) {
-        for (const std::unique_ptr<Control> &control : *node) {
+        auto controls = node->controls();
+        for (const auto &control : controls) {
             if ((uint32_t) control->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) {
-                controlQueue.emplace(control.get());
-                visitedControls.emplace(control.get());
+                controlQueue.emplace(control);
+                visitedControls.emplace(control);
             }
         }
     }
@@ -119,13 +121,14 @@ GeneratableModuleClass *Surface::compile() {
         controlQueue.pop();
 
         if (!((uint32_t) nextControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT)) {
-            for (const std::unique_ptr<Control> &relatedControl : *nextControl->node()) {
-                if (visitedControls.find(relatedControl.get()) != visitedControls.end()) continue;
-                visitedControls.emplace(relatedControl.get());
+            auto relatedControls = nextControl->node()->controls();
+            for (const auto &relatedControl : relatedControls) {
+                if (visitedControls.find(relatedControl) != visitedControls.end()) continue;
+                visitedControls.emplace(relatedControl);
 
                 if ((uint32_t) relatedControl->type()->type() & (uint32_t) MaximCommon::ControlType::EXTRACT) continue;
 
-                controlQueue.emplace(relatedControl.get());
+                controlQueue.emplace(relatedControl);
             }
         }
 
@@ -239,7 +242,8 @@ GeneratableModuleClass *Surface::compile() {
 
         inverseExecutionOrder.push_back(nextNode);
 
-        for (const auto &control : *nextNode) {
+        auto controls = nextNode->controls();
+        for (const auto &control : controls) {
             for (const auto &connectedControl : control->connections()) {
                 // only propagate to the node if it writes to the group - other nodes won't affect output
                 // (although they'll still be included in the final list by the check after this one)
@@ -310,7 +314,8 @@ GeneratableModuleClass *Surface::compile() {
                 currentIndex
             }, "entry.ptr");
 
-            for (const auto &control : *node) {
+            auto controls = node->controls();
+            for (const auto &control : controls) {
                 auto instId = control->instanceId();
                 if (instId < 0) continue;
 
@@ -440,7 +445,8 @@ GeneratableModuleClass *Surface::compile() {
             llvm::Value *shouldGenerate = nullptr;
             if (loopSize > 1) {
                 std::vector<llvm::Value *> generateBools;
-                for (const auto &control : *node) {
+                auto controls = node->controls();
+                for (const auto &control : controls) {
                     auto instId = control->instanceId();
                     if (!control->readFrom() || instId < 0) continue;
 
@@ -551,7 +557,8 @@ void *Surface::updateCurrentPtr(void *parentCtx) {
 void Surface::addExitNodes(std::set<MaximRuntime::Node *> &queue) {
     for (const auto &node : _nodes) {
         auto addNode = false;
-        for (const std::unique_ptr<Control> &control : *node) {
+        auto controls = node->controls();
+        for (const auto &control : controls) {
             if (!control->exposer() || !control->writtenTo()) continue;
 
             addNode = true;

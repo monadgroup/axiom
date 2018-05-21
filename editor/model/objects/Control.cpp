@@ -199,12 +199,15 @@ void Control::updateExposerRuntime() {
             std::cout << "Attaching runtime!" << std::endl;
             auto newRuntime = (*controlNode->runtime())->forwardControl(*_runtime);
             control->attachRuntime(newRuntime);
-            //control->removed.connect([newRuntime]() { newRuntime->remove(); });
+            control->removed.connect([newRuntime]() {
+                std::cout << "Removing runtime" << std::endl;
+                newRuntime->remove();
+            });
             std::cout << "Finished attaching runtime" << std::endl;
         });
     }
 }
 
 void Control::updateExposerRemoved() {
-    //if (!_exposingUuid.isNull()) find(root()->controls(), _exposingUuid)->setExposerUuid(QUuid());
+    if (!_exposingUuid.isNull()) find(root()->controls(), _exposingUuid)->setExposerUuid(QUuid());
 }

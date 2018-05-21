@@ -19,11 +19,7 @@ namespace MaximRuntime {
 
         GeneratableModuleClass *compile() override;
 
-        const std::unique_ptr<Control> *
-        begin() const override { return (const std::unique_ptr<Control> *) &_controls[0]; }
-
-        const std::unique_ptr<Control> *
-        end() const override { return (const std::unique_ptr<Control> *) &_controls[_controls.size()]; }
+        std::vector<Control*> controls() const override;
 
         Surface *subsurface() { return &_subsurface; }
 
