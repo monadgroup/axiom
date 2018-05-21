@@ -1,5 +1,7 @@
 #include "PortalControlItem.h"
 
+#include <QtWidgets/QGraphicsSceneMouseEvent>
+
 #include "editor/model/objects/PortalControl.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "../../util.h"
@@ -55,4 +57,8 @@ QPainterPath PortalControlItem::shape() const {
 
 QString PortalControlItem::getImagePath(AxiomModel::PortalControl *control) {
     return ":/icons/" + iconNameFromType(control->portalType(), control->wireType());
+}
+
+void PortalControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    event->ignore();
 }
