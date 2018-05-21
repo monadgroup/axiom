@@ -128,4 +128,14 @@ namespace AxiomModel {
         return std::move(result);
     }
 
+    template<class InputCollection>
+    typename InputCollection::value_type takeAt(const InputCollection &collection, size_t index) {
+        assert(index < collection.size());
+        auto iter = collection.begin();
+        for (size_t i = 0; i < index; i++) {
+            iter++;
+        }
+        return *iter;
+    }
+
 };

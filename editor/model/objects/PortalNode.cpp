@@ -1,5 +1,9 @@
 #include "PortalNode.h"
 
+#include "ControlSurface.h"
+#include "../WatchSequenceOperators.h"
+#include "compiler/runtime/IONode.h"
+
 using namespace AxiomModel;
 
 PortalNode::PortalNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
@@ -21,4 +25,13 @@ std::unique_ptr<PortalNode> PortalNode::deserialize(QDataStream &stream, const Q
 
 void PortalNode::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
     Node::serialize(stream, parent, withContext);
+}
+
+void PortalNode::attachRuntime(MaximRuntime::IONode *runtime) {
+    controls().then([runtime](ControlSurface *controls) {
+        auto controlRuntime = runtime->control();
+        takeAtLater(controls->controls(), 0).then([controlRuntime](Control *control) {
+            control->attachRuntime(controlRuntime);
+        });
+    });
 }

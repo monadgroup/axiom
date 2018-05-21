@@ -48,4 +48,20 @@ namespace AxiomModel {
         return std::move(result);
     };
 
+    template<class Item>
+    AxiomCommon::Promise<Item> takeAtLater(WatchSequence<Item> input, size_t index) {
+        auto inputSize = input.size();
+        if (inputSize > index) {
+            return AxiomCommon::Promise<Item>::from(takeAt(input, index));
+        }
+
+        AxiomCommon::Promise<Item> result;
+        input.itemAdded.connect([inputSize, index, result](const Item &item) mutable {
+            inputSize++;
+            if (inputSize == index + 1) result.resolve(item);
+        });
+
+        return std::move(result);
+    }
+
 }

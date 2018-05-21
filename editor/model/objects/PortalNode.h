@@ -4,6 +4,10 @@
 #include "PortalControl.h"
 #include "../ConnectionWire.h"
 
+namespace MaximRuntime {
+    class IONode;
+}
+
 namespace AxiomModel {
 
     class PortalNode : public Node {
@@ -22,6 +26,8 @@ namespace AxiomModel {
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
         void createAndAttachRuntime(MaximRuntime::Surface *parent) override {}
+
+        void attachRuntime(MaximRuntime::IONode *runtime);
 
         bool isResizable() const override { return false; }
 
