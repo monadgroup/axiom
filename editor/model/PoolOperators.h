@@ -25,6 +25,38 @@ namespace AxiomModel {
     };
 
     template<class InputCollection>
+    std::vector<typename InputCollection::value_type> heapSort(const InputCollection &input) {
+        auto collection = collect(input);
+        QSet<QUuid> seenIds;
+        QSet<QUuid> parentIds;
+
+        // find all top-level items (i.e ones that don't have parents in this collection)
+        for (const auto &itm : collection) {
+            if (!seenIds.contains(itm->parentUuid())) {
+                parentIds.insert(itm->parentUuid());
+            }
+            parentIds.remove(itm->uuid());
+            seenIds.insert(itm->uuid());
+        }
+
+        // parentIds is now a list of UUIDs of parents that don't exist in this collection
+        std::vector<typename InputCollection::value_type> result;
+        while (!collection.empty()) {
+            for (auto i = collection.begin(); i < collection.end(); i++) {
+                auto &itm = *i;
+                if (!parentIds.contains(itm->parentUuid())) continue;
+
+                parentIds.insert(itm->uuid());
+                result.push_back(std::move(itm));
+                collection.erase(i);
+                i--;
+            }
+        }
+
+        return std::move(result);
+    }
+
+    template<class InputCollection>
     typename InputCollection::value_type find(const InputCollection &collection, const QUuid &uuid) {
         return find<typename InputCollection::value_type>(collection, uuid);
     }

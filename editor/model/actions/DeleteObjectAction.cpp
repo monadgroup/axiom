@@ -36,11 +36,10 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
 
 bool DeleteObjectAction::forward(bool) {
     auto removeItems = getRemoveItems();
-
     auto needsRebuild = anyNeedRebuild(removeItems);
 
     QDataStream stream(&buffer, QIODevice::WriteOnly);
-    ModelRoot::serializeChunk(stream, QUuid(), removeItems);
+    ModelRoot::serializeChunk(stream, QUuid(), heapSort(removeItems));
 
     // remove all items
     while (!removeItems.empty()) {
