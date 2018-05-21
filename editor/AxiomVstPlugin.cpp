@@ -16,7 +16,7 @@ AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
 }
 
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 0), _editor(std::make_unique<AxiomModel::Project>()) {
+    : AudioEffectX(audioMaster, 1, 0), _editor(&runtime, std::make_unique<AxiomModel::Project>()) {
     isSynth();
     programsAreChunks();
     canProcessReplacing();
@@ -24,7 +24,6 @@ AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
     setNumOutputs(2);
     setUniqueID(0x41584F4D); // 'AXOM'
 
-    _editor.project()->attachRuntime(&runtime);
     setEditor(&_editor);
 }
 

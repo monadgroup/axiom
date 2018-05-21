@@ -12,8 +12,7 @@
 int main(int argc, char *argv[]) {
     MaximRuntime::Runtime runtime;
     auto project = std::make_unique<AxiomModel::Project>();
-    AxiomGui::MainWindow window(std::move(project));
+    AxiomGui::MainWindow window(&runtime, std::move(project));
     window.show();
-    window.project()->attachRuntime(&runtime);
     return AxiomApplication::main.exec();
 }

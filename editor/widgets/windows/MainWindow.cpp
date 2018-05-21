@@ -14,11 +14,12 @@
 #include "editor/AxiomApplication.h"
 #include "editor/model/objects/RootSurface.h"
 #include "editor/model/PoolOperators.h"
+#include "compiler/runtime/Runtime.h"
 #include "../GlobalActions.h"
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) {
+MainWindow::MainWindow(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomModel::Project> project) : runtime(runtime) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -82,6 +83,8 @@ MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) {
     setProject(std::move(project));
 }
 
+MainWindow::~MainWindow() = default;
+
 void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *surface, bool split) {
     auto openPanel = _openPanels.find(surface);
     if (openPanel != _openPanels.end()) {
@@ -117,12 +120,16 @@ void MainWindow::showAbout() {
 }
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
-    // todo: cleanup old project state
+    // cleanup old project state
     if (_project) {
         _project->destroy();
     }
+    if (_historyPanel) {
+        _historyPanel->close();
+    }
 
     _project = std::move(project);
+    _project->attachRuntime(runtime);
     auto &history = _project->mainRoot().history();
 
     GlobalActions::editUndo->setEnabled(history.canUndo());
@@ -143,7 +150,8 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     assert(defaultSurface.value());
     showSurface(nullptr, *defaultSurface.value(), false);
 
-    addDockWidget(Qt::RightDockWidgetArea, new HistoryPanel(&_project->mainRoot().history(), this));
+    _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
+    addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
 }
 
 void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {

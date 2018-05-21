@@ -7,7 +7,7 @@ class AxiomVstPlugin;
 
 class AxiomVstEditor : public AEffEditor {
 public:
-    explicit AxiomVstEditor(std::unique_ptr<AxiomModel::Project> project);
+    explicit AxiomVstEditor(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomModel::Project> project);
 
     AxiomModel::Project *project() const;
     

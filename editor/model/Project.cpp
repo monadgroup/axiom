@@ -9,23 +9,11 @@
 using namespace AxiomModel;
 
 Project::Project() {
-    _mainRoot.history().rebuildRequested.connect([this]() { rebuild(); });
-
-    // setup default project
-    //  1. create default surface
-    auto surfaceId = QUuid::createUuid();
-    auto rootSurface = std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot());
-    _rootSurface = rootSurface.get();
-    mainRoot().pool().registerObj(std::move(rootSurface));
-
-    //  2. add default inputs and outputs
-    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
-                                   PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
-    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
-                                   PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
+    init();
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(stream) {
+    init();
 }
 
 std::unique_ptr<Project> Project::deserialize(QDataStream &stream, uint32_t *versionOut) {
@@ -82,4 +70,21 @@ void Project::rebuild() const {
 
 void Project::destroy() {
     _mainRoot.destroy();
+}
+
+void Project::init() {
+    _mainRoot.history().rebuildRequested.connect([this]() { rebuild(); });
+
+    // setup default project
+    //  1. create default surface
+    auto surfaceId = QUuid::createUuid();
+    auto rootSurface = std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot());
+    _rootSurface = rootSurface.get();
+    mainRoot().pool().registerObj(std::move(rootSurface));
+
+    //  2. add default inputs and outputs
+    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
+                                   PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
+    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
+                                   PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
 }

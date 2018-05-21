@@ -61,6 +61,7 @@ void NodeSurface::attachRuntime(MaximRuntime::Surface *runtime) {
     std::cout << "Attached runtime to NodeSurface" << std::endl;
 
     for (const auto &node : nodes()) {
+        std::cout << "Attaching runtime to " << node << std::endl;
         node->createAndAttachRuntime(runtime);
     }
 }

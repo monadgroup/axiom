@@ -44,6 +44,8 @@ namespace AxiomModel {
         ModelRoot _mainRoot;
         RootSurface *_rootSurface;
         std::optional<MaximRuntime::Runtime *> _runtime;
+
+        void init();
     };
 
 }
