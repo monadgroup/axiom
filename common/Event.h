@@ -44,7 +44,9 @@ namespace AxiomCommon {
                 }
 
                 for (const auto &child : children) {
-                    child->trigger(params...);
+                    if (child) {
+                        child->trigger(params...);
+                    }
                 }
             }
 
