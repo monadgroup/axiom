@@ -70,6 +70,8 @@ void Project::attachRuntime(MaximRuntime::Runtime *runtime) {
     auto outputNode = dynamic_cast<PortalNode*>(takeAt(_rootSurface->nodes(), 1));
     assert(outputNode);
     outputNode->attachRuntime(runtime->mainSurface()->output);
+
+    rebuild();
 }
 
 void Project::rebuild() const {
