@@ -205,9 +205,11 @@ void Control::updateExposerRuntime() {
             std::cout << "Attaching runtime!" << std::endl;
             auto newRuntime = (*controlNode->runtime())->forwardControl(*_runtime);
             control->attachRuntime(newRuntime);
-            control->removed.connect([newRuntime]() {
-                std::cout << "Removing runtime" << std::endl;
-                newRuntime->remove();
+            control->removed.connect([control]() {
+                if (control->runtime()) {
+                    std::cout << "Removing runtime" << std::endl;
+                    (*control->runtime())->remove();
+                }
             });
             std::cout << "Finished attaching runtime" << std::endl;
         });

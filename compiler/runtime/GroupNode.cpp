@@ -38,6 +38,7 @@ SoftControl *GroupNode::forwardControl(MaximRuntime::Control *control) {
     auto newControlPtr = newControl.get();
     _controls.push_back(std::move(newControl));
     controlAdded.trigger(newControlPtr);
+    control->cleanup.connect(this, std::function([this, newControlPtr]() { removeControl(newControlPtr); }));
 
     control->node()->scheduleCompile();
     return newControlPtr;
@@ -65,4 +66,14 @@ void GroupNode::restoreValue() {
 
 MaximCodegen::ModuleClass *GroupNode::moduleClass() {
     return _subsurface.moduleClass();
+}
+
+void GroupNode::removeControl(MaximRuntime::SoftControl *control) {
+    for (auto i = _controls.begin(); i < _controls.end(); i++) {
+        if (i->get() == control) {
+            _controls.erase(i);
+            return;
+        }
+    }
+    assert(false);
 }

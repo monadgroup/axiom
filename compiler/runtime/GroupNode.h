@@ -11,7 +11,7 @@ namespace MaximRuntime {
 
     class GeneratableModuleClass;
 
-    class GroupNode : public Node {
+    class GroupNode : public Node, public AxiomCommon::Hookable {
     public:
         AxiomCommon::Event<SoftControl *> controlAdded;
 
@@ -41,6 +41,8 @@ namespace MaximRuntime {
         Surface _subsurface;
 
         std::vector<std::unique_ptr<SoftControl>> _controls;
+
+        void removeControl(SoftControl *control);
     };
 
 }
