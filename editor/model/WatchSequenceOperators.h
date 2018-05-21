@@ -4,6 +4,7 @@
 
 #include "WatchSequence.h"
 #include "SequenceOperators.h"
+#include "PromiseOperators.h"
 #include "common/Promise.h"
 
 namespace AxiomModel {
@@ -37,7 +38,7 @@ namespace AxiomModel {
     template<class Item>
     AxiomCommon::Promise<Item> getFirst(WatchSequence<Item> input) {
         if (!input.empty()) {
-            return AxiomCommon::Promise<Item>::from(*input.begin());
+            return from<Item>(*input.begin());
         }
 
         AxiomCommon::Promise<Item> result;
@@ -52,7 +53,7 @@ namespace AxiomModel {
     AxiomCommon::Promise<Item> takeAtLater(WatchSequence<Item> input, size_t index) {
         auto inputSize = input.size();
         if (inputSize > index) {
-            return AxiomCommon::Promise<Item>::from(takeAt(input, index));
+            return from<Item>(takeAt(input, index));
         }
 
         AxiomCommon::Promise<Item> result;

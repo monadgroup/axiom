@@ -2,6 +2,7 @@
 
 #include "../ModelObject.h"
 #include "../ConnectionWire.h"
+#include "common/Promise.h"
 
 namespace AxiomModel {
 
@@ -11,7 +12,7 @@ namespace AxiomModel {
 
     class Connection : public ModelObject {
     public:
-        Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB,
+        Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlAUuid, const QUuid &controlBUuid,
                    ModelRoot *root);
 
         static std::unique_ptr<Connection>
@@ -27,13 +28,11 @@ namespace AxiomModel {
 
         NodeSurface *surface() const { return _surface; }
 
-        Control *controlA() const { return _controlA; }
+        const QUuid &controlAUuid() const { return _controlAUuid; }
 
-        Control *controlB() const { return _controlB; }
+        const QUuid &controlBUuid() const { return _controlBUuid; }
 
-        ConnectionWire &wire() { return _wire; }
-
-        const ConnectionWire &wire() const { return _wire; }
+        AxiomCommon::Promise<ConnectionWire> wire() const { return _wire; }
 
         void attachRuntime();
 
@@ -43,9 +42,9 @@ namespace AxiomModel {
 
     private:
         NodeSurface *_surface;
-        Control *_controlA;
-        Control *_controlB;
-        ConnectionWire _wire;
+        QUuid _controlAUuid;
+        QUuid _controlBUuid;
+        AxiomCommon::Promise<ConnectionWire> _wire;
     };
 
 }

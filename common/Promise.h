@@ -10,17 +10,13 @@ namespace AxiomCommon {
     template<class A>
     class Promise {
     public:
-        using func_type = typename Event<A>::func_type;
+        using func_type = typename Event<A &>::func_type;
 
         Promise() : _value(std::make_shared<std::optional<A>>(std::optional<A>())) {}
 
-        const std::optional<A> &value() const { return *_value; }
+        std::optional<A> &value() { return *_value; }
 
-        static Promise from(A val) {
-            Promise promise;
-            promise.resolve(std::move(val));
-            return std::move(promise);
-        }
+        const std::optional<A> &value() const { return *_value; }
 
         void then(func_type func) {
             if (*_value) {
@@ -47,7 +43,7 @@ namespace AxiomCommon {
         }
 
     private:
-        Event <A> event;
+        Event <A &> event;
         std::shared_ptr<std::optional<A>> _value;
     };
 

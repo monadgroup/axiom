@@ -4,31 +4,34 @@
 #include "NodeSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../PromiseOperators.h"
 #include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
 
-Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB,
+Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlAUuid, const QUuid &controlBUuid,
                        AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::CONNECTION, uuid, parentUuid, root),
-      _surface(find(root->nodeSurfaces(), parentUuid)), _controlA(find(root->controls(), controlA)),
-      _controlB(find(root->controls(), controlB)), _wire(&_surface->grid(), _controlA->wireType(),
-                                                         _controlA->worldPos(), _controlB->worldPos()) {
-    _controlA->worldPosChanged.connect(&_wire, std::function([this](QPointF newPos) { _wire.setStartPos(newPos); }));
-    _controlB->worldPosChanged.connect(&_wire, std::function([this](QPointF newPos) { _wire.setEndPos(newPos); }));
-    _controlA->isActiveChanged.connect(&_wire,
-                                       std::function([this](bool isActive) { _wire.setStartActive(isActive); }));
-    _controlB->isActiveChanged.connect(&_wire, std::function([this](bool isActive) { _wire.setEndActive(isActive); }));
-    _wire.activeChanged.connect(_controlA, &Control::setIsActive);
-    _wire.activeChanged.connect(_controlB, &Control::setIsActive);
-    _controlA->runtimeAttached.connect(this, &Connection::attachRuntime);
-    _controlB->runtimeAttached.connect(this, &Connection::attachRuntime);
-    _controlA->runtimeAboutToDetach.connect(this, &Connection::detachRuntime);
-    _controlB->runtimeAboutToDetach.connect(this, &Connection::detachRuntime);
-    _controlA->removed.connect(this, &Connection::remove);
-    _controlB->removed.connect(this, &Connection::remove);
+      _surface(find(root->nodeSurfaces(), parentUuid)), _controlAUuid(controlAUuid),
+      _controlBUuid(controlBUuid) {
+    all(findLater<Control*>(root->controls(), controlAUuid), findLater<Control*>(root->controls(), controlBUuid)).then([this](const std::tuple<Control*, Control*> &controls) {
+        auto controlA = std::get<0>(controls);
+        auto controlB = std::get<1>(controls);
+        _wire.resolve(ConnectionWire(&_surface->grid(), controlA->wireType(), controlA->worldPos(), controlB->worldPos()));
+        auto &wire = *_wire.value();
+        controlA->worldPosChanged.connect(&wire, &ConnectionWire::setStartPos);
+        controlB->worldPosChanged.connect(&wire, &ConnectionWire::setEndPos);
+        wire.activeChanged.connect(controlA, &Control::setIsActive);
+        wire.activeChanged.connect(controlB, &Control::setIsActive);
+        controlA->runtimeAttached.connect(this, &Connection::attachRuntime);
+        controlB->runtimeAttached.connect(this, &Connection::attachRuntime);
+        controlA->runtimeAboutToDetach.connect(this, &Connection::detachRuntime);
+        controlB->runtimeAboutToDetach.connect(this, &Connection::detachRuntime);
+        controlA->removed.connect(this, &Connection::remove);
+        controlB->removed.connect(this, &Connection::remove);
 
-    attachRuntime();
+        attachRuntime();
+    });
 }
 
 std::unique_ptr<Connection> Connection::create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA,
@@ -48,28 +51,28 @@ std::unique_ptr<Connection> Connection::deserialize(QDataStream &stream, const Q
 
 void Connection::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
     ModelObject::serialize(stream, parent, withContext);
-    stream << _controlA->uuid();
-    stream << _controlB->uuid();
+    stream << _controlAUuid;
+    stream << _controlBUuid;
 }
 
 void Connection::attachRuntime() {
-    std::cout << "Attempting to attach runtime" << std::endl;
-    if (!_controlA->runtime() || !_controlB->runtime()) return;
+    auto controlA = findMaybe(root()->controls(), _controlAUuid);
+    auto controlB = findMaybe(root()->controls(), _controlBUuid);
 
-    std::cout << "Attaching runtime" << std::endl;
-    (*_controlA->runtime())->connectTo(*_controlB->runtime());
+    if (!controlA || !controlB || !(*controlA)->runtime() || !(*controlB)->runtime()) return;
+    (*(*controlA)->runtime())->connectTo(*(*controlB)->runtime());
 }
 
 void Connection::detachRuntime() {
-    std::cout << "Attempting to detach runtime" << std::endl;
-    if (!_controlA->runtime() || !_controlB->runtime()) return;
+    auto controlA = findMaybe(root()->controls(), _controlAUuid);
+    auto controlB = findMaybe(root()->controls(), _controlBUuid);
 
-    std::cout << "Detaching runtime" << std::endl;
-    (*_controlA->runtime())->disconnectFrom(*_controlB->runtime());
+    if (!controlA || !controlB || !(*controlA)->runtime() || !(*controlB)->runtime()) return;
+    (*(*controlA)->runtime())->disconnectFrom(*(*controlB)->runtime());
 }
 
 void Connection::remove() {
     detachRuntime();
-    _wire.remove();
+    if (_wire.value()) (*_wire.value()).remove();
     ModelObject::remove();
 }

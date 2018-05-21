@@ -58,13 +58,13 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     }
 
     for (const auto &connection : surface->connections()) {
-        addWire(&connection->wire());
+        connection->wire().then([this](ConnectionWire &wire) { addWire(&wire); });
     }
 
     // connect to model
     surface->nodes().itemAdded.connect(this, &NodeSurfaceCanvas::addNode);
     surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
-        addWire(&connection->wire());
+        connection->wire().then([this](ConnectionWire &wire) { addWire(&wire); });
     }));
 
     // connect to global actions

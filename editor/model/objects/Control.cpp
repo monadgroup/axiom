@@ -24,16 +24,22 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
       _controlType(controlType), _wireType(wireType), _name(std::move(name)), _showName(showName),
       _exposerUuid(exposerUuid), _exposingUuid(exposingUuid),
       _connections(filterWatch(root->connections(), std::function([uuid](Connection *const &connection) {
-          return connection->controlA()->uuid() == uuid || connection->controlB()->uuid() == uuid;
+          return connection->controlAUuid() == uuid || connection->controlBUuid() == uuid;
       }))), _connectedControls(
-        mapFilterWatch(_connections, std::function([uuid](Connection *const &connection) -> std::optional<Control *> {
-            if (connection->controlA()->uuid() == uuid) return connection->controlB();
-            if (connection->controlB()->uuid() == uuid) return connection->controlA();
-            return std::optional<Control *>();
+        mapFilterWatch(_connections, std::function([uuid](Connection *const &connection) -> std::optional<QUuid> {
+            if (connection->controlAUuid() == uuid) return connection->controlBUuid();
+            if (connection->controlBUuid() == uuid) return connection->controlAUuid();
+            return std::optional<QUuid>();
         }))) {
     posChanged.connect(this, &Control::updateSinkPos);
     removed.connect(this, &Control::updateExposerRemoved);
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
+
+    if (!_exposingUuid.isNull()) {
+        findLater<Control*>(root->controls(), _exposingUuid).then([uuid](Control *exposing) {
+            exposing->setExposerUuid(uuid);
+        });
+    }
 }
 
 Control::ControlType Control::fromRuntimeType(MaximCommon::ControlType type) {

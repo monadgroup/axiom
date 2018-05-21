@@ -88,9 +88,9 @@ namespace AxiomModel {
 
         const WatchSequence<Connection *> &connections() const { return _connections; }
 
-        WatchSequence<Control *> &connectedControls() { return _connectedControls; }
+        WatchSequence<QUuid> &connectedControls() { return _connectedControls; }
 
-        const WatchSequence<Control *> &connectedControls() const { return _connectedControls; }
+        const WatchSequence<QUuid> &connectedControls() const { return _connectedControls; }
 
         QPointF worldPos() const;
 
@@ -125,7 +125,7 @@ namespace AxiomModel {
         std::optional<MaximRuntime::Control *> _runtime;
 
         WatchSequence<Connection *> _connections;
-        WatchSequence<Control *> _connectedControls;
+        WatchSequence<QUuid> _connectedControls;
 
         void updateSinkPos();
 
