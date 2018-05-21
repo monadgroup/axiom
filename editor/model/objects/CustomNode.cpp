@@ -106,6 +106,8 @@ void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
 
     removed.connect(this, &CustomNode::detachRuntime);
 
+    runtime->setCode(_code.toStdString());
+
     // add any controls that might already exist in the runtime
     auto controls = runtime->controls();
     for (const auto &control : controls) {
