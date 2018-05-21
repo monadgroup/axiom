@@ -28,6 +28,8 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
+        bool isMovable() const override { return false; }
+
         PortalType portalType() const { return _portalType; }
 
         void doRuntimeUpdate() override {}

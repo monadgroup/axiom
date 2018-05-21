@@ -203,16 +203,17 @@ QColor ControlItem::outlineActiveColor() const {
 }
 
 void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    event->accept();
-
     if (event->button() == Qt::LeftButton && event->modifiers() & Qt::ControlModifier) {
+        event->accept();
         isConnecting = true;
         canvas->startConnecting(this);
     } else if (!isEditable() && event->button() == Qt::LeftButton) {
+        event->accept();
         isMoving = true;
         mouseStartPoint = event->screenPos();
         control->startedDragging.trigger();
     } else {
+        event->setAccepted(control->isMovable());
         control->surface()->grid().deselectAll();
     }
 }

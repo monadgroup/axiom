@@ -22,8 +22,6 @@ namespace AxiomGui {
 
         QRectF useBoundingRect() const override { return {}; }
 
-        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-
         QPainterPath controlPath() const override { return shape(); }
 
     private:
