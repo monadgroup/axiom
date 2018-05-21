@@ -209,5 +209,8 @@ void Control::updateExposerRuntime() {
 }
 
 void Control::updateExposerRemoved() {
-    if (!_exposingUuid.isNull()) find(root()->controls(), _exposingUuid)->setExposerUuid(QUuid());
+    if (!_exposingUuid.isNull()) {
+        auto baseControl = findMaybe(root()->controls(), _exposingUuid);
+        if (baseControl) (*baseControl)->setExposerUuid(QUuid());
+    }
 }

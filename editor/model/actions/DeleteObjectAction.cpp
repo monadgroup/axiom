@@ -38,12 +38,24 @@ bool DeleteObjectAction::forward(bool) {
     auto removeItems = getRemoveItems();
     auto needsRebuild = anyNeedRebuild(removeItems);
 
+    auto sortedItems = heapSort(removeItems);
+
     QDataStream stream(&buffer, QIODevice::WriteOnly);
-    ModelRoot::serializeChunk(stream, QUuid(), heapSort(removeItems));
+    ModelRoot::serializeChunk(stream, QUuid(), sortedItems);
+
+    // We can't just iterate over a collection of ModelObjects and call remove() on them,
+    // as objects also delete their children.
+    // Instead, we build a list of UUIDs to delete, create a Sequence of them, and iterate
+    // until that's empty.
+    QSet<QUuid> usedIds;
+    for (const auto &itm : sortedItems) {
+        usedIds.insert(itm->uuid());
+    }
+    auto itemsToDelete = findAll(dynamicCast<ModelObject*>(root()->pool().sequence()), std::move(usedIds));
 
     // remove all items
-    while (!removeItems.empty()) {
-        (*removeItems.begin())->remove();
+    while (!itemsToDelete.empty()) {
+        (*itemsToDelete.begin())->remove();
     }
     return needsRebuild;
 }
@@ -62,8 +74,8 @@ Sequence<ModelObject*> DeleteObjectAction::getLinkedItems(const QUuid &uuid) con
     auto linkDependents = flatten(map(links, std::function([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
 
     return distinctByUuid(flatten(std::array<Sequence<ModelObject*>, 2> {
-        linkDependents,
-        dependents
+        dependents,
+        linkDependents
     }));
 }
 

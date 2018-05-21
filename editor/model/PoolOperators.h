@@ -9,19 +9,41 @@
 namespace AxiomModel {
 
     template<class OutputItem, class InputIterator>
-    OutputItem find(InputIterator begin, InputIterator end, const QUuid &uuid) {
+    std::optional<OutputItem> findMaybe(InputIterator begin, InputIterator end, const QUuid &uuid) {
         for (auto i = begin; i != end; i++) {
             auto item = *i;
             if (item->uuid() == uuid) {
                 return dynamic_cast<OutputItem>(item);
             }
         }
-        unreachable;
+        return std::optional<OutputItem>();
+    };
+
+    template<class OutputItem, class InputCollection>
+    std::optional<OutputItem> findMaybe(const InputCollection &collection, const QUuid &uuid) {
+        return findMaybe<OutputItem>(collection.begin(), collection.end(), uuid);
+    };
+
+    template<class InputCollection>
+    std::optional<typename InputCollection::value_type> findMaybe(const InputCollection &collection, const QUuid &uuid) {
+        return findMaybe<typename InputCollection::value_type>(collection, uuid);
+    }
+
+    template<class OutputItem, class InputIterator>
+    OutputItem find(InputIterator begin, InputIterator end, const QUuid &uuid) {
+        auto result = findMaybe<OutputItem>(std::move(begin), std::move(end), uuid);
+        assert(result.has_value());
+        return std::move(*result);
     };
 
     template<class OutputItem, class InputCollection>
     OutputItem find(const InputCollection &collection, const QUuid &uuid) {
         return find<OutputItem>(collection.begin(), collection.end(), uuid);
+    };
+
+    template<class InputCollection>
+    typename InputCollection::value_type find(const InputCollection &collection, const QUuid &uuid) {
+        return find<typename InputCollection::value_type>(collection, uuid);
     };
 
     template<class InputCollection>
@@ -54,11 +76,6 @@ namespace AxiomModel {
         }
 
         return std::move(result);
-    }
-
-    template<class InputCollection>
-    typename InputCollection::value_type find(const InputCollection &collection, const QUuid &uuid) {
-        return find<typename InputCollection::value_type>(collection, uuid);
     }
 
     template<class InputCollection, class IdCollection>
