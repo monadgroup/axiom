@@ -3,6 +3,8 @@
 using namespace AxiomModel;
 
 QUuid CloneReferenceMapper::map(const QUuid &input) {
+    if (input.isNull()) return input;
+
     auto iter = _values.find(input);
     if (iter != _values.end()) {
         return *iter;

@@ -47,6 +47,7 @@ bool PasteBufferAction::forward(bool) {
 
     QDataStream stream(&buffer, QIODevice::ReadOnly);
     CloneReferenceMapper ref;
+    ref.set(surfaceUuid, surfaceUuid);
     auto used = root()->deserializeChunk(stream, surfaceUuid, &ref);
 
     buffer.clear();

@@ -88,6 +88,12 @@ namespace AxiomGui {
 
         void selectAll();
 
+        void cutSelected();
+
+        void copySelected();
+
+        void pasteBuffer();
+
         void doRuntimeUpdate();
 
     private:

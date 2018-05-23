@@ -24,9 +24,9 @@ std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const
 
     QUuid parentUuid;
     stream >> parentUuid;
-    parentUuid = ref->map(parentUuid);
-
     if (parentUuid.isNull()) parentUuid = parent;
+    else parentUuid = ref->map(parentUuid);
+
     return deserialize(stream, uuid, parentUuid, ref, root);
 }
 
