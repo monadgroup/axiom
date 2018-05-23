@@ -27,7 +27,7 @@ std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &p
 std::unique_ptr<NumControl> NumControl::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                                     QPoint pos, QSize size, bool selected, QString name, bool showName,
                                                     const QUuid &exposerUuid, const QUuid &exposingUuid,
-                                                    AxiomModel::ModelRoot *root) {
+                                                    ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     uint8_t displayModeInt;
     stream >> displayModeInt;
     uint8_t channelInt;

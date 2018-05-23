@@ -2,6 +2,7 @@
 
 #include "ModelRoot.h"
 #include "SequenceOperators.h"
+#include "ReferenceMapper.h"
 #include "objects/NodeSurface.h"
 #include "objects/CustomNode.h"
 #include "objects/ControlSurface.h"
@@ -15,30 +16,35 @@ ModelObject::ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &pa
     : PoolObject(uuid, parentUuid, &root->pool()), _modelType(modelType), _root(root) {
 }
 
-std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &parent, ModelRoot *root) {
+std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref,
+    ModelRoot *root) {
     QUuid uuid;
     stream >> uuid;
+    uuid = ref->map(uuid);
+
     QUuid parentUuid;
     stream >> parentUuid;
+    parentUuid = ref->map(parentUuid);
+
     if (parentUuid.isNull()) parentUuid = parent;
-    return deserialize(stream, uuid, parentUuid, root);
+    return deserialize(stream, uuid, parentUuid, ref, root);
 }
 
 std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                      AxiomModel::ModelRoot *root) {
+                                                      ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     uint8_t typeInt;
     stream >> typeInt;
     switch ((ModelType) typeInt) {
         case ModelType::NODE_SURFACE:
-            return NodeSurface::deserialize(stream, uuid, parentUuid, root);
+            return NodeSurface::deserialize(stream, uuid, parentUuid, ref, root);
         case ModelType::NODE:
-            return Node::deserialize(stream, uuid, parentUuid, root);
+            return Node::deserialize(stream, uuid, parentUuid, ref, root);
         case ModelType::CONTROL_SURFACE:
-            return ControlSurface::deserialize(stream, uuid, parentUuid, root);
+            return ControlSurface::deserialize(stream, uuid, parentUuid, ref, root);
         case ModelType::CONTROL:
-            return Control::deserialize(stream, uuid, parentUuid, root);
+            return Control::deserialize(stream, uuid, parentUuid, ref, root);
         case ModelType::CONNECTION:
-            return Connection::deserialize(stream, uuid, parentUuid, root);
+            return Connection::deserialize(stream, uuid, parentUuid, ref, root);
     }
 
     unreachable;

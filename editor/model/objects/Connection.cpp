@@ -5,6 +5,7 @@
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../PromiseOperators.h"
+#include "../ReferenceMapper.h"
 #include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
@@ -42,11 +43,13 @@ std::unique_ptr<Connection> Connection::create(const QUuid &uuid, const QUuid &p
 }
 
 std::unique_ptr<Connection> Connection::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                    AxiomModel::ModelRoot *root) {
+                                                    ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     QUuid controlA;
     stream >> controlA;
+    controlA = ref->map(controlA);
     QUuid controlB;
     stream >> controlB;
+    controlB = ref->map(controlB);
 
     return create(uuid, parentUuid, controlA, controlB, root);
 }

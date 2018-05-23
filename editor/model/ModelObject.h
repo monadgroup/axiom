@@ -11,6 +11,8 @@ namespace AxiomModel {
 
     class ModelRoot;
 
+    class ReferenceMapper;
+
     class ModelObject : public PoolObject {
     public:
         enum class ModelType {
@@ -25,10 +27,10 @@ namespace AxiomModel {
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
-        static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, const QUuid &parent, ModelRoot *root);
+        static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref, ModelRoot *root);
 
         static std::unique_ptr<ModelObject>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref, ModelRoot *root);
 
         virtual void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const;
 

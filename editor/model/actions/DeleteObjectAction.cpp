@@ -3,6 +3,7 @@
 #include "../ModelObject.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../IdentityReferenceMapper.h"
 
 using namespace AxiomModel;
 
@@ -62,7 +63,8 @@ bool DeleteObjectAction::forward(bool) {
 
 bool DeleteObjectAction::backward() {
     QDataStream stream(&buffer, QIODevice::ReadOnly);
-    root()->deserializeChunk(stream, QUuid());
+    IdentityReferenceMapper ref;
+    root()->deserializeChunk(stream, QUuid(), &ref);
     buffer.clear();
 
     return anyNeedRebuild(getRemoveItems());

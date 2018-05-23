@@ -2,7 +2,7 @@
 
 #include "ModelObject.h"
 #include "WatchSequenceOperators.h"
-
+#include "IdentityReferenceMapper.h"
 #include "objects/NodeSurface.h"
 #include "objects/Node.h"
 #include "objects/ControlSurface.h"
@@ -18,7 +18,8 @@ ModelRoot::ModelRoot() : _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.seq
                          _connections(dynamicCastWatch<Connection *>(_pool.sequence())) {}
 
 ModelRoot::ModelRoot(QDataStream &stream) : ModelRoot() {
-    deserializeChunk(stream, QUuid());
+    IdentityReferenceMapper ref;
+    deserializeChunk(stream, QUuid(), &ref);
     _history = HistoryList(stream, this);
 }
 
@@ -27,7 +28,7 @@ void ModelRoot::serialize(QDataStream &stream) {
     _history.serialize(stream);
 }
 
-std::vector<ModelObject*> ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent) {
+std::vector<ModelObject*> ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref) {
     std::vector<ModelObject*> usedObjects;
 
     uint32_t objectCount;
@@ -37,7 +38,7 @@ std::vector<ModelObject*> ModelRoot::deserializeChunk(QDataStream &stream, const
         QByteArray objectBuffer;
         stream >> objectBuffer;
         QDataStream objectStream(&objectBuffer, QIODevice::ReadOnly);
-        auto newObject = ModelObject::deserialize(objectStream, parent, this);
+        auto newObject = ModelObject::deserialize(objectStream, parent, ref, this);
         usedObjects.push_back(newObject.get());
         _pool.registerObj(std::move(newObject));
     }

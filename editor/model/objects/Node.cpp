@@ -8,6 +8,7 @@
 #include "PortalNode.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../ReferenceMapper.h"
 #include "../actions/CompositeAction.h"
 #include "../actions/GridItemSizeAction.h"
 #include "../actions/GridItemMoveAction.h"
@@ -23,7 +24,7 @@ Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint
 }
 
 std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                        AxiomModel::ModelRoot *root) {
+                                        ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     uint8_t nodeTypeInt;
     stream >> nodeTypeInt;
 
@@ -36,14 +37,15 @@ std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, 
     stream >> name;
     QUuid controlsUuid;
     stream >> controlsUuid;
+    controlsUuid = ref->map(controlsUuid);
 
     switch ((NodeType) nodeTypeInt) {
         case NodeType::CUSTOM_NODE:
-            return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
+            return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
         case NodeType::GROUP_NODE:
-            return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
+            return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
         case NodeType::PORTAL_NODE:
-            return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, root);
+            return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
     }
 
     unreachable;

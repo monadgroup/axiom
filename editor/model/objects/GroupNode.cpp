@@ -4,6 +4,7 @@
 #include "ControlSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../ReferenceMapper.h"
 #include "compiler/runtime/Surface.h"
 #include "compiler/runtime/GroupNode.h"
 
@@ -23,9 +24,11 @@ std::unique_ptr<GroupNode> GroupNode::create(const QUuid &uuid, const QUuid &par
 
 std::unique_ptr<GroupNode> GroupNode::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                                   QPoint pos, QSize size, bool selected, QString name,
-                                                  const QUuid &controlsUuid, AxiomModel::ModelRoot *root) {
+                                                  const QUuid &controlsUuid,
+                                                  ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     QUuid innerUuid;
     stream >> innerUuid;
+    innerUuid = ref->map(innerUuid);
 
     return create(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, innerUuid, root);
 }

@@ -23,7 +23,8 @@ std::unique_ptr<MidiControl> MidiControl::create(const QUuid &uuid, const QUuid 
 std::unique_ptr<MidiControl> MidiControl::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                                       QPoint pos, QSize size, bool selected, QString name,
                                                       bool showName, const QUuid &exposerUuid,
-                                                      const QUuid &exposingUuid, AxiomModel::ModelRoot *root) {
+                                                      const QUuid &exposingUuid, ReferenceMapper *ref,
+                                                      AxiomModel::ModelRoot *root) {
     return create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid, exposingUuid, root);
 }
 

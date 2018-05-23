@@ -24,7 +24,7 @@ namespace AxiomModel {
         static std::unique_ptr<ExtractControl>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                     bool selected, QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                    ConnectionWire::WireType wireType, ModelRoot *root);
+                    ConnectionWire::WireType wireType, ReferenceMapper *ref, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 

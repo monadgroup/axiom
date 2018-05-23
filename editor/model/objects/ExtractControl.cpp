@@ -41,6 +41,7 @@ std::unique_ptr<ExtractControl> ExtractControl::deserialize(QDataStream &stream,
                                                             bool selected, QString name, bool showName,
                                                             const QUuid &exposerUuid, const QUuid &exposingUuid,
                                                             AxiomModel::ConnectionWire::WireType wireType,
+                                                            ReferenceMapper *ref,
                                                             AxiomModel::ModelRoot *root) {
     ActiveSlotFlags activeSlots;
     stream >> activeSlots;

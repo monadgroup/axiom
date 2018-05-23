@@ -23,6 +23,8 @@ namespace AxiomModel {
 
     class Connection;
 
+    class ReferenceMapper;
+
     class ModelRoot {
     public:
         using NodeSurfaceCollection = WatchSequence<NodeSurface *>;
@@ -76,7 +78,7 @@ namespace AxiomModel {
 
         const ConnectionCollection &connections() const { return _connections; }
 
-        std::vector<ModelObject*> deserializeChunk(QDataStream &stream, const QUuid &parent);
+        std::vector<ModelObject*> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
 
         void destroy();
 

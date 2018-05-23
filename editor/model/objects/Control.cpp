@@ -10,6 +10,7 @@
 #include "GroupSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../ReferenceMapper.h"
 #include "compiler/codegen/Control.h"
 #include "compiler/runtime/Control.h"
 #include "compiler/runtime/GroupNode.h"
@@ -69,7 +70,7 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
 }
 
 std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                              AxiomModel::ModelRoot *root) {
+                                              ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     uint8_t controlTypeInt;
     stream >> controlTypeInt;
 
@@ -86,27 +87,33 @@ std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &
 
     QUuid exposerUuid;
     stream >> exposerUuid;
+    exposerUuid = ref->map(exposerUuid);
 
     QUuid exposingUuid;
     stream >> exposingUuid;
+    exposingUuid = ref->map(exposingUuid);
 
     switch ((ControlType) controlTypeInt) {
         case ControlType::NUM_SCALAR:
-            return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid, exposingUuid, root);
+            return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
+                exposerUuid, exposingUuid, ref, root);
         case ControlType::MIDI_SCALAR:
-            return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid, exposingUuid, root);
+            return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
+                exposerUuid, exposingUuid, ref, root);
         case ControlType::NUM_EXTRACT:
             return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
-                                               showName, exposerUuid, exposingUuid, ConnectionWire::WireType::NUM, root);
+                                               showName, exposerUuid, exposingUuid, ConnectionWire::WireType::NUM, ref,
+                                               root);
         case ControlType::MIDI_EXTRACT:
             return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
-                                               showName, exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, root);
+                                               showName, exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, ref,
+                                               root);
         case ControlType::NUM_PORTAL:
             return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                              exposerUuid, exposingUuid, ConnectionWire::WireType::NUM, root);
+                                              exposerUuid, exposingUuid, ConnectionWire::WireType::NUM, ref, root);
         case ControlType::MIDI_PORTAL:
             return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                              exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, root);
+                                              exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, ref, root);
     }
 
     unreachable;

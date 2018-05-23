@@ -19,7 +19,7 @@ NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan
 }
 
 std::unique_ptr<NodeSurface> NodeSurface::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                      AxiomModel::ModelRoot *root) {
+                                                      ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     QPointF pan;
     stream >> pan;
     float zoom;

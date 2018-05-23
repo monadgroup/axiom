@@ -38,7 +38,7 @@ std::unique_ptr<PortalControl> PortalControl::deserialize(QDataStream &stream, c
                                                           bool selected, QString name, bool showName,
                                                           const QUuid &exposerUuid, const QUuid &exposingUuid,
                                                           AxiomModel::ConnectionWire::WireType wireType,
-                                                          AxiomModel::ModelRoot *root) {
+                                                          ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     uint8_t portalTypeInt;
     stream >> portalTypeInt;
     return create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid, exposingUuid, wireType,
