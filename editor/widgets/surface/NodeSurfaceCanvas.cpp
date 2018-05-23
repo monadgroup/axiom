@@ -161,11 +161,22 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
 
     if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
         // if the sinks are already connected, remove the connection
-        // todo
-
-        surface->root()->history().append(
-            CreateConnectionAction::create(surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(),
-                                           surface->root()));
+        //auto connector = findMaybe(sourceControl->connection)
+        auto otherUuid = connectable->sink()->uuid();
+        auto connectors = filter(sourceControl->connections(), [otherUuid](Connection *const &connection) {
+            return connection->controlAUuid() == otherUuid || connection->controlBUuid() == otherUuid;
+        });
+        auto firstConnector = connectors.begin();
+        if (firstConnector == connectors.end()) {
+            // there isn't currently a connection, create a new one
+            surface->root()->history().append(
+                CreateConnectionAction::create(surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(),
+                                               surface->root()));
+        } else {
+            // there is a connection, remove it
+            surface->root()->history().append(
+                DeleteObjectAction::create((*firstConnector)->uuid(), surface->root()));
+        }
     } else {
         // todo: do something?
     }
