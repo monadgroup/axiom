@@ -27,7 +27,8 @@ namespace AxiomModel {
             SET_NUM_MODE,
             SET_NUM_VALUE,
             SET_SHOW_NAME,
-            EXPOSE_CONTROL
+            EXPOSE_CONTROL,
+            PASTE_BUFFER
         };
 
         Action(ActionType actionType, ModelRoot *root);

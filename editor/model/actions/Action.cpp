@@ -15,6 +15,7 @@
 #include "SetNumValueAction.h"
 #include "SetShowNameAction.h"
 #include "ExposeControlAction.h"
+#include "PasteBufferAction.h"
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -57,6 +58,8 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
             return "Show/Hide Name";
         case ActionType::EXPOSE_CONTROL:
             return "Expose Control";
+        case ActionType::PASTE_BUFFER:
+            return "Paste";
     }
 
     unreachable;
@@ -100,6 +103,8 @@ std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::Mod
             return SetShowNameAction::deserialize(stream, root);
         case ActionType::EXPOSE_CONTROL:
             return ExposeControlAction::deserialize(stream, root);
+        case ActionType::PASTE_BUFFER:
+            return PasteBufferAction::deserialize(stream, root);
         default:
         unreachable;
     }
