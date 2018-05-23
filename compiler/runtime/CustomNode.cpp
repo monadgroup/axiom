@@ -55,7 +55,6 @@ std::vector<Control*> CustomNode::controls() const {
 
 GeneratableModuleClass *CustomNode::compile() {
     if (!_needsCompile && _moduleClass) {
-        std::cout << "Skipping CustomNode compile, nothing's changed" << std::endl;
         return _moduleClass.get();
     }
     _needsCompile = false;

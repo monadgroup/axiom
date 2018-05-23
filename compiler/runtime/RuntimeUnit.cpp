@@ -49,13 +49,11 @@ void RuntimeUnit::saveValue() {
     if (!_currentPtr) return;
     auto module = moduleClass();
     if (!module) {
-        std::cout << "  Not saving: no module" << std::endl;
         return;
     }
 
     auto moduleType = module->storageType();
     auto size = _runtime->ctx()->dataLayout().getTypeAllocSize(moduleType);
-    std::cout << "  Saving " << size << " bytes" << std::endl;
     _saveType = moduleType;
     _saveValue = std::unique_ptr<void, ValueDeleter>(malloc(size));
     if (_saveValue) {
@@ -73,7 +71,6 @@ void RuntimeUnit::restoreValue() {
     if (moduleType != _saveType) return;
 
     auto size = _runtime->ctx()->dataLayout().getTypeAllocSize(_saveType);
-    std::cout << "  Restoring " << size << " bytes" << std::endl;
     memcpy(_currentPtr, _saveValue.get(), size);
     return;
 }

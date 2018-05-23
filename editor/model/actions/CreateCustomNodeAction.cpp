@@ -61,5 +61,5 @@ bool CreateCustomNodeAction::forward(bool) {
 
 bool CreateCustomNodeAction::backward() {
     find(root()->nodes(), uuid)->remove();
-    return false;
+    return true;
 }

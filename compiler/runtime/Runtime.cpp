@@ -25,28 +25,20 @@ Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
 
 void Runtime::compile() {
     std::lock_guard<std::mutex> lock(_mutex);
+    std::cout << "Starting compile..." << std::endl;
 
-    std::cout << "Removing destroyed modules..." << std::endl;
     _jit.flushRemoveQueue();
-    std::cout << "Finished removing destroyed modules" << std::endl;
 
     if (!_mainSurface->needsGraphUpdate()) {
-        std::cout << "Not compiling, no update needed" << std::endl;
         return;
     }
 
-    std::cout << "Beginning compile..." << std::endl;
     auto startClock = std::clock();
 
     // tell every unit to save its current value, so we can restore it later
     _mainSurface->saveValue();
 
-    std::cerr << "  Beginning codegen..." << std::endl;
-    auto codegenClock = std::clock();
     auto mainClass = _mainSurface->compile();
-    auto codegenEndClock = (std::clock() - codegenClock) / (double) (CLOCKS_PER_SEC / 1000);
-    std::cerr << "  Finished codegen in " << codegenEndClock << " ms" << std::endl;
-
     auto module = std::make_unique<llvm::Module>("controller", _context.llvm());
 
     // create global variable for all storage

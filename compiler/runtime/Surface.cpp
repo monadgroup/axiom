@@ -21,12 +21,10 @@ void Surface::scheduleGraphUpdate() {
 
 bool Surface::needsGraphUpdate() const {
     if (_needsGraphUpdate || !_class) {
-        std::cout << "Compiling surface because needsGraphUpdate or no class" << std::endl;
         return true;
     }
     for (const auto &node : _nodes) {
         if (node->needsCompile()) {
-            std::cout << "Compiling surface because a node needs it" << std::endl;
             return true;
         }
     }
@@ -35,7 +33,6 @@ bool Surface::needsGraphUpdate() const {
 
 GeneratableModuleClass *Surface::compile() {
     if (!needsGraphUpdate()) {
-        std::cout << "Skipping surface compile, nothing's changed" << std::endl;
         return _class.get();
     }
     _needsGraphUpdate = false;
@@ -43,19 +40,14 @@ GeneratableModuleClass *Surface::compile() {
     reset();
 
     // compile all children
-    auto nodeCodegenStart = std::clock();
     std::unordered_map<Node *, GeneratableModuleClass *> nodeClasses;
     for (const auto &node : _nodes) {
         nodeClasses.emplace(node.get(), node->compile());
         node->setExtracted(false);
     }
-    auto nodeCodegenTime = std::clock() - nodeCodegenStart;
-    std::cerr << "    Finished node codegen in " << nodeCodegenTime << " ms" << std::endl;
 
     /// CONTROL GROUPING
     // walk the graph to find control groups
-    auto controlGroupingStart = std::clock();
-
     // walk through new groups
     std::vector<std::unique_ptr<ControlGroup>> newGroups;
     for (const auto &node : _nodes) {
@@ -95,12 +87,9 @@ GeneratableModuleClass *Surface::compile() {
             }
         }
     }
-    auto controlGroupingTime = std::clock() - controlGroupingStart;
-    std::cerr << "    Finished control grouping in " << controlGroupingTime << " ms" << std::endl;
 
     /// EXTRACTOR HANDLING
     // floodfill to find extracted nodes
-    auto extractorSearchStart = std::clock();
     std::unordered_set<Control *> visitedControls;
     std::queue<Control *> controlQueue;
 
@@ -177,11 +166,7 @@ GeneratableModuleClass *Surface::compile() {
         group->setExtracted(isExtracted);
     }
 
-    auto extractorSearchTime = std::clock() - extractorSearchStart;
-    std::cerr << "    Finished extractor search in " << extractorSearchTime << " ms" << std::endl;
-
     /// CONTROLGROUP INITIALIZATION
-    auto groupInitializationStart = std::clock();
     _class = std::make_unique<GeneratableModuleClass>(runtime()->ctx(), module(), "surface");
     _groupPtrIndexes.clear();
     for (const auto &group : _controlGroups) {
@@ -217,11 +202,8 @@ GeneratableModuleClass *Surface::compile() {
         _groupPtrIndexes.emplace(group.get(), entryIndex);
         group->setMethods(_class->entryAccessor(entryIndex), _class->destructor());
     }
-    auto groupInitializationTime = std::clock() - groupInitializationStart;
-    std::cerr << "    Finished group initialization in " << groupInitializationTime << " ms" << std::endl;
 
     /// NODE WALKING
-    auto nodeOrderStart = std::clock();
     // calculate node execution order, using control read/write to make directed graph
     std::vector<Node *> inverseExecutionOrder;
     std::unordered_set<Node *> visitedNodes;
@@ -268,12 +250,9 @@ GeneratableModuleClass *Surface::compile() {
             }
         }
     }
-    auto nodeOrderTime = std::clock() - nodeOrderStart;
-    std::cerr << "    Finished node order search in " << nodeOrderTime << std::endl;
 
     // instantiate nodes in their orders - extracted nodes are created multiple times
     // control values are also assigned
-    auto nodeInstantiateStart = std::clock();
     for (ssize_t i = inverseExecutionOrder.size() - 1; i >= 0; i--) {
         auto node = inverseExecutionOrder[i];
         auto nodeClass = nodeClasses.find(node)->second;
@@ -498,8 +477,6 @@ GeneratableModuleClass *Surface::compile() {
             b.SetInsertPoint(loopEndBlock);
         }
     }
-    auto nodeInstantiateTime = std::clock() - nodeInstantiateStart;
-    std::cerr << "    Finished node instantiation in " << nodeInstantiateTime << " ms" << std::endl;
 
     _class->complete();
     deploy();
@@ -576,9 +553,7 @@ void Surface::saveValue() {
 }
 
 void Surface::restoreValue() {
-    std::cout << "Restoring node values" << std::endl;
     for (const auto &node : _nodes) {
         node->restoreValue();
     }
-    std::cout << "Finished restoring values" << std::endl;
 }
