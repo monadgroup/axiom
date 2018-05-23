@@ -21,6 +21,8 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
         auto &wire = *_wire.value();
         controlA->worldPosChanged.connect(&wire, &ConnectionWire::setStartPos);
         controlB->worldPosChanged.connect(&wire, &ConnectionWire::setEndPos);
+        controlA->isActiveChanged.connect(&wire, &ConnectionWire::setStartActive);
+        controlB->isActiveChanged.connect(&wire, &ConnectionWire::setEndActive);
         wire.activeChanged.connect(controlA, &Control::setIsActive);
         wire.activeChanged.connect(controlB, &Control::setIsActive);
         controlA->runtimeAttached.connect(this, &Connection::attachRuntime);

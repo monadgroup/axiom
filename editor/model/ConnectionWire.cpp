@@ -75,6 +75,10 @@ void ConnectionWire::updateActive() {
 }
 
 void ConnectionWire::updateRoute() {
-    _route = _grid->grid().findPath(_startPos.toPoint(), _endPos.toPoint(), 1, 10, 4);
+    _route = _grid->grid().findPath(
+        QPoint(_startPos.x(), _startPos.y()),
+        QPoint(_endPos.x(), _endPos.y()),
+        1, 10, 4
+    );
     routeChanged.trigger(_route);
 }

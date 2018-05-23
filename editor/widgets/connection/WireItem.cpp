@@ -23,8 +23,11 @@ WireItem::WireItem(QObject *parent, AxiomModel::ConnectionWire *wire) : QObject(
 void WireItem::updateRoute(const std::deque<QPoint> &route) {
     QPainterPath path;
 
-    auto firstPos = NodeSurfaceCanvas::nodeRealPos(wire->startPos());
-    auto lastPos = NodeSurfaceCanvas::nodeRealPos(wire->endPos());
+    auto halfNodeSize = QPointF(NodeSurfaceCanvas::nodeGridSize.width() / 2,
+                                NodeSurfaceCanvas::nodeGridSize.height() / 2);
+
+    auto firstPos = NodeSurfaceCanvas::nodeRealPos(wire->startPos()) + halfNodeSize;
+    auto lastPos = NodeSurfaceCanvas::nodeRealPos(wire->endPos()) + halfNodeSize;
 
     // todo: find spaces where several wires are, and make them look nice
     // e.g. - if they're going in the same direction, separate them out a bit
@@ -36,9 +39,6 @@ void WireItem::updateRoute(const std::deque<QPoint> &route) {
         path.lineTo(QPointF(lastPos.x(), firstPos.y()));
         path.lineTo(lastPos);
     } else if (route.size() >= 2) {
-        auto halfNodeSize = QPointF(NodeSurfaceCanvas::nodeGridSize.width() / 2,
-                                    NodeSurfaceCanvas::nodeGridSize.height() / 2);
-
         for (size_t i = 0; i < route.size(); i++) {
             QPointF routePos = NodeSurfaceCanvas::nodeRealPos(route[i]) + halfNodeSize;
 

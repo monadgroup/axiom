@@ -155,8 +155,7 @@ void Control::setIsActive(bool isActive) {
 
 QPointF Control::worldPos() const {
     auto worldPos = pos() + ControlSurface::nodeToControl(_surface->node()->pos());
-    auto centerPos = worldPos + QPointF(size().width() / 2., size().height() / 2.);
-    return ControlSurface::controlToNode(centerPos);
+    return ControlSurface::controlToNode(worldPos);
 }
 
 bool Control::canAttachRuntime(MaximRuntime::Control *runtime) {

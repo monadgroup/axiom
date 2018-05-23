@@ -147,8 +147,8 @@ void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     } else {
         connectionWire->setEndPos(
             QPointF(
-                mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width(),
-                mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height()
+                mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width() - 0.5,
+                mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height() - 0.5
             )
         );
     }
