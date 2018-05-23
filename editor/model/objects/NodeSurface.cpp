@@ -58,10 +58,7 @@ void NodeSurface::attachRuntime(MaximRuntime::Surface *runtime) {
     assert(!_runtime);
     _runtime = runtime;
 
-    std::cout << "Attached runtime to NodeSurface" << std::endl;
-
-    for (const auto &node : nodes()) {
-        std::cout << "Attaching runtime to " << node << std::endl;
+    for (const auto &node : _nodes) {
         node->createAndAttachRuntime(runtime);
     }
 }
@@ -95,10 +92,6 @@ void NodeSurface::remove() {
 }
 
 void NodeSurface::nodeAdded(AxiomModel::Node *node) const {
-    std::cout << "Node added, runtime = ";
-    if (_runtime) std::cout << *_runtime;
-    else std::cout << "false";
-    std::cout << std::endl;
     if (_runtime) {
         node->createAndAttachRuntime(*_runtime);
     }

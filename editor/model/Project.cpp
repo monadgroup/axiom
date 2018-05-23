@@ -1,6 +1,6 @@
 #include "Project.h"
 
-#include "SequenceOperators.h"
+#include "PoolOperators.h"
 #include "objects/RootSurface.h"
 #include "objects/PortalNode.h"
 #include "actions/CreatePortalNodeAction.h"
@@ -10,10 +10,30 @@ using namespace AxiomModel;
 
 Project::Project() {
     init();
+
+    // setup default project
+    //  1. create default surface
+    auto surfaceId = QUuid::createUuid();
+    auto rootSurface = std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot());
+    _rootSurface = rootSurface.get();
+    mainRoot().pool().registerObj(std::move(rootSurface));
+
+    //  2. add default inputs and outputs
+    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
+                                   PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
+    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
+                                   PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(stream) {
     init();
+
+    auto rootSurfaces = findChildren(mainRoot().nodeSurfaces(), QUuid());
+    assert(rootSurfaces.size() == 1);
+    auto rootSurface = dynamic_cast<RootSurface*>(takeAt(rootSurfaces, 0));
+    assert(rootSurface);
+
+    _rootSurface = rootSurface;
 }
 
 std::unique_ptr<Project> Project::deserialize(QDataStream &stream, uint32_t *versionOut) {
@@ -74,17 +94,4 @@ void Project::destroy() {
 
 void Project::init() {
     _mainRoot.history().rebuildRequested.connect([this]() { rebuild(); });
-
-    // setup default project
-    //  1. create default surface
-    auto surfaceId = QUuid::createUuid();
-    auto rootSurface = std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot());
-    _rootSurface = rootSurface.get();
-    mainRoot().pool().registerObj(std::move(rootSurface));
-
-    //  2. add default inputs and outputs
-    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
-                                   PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
-    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
-                                   PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
 }
