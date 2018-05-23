@@ -168,9 +168,8 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
 
     auto currentItem = itemAt(mousePos, QTransform());
 
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem)) {
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() == sourceControl->wireType()) {
         // if the sinks are already connected, remove the connection
-        //auto connector = findMaybe(sourceControl->connection)
         auto otherUuid = connectable->sink()->uuid();
         auto connectors = filter(sourceControl->connections(), [otherUuid](Connection *const &connection) {
             return connection->controlAUuid() == otherUuid || connection->controlBUuid() == otherUuid;

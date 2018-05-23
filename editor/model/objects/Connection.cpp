@@ -18,6 +18,7 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
     all(findLater<Control*>(root->controls(), controlAUuid), findLater<Control*>(root->controls(), controlBUuid)).then([this](const std::tuple<Control*, Control*> &controls) {
         auto controlA = std::get<0>(controls);
         auto controlB = std::get<1>(controls);
+        assert(controlA->wireType() == controlB->wireType());
         _wire.resolve(ConnectionWire(&_surface->grid(), controlA->wireType(), controlA->worldPos(), controlB->worldPos()));
         auto &wire = *_wire.value();
         controlA->worldPosChanged.connect(&wire, &ConnectionWire::setStartPos);
