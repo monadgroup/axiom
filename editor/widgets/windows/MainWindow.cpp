@@ -96,7 +96,7 @@ void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurfac
     auto newDockPtr = newDock.get();
     newDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     if (!fromPanel) {
-        addDockWidget(Qt::TopDockWidgetArea, newDockPtr);
+        addDockWidget(Qt::LeftDockWidgetArea, newDockPtr);
     } else if (split) {
         splitDockWidget(fromPanel, newDockPtr, Qt::Horizontal);
     } else {
@@ -104,8 +104,7 @@ void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurfac
 
         // raise() doesn't seem to work when called synchronously after tabifyDockWidget, so we wait for the next
         // event loop iteration
-        // fixme: if the dock is removed before this timer finishes, we'll segfault
-        QTimer::singleShot(0, this, [newDockPtr]() {
+        QTimer::singleShot(0, newDockPtr, [newDockPtr]() {
             newDockPtr->raise();
         });
     }
@@ -151,6 +150,7 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     showSurface(nullptr, *defaultSurface.value(), false);
 
     _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
+    _historyPanel->widget()->setBaseSize(300, _historyPanel->widget()->baseSize().height());
     addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
 }
 

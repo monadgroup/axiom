@@ -253,7 +253,7 @@ void NodeSurfaceCanvas::copySelected() {
 
     QByteArray serializeArray;
     QDataStream stream(&serializeArray, QIODevice::WriteOnly);
-    ModelRoot::serializeChunk(stream, surface->uuid(), dynamicCast<ModelObject*>(surface->grid().selectedItems()));
+    ModelRoot::serializeChunk(stream, surface->uuid(), surface->getCopyItems());
 
     auto mimeData = new QMimeData();
     mimeData->setData("application/axiom-partial-surface", serializeArray);

@@ -56,6 +56,8 @@ namespace AxiomModel {
 
         void setZoom(float zoom);
 
+        Sequence<ModelObject *> getCopyItems() const;
+
         void attachRuntime(MaximRuntime::Surface *runtime);
 
         void doRuntimeUpdate();

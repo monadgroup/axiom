@@ -3,6 +3,7 @@
 #include "RootSurface.h"
 #include "GroupSurface.h"
 #include "Node.h"
+#include "Control.h"
 #include "Connection.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
@@ -52,6 +53,34 @@ void NodeSurface::setZoom(float zoom) {
         _zoom = zoom;
         zoomChanged.trigger(zoom);
     }
+}
+
+Sequence<ModelObject *> NodeSurface::getCopyItems() const {
+    // we want to copy:
+    // all nodes and their children (but NOT nodes that aren't copyable!)
+    // all connections that connect to controls in nodes that are selected
+
+    auto copyNodes = filter(_nodes, [](Node *const &node) {
+        return node->isSelected() && node->isCopyable();
+    });
+    auto poolSequence = dynamicCast<ModelObject*>(pool()->sequence().sequence());
+    auto copyChildren = flatten(map<Sequence<ModelObject*>, Sequence<Node*>>(copyNodes.sequence(), [poolSequence](Node *const &node) -> Sequence<ModelObject*> {
+        return findDependents(poolSequence, node->uuid());
+    }));
+    auto copyControls = dynamicCast<Control*>(copyChildren);
+    QSet<QUuid> controlUuids;
+    for (const auto &control : copyControls) {
+        controlUuids.insert(control->uuid());
+    }
+
+    auto copyConnections = filter(_connections, [controlUuids](Connection *const &connection) {
+        return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
+    });
+
+    return flatten(std::array<Sequence<ModelObject*>, 2> {
+        copyChildren,
+        staticCast<ModelObject*>(copyConnections).sequence()
+    });
 }
 
 void NodeSurface::attachRuntime(MaximRuntime::Surface *runtime) {

@@ -71,16 +71,22 @@ bool PasteBufferAction::backward() {
         usedSet.insert(uuid);
     }
 
-    auto objs = collect(findAll(dynamicCast<ModelObject*>(root()->pool().sequence()), usedSet));
+    auto objs = findAll(dynamicCast<ModelObject*>(root()->pool().sequence()), usedSet);
+    auto collected = collect(objs);
     auto needsBuild = false;
-    for (const auto &obj : objs) {
+    for (const auto &obj : collected) {
         if (!obj->buildOnRemove()) continue;
         needsBuild = true;
         break;
     }
 
-    ModelRoot::serializeChunk(stream, surfaceUuid, objs);
+    ModelRoot::serializeChunk(stream, surfaceUuid, collected);
+
     usedUuids.clear();
+
+    while (!objs.empty()) {
+        (*objs.begin())->remove();
+    }
 
     return needsBuild;
 }
