@@ -18,6 +18,8 @@ set(SOURCE_FILES
         CloneReferenceMapper.cpp
         ConnectionWire.cpp
         HistoryList.cpp
+        Library.cpp
+        LibraryEntry.cpp
         ModelObject.cpp
         ModelRoot.cpp
         Pool.cpp

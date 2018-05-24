@@ -5,7 +5,7 @@
 #include <QtGui/QColor>
 #include <cassert>
 
-#define unreachable assert(false); throw
+#define unreachable assert(false); abort();
 
 namespace AxiomUtil {
 

@@ -25,7 +25,7 @@ Project::Project() {
                                    PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
 }
 
-Project::Project(QDataStream &stream) : _mainRoot(stream) {
+Project::Project(QDataStream &stream) : _mainRoot(stream), _library(stream) {
     init();
 
     auto rootSurfaces = findChildren(mainRoot().nodeSurfaces(), QUuid());
@@ -62,6 +62,7 @@ bool Project::readHeader(QDataStream &stream, uint32_t *versionOut) {
 void Project::serialize(QDataStream &stream) {
     writeHeader(stream);
     _mainRoot.serialize(stream);
+    _library.serialize(stream);
 }
 
 void Project::attachRuntime(MaximRuntime::Runtime *runtime) {

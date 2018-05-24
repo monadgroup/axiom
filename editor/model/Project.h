@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "ModelRoot.h"
+#include "Library.h"
 
 namespace MaximRuntime {
     class Runtime;
@@ -32,6 +33,10 @@ namespace AxiomModel {
 
         const ModelRoot &mainRoot() const { return _mainRoot; }
 
+        Library &library() { return _library; }
+
+        const Library &library() const { return _library; }
+
         void serialize(QDataStream &stream);
 
         void attachRuntime(MaximRuntime::Runtime *runtime);
@@ -42,6 +47,7 @@ namespace AxiomModel {
 
     private:
         ModelRoot _mainRoot;
+        Library _library;
         RootSurface *_rootSurface;
         std::optional<MaximRuntime::Runtime *> _runtime;
 
