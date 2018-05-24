@@ -4,10 +4,18 @@
 #include <QtWidgets/QGraphicsItem>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsSceneWheelEvent>
+#include <QtCore/QMimeData>
+#include <QtGui/QClipboard>
 
 #include "editor/model/objects/NodeSurface.h"
+#include "editor/model/objects/Node.h"
 #include "editor/model/Project.h"
+#include "editor/model/actions/PasteBufferAction.h"
+#include "editor/model/actions/DeleteObjectAction.h"
+#include "editor/model/actions/CompositeAction.h"
+#include "editor/model/PoolOperators.h"
 #include "NodeSurfaceCanvas.h"
+#include "../GlobalActions.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -30,6 +38,18 @@ NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
 
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // connect to global actions
+    connect(GlobalActions::editDelete, &QAction::triggered,
+            this, &NodeSurfaceView::deleteSelected);
+    connect(GlobalActions::editSelectAll, &QAction::triggered,
+            this, &NodeSurfaceView::selectAll);
+    connect(GlobalActions::editCut, &QAction::triggered,
+            this, &NodeSurfaceView::cutSelected);
+    connect(GlobalActions::editCopy, &QAction::triggered,
+            this, &NodeSurfaceView::copySelected);
+    connect(GlobalActions::editPaste, &QAction::triggered,
+            this, &NodeSurfaceView::pasteBuffer);
 }
 
 void NodeSurfaceView::mousePressEvent(QMouseEvent *event) {
@@ -145,6 +165,65 @@ void NodeSurfaceView::zoom(float zoom) {
     auto scaleChange = newScale / lastScale;
     lastScale = newScale;
     scale(scaleChange, scaleChange);
+}
+
+void NodeSurfaceView::deleteSelected() {
+    if (!hasFocus()) return;
+
+    std::vector<std::unique_ptr<Action>> deleteActions;
+    auto selectedNodes = filter(surface->nodes().sequence(), [](Node *const &node) { return node->isSelected(); });
+    for (const auto &node : selectedNodes) {
+        if (node->isDeletable()) {
+            deleteActions.push_back(DeleteObjectAction::create(node->uuid(), node->root()));
+        }
+    }
+
+    if (!deleteActions.empty()) {
+        surface->root()->history().append(CompositeAction::create(std::move(deleteActions), surface->root()));
+    }
+}
+
+void NodeSurfaceView::selectAll() {
+    if (!hasFocus()) return;
+
+    surface->grid().selectAll();
+}
+
+void NodeSurfaceView::cutSelected() {
+    if (!hasFocus()) return;
+
+    copySelected();
+    deleteSelected();
+}
+
+void NodeSurfaceView::copySelected() {
+    if (!hasFocus() || surface->grid().selectedItems().empty()) return;
+
+    auto centerPos = AxiomModel::GridSurface::findCenter(surface->grid().selectedItems());
+    QByteArray serializeArray;
+    QDataStream stream(&serializeArray, QIODevice::WriteOnly);
+    stream << centerPos;
+    ModelRoot::serializeChunk(stream, surface->uuid(), surface->getCopyItems());
+
+    auto mimeData = new QMimeData();
+    mimeData->setData("application/axiom-partial-surface", serializeArray);
+    auto clipboard = QApplication::clipboard();
+    clipboard->setMimeData(mimeData);
+}
+
+void NodeSurfaceView::pasteBuffer() {
+    if (!hasFocus()) return;
+
+    auto mimeData = QApplication::clipboard()->mimeData();
+    if (!mimeData || !mimeData->hasFormat("application/axiom-partial-surface")) return;
+
+    auto buffer = mimeData->data("application/axiom-partial-surface");
+    auto scenePos = mapToScene(mapFromGlobal(QCursor::pos()));
+    auto targetPos = QPoint(
+        qRound((float) scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+        qRound((float) scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
+    );
+    surface->root()->history().append(PasteBufferAction::create(surface->uuid(), std::move(buffer), targetPos, surface->root()));
 }
 
 float NodeSurfaceView::zoomToScale(float zoom) {

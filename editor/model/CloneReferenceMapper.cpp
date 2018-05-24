@@ -2,7 +2,7 @@
 
 using namespace AxiomModel;
 
-QUuid CloneReferenceMapper::map(const QUuid &input) {
+QUuid CloneReferenceMapper::mapUuid(const QUuid &input) {
     if (input.isNull()) return input;
 
     auto iter = _values.find(input);
@@ -15,6 +15,16 @@ QUuid CloneReferenceMapper::map(const QUuid &input) {
     return newUuid;
 }
 
-void CloneReferenceMapper::set(const QUuid &key, const QUuid &value) {
+QPoint CloneReferenceMapper::mapPos(const QUuid &parent, const QPoint &input) {
+    auto iter = _pos.find(parent);
+    if (iter == _pos.end()) return input;
+    else return *iter + input;
+}
+
+void CloneReferenceMapper::setUuid(const QUuid &key, const QUuid &value) {
     _values.insert(key, value);
+}
+
+void CloneReferenceMapper::setPos(const QUuid &key, const QPoint &value) {
+    _pos.insert(key, value);
 }

@@ -47,10 +47,10 @@ std::unique_ptr<Connection> Connection::deserialize(QDataStream &stream, const Q
                                                     ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     QUuid controlA;
     stream >> controlA;
-    controlA = ref->map(controlA);
+    controlA = ref->mapUuid(controlA);
     QUuid controlB;
     stream >> controlB;
-    controlB = ref->map(controlB);
+    controlB = ref->mapUuid(controlB);
 
     return create(uuid, parentUuid, controlA, controlB, root);
 }

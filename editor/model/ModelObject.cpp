@@ -20,12 +20,12 @@ std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const
     ModelRoot *root) {
     QUuid uuid;
     stream >> uuid;
-    uuid = ref->map(uuid);
+    uuid = ref->mapUuid(uuid);
 
     QUuid parentUuid;
     stream >> parentUuid;
     if (parentUuid.isNull()) parentUuid = parent;
-    else parentUuid = ref->map(parentUuid);
+    else parentUuid = ref->mapUuid(parentUuid);
 
     return deserialize(stream, uuid, parentUuid, ref, root);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore/QUuid>
+#include <QtCore/QPoint>
 
 namespace AxiomModel {
 
@@ -8,7 +9,9 @@ namespace AxiomModel {
     public:
         virtual ~ReferenceMapper() = default;
 
-        virtual QUuid map(const QUuid &input) = 0;
+        virtual QUuid mapUuid(const QUuid &input) = 0;
+
+        virtual QPoint mapPos(const QUuid &parent, const QPoint &input) = 0;
     };
 
 }

@@ -32,12 +32,13 @@ std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, 
     QSize size;
     bool selected;
     GridItem::deserialize(stream, pos, size, selected);
+    pos = ref->mapPos(parentUuid, pos);
 
     QString name;
     stream >> name;
     QUuid controlsUuid;
     stream >> controlsUuid;
-    controlsUuid = ref->map(controlsUuid);
+    controlsUuid = ref->mapUuid(controlsUuid);
 
     switch ((NodeType) nodeTypeInt) {
         case NodeType::CUSTOM_NODE:

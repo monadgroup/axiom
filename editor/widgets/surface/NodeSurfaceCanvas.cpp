@@ -70,18 +70,6 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
         connection->wire().then([this](ConnectionWire &wire) { addWire(&wire); });
     }));
 
-    // connect to global actions
-    connect(GlobalActions::editDelete, &QAction::triggered,
-            this, &NodeSurfaceCanvas::deleteSelected);
-    connect(GlobalActions::editSelectAll, &QAction::triggered,
-            this, &NodeSurfaceCanvas::selectAll);
-    connect(GlobalActions::editCut, &QAction::triggered,
-            this, &NodeSurfaceCanvas::cutSelected);
-    connect(GlobalActions::editCopy, &QAction::triggered,
-            this, &NodeSurfaceCanvas::copySelected);
-    connect(GlobalActions::editPaste, &QAction::triggered,
-            this, &NodeSurfaceCanvas::pasteBuffer);
-
     auto timer = new QTimer(this);
     connect(timer, &QTimer::timeout,
             this, &NodeSurfaceCanvas::doRuntimeUpdate);
@@ -217,58 +205,6 @@ void NodeSurfaceCanvas::addWire(AxiomModel::ConnectionWire *wire) {
     auto item = new WireItem(this, wire);
     item->setZValue(wireZVal);
     addItem(item);
-}
-
-void NodeSurfaceCanvas::deleteSelected() {
-    if (!hasFocus()) return;
-
-    std::vector<std::unique_ptr<Action>> deleteActions;
-    auto selectedNodes = filter(surface->nodes().sequence(), [](Node *const &node) { return node->isSelected(); });
-    for (const auto &node : selectedNodes) {
-        if (node->isDeletable()) {
-            deleteActions.push_back(DeleteObjectAction::create(node->uuid(), node->root()));
-        }
-    }
-
-    if (!deleteActions.empty()) {
-        surface->root()->history().append(CompositeAction::create(std::move(deleteActions), surface->root()));
-    }
-}
-
-void NodeSurfaceCanvas::selectAll() {
-    if (!hasFocus()) return;
-
-    surface->grid().selectAll();
-}
-
-void NodeSurfaceCanvas::cutSelected() {
-    if (!hasFocus()) return;
-
-    copySelected();
-    deleteSelected();
-}
-
-void NodeSurfaceCanvas::copySelected() {
-    if (!hasFocus() || surface->grid().selectedItems().empty()) return;
-
-    QByteArray serializeArray;
-    QDataStream stream(&serializeArray, QIODevice::WriteOnly);
-    ModelRoot::serializeChunk(stream, surface->uuid(), surface->getCopyItems());
-
-    auto mimeData = new QMimeData();
-    mimeData->setData("application/axiom-partial-surface", serializeArray);
-    auto clipboard = QApplication::clipboard();
-    clipboard->setMimeData(mimeData);
-}
-
-void NodeSurfaceCanvas::pasteBuffer() {
-    if (!hasFocus()) return;
-
-    auto mimeData = QApplication::clipboard()->mimeData();
-    if (!mimeData || !mimeData->hasFormat("application/axiom-partial-surface")) return;
-
-    auto buffer = mimeData->data("application/axiom-partial-surface");
-    surface->root()->history().append(PasteBufferAction::create(surface->uuid(), std::move(buffer), QPoint(0, 0), surface->root()));
 }
 
 void NodeSurfaceCanvas::doRuntimeUpdate() {

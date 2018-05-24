@@ -13,6 +13,8 @@ namespace AxiomGui {
 
     class NodeSurfacePanel;
 
+    class NodeSurfaceCanvas;
+
     class NodeSurfaceView : public QGraphicsView, public AxiomCommon::Hookable {
     Q_OBJECT
 
@@ -44,6 +46,16 @@ namespace AxiomGui {
         void pan(QPointF pan);
 
         void zoom(float zoom);
+
+        void deleteSelected();
+
+        void selectAll();
+
+        void cutSelected();
+
+        void copySelected();
+
+        void pasteBuffer();
 
     private:
         AxiomModel::NodeSurface *surface;

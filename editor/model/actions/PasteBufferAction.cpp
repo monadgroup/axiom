@@ -9,7 +9,8 @@ using namespace AxiomModel;
 
 PasteBufferAction::PasteBufferAction(const QUuid &surfaceUuid, QByteArray buffer, QVector<QUuid> usedUuids,
                                      QPoint center, AxiomModel::ModelRoot *root)
-    : Action(ActionType::PASTE_BUFFER, root), surfaceUuid(surfaceUuid), buffer(std::move(buffer)), center(center) {
+    : Action(ActionType::PASTE_BUFFER, root), surfaceUuid(surfaceUuid), buffer(std::move(buffer)),
+    usedUuids(std::move(usedUuids)), center(center) {
 }
 
 std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfaceUuid, QByteArray buffer,
@@ -46,10 +47,14 @@ bool PasteBufferAction::forward(bool) {
     assert(usedUuids.isEmpty());
 
     QDataStream stream(&buffer, QIODevice::ReadOnly);
+    QPoint objectCenter; stream >> objectCenter;
+
     CloneReferenceMapper ref;
-    ref.set(surfaceUuid, surfaceUuid);
+    ref.setUuid(surfaceUuid, surfaceUuid);
+    ref.setPos(surfaceUuid, center - objectCenter);
     auto used = root()->deserializeChunk(stream, surfaceUuid, &ref);
 
+    center = QPoint(0, 0);
     buffer.clear();
 
     auto needsBuild = false;
@@ -80,6 +85,7 @@ bool PasteBufferAction::backward() {
         break;
     }
 
+    stream << QPoint(0, 0);
     ModelRoot::serializeChunk(stream, surfaceUuid, collected);
 
     usedUuids.clear();

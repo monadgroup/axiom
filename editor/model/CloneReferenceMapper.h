@@ -8,11 +8,16 @@ namespace AxiomModel {
 
     class CloneReferenceMapper : public ReferenceMapper {
     public:
-        QUuid map(const QUuid &input) override;
+        QUuid mapUuid(const QUuid &input) override;
 
-        void set(const QUuid &key, const QUuid &value);
+        QPoint mapPos(const QUuid &parent, const QPoint &input) override;
+
+        void setUuid(const QUuid &key, const QUuid &value);
+
+        void setPos(const QUuid &key, const QPoint &value);
 
     private:
+        QHash<QUuid, QPoint> _pos;
         QHash<QUuid, QUuid> _values;
     };
 

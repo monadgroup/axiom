@@ -87,11 +87,11 @@ std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &
 
     QUuid exposerUuid;
     stream >> exposerUuid;
-    exposerUuid = ref->map(exposerUuid);
+    exposerUuid = ref->mapUuid(exposerUuid);
 
     QUuid exposingUuid;
     stream >> exposingUuid;
-    exposingUuid = ref->map(exposingUuid);
+    exposingUuid = ref->mapUuid(exposingUuid);
 
     switch ((ControlType) controlTypeInt) {
         case ControlType::NUM_SCALAR:

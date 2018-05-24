@@ -6,7 +6,11 @@ namespace AxiomModel {
 
     class IdentityReferenceMapper : public ReferenceMapper {
     public:
-        QUuid map(const QUuid &input) override {
+        QUuid mapUuid(const QUuid &input) override {
+            return input;
+        }
+
+        QPoint mapPos(const QUuid &parent, const QPoint &input) override {
             return input;
         }
     };

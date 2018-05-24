@@ -84,16 +84,6 @@ namespace AxiomGui {
 
         void addWire(AxiomModel::ConnectionWire *wire);
 
-        void deleteSelected();
-
-        void selectAll();
-
-        void cutSelected();
-
-        void copySelected();
-
-        void pasteBuffer();
-
         void doRuntimeUpdate();
 
     private:

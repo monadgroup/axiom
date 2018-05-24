@@ -28,7 +28,7 @@ std::unique_ptr<GroupNode> GroupNode::deserialize(QDataStream &stream, const QUu
                                                   ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     QUuid innerUuid;
     stream >> innerUuid;
-    innerUuid = ref->map(innerUuid);
+    innerUuid = ref->mapUuid(innerUuid);
 
     return create(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, innerUuid, root);
 }
