@@ -9,7 +9,7 @@
 
 namespace AxiomModel {
 
-    class Pool;
+    class Project;
 
     class ModelObject;
 
@@ -33,9 +33,9 @@ namespace AxiomModel {
         using ControlCollection = WatchSequence<Control *>;
         using ConnectionCollection = WatchSequence<Connection *>;
 
-        ModelRoot();
+        ModelRoot(Project *project);
 
-        explicit ModelRoot(QDataStream &stream);
+        ModelRoot(Project *project, QDataStream &stream);
 
         template<class T>
         static void serializeChunk(QDataStream &stream, const QUuid &parent, const T &objects) {
@@ -49,6 +49,8 @@ namespace AxiomModel {
         }
 
         void serialize(QDataStream &stream);
+
+        Project *project() const { return _project; }
 
         Pool &pool() { return _pool; }
 
@@ -83,6 +85,7 @@ namespace AxiomModel {
         void destroy();
 
     private:
+        Project *_project;
         Pool _pool;
         HistoryList _history;
         NodeSurfaceCollection _nodeSurfaces;

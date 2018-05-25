@@ -5,6 +5,8 @@
 #include <QtCore/QTimer>
 
 #include "editor/model/PoolOperators.h"
+#include "editor/model/LibraryEntry.h"
+#include "editor/model/CloneReferenceMapper.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/GroupNode.h"
 #include "editor/model/objects/CustomNode.h"
@@ -13,6 +15,7 @@
 #include "editor/model/objects/MidiControl.h"
 #include "editor/model/objects/ExtractControl.h"
 #include "editor/model/objects/PortalControl.h"
+#include "editor/model/objects/RootSurface.h"
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/GridItemMoveAction.h"
@@ -265,64 +268,29 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                 node->root()->history().append(
                     RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
             });
-    } else if (selectedAction == deleteAction) {
-        node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
-    }
-
-    /*event->accept();
-
-    auto copyableItems = GridSurface::findCopyable(node->parentSchematic->selectedItems());
-
-    QMenu menu;
-
-    auto renameAction = menu.addAction(tr("&Rename..."));
-    renameAction->setVisible(node->parentSchematic->selectedItems().size() == 1);
-    menu.addSeparator();
-    auto groupAction = menu.addAction(tr("&Group..."));
-    groupAction->setEnabled(!copyableItems.empty());
-    auto saveModuleAction = menu.addAction(tr("&Save as Module..."));
-    saveModuleAction->setEnabled(!copyableItems.empty());
-    menu.addSeparator();
-    auto deleteAction = menu.addAction(tr("&Delete"));
-    deleteAction->setEnabled(node->isDeletable());
-    auto selectedAction = menu.exec(event->screenPos());
-
-    if (selectedAction == renameAction) {
-        auto editor = new FloatingValueEditor(node->name(), event->scenePos());
-        scene()->addItem(editor);
-
-        connect(editor, &FloatingValueEditor::valueSubmitted,
-                this, [this](QString name) {
-                    DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::RENAME_NODE, {
-                        node->setName(name);
-                    });
-                });
-    } else if (selectedAction == groupAction) {
-        *auto groupedNode = node->parentSchematic->groupSelection();
-        canvas->panel->window->showSchematic(
-            canvas->panel,
-            groupedNode->schematic.get(),
-            true
-        );*
     } else if (selectedAction == saveModuleAction) {
-        ModulePropertiesWindow saveWindow(&node->parentSchematic->project()->library);
+        ModulePropertiesWindow saveWindow(&node->root()->project()->library());
         if (saveWindow.exec() == QDialog::Accepted) {
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();
 
-            auto newEntry = std::make_unique<LibraryEntry>(enteredName, std::set<QString>(enteredTags.begin(), enteredTags.end()), node->parentSchematic->project());
+            auto newEntry = LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()), node->root()->project());
+            auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems());
+            QByteArray serializeArray;
+            QDataStream serializeStream(&serializeArray, QIODevice::WriteOnly);
+            ModelRoot::serializeChunk(serializeStream, node->surface()->uuid(), node->surface()->getCopyItems());
 
-            node->parentSchematic->project()->library.addEntry(
-                std::move(newEntry),
-                copyableItems,
-                QPoint(0, 0)
-            );
+            QDataStream deserializeStream(&serializeArray, QIODevice::ReadOnly);
+            AxiomModel::CloneReferenceMapper ref;
+            ref.setUuid(newEntry->rootSurface()->uuid(), newEntry->rootSurface()->uuid());
+            ref.setPos(newEntry->rootSurface()->uuid(), -centerPos);
+            newEntry->root()->deserializeChunk(deserializeStream, newEntry->rootSurface()->uuid(), &ref);
+
+            node->root()->project()->library().addEntry(std::move(newEntry));
         }
     } else if (selectedAction == deleteAction) {
-        DO_ACTION(node->parentSchematic->project()->history, HistoryList::ActionType::DELETE_SELECTED_ITEMS, {
-            node->parentSurface->deleteSelectedItems();
-        });
-    }*/
+        node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
+    }
 }
 
 void NodeItem::setPos(QPoint newPos) {

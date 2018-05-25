@@ -11,13 +11,13 @@ Library::Library() = default;
 
 Library::~Library() = default;
 
-Library::Library(QDataStream &stream) {
+Library::Library(Project *project, QDataStream &stream) {
     stream >> _activeTag;
 
     quint32 entryCount;
     stream >> entryCount;
     for (quint32 i = 0; i < entryCount; i++) {
-        addEntry(LibraryEntry::deserialize(stream));
+        addEntry(LibraryEntry::deserialize(stream, project));
     }
 }
 

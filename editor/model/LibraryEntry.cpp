@@ -23,13 +23,13 @@ std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, const QUuid &ba
         std::move(tags), std::move(root));
 }
 
-std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, std::set<QString> tags) {
-    auto newRoot = std::make_unique<ModelRoot>();
+std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, std::set<QString> tags, Project *project) {
+    auto newRoot = std::make_unique<ModelRoot>(project);
     newRoot->pool().registerObj(std::make_unique<RootSurface>(QUuid::createUuid(), QPointF(0, 0), 0, newRoot.get()));
     return create(std::move(name), QUuid::createUuid(), QUuid::createUuid(), QDateTime::currentDateTimeUtc(), std::move(tags), std::move(newRoot));
 }
 
-std::unique_ptr<LibraryEntry> LibraryEntry::deserialize(QDataStream &stream) {
+std::unique_ptr<LibraryEntry> LibraryEntry::deserialize(QDataStream &stream, Project *project) {
     QString name; stream >> name;
     QUuid baseUuid; stream >> baseUuid;
     QUuid modificationUuid; stream >> modificationUuid;
@@ -42,7 +42,7 @@ std::unique_ptr<LibraryEntry> LibraryEntry::deserialize(QDataStream &stream) {
         tags.emplace(tag);
     }
 
-    auto root = std::make_unique<ModelRoot>(stream);
+    auto root = std::make_unique<ModelRoot>(project, stream);
 
     return create(std::move(name), baseUuid, modificationUuid, modificationDateTime, std::move(tags), std::move(root));
 }

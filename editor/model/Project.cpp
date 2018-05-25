@@ -8,7 +8,7 @@
 
 using namespace AxiomModel;
 
-Project::Project() {
+Project::Project() : _mainRoot(this) {
     init();
 
     // setup default project
@@ -25,7 +25,7 @@ Project::Project() {
                                    PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
 }
 
-Project::Project(QDataStream &stream) : _mainRoot(stream), _library(stream) {
+Project::Project(QDataStream &stream) : _mainRoot(this, stream), _library(this, stream) {
     init();
 
     auto rootSurfaces = findChildren(mainRoot().nodeSurfaces(), QUuid());

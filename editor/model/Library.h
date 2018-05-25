@@ -11,6 +11,8 @@ namespace AxiomModel {
 
     class LibraryEntry;
 
+    class Project;
+
     class Library : public AxiomCommon::Hookable {
     public:
         AxiomCommon::Event<LibraryEntry *> entryAdded;
@@ -20,9 +22,9 @@ namespace AxiomModel {
 
         Library();
 
-        explicit Library(QDataStream &stream);
+        Library(Project *project, QDataStream &stream);
 
-        ~Library();
+        ~Library() override;
 
         void serialize(QDataStream &stream);
 

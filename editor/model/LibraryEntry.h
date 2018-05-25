@@ -24,9 +24,9 @@ namespace AxiomModel {
 
         static std::unique_ptr<LibraryEntry> create(QString name, const QUuid &baseUuid, const QUuid &modificationUuid, const QDateTime &modificationDateTime, std::set<QString> tags, std::unique_ptr<ModelRoot> root);
 
-        static std::unique_ptr<LibraryEntry> create(QString name, std::set<QString> tags);
+        static std::unique_ptr<LibraryEntry> create(QString name, std::set<QString> tags, Project *project);
 
-        static std::unique_ptr<LibraryEntry> deserialize(QDataStream &stream);
+        static std::unique_ptr<LibraryEntry> deserialize(QDataStream &stream, Project *project);
 
         void serialize(QDataStream &stream);
 
