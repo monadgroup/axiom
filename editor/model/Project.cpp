@@ -41,12 +41,12 @@ std::unique_ptr<Project> Project::deserialize(QDataStream &stream, uint32_t *ver
 }
 
 void Project::writeHeader(QDataStream &stream) {
-    stream << schemaMagic;
+    stream << static_cast<quint64>(schemaMagic);
     stream << schemaVersion;
 }
 
 bool Project::readHeader(QDataStream &stream, uint32_t *versionOut) {
-    uint64_t magic;
+    quint64 magic;
     stream >> magic;
     if (magic != schemaMagic) return false;
 
