@@ -2,6 +2,8 @@
 
 #include <QtWidgets/QScrollArea>
 
+#include "common/Hookable.h"
+
 namespace AxiomModel {
     class Library;
 
@@ -14,7 +16,7 @@ namespace AxiomGui {
 
     class MainWindow;
 
-    class ModulePreviewList : public QScrollArea {
+    class ModulePreviewList : public QScrollArea, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:

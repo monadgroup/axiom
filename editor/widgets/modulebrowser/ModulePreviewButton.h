@@ -3,6 +3,8 @@
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
 
+#include "common/Hookable.h"
+
 namespace AxiomModel {
     class Library;
 
@@ -13,22 +15,20 @@ namespace AxiomGui {
 
     class MainWindow;
 
-    class ModulePreviewButton : public QFrame {
+    class ModulePreviewButton : public QFrame, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:
         explicit ModulePreviewButton(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry,
                                      QWidget *parent = nullptr);
 
-    private slots:
+    private:
+        AxiomModel::LibraryEntry *entry;
+        QLabel *label;
 
         void setName(QString name);
 
         void setVisibleTag(const QString &tag);
-
-    private:
-        AxiomModel::LibraryEntry *entry;
-        QLabel *label;
 
     };
 

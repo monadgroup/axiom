@@ -2,50 +2,43 @@
 
 #include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
+#include "editor/model/objects/NodeSurface.h"
+#include "editor/model/objects/Node.h"
+#include "editor/model/objects/Connection.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-ModulePreviewCanvas::ModulePreviewCanvas(const Schematic *schematic) {
-    // todo: this could be refactored with SchematicCanvas
-    /*for (const auto &item : schematic->items()) {
-        if (auto node = dynamic_cast<Node *>(item.get())) {
-            addNode(node);
-        }
+ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface) {
+    // create items for all nodes and wires that already exist
+    // todo: this could be refactored with NodeSurfaceCanvas
+    for (const auto &node : surface->nodes()) {
+        addNode(node);
     }
 
-    for (const auto &wire : schematic->wires()) {
-        addWire(wire.get());
+    for (const auto &connection : surface->connections()) {
+        connection->wire().then(this, [this](ConnectionWire &wire) { addWire(&wire); });
     }
 
     // connect to model
-    connect(schematic, &Schematic::itemAdded,
-            [this](AxiomModel::GridItem *item) {
-                if (auto node = dynamic_cast<Node *>(item)) {
-                    addNode(node);
-                }
-            });
-    connect(schematic, &Schematic::itemAdded,
-            this, &ModulePreviewCanvas::contentChanged);
-    connect(schematic, &Schematic::wireAdded,
-            this, &ModulePreviewCanvas::addWire);*/
+    surface->nodes().itemAdded.connect(this, &ModulePreviewCanvas::addNode);
+    surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
+        connection->wire().then(this, [this](ConnectionWire &wire) { addWire(&wire); });
+    }));
 }
 
 void ModulePreviewCanvas::addNode(AxiomModel::Node *node) {
-    /*connect(node, &Node::posChanged,
-            this, &ModulePreviewCanvas::contentChanged);
-    connect(node, &Node::sizeChanged,
-            this, &ModulePreviewCanvas::contentChanged);
-    connect(node, &Node::removed,
-            this, &ModulePreviewCanvas::contentChanged);
+    node->posChanged.connect(this, &ModulePreviewCanvas::contentChanged);
+    node->sizeChanged.connect(this, &ModulePreviewCanvas::contentChanged);
+    node->removed.connect(this, &ModulePreviewCanvas::contentChanged);
 
     auto item = new NodeItem(node, nullptr);
     item->setZValue(1);
-    addItem(item);*/
+    addItem(item);
 }
 
 void ModulePreviewCanvas::addWire(AxiomModel::ConnectionWire *wire) {
-    /*auto item = new WireItem(this, wire);
+    auto item = new WireItem(this, wire);
     item->setZValue(0);
-    addItem(item);*/
+    addItem(item);
 }

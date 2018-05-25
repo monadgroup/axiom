@@ -126,6 +126,9 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     if (_historyPanel) {
         _historyPanel->close();
     }
+    if (_modulePanel) {
+        _modulePanel->close();
+    }
 
     _project = std::move(project);
     _project->attachRuntime(runtime);
@@ -150,8 +153,10 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     showSurface(nullptr, *defaultSurface.value(), false);
 
     _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
-    _historyPanel->widget()->setBaseSize(300, _historyPanel->widget()->baseSize().height());
     addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
+
+    _modulePanel = std::make_unique<ModuleBrowserPanel>(this, &_project->library(), this);
+    addDockWidget(Qt::BottomDockWidgetArea, _modulePanel.get());
 }
 
 void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {

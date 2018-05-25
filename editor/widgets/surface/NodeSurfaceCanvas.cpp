@@ -61,7 +61,7 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     }
 
     for (const auto &connection : surface->connections()) {
-        connection->wire().then([this](ConnectionWire &wire) { addWire(&wire); });
+        connection->wire().then(this, [this](ConnectionWire &wire) { addWire(&wire); });
     }
 
     // connect to model

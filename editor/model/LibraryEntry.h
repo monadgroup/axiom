@@ -10,6 +10,8 @@ namespace AxiomModel {
 
     class Library;
 
+    class RootSurface;
+
     class LibraryEntry : public AxiomCommon::Hookable {
     public:
         AxiomCommon::Event<const QString &> nameChanged;
@@ -46,6 +48,8 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root.get(); }
 
+        RootSurface *rootSurface() const { return _rootSurface; }
+
         void modified();
 
         void remove();
@@ -57,6 +61,7 @@ namespace AxiomModel {
         QDateTime _modificationDateTime;
         std::set<QString> _tags;
         std::unique_ptr<ModelRoot> _root;
+        RootSurface *_rootSurface;
     };
 
 }

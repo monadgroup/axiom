@@ -1,6 +1,8 @@
 #include "LibraryEntry.h"
 
+#include "PoolOperators.h"
 #include "ModelRoot.h"
+#include "objects/RootSurface.h"
 
 using namespace AxiomModel;
 
@@ -8,6 +10,10 @@ LibraryEntry::LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &mod
                            const QDateTime &modificationDateTime, std::set<QString> tags, std::unique_ptr<AxiomModel::ModelRoot> root)
    : _name(std::move(name)), _baseUuid(baseUuid), _modificationUuid(modificationUuid),
    _modificationDateTime(modificationDateTime), _tags(std::move(tags)), _root(std::move(root)) {
+    auto rootSurfaces = findChildren(_root->nodeSurfaces(), QUuid());
+    assert(rootSurfaces.size() == 1);
+    _rootSurface = dynamic_cast<RootSurface*>(takeAt(rootSurfaces, 0));
+    assert(_rootSurface);
 }
 
 std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,
@@ -18,7 +24,9 @@ std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, const QUuid &ba
 }
 
 std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, std::set<QString> tags) {
-    return create(std::move(name), QUuid::createUuid(), QUuid::createUuid(), QDateTime::currentDateTimeUtc(), std::move(tags), std::make_unique<ModelRoot>());
+    auto newRoot = std::make_unique<ModelRoot>();
+    newRoot->pool().registerObj(std::make_unique<RootSurface>(QUuid::createUuid(), QPointF(0, 0), 0, newRoot.get()));
+    return create(std::move(name), QUuid::createUuid(), QUuid::createUuid(), QDateTime::currentDateTimeUtc(), std::move(tags), std::move(newRoot));
 }
 
 std::unique_ptr<LibraryEntry> LibraryEntry::deserialize(QDataStream &stream) {

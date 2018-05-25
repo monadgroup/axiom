@@ -7,13 +7,16 @@
 #include "../node/NodeItem.h"
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
+#include "editor/model/Library.h"
+#include "editor/model/LibraryEntry.h"
+#include "editor/model/objects/RootSurface.h"
 
 using namespace AxiomGui;
 
 ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry,
                                      QWidget *parent)
     : QGraphicsView(parent), window(window), library(library), entry(entry) {
-    /*auto moduleScene = new ModulePreviewCanvas(&entry->schematic());
+    auto moduleScene = new ModulePreviewCanvas(entry->rootSurface());
     setScene(moduleScene);
     scene()->setParent(this);
 
@@ -25,7 +28,7 @@ ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *li
     setFixedSize(100, 100);
     updateScaling();
     connect(moduleScene, &ModulePreviewCanvas::contentChanged,
-            this, &ModulePreviewView::updateScaling);*/
+            this, &ModulePreviewView::updateScaling);
 }
 
 void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
@@ -48,8 +51,8 @@ void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
     }*/
 }
 
-void ModulePreviewView::mouseDoubleClickEvent(QMouseEvent *event) {
-    //window->showSchematic(nullptr, &entry->schematic(), true);
+void ModulePreviewView::mouseDoubleClickEvent(QMouseEvent *) {
+    window->showSurface(nullptr, entry->rootSurface(), true);
 }
 
 void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
@@ -106,7 +109,7 @@ void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
 
 void ModulePreviewView::updateScaling() {
     // figure out the bounding box size of the scene
-    /*QRectF boundingRect;
+    QRectF boundingRect;
     for (const auto &item : scene()->items()) {
         if (auto node = dynamic_cast<NodeItem*>(item)) {
             auto br = node->drawBoundingRect();
@@ -124,5 +127,5 @@ void ModulePreviewView::updateScaling() {
     scale(1 / currentScale, 1 / currentScale);
     centerOn(boundingRect.center());
     scale(scaleFactor, scaleFactor);
-    currentScale = scaleFactor;*/
+    currentScale = scaleFactor;
 }

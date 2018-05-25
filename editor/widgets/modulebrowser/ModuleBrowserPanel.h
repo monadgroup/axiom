@@ -2,6 +2,7 @@
 
 #include <map>
 
+#include "common/Hookable.h"
 #include "../dock/DockPanel.h"
 
 class QTabBar;
@@ -14,17 +15,13 @@ namespace AxiomGui {
 
     class MainWindow;
 
-    class ModuleBrowserPanel : public DockPanel {
+    class ModuleBrowserPanel : public DockPanel, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:
         explicit ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *library, QWidget *parent = nullptr);
 
     private slots:
-
-        void addTag(const QString &tag);
-
-        void removeTag(const QString &tag);
 
         void changeTag(int tag);
 
@@ -34,6 +31,10 @@ namespace AxiomGui {
         QTabBar *filterTabs;
         std::map<QString, int> tabIndexes;
         std::map<int, QString> indexTabs;
+
+        void addTag(const QString &tag);
+
+        void removeTag(const QString &tag);
     };
 
 }

@@ -3,6 +3,8 @@
 #include <QtWidgets/QGridLayout>
 #include <QtGui/QContextMenuEvent>
 
+#include "editor/model/Library.h"
+#include "editor/model/LibraryEntry.h"
 #include "ModulePreviewView.h"
 
 using namespace AxiomGui;
@@ -24,13 +26,11 @@ ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library
 
     setLayout(mainLayout);
 
-    /*connect(entry, &AxiomModel::LibraryEntry::nameChanged,
-            this, &ModulePreviewButton::setName);
+    entry->nameChanged.connect(this, &ModulePreviewButton::setName);
     setName(entry->name());
 
-    connect(library, &AxiomModel::Library::activeTagChanged,
-            this, &ModulePreviewButton::setVisibleTag);
-    setVisibleTag(library->activeTag());*/
+    library->activeTagChanged.connect(this, &ModulePreviewButton::setVisibleTag);
+    setVisibleTag(library->activeTag());
 }
 
 void ModulePreviewButton::setName(QString name) {
@@ -38,6 +38,6 @@ void ModulePreviewButton::setName(QString name) {
 }
 
 void ModulePreviewButton::setVisibleTag(const QString &tag) {
-    //auto hasTag = tag == "" || entry->tags().find(tag) != entry->tags().end();
-    //setVisible(hasTag);
+    auto hasTag = tag == "" || entry->tags().find(tag) != entry->tags().end();
+    setVisible(hasTag);
 }

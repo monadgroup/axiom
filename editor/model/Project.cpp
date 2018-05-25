@@ -30,10 +30,8 @@ Project::Project(QDataStream &stream) : _mainRoot(stream), _library(stream) {
 
     auto rootSurfaces = findChildren(mainRoot().nodeSurfaces(), QUuid());
     assert(rootSurfaces.size() == 1);
-    auto rootSurface = dynamic_cast<RootSurface*>(takeAt(rootSurfaces, 0));
-    assert(rootSurface);
-
-    _rootSurface = rootSurface;
+    _rootSurface = dynamic_cast<RootSurface*>(takeAt(rootSurfaces, 0));
+    assert(_rootSurface);
 }
 
 std::unique_ptr<Project> Project::deserialize(QDataStream &stream, uint32_t *versionOut) {

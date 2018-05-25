@@ -2,8 +2,10 @@
 
 #include <QtWidgets/QGraphicsScene>
 
+#include "common/Hookable.h"
+
 namespace AxiomModel {
-    class Schematic;
+    class NodeSurface;
 
     class Node;
 
@@ -12,12 +14,12 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class ModulePreviewCanvas : public QGraphicsScene {
+    class ModulePreviewCanvas : public QGraphicsScene, public AxiomCommon::Hookable {
     Q_OBJECT
 
     public:
 
-        explicit ModulePreviewCanvas(const AxiomModel::Schematic *schematic);
+        explicit ModulePreviewCanvas(AxiomModel::NodeSurface *surface);
 
     signals:
 
