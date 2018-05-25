@@ -13,6 +13,7 @@
 #include "editor/model/actions/PasteBufferAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/CompositeAction.h"
+#include "editor/model/actions/PasteBufferAction.h"
 #include "editor/model/PoolOperators.h"
 #include "NodeSurfaceCanvas.h"
 #include "../GlobalActions.h"
@@ -111,6 +112,22 @@ void NodeSurfaceView::wheelEvent(QWheelEvent *event) {
 }
 
 void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
+    if (!event->mimeData()->hasFormat("application/axiom-partial-surface")) return;
+
+    event->acceptProposedAction();
+
+    // add the nodes to the surface, select them, and make them follow the mouse
+    auto scenePos = mapToScene(event->pos());
+    auto nodePos = QPoint(
+        (int) (scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+        (int) (scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
+    );
+
+    auto data = event->mimeData()->data("application/axiom-partial-surface");
+    auto action = PasteBufferAction::create(surface->uuid(), std::move(data), nodePos, surface->root());
+    action->forward(true);
+
+
     /*if (!event->mimeData()->hasFormat("application/axiom-partial-surface")) return;
 
     event->acceptProposedAction();

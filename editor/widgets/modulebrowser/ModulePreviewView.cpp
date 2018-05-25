@@ -1,14 +1,20 @@
 #include "ModulePreviewView.h"
 
 #include <QtWidgets/QGraphicsItem>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMessageBox>
 #include <QtGui/QMouseEvent>
+#include <QtGui/QDrag>
+#include <QtCore/QMimeData>
 
 #include "ModulePreviewCanvas.h"
 #include "../node/NodeItem.h"
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
+#include "editor/model/PoolOperators.h"
 #include "editor/model/Library.h"
 #include "editor/model/LibraryEntry.h"
+#include "editor/model/grid/GridItem.h"
 #include "editor/model/objects/RootSurface.h"
 
 using namespace AxiomGui;
@@ -32,23 +38,25 @@ ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *li
 }
 
 void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
-    /*QGraphicsView::mousePressEvent(event);
+    QGraphicsView::mousePressEvent(event);
 
     if (event->button() == Qt::LeftButton) {
         event->accept();
         auto drag = new QDrag(this);
 
         // serialize the surface and set mime data
+        auto centerPos = AxiomModel::GridSurface::findCenter(entry->rootSurface()->grid().items());
         QByteArray serializeArray;
         QDataStream stream(&serializeArray, QIODevice::WriteOnly);
-        entry->schematic().partialSerialize(stream, entry->schematic().rawItems(), QPoint(0, 0));
+        stream << centerPos;
+        AxiomModel::ModelRoot::serializeChunk(stream, entry->rootSurface()->uuid(), AxiomModel::findDependents(AxiomModel::dynamicCast<AxiomModel::ModelObject*>(entry->root()->pool().sequence()), entry->rootSurface()->uuid(), false));
 
         auto mimeData = new QMimeData();
         mimeData->setData("application/axiom-partial-surface", serializeArray);
         drag->setMimeData(mimeData);
 
         drag->exec();
-    }*/
+    }
 }
 
 void ModulePreviewView::mouseDoubleClickEvent(QMouseEvent *) {
@@ -56,18 +64,18 @@ void ModulePreviewView::mouseDoubleClickEvent(QMouseEvent *) {
 }
 
 void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
-    /*event->accept();
+    event->accept();
 
     QMenu menu;
 
-    auto editAction = menu.addAction(tr("&Edit"));
-    auto propertiesAction = menu.addAction(tr("&Properties..."));
+    auto editAction = menu.addAction("&Edit");
+    auto propertiesAction = menu.addAction("&Properties...");
     menu.addSeparator();
-    auto deleteAction = menu.addAction(tr("&Delete"));
+    auto deleteAction = menu.addAction("&Delete");
     auto selectedAction = menu.exec(event->globalPos());
 
     if (selectedAction == editAction) {
-        window->showSchematic(nullptr, &entry->schematic(), true);
+        window->showSurface(nullptr, entry->rootSurface(), true);
     } else if (selectedAction == propertiesAction) {
         ModulePropertiesWindow propWindow(library);
         propWindow.setEnteredName(entry->name());
@@ -104,7 +112,7 @@ void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
         if (confirmBox.exec() == QMessageBox::Yes) {
             entry->remove();
         }
-    }*/
+    }
 }
 
 void ModulePreviewView::updateScaling() {

@@ -111,18 +111,18 @@ namespace AxiomModel {
     }
 
     template<class InputCollection>
-    Sequence<typename InputCollection::value_type> findDependents(InputCollection input, QUuid uuid) {
+    Sequence<typename InputCollection::value_type> findDependents(InputCollection input, QUuid uuid, bool includeSelf = true) {
         // Objects in a pool are always in heap-sorted order - this means that a child is _always_ after a parent
         // in the array. We can take advantage of that here by doing a simple iteration over all items in the input
         // pool, and checking to see if we've seen the items parent before, by keeping a set of all seen UUIDs.
         // If we have seen the item before, it must be a dependent of the base item, so we yield it and add it to the
         // set.
 
-        return Sequence<typename InputCollection::value_type>([input, uuid]() {
+        return Sequence<typename InputCollection::value_type>([input, uuid, includeSelf]() {
             std::optional<typename InputCollection::const_iterator> begin;
             std::optional<typename InputCollection::const_iterator> end;
             QSet<QUuid> visitedIds;
-            return [uuid, input, begin, end, visitedIds]() mutable -> std::optional<typename InputCollection::value_type> {
+            return [uuid, input, begin, end, visitedIds, includeSelf]() mutable -> std::optional<typename InputCollection::value_type> {
                 if (!begin || !end) {
                     begin = input.begin();
                     end = input.end();
@@ -133,7 +133,7 @@ namespace AxiomModel {
                     (*begin)++;
                     if (obj->uuid() == uuid || visitedIds.contains(obj->parentUuid())) {
                         visitedIds.insert(obj->uuid());
-                        return std::move(obj);
+                        if (obj->uuid() != uuid || includeSelf) return std::move(obj);
                     }
                 }
                 return std::optional<typename InputCollection::value_type>();

@@ -5,6 +5,8 @@
 #include "../PoolOperators.h"
 #include "../CloneReferenceMapper.h"
 #include "../IdentityReferenceMapper.h"
+#include "../objects/NodeSurface.h"
+#include "../objects/Node.h"
 
 using namespace AxiomModel;
 
@@ -52,6 +54,9 @@ bool PasteBufferAction::forward(bool) {
     QDataStream stream(&buffer, QIODevice::ReadOnly);
     QPoint objectCenter; stream >> objectCenter;
 
+    // deselect all nodes so we can just select the new ones
+    find(root()->nodeSurfaces(), surfaceUuid)->grid().deselectAll();
+
     std::vector<ModelObject*> used;
     if (isBufferFormatted) {
         IdentityReferenceMapper ref;
@@ -68,6 +73,10 @@ bool PasteBufferAction::forward(bool) {
 
     auto needsBuild = false;
     for (const auto &obj : used) {
+        if (auto node = dynamic_cast<Node*>(obj); node && obj->parentUuid() == surfaceUuid) {
+            node->select(false);
+        }
+
         usedUuids.push_back(obj->uuid());
         if (obj->buildOnRemove()) needsBuild = true;
     }
