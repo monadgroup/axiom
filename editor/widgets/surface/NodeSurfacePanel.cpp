@@ -8,7 +8,7 @@
 using namespace AxiomGui;
 
 NodeSurfacePanel::NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *surface)
-    : DockPanel(surface->name()), window(window) {
+    : ads::CDockWidget(surface->name()), window(window) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/SchematicPanel.qss"));
 
     surface->nameChanged.connect(this, &NodeSurfacePanel::setWindowTitle);
@@ -19,6 +19,6 @@ NodeSurfacePanel::NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *
 }
 
 void NodeSurfacePanel::closeEvent(QCloseEvent *event) {
-    DockPanel::closeEvent(event);
+    ads::CDockWidget::closeEvent(event);
     emit closed();
 }

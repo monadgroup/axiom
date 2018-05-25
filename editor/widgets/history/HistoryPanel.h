@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QListWidget>
 
-#include "../dock/DockPanel.h"
+#include "../dock/DockWidget.h"
 #include "common/TrackedObject.h"
 
 namespace AxiomModel {
@@ -13,7 +13,7 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class HistoryPanel : public DockPanel, public AxiomCommon::TrackedObject {
+    class HistoryPanel : public ads::CDockWidget, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:

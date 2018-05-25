@@ -14,12 +14,14 @@
 #include <QtWidgets/QPushButton>
 #include <chrono>
 #include <iostream>
+#include <editor/widgets/dock/ads_globals.h>
 
 #include "../GlobalActions.h"
 #include "../InteractiveImport.h"
 #include "../history/HistoryPanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
 #include "../surface/NodeSurfacePanel.h"
+#include "../dock/DockManager.h"
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
 #include "editor/backend/AudioBackend.h"
@@ -42,8 +44,8 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     resize(1440, 810);
 
     setUnifiedTitleAndToolBarOnMac(true);
-    setDockNestingEnabled(true);
-    setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
+
+    dockManager = new ads::CDockManager(this);
 
     auto startTime = std::chrono::high_resolution_clock::now();
     lockGlobalLibrary();
@@ -80,7 +82,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     connect(&loadDebounceTimer, &QTimer::timeout, this, &MainWindow::triggerLibraryReloadDebounce);
 
     _modulePanel = std::make_unique<ModuleBrowserPanel>(this, _library.get(), this);
-    addDockWidget(Qt::BottomDockWidgetArea, _modulePanel.get());
+    dockManager->addDockWidget(ads::BottomDockWidgetArea, _modulePanel.get());
 
     // build menus
     auto fileMenu = menuBar()->addMenu(tr("&File"));
@@ -150,8 +152,20 @@ NodeSurfacePanel *MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomMode
 
     auto newDock = std::make_unique<NodeSurfacePanel>(this, surface);
     auto newDockPtr = newDock.get();
-    newDock->setAllowedAreas(Qt::AllDockWidgetAreas);
     if (!fromPanel) {
+        dockManager->addDockWidget(ads::LeftDockWidgetArea, newDockPtr);
+    } else {
+        dockManager->addDockWidget(ads::RightDockWidgetArea, newDockPtr, fromPanel->dockAreaWidget());
+
+        // raise() doesn't seem to work when called synchronously after tabifyDockWidget, so we wait for the next
+        // event loop iteration
+        QTimer::singleShot(0, newDockPtr, [newDockPtr]() {
+            newDockPtr->raise();
+            newDockPtr->setFocus(Qt::OtherFocusReason);
+        });
+    }
+
+    /*if (!fromPanel) {
         addDockWidget(Qt::LeftDockWidgetArea, newDockPtr);
     } else if (split) {
         splitDockWidget(fromPanel, newDockPtr, Qt::Horizontal);
@@ -164,7 +178,7 @@ NodeSurfacePanel *MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomMode
             newDockPtr->raise();
             newDockPtr->setFocus(Qt::OtherFocusReason);
         });
-    }
+    }*/
 
     if (!permanent) {
         connect(newDockPtr, &NodeSurfacePanel::closed, this, [this, surface]() { removeSurface(surface); });
@@ -256,7 +270,7 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     _modulePanel->show();
 
     _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
-    addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
+    dockManager->addDockWidget(ads::RightDockWidgetArea, _historyPanel.get());
     _historyPanel->hide();
 
     _viewMenu->addAction(surfacePanel->toggleViewAction());

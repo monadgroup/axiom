@@ -1,6 +1,6 @@
 * {
     color: #EEEEEE;
-    background-color: #111;/*#0A0A0A;*/
+    background-color: #111;
 }
 
 /* form control styling */

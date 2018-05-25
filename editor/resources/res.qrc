@@ -5,6 +5,7 @@
         <file>logo.png</file>
 
         <file>styles/MainStyles.qss</file>
+        <file>styles/Dock.qss</file>
         <file>styles/ModuleBrowserPanel.qss</file>
         <file>styles/ModulePreviewList.qss</file>
         <file>styles/SchematicPanel.qss</file>

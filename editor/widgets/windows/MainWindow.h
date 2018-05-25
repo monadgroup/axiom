@@ -19,6 +19,10 @@ namespace AxiomModel {
     class NodeSurface;
 }
 
+namespace ads{
+    class CDockManager;
+}
+
 namespace AxiomGui {
 
     class NodeSurfacePanel;
@@ -88,6 +92,7 @@ namespace AxiomGui {
         void importLibraryFrom(const QString &path);
 
     private:
+        ads::CDockManager *dockManager;
         AxiomBackend::AudioBackend *_backend;
         MaximCompiler::Runtime _runtime;
         std::unique_ptr<AxiomModel::Project> _project;
