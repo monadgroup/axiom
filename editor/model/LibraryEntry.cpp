@@ -14,6 +14,8 @@ LibraryEntry::LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &mod
     assert(rootSurfaces.size() == 1);
     _rootSurface = dynamic_cast<RootSurface*>(takeAt(rootSurfaces, 0));
     assert(_rootSurface);
+
+    _root->history().stackChanged.connect(this, &LibraryEntry::modified);
 }
 
 std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,
@@ -65,15 +67,22 @@ void LibraryEntry::setName(const QString &newName) {
     if (newName != _name) {
         _name = newName;
         nameChanged.trigger(newName);
+        modified();
     }
 }
 
 void LibraryEntry::addTag(const QString &tag) {
-    if (_tags.insert(tag).second) tagAdded.trigger(tag);
+    if (_tags.insert(tag).second) {
+        tagAdded.trigger(tag);
+        modified();
+    }
 }
 
 void LibraryEntry::removeTag(const QString &tag) {
-    if (_tags.erase(tag)) tagRemoved.trigger(tag);
+    if (_tags.erase(tag)) {
+        tagRemoved.trigger(tag);
+        modified();
+    }
 }
 
 
