@@ -4,6 +4,7 @@
 #include <QtWidgets/QMenu>
 
 #include "common/Hookable.h"
+#include "editor/model/actions/CompositeAction.h"
 
 namespace AxiomModel {
     class NodeSurface;
@@ -64,6 +65,7 @@ namespace AxiomGui {
         QPoint startMousePos;
         QPointF startPan;
         float lastScale = 1;
+        std::unique_ptr<AxiomModel::CompositeAction> dragAndDropAction;
 
         static float zoomToScale(float zoom);
     };

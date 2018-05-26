@@ -14,6 +14,7 @@
 #include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/PasteBufferAction.h"
+#include "editor/model/actions/GridItemMoveAction.h"
 #include "editor/model/PoolOperators.h"
 #include "NodeSurfaceCanvas.h"
 #include "../GlobalActions.h"
@@ -127,50 +128,42 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
     auto action = PasteBufferAction::create(surface->uuid(), std::move(data), nodePos, surface->root());
     action->forward(true);
 
+    std::vector<std::unique_ptr<Action>> actions;
+    actions.push_back(std::move(action));
+    dragAndDropAction = CompositeAction::create(std::move(actions), surface->root());
 
-    /*if (!event->mimeData()->hasFormat("application/axiom-partial-surface")) return;
-
-    event->acceptProposedAction();
-    schematic->project()->history.startAction(HistoryList::ActionType::PLACE_MODULE);
-
-    auto currentItemCount = schematic->items().size();
-
-    // add the nodes to the surface, select them, and make them follow the mouse
-    auto scenePos = mapToScene(event->pos());
-    auto nodePos = QPoint(
-        (int) (scenePos.x() / SchematicCanvas::nodeGridSize.width()),
-        (int) (scenePos.y() / SchematicCanvas::nodeGridSize.height())
-    );
-
-    auto data = event->mimeData()->data("application/axiom-partial-surface");
-    QDataStream stream(&data, QIODevice::ReadOnly);
-    schematic->partialDeserialize(stream, nodePos);
-
-    schematic->deselectAll();
-    for (size_t i = currentItemCount; i < schematic->items().size(); i++) {
-        schematic->items()[i]->select(false);
-    }
-    schematic->startDragging();
-    startMousePos = QPoint(scenePos.x(), scenePos.y());*/
+    surface->grid().startDragging();
+    startMousePos = QPoint(scenePos.x(), scenePos.y());
 }
 
 void NodeSurfaceView::dragMoveEvent(QDragMoveEvent *event) {
-    /*auto mouseDelta = mapToScene(event->pos()) - startMousePos;
-    surface->dragTo(QPoint(
-        mouseDelta.x() / SchematicCanvas::nodeGridSize.width(),
-        mouseDelta.y() / SchematicCanvas::nodeGridSize.height()
-    ));*/
+    auto mouseDelta = mapToScene(event->pos()) - startMousePos;
+    surface->grid().dragTo(QPoint(
+        mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width(),
+        mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height()
+    ));
 }
 
 void NodeSurfaceView::dragLeaveEvent(QDragLeaveEvent *event) {
-    //schematic->finishDragging();
-    //schematic->project()->history.cancelAction(HistoryList::ActionType::PLACE_MODULE);
+    surface->grid().finishDragging();
+    dragAndDropAction->backward();
+    dragAndDropAction.reset();
 }
 
 void NodeSurfaceView::dropEvent(QDropEvent *event) {
-    //schematic->finishDragging();
-    //schematic->project()->history.endAction(HistoryList::ActionType::PLACE_MODULE);
-    //setFocus(Qt::OtherFocusReason);
+    surface->grid().finishDragging();
+
+    auto selectedNodes = staticCast<Node *>(surface->grid().selectedItems().sequence());
+    for (const auto &selectedNode : selectedNodes) {
+        auto beforePos = selectedNode->dragStartPos();
+        auto afterPos = selectedNode->pos();
+
+        if (beforePos != afterPos) {
+            dragAndDropAction->actions().push_back(GridItemMoveAction::create(selectedNode->uuid(), beforePos, afterPos, surface->root()));
+        }
+    }
+
+    surface->root()->history().append(std::move(dragAndDropAction), false);
 }
 
 void NodeSurfaceView::pan(QPointF pan) {

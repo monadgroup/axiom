@@ -33,7 +33,7 @@ namespace AxiomModel {
 
         size_t stackPos() const { return _stackPos; }
 
-        void append(std::unique_ptr<Action> action);
+        void append(std::unique_ptr<Action> action, bool forward = true);
 
         bool canUndo() const;
 
