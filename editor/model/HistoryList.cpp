@@ -30,9 +30,10 @@ void HistoryList::serialize(QDataStream &stream) {
     }
 }
 
-void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward) {
+void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward, bool forceForwards) {
     // run the action forward
-    if (forward && action->forward(true)) rebuildRequested.trigger();
+    auto needsForward = forward && action->forward(true);
+    if (needsForward || forceForwards) rebuildRequested.trigger();
 
     auto couldRedo = canRedo();
     auto actionType = action->actionType();

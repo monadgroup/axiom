@@ -126,7 +126,7 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
 
     auto data = event->mimeData()->data("application/axiom-partial-surface");
     auto action = PasteBufferAction::create(surface->uuid(), std::move(data), nodePos, surface->root());
-    action->forward(true);
+    dragAndDropRebuild = action->forward(true);
 
     std::vector<std::unique_ptr<Action>> actions;
     actions.push_back(std::move(action));
@@ -163,7 +163,7 @@ void NodeSurfaceView::dropEvent(QDropEvent *event) {
         }
     }
 
-    surface->root()->history().append(std::move(dragAndDropAction), false);
+    surface->root()->history().append(std::move(dragAndDropAction), false, dragAndDropRebuild);
 }
 
 void NodeSurfaceView::pan(QPointF pan) {

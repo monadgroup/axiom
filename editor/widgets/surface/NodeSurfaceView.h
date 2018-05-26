@@ -66,6 +66,7 @@ namespace AxiomGui {
         QPointF startPan;
         float lastScale = 1;
         std::unique_ptr<AxiomModel::CompositeAction> dragAndDropAction;
+        bool dragAndDropRebuild = false;
 
         static float zoomToScale(float zoom);
     };
