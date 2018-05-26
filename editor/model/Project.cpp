@@ -39,20 +39,20 @@ Project::~Project() {
 }
 
 std::unique_ptr<Project> Project::deserialize(QDataStream &stream, uint32_t *versionOut) {
-    if (!readHeader(stream, versionOut)) return nullptr;
+    if (!readHeader(stream, projectSchemaMagic, versionOut)) return nullptr;
 
     return std::make_unique<Project>(stream);
 }
 
-void Project::writeHeader(QDataStream &stream) {
-    stream << static_cast<quint64>(schemaMagic);
+void Project::writeHeader(QDataStream &stream, uint64_t magic) {
+    stream << static_cast<quint64>(magic);
     stream << schemaVersion;
 }
 
-bool Project::readHeader(QDataStream &stream, uint32_t *versionOut) {
+bool Project::readHeader(QDataStream &stream, uint64_t expectedMagic, uint32_t *versionOut) {
     quint64 magic;
     stream >> magic;
-    if (magic != schemaMagic) return false;
+    if (magic != expectedMagic) return false;
 
     uint32_t version;
     stream >> version;
@@ -62,7 +62,7 @@ bool Project::readHeader(QDataStream &stream, uint32_t *versionOut) {
 }
 
 void Project::serialize(QDataStream &stream) {
-    writeHeader(stream);
+    writeHeader(stream, projectSchemaMagic);
     _mainRoot.serialize(stream);
     _library.serialize(stream);
 }

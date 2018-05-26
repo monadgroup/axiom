@@ -1,6 +1,8 @@
 #include "Library.h"
 
 #include <QtCore/QDataStream>
+#include <QtCore/QMap>
+#include <QtWidgets/QMessageBox>
 
 #include "LibraryEntry.h"
 #include "../util.h"
@@ -26,6 +28,46 @@ void Library::serialize(QDataStream &stream) {
     stream << (quint32) _entries.size();
     for (const auto &entry : _entries) {
         entry->serialize(stream);
+    }
+}
+
+void Library::import(AxiomModel::Library *library, const std::function<Library::ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict) {
+    // create a mapping of uuid/entry pairs for checking conflicts
+    QMap<QUuid, LibraryEntry *> currentEntries;
+    for (const auto &entry : _entries) {
+        currentEntries.insert(entry->baseUuid(), entry.get());
+    }
+
+    // merge, checking for duplicates
+    // if we hit a duplicate, we have two possible actions:
+    //   - if the modification UUID is the same as the local one, they're the same and we can just keep what we've got
+    //   - if not, there's a desync, and we need to ask the user which one they want to keep
+    for (auto &entry : library->_entries) {
+        auto currentEntry = currentEntries.find(entry->baseUuid());
+
+        if (currentEntry == currentEntries.end()) {
+            // no conflict, just add the entry
+            addEntry(std::move(entry));
+        } else {
+            if (entry->modificationUuid() != currentEntry.value()->modificationUuid()) {
+                // different modification IDs, one of them has to go
+                auto resolution = resolveConflict(currentEntry.value(), entry.get());
+
+                switch (resolution) {
+                    case ConflictResolution::KEEP_OLD:
+                        // no action needed
+                        break;
+                    case ConflictResolution::KEEP_NEW:
+                        currentEntries.remove(currentEntry.value()->baseUuid());
+                        currentEntry.value()->remove();
+                        addEntry(std::move(entry));
+                        break;
+                    case ConflictResolution::KEEP_BOTH:
+                        // todo
+                        break;
+                }
+            }
+        }
     }
 }
 

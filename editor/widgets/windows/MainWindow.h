@@ -46,6 +46,10 @@ namespace AxiomGui {
 
         void saveProject();
 
+        void importLibrary();
+
+        void exportLibrary();
+
     private:
 
         MaximRuntime::Runtime *runtime;

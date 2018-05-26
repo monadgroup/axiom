@@ -250,14 +250,12 @@ void NodeSurfaceView::pasteBuffer() {
 
 void NodeSurfaceView::doUndo() {
     if (hasFocus()) {
-        std::cout << "I have focus, undoing" << std::endl;
         surface->root()->history().undo();
     }
 }
 
 void NodeSurfaceView::doRedo() {
     if (hasFocus()) {
-        std::cout << "I have focus, redoing" << std::endl;
         surface->root()->history().redo();
     }
 }

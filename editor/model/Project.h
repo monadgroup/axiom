@@ -16,7 +16,8 @@ namespace AxiomModel {
     class Project {
     public:
         static constexpr uint32_t schemaVersion = 2;
-        static constexpr uint64_t schemaMagic = 0x4D4F4E4144202020;
+        static constexpr uint64_t projectSchemaMagic = 0x4D4F4E4144415850;
+        static constexpr uint64_t librarySchemaMagic = 0x4D4F4E414441584C;
         static constexpr uint32_t minSchemaVersion = 2;
 
         Project();
@@ -27,9 +28,9 @@ namespace AxiomModel {
 
         static std::unique_ptr<Project> deserialize(QDataStream &stream, uint32_t *versionOut);
 
-        static void writeHeader(QDataStream &stream);
+        static void writeHeader(QDataStream &stream, uint64_t magic);
 
-        static bool readHeader(QDataStream &stream, uint32_t *versionOut);
+        static bool readHeader(QDataStream &stream, uint64_t expectedMagic, uint32_t *versionOut);
 
         ModelRoot &mainRoot() { return _mainRoot; }
 
