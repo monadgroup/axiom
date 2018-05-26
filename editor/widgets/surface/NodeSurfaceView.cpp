@@ -42,6 +42,10 @@ NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // connect to global actions
+    connect(GlobalActions::editUndo, &QAction::triggered,
+            this, &NodeSurfaceView::doUndo);
+    connect(GlobalActions::editRedo, &QAction::triggered,
+            this, &NodeSurfaceView::doRedo);
     connect(GlobalActions::editDelete, &QAction::triggered,
             this, &NodeSurfaceView::deleteSelected);
     connect(GlobalActions::editSelectAll, &QAction::triggered,
@@ -52,6 +56,9 @@ NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
             this, &NodeSurfaceView::copySelected);
     connect(GlobalActions::editPaste, &QAction::triggered,
             this, &NodeSurfaceView::pasteBuffer);
+
+    // connect to update history
+    surface->root()->history().stackChanged.connect(this, &NodeSurfaceView::updateHistoryState);
 }
 
 void NodeSurfaceView::mousePressEvent(QMouseEvent *event) {
@@ -166,6 +173,11 @@ void NodeSurfaceView::dropEvent(QDropEvent *event) {
     surface->root()->history().append(std::move(dragAndDropAction), false, dragAndDropRebuild);
 }
 
+void NodeSurfaceView::focusInEvent(QFocusEvent *event) {
+    updateHistoryState();
+    QGraphicsView::focusInEvent(event);
+}
+
 void NodeSurfaceView::pan(QPointF pan) {
     centerOn(pan);
 }
@@ -236,6 +248,28 @@ void NodeSurfaceView::pasteBuffer() {
     surface->root()->history().append(PasteBufferAction::create(surface->uuid(), std::move(buffer), targetPos, surface->root()));
 }
 
+void NodeSurfaceView::doUndo() {
+    if (hasFocus()) {
+        std::cout << "I have focus, undoing" << std::endl;
+        surface->root()->history().undo();
+    }
+}
+
+void NodeSurfaceView::doRedo() {
+    if (hasFocus()) {
+        std::cout << "I have focus, redoing" << std::endl;
+        surface->root()->history().redo();
+    }
+}
+
 float NodeSurfaceView::zoomToScale(float zoom) {
     return std::pow(20.f, zoom);
+}
+
+void NodeSurfaceView::updateHistoryState() {
+    if (!hasFocus()) return;
+    GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(surface->root()->history().undoType()));
+    GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(surface->root()->history().redoType()));
+    GlobalActions::editUndo->setEnabled(surface->root()->history().canUndo());
+    GlobalActions::editRedo->setEnabled(surface->root()->history().canRedo());
 }

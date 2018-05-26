@@ -14,10 +14,6 @@ namespace AxiomModel {
 
     class HistoryList : public AxiomCommon::Hookable {
     public:
-        AxiomCommon::Event<bool> canUndoChanged;
-        AxiomCommon::Event<bool> canRedoChanged;
-        AxiomCommon::Event<Action::ActionType> undoTypeChanged;
-        AxiomCommon::Event<Action::ActionType> redoTypeChanged;
         AxiomCommon::Event<> rebuildRequested;
         AxiomCommon::Event<> stackChanged;
 
@@ -37,9 +33,13 @@ namespace AxiomModel {
 
         bool canUndo() const;
 
+        Action::ActionType undoType() const;
+
         void undo();
 
         bool canRedo() const;
+
+        Action::ActionType redoType() const;
 
         void redo();
 

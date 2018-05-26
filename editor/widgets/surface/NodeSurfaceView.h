@@ -42,6 +42,8 @@ namespace AxiomGui {
 
         void dropEvent(QDropEvent *event) override;
 
+        void focusInEvent(QFocusEvent *event) override;
+
     private slots:
 
         void pan(QPointF pan);
@@ -58,6 +60,10 @@ namespace AxiomGui {
 
         void pasteBuffer();
 
+        void doUndo();
+
+        void doRedo();
+
     private:
         AxiomModel::NodeSurface *surface;
 
@@ -69,6 +75,8 @@ namespace AxiomGui {
         bool dragAndDropRebuild = false;
 
         static float zoomToScale(float zoom);
+
+        void updateHistoryState();
     };
 
 }

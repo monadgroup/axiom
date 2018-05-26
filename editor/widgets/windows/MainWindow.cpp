@@ -75,11 +75,6 @@ MainWindow::MainWindow(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomMode
     connect(GlobalActions::fileQuit, &QAction::triggered,
             QApplication::quit);
 
-    connect(GlobalActions::editUndo, &QAction::triggered,
-            this, [this]() { if (_project) _project->mainRoot().history().undo(); });
-    connect(GlobalActions::editRedo, &QAction::triggered,
-            this, [this]() { if (_project) _project->mainRoot().history().redo(); });
-
     setProject(std::move(project));
 }
 
@@ -106,6 +101,7 @@ void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurfac
         // event loop iteration
         QTimer::singleShot(0, newDockPtr, [newDockPtr]() {
             newDockPtr->raise();
+            newDockPtr->setFocus(Qt::OtherFocusReason);
         });
     }
 
@@ -129,19 +125,6 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
 
     _project = std::move(project);
     _project->attachRuntime(runtime);
-    auto &history = _project->mainRoot().history();
-
-    GlobalActions::editUndo->setEnabled(history.canUndo());
-    history.canUndoChanged.forward(GlobalActions::editUndo, &QAction::setEnabled);
-    history.undoTypeChanged.connect([](AxiomModel::Action::ActionType type) {
-        GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(type));
-    });
-
-    GlobalActions::editRedo->setEnabled(history.canRedo());
-    history.canRedoChanged.forward(GlobalActions::editRedo, &QAction::setEnabled);
-    history.redoTypeChanged.connect([](AxiomModel::Action::ActionType type) {
-        GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(type));
-    });
 
     // find root surface and show it
     auto defaultSurface = AxiomModel::getFirst(
