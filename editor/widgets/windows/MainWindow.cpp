@@ -236,10 +236,10 @@ void MainWindow::importLibrary() {
                     tr("Heads up! One of the modules in the imported library is conflicting with one you already had.\n\n"
                     "Current module (") + (currentNewer ? "newer" : "older") + ")\n"
                     "Name: " + oldEntry->name() + "\n"
-                    "Last edit: " + oldEntry->modificationDateTime().toString() + "\n\n"
+                    "Last edit: " + oldEntry->modificationDateTime().toLocalTime().toString() + "\n\n"
                     "New module (" + (currentNewer ? "older" : "newer") + ")\n"
                     "Name: " + newEntry->name() + "\n"
-                    "Last edit: " + newEntry->modificationDateTime().toString() + "\n\n"
+                    "Last edit: " + newEntry->modificationDateTime().toLocalTime().toString() + "\n\n"
                     "Would you like to keep the current module, imported one, or both?");
         auto currentBtn = msgBox.addButton("Current", QMessageBox::ActionRole);
         auto importedBtn = msgBox.addButton("Imported", QMessageBox::ActionRole);
