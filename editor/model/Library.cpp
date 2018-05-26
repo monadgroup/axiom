@@ -49,17 +49,18 @@ void Library::import(AxiomModel::Library *library, const std::function<Library::
             // no conflict, just add the entry
             addEntry(std::move(entry));
         } else {
-            if (entry->modificationUuid() != currentEntry.value()->modificationUuid()) {
+            auto curEntry = currentEntry.value();
+            if (entry->modificationUuid() != curEntry->modificationUuid()) {
                 // different modification IDs, one of them has to go
-                auto resolution = resolveConflict(currentEntry.value(), entry.get());
+                auto resolution = resolveConflict(curEntry, entry.get());
 
                 switch (resolution) {
                     case ConflictResolution::KEEP_OLD:
                         // no action needed
                         break;
                     case ConflictResolution::KEEP_NEW:
-                        currentEntries.remove(currentEntry.value()->baseUuid());
-                        currentEntry.value()->remove();
+                        currentEntries.remove(curEntry->baseUuid());
+                        curEntry->remove();
                         addEntry(std::move(entry));
                         break;
                     case ConflictResolution::KEEP_BOTH:
