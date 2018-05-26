@@ -21,6 +21,8 @@ namespace AxiomModel {
 
         Project();
 
+        ~Project();
+
         explicit Project(QDataStream &stream);
 
         static std::unique_ptr<Project> deserialize(QDataStream &stream, uint32_t *versionOut);

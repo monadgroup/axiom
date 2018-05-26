@@ -34,6 +34,10 @@ Project::Project(QDataStream &stream) : _mainRoot(this, stream), _library(this, 
     assert(_rootSurface);
 }
 
+Project::~Project() {
+    destroy();
+}
+
 std::unique_ptr<Project> Project::deserialize(QDataStream &stream, uint32_t *versionOut) {
     if (!readHeader(stream, versionOut)) return nullptr;
 

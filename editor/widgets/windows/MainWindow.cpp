@@ -120,9 +120,6 @@ void MainWindow::showAbout() {
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     // cleanup old project state
-    if (_project) {
-        _project->destroy();
-    }
     if (_historyPanel) {
         _historyPanel->close();
     }
