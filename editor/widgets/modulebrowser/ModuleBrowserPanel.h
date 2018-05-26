@@ -29,8 +29,7 @@ namespace AxiomGui {
 
         AxiomModel::Library *library;
         QTabBar *filterTabs;
-        std::map<QString, int> tabIndexes;
-        std::map<int, QString> indexTabs;
+        std::vector<QString> tabValues;
 
         void addTag(const QString &tag);
 

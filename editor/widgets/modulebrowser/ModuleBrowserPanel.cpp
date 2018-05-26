@@ -53,24 +53,21 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
 }
 
 void ModuleBrowserPanel::addTag(const QString &tag) {
-    auto index = filterTabs->addTab(tag);
-    tabIndexes.emplace(tag, index);
-    indexTabs.emplace(index, tag);
+    filterTabs->addTab(tag);
+    tabValues.push_back(tag);
 }
 
 void ModuleBrowserPanel::removeTag(const QString &tag) {
-    auto index = tabIndexes.find(tag);
-    assert(index != tabIndexes.end());
-    filterTabs->removeTab(index->second);
-    tabIndexes.erase(index);
-    indexTabs.erase(indexTabs.find(index->second));
+    auto index = std::find(tabValues.begin(), tabValues.end(), tag);
+    assert(index != tabValues.end());
+    tabValues.erase(index);
+    filterTabs->removeTab((int)(index - tabValues.begin()) + 1);
 }
 
 void ModuleBrowserPanel::changeTag(int tag) {
     if (tag == 0) library->setActiveTag("");
     else {
-        auto index = indexTabs.find(tag);
-        assert(index != indexTabs.end());
-        library->setActiveTag(index->second);
+        assert(tag <= (int) tabValues.size());
+        library->setActiveTag(tabValues[tag - 1]);
     }
 }

@@ -4,6 +4,8 @@
 #include <QtWidgets/QWidgetAction>
 
 #include "editor/model/Project.h"
+#include "editor/model/LibraryEntry.h"
+#include "editor/model/objects/NodeSurface.h"
 
 using namespace AxiomGui;
 
@@ -30,16 +32,13 @@ AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search
     addSeparator();
 
     // add default entries
-    /*std::vector<AxiomModel::LibraryEntry *> sortedEntries;
-    for (const auto &entry : schematic->project()->library.entries()) {
-        sortedEntries.push_back(entry.get());
-    }
+    std::vector<AxiomModel::LibraryEntry *> sortedEntries = surface->root()->project()->library().entries();
     std::sort(sortedEntries.begin(), sortedEntries.end(), [](AxiomModel::LibraryEntry *a, AxiomModel::LibraryEntry *b) {
         return a->name() < b->name();
     });
     for (const auto &entry : sortedEntries) {
         entryActions.emplace(entry, addAction(entry->name()));
-    }*/
+    }
 
     cantFindAction = addAction(tr("Oops, I can't find that one..."));
     cantFindAction->setEnabled(false);
@@ -49,7 +48,7 @@ AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search
 }
 
 void AddNodeMenu::applySearch(QString search) {
-    /*QString lowerSearch = search.toLower();
+    QString lowerSearch = search.toLower();
 
     bool anyEntryVisible = false;
     for (const auto &pair : entryActions) {
@@ -58,5 +57,5 @@ void AddNodeMenu::applySearch(QString search) {
         if (inName) anyEntryVisible = true;
     }
 
-    cantFindAction->setVisible(!anyEntryVisible);*/
+    cantFindAction->setVisible(!anyEntryVisible && !entryActions.empty());
 }
