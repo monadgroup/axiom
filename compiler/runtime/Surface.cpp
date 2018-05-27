@@ -6,6 +6,7 @@
 
 #include "Runtime.h"
 #include "HardControl.h"
+#include "SoftControl.h"
 #include "../codegen/Control.h"
 
 using namespace MaximRuntime;
@@ -186,8 +187,7 @@ GeneratableModuleClass *Surface::compile() {
 
         if (group->exposed()) {
             // just add an entry for a pointer to the group
-            // todo: getting the type like this might break with extraction???
-            entryIndex = _class->addEntry(group->type()->storageType());
+            entryIndex = _class->addEntry(llvm::PointerType::get(group->type()->underlyingType(), 0));
         } else {
             // add an entry for the actual value, and one for a pointer to that value
             auto realVal = group->compile();
@@ -300,7 +300,12 @@ GeneratableModuleClass *Surface::compile() {
 
                 auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), instId,
                                                              entryPtr, "controlinst");
-                auto controlGroupPtr = _class->constructor()->builder().CreateStructGEP(controlPtr->getType()->getPointerElementType(), controlPtr, 0, "controlinstgroup");
+                auto controlGroupPtr = controlPtr;
+
+                // todo: find a better way to do this?
+                if (dynamic_cast<SoftControl*>(control) == nullptr) {
+                    controlGroupPtr = _class->constructor()->builder().CreateStructGEP(controlPtr->getType()->getPointerElementType(), controlPtr, 0, "controlinstgroup");
+                }
 
                 auto groupPtrIndex = _groupPtrIndexes.find(control->group());
                 assert(groupPtrIndex != _groupPtrIndexes.end());
@@ -435,7 +440,14 @@ GeneratableModuleClass *Surface::compile() {
                     // array types are always active (because they don't store an active flag...)
                     llvm::Value *controlActive = llvm::ConstantInt::get(llvm::Type::getInt1Ty(runtime()->ctx()->llvm()),
                                                                         1, false);
-                    auto loadedPtr = b.CreateLoad(controlPtr);
+
+                    // todo: need a better way to do this
+                    auto loadedPtrPtr = controlPtr;
+                    if (dynamic_cast<SoftControl *>(control) == nullptr) {
+                        loadedPtrPtr = b.CreateStructGEP(controlPtr->getType()->getPointerElementType(), controlPtr, 0);
+                    }
+
+                    auto loadedPtr = loadedPtrPtr;
                     if (loadedPtr->getType()->getPointerElementType()->isStructTy()) {
                         controlActive = b.CreateLoad(b.CreateGEP(
                             loadedPtr,
