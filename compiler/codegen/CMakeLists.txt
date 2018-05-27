@@ -10,7 +10,7 @@ set(SOURCE_FILES
         Operator.cpp Value.cpp Builder.cpp MaximContext.cpp
         ModuleClass.cpp ComposableModuleClass.cpp
         ModuleClassMethod.cpp ComposableModuleClassMethod.cpp Function.cpp
-        Control.cpp ControlField.cpp ControlFieldClassMethod.cpp
+        Control.cpp ControlField.cpp ControlClassMethod.cpp
         Converter.cpp
         Scope.cpp
         Array.cpp ArrayType.cpp

@@ -56,6 +56,7 @@
 
 #include "controls/ScalarControl.h"
 #include "controls/ExtractControl.h"
+#include "controls/VectorScopeControl.h"
 
 
 using namespace MaximCodegen;
@@ -322,6 +323,8 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
         ExtractControl::create(this, libModule, MaximCommon::ControlType::NUM_EXTRACT, numType(), "numextract"));
     registerControl(
         ExtractControl::create(this, libModule, MaximCommon::ControlType::MIDI_EXTRACT, midiType(), "midi"));
+
+    registerControl(VectorScopeControl::create(this, libModule));
 }
 
 void MaximContext::registerOperator(std::unique_ptr<Operator> op) {

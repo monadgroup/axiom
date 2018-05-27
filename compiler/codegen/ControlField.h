@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ModuleClass.h"
-#include "ControlFieldClassMethod.h"
+#include "ControlClassMethod.h"
 
 namespace MaximCodegen {
 
@@ -17,11 +17,11 @@ namespace MaximCodegen {
 
         Type *type() const { return _type; }
 
-        ControlFieldClassMethod *constructor() override { return &_constructor; }
+        ControlClassMethod *constructor() override { return &_constructor; }
 
-        ControlFieldClassMethod *getValue() { return &_getValue; }
+        ControlClassMethod *getValue() { return &_getValue; }
 
-        ControlFieldClassMethod *setValue() { return &_setValue; }
+        ControlClassMethod *setValue() { return &_setValue; }
 
         llvm::Type *storageType() override;
 
@@ -33,9 +33,9 @@ namespace MaximCodegen {
         Control *_control;
         Type *_type;
 
-        ControlFieldClassMethod _constructor;
-        ControlFieldClassMethod _getValue;
-        ControlFieldClassMethod _setValue;
+        ControlClassMethod _constructor;
+        ControlClassMethod _getValue;
+        ControlClassMethod _setValue;
     };
 
 }

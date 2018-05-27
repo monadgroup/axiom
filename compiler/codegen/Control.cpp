@@ -5,9 +5,9 @@
 
 using namespace MaximCodegen;
 
-Control::Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, llvm::Type *storageType,
+Control::Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, llvm::Type *dataType,
                  llvm::Type *valueType, llvm::Type *underlyingType, const std::string &name)
-    : ModuleClass(ctx, module, name), _type(type), _storageType(storageType), _valueType(valueType),
+    : ModuleClass(ctx, module, name), _type(type), _dataType(dataType), _valueType(valueType),
       _underlyingType(underlyingType), _constructor(this, "constructor"), _update(this, "update") {
 
 }
@@ -28,7 +28,7 @@ ControlField *Control::getField(const std::string &name) {
 llvm::Type *Control::storageType() {
     return llvm::StructType::get(ctx()->llvm(), {
         llvm::PointerType::get(_valueType, 0),
-        _storageType
+        _dataType
     });
 }
 

@@ -308,6 +308,7 @@ std::unique_ptr<MaximAst::AssignableExpression> Parser::parseControlExpression(s
     else if (typeToken.content == "roll") controlType = ControlType::ROLL;
     else if (typeToken.content == "num[]") controlType = ControlType::NUM_EXTRACT;
     else if (typeToken.content == "midi[]") controlType = ControlType::MIDI_EXTRACT;
+    else if (typeToken.content == "scope") controlType = ControlType::SCOPE;
     else {
         throw MaximCommon::CompileError(
             "Come on man, I don't support " + typeToken.content + " controls.",
