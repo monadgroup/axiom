@@ -6,11 +6,7 @@
 using namespace MaximCodegen;
 
 VectorScopeControl::VectorScopeControl(MaximCodegen::MaximContext *ctx, llvm::Module *module)
-    : Control(ctx, module, MaximCommon::ControlType::SCOPE, llvm::StructType::get(ctx->llvm(), {
-        llvm::Type::getInt16Ty(ctx->llvm()), // buffer position
-        llvm::Type::getInt16Ty(ctx->llvm()), // buffer capacity
-        llvm::ArrayType::get(ctx->floatVecTy(), ctx->sampleRate / minimumFps)
-    }, false), ctx->numType()->get(), ctx->numType()->get(), "vectorcontrol") {
+    : Control(ctx, module, MaximCommon::ControlType::SCOPE, ctx->vecScopeStorage(), ctx->numType()->get(), ctx->numType()->get(), "vectorcontrol") {
 
     auto valueField = addField("value", ctx->numType());
 

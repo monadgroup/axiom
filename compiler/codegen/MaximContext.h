@@ -92,6 +92,8 @@ namespace MaximCodegen {
 
         const MidiType *midiType() const { return &_midiType; }
 
+        llvm::StructType *vecScopeStorage() const { return _vecScopeStorage; }
+
         llvm::Type *voidPointerType();
 
         void assertType(const Value *val, const Type *type) const;
@@ -173,6 +175,8 @@ namespace MaximCodegen {
 
         NumType _numType;
         MidiType _midiType;
+
+        llvm::StructType *_vecScopeStorage;
 
         std::unordered_map<llvm::StructType *, TupleType> tupleTypeMap;
         std::unordered_map<llvm::Type *, ArrayType> arrayTypeMap;

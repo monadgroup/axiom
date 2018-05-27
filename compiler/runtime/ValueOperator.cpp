@@ -5,6 +5,8 @@
 using namespace MaximRuntime;
 
 ValueOperator::ValueOperator(MaximCodegen::MaximContext *context) : _context(context) {
+    pointerSize = context->dataLayout().getPointerSize(0);
+
     auto numLayout = context->numType()->layout();
     numActiveOffset = numLayout->getElementOffset(0);
     numValOffset = numLayout->getElementOffset(1);
@@ -23,6 +25,12 @@ ValueOperator::ValueOperator(MaximCodegen::MaximContext *context) : _context(con
     midiEventChannelOffset = midiEventLayout->getElementOffset(1);
     midiEventNoteOffset = midiEventLayout->getElementOffset(2);
     midiEventParamOffset = midiEventLayout->getElementOffset(3);
+
+    auto vecScopeLayout = context->dataLayout().getStructLayout(context->vecScopeStorage());
+    vecScopePosOffset = vecScopeLayout->getElementOffset(0);
+    vecScopeCapacityOffset = vecScopeLayout->getElementOffset(1);
+    vecScopeBufferOffset = vecScopeLayout->getElementOffset(2);
+    vecScopeBufferStride = context->dataLayout().getTypeAllocSize(context->vecScopeStorage()->getElementType(2)->getArrayElementType());
 }
 
 uint32_t ValueOperator::readArrayActiveFlags(void *ptr, size_t stride, size_t offset) {
@@ -134,4 +142,40 @@ void ValueOperator::writeMidi(void *ptr, const MidiValue &value) {
     for (uint8_t i = 0; i < value.count; i++) {
         writeMidiEvent(ptr, i, value.events[i]);
     }
+}
+
+void* ValueOperator::controlData(void *ptr) {
+    auto bytePtr = (uint8_t *) ptr;
+
+    return bytePtr + pointerSize;
+}
+
+uint16_t ValueOperator::readScopePos(void *ptr) {
+    auto bytePtr = (uint8_t *) ptr;
+
+    return __atomic_load_n(reinterpret_cast<uint16_t *>(bytePtr + vecScopePosOffset), __ATOMIC_SEQ_CST);
+}
+
+uint16_t ValueOperator::readScopeCapacity(void *ptr) {
+    auto bytePtr = (uint8_t *) ptr;
+
+    return *reinterpret_cast<uint16_t *>(bytePtr + vecScopeCapacityOffset);
+}
+
+NumValue ValueOperator::readScopeBuffer(void *ptr, size_t index) {
+    auto bytePtr = (uint8_t *) ptr;
+    auto vecPos = reinterpret_cast<float *>(bytePtr + vecScopeBufferOffset + index * vecScopeBufferStride);
+
+    return {
+        true,
+        *(vecPos + 0),
+        *(vecPos + 1),
+        MaximCommon::FormType::LINEAR
+    };
+}
+
+void ValueOperator::writeScopePos(void *ptr, uint16_t value) {
+    auto bytePtr = (uint8_t *) ptr;
+
+    __atomic_store_n(reinterpret_cast<uint16_t *>(bytePtr + vecScopePosOffset), value, __ATOMIC_SEQ_CST);
 }

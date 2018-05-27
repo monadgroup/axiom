@@ -15,6 +15,7 @@
 #include "editor/model/objects/MidiControl.h"
 #include "editor/model/objects/ExtractControl.h"
 #include "editor/model/objects/PortalControl.h"
+#include "editor/model/objects/ScopeControl.h"
 #include "editor/model/objects/RootSurface.h"
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
@@ -27,6 +28,7 @@
 #include "editor/widgets/controls/MidiControlItem.h"
 #include "editor/widgets/controls/ExtractControlItem.h"
 #include "editor/widgets/controls/PortalControlItem.h"
+#include "editor/widgets/controls/ScopeControlItem.h"
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
 #include "../FloatingValueEditor.h"
@@ -314,6 +316,8 @@ void NodeItem::addControl(Control *control) {
         item = new ExtractControlItem(extractControl, canvas);
     } else if (auto outputControl = dynamic_cast<PortalControl *>(control)) {
         item = new PortalControlItem(outputControl, canvas);
+    } else if (auto scopeControl = dynamic_cast<ScopeControl *>(control)) {
+        item = new ScopeControlItem(scopeControl, canvas);
     }
 
     assert(item);

@@ -6,6 +6,7 @@
 #include <QtWidgets/QGraphicsSceneWheelEvent>
 #include <QtCore/QMimeData>
 #include <QtGui/QClipboard>
+#include <QtWidgets/QOpenGLWidget>
 
 #include "editor/model/objects/NodeSurface.h"
 #include "editor/model/objects/Node.h"
@@ -25,6 +26,7 @@ using namespace AxiomModel;
 NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
     : QGraphicsView(new NodeSurfaceCanvas(panel, surface)), surface(surface) {
     scene()->setParent(this);
+    //setViewport(new QOpenGLWidget());
     setAcceptDrops(true);
 
     surface->panChanged.connect(this, &NodeSurfaceView::pan);

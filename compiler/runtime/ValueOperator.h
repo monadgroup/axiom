@@ -111,8 +111,19 @@ namespace MaximRuntime {
 
         void writeMidi(void *ptr, const MidiValue &value);
 
+        void *controlData(void *ptr);
+
+        uint16_t readScopePos(void *ptr);
+
+        uint16_t readScopeCapacity(void *ptr);
+
+        NumValue readScopeBuffer(void *ptr, size_t index);
+
+        void writeScopePos(void *ptr, uint16_t value);
+
     private:
         MaximCodegen::MaximContext *_context;
+        uint64_t pointerSize;
 
         uint64_t numActiveOffset;
         uint64_t numValOffset;
@@ -128,6 +139,11 @@ namespace MaximRuntime {
         uint64_t midiEventChannelOffset;
         uint64_t midiEventNoteOffset;
         uint64_t midiEventParamOffset;
+
+        uint64_t vecScopePosOffset;
+        uint64_t vecScopeCapacityOffset;
+        uint64_t vecScopeBufferOffset;
+        uint64_t vecScopeBufferStride;
     };
 
 }

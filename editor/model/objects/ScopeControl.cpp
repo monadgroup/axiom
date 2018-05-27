@@ -1,5 +1,8 @@
 #include "ScopeControl.h"
 
+#include "compiler/runtime/Control.h"
+#include "compiler/runtime/Runtime.h"
+
 using namespace AxiomModel;
 
 ScopeControl::ScopeControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
@@ -29,6 +32,13 @@ void ScopeControl::serialize(QDataStream &stream, const QUuid &parent, bool with
 }
 
 void ScopeControl::doRuntimeUpdate() {
+    if (runtime() && (*runtime())->currentPtr()) {
+        auto run = *runtime();
+        auto controlData = run->runtime()->op().controlData(run->currentPtr());
+        auto currentPos = run->runtime()->op().readScopePos(controlData);
+        std::cout << "Current pos = " << currentPos << std::endl;
+    }
+
     // todo
 }
 
