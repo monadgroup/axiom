@@ -1,4 +1,3 @@
-#include <llvm/Support/raw_ostream.h>
 #include "ExtractControl.h"
 
 #include "../Type.h"
@@ -8,7 +7,7 @@ using namespace MaximCodegen;
 
 ExtractControl::ExtractControl(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type,
                                Type *storageType, const std::string &name)
-    : Control(ctx, module, type, ctx->getArrayType(storageType)->get(), storageType->get(), name + "control") {
+    : Control(ctx, module, type, llvm::StructType::get(ctx->llvm(), {}, false), ctx->getArrayType(storageType)->get(), storageType->get(), name + "control") {
     auto valueField = addField("value", ctx->getArrayType(storageType));
 
     auto getMethod = valueField->getValue();

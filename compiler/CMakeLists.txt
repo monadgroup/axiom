@@ -12,7 +12,7 @@ if (NOT MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
 endif ()
 
-set(SOURCE_FILES util.h
+set(SOURCE_FILES util.cpp
         common/FormType.cpp common/OperatorType.cpp common/ControlType.cpp
         parser/TokenStream.cpp parser/Token.cpp parser/Parser.cpp
         ast/Expression.cpp)

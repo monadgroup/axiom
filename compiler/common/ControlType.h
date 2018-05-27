@@ -9,9 +9,10 @@ namespace MaximCommon {
         GRAPH = 1 << 1,
         MIDI = 1 << 2,
         ROLL = 1 << 3,
+        SCOPE = 1 << 4,
 
-        NUM_EXTRACT = 1 << 4,
-        MIDI_EXTRACT = 1 << 5,
+        NUM_EXTRACT = 1 << 5,
+        MIDI_EXTRACT = 1 << 6,
 
         EXTRACT = NUM_EXTRACT | MIDI_EXTRACT
     };

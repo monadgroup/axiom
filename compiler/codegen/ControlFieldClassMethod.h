@@ -13,8 +13,11 @@ namespace MaximCodegen {
 
         llvm::Value *groupPtr() const { return _groupPtr; }
 
+        llvm::Value *storagePtr() const { return _storagePtr; }
+
     private:
         llvm::Value *_groupPtr;
+        llvm::Value *_storagePtr;
     };
 
 }

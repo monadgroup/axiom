@@ -300,6 +300,7 @@ GeneratableModuleClass *Surface::compile() {
 
                 auto controlPtr = nodeClass->getEntryPointer(_class->constructor()->builder(), instId,
                                                              entryPtr, "controlinst");
+                auto controlGroupPtr = _class->constructor()->builder().CreateStructGEP(controlPtr->getType()->getPointerElementType(), controlPtr, 0, "controlinstgroup");
 
                 auto groupPtrIndex = _groupPtrIndexes.find(control->group());
                 assert(groupPtrIndex != _groupPtrIndexes.end());
@@ -322,7 +323,7 @@ GeneratableModuleClass *Surface::compile() {
                     );
                 }
 
-                _class->constructor()->builder().CreateStore(groupIndexPtr, controlPtr);
+                _class->constructor()->builder().CreateStore(groupIndexPtr, controlGroupPtr);
             }
 
             nodeClass->constructor()->call(b, {}, entryPtr, module(), "");

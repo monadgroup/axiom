@@ -1,12 +1,13 @@
 #include "Control.h"
 
 #include "Type.h"
+#include "MaximContext.h"
 
 using namespace MaximCodegen;
 
 Control::Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, llvm::Type *storageType,
-                 llvm::Type *underlyingType, const std::string &name)
-    : ModuleClass(ctx, module, name), _type(type), _storageType(storageType),
+                 llvm::Type *valueType, llvm::Type *underlyingType, const std::string &name)
+    : ModuleClass(ctx, module, name), _type(type), _storageType(storageType), _valueType(valueType),
       _underlyingType(underlyingType), _constructor(this, "constructor") {
 
 }
@@ -25,7 +26,10 @@ ControlField *Control::getField(const std::string &name) {
 }
 
 llvm::Type *Control::storageType() {
-    return llvm::PointerType::get(_storageType, 0);
+    return llvm::StructType::get(ctx()->llvm(), {
+        llvm::PointerType::get(_valueType, 0),
+        _storageType
+    });
 }
 
 void Control::doComplete() {

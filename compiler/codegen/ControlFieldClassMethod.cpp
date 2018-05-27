@@ -9,5 +9,6 @@ ControlFieldClassMethod::ControlFieldClassMethod(ControlField *controlField, std
                                                  std::vector<llvm::Type *> paramTypes)
     : ModuleClassMethod(controlField, std::move(name), returnType, std::move(paramTypes)) {
     auto ptr = contextPtr();
-    _groupPtr = builder().CreateLoad(ptr, "controlctx");
+    _groupPtr = builder().CreateLoad(builder().CreateStructGEP(ptr->getType()->getPointerElementType(), ptr, 0, "controlgroup"));
+    _storagePtr = builder().CreateLoad(builder().CreateStructGEP(ptr->getType()->getPointerElementType(), ptr, 1, "controlstorage"));
 }

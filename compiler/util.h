@@ -2,6 +2,10 @@
 
 #include <memory>
 
+namespace llvm {
+    class Type;
+}
+
 namespace AxiomUtil {
 
     template<class To, class From>
@@ -19,5 +23,7 @@ namespace AxiomUtil {
         assert(result);
         return std::unique_ptr<To>(result);
     };
+
+    std::string debugLLType(llvm::Type *type);
 
 }
