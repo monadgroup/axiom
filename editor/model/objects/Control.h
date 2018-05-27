@@ -28,7 +28,8 @@ namespace AxiomModel {
             NUM_EXTRACT,
             MIDI_EXTRACT,
             NUM_PORTAL,
-            MIDI_PORTAL
+            MIDI_PORTAL,
+            SCOPE
         };
 
         AxiomCommon::Event<const QString &> nameChanged;

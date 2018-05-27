@@ -12,6 +12,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/NumControl.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/PortalControl.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/PortalNode.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/RootSurface.cpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/RootSurface.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ScopeControl.cpp")
 
 target_sources(axiom_model PRIVATE ${SOURCE_FILES})

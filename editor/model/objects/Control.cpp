@@ -7,6 +7,7 @@
 #include "MidiControl.h"
 #include "ExtractControl.h"
 #include "PortalControl.h"
+#include "ScopeControl.h"
 #include "GroupSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
@@ -49,6 +50,7 @@ Control::ControlType Control::fromRuntimeType(MaximCommon::ControlType type) {
         case MaximCommon::ControlType::MIDI: return Control::ControlType::MIDI_SCALAR;
         case MaximCommon::ControlType::NUM_EXTRACT: return Control::ControlType::NUM_EXTRACT;
         case MaximCommon::ControlType::MIDI_EXTRACT: return Control::ControlType::MIDI_EXTRACT;
+        case MaximCommon::ControlType::SCOPE: return Control::ControlType::SCOPE;
         default: unreachable;
     }
 }
@@ -65,6 +67,8 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
             return ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(), exposingUuid, ConnectionWire::WireType::NUM, 0, root);
         case Control::ControlType::MIDI_EXTRACT:
             return ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(), exposingUuid, ConnectionWire::WireType::MIDI, 0, root);
+        case Control::ControlType::SCOPE:
+            return ScopeControl::create(uuid, parentUuid, QPoint(0, 0), QSize(6, 6), false, name, true, QUuid(), exposingUuid, root);
         default: unreachable;
     }
 }
@@ -114,6 +118,9 @@ std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &
         case ControlType::MIDI_PORTAL:
             return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
                                               exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, ref, root);
+        case ControlType::SCOPE:
+            return ScopeControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
+                                             exposerUuid, exposingUuid, ref, root);
     }
 
     unreachable;
