@@ -83,6 +83,12 @@ GeneratableModuleClass *CustomNode::compile() {
         // update control list
         updateControls();
 
+        // pull control methods
+        for (const auto &control : _controls) {
+            assert(control->instanceId() >= 0);
+            control->setMethods(_moduleClass->entryAccessor(control->instanceId()), control->moduleClass()->destructor());
+        }
+
         destructIfNeeded();
         deploy();
     } catch (const MaximCommon::CompileError &err) {
@@ -164,4 +170,13 @@ void CustomNode::updateControls() {
 
 MaximCodegen::ModuleClass *CustomNode::moduleClass() {
     return _moduleClass.get();
+}
+
+void CustomNode::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
+                             MaximCodegen::ModuleClassMethod *destroyMethod) {
+    RuntimeUnit::pullMethods(getterMethod, destroyMethod);
+
+    for (const auto &control : _controls) {
+        control->pullMethods();
+    }
 }

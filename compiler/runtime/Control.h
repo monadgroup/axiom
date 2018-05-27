@@ -16,13 +16,17 @@ namespace MaximRuntime {
 
     class ControlGroup;
 
-    class Control {
+    class Control : public RuntimeUnit {
     public:
         AxiomCommon::Event<Control *> exposerChanged;
         AxiomCommon::Event<> removed;
         AxiomCommon::Event<> cleanup;
 
         explicit Control(Node *node);
+
+        llvm::Module *module() override;
+
+        MaximCodegen::ModuleClass *moduleClass() override;
 
         Node *node() const { return _node; }
 

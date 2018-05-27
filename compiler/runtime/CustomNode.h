@@ -37,6 +37,8 @@ namespace MaximRuntime {
 
         MaximCodegen::ModuleClass *moduleClass() override;
 
+        void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod, MaximCodegen::ModuleClassMethod *destroyMethod) override;
+
     private:
 
         std::unique_ptr<GeneratableModuleClass> _moduleClass;

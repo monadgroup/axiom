@@ -8,11 +8,20 @@
 #include "ControlGroup.h"
 #include "Surface.h"
 #include "../codegen/Scope.h"
+#include "../codegen/Control.h"
 
 using namespace MaximRuntime;
 
 Control::Control(Node *node)
-    : _node(node) {
+    : RuntimeUnit(node->runtime()), _node(node) {
+}
+
+llvm::Module* Control::module() {
+    return node()->module();
+}
+
+MaximCodegen::ModuleClass* Control::moduleClass() {
+    return type();
 }
 
 void Control::setGroup(ControlGroup *group) {
