@@ -72,6 +72,12 @@ GeneratableModuleClass *CustomNode::compile() {
         for (const auto &statement : _ast->expressions) {
             MaximCodegen::visitExpression(_moduleClass->generate(), &_scope, statement.get());
         }
+
+        // call each controls update function
+        for (const auto &control : _scope.controls()) {
+            _moduleClass->generate()->callInto(control.second.instId, std::vector<llvm::Value*>(), control.second.control->update(), "");
+        }
+
         _moduleClass->complete();
 
         // update control list

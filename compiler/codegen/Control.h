@@ -29,6 +29,8 @@ namespace MaximCodegen {
 
         ModuleClassMethod *constructor() override { return &_constructor; }
 
+        ModuleClassMethod *update() { return &_update; }
+
     protected:
 
         void doComplete() override;
@@ -41,6 +43,7 @@ namespace MaximCodegen {
         llvm::Type *_underlyingType;
 
         ModuleClassMethod _constructor;
+        ModuleClassMethod _update;
 
     };
 

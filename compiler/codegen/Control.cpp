@@ -8,7 +8,7 @@ using namespace MaximCodegen;
 Control::Control(MaximContext *ctx, llvm::Module *module, MaximCommon::ControlType type, llvm::Type *storageType,
                  llvm::Type *valueType, llvm::Type *underlyingType, const std::string &name)
     : ModuleClass(ctx, module, name), _type(type), _storageType(storageType), _valueType(valueType),
-      _underlyingType(underlyingType), _constructor(this, "constructor") {
+      _underlyingType(underlyingType), _constructor(this, "constructor"), _update(this, "update") {
 
 }
 
@@ -36,6 +36,7 @@ void Control::doComplete() {
     for (auto &pair : _fields) {
         pair.second->complete();
     }
+    _update.builder().CreateRetVoid();
 
     ModuleClass::doComplete();
 }
