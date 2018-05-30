@@ -26,6 +26,8 @@ namespace MaximRuntime {
 
         MaximCodegen::MaximContext *ctx() { return &_context; }
 
+        std::mutex &mutex() { return _mutex; }
+
         Jit &jit() { return _jit; }
 
         ValueOperator &op() { return _op; }

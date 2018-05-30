@@ -1,18 +1,10 @@
 cmake_minimum_required(VERSION 3.4.3)
 project(axiom)
 
-find_package(LLVM REQUIRED CONFIG)
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
-
 set(CMAKE_CXX_STANDARD 17)
 if (NOT MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
 endif ()
-
-find_package(Qt5Core REQUIRED)
-get_target_property(QT5_INCLUDE_DIRS Qt5::Core INTERFACE_INCLUDE_DIRECTORIES)
 
 set(SOURCE_FILES
         CloneReferenceMapper.cpp

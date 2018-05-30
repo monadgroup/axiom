@@ -8,11 +8,15 @@
 #include "compiler/codegen/Converter.h"
 #include "compiler/codegen/Control.h"
 #include "compiler/codegen/Function.h"
+#include "StandaloneAudio.h"
 
 int main(int argc, char *argv[]) {
     MaximRuntime::Runtime runtime;
     auto project = std::make_unique<AxiomModel::Project>();
     AxiomGui::MainWindow window(&runtime, std::move(project));
+    AxiomStandalone::startupAudio(&runtime);
     window.show();
-    return AxiomApplication::main.exec();
+    auto result = AxiomApplication::main.exec();
+    AxiomStandalone::shutdownAudio();
+    return result;
 }

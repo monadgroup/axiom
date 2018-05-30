@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.4.3)
 project(axiom)
 
 set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -11,11 +11,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 message("Debug flags: ${CMAKE_CXX_FLAGS_DEBUG}")
 message("Reldeb flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 message("Release flags: ${CMAKE_CXX_FLAGS_RELEASE}")
-
-find_package(LLVM REQUIRED CONFIG)
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-message(STATUS "Including LLVM headers from ${LLVM_INCLUDE_DIRS}")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -28,16 +23,34 @@ if (AXIOM_STATIC_LINK)
 else ()
     set(AXIOM_LINK_FLAGS "")
 endif ()
+
+find_package(LLVM REQUIRED CONFIG)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+
 find_package(Qt5Widgets REQUIRED)
+find_package(PortAudio)
+
+if (NOT PORTAUDIO_FOUND)
+    message(WARNING "PortAudio could not be found, the standalone editor won't have audio output support.")
+    set(AUDIO_SOURCES "StandaloneAudioNull.cpp")
+else ()
+    message(STATUS "Found Portaudio in ${PORTAUDIO_LIBRARIES}")
+    add_definitions(-DPORTAUDIO)
+    set(AUDIO_SOURCES "StandaloneAudioPA.cpp")
+endif ()
+
+if (NOT DEFINED VST2_SDK_ROOT)
+    message(WARNING "VST2 SDK path was not specified, you won't be able to build the VST. In the future specify it with -DVST2_SDK_ROOT=/path/to/sdk")
+else ()
+    set(VST2_SOURCES
+            "${VST2_SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp"
+            "${VST2_SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp"
+            "${VST2_SDK_ROOT}/public.sdk/source/vst2.x/vstplugmain.cpp")
+endif ()
 
 set(SOURCE_FILES AxiomApplication.cpp util.cpp)
-set(STANDALONE_SOURCE_FILES ${SOURCE_FILES} main.cpp)
-set(VST_SOURCE_FILES ${SOURCE_FILES}
-        AxiomVstEditor.cpp
-        AxiomVstPlugin.cpp
-        ../vendor/vst/public.sdk/source/vst2.x/audioeffect.cpp
-        ../vendor/vst/public.sdk/source/vst2.x/audioeffectx.cpp
-        ../vendor/vst/public.sdk/source/vst2.x/vstplugmain.cpp)
+set(STANDALONE_SOURCE_FILES ${SOURCE_FILES} ${AUDIO_SOURCES} main.cpp)
+set(VST_SOURCE_FILES ${SOURCE_FILES} AxiomVstEditor.cpp AxiomVstPlugin.cpp ${VST2_SOURCES})
 
 set(RES_FILES resources/axiom.rc resources/res.qrc resources/AxiomVst.def)
 
@@ -56,4 +69,4 @@ add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_editor ${LINK_LIBS} ${AXIOM_LINK_FLAGS})
 
 add_executable(axiom_standalone ${STANDALONE_SOURCE_FILES} ${RES_FILES})
-target_link_libraries(axiom_standalone ${LINK_LIBS} ${AXIOM_LINK_FLAGS})
+target_link_libraries(axiom_standalone ${LINK_LIBS} ${AXIOM_LINK_FLAGS} ${PORTAUDIO_LIBRARIES})
