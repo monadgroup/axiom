@@ -178,6 +178,8 @@ namespace MaximCodegen {
 
         llvm::StructType *_vecScopeStorage;
 
+        std::unique_ptr<Function> commonBiquadFunction;
+
         std::unordered_map<llvm::StructType *, TupleType> tupleTypeMap;
         std::unordered_map<llvm::Type *, ArrayType> arrayTypeMap;
         std::unordered_map<OperatorKey, std::unique_ptr<Operator>> operatorMap;
