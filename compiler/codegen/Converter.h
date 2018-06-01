@@ -30,6 +30,11 @@ namespace MaximCodegen {
         MaximCommon::FormType _toType;
 
         std::unique_ptr<ComposableModuleClassMethod> _callMethod;
+        llvm::Function *_wrapFunction;
+
+        void generateCall();
+
+        void generateWrapper();
     };
 
 }

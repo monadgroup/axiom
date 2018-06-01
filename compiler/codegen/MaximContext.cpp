@@ -81,7 +81,7 @@ llvm::Value *MaximContext::beatsPerSecond() const {
     return llvm::UndefValue::get(llvm::PointerType::get(numType()->vecType(), 0));
 }
 
-llvm::Type *MaximContext::voidPointerType() {
+llvm::PointerType *MaximContext::voidPointerType() {
     return llvm::PointerType::get(llvm::Type::getInt1Ty(_llvm), 0);
 }
 

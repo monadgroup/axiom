@@ -13,9 +13,36 @@ Converter::Converter(MaximContext *ctx, llvm::Module *module, MaximCommon::FormT
     _callMethod = std::make_unique<ComposableModuleClassMethod>(this, "call",
                                                                 ctx->numType()->get(),
                                                                 std::vector<llvm::Type *>{numPtr});
+    _wrapFunction = llvm::Function::Create(
+        llvm::FunctionType::get(llvm::Type::getVoidTy(ctx->llvm()), {numPtr, numPtr}, false),
+        llvm::Function::LinkageTypes::ExternalLinkage,
+        "converter." + MaximCommon::formType2String(toType) + ".wrap", module
+    );
 }
 
 void Converter::generate() {
+    generateCall();
+    generateWrapper();
+    complete();
+}
+
+std::unique_ptr<Num> Converter::call(ComposableModuleClassMethod *method, std::unique_ptr<Num> value,
+                                     SourcePos startPos, SourcePos endPos) {
+    // hot path if there aren't any converters, just return the input with the target form
+    if (converters.empty()) {
+        value->setForm(method->builder(), _toType);
+        return std::move(value);
+    }
+
+    // call the generated function
+    auto entryIndex = method->moduleClass()->addEntry(this);
+    auto result = method->callInto(entryIndex, {value->get()}, _callMethod.get(), "convertresult");
+    auto newNum = Num::create(ctx(), method->allocaBuilder(), startPos, endPos);
+    method->builder().CreateStore(result, newNum->get());
+    return std::move(newNum);
+}
+
+void Converter::generateCall() {
     auto undefPos = SourcePos(-1, -1);
     auto &b = _callMethod->builder();
     auto numInput = Num::create(ctx(), _callMethod->arg(0), undefPos, undefPos);
@@ -46,22 +73,12 @@ void Converter::generate() {
     b.SetInsertPoint(defaultBlock);
     resultNum->setForm(b, _toType);
     b.CreateRet(b.CreateLoad(resultNum->get(), "conv.deref"));
-
-    complete();
 }
 
-std::unique_ptr<Num> Converter::call(ComposableModuleClassMethod *method, std::unique_ptr<Num> value,
-                                     SourcePos startPos, SourcePos endPos) {
-    // hot path if there aren't any converters, just return the input with the target form
-    if (converters.empty()) {
-        value->setForm(method->builder(), _toType);
-        return std::move(value);
-    }
-
-    // call the generated function
-    auto entryIndex = method->moduleClass()->addEntry(this);
-    auto result = method->callInto(entryIndex, {value->get()}, _callMethod.get(), "convertresult");
-    auto newNum = Num::create(ctx(), method->allocaBuilder());
-    method->builder().CreateStore(result, newNum->get());
-    return std::move(newNum);
+void Converter::generateWrapper() {
+    auto mainBlock = llvm::BasicBlock::Create(ctx()->llvm(), "main", _wrapFunction);
+    llvm::IRBuilder<> b(mainBlock);
+    auto result = _callMethod->call(b, {_wrapFunction->arg_begin() + 1}, llvm::ConstantPointerNull::get(ctx()->voidPointerType()), module(), "");
+    b.CreateStore(result, _wrapFunction->arg_begin());
+    b.CreateRetVoid();
 }

@@ -94,7 +94,7 @@ namespace MaximCodegen {
 
         llvm::StructType *vecScopeStorage() const { return _vecScopeStorage; }
 
-        llvm::Type *voidPointerType();
+        llvm::PointerType *voidPointerType();
 
         void assertType(const Value *val, const Type *type) const;
 
