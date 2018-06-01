@@ -136,6 +136,8 @@ namespace MaximCodegen {
 
         void setLibModule(llvm::Module *libModule);
 
+        const std::unordered_map<MaximCommon::FormType, std::unique_ptr<Converter>> &converters() const { return converterMap; }
+
         void registerOperator(std::unique_ptr<Operator> op);
 
         void registerFunction(std::unique_ptr<Function> func);

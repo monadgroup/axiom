@@ -21,6 +21,8 @@ namespace MaximCodegen {
         std::unique_ptr<Num>
         call(ComposableModuleClassMethod *method, std::unique_ptr<Num> value, SourcePos startPos, SourcePos endPos);
 
+        const std::string &wrapFunctionName() const { return _wrapFunctionName; }
+
     protected:
         using FormConverter = std::function<llvm::Value *(ComposableModuleClassMethod *, llvm::Value *)>;
 
@@ -31,6 +33,7 @@ namespace MaximCodegen {
 
         std::unique_ptr<ComposableModuleClassMethod> _callMethod;
         llvm::Function *_wrapFunction;
+        std::string _wrapFunctionName;
 
         void generateCall();
 

@@ -18,6 +18,7 @@ Converter::Converter(MaximContext *ctx, llvm::Module *module, MaximCommon::FormT
         llvm::Function::LinkageTypes::ExternalLinkage,
         "converter." + MaximCommon::formType2String(toType) + ".wrap", module
     );
+    _wrapFunctionName = _wrapFunction->getName();
 }
 
 void Converter::generate() {

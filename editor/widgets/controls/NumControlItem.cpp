@@ -11,6 +11,8 @@
 #include "editor/model/objects/NumControl.h"
 #include "editor/model/actions/SetNumModeAction.h"
 #include "editor/model/actions/SetNumValueAction.h"
+#include "compiler/runtime/Control.h"
+#include "compiler/runtime/Runtime.h"
 #include "../node/NodeItem.h"
 #include "../CommonColors.h"
 #include "../FloatingValueEditor.h"
@@ -270,8 +272,20 @@ MaximRuntime::NumValue NumControlItem::stringAsValue(const QString &str, MaximRu
     unreachable;
 }
 
+MaximRuntime::NumValue NumControlItem::clampVal(const MaximRuntime::NumValue &val) {
+    return val.withLR(
+        val.left < 0 ? 0 : val.left > 1 ? 1 : val.left,
+        val.right < 0 ? 0 : val.right > 1 ? 1 : val.right
+    );
+}
+
 MaximRuntime::NumValue NumControlItem::getCVal() const {
     auto v = control->value();
+    if (control->runtime()) {
+        v = (*control->runtime())->runtime()->op().convertNum(MaximCommon::FormType::CONTROL, v);
+    }
+    v = clampVal(v);
+
     switch (control->channel()) {
         case NumControl::Channel::LEFT:
             return v.withLR(v.left, v.left);
@@ -284,12 +298,20 @@ MaximRuntime::NumValue NumControlItem::getCVal() const {
 }
 
 void NumControlItem::setCVal(MaximRuntime::NumValue v) const {
+    MaximRuntime::NumValue setVal;
+
     switch (control->channel()) {
         case NumControl::Channel::LEFT:
-            control->setValue(control->value().withL(v.left).withForm(MaximCommon::FormType::CONTROL));
+            setVal = control->value().withL(v.left);
+            break;
         case NumControl::Channel::RIGHT:
-            control->setValue(control->value().withR(v.right).withForm(MaximCommon::FormType::CONTROL));
+            setVal = control->value().withR(v.right);
+            break;
         case NumControl::Channel::BOTH:
-            control->setValue(control->value().withLR(v.left, v.right).withForm(MaximCommon::FormType::CONTROL));
+            setVal = control->value().withLR(v.left, v.right);
+            break;
     }
+
+    setVal = clampVal(setVal).withForm(MaximCommon::FormType::CONTROL);
+    control->setValue(setVal);
 }

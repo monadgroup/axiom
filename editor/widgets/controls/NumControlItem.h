@@ -60,6 +60,8 @@ namespace AxiomGui {
 
         MaximRuntime::NumValue stringAsValue(const QString &str, MaximRuntime::NumValue oldNum);
 
+        static MaximRuntime::NumValue clampVal(const MaximRuntime::NumValue &val);
+
         MaximRuntime::NumValue getCVal() const;
 
         void setCVal(MaximRuntime::NumValue v) const;

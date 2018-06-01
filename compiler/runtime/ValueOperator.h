@@ -3,6 +3,7 @@
 #include "../common/FormType.h"
 #include "../common/MidiEventType.h"
 #include "../codegen/MidiType.h"
+#include "Jit.h"
 
 namespace MaximCodegen {
     class MaximContext;
@@ -85,6 +86,8 @@ namespace MaximRuntime {
     public:
         explicit ValueOperator(MaximCodegen::MaximContext *context);
 
+        void buildConverters(Jit &jit);
+
         uint32_t readArrayActiveFlags(void *ptr, size_t stride, size_t offset);
 
         uint32_t readNumArrayActiveFlags(void *ptr);
@@ -94,6 +97,8 @@ namespace MaximRuntime {
         NumValue readNum(void *ptr);
 
         void writeNum(void *ptr, const NumValue &value);
+
+        NumValue convertNum(MaximCommon::FormType targetType, const NumValue &value);
 
         bool readMidiActive(void *ptr);
 
@@ -148,6 +153,10 @@ namespace MaximRuntime {
         uint64_t vecScopeCapacityOffset;
         uint64_t vecScopeBufferOffset;
         uint64_t vecScopeBufferStride;
+
+        std::unique_ptr<uint8_t[]> _numScratchInput;
+        std::unique_ptr<uint8_t[]> _numScratchOutput;
+        std::unordered_map<MaximCommon::FormType, void (*)(void*, void*)> converters;
     };
 
 }

@@ -18,6 +18,7 @@ Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
     libModule->setDataLayout(_jit.dataLayout());
     _context.setLibModule(libModule.get());
     _jit.addModule(std::move(libModule));
+    _op.buildConverters(_jit);
 
     // this must go after `setLibModule` as compilation reads from there
     _mainSurface = std::make_unique<RootSurface>(this);

@@ -1,6 +1,9 @@
 #include "ValueOperator.h"
 
+#include <llvm/IR/Function.h>
+
 #include "../codegen/MaximContext.h"
+#include "../codegen/Converter.h"
 
 using namespace MaximRuntime;
 
@@ -12,6 +15,9 @@ ValueOperator::ValueOperator(MaximCodegen::MaximContext *context) : _context(con
     numValOffset = numLayout->getElementOffset(1);
     numFormOffset = numLayout->getElementOffset(2);
     numStride = numLayout->getSizeInBytes();
+
+    _numScratchInput = std::make_unique<uint8_t[]>(numStride);
+    _numScratchOutput = std::make_unique<uint8_t[]>(numStride);
 
     auto midiLayout = context->midiType()->layout();
     midiActiveOffset = midiLayout->getElementOffset(0);
@@ -31,6 +37,15 @@ ValueOperator::ValueOperator(MaximCodegen::MaximContext *context) : _context(con
     vecScopeCapacityOffset = vecScopeLayout->getElementOffset(1);
     vecScopeBufferOffset = vecScopeLayout->getElementOffset(2);
     vecScopeBufferStride = context->dataLayout().getTypeAllocSize(context->vecScopeStorage()->getElementType(2)->getArrayElementType());
+}
+
+void ValueOperator::buildConverters(Jit &jit) {
+    for (const auto &pair : _context->converters()) {
+        MaximCodegen::Converter *converter = pair.second.get();
+        auto ptr = (void (*)(void *, void*)) jit.getSymbolAddress(converter->wrapFunctionName());
+        assert(ptr);
+        converters.emplace(pair.first, ptr);
+    }
 }
 
 uint32_t ValueOperator::readArrayActiveFlags(void *ptr, size_t stride, size_t offset) {
@@ -69,6 +84,15 @@ void ValueOperator::writeNum(void *ptr, const NumValue &value) {
     *(vecPtr + 1) = value.right;
     *(bytePtr + numFormOffset) = (uint8_t) value.form;
     *(bytePtr + numActiveOffset) = (uint8_t) value.active;
+}
+
+NumValue ValueOperator::convertNum(MaximCommon::FormType targetType, const MaximRuntime::NumValue &value) {
+    auto converter = converters.find(targetType);
+    if (converter == converters.end()) return value;
+
+    writeNum(_numScratchInput.get(), value);
+    converter->second(_numScratchOutput.get(), _numScratchInput.get());
+    return readNum(_numScratchOutput.get());
 }
 
 bool ValueOperator::readMidiActive(void *ptr) {
