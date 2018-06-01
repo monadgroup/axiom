@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vendor/vst/public.sdk/source/vst2.x/aeffeditor.h>
+#include <public.sdk/source/vst2.x/aeffeditor.h>
 #include "widgets/windows/MainWindow.h"
 
 class AxiomVstPlugin;

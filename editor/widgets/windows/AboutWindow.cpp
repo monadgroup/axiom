@@ -28,7 +28,7 @@ AboutWindow::AboutWindow() : QDialog(nullptr,
     logoLabel->setPixmap(logoImg);
     mainLayout->addWidget(logoLabel, 0, 0, 1, 2);
 
-    auto descriptLabel = new QLabel(tr(VER_FILEDESCRIPTION_STR " - " VER_LEGALCOPYRIGHT_STR), this);
+    auto descriptLabel = new QLabel(tr(VER_FILEDESCRIPTION_STR " - " VER_LEGALCOPYRIGHT_STR "\nVST Plug-In Technology by Steinberg"), this);
     descriptLabel->setObjectName("about-descript");
     mainLayout->addWidget(descriptLabel, 1, 0, 1, 2);
 

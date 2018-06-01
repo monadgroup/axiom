@@ -54,7 +54,7 @@ set(VST_SOURCE_FILES ${SOURCE_FILES} AxiomVstEditor.cpp AxiomVstPlugin.cpp ${VST
 
 set(RES_FILES resources/axiom.rc resources/res.qrc resources/AxiomVst.def)
 
-include_directories(../ ${LLVM_INCLUDE_DIRS} ../vendor/vst ${Qt5Widgets_INCLUDE_DIRS})
+include_directories(../ ${LLVM_INCLUDE_DIRS} ${VST2_SDK_ROOT} ${PORTAUDIO_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 llvm_map_components_to_libnames(llvm_libs support core ipo irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
@@ -70,3 +70,14 @@ target_link_libraries(axiom_editor ${LINK_LIBS} ${AXIOM_LINK_FLAGS})
 
 add_executable(axiom_standalone ${STANDALONE_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_standalone ${LINK_LIBS} ${AXIOM_LINK_FLAGS} ${PORTAUDIO_LIBRARIES})
+
+set_target_properties(axiom_editor PROPERTIES
+        BUNDLE true
+        BUNDLE_EXTENSION "vst"
+        XCODE_ATTRIBUTE_WRAPPER_EXTENSION "vst"
+        MACOSX_BUNDLE_INFO_PLIST "resources/Info.plist.in"
+        MACOSX_BUNDLE_BUNDLE_NAME "Axiom: node-based VSTi"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.monadgroup.axiom"
+        MACOSX_BUNDLE_ICON_FILE "resources/application.ico"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "0.2.0"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright 2018 MONAD")

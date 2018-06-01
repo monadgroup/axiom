@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vendor/vst/public.sdk/source/vst2.x/audioeffectx.h>
+#include <public.sdk/source/vst2.x/audioeffectx.h>
 #include "AxiomApplication.h"
 #include "compiler/runtime/Runtime.h"
 #include "model/Project.h"
