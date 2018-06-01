@@ -23,6 +23,6 @@ void PlugPainter::shape(QPainterPath &path, const QRectF &aspectBoundingRect) co
 }
 
 QRectF PlugPainter::getBounds(const QRectF &aspectBoundingRect) const {
-    auto scaledMargin = 0.1f * aspectBoundingRect.width();
+    auto scaledMargin = 0.12f * aspectBoundingRect.width();
     return aspectBoundingRect.marginsRemoved(QMarginsF(scaledMargin, scaledMargin, scaledMargin, scaledMargin));
 }
