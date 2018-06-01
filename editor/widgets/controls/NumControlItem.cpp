@@ -286,10 +286,10 @@ MaximRuntime::NumValue NumControlItem::getCVal() const {
 void NumControlItem::setCVal(MaximRuntime::NumValue v) const {
     switch (control->channel()) {
         case NumControl::Channel::LEFT:
-            control->setValue(control->value().withL(v.left));
+            control->setValue(control->value().withL(v.left).withForm(MaximCommon::FormType::CONTROL));
         case NumControl::Channel::RIGHT:
-            control->setValue(control->value().withR(v.right));
+            control->setValue(control->value().withR(v.right).withForm(MaximCommon::FormType::CONTROL));
         case NumControl::Channel::BOTH:
-            control->setValue(control->value().withLR(v.left, v.right));
+            control->setValue(control->value().withLR(v.left, v.right).withForm(MaximCommon::FormType::CONTROL));
     }
 }

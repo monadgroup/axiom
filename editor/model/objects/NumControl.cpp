@@ -61,7 +61,7 @@ void NumControl::setChannel(AxiomModel::NumControl::Channel channel) {
 }
 
 void NumControl::setValue(MaximRuntime::NumValue value) {
-    setInternalValue(value.withForm(MaximCommon::FormType::CONTROL));
+    setInternalValue(value);
     restoreValue();
 }
 
