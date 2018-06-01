@@ -44,7 +44,7 @@ llvm::Function *ModuleClassMethod::get(llvm::Module *module) const {
         llvm::Function::LinkageTypes::ExternalLinkage,
         _name, module
     );
-    //func->addFnAttr("denormal-fp-math", "positive-zero");
+    func->addFnAttr("denormal-fp-math", "positive-zero");
     return func;
 }
 

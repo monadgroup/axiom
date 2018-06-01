@@ -72,6 +72,10 @@ Jit::Jit()
       optimizeLayer(compileLayer, [this](std::shared_ptr<llvm::Module> m) {
           return optimizeModule(std::move(m));
       }) {
+    targetMachine->Options.UnsafeFPMath = 1;
+    targetMachine->Options.NoTrappingFPMath = 1;
+    targetMachine->Options.NoSignedZerosFPMath = 1;
+    targetMachine->Options.FPDenormalMode = llvm::FPDenormal::PositiveZero;
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }
 
