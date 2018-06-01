@@ -35,6 +35,10 @@ namespace MaximRuntime {
         NumValue withR(float r) const {
             return {active, left, r, form};
         }
+
+        NumValue withForm(MaximCommon::FormType form) const {
+            return {active, left, right, form};
+        }
     };
 
     struct MidiEventValue {
