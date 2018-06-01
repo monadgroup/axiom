@@ -14,7 +14,7 @@ namespace MaximRuntime {
         bool active = false;
         float left = 0;
         float right = 0;
-        MaximCommon::FormType form = MaximCommon::FormType::LINEAR;
+        MaximCommon::FormType form = MaximCommon::FormType::NONE;
 
         bool operator==(const NumValue &other) const {
             return left == other.left && right == other.right && form == other.form && active == other.active;

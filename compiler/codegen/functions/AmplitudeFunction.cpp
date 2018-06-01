@@ -40,6 +40,6 @@ AmplitudeFunction::generate(ComposableModuleClassMethod *method, const std::vect
 
     auto newNum = Num::create(ctx(), paramVal->get(), b, method->allocaBuilder());
     newNum->setVec(b, newEstimate);
-    newNum->setForm(b, MaximCommon::FormType::LINEAR);
+    newNum->setForm(b, MaximCommon::FormType::AMPLITUDE);
     return std::move(newNum);
 }

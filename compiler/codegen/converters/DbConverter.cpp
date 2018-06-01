@@ -5,19 +5,35 @@
 
 using namespace MaximCodegen;
 
-DbConverter::DbConverter(MaximContext *ctx, llvm::Module *module) : Converter(ctx, module, MaximCommon::FormType::DB) {
-    converters.emplace(MaximCommon::FormType::CONTROL, (FormConverter) & MaximCodegen::DbConverter::fromControl);
+DbConverter::DbConverter(MaximCodegen::MaximContext *ctx, llvm::Module *module)
+    : Converter(ctx, module, MaximCommon::FormType::DB) {
+    using namespace std::placeholders;
+    converters.emplace(MaximCommon::FormType::AMPLITUDE, std::bind(&DbConverter::fromAmplitude, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::CONTROL, std::bind(&DbConverter::fromControl, this, _1, _2));
 }
 
-std::unique_ptr<DbConverter> DbConverter::create(MaximContext *ctx, llvm::Module *module) {
+std::unique_ptr<DbConverter> DbConverter::create(MaximCodegen::MaximContext *ctx, llvm::Module *module) {
     return std::make_unique<DbConverter>(ctx, module);
 }
 
-llvm::Value *DbConverter::fromControl(ComposableModuleClassMethod *method, llvm::Value *val) {
-    auto logIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::log10,
-                                                        {ctx()->numType()->vecType()});
+llvm::Value* DbConverter::fromAmplitude(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
+    auto log10Intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::log10, val->getType());
+
     auto &b = method->builder();
-    auto m = b.CreateFMul(val, llvm::ConstantVector::getSplat(2, ctx()->constFloat(2)));
-    auto l = CreateCall(b, logIntrinsic, {m}, "logd");
-    return b.CreateFMul(l, llvm::ConstantVector::getSplat(2, ctx()->constFloat(20)));
+    return b.CreateFMul(
+        b.CreateCall(log10Intrinsic, {val}),
+        ctx()->constFloatVec(20)
+    );
+}
+
+llvm::Value* DbConverter::fromControl(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
+    auto log10Intrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::log10, val->getType());
+
+    auto &b = method->builder();
+    return b.CreateFMul(
+        b.CreateCall(log10Intrinsic, {
+            b.CreateFMul(val, ctx()->constFloatVec(2))
+        }),
+        ctx()->constFloatVec(20)
+    );
 }

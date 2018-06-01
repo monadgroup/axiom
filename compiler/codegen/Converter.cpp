@@ -37,8 +37,7 @@ void Converter::generate() {
         );
         b.SetInsertPoint(converterBlock);
 
-        auto convertFunc = pair.second;
-        auto newVec = (this->*convertFunc)(_callMethod.get(), numVec);
+        auto newVec = pair.second(_callMethod.get(), numVec);
         resultNum->setVec(b, newVec);
         resultNum->setForm(b, _toType);
         b.CreateRet(b.CreateLoad(resultNum->get(), "conv.deref"));

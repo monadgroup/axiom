@@ -169,15 +169,17 @@ std::unique_ptr<MaximAst::Form> Parser::parseForm() {
     auto nameToken = stream()->next();
     expect(nameToken, Token::Type::IDENTIFIER);
     FormType formType;
-    if (nameToken.content == "lin") formType = FormType::LINEAR;
-    else if (nameToken.content == "osc") formType = FormType::OSCILLATOR;
+    if (nameToken.content == "none") formType = FormType::NONE;
     else if (nameToken.content == "control") formType = FormType::CONTROL;
-    else if (nameToken.content == "freq") formType = FormType::FREQUENCY;
+    else if (nameToken.content == "osc") formType = FormType::OSCILLATOR;
     else if (nameToken.content == "note") formType = FormType::NOTE;
-    else if (nameToken.content == "db") formType = FormType::DB;
-    else if (nameToken.content == "q") formType = FormType::Q;
-    else if (nameToken.content == "secs") formType = FormType::SECONDS;
+    else if (nameToken.content == "freq") formType = FormType::FREQUENCY;
     else if (nameToken.content == "beats") formType = FormType::BEATS;
+    else if (nameToken.content == "secs") formType = FormType::SECONDS;
+    else if (nameToken.content == "samples") formType = FormType::SAMPLES;
+    else if (nameToken.content == "db") formType = FormType::DB;
+    else if (nameToken.content == "amp") formType = FormType::AMPLITUDE;
+    else if (nameToken.content == "q") formType = FormType::Q;
     else {
         throw MaximCommon::CompileError(
             "Come on man, I don't support " + nameToken.content + " forms.",
@@ -225,7 +227,7 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNumberTokenExpression() {
 
     auto endPos = numberToken.endPos;
     auto postMulToken = stream()->peek();
-    auto valueForm = std::make_unique<Form>(FormType::LINEAR, postMulToken.startPos, postMulToken.endPos);
+    auto valueForm = std::make_unique<Form>(FormType::NONE, postMulToken.startPos, postMulToken.endPos);
     if (postMulToken.type == Token::Type::IDENTIFIER) {
         auto postMulText = toUpperCase(postMulToken.content);
 

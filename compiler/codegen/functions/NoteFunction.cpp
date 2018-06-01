@@ -195,7 +195,7 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
     Tuple::Storage tupleVecs;
     auto resultGate = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
     resultGate->setVec(b, b.CreateVectorSplat(2, isActive, "gatevec"));
-    resultGate->setForm(b, MaximCommon::FormType::LINEAR);
+    resultGate->setForm(b, MaximCommon::FormType::NONE);
     resultGate->setActive(b, true);
     tupleVecs.push_back(std::move(resultGate));
 
@@ -207,13 +207,13 @@ std::unique_ptr<Value> NoteFunction::generate(ComposableModuleClassMethod *metho
 
     auto resultVelocity = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
     resultVelocity->setVec(b, b.CreateVectorSplat(2, velocityNum, "velocityvec"));
-    resultVelocity->setForm(b, MaximCommon::FormType::LINEAR);
+    resultVelocity->setForm(b, MaximCommon::FormType::NONE);
     resultVelocity->setActive(b, true);
     tupleVecs.push_back(std::move(resultVelocity));
 
     auto resultAftertouch = Num::create(ctx(), method->allocaBuilder(), undefPos, undefPos);
     resultAftertouch->setVec(b, b.CreateVectorSplat(2, aftertouchNum, "aftertouchvec"));
-    resultAftertouch->setForm(b, MaximCommon::FormType::LINEAR);
+    resultAftertouch->setForm(b, MaximCommon::FormType::NONE);
     resultAftertouch->setActive(b, true);
     tupleVecs.push_back(std::move(resultAftertouch));
 

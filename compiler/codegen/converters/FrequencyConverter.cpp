@@ -5,41 +5,60 @@
 
 using namespace MaximCodegen;
 
-FrequencyConverter::FrequencyConverter(MaximContext *ctx, llvm::Module *module) : Converter(ctx, module,
-                                                                                            MaximCommon::FormType::FREQUENCY) {
-    converters.emplace(MaximCommon::FormType::CONTROL, (FormConverter) & MaximCodegen::FrequencyConverter::fromControl);
-    converters.emplace(MaximCommon::FormType::SECONDS, (FormConverter) & MaximCodegen::FrequencyConverter::fromSeconds);
-    converters.emplace(MaximCommon::FormType::NOTE, (FormConverter) & MaximCodegen::FrequencyConverter::fromNote);
+FrequencyConverter::FrequencyConverter(MaximCodegen::MaximContext *ctx, llvm::Module *module)
+    : Converter(ctx, module, MaximCommon::FormType::FREQUENCY) {
+    using namespace std::placeholders;
+    converters.emplace(MaximCommon::FormType::BEATS, std::bind(&FrequencyConverter::fromBeats, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::CONTROL, std::bind(&FrequencyConverter::fromControl, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::NOTE, std::bind(&FrequencyConverter::fromNote, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::SAMPLES, std::bind(&FrequencyConverter::fromSamples, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::SECONDS, std::bind(&FrequencyConverter::fromSeconds, this, _1, _2));
 }
 
-std::unique_ptr<FrequencyConverter> FrequencyConverter::create(MaximContext *ctx, llvm::Module *module) {
+std::unique_ptr<FrequencyConverter> FrequencyConverter::create(MaximCodegen::MaximContext *ctx, llvm::Module *module) {
     return std::make_unique<FrequencyConverter>(ctx, module);
 }
 
-llvm::Value *FrequencyConverter::fromControl(ComposableModuleClassMethod *method, llvm::Value *val) {
-    auto powFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::pow,
-                                                   ctx()->numType()->vecType());
-
+llvm::Value* FrequencyConverter::fromBeats(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
-    auto baseVal = llvm::ConstantVector::getSplat(2, ctx()->constFloat(20000));
-    return CreateCall(b, powFunc, {baseVal, val}, "");
+    return b.CreateFDiv(
+        b.CreateLoad(ctx()->beatsPerSecond()),
+        b.CreateFMul(val, ctx()->constFloatVec(60))
+    );
 }
 
-llvm::Value *FrequencyConverter::fromSeconds(ComposableModuleClassMethod *method, llvm::Value *val) {
-    auto oneDiv = llvm::ConstantVector::getSplat(2, ctx()->constFloat(1));
-    return method->builder().CreateFDiv(oneDiv, val);
-}
-
-llvm::Value *FrequencyConverter::fromNote(ComposableModuleClassMethod *method, llvm::Value *val) {
-    auto powFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::pow,
-                                                   ctx()->numType()->vecType());
+llvm::Value* FrequencyConverter::fromControl(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
+    auto powIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::pow, val->getType());
 
     auto &b = method->builder();
-    auto noteSub = b.CreateFSub(val, llvm::ConstantVector::getSplat(2, ctx()->constFloat(69)));
-    auto noteDiv = b.CreateFDiv(noteSub, llvm::ConstantVector::getSplat(2, ctx()->constFloat(12)));
-    auto powd = CreateCall(b, powFunc, {
-        llvm::ConstantVector::getSplat(2, ctx()->constFloat(2)),
-        noteDiv
-    }, "");
-    return b.CreateFMul(llvm::ConstantVector::getSplat(2, ctx()->constFloat(440)), powd);
+    return b.CreateCall(powIntrinsic, {
+        ctx()->constFloatVec(20000),
+        val
+    });
+}
+
+llvm::Value* FrequencyConverter::fromNote(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
+    auto powIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::pow, val->getType());
+
+    auto &b = method->builder();
+    return b.CreateFMul(
+        ctx()->constFloatVec(440),
+        b.CreateCall(powIntrinsic, {
+            ctx()->constFloatVec(2),
+            b.CreateFDiv(
+                b.CreateFSub(val, ctx()->constFloatVec(69)),
+                ctx()->constFloatVec(12)
+            )
+        })
+    );
+}
+
+llvm::Value* FrequencyConverter::fromSamples(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
+    auto &b = method->builder();
+    return b.CreateFDiv(ctx()->constFloatVec(ctx()->sampleRate), val);
+}
+
+llvm::Value* FrequencyConverter::fromSeconds(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
+    auto &b = method->builder();
+    return b.CreateFDiv(ctx()->constFloatVec(1), val);
 }

@@ -5,15 +5,17 @@
 namespace MaximCommon {
 
     enum class FormType {
-        LINEAR,
-        OSCILLATOR,
+        NONE,
         CONTROL,
-        FREQUENCY,
+        OSCILLATOR,
         NOTE,
-        DB,
-        Q,
+        FREQUENCY,
+        BEATS,
         SECONDS,
-        BEATS
+        SAMPLES,
+        DB,
+        AMPLITUDE,
+        Q
     };
 
     std::string formType2String(FormType type);

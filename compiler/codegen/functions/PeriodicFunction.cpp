@@ -56,7 +56,7 @@ PeriodicFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<
     if (providedArgs.size() < 2) {
         auto undefPos = SourcePos(-1, -1);
         providedArgs.push_back(
-            Num::create(ctx(), method->allocaBuilder(), 0, 0, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+            Num::create(ctx(), method->allocaBuilder(), 0, 0, MaximCommon::FormType::NONE, true, undefPos, undefPos));
     }
     return providedArgs;
 }

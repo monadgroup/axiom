@@ -30,7 +30,7 @@ ActiveFunction::generate(ComposableModuleClassMethod *method, const std::vector<
 
     auto newNum = Num::create(ctx(), method->allocaBuilder());
     newNum->setVec(b, activeVec);
-    newNum->setForm(b, MaximCommon::FormType::LINEAR);
+    newNum->setForm(b, MaximCommon::FormType::NONE);
     newNum->setActive(b, xNum->active(b));
     return std::move(newNum);
 }

@@ -59,7 +59,7 @@ NoiseFunction::generate(ComposableModuleClassMethod *method, const std::vector<s
 
     auto numResult = Num::create(ctx(), method->allocaBuilder());
     numResult->setVec(b, randVal);
-    numResult->setForm(b, MaximCommon::FormType::LINEAR);
+    numResult->setForm(b, MaximCommon::FormType::OSCILLATOR);
     numResult->setActive(b, true);
     return std::move(numResult);
 }
@@ -69,12 +69,12 @@ NoiseFunction::mapArguments(ComposableModuleClassMethod *method, std::vector<std
     auto undefPos = SourcePos(-1, -1);
     if (providedArgs.empty()) {
         providedArgs.push_back(
-            Num::create(ctx(), method->allocaBuilder(), -1, -1, MaximCommon::FormType::LINEAR, true, undefPos,
+            Num::create(ctx(), method->allocaBuilder(), -1, -1, MaximCommon::FormType::NONE, true, undefPos,
                         undefPos));
     }
     if (providedArgs.size() < 2) {
         providedArgs.push_back(
-            Num::create(ctx(), method->allocaBuilder(), 1, 1, MaximCommon::FormType::LINEAR, true, undefPos, undefPos));
+            Num::create(ctx(), method->allocaBuilder(), 1, 1, MaximCommon::FormType::NONE, true, undefPos, undefPos));
     }
     return providedArgs;
 }

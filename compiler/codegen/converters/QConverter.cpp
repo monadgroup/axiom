@@ -5,19 +5,23 @@
 
 using namespace MaximCodegen;
 
-QConverter::QConverter(MaximContext *ctx, llvm::Module *module)
+QConverter::QConverter(MaximCodegen::MaximContext *ctx, llvm::Module *module)
     : Converter(ctx, module, MaximCommon::FormType::Q) {
-    converters.emplace(MaximCommon::FormType::CONTROL, (FormConverter) & MaximCodegen::QConverter::fromControl);
+    using namespace std::placeholders;
+    converters.emplace(MaximCommon::FormType::Q, std::bind(&QConverter::fromControl, this, _1, _2));
 }
 
-std::unique_ptr<QConverter> QConverter::create(MaximContext *ctx, llvm::Module *module) {
+std::unique_ptr<QConverter> QConverter::create(MaximCodegen::MaximContext *ctx, llvm::Module *module) {
     return std::make_unique<QConverter>(ctx, module);
 }
 
-llvm::Value *QConverter::fromControl(ComposableModuleClassMethod *method, llvm::Value *val) {
+llvm::Value* QConverter::fromControl(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *value) {
     auto &b = method->builder();
-    auto m = b.CreateFMul(ctx()->constFloatVec(-2), val);
-    m = b.CreateFMul(m, ctx()->constFloatVec(0.999));
-    auto a = b.CreateFAdd(m, ctx()->constFloatVec(2));
-    return b.CreateFDiv(ctx()->constFloatVec(1), a);
+    return b.CreateFDiv(
+        ctx()->constFloatVec(-0.5f),
+        b.CreateFSub(
+            b.CreateFMul(value, ctx()->constFloatVec(0.999f)),
+            ctx()->constFloatVec(1)
+        )
+    );
 }

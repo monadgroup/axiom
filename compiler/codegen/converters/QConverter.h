@@ -6,12 +6,13 @@ namespace MaximCodegen {
 
     class QConverter : public Converter {
     public:
-        explicit QConverter(MaximContext *ctx, llvm::Module *module);
+        QConverter(MaximContext *ctx, llvm::Module *module);
 
         static std::unique_ptr<QConverter> create(MaximContext *ctx, llvm::Module *module);
 
     private:
-        llvm::Value *fromControl(ComposableModuleClassMethod *method, llvm::Value *val);
+        llvm::Value *fromControl(ComposableModuleClassMethod *method, llvm::Value *value);
+
     };
 
 }

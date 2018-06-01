@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "ComposableModuleClass.h"
 #include "../common/FormType.h"
 #include "../SourcePos.h"
@@ -20,7 +22,7 @@ namespace MaximCodegen {
         call(ComposableModuleClassMethod *method, std::unique_ptr<Num> value, SourcePos startPos, SourcePos endPos);
 
     protected:
-        using FormConverter = llvm::Value *(Converter::*)(ComposableModuleClassMethod *method, llvm::Value *val);
+        using FormConverter = std::function<llvm::Value *(ComposableModuleClassMethod *, llvm::Value *)>;
 
         std::map<MaximCommon::FormType, FormConverter> converters;
 

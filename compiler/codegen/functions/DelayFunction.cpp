@@ -258,7 +258,7 @@ std::vector<std::unique_ptr<Value>> DelayFunction::mapArguments(ComposableModule
                                                                 std::vector<std::unique_ptr<MaximCodegen::Value>> providedArgs) {
     if (providedArgs.size() < 3) {
         providedArgs.insert(providedArgs.begin() + 1,
-                            Num::create(ctx(), method->allocaBuilder(), 1, 1, MaximCommon::FormType::LINEAR, true));
+                            Num::create(ctx(), method->allocaBuilder(), 1, 1, MaximCommon::FormType::NONE, true));
     }
     return providedArgs;
 }

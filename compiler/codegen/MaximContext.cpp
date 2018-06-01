@@ -48,12 +48,16 @@
 #include "operators/NumComparisonOperator.h"
 #include "operators/NumLogicalOperator.h"
 
+#include "converters/AmplitudeConverter.h"
 #include "converters/BeatsConverter.h"
 #include "converters/ControlConverter.h"
 #include "converters/DbConverter.h"
 #include "converters/FrequencyConverter.h"
-#include "converters/LinearConverter.h"
+#include "converters/NoneConverter.h"
+#include "converters/NoteConverter.h"
+#include "converters/OscillatorConverter.h"
 #include "converters/QConverter.h"
+#include "converters/SamplesConverter.h"
 #include "converters/SecondsConverter.h"
 
 #include "controls/ScalarControl.h"
@@ -317,12 +321,16 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
                                                 llvm::Instruction::BinaryOps::Or));
 
     /// REGISTER CONVERTERS
+    registerConverter(AmplitudeConverter::create(this, libModule));
     registerConverter(BeatsConverter::create(this, libModule));
     registerConverter(ControlConverter::create(this, libModule));
     registerConverter(DbConverter::create(this, libModule));
     registerConverter(FrequencyConverter::create(this, libModule));
-    registerConverter(LinearConverter::create(this, libModule));
+    registerConverter(NoneConverter::create(this, libModule));
+    registerConverter(NoteConverter::create(this, libModule));
+    registerConverter(OscillatorConverter::create(this, libModule));
     registerConverter(QConverter::create(this, libModule));
+    registerConverter(SamplesConverter::create(this, libModule));
     registerConverter(SecondsConverter::create(this, libModule));
 
     /// REGISTER CONTROLS

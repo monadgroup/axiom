@@ -5,31 +5,44 @@
 
 using namespace MaximCodegen;
 
-SecondsConverter::SecondsConverter(MaximContext *ctx, llvm::Module *module)
+SecondsConverter::SecondsConverter(MaximCodegen::MaximContext *ctx, llvm::Module *module)
     : Converter(ctx, module, MaximCommon::FormType::SECONDS) {
-    converters.emplace(MaximCommon::FormType::BEATS, (FormConverter) & MaximCodegen::SecondsConverter::fromBeats);
-    converters.emplace(MaximCommon::FormType::CONTROL, (FormConverter) & MaximCodegen::SecondsConverter::fromControl);
-    converters.emplace(MaximCommon::FormType::FREQUENCY,
-                       (FormConverter) & MaximCodegen::SecondsConverter::fromFrequency);
+    using namespace std::placeholders;
+    converters.emplace(MaximCommon::FormType::BEATS, std::bind(&SecondsConverter::fromBeats, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::CONTROL, std::bind(&SecondsConverter::fromControl, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::FREQUENCY, std::bind(&SecondsConverter::fromFrequency, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::SAMPLES, std::bind(&SecondsConverter::fromSamples, this, _1, _2));
 }
 
-std::unique_ptr<SecondsConverter> SecondsConverter::create(MaximContext *ctx, llvm::Module *module) {
+std::unique_ptr<SecondsConverter> SecondsConverter::create(MaximCodegen::MaximContext *ctx, llvm::Module *module) {
     return std::make_unique<SecondsConverter>(ctx, module);
 }
 
-llvm::Value *SecondsConverter::fromBeats(ComposableModuleClassMethod *method, llvm::Value *val) {
+llvm::Value* SecondsConverter::fromBeats(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
-    return b.CreateFDiv(val, b.CreateLoad(ctx()->beatsPerSecond(), "bps"), "secs");
+    return b.CreateFDiv(
+        val,
+        b.CreateFDiv(b.CreateLoad(ctx()->beatsPerSecond()), ctx()->constFloatVec(60))
+    );
 }
 
-llvm::Value *SecondsConverter::fromControl(ComposableModuleClassMethod *method, llvm::Value *val) {
+llvm::Value* SecondsConverter::fromControl(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
-    auto m = b.CreateFMul(val, llvm::ConstantVector::getSplat(2, ctx()->constFloat(0.5)));
-    auto a = b.CreateFAdd(val, llvm::ConstantVector::getSplat(2, ctx()->constFloat(1.1)));
-    return b.CreateFDiv(m, a);
+    return b.CreateFDiv(
+        val,
+        b.CreateFSub(
+            ctx()->constFloatVec(2.2),
+            b.CreateFMul(val, ctx()->constFloatVec(2))
+        )
+    );
 }
 
-llvm::Value *SecondsConverter::fromFrequency(ComposableModuleClassMethod *method, llvm::Value *val) {
-    auto oneDiv = llvm::ConstantVector::getSplat(2, ctx()->constFloat(1));
-    return method->builder().CreateFDiv(oneDiv, val);
+llvm::Value* SecondsConverter::fromFrequency(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
+    auto &b = method->builder();
+    return b.CreateFDiv(ctx()->constFloatVec(1), val);
+}
+
+llvm::Value* SecondsConverter::fromSamples(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
+    auto &b = method->builder();
+    return b.CreateFDiv(val, ctx()->constFloatVec(ctx()->sampleRate));
 }

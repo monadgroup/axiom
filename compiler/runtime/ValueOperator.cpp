@@ -170,7 +170,7 @@ NumValue ValueOperator::readScopeBuffer(void *ptr, size_t index) {
         true,
         *(vecPos + 0),
         *(vecPos + 1),
-        MaximCommon::FormType::LINEAR
+        MaximCommon::FormType::NONE
     };
 }
 
