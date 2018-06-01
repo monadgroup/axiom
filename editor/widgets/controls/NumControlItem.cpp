@@ -116,6 +116,7 @@ void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         auto isActive = cv.left != 0 || cv.right != 0;
         auto newVal = !isActive;
         setCVal(cv.withLR(newVal, newVal));
+        control->root()->history().append(SetNumValueAction::create(control->uuid(), cv, control->value(), control->root()));
     } else if (!isDragging) {
         isDragging = true;
         beforeDragVal = getCVal();
