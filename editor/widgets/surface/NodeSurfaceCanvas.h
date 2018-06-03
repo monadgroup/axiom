@@ -7,11 +7,10 @@
 
 #include "common/Hookable.h"
 #include "editor/model/ConnectionWire.h"
+#include "editor/model/objects/Node.h"
 
 namespace AxiomModel {
     class NodeSurface;
-
-    class Node;
 
     class Control;
 
@@ -80,7 +79,7 @@ namespace AxiomGui {
 
         void addNode(AxiomModel::Node *node);
 
-        void newNode(QPointF scenePos, QString name, bool group);
+        void newNode(QPointF scenePos, QString name, AxiomModel::Node::NodeType type);
 
         void addWire(AxiomModel::ConnectionWire *wire);
 

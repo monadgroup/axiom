@@ -19,10 +19,10 @@
 #include "editor/model/objects/NodeSurface.h"
 #include "editor/model/objects/Control.h"
 #include "editor/model/objects/Connection.h"
-#include "editor/model/objects/Node.h"
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/CreateCustomNodeAction.h"
 #include "editor/model/actions/CreateGroupNodeAction.h"
+#include "editor/model/actions/CreatePortalNodeAction.h"
 #include "editor/model/actions/CreateConnectionAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/PasteBufferAction.h"
@@ -186,18 +186,27 @@ void NodeSurfaceCanvas::addNode(AxiomModel::Node *node) {
     addItem(item);
 }
 
-void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, bool group) {
+void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, AxiomModel::Node::NodeType type) {
     auto targetPos = QPoint(
         qRound((float) scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
         qRound((float) scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
     );
 
-    if (group) {
-        surface->root()->history().append(
-            CreateGroupNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
-    } else {
-        surface->root()->history().append(
-            CreateCustomNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
+    switch (type) {
+
+        case Node::NodeType::CUSTOM_NODE:
+            surface->root()->history().append(
+                CreateCustomNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
+            break;
+        case Node::NodeType::GROUP_NODE:
+            surface->root()->history().append(
+                CreateGroupNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
+            break;
+        case Node::NodeType::PORTAL_NODE:
+            surface->root()->history().append(CreatePortalNodeAction::create(surface->uuid(), targetPos, name,
+                AxiomModel::ConnectionWire::WireType::NUM, AxiomModel::PortalControl::PortalType::AUTOMATION,
+                surface->root()));
+            break;
     }
 }
 
@@ -300,7 +309,7 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
                 addItem(editor);
                 connect(editor, &FloatingValueEditor::valueSubmitted,
                         this, [this, scenePos](QString value) {
-                        newNode(scenePos, value, false);
+                        newNode(scenePos, value, Node::NodeType::CUSTOM_NODE);
                     });
             });
     connect(&menu, &AddNodeMenu::newGroupAdded,
@@ -309,7 +318,16 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
                 addItem(editor);
                 connect(editor, &FloatingValueEditor::valueSubmitted,
                         this, [this, scenePos](QString value) {
-                        newNode(scenePos, value, true);
+                        newNode(scenePos, value, Node::NodeType::GROUP_NODE);
+                    });
+            });
+    connect(&menu, &AddNodeMenu::newAutomationAdded,
+            [this, scenePos]() {
+                auto editor = new FloatingValueEditor("New Automation", scenePos);
+                addItem(editor);
+                connect(editor, &FloatingValueEditor::valueSubmitted,
+                        this, [this, scenePos](QString value) {
+                        newNode(scenePos, value, Node::NodeType::PORTAL_NODE);
                     });
             });
 

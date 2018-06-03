@@ -28,6 +28,8 @@ namespace AxiomGui {
 
         void newGroupAdded();
 
+        void newAutomationAdded();
+
         void moduleAdded(AxiomModel::LibraryEntry *entry);
 
     private:

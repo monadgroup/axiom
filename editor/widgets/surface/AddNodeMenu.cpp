@@ -29,6 +29,12 @@ AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search
     connect(newGroupAction, &QAction::triggered,
             this, &AddNodeMenu::newGroupAdded);
 
+    if (surface->canHaveAutomation()) {
+        auto newAutomationAction = addAction(tr("New Automation"));
+        connect(newAutomationAction, &QAction::triggered,
+                this, &AddNodeMenu::newAutomationAdded);
+    }
+
     addSeparator();
 
     // add default entries
