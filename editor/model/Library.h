@@ -24,6 +24,7 @@ namespace AxiomModel {
 
         AxiomCommon::Event<LibraryEntry *> entryAdded;
         AxiomCommon::Event<const QString &> activeTagChanged;
+        AxiomCommon::Event<const QString &> activeSearchChanged;
         AxiomCommon::Event<const QString &> tagAdded;
         AxiomCommon::Event<const QString &> tagRemoved;
 
@@ -41,6 +42,10 @@ namespace AxiomModel {
 
         void setActiveTag(const QString &activeTag);
 
+        const QString &activeSearch() const { return _activeSearch; }
+
+        void setActiveSearch(const QString &search);
+
         std::vector<LibraryEntry *> entries() const;
 
         QStringList tags() const;
@@ -54,6 +59,7 @@ namespace AxiomModel {
         std::vector<std::unique_ptr<LibraryEntry>> _entries;
         std::map<QString, size_t> _tags;
         QString _activeTag;
+        QString _activeSearch;
 
         void addTag(const QString &tag);
 

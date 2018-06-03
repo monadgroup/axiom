@@ -35,6 +35,9 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
     searchBox->setPlaceholderText("Search modules...");
     mainLayout->addWidget(searchBox, 0, 1);
 
+    connect(searchBox, &QLineEdit::textChanged,
+            this, &ModuleBrowserPanel::changeSearch);
+
     auto previewList = new ModulePreviewList(window, library, this);
     mainLayout->addWidget(previewList, 1, 0, 1, 2);
 
@@ -70,4 +73,8 @@ void ModuleBrowserPanel::changeTag(int tag) {
         assert(tag <= (int) tabValues.size());
         library->setActiveTag(tabValues[tag - 1]);
     }
+}
+
+void ModuleBrowserPanel::changeSearch(const QString &newSearch) {
+    library->setActiveSearch(newSearch);
 }

@@ -23,12 +23,13 @@ namespace AxiomGui {
                                      QWidget *parent = nullptr);
 
     private:
+        AxiomModel::Library *library;
         AxiomModel::LibraryEntry *entry;
         QLabel *label;
 
         void setName(QString name);
 
-        void setVisibleTag(const QString &tag);
+        void updateIsVisible();
 
     };
 

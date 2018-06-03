@@ -25,6 +25,8 @@ namespace AxiomGui {
 
         void changeTag(int tag);
 
+        void changeSearch(const QString &newSearch);
+
     private:
 
         AxiomModel::Library *library;

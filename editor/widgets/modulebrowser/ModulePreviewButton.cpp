@@ -11,6 +11,7 @@ using namespace AxiomGui;
 
 ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library *library,
                                          AxiomModel::LibraryEntry *entry, QWidget *parent) : QFrame(parent),
+                                                                                             library(library),
                                                                                              entry(entry) {
     auto mainLayout = new QGridLayout(this);
 
@@ -29,15 +30,17 @@ ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library
     entry->nameChanged.connect(this, &ModulePreviewButton::setName);
     setName(entry->name());
 
-    library->activeTagChanged.connect(this, &ModulePreviewButton::setVisibleTag);
-    setVisibleTag(library->activeTag());
+    library->activeTagChanged.connect(this, &ModulePreviewButton::updateIsVisible);
+    library->activeSearchChanged.connect(this, &ModulePreviewButton::updateIsVisible);
+    updateIsVisible();
 }
 
 void ModulePreviewButton::setName(QString name) {
     label->setText(name);
 }
 
-void ModulePreviewButton::setVisibleTag(const QString &tag) {
-    auto hasTag = tag == "" || entry->tags().find(tag) != entry->tags().end();
-    setVisible(hasTag);
+void ModulePreviewButton::updateIsVisible() {
+    auto hasTag = library->activeTag() == "" || entry->tags().find(library->activeTag()) != entry->tags().end();
+    auto hasSearch = library->activeSearch() == "" || entry->name().contains(library->activeSearch(), Qt::CaseInsensitive);
+    setVisible(hasTag && hasSearch);
 }

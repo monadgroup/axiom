@@ -15,6 +15,7 @@ Library::~Library() = default;
 
 Library::Library(Project *project, QDataStream &stream) {
     stream >> _activeTag;
+    stream >> _activeSearch;
 
     quint32 entryCount;
     stream >> entryCount;
@@ -25,6 +26,7 @@ Library::Library(Project *project, QDataStream &stream) {
 
 void Library::serialize(QDataStream &stream) {
     stream << _activeTag;
+    stream << _activeSearch;
     stream << (quint32) _entries.size();
     for (const auto &entry : _entries) {
         entry->serialize(stream);
@@ -76,6 +78,13 @@ void Library::setActiveTag(const QString &activeTag) {
     if (activeTag != _activeTag) {
         _activeTag = activeTag;
         activeTagChanged.trigger(activeTag);
+    }
+}
+
+void Library::setActiveSearch(const QString &search) {
+    if (search != _activeSearch) {
+        _activeSearch = search;
+        activeSearchChanged.trigger(search);
     }
 }
 
