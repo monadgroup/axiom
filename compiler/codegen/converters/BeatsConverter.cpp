@@ -20,10 +20,7 @@ std::unique_ptr<BeatsConverter> BeatsConverter::create(MaximCodegen::MaximContex
 
 llvm::Value* BeatsConverter::fromControl(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
-    return b.CreateFDiv(
-        b.CreateFMul(val, ctx()->constFloatVec(0.8)),
-        b.CreateFAdd(val, ctx()->constFloatVec(1.1))
-    );
+    return b.CreateFMul(val, ctx()->constFloatVec(8));
 }
 
 llvm::Value* BeatsConverter::fromFrequency(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {

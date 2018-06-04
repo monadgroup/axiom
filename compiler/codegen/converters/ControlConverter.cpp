@@ -24,10 +24,7 @@ std::unique_ptr<ControlConverter> ControlConverter::create(MaximCodegen::MaximCo
 
 llvm::Value* ControlConverter::fromBeats(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
-    return b.CreateFDiv(
-        b.CreateFMul(val, ctx()->constFloatVec(1.1)),
-        b.CreateFAdd(val, ctx()->constFloatVec(0.8))
-    );
+    return b.CreateFDiv(val, ctx()->constFloatVec(8));
 }
 
 llvm::Value* ControlConverter::fromDb(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
