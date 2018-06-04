@@ -10,7 +10,9 @@
 using namespace AxiomGui;
 
 AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search) : surface(surface) {
-    contextSearch = new QLineEdit(this);
+    setStyleSheet("QMenu { menu-scrollable: 1; }");
+
+    /*contextSearch = new QLineEdit(this);
     contextSearch->setPlaceholderText("Search modules...");
     contextSearch->setText(search);
     connect(contextSearch, &QLineEdit::textChanged,
@@ -19,7 +21,7 @@ AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search
     auto widgetAction = new QWidgetAction(this);
     widgetAction->setDefaultWidget(contextSearch);
     addAction(widgetAction);
-    addSeparator();
+    addSeparator();*/
 
     auto newNodeAction = addAction(tr("New Node"));
     connect(newNodeAction, &QAction::triggered,
@@ -35,33 +37,36 @@ AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search
                 this, &AddNodeMenu::newAutomationAdded);
     }
 
-    addSeparator();
+    /*addSeparator();
 
     // add default entries
     std::vector<AxiomModel::LibraryEntry *> sortedEntries = surface->root()->project()->library().entries();
     std::sort(sortedEntries.begin(), sortedEntries.end(), [](AxiomModel::LibraryEntry *a, AxiomModel::LibraryEntry *b) {
         return a->name() < b->name();
     });
-    for (const auto &entry : sortedEntries) {
-        entryActions.emplace(entry, addAction(entry->name()));
+    for (size_t i = 0; i < sortedEntries.size(); i++) {
+        auto &entry = sortedEntries[i];
+        auto action = addAction(entry->name());
+        action->setVisible(i < 20);
+        entryActions.emplace(entry, action);
     }
 
     cantFindAction = addAction(tr("Oops, I can't find that one..."));
     cantFindAction->setEnabled(false);
     cantFindAction->setVisible(false);
 
-    applySearch(search);
+    applySearch(search);*/
 }
 
 void AddNodeMenu::applySearch(QString search) {
     QString lowerSearch = search.toLower();
 
-    bool anyEntryVisible = false;
+    size_t visibleCount = 0;
     for (const auto &pair : entryActions) {
         auto inName = pair.first->name().toLower().contains(lowerSearch);
-        pair.second->setVisible(inName);
-        if (inName) anyEntryVisible = true;
+        pair.second->setVisible(visibleCount < 20 && inName);
+        if (inName) visibleCount++;
     }
 
-    cantFindAction->setVisible(!anyEntryVisible && !entryActions.empty());
+    cantFindAction->setVisible(!visibleCount && !entryActions.empty());
 }
