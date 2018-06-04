@@ -16,15 +16,22 @@ AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
 }
 
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 0), _editor(&runtime, std::make_unique<AxiomModel::Project>()) {
+    : AudioEffectX(audioMaster, 1, 255), _editor(&runtime, std::make_unique<AxiomModel::Project>()) {
     isSynth();
-    programsAreChunks();
-    canProcessReplacing();
     setNumInputs(0);
     setNumOutputs(2);
     setUniqueID(0x41584F4D); // 'AXOM'
+    programsAreChunks();
+    canProcessReplacing();
+
+    runtime.mainSurface()->automationCountChanged.connect(this, &AxiomVstPlugin::updateDisplay);
 
     setEditor(&_editor);
+}
+
+AxiomVstPlugin::~AxiomVstPlugin() {
+    // prevent the AudioEffect destructor trying to delete the editor
+    setEditor(nullptr);
 }
 
 void AxiomVstPlugin::open() {
@@ -111,24 +118,29 @@ void AxiomVstPlugin::setSampleRate(float sampleRate) {
 }
 
 void AxiomVstPlugin::setParameter(VstInt32 index, float value) {
-    // todo
+    auto node = runtime.mainSurface()->getAutomationNode(index);
+    if (node == nullptr || node->control()->group() == nullptr) return;
+    node->control()->group()->setNumValue({ true, value, value, MaximCommon::FormType::CONTROL });
 }
 
 float AxiomVstPlugin::getParameter(VstInt32 index) {
-    // todo
-    return 0;
+    auto node = runtime.mainSurface()->getAutomationNode(index);
+    if (node == nullptr || node->control()->group() == nullptr) return 0;
+    return node->control()->group()->getNumValue().left;
 }
 
 void AxiomVstPlugin::getParameterLabel(VstInt32 index, char *label) {
-    // todo
+    vst_strncpy(label, "", kVstMaxParamStrLen);
 }
 
 void AxiomVstPlugin::getParameterDisplay(VstInt32 index, char *text) {
-    // todo
+    float2string(getParameter(index), text, kVstMaxParamStrLen);
 }
 
 void AxiomVstPlugin::getParameterName(VstInt32 index, char *text) {
-    // todo
+    auto node = runtime.mainSurface()->getAutomationNode(index);
+    if (node == nullptr) vst_strncpy(text, "", kVstMaxParamStrLen);
+    else vst_strncpy(text, node->name().c_str(), kVstMaxParamStrLen);
 }
 
 VstInt32 AxiomVstPlugin::getChunk(void **data, bool isPreset) {
@@ -202,4 +214,9 @@ VstInt32 AxiomVstPlugin::canDo(char *text) {
 
 VstInt32 AxiomVstPlugin::getNumMidiInputChannels() {
     return 16;
+}
+
+bool AxiomVstPlugin::canParameterBeAutomated(VstInt32 index) {
+    auto node = runtime.mainSurface()->getAutomationNode(index);
+    return node != nullptr;
 }

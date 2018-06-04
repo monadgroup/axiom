@@ -13,6 +13,10 @@ namespace MaximRuntime {
 
         void remove() override;
 
+        const std::string &name() const { return _name; }
+
+        void setName(const std::string &name);
+
         IOControl *control() { return _control.get(); }
 
         std::vector<Control*> controls() const override;
@@ -20,6 +24,8 @@ namespace MaximRuntime {
         MaximCodegen::ModuleClass *moduleClass() override;
 
     private:
+
+        std::string _name;
 
         std::unique_ptr<GeneratableModuleClass> _moduleClass;
 

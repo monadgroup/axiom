@@ -8,11 +8,13 @@
 
 class AxiomVstEditor;
 
-class AxiomVstPlugin : public AudioEffectX {
+class AxiomVstPlugin : public AudioEffectX, public AxiomCommon::Hookable {
 public:
     MaximRuntime::Runtime runtime;
 
     explicit AxiomVstPlugin(audioMasterCallback audioMaster);
+
+    ~AxiomVstPlugin() override;
 
     void open() override;
 
@@ -58,9 +60,13 @@ public:
 
     VstInt32 getNumMidiInputChannels() override;
 
+    bool canParameterBeAutomated(VstInt32 index) override;
+
 private:
 
     AxiomVstEditor _editor;
     std::unique_ptr<QByteArray> saveBuffer;
+
+    void setNumParams(VstInt32 numParams);
 
 };

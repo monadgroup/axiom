@@ -40,6 +40,8 @@ namespace AxiomModel {
 
         const Library &library() const { return _library; }
 
+        RootSurface *rootSurface() const { return _rootSurface; }
+
         void serialize(QDataStream &stream);
 
         void attachRuntime(MaximRuntime::Runtime *runtime);

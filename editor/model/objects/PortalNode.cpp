@@ -3,6 +3,7 @@
 #include "ControlSurface.h"
 #include "../WatchSequenceOperators.h"
 #include "compiler/runtime/IONode.h"
+#include "compiler/runtime/RootSurface.h"
 
 using namespace AxiomModel;
 
@@ -28,7 +29,20 @@ void PortalNode::serialize(QDataStream &stream, const QUuid &parent, bool withCo
     Node::serialize(stream, parent, withContext);
 }
 
+void PortalNode::createAndAttachRuntime(MaximRuntime::Surface *parent) {
+    controls().then([this, parent](ControlSurface *controls) {
+        takeAtLater(controls->controls(), 0).then([this, parent](Control *control) {
+            auto portalControl = dynamic_cast<PortalControl*>(control);
+            auto rootParent = dynamic_cast<MaximRuntime::RootSurface *>(parent);
+            if (portalControl->portalType() == PortalControl::PortalType::AUTOMATION) {
+                attachRuntime(rootParent->addAutomationNode());
+            }
+        });
+    });
+}
+
 void PortalNode::attachRuntime(MaximRuntime::IONode *runtime) {
+    runtime->setName(name().toStdString());
     controls().then([runtime](ControlSurface *controls) {
         auto controlRuntime = runtime->control();
         takeAtLater(controls->controls(), 0).then([controlRuntime](Control *control) {

@@ -25,7 +25,7 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        void createAndAttachRuntime(MaximRuntime::Surface *parent) override {}
+        void createAndAttachRuntime(MaximRuntime::Surface *parent) override;
 
         void attachRuntime(MaximRuntime::IONode *runtime);
 

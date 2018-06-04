@@ -22,6 +22,10 @@ void IONode::remove() {
     Node::remove();
 }
 
+void IONode::setName(const std::string &name) {
+    _name = name;
+}
+
 std::vector<Control*> IONode::controls() const {
     return std::vector<Control*> {_control.get()};
 }

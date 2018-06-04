@@ -32,7 +32,7 @@ namespace MaximRuntime {
 
         void addNode(std::unique_ptr<Node> node);
 
-        void removeNode(Node *node);
+        virtual void removeNode(Node *node);
 
         void pullMethods() override;
 
