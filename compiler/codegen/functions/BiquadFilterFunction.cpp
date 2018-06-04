@@ -25,6 +25,7 @@ std::unique_ptr<Value> BiquadFilterFunction::generate(MaximCodegen::ComposableMo
             "tanf", method->moduleClass()->module()
         );
     }
+    auto maxFunc = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::maxnum, ctx()->floatVecTy());
 
     auto inputNum = dynamic_cast<Num *>(params[0].get());
     auto freqNum = dynamic_cast<Num *>(params[1].get());
@@ -62,6 +63,12 @@ std::unique_ptr<Value> BiquadFilterFunction::generate(MaximCodegen::ComposableMo
 
     b.CreateStore(freqVec, cachedFreqPtr);
     b.CreateStore(qVec, cachedQPtr);
+
+    // ensure Q is 0.5 or above to avoid dividing by zero later on
+    qVec = b.CreateCall(maxFunc, {
+        qVec,
+        ctx()->constFloatVec(0.5)
+    });
 
     // calculate K value = tan(PI * freq / sampleRate)
     auto kParam = b.CreateFDiv(

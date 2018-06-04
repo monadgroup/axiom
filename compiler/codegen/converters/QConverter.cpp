@@ -8,7 +8,7 @@ using namespace MaximCodegen;
 QConverter::QConverter(MaximCodegen::MaximContext *ctx, llvm::Module *module)
     : Converter(ctx, module, MaximCommon::FormType::Q) {
     using namespace std::placeholders;
-    converters.emplace(MaximCommon::FormType::Q, std::bind(&QConverter::fromControl, this, _1, _2));
+    converters.emplace(MaximCommon::FormType::CONTROL, std::bind(&QConverter::fromControl, this, _1, _2));
 }
 
 std::unique_ptr<QConverter> QConverter::create(MaximCodegen::MaximContext *ctx, llvm::Module *module) {
