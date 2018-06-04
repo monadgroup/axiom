@@ -21,6 +21,7 @@ Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
     _op.buildConverters(_jit);
 
     _bpmVector = (BpmVector *) _jit.getSymbolAddress(_context.beatsPerSecName());
+    assert(_bpmVector);
 
     // this must go after `setLibModule` as compilation reads from there
     _mainSurface = std::make_unique<RootSurface>(this);

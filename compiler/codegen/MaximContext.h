@@ -180,7 +180,6 @@ namespace MaximCodegen {
         MidiType _midiType;
 
         llvm::StructType *_vecScopeStorage;
-        llvm::Value *_beatsPerSecondPtr = nullptr;
 
         std::unique_ptr<Function> commonBiquadFunction;
 
