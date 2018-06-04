@@ -29,7 +29,7 @@ llvm::Value* BeatsConverter::fromControl(MaximCodegen::ComposableModuleClassMeth
 llvm::Value* BeatsConverter::fromFrequency(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
     return b.CreateFDiv(
-        b.CreateLoad(ctx()->beatsPerSecond()),
+        b.CreateLoad(ctx()->beatsPerSecondPtr(*method->moduleClass()->module())),
         b.CreateFMul(ctx()->constFloatVec(60), val)
     );
 }
@@ -37,7 +37,7 @@ llvm::Value* BeatsConverter::fromFrequency(MaximCodegen::ComposableModuleClassMe
 llvm::Value* BeatsConverter::fromSamples(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
     return b.CreateFDiv(
-        b.CreateFMul(val, b.CreateLoad(ctx()->beatsPerSecond())),
+        b.CreateFMul(val, b.CreateLoad(ctx()->beatsPerSecondPtr(*method->moduleClass()->module()))),
         b.CreateFMul(ctx()->constFloatVec(ctx()->sampleRate), ctx()->constFloatVec(60))
     );
 }
@@ -46,6 +46,6 @@ llvm::Value* BeatsConverter::fromSeconds(MaximCodegen::ComposableModuleClassMeth
     auto &b = method->builder();
     return b.CreateFMul(
         val,
-        b.CreateFDiv(b.CreateLoad(ctx()->beatsPerSecond()), ctx()->constFloatVec(60))
+        b.CreateFDiv(b.CreateLoad(ctx()->beatsPerSecondPtr(*method->moduleClass()->module())), ctx()->constFloatVec(60))
     );
 }

@@ -22,7 +22,7 @@ llvm::Value* SamplesConverter::fromBeats(MaximCodegen::ComposableModuleClassMeth
     auto &b = method->builder();
     return b.CreateFDiv(
         b.CreateFMul(val, ctx()->constFloatVec(60 * ctx()->sampleRate)),
-        b.CreateLoad(ctx()->beatsPerSecond())
+        b.CreateLoad(ctx()->beatsPerSecondPtr(*method->moduleClass()->module()))
     );
 }
 

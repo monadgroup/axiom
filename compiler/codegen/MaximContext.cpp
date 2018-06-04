@@ -79,8 +79,12 @@ MaximContext::MaximContext(llvm::DataLayout dataLayout)
     });
 }
 
-llvm::Value *MaximContext::beatsPerSecond() const {
-    return llvm::UndefValue::get(llvm::PointerType::get(numType()->vecType(), 0));
+llvm::Value* MaximContext::beatsPerSecondPtr(llvm::Module &module) {
+    if (auto global = module.getGlobalVariable(beatsPerSecName())) {
+        return global;
+    }
+
+    return new llvm::GlobalVariable(module, floatVecTy(), false, llvm::GlobalVariable::CommonLinkage, nullptr, beatsPerSecName());
 }
 
 llvm::PointerType *MaximContext::voidPointerType() {
@@ -212,6 +216,9 @@ void MaximContext::clearPtr(Builder &builder, llvm::Value *src) {
 }
 
 void MaximContext::setLibModule(llvm::Module *libModule) {
+    /// SETUP GLOBALS
+    new llvm::GlobalVariable(*libModule, floatVecTy(), false, llvm::GlobalVariable::ExternalLinkage, constFloatVec(60), beatsPerSecName());
+
     /// SETUP TYPES
     Midi::initialize(libModule, this);
 

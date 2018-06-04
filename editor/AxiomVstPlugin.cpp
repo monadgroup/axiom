@@ -47,6 +47,11 @@ void AxiomVstPlugin::resume() {
 }
 
 void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) {
+    auto timeInfo = getTimeInfo(kVstTempoValid);
+    if (timeInfo->flags & kVstTempoValid) {
+        runtime.setBpm(timeInfo->tempo);
+    }
+
     runtime.fillBuffer(outputs, (size_t) sampleFrames);
 }
 

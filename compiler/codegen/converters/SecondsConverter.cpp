@@ -22,7 +22,7 @@ llvm::Value* SecondsConverter::fromBeats(MaximCodegen::ComposableModuleClassMeth
     auto &b = method->builder();
     return b.CreateFDiv(
         val,
-        b.CreateFDiv(b.CreateLoad(ctx()->beatsPerSecond()), ctx()->constFloatVec(60))
+        b.CreateFDiv(b.CreateLoad(ctx()->beatsPerSecondPtr(*method->moduleClass()->module())), ctx()->constFloatVec(60))
     );
 }
 

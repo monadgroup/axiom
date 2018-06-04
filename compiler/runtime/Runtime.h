@@ -18,6 +18,11 @@ namespace MaximRuntime {
         MidiEventValue event;
     };
 
+    struct BpmVector {
+        float a;
+        float b;
+    };
+
     class Runtime {
     public:
         static constexpr size_t eventQueueSize = 256;
@@ -46,6 +51,10 @@ namespace MaximRuntime {
 
         void fillPartialBuffer(float **buffer, size_t length, const MidiValue &event);
 
+        float getBpm() const;
+
+        void setBpm(float newVal);
+
     private:
         std::mutex _mutex;
         Jit _jit;
@@ -58,6 +67,7 @@ namespace MaximRuntime {
         bool _isDeployed = false;
         Jit::ModuleKey _deployKey;
 
+        BpmVector *_bpmVector = nullptr;
         void (*_generateFuncPtr)() = nullptr;
 
         llvm::Function *createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,

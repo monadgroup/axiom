@@ -20,6 +20,8 @@ Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context) {
     _jit.addModule(std::move(libModule));
     _op.buildConverters(_jit);
 
+    _bpmVector = (BpmVector *) _jit.getSymbolAddress(_context.beatsPerSecName());
+
     // this must go after `setLibModule` as compilation reads from there
     _mainSurface = std::make_unique<RootSurface>(this);
 }
@@ -154,6 +156,15 @@ void Runtime::fillPartialBuffer(float **buffer, size_t length, const MidiValue &
         // clear midi events
         _op.writeMidiCount(inputPtr, 0);
     }
+}
+
+float Runtime::getBpm() const {
+    return _bpmVector->a;
+}
+
+void Runtime::setBpm(float newVal) {
+    _bpmVector->a = newVal;
+    _bpmVector->b = newVal;
 }
 
 llvm::Function *Runtime::createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,

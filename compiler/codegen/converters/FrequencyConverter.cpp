@@ -22,7 +22,7 @@ std::unique_ptr<FrequencyConverter> FrequencyConverter::create(MaximCodegen::Max
 llvm::Value* FrequencyConverter::fromBeats(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *val) {
     auto &b = method->builder();
     return b.CreateFDiv(
-        b.CreateLoad(ctx()->beatsPerSecond()),
+        b.CreateLoad(ctx()->beatsPerSecondPtr(*method->moduleClass()->module())),
         b.CreateFMul(val, ctx()->constFloatVec(60))
     );
 }

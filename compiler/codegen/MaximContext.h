@@ -81,8 +81,9 @@ namespace MaximCodegen {
 
         llvm::DataLayout &dataLayout() { return _dataLayout; }
 
-        // some LLVM globals
-        llvm::Value *beatsPerSecond() const;
+        std::string beatsPerSecName() const { return "beatspersec"; }
+
+        llvm::Value *beatsPerSecondPtr(llvm::Module &module);
 
         NumType *numType() { return &_numType; }
 
@@ -179,6 +180,7 @@ namespace MaximCodegen {
         MidiType _midiType;
 
         llvm::StructType *_vecScopeStorage;
+        llvm::Value *_beatsPerSecondPtr = nullptr;
 
         std::unique_ptr<Function> commonBiquadFunction;
 
