@@ -82,6 +82,7 @@ MainWindow::MainWindow(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomMode
             this, &MainWindow::exportLibrary);
 
     setProject(std::move(project));
+    importLibraryFrom(":/default.axl");
 }
 
 MainWindow::~MainWindow() = default;
@@ -203,8 +204,27 @@ void MainWindow::openProject() {
 void MainWindow::importLibrary() {
     auto selectedFile = QFileDialog::getOpenFileName(this, "Import Library", QString(), tr("Axiom Library Files (*.axl);;All Files (*.*)"));
     if (selectedFile.isNull()) return;
+    importLibraryFrom(selectedFile);
+}
+
+void MainWindow::exportLibrary() {
+    auto selectedFile = QFileDialog::getSaveFileName(this, "Export Library", QString(), tr("Axiom Library Files (*.axl);;All Files (*.*)"));
+    if (selectedFile.isNull()) return;
 
     QFile file(selectedFile);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox(QMessageBox::Critical, "Failed to export library", "The file you selected couldn't be opened.", QMessageBox::Ok).exec();
+        return;
+    }
+
+    QDataStream stream(&file);
+    AxiomModel::Project::writeHeader(stream, AxiomModel::Project::librarySchemaMagic);
+    _project->library().serialize(stream);
+    file.close();
+}
+
+void MainWindow::importLibraryFrom(const QString &path) {
+    QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         QMessageBox(QMessageBox::Critical, "Failed to import library", "The file you selected couldn't be opened.", QMessageBox::Ok).exec();
         return;
@@ -233,14 +253,14 @@ void MainWindow::importLibrary() {
         auto currentNewer = oldEntry->modificationDateTime() > newEntry->modificationDateTime();
 
         QMessageBox msgBox(QMessageBox::Warning, "Module import conflict",
-                    tr("Heads up! One of the modules in the imported library is conflicting with one you already had.\n\n"
-                    "Current module (") + (currentNewer ? "newer" : "older") + ")\n"
-                    "Name: " + oldEntry->name() + "\n"
-                    "Last edit: " + oldEntry->modificationDateTime().toLocalTime().toString() + "\n\n"
-                    "New module (" + (currentNewer ? "older" : "newer") + ")\n"
-                    "Name: " + newEntry->name() + "\n"
-                    "Last edit: " + newEntry->modificationDateTime().toLocalTime().toString() + "\n\n"
-                    "Would you like to keep the current module, imported one, or both?");
+                           tr("Heads up! One of the modules in the imported library is conflicting with one you already had.\n\n"
+                              "Current module (") + (currentNewer ? "newer" : "older") + ")\n"
+                                                                                         "Name: " + oldEntry->name() + "\n"
+                                                                                                                       "Last edit: " + oldEntry->modificationDateTime().toLocalTime().toString() + "\n\n"
+                                                                                                                                                                                                   "New module (" + (currentNewer ? "older" : "newer") + ")\n"
+                                                                                                                                                                                                                                                         "Name: " + newEntry->name() + "\n"
+                                                                                                                                                                                                                                                                                       "Last edit: " + newEntry->modificationDateTime().toLocalTime().toString() + "\n\n"
+                                                                                                                                                                                                                                                                                                                                                                   "Would you like to keep the current module, imported one, or both?");
         auto currentBtn = msgBox.addButton("Current", QMessageBox::ActionRole);
         auto importedBtn = msgBox.addButton("Imported", QMessageBox::ActionRole);
         msgBox.addButton("Both", QMessageBox::ActionRole);
@@ -251,20 +271,4 @@ void MainWindow::importLibrary() {
         else if (msgBox.clickedButton() == importedBtn) return AxiomModel::Library::ConflictResolution::KEEP_NEW;
         else return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
     });
-}
-
-void MainWindow::exportLibrary() {
-    auto selectedFile = QFileDialog::getSaveFileName(this, "Export Library", QString(), tr("Axiom Library Files (*.axl);;All Files (*.*)"));
-    if (selectedFile.isNull()) return;
-
-    QFile file(selectedFile);
-    if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox(QMessageBox::Critical, "Failed to export library", "The file you selected couldn't be opened.", QMessageBox::Ok).exec();
-        return;
-    }
-
-    QDataStream stream(&file);
-    AxiomModel::Project::writeHeader(stream, AxiomModel::Project::librarySchemaMagic);
-    _project->library().serialize(stream);
-    file.close();
 }

@@ -57,6 +57,8 @@ namespace AxiomGui {
         std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
         std::unique_ptr<HistoryPanel> _historyPanel;
         std::unique_ptr<ModuleBrowserPanel> _modulePanel;
+
+        void importLibraryFrom(const QString &path);
     };
 
 }

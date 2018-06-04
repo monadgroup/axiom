@@ -1,3 +1,5 @@
+#include <QtCore/QFile>
+
 #include "compiler/runtime/Runtime.h"
 #include "widgets/windows/MainWindow.h"
 #include "widgets/surface/NodeSurfacePanel.h"

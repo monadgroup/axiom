@@ -13,6 +13,8 @@ ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library
                                          AxiomModel::LibraryEntry *entry, QWidget *parent) : QFrame(parent),
                                                                                              library(library),
                                                                                              entry(entry) {
+    setFixedWidth(110);
+
     auto mainLayout = new QGridLayout(this);
 
     mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -36,7 +38,9 @@ ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library
 }
 
 void ModulePreviewButton::setName(QString name) {
-    label->setText(name);
+    QFontMetrics metrics(label->font());
+    auto elidedText = metrics.elidedText(name, Qt::ElideRight, label->width());
+    label->setText(elidedText);
 }
 
 void ModulePreviewButton::updateIsVisible() {

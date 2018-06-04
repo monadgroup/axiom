@@ -19,5 +19,7 @@
         <file>icons/input-midi-portal.png</file>
         <file>icons/output-num-portal.png</file>
         <file>icons/automation-portal.png</file>
+
+        <file>default.axl</file>
     </qresource>
 </RCC>
