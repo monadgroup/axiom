@@ -7,13 +7,10 @@
 using namespace MaximCodegen;
 
 BiquadFilterFunction::BiquadFilterFunction(MaximCodegen::MaximContext *ctx, llvm::Module *module,
-                                           MaximCodegen::Function *biquadFilterFunction, const std::string &name)
-    : Function(ctx, module, name,
-               ctx->numType(),
-               {Parameter(ctx->numType(), false, false), // input
-                Parameter(ctx->numType(), false, false), // frequency
-                Parameter(ctx->numType(), false, false)  // Q
-               }, nullptr), biquadFilterFunction(biquadFilterFunction) {
+                                           MaximCodegen::Function *biquadFilterFunction, const std::string &name,
+                                           bool hasGain)
+    : Function(ctx, module, name, ctx->numType(), getParams(ctx, hasGain), nullptr),
+      biquadFilterFunction(biquadFilterFunction), hasGain(hasGain) {
 }
 
 std::unique_ptr<Value> BiquadFilterFunction::generate(MaximCodegen::ComposableModuleClassMethod *method,
@@ -46,6 +43,13 @@ std::unique_ptr<Value> BiquadFilterFunction::generate(MaximCodegen::ComposableMo
     auto freqVec = freqNum->vec(b);
     auto qVec = qNum->vec(b);
 
+    llvm::Value *gainVec = nullptr;
+    if (hasGain) {
+        auto gainNum = dynamic_cast<Num *>(params[3].get());
+        assert(gainNum);
+        gainVec = gainNum->vec(b);
+    }
+
     auto freqChanged = b.CreateFCmpONE(freqVec, b.CreateLoad(cachedFreqPtr), "freqchanged");
     auto qChanged = b.CreateFCmpONE(qVec, b.CreateLoad(cachedQPtr), "qchanged");
     auto needsRegenVec = b.CreateOr(freqChanged, qChanged, "needsregen");
@@ -74,7 +78,7 @@ std::unique_ptr<Value> BiquadFilterFunction::generate(MaximCodegen::ComposableMo
     kValue = b.CreateInsertElement(kValue, rightK, (uint64_t) 1, "kvalue");
     auto kSquared = b.CreateFMul(kValue, kValue);
 
-    generateCoefficients(b, qVec, kValue, kSquared, a0Ptr, a1Ptr, a2Ptr, b1Ptr, b2Ptr);
+    generateCoefficients(method, qVec, kValue, kSquared, gainVec, a0Ptr, a1Ptr, a2Ptr, b1Ptr, b2Ptr);
     b.CreateBr(continueBlock);
     b.SetInsertPoint(continueBlock);
 
@@ -102,4 +106,14 @@ std::unique_ptr<Value> BiquadFilterFunction::generate(MaximCodegen::ComposableMo
     biquadParams.push_back(std::move(b2Num));
 
     return biquadFilterFunction->call(method, std::move(biquadParams), SourcePos(-1, -1), SourcePos(-1, -1));
+}
+
+std::vector<Parameter> BiquadFilterFunction::getParams(MaximCodegen::MaximContext *ctx, bool hasGain) {
+    std::vector<Parameter> result {
+        Parameter(ctx->numType(), false, false), // input
+        Parameter(ctx->numType(), false, false), // frequency
+        Parameter(ctx->numType(), false, false)  // Q
+    };
+    if (hasGain) result.emplace_back(ctx->numType(), false, false);
+    return std::move(result);
 }

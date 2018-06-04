@@ -42,6 +42,7 @@
 #include "functions/InternalBiquadFilterFunction.h"
 #include "functions/LowBqFilterFunction.h"
 #include "functions/HighBqFilterFunction.h"
+#include "functions/PeakBqFilterFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -263,6 +264,7 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     commonBiquadFunction->generate();
     registerFunction(LowBqFilterFunction::create(this, libModule, commonBiquadFunction.get()));
     registerFunction(HighBqFilterFunction::create(this, libModule, commonBiquadFunction.get()));
+    registerFunction(PeakBqFilterFunction::create(this, libModule, commonBiquadFunction.get()));
 
     // oscillators
     registerFunction(SinOscFunction::create(this, libModule));

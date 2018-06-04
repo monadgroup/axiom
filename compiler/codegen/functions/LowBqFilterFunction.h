@@ -11,7 +11,7 @@ namespace MaximCodegen {
         static std::unique_ptr<LowBqFilterFunction> create(MaximContext *ctx, llvm::Module *module, Function *biquadFilterFunction);
 
     protected:
-        void generateCoefficients(llvm::IRBuilder<> &b, llvm::Value *q, llvm::Value *k, llvm::Value *kSquared, llvm::Value *a0Ptr, llvm::Value *a1Ptr, llvm::Value *a2Ptr, llvm::Value *b1Ptr, llvm::Value *b2Ptr) override;
+        void generateCoefficients(ComposableModuleClassMethod *method, llvm::Value *q, llvm::Value *k, llvm::Value *kSquared, llvm::Value *gain, llvm::Value *a0Ptr, llvm::Value *a1Ptr, llvm::Value *a2Ptr, llvm::Value *b1Ptr, llvm::Value *b2Ptr) override;
     };
 
 }

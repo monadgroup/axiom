@@ -8,7 +8,7 @@ using namespace MaximCodegen;
 
 HighBqFilterFunction::HighBqFilterFunction(MaximCodegen::MaximContext *ctx, llvm::Module *module,
                                            MaximCodegen::Function *biquadFilterFunction)
-    : BiquadFilterFunction(ctx, module, biquadFilterFunction, "highBqFilter") {
+    : BiquadFilterFunction(ctx, module, biquadFilterFunction, "highBqFilter", false) {
 }
 
 std::unique_ptr<HighBqFilterFunction> HighBqFilterFunction::create(MaximCodegen::MaximContext *ctx, llvm::Module *module,
@@ -16,9 +16,12 @@ std::unique_ptr<HighBqFilterFunction> HighBqFilterFunction::create(MaximCodegen:
     return std::make_unique<HighBqFilterFunction>(ctx, module, biquadFilterFunction);
 }
 
-void HighBqFilterFunction::generateCoefficients(llvm::IRBuilder<> &b, llvm::Value *q, llvm::Value *k,
-                                                llvm::Value *kSquared, llvm::Value *a0Ptr, llvm::Value *a1Ptr,
-                                                llvm::Value *a2Ptr, llvm::Value *b1Ptr, llvm::Value *b2Ptr) {
+void HighBqFilterFunction::generateCoefficients(MaximCodegen::ComposableModuleClassMethod *method, llvm::Value *q,
+                                                llvm::Value *k, llvm::Value *kSquared, llvm::Value *gain,
+                                                llvm::Value *a0Ptr, llvm::Value *a1Ptr, llvm::Value *a2Ptr,
+                                                llvm::Value *b1Ptr, llvm::Value *b2Ptr) {
+    auto &b = method->builder();
+
     // norm = 1 / (1 + K / q + K * K)
     auto norm = b.CreateFDiv(
         ctx()->constFloatVec(1),
