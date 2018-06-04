@@ -39,8 +39,9 @@
 #include "functions/MixdownFunction.h"
 #include "functions/ChannelFunction.h"
 #include "functions/SvFilterFunction.h"
-#include "functions/BiquadFilterFunction.h"
+#include "functions/InternalBiquadFilterFunction.h"
 #include "functions/LowBqFilterFunction.h"
+#include "functions/HighBqFilterFunction.h"
 
 #include "operators/NumFloatOperator.h"
 #include "operators/NumIntrinsicOperator.h"
@@ -258,9 +259,10 @@ void MaximContext::setLibModule(llvm::Module *libModule) {
     // filters
     registerFunction(SvFilterFunction::create(this, libModule));
 
-    commonBiquadFunction = BiquadFilterFunction::create(this, libModule);
+    commonBiquadFunction = InternalBiquadFilterFunction::create(this, libModule);
     commonBiquadFunction->generate();
     registerFunction(LowBqFilterFunction::create(this, libModule, commonBiquadFunction.get()));
+    registerFunction(HighBqFilterFunction::create(this, libModule, commonBiquadFunction.get()));
 
     // oscillators
     registerFunction(SinOscFunction::create(this, libModule));

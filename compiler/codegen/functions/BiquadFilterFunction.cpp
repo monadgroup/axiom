@@ -6,68 +6,100 @@
 
 using namespace MaximCodegen;
 
-BiquadFilterFunction::BiquadFilterFunction(MaximCodegen::MaximContext *ctx, llvm::Module *module)
-    : Function(ctx, module, "biquadFilter",
+BiquadFilterFunction::BiquadFilterFunction(MaximCodegen::MaximContext *ctx, llvm::Module *module,
+                                           MaximCodegen::Function *biquadFilterFunction, const std::string &name)
+    : Function(ctx, module, name,
                ctx->numType(),
                {Parameter(ctx->numType(), false, false), // input
-                Parameter(ctx->numType(), false, false), // a0
-                Parameter(ctx->numType(), false, false), // a1
-                Parameter(ctx->numType(), false, false), // a2
-                Parameter(ctx->numType(), false, false), // b1
-                Parameter(ctx->numType(), false, false)  // b2
-               }, nullptr) {
-}
-
-std::unique_ptr<BiquadFilterFunction> BiquadFilterFunction::create(MaximCodegen::MaximContext *ctx,
-                                                                   llvm::Module *module) {
-    return std::make_unique<BiquadFilterFunction>(ctx, module);
+                Parameter(ctx->numType(), false, false), // frequency
+                Parameter(ctx->numType(), false, false)  // Q
+               }, nullptr), biquadFilterFunction(biquadFilterFunction) {
 }
 
 std::unique_ptr<Value> BiquadFilterFunction::generate(MaximCodegen::ComposableModuleClassMethod *method,
                                                       const std::vector<std::unique_ptr<MaximCodegen::Value>> &params,
                                                       std::unique_ptr<MaximCodegen::VarArg> vararg) {
+    auto floatTy = llvm::Type::getFloatTy(ctx()->llvm());
+    auto tanFunc = method->moduleClass()->module()->getFunction("tanf");
+    if (!tanFunc) {
+        tanFunc = llvm::Function::Create(
+            llvm::FunctionType::get(floatTy, std::vector<llvm::Type *>{floatTy}, false),
+            llvm::Function::ExternalLinkage,
+            "tanf", method->moduleClass()->module()
+        );
+    }
+
     auto inputNum = dynamic_cast<Num *>(params[0].get());
-    auto a0Num = dynamic_cast<Num *>(params[1].get());
-    auto a1Num = dynamic_cast<Num *>(params[2].get());
-    auto a2Num = dynamic_cast<Num *>(params[3].get());
-    auto b1Num = dynamic_cast<Num *>(params[4].get());
-    auto b2Num = dynamic_cast<Num *>(params[5].get());
-    assert(inputNum && a0Num && a1Num && a2Num && b1Num && b2Num);
+    auto freqNum = dynamic_cast<Num *>(params[1].get());
+    auto qNum = dynamic_cast<Num *>(params[2].get());
+    assert(inputNum && freqNum && qNum);
 
     auto &b = method->builder();
-    auto z1Ptr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "z1.ptr");
-    auto z2Ptr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "z2.ptr");
+    auto cachedFreqPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "cachedfreq.ptr");
+    auto cachedQPtr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "cachedq.ptr");
+    auto a0Ptr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "a0.ptr");
+    auto a1Ptr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "a1.ptr");
+    auto a2Ptr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "a2.ptr");
+    auto b1Ptr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "b1.ptr");
+    auto b2Ptr = method->getEntryPointer(method->moduleClass()->addEntry(ctx()->floatVecTy()), "b2.ptr");
 
-    auto inputVec = inputNum->vec(b);
-    auto outVec = b.CreateFAdd(
-        b.CreateFMul(inputVec, a0Num->vec(b)),
-        b.CreateLoad(z1Ptr)
-    );
-    auto newZ1 = b.CreateFSub(
-        b.CreateFAdd(
-            b.CreateFMul(inputVec, a1Num->vec(b)),
-            b.CreateLoad(z2Ptr)
+    auto freqVec = freqNum->vec(b);
+    auto qVec = qNum->vec(b);
+
+    auto freqChanged = b.CreateFCmpONE(freqVec, b.CreateLoad(cachedFreqPtr), "freqchanged");
+    auto qChanged = b.CreateFCmpONE(qVec, b.CreateLoad(cachedQPtr), "qchanged");
+    auto needsRegenVec = b.CreateOr(freqChanged, qChanged, "needsregen");
+    auto needsRegen = b.CreateOr(b.CreateExtractElement(needsRegenVec, (uint64_t) 0), b.CreateExtractElement(needsRegenVec, 1));
+
+    auto regenBlock = llvm::BasicBlock::Create(ctx()->llvm(), "regen", method->get(method->moduleClass()->module()));
+    auto continueBlock = llvm::BasicBlock::Create(ctx()->llvm(), "continue", method->get(method->moduleClass()->module()));
+    b.CreateCondBr(needsRegen, regenBlock, continueBlock);
+    b.SetInsertPoint(regenBlock);
+
+    b.CreateStore(freqVec, cachedFreqPtr);
+    b.CreateStore(qVec, cachedQPtr);
+
+    // calculate K value = tan(PI * freq / sampleRate)
+    auto kParam = b.CreateFDiv(
+        b.CreateFMul(
+            ctx()->constFloatVec(M_PI),
+            freqVec
         ),
-        b.CreateFMul(
-            b1Num->vec(b),
-            outVec
-        )
+        ctx()->constFloatVec(ctx()->sampleRate)
     );
-    b.CreateStore(newZ1, z1Ptr);
+    auto leftK = b.CreateCall(tanFunc, { b.CreateExtractElement(kParam, (uint64_t) 0) }, "leftk");
+    auto rightK = b.CreateCall(tanFunc, { b.CreateExtractElement(kParam, (uint64_t) 1) }, "rightk");
+    llvm::Value *kValue = llvm::UndefValue::get(ctx()->floatVecTy());
+    kValue = b.CreateInsertElement(kValue, leftK, (uint64_t) 0, "kvalue");
+    kValue = b.CreateInsertElement(kValue, rightK, (uint64_t) 1, "kvalue");
+    auto kSquared = b.CreateFMul(kValue, kValue);
 
-    auto newZ2 = b.CreateFSub(
-        b.CreateFMul(
-            inputVec,
-            a2Num->vec(b)
-        ),
-        b.CreateFMul(
-            b2Num->vec(b),
-            outVec
-        )
-    );
-    b.CreateStore(newZ2, z2Ptr);
+    generateCoefficients(b, qVec, kValue, kSquared, a0Ptr, a1Ptr, a2Ptr, b1Ptr, b2Ptr);
+    b.CreateBr(continueBlock);
+    b.SetInsertPoint(continueBlock);
 
-    auto resultNum = Num::create(ctx(), inputNum->get(), b, method->allocaBuilder());
-    resultNum->setVec(b, outVec);
-    return std::move(resultNum);
+    std::vector<std::unique_ptr<Value>> biquadParams;
+    biquadParams.push_back(Num::create(ctx(), inputNum->get(), b, method->allocaBuilder()));
+
+    auto a0Num = Num::create(ctx(), method->allocaBuilder());
+    a0Num->setVec(b, b.CreateLoad(a0Ptr));
+    biquadParams.push_back(std::move(a0Num));
+
+    auto a1Num = Num::create(ctx(), method->allocaBuilder());
+    a1Num->setVec(b, b.CreateLoad(a1Ptr));
+    biquadParams.push_back(std::move(a1Num));
+
+    auto a2Num = Num::create(ctx(), method->allocaBuilder());
+    a2Num->setVec(b, b.CreateLoad(a2Ptr));
+    biquadParams.push_back(std::move(a2Num));
+
+    auto b1Num = Num::create(ctx(), method->allocaBuilder());
+    b1Num->setVec(b, b.CreateLoad(b1Ptr));
+    biquadParams.push_back(std::move(b1Num));
+
+    auto b2Num = Num::create(ctx(), method->allocaBuilder());
+    b2Num->setVec(b, b.CreateLoad(b2Ptr));
+    biquadParams.push_back(std::move(b2Num));
+
+    return biquadFilterFunction->call(method, std::move(biquadParams), SourcePos(-1, -1), SourcePos(-1, -1));
 }

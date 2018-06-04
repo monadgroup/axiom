@@ -1,4 +1,4 @@
-#include "LowBqFilterFunction.h"
+#include "HighBqFilterFunction.h"
 
 #include "../MaximContext.h"
 #include "../ComposableModuleClassMethod.h"
@@ -6,19 +6,19 @@
 
 using namespace MaximCodegen;
 
-LowBqFilterFunction::LowBqFilterFunction(MaximCodegen::MaximContext *ctx, llvm::Module *module,
-                                         MaximCodegen::Function *biquadFilterFunction)
-     : BiquadFilterFunction(ctx, module, biquadFilterFunction, "lowBqFilter") {
+HighBqFilterFunction::HighBqFilterFunction(MaximCodegen::MaximContext *ctx, llvm::Module *module,
+                                           MaximCodegen::Function *biquadFilterFunction)
+    : BiquadFilterFunction(ctx, module, biquadFilterFunction, "highBqFilter") {
 }
 
-std::unique_ptr<LowBqFilterFunction> LowBqFilterFunction::create(MaximCodegen::MaximContext *ctx,
-                                                                 llvm::Module *module, Function *biquadFilterFunction) {
-    return std::make_unique<LowBqFilterFunction>(ctx, module, biquadFilterFunction);
+std::unique_ptr<HighBqFilterFunction> HighBqFilterFunction::create(MaximCodegen::MaximContext *ctx, llvm::Module *module,
+                                                                  MaximCodegen::Function *biquadFilterFunction) {
+    return std::make_unique<HighBqFilterFunction>(ctx, module, biquadFilterFunction);
 }
 
-void LowBqFilterFunction::generateCoefficients(llvm::IRBuilder<> &b, llvm::Value *q, llvm::Value *k,
-                                               llvm::Value *kSquared, llvm::Value *a0Ptr, llvm::Value *a1Ptr,
-                                               llvm::Value *a2Ptr, llvm::Value *b1Ptr, llvm::Value *b2Ptr) {
+void HighBqFilterFunction::generateCoefficients(llvm::IRBuilder<> &b, llvm::Value *q, llvm::Value *k,
+                                                llvm::Value *kSquared, llvm::Value *a0Ptr, llvm::Value *a1Ptr,
+                                                llvm::Value *a2Ptr, llvm::Value *b1Ptr, llvm::Value *b2Ptr) {
     // norm = 1 / (1 + K / q + K * K)
     auto norm = b.CreateFDiv(
         ctx()->constFloatVec(1),
@@ -31,12 +31,12 @@ void LowBqFilterFunction::generateCoefficients(llvm::IRBuilder<> &b, llvm::Value
         )
     );
 
-    // a0 = K * K * norm
-    auto a0 = b.CreateFMul(kSquared, norm);
+    // a0 = norm
+    auto a0 = norm;
     b.CreateStore(a0, a0Ptr);
 
-    // a1 = 2 * a0
-    auto a1 = b.CreateFMul(ctx()->constFloatVec(2), a0);
+    // a1 = -2 * a0
+    auto a1 = b.CreateFMul(ctx()->constFloatVec(-2), a0);
     b.CreateStore(a1, a1Ptr);
 
     // a2 = a0
