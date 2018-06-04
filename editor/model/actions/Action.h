@@ -28,7 +28,8 @@ namespace AxiomModel {
             SET_NUM_VALUE,
             SET_SHOW_NAME,
             EXPOSE_CONTROL,
-            PASTE_BUFFER
+            PASTE_BUFFER,
+            CREATE_AUTOMATION_NODE
         };
 
         Action(ActionType actionType, ModelRoot *root);

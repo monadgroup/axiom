@@ -6,6 +6,7 @@
 #include "CustomNode.h"
 #include "GroupNode.h"
 #include "PortalNode.h"
+#include "AutomationNode.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
@@ -47,6 +48,8 @@ std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, 
             return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
         case NodeType::PORTAL_NODE:
             return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
+        case NodeType::AUTOMATION_NODE:
+            return AutomationNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
     }
 
     unreachable;

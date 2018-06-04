@@ -37,6 +37,12 @@ IONode* RootSurface::getAutomationNode(size_t index) const {
     return iter->second;
 }
 
+void RootSurface::nodeFiddled(MaximRuntime::IONode *node) {
+    auto index = _reverseAutomationNodes.find(node);
+    if (index == _reverseAutomationNodes.end()) return;
+    automationFiddled.trigger(index->second);
+}
+
 void RootSurface::removeNode(MaximRuntime::Node *node) {
     // if we can find the ptr in the map, we know it's an IONode - so no need to use dynamic_cast
     auto index = _reverseAutomationNodes.find(static_cast<MaximRuntime::IONode*>(node));

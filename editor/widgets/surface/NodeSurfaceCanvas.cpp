@@ -22,7 +22,7 @@
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/CreateCustomNodeAction.h"
 #include "editor/model/actions/CreateGroupNodeAction.h"
-#include "editor/model/actions/CreatePortalNodeAction.h"
+#include "editor/model/actions/CreateAutomationNodeAction.h"
 #include "editor/model/actions/CreateConnectionAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/PasteBufferAction.h"
@@ -193,7 +193,6 @@ void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, AxiomModel::Node
     );
 
     switch (type) {
-
         case Node::NodeType::CUSTOM_NODE:
             surface->root()->history().append(
                 CreateCustomNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
@@ -202,11 +201,11 @@ void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, AxiomModel::Node
             surface->root()->history().append(
                 CreateGroupNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
             break;
-        case Node::NodeType::PORTAL_NODE:
-            surface->root()->history().append(CreatePortalNodeAction::create(surface->uuid(), targetPos, name,
-                AxiomModel::ConnectionWire::WireType::NUM, AxiomModel::PortalControl::PortalType::AUTOMATION,
-                surface->root()));
+        case Node::NodeType::AUTOMATION_NODE:
+            surface->root()->history().append(
+                CreateAutomationNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
             break;
+        default: break;
     }
 }
 
@@ -327,7 +326,7 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
                 addItem(editor);
                 connect(editor, &FloatingValueEditor::valueSubmitted,
                         this, [this, scenePos](QString value) {
-                        newNode(scenePos, value, Node::NodeType::PORTAL_NODE);
+                        newNode(scenePos, value, Node::NodeType::AUTOMATION_NODE);
                     });
             });
 

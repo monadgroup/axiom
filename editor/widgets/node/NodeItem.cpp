@@ -10,6 +10,7 @@
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/GroupNode.h"
 #include "editor/model/objects/CustomNode.h"
+#include "editor/model/objects/AutomationNode.h"
 #include "editor/model/objects/ControlSurface.h"
 #include "editor/model/objects/NumControl.h"
 #include "editor/model/objects/MidiControl.h"
@@ -29,6 +30,7 @@
 #include "editor/widgets/controls/ExtractControlItem.h"
 #include "editor/widgets/controls/PortalControlItem.h"
 #include "editor/widgets/controls/ScopeControlItem.h"
+#include "compiler/runtime/IONode.h"
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
 #include "../FloatingValueEditor.h"
@@ -131,6 +133,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     switch (node->nodeType()) {
         case Node::NodeType::PORTAL_NODE:
         case Node::NodeType::CUSTOM_NODE:
+        case Node::NodeType::AUTOMATION_NODE:
             darkColor = CommonColors::customNodeNormal;
             lightColor = CommonColors::customNodeActive;
             outlineColor = CommonColors::customNodeBorder;
@@ -257,6 +260,14 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto saveModuleAction = menu.addAction(tr("&Save as Module..."));
     saveModuleAction->setEnabled(!copyableItems.empty());
     menu.addSeparator();
+
+    QAction *fiddleAction = nullptr;
+    auto automationNode = dynamic_cast<AutomationNode *>(node);
+    if (automationNode) {
+        fiddleAction = menu.addAction(tr("&Fiddle"));
+        menu.addSeparator();
+    }
+
     auto deleteAction = menu.addAction(tr("&Delete"));
     deleteAction->setEnabled(node->isDeletable());
     auto selectedAction = menu.exec(event->screenPos());
@@ -292,6 +303,10 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         }
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
+    } else if (selectedAction == fiddleAction && automationNode) {
+        if (automationNode->runtime()) {
+            (*automationNode->runtime())->fiddle();
+        }
     }
 }
 

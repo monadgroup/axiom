@@ -17,6 +17,8 @@ namespace MaximRuntime {
 
         void setName(const std::string &name);
 
+        void fiddle();
+
         IOControl *control() { return _control.get(); }
 
         std::vector<Control*> controls() const override;

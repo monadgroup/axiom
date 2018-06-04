@@ -20,7 +20,8 @@ namespace AxiomModel {
         enum class NodeType {
             CUSTOM_NODE,
             GROUP_NODE,
-            PORTAL_NODE
+            PORTAL_NODE,
+            AUTOMATION_NODE
         };
 
         AxiomCommon::Event<const QString &> nameChanged;

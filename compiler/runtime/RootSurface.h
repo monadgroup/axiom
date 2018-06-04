@@ -8,6 +8,7 @@ namespace MaximRuntime {
     class RootSurface : public Surface {
     public:
         AxiomCommon::Event<size_t> automationCountChanged;
+        AxiomCommon::Event<size_t> automationFiddled;
 
         explicit RootSurface(Runtime *runtime);
 
@@ -20,6 +21,8 @@ namespace MaximRuntime {
         IONode *getAutomationNode(size_t index) const;
 
         IONode *addAutomationNode();
+
+        void nodeFiddled(IONode *node);
 
         void removeNode(Node *node) override;
 

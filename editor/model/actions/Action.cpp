@@ -16,6 +16,7 @@
 #include "SetShowNameAction.h"
 #include "ExposeControlAction.h"
 #include "PasteBufferAction.h"
+#include "CreateAutomationNodeAction.h"
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -60,6 +61,8 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
             return "Expose Control";
         case ActionType::PASTE_BUFFER:
             return "Paste";
+        case ActionType::CREATE_AUTOMATION_NODE:
+            return "Create Automation Node";
     }
 
     unreachable;
@@ -105,6 +108,8 @@ std::unique_ptr<Action> Action::deserialize(QDataStream &stream, AxiomModel::Mod
             return ExposeControlAction::deserialize(stream, root);
         case ActionType::PASTE_BUFFER:
             return PasteBufferAction::deserialize(stream, root);
+        case ActionType::CREATE_AUTOMATION_NODE:
+            return CreateAutomationNodeAction::deserialize(stream, root);
         default:
         unreachable;
     }

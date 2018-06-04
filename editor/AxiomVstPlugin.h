@@ -67,6 +67,6 @@ private:
     AxiomVstEditor _editor;
     std::unique_ptr<QByteArray> saveBuffer;
 
-    void setNumParams(VstInt32 numParams);
+    void fiddleParam(VstInt32 param);
 
 };

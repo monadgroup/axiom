@@ -24,7 +24,7 @@ AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
     programsAreChunks();
     canProcessReplacing();
 
-    runtime.mainSurface()->automationCountChanged.connect(this, &AxiomVstPlugin::updateDisplay);
+    runtime.mainSurface()->automationFiddled.connect(this, &AxiomVstPlugin::fiddleParam);
 
     setEditor(&_editor);
 }
@@ -219,4 +219,10 @@ VstInt32 AxiomVstPlugin::getNumMidiInputChannels() {
 bool AxiomVstPlugin::canParameterBeAutomated(VstInt32 index) {
     auto node = runtime.mainSurface()->getAutomationNode(index);
     return node != nullptr;
+}
+
+void AxiomVstPlugin::fiddleParam(VstInt32 param) {
+    beginEdit(param);
+    setParameterAutomated(param, getParameter(param));
+    endEdit(param);
 }

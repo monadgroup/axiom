@@ -1,6 +1,7 @@
 set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/Action.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CompositeAction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CreateAutomationNodeAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CreateConnectionAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CreateCustomNodeAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CreateGroupNodeAction.cpp"

@@ -26,6 +26,12 @@ void IONode::setName(const std::string &name) {
     _name = name;
 }
 
+void IONode::fiddle() {
+    auto rootSurface = dynamic_cast<RootSurface *>(surface());
+    assert(rootSurface);
+    rootSurface->nodeFiddled(this);
+}
+
 std::vector<Control*> IONode::controls() const {
     return std::vector<Control*> {_control.get()};
 }
