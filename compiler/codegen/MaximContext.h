@@ -97,6 +97,8 @@ namespace MaximCodegen {
 
         llvm::PointerType *voidPointerType();
 
+        llvm::IntegerType *dataLayoutType();
+
         void assertType(const Value *val, const Type *type) const;
 
         std::unique_ptr<Num> assertNum(std::unique_ptr<Value> val);

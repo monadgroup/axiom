@@ -39,7 +39,7 @@ namespace MaximRuntime {
 
         RootSurface *mainSurface() { return _mainSurface.get(); }
 
-        void compile();
+        GeneratableModuleClass *compile();
 
         void generate();
 
@@ -55,12 +55,19 @@ namespace MaximRuntime {
 
         void setBpm(float newVal);
 
+        std::unique_ptr<llvm::Module> exportSurface(const std::string &globalName);
+
+        void generateExportExternal(llvm::Module *module);
+
     private:
         std::mutex _mutex;
         Jit _jit;
         MaximCodegen::MaximContext _context;
         ValueOperator _op;
+        llvm::Module _libModule;
         std::unique_ptr<RootSurface> _mainSurface;
+        llvm::StructType *_exportDefinitionTy;
+        llvm::StructType *_exportInstrumentTy;
 
         QueuedEvent _queuedEvents[eventQueueSize];
 
@@ -72,6 +79,9 @@ namespace MaximRuntime {
 
         llvm::Function *createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,
                                           MaximCodegen::ModuleClassMethod *method);
+
+        llvm::Function *createExportFunc(llvm::Module *module, std::string name,
+            MaximCodegen::ModuleClassMethod *method);
     };
 
 }

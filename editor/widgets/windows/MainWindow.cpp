@@ -74,6 +74,8 @@ MainWindow::MainWindow(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomMode
             this, &MainWindow::openProject);
     connect(GlobalActions::fileSave, &QAction::triggered,
             this, &MainWindow::saveProject);
+    connect(GlobalActions::fileExport, &QAction::triggered,
+            this, &MainWindow::exportProject);
     connect(GlobalActions::fileQuit, &QAction::triggered,
             QApplication::quit);
     connect(GlobalActions::fileImportLibrary, &QAction::triggered,
@@ -199,6 +201,11 @@ void MainWindow::openProject() {
     } else {
         setProject(std::move(newProject));
     }
+}
+
+void MainWindow::exportProject() {
+    auto module = runtime->exportSurface("surface");
+    module->print(llvm::errs(), nullptr);
 }
 
 void MainWindow::importLibrary() {

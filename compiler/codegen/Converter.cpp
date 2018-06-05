@@ -16,7 +16,7 @@ Converter::Converter(MaximContext *ctx, llvm::Module *module, MaximCommon::FormT
     _wrapFunction = llvm::Function::Create(
         llvm::FunctionType::get(llvm::Type::getVoidTy(ctx->llvm()), {numPtr, numPtr}, false),
         llvm::Function::LinkageTypes::ExternalLinkage,
-        "converter." + MaximCommon::formType2String(toType) + ".wrap", module
+        "maximconverter." + MaximCommon::formType2String(toType) + ".wrap", module
     );
     _wrapFunctionName = _wrapFunction->getName();
 }

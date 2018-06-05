@@ -20,6 +20,13 @@ void Surface::scheduleGraphUpdate() {
     _needsGraphUpdate = true;
 }
 
+void Surface::scheduleChildUpdate() {
+    _needsGraphUpdate = true;
+    for (const auto &node : _nodes) {
+        node->scheduleChildUpdate();
+    }
+}
+
 bool Surface::needsGraphUpdate() const {
     if (_needsGraphUpdate || !_class) {
         return true;

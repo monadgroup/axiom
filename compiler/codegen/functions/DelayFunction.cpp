@@ -34,17 +34,23 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
     auto maxIntrinsic = llvm::Intrinsic::getDeclaration(method->moduleClass()->module(), llvm::Intrinsic::ID::maxnum,
                                                         {ctx()->numType()->vecType()});
     auto clzIntrinsic = llvm::Intrinsic::getDeclaration(module(), llvm::Intrinsic::ID::ctlz, {sizeType});
-    auto reallocFunction = llvm::Function::Create(
-        llvm::FunctionType::get(voidPtrType, {
-            voidPtrType,
-            dataLayoutType
-        }, false),
-        llvm::Function::ExternalLinkage, "realloc", module()
-    );
-    auto freeFunction = llvm::Function::Create(
-        llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()->llvm()), {voidPtrType}, false),
-        llvm::Function::ExternalLinkage, "free", module()
-    );
+    auto reallocFunction = method->moduleClass()->module()->getFunction("realloc");
+    if (!reallocFunction) {
+        reallocFunction = llvm::Function::Create(
+            llvm::FunctionType::get(voidPtrType, {
+                voidPtrType,
+                dataLayoutType
+            }, false),
+            llvm::Function::ExternalLinkage, "realloc", method->moduleClass()->module()
+        );
+    }
+    auto freeFunction = method->moduleClass()->module()->getFunction("free");
+    if (!freeFunction) {
+        freeFunction = llvm::Function::Create(
+            llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()->llvm()), {voidPtrType}, false),
+            llvm::Function::ExternalLinkage, "free", method->moduleClass()->module()
+        );
+    }
 
     // we need to store:
     //  - current lengths of buffers (in samples)

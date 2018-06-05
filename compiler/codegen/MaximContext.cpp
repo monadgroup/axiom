@@ -91,6 +91,10 @@ llvm::PointerType *MaximContext::voidPointerType() {
     return llvm::PointerType::get(llvm::Type::getInt1Ty(_llvm), 0);
 }
 
+llvm::IntegerType* MaximContext::dataLayoutType() {
+    return llvm::Type::getIntNTy(_llvm, _dataLayout.getPointerSizeInBits(0));
+}
+
 void MaximContext::assertType(const Value *val, const Type *type) const {
     if (val->type() != type) {
         throw typeAssertFailed(type, val->type(), val->startPos, val->endPos);
@@ -199,7 +203,7 @@ llvm::Constant *MaximContext::sizeOf(llvm::Type *type) {
     auto ptrType = llvm::PointerType::get(type, 0);
     auto nextPtr = llvm::ConstantExpr::getGetElementPtr(type, llvm::ConstantPointerNull::get(ptrType),
                                                         constInt(64, 1, false));
-    return llvm::ConstantExpr::getPtrToInt(nextPtr, llvm::Type::getInt64Ty(_llvm));
+    return llvm::ConstantExpr::getPtrToInt(nextPtr, dataLayoutType());
 }
 
 void MaximContext::copyPtr(Builder &builder, llvm::Value *src, llvm::Value *dest) {

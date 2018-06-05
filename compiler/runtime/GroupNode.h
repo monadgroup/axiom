@@ -25,6 +25,8 @@ namespace MaximRuntime {
 
         SoftControl *forwardControl(Control *control);
 
+        void scheduleChildUpdate() override;
+
         void pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
                          MaximCodegen::ModuleClassMethod *destroyMethod) override;
 

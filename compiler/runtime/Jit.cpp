@@ -11,6 +11,7 @@
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
 #include <llvm/Support/DynamicLibrary.h>
+#include <llvm/Linker/Linker.h>
 #include <iostream>
 
 using namespace MaximRuntime;
@@ -65,21 +66,26 @@ llvm::JITSymbol getSymbol(const std::string &name) {
 }
 
 Jit::Jit()
-    : targetMachine(llvm::EngineBuilder().selectTarget()),
-      _dataLayout(targetMachine->createDataLayout()),
+    : _targetMachine(llvm::EngineBuilder().selectTarget()),
+      _dataLayout(_targetMachine->createDataLayout()),
       objectLayer([]() { return std::make_shared<llvm::SectionMemoryManager>(); }),
-      compileLayer(objectLayer, llvm::orc::SimpleCompiler(*targetMachine)),
+      compileLayer(objectLayer, llvm::orc::SimpleCompiler(*_targetMachine)),
       optimizeLayer(compileLayer, [this](std::shared_ptr<llvm::Module> m) {
           return optimizeModule(std::move(m));
       }) {
-    targetMachine->Options.UnsafeFPMath = 1;
-    targetMachine->Options.NoTrappingFPMath = 1;
-    targetMachine->Options.NoSignedZerosFPMath = 1;
-    targetMachine->Options.FPDenormalMode = llvm::FPDenormal::PositiveZero;
+    _targetMachine->Options.UnsafeFPMath = 1;
+    _targetMachine->Options.NoTrappingFPMath = 1;
+    _targetMachine->Options.NoSignedZerosFPMath = 1;
+    _targetMachine->Options.FPDenormalMode = llvm::FPDenormal::PositiveZero;
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }
 
 Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
+    if (linker) {
+        auto success = !linker->linkInModule(llvm::CloneModule(m.get()));
+        assert(success);
+    }
+
     auto resolver = llvm::orc::createLambdaResolver(
         [&](const std::string &name) {
             if (auto sym = optimizeLayer.findSymbol(name, false)) return sym;
@@ -146,7 +152,7 @@ std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> 
     llvm::legacy::FunctionPassManager fpm(m.get());
 
     fpm.add(llvm::createVerifierPass());
-    fpm.add(llvm::createTargetTransformInfoWrapperPass(targetMachine->getTargetIRAnalysis()));
+    fpm.add(llvm::createTargetTransformInfoWrapperPass(_targetMachine->getTargetIRAnalysis()));
 
     llvm::PassManagerBuilder builder;
     builder.OptLevel = 3;
@@ -154,7 +160,7 @@ std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> 
     builder.Inliner = llvm::createFunctionInliningPass(builder.OptLevel, builder.SizeLevel, false);
     builder.LoopVectorize = true;
     builder.SLPVectorize = true;
-    targetMachine->adjustPassManager(builder);
+    _targetMachine->adjustPassManager(builder);
     builder.populateFunctionPassManager(fpm);
     builder.populateModulePassManager(mpm);
 

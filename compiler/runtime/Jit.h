@@ -10,6 +10,8 @@
 
 namespace llvm {
     class Module;
+
+    class Linker;
 }
 
 namespace MaximRuntime {
@@ -24,7 +26,11 @@ namespace MaximRuntime {
     public:
         using ModuleKey = CompileLayer::ModuleHandleT;
 
+        llvm::Linker *linker;
+
         Jit();
+
+        llvm::TargetMachine *targetMachine() const { return _targetMachine; }
 
         llvm::DataLayout const &dataLayout() const { return _dataLayout; }
 
@@ -49,7 +55,7 @@ namespace MaximRuntime {
         std::shared_ptr<llvm::Module> optimizeModule(std::shared_ptr<llvm::Module> m);
 
     private:
-        llvm::TargetMachine *targetMachine;
+        llvm::TargetMachine *_targetMachine;
         const llvm::DataLayout _dataLayout;
         ObjectLayer objectLayer;
         CompileLayer compileLayer;

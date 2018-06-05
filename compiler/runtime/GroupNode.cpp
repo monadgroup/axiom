@@ -44,6 +44,11 @@ SoftControl *GroupNode::forwardControl(MaximRuntime::Control *control) {
     return newControlPtr;
 }
 
+void GroupNode::scheduleChildUpdate() {
+    Node::scheduleChildUpdate();
+    _subsurface.scheduleChildUpdate();
+}
+
 void GroupNode::pullMethods(MaximCodegen::ModuleClassMethod *getterMethod,
                             MaximCodegen::ModuleClassMethod *destroyMethod) {
     RuntimeUnit::pullMethods(getterMethod, destroyMethod);

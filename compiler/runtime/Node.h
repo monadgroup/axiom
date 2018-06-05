@@ -29,6 +29,8 @@ namespace MaximRuntime {
 
         void scheduleCompile();
 
+        virtual void scheduleChildUpdate();
+
         bool needsCompile() const { return _needsCompile; }
 
         bool extracted() const { return _extracted; }

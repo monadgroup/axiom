@@ -46,6 +46,8 @@ namespace AxiomGui {
 
         void saveProject();
 
+        void exportProject();
+
         void importLibrary();
 
         void exportLibrary();
