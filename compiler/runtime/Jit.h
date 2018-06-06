@@ -26,7 +26,7 @@ namespace MaximRuntime {
     public:
         using ModuleKey = CompileLayer::ModuleHandleT;
 
-        llvm::Linker *linker;
+        llvm::Linker *linker = nullptr;
 
         Jit();
 
