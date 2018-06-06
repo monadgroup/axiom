@@ -27,11 +27,7 @@ void Exporter::exportObject(llvm::raw_fd_ostream &dest, unsigned optLevel, unsig
     Jit::optimizeModule(&module, target, optLevel, sizeLevel);
 
     llvm::legacy::PassManager pass;
-    auto fileType = llvm::TargetMachine::CGFT_ObjectFile;
-
-    target->addPass
-
-    assert(!target->addPassesToEmitFile(pass, dest, fileType));
+    assert(!target->addPassesToEmitFile(pass, dest, llvm::TargetMachine::CGFT_ObjectFile));
     pass.run(module);
     dest.flush();
 }
