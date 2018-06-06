@@ -129,7 +129,7 @@ namespace MaximCodegen {
 
         llvm::Constant *constFloatVec(float left, float right);
 
-        llvm::Constant *constInt(unsigned int numBits, uint64_t val, bool isSigned);
+        llvm::ConstantInt *constInt(unsigned int numBits, uint64_t val, bool isSigned);
 
         llvm::Constant *sizeOf(llvm::Type *type);
 

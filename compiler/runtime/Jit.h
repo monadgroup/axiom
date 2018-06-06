@@ -54,6 +54,8 @@ namespace MaximRuntime {
 
         std::shared_ptr<llvm::Module> optimizeModule(std::shared_ptr<llvm::Module> m);
 
+        static void optimizeModule(llvm::Module *m, llvm::TargetMachine *targetMachine, unsigned int optLevel, unsigned int sizeLevel);
+
     private:
         llvm::TargetMachine *_targetMachine;
         const llvm::DataLayout _dataLayout;

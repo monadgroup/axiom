@@ -17,6 +17,7 @@
 #include "editor/model/PoolOperators.h"
 #include "editor/model/LibraryEntry.h"
 #include "compiler/runtime/Runtime.h"
+#include "compiler/runtime/Exporter.h"
 #include "../GlobalActions.h"
 
 using namespace AxiomGui;
@@ -204,8 +205,11 @@ void MainWindow::openProject() {
 }
 
 void MainWindow::exportProject() {
-    auto module = runtime->exportSurface("surface");
-    module->print(llvm::errs(), nullptr);
+    MaximRuntime::Exporter exporter(runtime->ctx(), runtime);
+    exporter.addRuntime(runtime, "export");
+    std::error_code err;
+    llvm::raw_fd_ostream dest("output.o", err, llvm::sys::fs::F_None);
+    exporter.exportObject(dest, 2, 2);
 }
 
 void MainWindow::importLibrary() {

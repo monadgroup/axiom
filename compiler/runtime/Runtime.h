@@ -55,9 +55,9 @@ namespace MaximRuntime {
 
         void setBpm(float newVal);
 
-        std::unique_ptr<llvm::Module> exportSurface(const std::string &globalName);
+        void exportSurface(const std::string &globalName, llvm::Module *module);
 
-        void generateExportExternal(llvm::Module *module);
+        void generateExportCommon(llvm::Module *module);
 
     private:
         std::mutex _mutex;

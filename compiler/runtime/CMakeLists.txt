@@ -15,6 +15,7 @@ set(SOURCE_FILES
         Control.cpp
         ControlGroup.cpp
         CustomNode.cpp
+        Exporter.cpp
         GeneratableModuleClass.cpp
         GroupNode.cpp
         Jit.cpp

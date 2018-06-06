@@ -147,20 +147,21 @@ llvm::JITTargetAddress Jit::getSymbolAddress(llvm::GlobalValue *value) {
     return llvm::cantFail(std::move(addr));
 }
 
-std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> m) {
+void Jit::optimizeModule(llvm::Module *m, llvm::TargetMachine *targetMachine, unsigned int optLevel,
+                         unsigned int sizeLevel) {
     llvm::legacy::PassManager mpm;
-    llvm::legacy::FunctionPassManager fpm(m.get());
+    llvm::legacy::FunctionPassManager fpm(m);
 
     fpm.add(llvm::createVerifierPass());
-    fpm.add(llvm::createTargetTransformInfoWrapperPass(_targetMachine->getTargetIRAnalysis()));
+    fpm.add(llvm::createTargetTransformInfoWrapperPass(targetMachine->getTargetIRAnalysis()));
 
     llvm::PassManagerBuilder builder;
-    builder.OptLevel = 3;
-    builder.SizeLevel = 3;
+    builder.OptLevel = optLevel;
+    builder.SizeLevel = sizeLevel;
     builder.Inliner = llvm::createFunctionInliningPass(builder.OptLevel, builder.SizeLevel, false);
     builder.LoopVectorize = true;
     builder.SLPVectorize = true;
-    _targetMachine->adjustPassManager(builder);
+    targetMachine->adjustPassManager(builder);
     builder.populateFunctionPassManager(fpm);
     builder.populateModulePassManager(mpm);
 
@@ -169,6 +170,9 @@ std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> 
         fpm.run(f);
     }
     mpm.run(*m);
+}
 
+std::shared_ptr<llvm::Module> Jit::optimizeModule(std::shared_ptr<llvm::Module> m) {
+    optimizeModule(m.get(), _targetMachine, 3, 0);
     return m;
 }

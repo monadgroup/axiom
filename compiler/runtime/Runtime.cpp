@@ -3,12 +3,6 @@
 #include <iostream>
 #include <llvm/Linker/Linker.h>
 #include <llvm/Transforms/Utils/Cloning.h>
-#include <llvm/Transforms/Scalar.h>
-#include <llvm/Transforms/Scalar/GVN.h>
-#include <llvm/Transforms/IPO.h>
-#include <llvm/Transforms/IPO/PassManagerBuilder.h>
-#include <llvm/Analysis/TargetTransformInfo.h>
-#include <llvm/IR/Verifier.h>
 
 #include "../codegen/Operator.h"
 #include "../codegen/Converter.h"
@@ -190,32 +184,28 @@ void Runtime::setBpm(float newVal) {
     _bpmVector->b = newVal;
 }
 
-std::unique_ptr<llvm::Module> Runtime::exportSurface(const std::string &globalName) {
+void Runtime::exportSurface(const std::string &globalName, llvm::Module *module) {
     std::cout << "Starting export" << std::endl;
 
-    auto result = std::make_unique<llvm::Module>("linked", _context.llvm());
-    result->setDataLayout(_jit.dataLayout());
-    llvm::Linker linker(*result);
-    linker.linkInModule(llvm::CloneModule(&_libModule));
-
+    llvm::Linker linker(*module);
     _jit.linker = &linker;
     _mainSurface->scheduleChildUpdate();
     auto mainClass = compile();
     _jit.linker = nullptr;
 
     // ensure all globals in the module are internal, since we only need to expose a single global we'll define soon
-    for (auto &global : result->global_values()) {
+    for (auto &global : module->global_values()) {
         if (global.getName().startswith("maxim")) {
-            global.setLinkage(llvm::GlobalValue::InternalLinkage);
+            global.setLinkage(llvm::GlobalValue::PrivateLinkage);
         }
     }
 
-    auto runConstructor = createExportFunc(result.get(), "instrument.constructor", mainClass->constructor());
-    auto runGenerate = createExportFunc(result.get(), "instrument.generate", mainClass->generate());
-    auto runDestructor = createExportFunc(result.get(), "instrument.destructor", mainClass->destructor());
+    auto runConstructor = createExportFunc(module, globalName + ".constructor", mainClass->constructor());
+    auto runGenerate = createExportFunc(module, globalName + ".generate", mainClass->generate());
+    auto runDestructor = createExportFunc(module, globalName + ".destructor", mainClass->destructor());
 
-    new llvm::GlobalVariable(
-        *result, _exportDefinitionTy, false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+    auto exportGlobal = new llvm::GlobalVariable(
+        *module, _exportDefinitionTy, false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
         llvm::ConstantStruct::get(_exportDefinitionTy, {
             ctx()->sizeOf(mainClass->storageType()),
             runConstructor,
@@ -223,40 +213,13 @@ std::unique_ptr<llvm::Module> Runtime::exportSurface(const std::string &globalNa
             runDestructor
         }), globalName
     );
-
-    generateExportExternal(result.get());
-
-    result->print(llvm::errs(), nullptr);
-
-    // optimize the entire thing
-    std::cout << "Running optimizer" << std::endl;
-    llvm::legacy::PassManager mpm;
-    llvm::legacy::FunctionPassManager fpm(result.get());
-
-    fpm.add(llvm::createVerifierPass());
-    fpm.add(llvm::createTargetTransformInfoWrapperPass(_jit.targetMachine()->getTargetIRAnalysis()));
-
-    llvm::PassManagerBuilder builder;
-    builder.OptLevel = 2;
-    builder.SizeLevel = 3;
-    builder.Inliner = llvm::createFunctionInliningPass(builder.OptLevel, builder.SizeLevel, false);
-    builder.LoopVectorize = true;
-    builder.SLPVectorize = true;
-    _jit.targetMachine()->adjustPassManager(builder);
-    builder.populateFunctionPassManager(fpm);
-    builder.populateModulePassManager(mpm);
-
-    fpm.doInitialization();
-    for (auto &f : *result) {
-        fpm.run(f);
-    }
-    mpm.run(*result);
-
-    std::cout << "Done!" << std::endl;
-    return std::move(result);
+    exportGlobal->setConstant(true);
 }
 
-void Runtime::generateExportExternal(llvm::Module *module) {
+void Runtime::generateExportCommon(llvm::Module *module) {
+    llvm::Linker linker(*module);
+    linker.linkInModule(llvm::CloneModule(&_libModule));
+
     auto dataLayoutType = llvm::Type::getIntNTy(ctx()->llvm(), ctx()->dataLayout().getPointerSizeInBits(0));
     auto allocFunction = module->getFunction("malloc");
     if (!allocFunction) {
@@ -269,12 +232,12 @@ void Runtime::generateExportExternal(llvm::Module *module) {
     auto freeFunction = module->getFunction("free");
     if (!freeFunction) {
         freeFunction = llvm::Function::Create(
-            llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()->llvm()), {ctx()->voidPointerType()}, false),
+            llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()->llvm()), {llvm::Type::getInt8PtrTy(ctx()->llvm())}, false),
             llvm::Function::ExternalLinkage, "free", module
         );
     }
 
-    auto memSetFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::memset, ctx()->dataLayoutType());
+    auto memSetFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::memset, {llvm::IntegerType::getInt8PtrTy(ctx()->llvm()), ctx()->dataLayoutType()});
 
     {
         auto createInstrumentFunc = llvm::Function::Create(
@@ -291,17 +254,18 @@ void Runtime::generateExportExternal(llvm::Module *module) {
         auto resultSize = b.CreateAdd(allocSize, instrumentSize);
 
         auto resultPtr = b.CreatePointerCast(b.CreateCall(allocFunction, {resultSize}), llvm::PointerType::get(_exportInstrumentTy, 0));
-        auto bytePtrTy = llvm::IntegerType::getInt8PtrTy(ctx()->llvm());
-        auto dataPtr = b.CreateAdd(b.CreatePointerCast(resultPtr, bytePtrTy), b.CreateBitCast(instrumentSize, bytePtrTy));
 
-        b.CreateStore(dataPtr, b.CreateStructGEP(_exportInstrumentTy, resultPtr, 0));
+        auto dataPtr = b.CreateGEP(b.CreatePointerCast(resultPtr, llvm::IntegerType::getInt8PtrTy(ctx()->llvm())), instrumentSize);
+
+        b.CreateStore(b.CreatePointerCast(dataPtr, ctx()->voidPointerType()), b.CreateStructGEP(_exportInstrumentTy, resultPtr, 0));
         b.CreateStore(createInstrumentFunc->arg_begin(), b.CreateStructGEP(_exportInstrumentTy, resultPtr, 1));
 
         // fill the allocated buffer with zeros
-        b.CreateCall(memSetFunc, {dataPtr, ctx()->constInt(8, 0, false), allocSize, ctx()->constInt(1, 0, false)});
+        b.CreateCall(memSetFunc, {dataPtr, ctx()->constInt(8, 0, false), allocSize, ctx()->constInt(32, 0, false), ctx()->constInt(1, 0, false)});
 
         // run the constructor function to initialize everything
-        b.CreateCall(b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 1)), {dataPtr});
+        auto constructorFunc = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 1));
+        b.CreateCall(constructorFunc, {b.CreatePointerCast(dataPtr, ctx()->voidPointerType())});
         b.CreateRet(resultPtr);
     }
 
@@ -313,7 +277,7 @@ void Runtime::generateExportExternal(llvm::Module *module) {
         auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", generateInstrumentFunc);
         MaximCodegen::Builder b(block);
 
-        auto dataPtr = b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 0);
+        auto dataPtr = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 0));
         auto definition = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 1));
         auto generateFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 2);
         b.CreateCall(b.CreateLoad(generateFunc), {dataPtr});
@@ -328,7 +292,7 @@ void Runtime::generateExportExternal(llvm::Module *module) {
         auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", destroyInstrumentFunc);
         MaximCodegen::Builder b(block);
 
-        b.CreateCall(freeFunction, {destroyInstrumentFunc->arg_begin()});
+        b.CreateCall(freeFunction, {b.CreatePointerCast(destroyInstrumentFunc->arg_begin(), llvm::Type::getInt8PtrTy(ctx()->llvm()))});
         b.CreateRetVoid();
     }
 }
@@ -350,7 +314,7 @@ llvm::Function* Runtime::createExportFunc(llvm::Module *module, std::string name
                                           MaximCodegen::ModuleClassMethod *method) {
     auto func = llvm::Function::Create(
         llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {_context.voidPointerType()}, false),
-        llvm::Function::LinkageTypes::InternalLinkage, name, module
+        llvm::Function::LinkageTypes::PrivateLinkage, name, module
     );
     auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", func);
     MaximCodegen::Builder b(block);

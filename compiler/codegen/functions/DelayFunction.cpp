@@ -84,7 +84,7 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
         ctx()->numType()->activeType(),                                    // input active?
         llvm::Type::getFloatTy(ctx()->llvm()),                             // input value
     }, false);
-    auto channelUpdateFunc = llvm::Function::Create(channelUpdateType, llvm::Function::InternalLinkage,
+    auto channelUpdateFunc = llvm::Function::Create(channelUpdateType, llvm::Function::PrivateLinkage,
                                                     "maxim.util.channelUpdate", module());
 
     {

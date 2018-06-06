@@ -195,7 +195,7 @@ llvm::Constant *MaximContext::constFloatVec(float left, float right) {
     return llvm::ConstantVector::get({constFloat(left), constFloat(right)});
 }
 
-llvm::Constant *MaximContext::constInt(unsigned int numBits, uint64_t val, bool isSigned) {
+llvm::ConstantInt *MaximContext::constInt(unsigned int numBits, uint64_t val, bool isSigned) {
     return llvm::ConstantInt::get(llvm::Type::getIntNTy(_llvm, numBits), val, isSigned);
 }
 

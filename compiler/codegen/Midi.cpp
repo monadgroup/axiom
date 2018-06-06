@@ -137,7 +137,7 @@ llvm::Function *Midi::pushEventFunc(llvm::Module *module, MaximContext *ctx) {
             llvm::PointerType::get(ctx->midiType()->get(), 0),
             llvm::PointerType::get(ctx->midiType()->eventType(), 0)
         }, false),
-        llvm::Function::LinkageTypes::InternalLinkage,
+        llvm::Function::LinkageTypes::PrivateLinkage,
         funcName, module
     );
 }
