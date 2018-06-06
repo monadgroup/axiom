@@ -68,7 +68,12 @@ add_subdirectory(../compiler compiler)
 add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_editor ${LINK_LIBS} ${AXIOM_LINK_FLAGS})
 
-add_executable(axiom_standalone ${STANDALONE_SOURCE_FILES} ${RES_FILES})
+set(AXIOM_STANDALONE_PROPERTIES )
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(AXIOM_STANDALONE_PROPERTIES ${AXIOM_STANDALONE_PROPERTIES} WIN32)
+endif ()
+
+add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} ${STANDALONE_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_standalone ${LINK_LIBS} ${AXIOM_LINK_FLAGS} ${PORTAUDIO_LIBRARIES})
 
 set_target_properties(axiom_editor PROPERTIES
