@@ -37,6 +37,11 @@ else ()
     message(STATUS "Found Portaudio in ${PORTAUDIO_LIBRARIES}")
     add_definitions(-DPORTAUDIO)
     set(AUDIO_SOURCES "StandaloneAudioPA.cpp")
+
+    # statically linking PortAudio on Windows needs setupapi.lib
+    if (WIN32)
+        set(PORTAUDIO_LIBRARIES ${PORTAUDIO_LIBRARIES} setupapi)
+    endif ()
 endif ()
 
 if (NOT DEFINED VST2_SDK_ROOT)
@@ -66,7 +71,7 @@ add_subdirectory(widgets)
 add_subdirectory(../compiler compiler)
 
 add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
-target_link_libraries(axiom_editor ${LINK_LIBS} ${AXIOM_LINK_FLAGS})
+target_link_libraries(axiom_editor ${AXIOM_LINK_FLAGS} ${LINK_LIBS})
 
 set(AXIOM_STANDALONE_PROPERTIES )
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -74,7 +79,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 
 add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} ${STANDALONE_SOURCE_FILES} ${RES_FILES})
-target_link_libraries(axiom_standalone ${LINK_LIBS} ${AXIOM_LINK_FLAGS} ${PORTAUDIO_LIBRARIES})
+target_link_libraries(axiom_standalone ${AXIOM_LINK_FLAGS} ${LINK_LIBS} ${PORTAUDIO_LIBRARIES})
 
 set_target_properties(axiom_editor PROPERTIES
         BUNDLE true
