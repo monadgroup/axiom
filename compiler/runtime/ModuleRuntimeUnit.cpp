@@ -6,16 +6,22 @@ using namespace MaximRuntime;
 
 ModuleRuntimeUnit::ModuleRuntimeUnit(Runtime *runtime, const std::string &name)
     : RuntimeUnit(runtime) {
-    _module = std::make_unique<llvm::Module>(name, runtime->ctx()->llvm());
-    _module->setDataLayout(runtime->ctx()->dataLayout());
+    _module = createModule(name, runtime);
 }
 
 ModuleRuntimeUnit::~ModuleRuntimeUnit() {
     if (_isDeployed) runtime()->jit().markForRemove(_deployKey);
 }
 
+std::unique_ptr<llvm::Module> ModuleRuntimeUnit::createModule(const std::string &name, MaximRuntime::Runtime *runtime) {
+    auto module = std::make_unique<llvm::Module>(name, runtime->ctx()->llvm());
+    module->setDataLayout(runtime->ctx()->dataLayout());
+    module->setTargetTriple(runtime->jit().targetMachine()->getTargetTriple().str());
+    return std::move(module);
+}
+
 std::unique_ptr<llvm::Module> ModuleRuntimeUnit::reset() {
-    return setModule(std::make_unique<llvm::Module>(_module->getName(), runtime()->ctx()->llvm()));
+    return setModule(createModule(_module->getName(), runtime()));
 }
 
 std::unique_ptr<llvm::Module> ModuleRuntimeUnit::setModule(std::unique_ptr<llvm::Module> module) {

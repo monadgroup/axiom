@@ -18,6 +18,7 @@ static const std::string globalCtxName = "maxim.globalCtx";
 
 Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context), _libModule("lib", _context.llvm()) {
     _libModule.setDataLayout(_jit.dataLayout());
+    _libModule.setTargetTriple(_jit.targetMachine()->getTargetTriple().str());
     _context.setLibModule(&_libModule);
     _jit.addModule(_libModule);
     _op.buildConverters(_jit);
@@ -45,7 +46,7 @@ GeneratableModuleClass *Runtime::compile() {
     _mainSurface->saveValue();
 
     auto mainClass = _mainSurface->compile();
-    auto module = std::make_unique<llvm::Module>("controller", _context.llvm());
+    auto module = ModuleRuntimeUnit::createModule("controller", this);
 
     // create global variable for all storage
     auto ctxGlobal = new llvm::GlobalVariable(

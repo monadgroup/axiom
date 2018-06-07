@@ -15,6 +15,8 @@ namespace MaximRuntime {
 
         llvm::Module *module() override { return _module.get(); }
 
+        static std::unique_ptr<llvm::Module> createModule(const std::string &name, Runtime *runtime);
+
     protected:
 
         std::unique_ptr<llvm::Module> reset();

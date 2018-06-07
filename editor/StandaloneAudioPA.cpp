@@ -3,6 +3,7 @@
 #include <portaudio.h>
 #include <cassert>
 #include <mutex>
+#include <iostream>
 
 #include "compiler/runtime/Runtime.h"
 
@@ -27,33 +28,28 @@ static int paCallback(const void *, void *outputBuffer, unsigned long framesPerB
     }
 }
 
+static void checkError(PaError error) {
+    if (error != paNoError) {
+        std::cerr << "PortAudio error: " << Pa_GetErrorText(error) << std::endl;
+        abort();
+    }
+}
+
 void AxiomStandalone::startupAudio(MaximRuntime::Runtime *runtime) {
-    PaError err;
-    Pa_Initialize();
-    assert(err == paNoError);
-
-    err = Pa_OpenDefaultStream(&stream,
-                               0, // no inputs
-                               2, // stereo output
-                               paFloat32,
-                               44100,
-                               paFramesPerBufferUnspecified,
-                               paCallback,
-                               runtime);
-    assert(err == paNoError);
-
-    err = Pa_StartStream(stream);
-    assert(err == paNoError);
+    checkError(Pa_Initialize());
+    checkError(Pa_OpenDefaultStream(&stream,
+                                    0, // no inputs
+                                    2, // stereo output
+                                    paFloat32,
+                                    44100,
+                                    paFramesPerBufferUnspecified,
+                                    paCallback,
+                                    runtime));
+    checkError(Pa_StartStream(stream));
 }
 
 void AxiomStandalone::shutdownAudio() {
-    PaError err;
-    err = Pa_StopStream(stream);
-    assert(err == paNoError);
-
-    err = Pa_CloseStream(stream);
-    assert(err == paNoError);
-
-    err = Pa_Terminate();
-    assert(err == paNoError);
+    checkError(Pa_StopStream(stream));
+    checkError(Pa_CloseStream(stream));
+    checkError(Pa_Terminate());
 }

@@ -22,6 +22,11 @@ llvm::JITSymbol getSymbol(const std::string &name) {
         return llvm::JITSymbol(symAddr, llvm::JITSymbolFlags::Exported);
     }
 
+    // if the name starts with an underscore, try looking it up without
+    if (name[0] == '_') {
+        return getSymbol(name.substr(1));
+    }
+
     if (name == "log2f") {
         return llvm::JITSymbol((uint64_t) &::log2f, llvm::JITSymbolFlags::Exported);
     } else if (name == "logbf") {
@@ -60,6 +65,8 @@ llvm::JITSymbol getSymbol(const std::string &name) {
         return llvm::JITSymbol((uint64_t) &::fminf, llvm::JITSymbolFlags::Exported);
     } else if (name == "fmodf") {
         return llvm::JITSymbol((uint64_t) &::fmodf, llvm::JITSymbolFlags::Exported);
+    } else if (name == "free") {
+        return llvm::JITSymbol((uint64_t) &::free, llvm::JITSymbolFlags::Exported);
     }
 
     return nullptr;
@@ -96,7 +103,7 @@ Jit::ModuleKey Jit::addModule(std::unique_ptr<llvm::Module> m) {
         }
     );
 
-    return llvm::cantFail(optimizeLayer.addModule(std::move(m), std::move(resolver)));
+    return std::move(llvm::cantFail(optimizeLayer.addModule(std::move(m), std::move(resolver))));
 }
 
 Jit::ModuleKey Jit::addModule(const llvm::Module &m) {
