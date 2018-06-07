@@ -205,7 +205,7 @@ void MainWindow::openProject() {
 }
 
 void MainWindow::exportProject() {
-    MaximRuntime::Exporter exporter(runtime->ctx(), runtime);
+    MaximRuntime::Exporter exporter(runtime->ctx(), &runtime->libModule());
     exporter.addRuntime(runtime, "export");
     std::error_code err;
     llvm::raw_fd_ostream dest("output.o", err, llvm::sys::fs::F_None);

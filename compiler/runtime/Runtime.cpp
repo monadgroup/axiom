@@ -22,18 +22,6 @@ Runtime::Runtime() : _context(_jit.dataLayout()), _op(&_context), _libModule("li
     _jit.addModule(_libModule);
     _op.buildConverters(_jit);
 
-    _exportDefinitionTy = llvm::StructType::get(_context.llvm(), {
-        _context.dataLayoutType(), // storage alloc size
-        llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {_context.voidPointerType()}, false), 0), // constructor func
-        llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {_context.voidPointerType()}, false), 0), // generate func
-        llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {_context.voidPointerType()}, false), 0)  // destructor func
-    }, false);
-
-    _exportInstrumentTy = llvm::StructType::get(_context.llvm(), {
-        _context.voidPointerType(),
-        llvm::PointerType::get(_exportDefinitionTy, 0)
-    }, false);
-
     _bpmVector = (BpmVector *) _jit.getSymbolAddress(_context.beatsPerSecName());
     assert(_bpmVector);
 
@@ -184,119 +172,6 @@ void Runtime::setBpm(float newVal) {
     _bpmVector->b = newVal;
 }
 
-void Runtime::exportSurface(const std::string &globalName, llvm::Module *module) {
-    std::cout << "Starting export" << std::endl;
-
-    llvm::Linker linker(*module);
-    _jit.linker = &linker;
-    _mainSurface->scheduleChildUpdate();
-    auto mainClass = compile();
-    _jit.linker = nullptr;
-
-    // ensure all globals in the module are internal, since we only need to expose a single global we'll define soon
-    for (auto &global : module->global_values()) {
-        if (global.getName().startswith("maxim")) {
-            global.setLinkage(llvm::GlobalValue::PrivateLinkage);
-        }
-    }
-
-    auto runConstructor = createExportFunc(module, globalName + ".constructor", mainClass->constructor());
-    auto runGenerate = createExportFunc(module, globalName + ".generate", mainClass->generate());
-    auto runDestructor = createExportFunc(module, globalName + ".destructor", mainClass->destructor());
-
-    auto exportGlobal = new llvm::GlobalVariable(
-        *module, _exportDefinitionTy, false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-        llvm::ConstantStruct::get(_exportDefinitionTy, {
-            ctx()->sizeOf(mainClass->storageType()),
-            runConstructor,
-            runGenerate,
-            runDestructor
-        }), globalName
-    );
-    exportGlobal->setConstant(true);
-}
-
-void Runtime::generateExportCommon(llvm::Module *module) {
-    llvm::Linker linker(*module);
-    linker.linkInModule(llvm::CloneModule(&_libModule));
-
-    auto dataLayoutType = llvm::Type::getIntNTy(ctx()->llvm(), ctx()->dataLayout().getPointerSizeInBits(0));
-    auto allocFunction = module->getFunction("malloc");
-    if (!allocFunction) {
-        allocFunction = llvm::Function::Create(
-            llvm::FunctionType::get(ctx()->voidPointerType(), {dataLayoutType}, false),
-            llvm::Function::ExternalLinkage, "malloc", module
-        );
-    }
-
-    auto freeFunction = module->getFunction("free");
-    if (!freeFunction) {
-        freeFunction = llvm::Function::Create(
-            llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()->llvm()), {llvm::Type::getInt8PtrTy(ctx()->llvm())}, false),
-            llvm::Function::ExternalLinkage, "free", module
-        );
-    }
-
-    auto memSetFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::memset, {llvm::IntegerType::getInt8PtrTy(ctx()->llvm()), ctx()->dataLayoutType()});
-
-    {
-        auto createInstrumentFunc = llvm::Function::Create(
-            llvm::FunctionType::get(llvm::PointerType::get(_exportInstrumentTy, 0), {llvm::PointerType::get(_exportDefinitionTy, 0)}, false),
-            llvm::Function::LinkageTypes::ExternalLinkage, "axiom_create_instrument", module
-        );
-        auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", createInstrumentFunc);
-        MaximCodegen::Builder b(block);
-
-        auto allocSize = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 0));
-
-        // for simplicity, we can put the allocated buffer as the last element in the structure
-        auto instrumentSize = ctx()->sizeOf(_exportInstrumentTy);
-        auto resultSize = b.CreateAdd(allocSize, instrumentSize);
-
-        auto resultPtr = b.CreatePointerCast(b.CreateCall(allocFunction, {resultSize}), llvm::PointerType::get(_exportInstrumentTy, 0));
-
-        auto dataPtr = b.CreateGEP(b.CreatePointerCast(resultPtr, llvm::IntegerType::getInt8PtrTy(ctx()->llvm())), instrumentSize);
-
-        b.CreateStore(b.CreatePointerCast(dataPtr, ctx()->voidPointerType()), b.CreateStructGEP(_exportInstrumentTy, resultPtr, 0));
-        b.CreateStore(createInstrumentFunc->arg_begin(), b.CreateStructGEP(_exportInstrumentTy, resultPtr, 1));
-
-        // fill the allocated buffer with zeros
-        b.CreateCall(memSetFunc, {dataPtr, ctx()->constInt(8, 0, false), allocSize, ctx()->constInt(32, 0, false), ctx()->constInt(1, 0, false)});
-
-        // run the constructor function to initialize everything
-        auto constructorFunc = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 1));
-        b.CreateCall(constructorFunc, {b.CreatePointerCast(dataPtr, ctx()->voidPointerType())});
-        b.CreateRet(resultPtr);
-    }
-
-    {
-        auto generateInstrumentFunc = llvm::Function::Create(
-            llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()->llvm()), {llvm::PointerType::get(_exportInstrumentTy, 0)}, false),
-            llvm::Function::LinkageTypes::ExternalLinkage, "axiom_generate", module
-        );
-        auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", generateInstrumentFunc);
-        MaximCodegen::Builder b(block);
-
-        auto dataPtr = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 0));
-        auto definition = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 1));
-        auto generateFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 2);
-        b.CreateCall(b.CreateLoad(generateFunc), {dataPtr});
-        b.CreateRetVoid();
-    }
-
-    {
-        auto destroyInstrumentFunc = llvm::Function::Create(
-            llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()->llvm()), {llvm::PointerType::get(_exportInstrumentTy, 0)}, false),
-            llvm::Function::LinkageTypes::ExternalLinkage, "axiom_destroy_instrument", module
-        );
-        auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", destroyInstrumentFunc);
-        MaximCodegen::Builder b(block);
-
-        b.CreateCall(freeFunction, {b.CreatePointerCast(destroyInstrumentFunc->arg_begin(), llvm::Type::getInt8PtrTy(ctx()->llvm()))});
-        b.CreateRetVoid();
-    }
-}
-
 llvm::Function *Runtime::createForwardFunc(llvm::Module *module, std::string name, llvm::Value *ctx,
                                            MaximCodegen::ModuleClassMethod *method) {
     auto func = llvm::Function::Create(
@@ -306,19 +181,6 @@ llvm::Function *Runtime::createForwardFunc(llvm::Module *module, std::string nam
     auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", func);
     MaximCodegen::Builder b(block);
     method->call(b, {}, ctx, module, "");
-    b.CreateRetVoid();
-    return func;
-}
-
-llvm::Function* Runtime::createExportFunc(llvm::Module *module, std::string name,
-                                          MaximCodegen::ModuleClassMethod *method) {
-    auto func = llvm::Function::Create(
-        llvm::FunctionType::get(llvm::Type::getVoidTy(_context.llvm()), {_context.voidPointerType()}, false),
-        llvm::Function::LinkageTypes::PrivateLinkage, name, module
-    );
-    auto block = llvm::BasicBlock::Create(_context.llvm(), "entry", func);
-    MaximCodegen::Builder b(block);
-    method->call(b, {}, func->arg_begin(), module, "");
     b.CreateRetVoid();
     return func;
 }
