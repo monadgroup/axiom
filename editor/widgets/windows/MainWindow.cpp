@@ -205,11 +205,13 @@ void MainWindow::openProject() {
 }
 
 void MainWindow::exportProject() {
+    project()->rootSurface()->saveValue();
     MaximRuntime::Exporter exporter(runtime->ctx(), &runtime->libModule());
     exporter.addRuntime(runtime, "export");
     std::error_code err;
     llvm::raw_fd_ostream dest("output.o", err, llvm::sys::fs::F_None);
     exporter.exportObject(dest, 2, 2);
+    project()->rootSurface()->restoreValue();
 }
 
 void MainWindow::importLibrary() {
