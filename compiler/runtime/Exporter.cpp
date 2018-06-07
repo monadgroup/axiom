@@ -19,6 +19,13 @@ Exporter::Exporter(MaximCodegen::MaximContext *context, const llvm::Module *comm
     module.setTargetTriple(target->getTargetTriple().str());
     module.setDataLayout(target->createDataLayout());
 
+    target->Options.FPDenormalMode = llvm::FPDenormal::PositiveZero;
+    target->Options.NoSignedZerosFPMath = 1;
+    target->Options.AllowFPOpFusion = llvm::FPOpFusion::Fast;
+    target->Options.NoTrappingFPMath = 1;
+    target->Options.UnsafeFPMath = 1;
+    target->setOptLevel(llvm::CodeGenOpt::Aggressive);
+
     llvm::Linker linker(module);
     linker.linkInModule(llvm::CloneModule(commonModule));
 
