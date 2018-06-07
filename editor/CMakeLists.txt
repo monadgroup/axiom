@@ -57,7 +57,7 @@ set(RES_FILES resources/axiom.rc resources/res.qrc resources/AxiomVst.def)
 include_directories(../ ${LLVM_INCLUDE_DIRS} ${VST2_SDK_ROOT} ${PORTAUDIO_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-llvm_map_components_to_libnames(llvm_libs support core ipo irreader orcjit x86asmparser x86asmprinter x86codegen x86desc x86disassembler x86info x86utils)
+llvm_map_components_to_libnames(llvm_libs support core orcjit native linker ipo)
 set(LINK_LIBS axiom_widgets axiom_model maxim_runtime maxim_codegen maxim_common axiom_common Qt5::Widgets ${llvm_libs})
 
 add_subdirectory(../common common)
