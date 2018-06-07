@@ -6,8 +6,8 @@
 using namespace MaximCodegen;
 
 MidiType::MidiType(MaximContext *context) : _context(context) {
-    _typeType = llvm::Type::getIntNTy(context->llvm(), 4);
-    _channelType = llvm::Type::getIntNTy(context->llvm(), 4);
+    _typeType = llvm::Type::getInt8Ty(context->llvm());
+    _channelType = llvm::Type::getInt8Ty(context->llvm());
     _noteType = llvm::Type::getInt8Ty(context->llvm());
     _paramType = llvm::Type::getInt8Ty(context->llvm());
     _eventType = llvm::StructType::create(context->llvm(), {
