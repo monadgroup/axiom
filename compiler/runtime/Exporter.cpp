@@ -64,7 +64,8 @@ void Exporter::exportObject(llvm::raw_fd_ostream &dest, unsigned optLevel, unsig
     finishModule(optLevel, sizeLevel);
 
     llvm::legacy::PassManager pass;
-    assert(!target->addPassesToEmitFile(pass, dest, llvm::TargetMachine::CGFT_ObjectFile));
+    auto addPassSuccess = !target->addPassesToEmitFile(pass, dest, llvm::TargetMachine::CGFT_ObjectFile);
+    assert(addPassSuccess);
     pass.run(module);
     dest.flush();
 }

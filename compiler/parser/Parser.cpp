@@ -203,7 +203,8 @@ std::unique_ptr<MaximAst::Expression> Parser::parseNoteTokenExpression() {
     expect(noteToken, Token::Type::NOTE);
 
     std::smatch match;
-    assert(std::regex_match(noteToken.content, match, noteRegex));
+    auto success = std::regex_match(noteToken.content, match, noteRegex);
+    assert(success);
 
     auto noteName = toUpperCase(match[1].str());
     auto noteNum = std::distance(noteNames.begin(), std::find(noteNames.begin(), noteNames.end(), noteName));
