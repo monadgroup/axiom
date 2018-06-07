@@ -31,6 +31,7 @@ Exporter::Exporter(MaximCodegen::MaximContext *context, const llvm::Module *comm
 
     _exportDefinitionTy = llvm::StructType::get(context->llvm(), {
         context->dataLayoutType(), // storage alloc size
+        context->voidPointerType(), // pointer to default memory
         llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(context->llvm()), {context->voidPointerType()}, false), 0), // constructor func
         llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(context->llvm()), {context->voidPointerType()}, false), 0), // generate func
         llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(context->llvm()), {context->voidPointerType()}, false), 0)  // destructor func
@@ -53,18 +54,33 @@ void Exporter::addRuntime(MaximRuntime::Runtime *runtime, const std::string &exp
 
     auto runConstructor = buildInstrumentFunc(runtime->ctx(), exportName + ".constructor", mainClass->constructor());
     auto runGenerate = buildInstrumentFunc(runtime->ctx(), exportName + ".generate", mainClass->generate());
-    auto runDestructor = buildInstrumentFunc(runtime->ctx(), exportName + ".destructor", mainClass->generate());
+    auto runDestructor = buildInstrumentFunc(runtime->ctx(), exportName + ".destructor", mainClass->destructor());
 
-    auto exportGlobal = new llvm::GlobalVariable(
-        module, _exportDefinitionTy, false, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+    auto storageSize = runtime->jit().dataLayout().getStructLayout(mainClass->storageType())->getSizeInBytes();
+    auto currentStoragePtr = (uint8_t *) runtime->mainSurface()->currentPtr();
+
+    std::vector<llvm::Constant*> storageValues;
+    storageValues.reserve(storageSize);
+    auto byteTy = llvm::IntegerType::getInt8Ty(runtime->ctx()->llvm());
+    for (size_t i = 0; i < storageSize; i++) {
+        storageValues.push_back(llvm::ConstantInt::get(byteTy, *(currentStoragePtr + i), false));
+    }
+
+    auto exportData = new llvm::GlobalVariable(
+        module, llvm::ArrayType::get(byteTy, storageSize), true, llvm::GlobalValue::LinkageTypes::PrivateLinkage,
+        llvm::ConstantArray::get(llvm::ArrayType::get(byteTy, storageSize), std::move(storageValues))
+    );
+
+    new llvm::GlobalVariable(
+        module, _exportDefinitionTy, true, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
         llvm::ConstantStruct::get(_exportDefinitionTy, {
-            runtime->ctx()->sizeOf(mainClass->storageType()),
+            llvm::ConstantInt::get(runtime->ctx()->dataLayoutType(), storageSize, false),
+            exportData,
             runConstructor,
             runGenerate,
             runDestructor
         }), exportName
     );
-    exportGlobal->setConstant(true);
 }
 
 void Exporter::exportObject(llvm::raw_fd_ostream &dest, unsigned optLevel, unsigned sizeLevel) {
@@ -118,7 +134,7 @@ void Exporter::buildCreateInstrumentFunc(MaximCodegen::MaximContext *ctx) {
             llvm::Function::ExternalLinkage, "malloc", &module
         );
     }
-    auto memSetFunc = llvm::Intrinsic::getDeclaration(&module, llvm::Intrinsic::memset, {llvm::IntegerType::getInt8PtrTy(ctx->llvm()), ctx->dataLayoutType()});
+    auto memCopyFunc = llvm::Intrinsic::getDeclaration(&module, llvm::Intrinsic::memcpy, {llvm::IntegerType::getInt8PtrTy(ctx->llvm()), ctx->voidPointerType(), ctx->dataLayoutType()});
 
     auto createInstrumentFunc = llvm::Function::Create(
         llvm::FunctionType::get(llvm::PointerType::get(_exportInstrumentTy, 0), {llvm::PointerType::get(_exportDefinitionTy, 0)}, false),
@@ -140,11 +156,12 @@ void Exporter::buildCreateInstrumentFunc(MaximCodegen::MaximContext *ctx) {
     b.CreateStore(b.CreatePointerCast(dataPtr, ctx->voidPointerType()), b.CreateStructGEP(_exportInstrumentTy, resultPtr, 0));
     b.CreateStore(createInstrumentFunc->arg_begin(), b.CreateStructGEP(_exportInstrumentTy, resultPtr, 1));
 
-    // fill the allocated buffer with zeros
-    b.CreateCall(memSetFunc, {dataPtr, ctx->constInt(8, 0, false), allocSize, ctx->constInt(32, 0, false), ctx->constInt(1, 0, false)});
+    // copy the data buffer from global storate
+    auto copyBufferPtr = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 1));
+    b.CreateCall(memCopyFunc, {dataPtr, copyBufferPtr, allocSize, ctx->constInt(32, 0, false), ctx->constInt(1, 0, false)});
 
     // run the constructor function to initialize everything
-    auto constructorFunc = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 1));
+    auto constructorFunc = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 2));
     b.CreateCall(constructorFunc, {b.CreatePointerCast(dataPtr, ctx->voidPointerType())});
     b.CreateRet(resultPtr);
 }
@@ -167,7 +184,7 @@ void Exporter::buildGenerateFunc(MaximCodegen::MaximContext *ctx) {
 
     auto dataPtr = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 0));
     auto definition = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 1));
-    auto generateFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 2);
+    auto generateFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 3);
     b.CreateCall(b.CreateLoad(generateFunc), {dataPtr});
     b.CreateRetVoid();
 }
@@ -188,6 +205,10 @@ void Exporter::buildDestroyInstrumentFunc(MaximCodegen::MaximContext *ctx) {
     auto block = llvm::BasicBlock::Create(ctx->llvm(), "entry", destroyInstrumentFunc);
     MaximCodegen::Builder b(block);
 
+    auto dataPtr = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, destroyInstrumentFunc->arg_begin(), 0));
+    auto definition = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, destroyInstrumentFunc->arg_begin(), 1));
+    auto destroyFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 4);
+    b.CreateCall(b.CreateLoad(destroyFunc), {dataPtr});
     b.CreateCall(freeFunction, {b.CreatePointerCast(destroyInstrumentFunc->arg_begin(), llvm::Type::getInt8PtrTy(ctx->llvm()))});
     b.CreateRetVoid();
 }
