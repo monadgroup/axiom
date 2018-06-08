@@ -31,8 +31,8 @@ llvm::Value* SamplesConverter::fromControl(MaximCodegen::ComposableModuleClassMe
     return b.CreateFDiv(
         b.CreateFMul(val, ctx()->constFloatVec(ctx()->sampleRate)),
         b.CreateFSub(
-            ctx()->constFloatVec(2.2),
-            b.CreateFMul(val, ctx()->constFloatVec(2))
+            ctx()->constFloatVec(11),
+            b.CreateFMul(val, ctx()->constFloatVec(10))
         )
     );
 }

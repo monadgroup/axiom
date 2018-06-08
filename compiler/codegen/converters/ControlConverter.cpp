@@ -75,7 +75,7 @@ llvm::Value* ControlConverter::fromSamples(MaximCodegen::ComposableModuleClassMe
     auto &b = method->builder();
     return b.CreateFDiv(
         b.CreateFMul(val, ctx()->constFloatVec(1.1)),
-        b.CreateFAdd(val, ctx()->constFloatVec(0.5f * ctx()->sampleRate))
+        b.CreateFAdd(val, ctx()->constFloatVec(0.1f * ctx()->sampleRate))
     );
 }
 

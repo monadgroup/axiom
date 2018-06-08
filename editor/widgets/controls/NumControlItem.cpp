@@ -57,7 +57,7 @@ QString NumControlItem::formatNumber(float val, MaximCommon::FormType form) {
         case MaximCommon::FormType::OSCILLATOR:
         case MaximCommon::FormType::AMPLITUDE:
         case MaximCommon::FormType::Q:
-            return QString::number(val, 'f', 2);
+            return QString::number(val, 'f', 1);
         case MaximCommon::FormType::NOTE:
             return getNoteName(val);
         case MaximCommon::FormType::FREQUENCY:
