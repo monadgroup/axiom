@@ -37,9 +37,7 @@ NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     control->connections().itemRemoved.connect(this, &NumControlItem::triggerUpdate);
 }
 
-void NumControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    ControlItem::paint(painter, option, widget);
-
+void NumControlItem::paintControl(QPainter *painter) {
     switch (control->displayMode()) {
         case NumControl::DisplayMode::PLUG:
             plugPainter.paint(painter, aspectBoundingRect(), hoverState());
@@ -65,6 +63,19 @@ void NumControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 QPainterPath NumControlItem::shape() const {
     if (control->isSelected()) return QGraphicsItem::shape();
     return controlPath();
+}
+
+bool NumControlItem::showLabelInCenter() const {
+    switch (control->displayMode()) {
+        case NumControl::DisplayMode::PLUG:
+        case NumControl::DisplayMode::KNOB:
+        case NumControl::DisplayMode::TOGGLE:
+            return true;
+        case NumControl::DisplayMode::SLIDER_H:
+        case NumControl::DisplayMode::SLIDER_V:
+            return false;
+    }
+    unreachable;
 }
 
 QRectF NumControlItem::useBoundingRect() const {

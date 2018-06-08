@@ -13,9 +13,7 @@ ScopeControlItem::ScopeControlItem(AxiomModel::ScopeControl *control, AxiomGui::
     : ControlItem(control, canvas), control(control) {
 }
 
-void ScopeControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    ControlItem::paint(painter, option, widget);
-
+void ScopeControlItem::paintControl(QPainter *painter) {
     painter->setBrush(QBrush(Qt::black));
     painter->drawRect(useBoundingRect());
 }

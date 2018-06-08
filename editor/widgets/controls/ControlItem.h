@@ -54,6 +54,8 @@ namespace AxiomGui {
 
     protected:
 
+        virtual bool showLabelInCenter() const = 0;
+
         QRectF drawBoundingRect() const;
 
         virtual QRectF useBoundingRect() const = 0;
@@ -86,6 +88,8 @@ namespace AxiomGui {
 
         void buildMenuEnd(QMenu &menu);
 
+        virtual void paintControl(QPainter *painter) = 0;
+
     private slots:
 
         void setPos(QPoint newPos);
@@ -108,6 +112,8 @@ namespace AxiomGui {
         QPointF mouseStartPoint;
         float _hoverState = 0;
         QRect startDragRect;
+
+        QString getLabelText() const;
     };
 
 }

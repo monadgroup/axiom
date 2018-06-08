@@ -20,9 +20,13 @@ namespace AxiomGui {
 
     protected:
 
+        bool showLabelInCenter() const override { return true; }
+
         QRectF useBoundingRect() const override { return {}; }
 
         QPainterPath controlPath() const override { return shape(); }
+
+        void paintControl(QPainter *painter) override {}
 
     private:
 

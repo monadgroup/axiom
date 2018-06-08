@@ -98,7 +98,9 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
 
 QRectF ControlItem::boundingRect() const {
     auto br = drawBoundingRect();
-    br.setHeight(br.height() + 20);
+    if (!showLabelInCenter()) {
+        br.setHeight(br.height() + 20);
+    }
     return br;
 }
 
@@ -153,15 +155,21 @@ void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
         painter->drawPath(bounds);
     }
 
-    if (!control->showName()) return;
+    paintControl(painter);
 
-    auto br = boundingRect();
-    auto pathBr = useBoundingRect();
-    auto nameBr = QRectF(br.left(), pathBr.bottom() + 5, br.width(), 20);
+    if (!control->showName()) return;
 
     painter->setPen(QPen(QColor(200, 200, 200)));
     painter->setBrush(Qt::NoBrush);
-    painter->drawText(nameBr, Qt::AlignHCenter | Qt::AlignTop, control->name());
+
+    auto pathBr = useBoundingRect();
+    if (showLabelInCenter()) {
+        painter->drawText(pathBr, Qt::AlignCenter, getLabelText());
+    } else {
+        auto br = boundingRect();
+        auto nameBr = QRectF(br.left(), pathBr.bottom() + 5, br.width(), 20);
+        painter->drawText(nameBr, Qt::AlignHCenter | Qt::AlignTop, getLabelText());
+    }
 }
 
 bool ControlItem::isEditable() const {
@@ -371,4 +379,8 @@ void ControlItem::buildMenuEnd(QMenu &menu) {
                     control->root()->history().append(DeleteObjectAction::create(control->exposerUuid(), control->root()));
                 }
             });
+}
+
+QString ControlItem::getLabelText() const {
+    return control->name();
 }

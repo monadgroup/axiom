@@ -15,9 +15,7 @@ ExtractControlItem::ExtractControlItem(ExtractControl *control, NodeSurfaceCanva
     control->connections().itemRemoved.connect(this, &ExtractControlItem::triggerUpdate);
 }
 
-void ExtractControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    ControlItem::paint(painter, option, widget);
-
+void ExtractControlItem::paintControl(QPainter *painter) {
     extractPainter.paint(painter, aspectBoundingRect(), hoverState(), control->activeSlots(), outlineNormalColor(),
                          outlineActiveColor());
 }

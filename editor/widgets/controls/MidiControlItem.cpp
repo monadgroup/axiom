@@ -9,11 +9,6 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-/*static std::vector<std::pair<QString, NodeMidiControl::Mode>> modes = {
-    std::make_pair("&Plug", NodeMidiControl::Mode::PLUG),
-    std::make_pair("&Piano", NodeMidiControl::Mode::PIANO)
-};*/
-
 MidiControlItem::MidiControlItem(AxiomModel::MidiControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
     control->valueChanged.connect(this, &MidiControlItem::triggerUpdate);
@@ -21,8 +16,7 @@ MidiControlItem::MidiControlItem(AxiomModel::MidiControl *control, NodeSurfaceCa
     control->connections().itemRemoved.connect(this, &MidiControlItem::triggerUpdate);
 }
 
-void MidiControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    ControlItem::paint(painter, option, widget);
+void MidiControlItem::paintControl(QPainter *painter) {
     plugPainter.paint(painter, aspectBoundingRect(), hoverState());
 }
 

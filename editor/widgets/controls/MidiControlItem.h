@@ -18,17 +18,19 @@ namespace AxiomGui {
 
         MidiControlItem(AxiomModel::MidiControl *control, NodeSurfaceCanvas *canvas);
 
-        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-
         QPainterPath shape() const override;
 
     protected:
+
+        bool showLabelInCenter() const override { return true; }
 
         QRectF useBoundingRect() const override;
 
         QPainterPath controlPath() const override;
 
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+
+        void paintControl(QPainter *painter) override;
 
     private:
         PlugPainter plugPainter;
