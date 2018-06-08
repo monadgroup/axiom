@@ -77,7 +77,7 @@ QString NumControlItem::formatNumber(float val, MaximCommon::FormType form) {
 void NumControlItem::paintControl(QPainter *painter) {
     switch (control->displayMode()) {
         case NumControl::DisplayMode::PLUG:
-            plugPainter.paint(painter, aspectBoundingRect(), hoverState());
+            plugPainter.paint(painter, aspectBoundingRect(), hoverState(), getCVal(), CommonColors::numNormal);
             break;
         case NumControl::DisplayMode::KNOB:
             knobPainter.paint(painter, aspectBoundingRect(), hoverState(), getCVal(), CommonColors::numNormal,

@@ -4,7 +4,7 @@
 
 using namespace AxiomGui;
 
-void PlugPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState) {
+void PlugPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, std::optional<MaximRuntime::NumValue> val, const QColor &valBaseColor) {
     auto scaledBorder = 0.06f * aspectBoundingRect.width();
     auto externBr = getBounds(aspectBoundingRect);
 
@@ -14,8 +14,34 @@ void PlugPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, flo
     auto activeColor = QColor(60, 60, 60);
 
     painter->setPen(QPen(QColor(0, 0, 0), scaledBorder));
+    if (val) {
+        painter->setBrush(Qt::NoBrush);
+    } else {
+        painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, hoverState)));
+    }
+
+    auto ellipseBounds = externBr.marginsRemoved(marginF);
+    painter->drawEllipse(ellipseBounds);
+
+    if (!val) return;
+
+    auto startAngle = 240 * 16;
+    auto completeAngle = -300 * 16;
+
+    auto minVal = std::min(val->left, val->right);
+    auto maxVal = std::max(val->left, val->right);
+
+    // draw max ring
+    painter->setPen(QPen(valBaseColor.darker(), scaledBorder));
+    painter->drawArc(ellipseBounds, startAngle + completeAngle * minVal, completeAngle * maxVal - completeAngle * minVal);
+
+    // draw min ring
+    painter->setPen(QPen(valBaseColor, scaledBorder));
+    painter->drawArc(ellipseBounds, startAngle, completeAngle * minVal);
+
+    painter->setPen(QPen(Qt::transparent, scaledBorder));
     painter->setBrush(QBrush(AxiomUtil::mixColor(baseColor, activeColor, hoverState)));
-    painter->drawEllipse(externBr.marginsRemoved(marginF));
+    painter->drawEllipse(ellipseBounds.marginsRemoved(marginF));
 }
 
 void PlugPainter::shape(QPainterPath &path, const QRectF &aspectBoundingRect) const {
