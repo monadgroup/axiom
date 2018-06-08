@@ -24,8 +24,8 @@ typedef struct {
 } AxiomMidiEvent;
 
 AxiomInstrument *axiom_create_instrument(AxiomDefinition *definition);
-AxiomInput *axiom_get_input(AxiomInstrument *instrument, uint8_t id);
-AxiomInput *axiom_get_output(AxiomInstrument *instrument, uint8_t id);
+AxiomInput *axiom_get_input(AxiomInstrument *instrument, uint32_t id);
+AxiomInput *axiom_get_output(AxiomInstrument *instrument, uint32_t id);
 void axiom_generate();
 void axiom_destroy_instrument(AxiomInstrument *instrument);
 

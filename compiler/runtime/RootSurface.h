@@ -18,6 +18,8 @@ namespace MaximRuntime {
 
         size_t getAutomationCount() const { return _currentAutomationIndex; }
 
+        const std::unordered_map<size_t, IONode*> &automationNodes() const { return _automationNodes; }
+
         IONode *getAutomationNode(size_t index) const;
 
         IONode *addAutomationNode();

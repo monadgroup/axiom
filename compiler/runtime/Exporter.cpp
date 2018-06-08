@@ -32,6 +32,8 @@ Exporter::Exporter(MaximCodegen::MaximContext *context, const llvm::Module *comm
     _exportDefinitionTy = llvm::StructType::get(context->llvm(), {
         context->dataLayoutType(), // storage alloc size
         context->voidPointerType(), // pointer to default memory
+        llvm::PointerType::get(context->dataLayoutType(), 0), // list of input indexes into storage array
+        llvm::PointerType::get(context->dataLayoutType(), 0), // list of output indexes into storage array
         llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(context->llvm()), {context->voidPointerType()}, false), 0), // constructor func
         llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(context->llvm()), {context->voidPointerType()}, false), 0), // generate func
         llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(context->llvm()), {context->voidPointerType()}, false), 0)  // destructor func
@@ -45,6 +47,14 @@ Exporter::Exporter(MaximCodegen::MaximContext *context, const llvm::Module *comm
     buildInterfaceFunctions(context);
 }
 
+static llvm::Constant *getIoNodeAccessor(MaximRuntime::Runtime *runtime, const llvm::StructLayout *layout, MaximRuntime::IONode *node) {
+    auto inputGroup = node->control()->group();
+    assert(inputGroup);
+    auto entryIndex = runtime->mainSurface()->groupPtrIndexes().find(inputGroup);
+    assert(entryIndex != runtime->mainSurface()->groupPtrIndexes().end());
+    return llvm::ConstantInt::get(runtime->ctx()->dataLayoutType(), layout->getElementOffset(entryIndex->second));
+}
+
 void Exporter::addRuntime(MaximRuntime::Runtime *runtime, const std::string &exportName) {
     llvm::Linker linker(module);
     runtime->jit().linker = &linker;
@@ -56,7 +66,8 @@ void Exporter::addRuntime(MaximRuntime::Runtime *runtime, const std::string &exp
     auto runGenerate = buildInstrumentFunc(runtime->ctx(), exportName + ".generate", mainClass->generate());
     auto runDestructor = buildInstrumentFunc(runtime->ctx(), exportName + ".destructor", mainClass->destructor());
 
-    auto storageSize = runtime->jit().dataLayout().getStructLayout(mainClass->storageType())->getSizeInBytes();
+    auto storageLayout = runtime->jit().dataLayout().getStructLayout(mainClass->storageType());
+    auto storageSize = storageLayout->getSizeInBytes();
     auto currentStoragePtr = (uint8_t *) runtime->mainSurface()->currentPtr();
 
     std::vector<llvm::Constant*> storageValues;
@@ -66,9 +77,31 @@ void Exporter::addRuntime(MaximRuntime::Runtime *runtime, const std::string &exp
         storageValues.push_back(llvm::ConstantInt::get(byteTy, *(currentStoragePtr + i), false));
     }
 
+    auto exportArrayTy = llvm::ArrayType::get(byteTy, storageSize);
     auto exportData = new llvm::GlobalVariable(
-        module, llvm::ArrayType::get(byteTy, storageSize), true, llvm::GlobalValue::LinkageTypes::PrivateLinkage,
-        llvm::ConstantArray::get(llvm::ArrayType::get(byteTy, storageSize), std::move(storageValues))
+        module, exportArrayTy, true, llvm::GlobalValue::LinkageTypes::PrivateLinkage,
+        llvm::ConstantArray::get(exportArrayTy, storageValues), exportName + ".staticbuffer"
+    );
+
+    std::vector<llvm::Constant*> inputValues;
+    inputValues.push_back(getIoNodeAccessor(runtime, storageLayout, runtime->mainSurface()->input));
+    for (const auto &automationNode : runtime->mainSurface()->automationNodes()) {
+        inputValues.push_back(getIoNodeAccessor(runtime, storageLayout, automationNode.second));
+    }
+
+    auto inputArrayTy = llvm::ArrayType::get(runtime->ctx()->dataLayoutType(), inputValues.size());
+    auto inputList = new llvm::GlobalVariable(
+        module, inputArrayTy, true, llvm::GlobalValue::LinkageTypes::PrivateLinkage,
+        llvm::ConstantArray::get(inputArrayTy, inputValues), exportName + ".inputs"
+    );
+
+    std::vector<llvm::Constant*> outputValues;
+    outputValues.push_back(getIoNodeAccessor(runtime, storageLayout, runtime->mainSurface()->output));
+
+    auto outputArrayTy = llvm::ArrayType::get(runtime->ctx()->dataLayoutType(), outputValues.size());
+    auto outputList = new llvm::GlobalVariable(
+        module, outputArrayTy, true, llvm::GlobalValue::LinkageTypes::PrivateLinkage,
+        llvm::ConstantArray::get(outputArrayTy, outputValues), exportName + ".outputs"
     );
 
     new llvm::GlobalVariable(
@@ -76,6 +109,8 @@ void Exporter::addRuntime(MaximRuntime::Runtime *runtime, const std::string &exp
         llvm::ConstantStruct::get(_exportDefinitionTy, {
             llvm::ConstantInt::get(runtime->ctx()->dataLayoutType(), storageSize, false),
             exportData,
+            inputList,
+            outputList,
             runConstructor,
             runGenerate,
             runDestructor
@@ -161,17 +196,45 @@ void Exporter::buildCreateInstrumentFunc(MaximCodegen::MaximContext *ctx) {
     b.CreateCall(memCopyFunc, {dataPtr, copyBufferPtr, allocSize, ctx->constInt(32, 0, false), ctx->constInt(1, 0, false)});
 
     // run the constructor function to initialize everything
-    auto constructorFunc = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 2));
+    auto constructorFunc = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, createInstrumentFunc->arg_begin(), 4));
     b.CreateCall(constructorFunc, {b.CreatePointerCast(dataPtr, ctx->voidPointerType())});
     b.CreateRet(resultPtr);
 }
 
 void Exporter::buildGetInputFunc(MaximCodegen::MaximContext *ctx) {
-    // todo
+    auto getInputFunc = llvm::Function::Create(
+        llvm::FunctionType::get(llvm::Type::getInt8PtrTy(ctx->llvm()), {llvm::PointerType::get(_exportInstrumentTy, 0), llvm::Type::getInt32Ty(ctx->llvm())}, false),
+        llvm::Function::LinkageTypes::ExternalLinkage, "axiom_get_input", &module
+    );
+    auto block = llvm::BasicBlock::Create(ctx->llvm(), "entry", getInputFunc);
+    MaximCodegen::Builder b(block);
+
+    llvm::Value *instrument = getInputFunc->arg_begin();
+    llvm::Value *inputIndex = getInputFunc->arg_begin() + 1;
+
+    auto dataPtr = b.CreatePointerCast(b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, instrument, 0)), llvm::Type::getInt8PtrTy(ctx->llvm()));
+    auto definition = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, instrument, 1));
+    auto inputIndexes = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, definition, 2));
+    auto thisInputIndex = b.CreateLoad(b.CreateGEP(inputIndexes, inputIndex));
+    b.CreateRet(b.CreateGEP(dataPtr, thisInputIndex));
 }
 
 void Exporter::buildGetOutputFunc(MaximCodegen::MaximContext *ctx) {
-    // todo
+    auto getOutputFunc = llvm::Function::Create(
+        llvm::FunctionType::get(llvm::Type::getInt8PtrTy(ctx->llvm()), {llvm::PointerType::get(_exportInstrumentTy, 0), llvm::Type::getInt32Ty(ctx->llvm())}, false),
+        llvm::Function::LinkageTypes::ExternalLinkage, "axiom_get_output", &module
+    );
+    auto block = llvm::BasicBlock::Create(ctx->llvm(), "entry", getOutputFunc);
+    MaximCodegen::Builder b(block);
+
+    llvm::Value *instrument = getOutputFunc->arg_begin();
+    llvm::Value *outputIndex = getOutputFunc->arg_begin() + 1;
+
+    auto dataPtr = b.CreatePointerCast(b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, instrument, 0)), llvm::Type::getInt8PtrTy(ctx->llvm()));
+    auto definition = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, instrument, 1));
+    auto outputIndexes = b.CreateLoad(b.CreateStructGEP(_exportDefinitionTy, definition, 3));
+    auto thisOutputIndex = b.CreateLoad(b.CreateGEP(outputIndexes, outputIndex));
+    b.CreateRet(b.CreateGEP(dataPtr, thisOutputIndex));
 }
 
 void Exporter::buildGenerateFunc(MaximCodegen::MaximContext *ctx) {
@@ -184,7 +247,7 @@ void Exporter::buildGenerateFunc(MaximCodegen::MaximContext *ctx) {
 
     auto dataPtr = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 0));
     auto definition = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, generateInstrumentFunc->arg_begin(), 1));
-    auto generateFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 3);
+    auto generateFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 5);
     b.CreateCall(b.CreateLoad(generateFunc), {dataPtr});
     b.CreateRetVoid();
 }
@@ -207,7 +270,7 @@ void Exporter::buildDestroyInstrumentFunc(MaximCodegen::MaximContext *ctx) {
 
     auto dataPtr = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, destroyInstrumentFunc->arg_begin(), 0));
     auto definition = b.CreateLoad(b.CreateStructGEP(_exportInstrumentTy, destroyInstrumentFunc->arg_begin(), 1));
-    auto destroyFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 4);
+    auto destroyFunc = b.CreateStructGEP(_exportDefinitionTy, definition, 6);
     b.CreateCall(b.CreateLoad(destroyFunc), {dataPtr});
     b.CreateCall(freeFunction, {b.CreatePointerCast(destroyInstrumentFunc->arg_begin(), llvm::Type::getInt8PtrTy(ctx->llvm()))});
     b.CreateRetVoid();
