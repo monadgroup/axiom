@@ -90,6 +90,8 @@ namespace AxiomGui {
 
         virtual void paintControl(QPainter *painter) = 0;
 
+        virtual QString getLabelText() const;
+
     private slots:
 
         void setPos(QPoint newPos);
@@ -112,8 +114,6 @@ namespace AxiomGui {
         QPointF mouseStartPoint;
         float _hoverState = 0;
         QRect startDragRect;
-
-        QString getLabelText() const;
     };
 
 }

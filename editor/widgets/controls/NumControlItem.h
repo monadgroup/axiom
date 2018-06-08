@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtCore/QTimer>
+
 #include "ControlItem.h"
 
 #include "painters/KnobPainter.h"
@@ -20,6 +22,8 @@ namespace AxiomGui {
         AxiomModel::NumControl *control;
 
         NumControlItem(AxiomModel::NumControl *control, NodeSurfaceCanvas *canvas);
+
+        static QString formatNumber(float val, MaximCommon::FormType form);
 
         QPainterPath shape() const override;
 
@@ -42,14 +46,22 @@ namespace AxiomGui {
 
         void paintControl(QPainter *painter) override;
 
+        QString getLabelText() const override;
+
     private slots:
 
         void setStringValue(QString value);
 
         void setValue(MaximRuntime::NumValue value);
 
+        void controlValueChanged();
+
+        void showValueExpired();
+
     private:
         bool isDragging = false;
+        bool isShowingValue = false;
+        QTimer showValueTimer;
         MaximRuntime::NumValue beforeDragVal;
         QPointF mouseStartPoint;
 

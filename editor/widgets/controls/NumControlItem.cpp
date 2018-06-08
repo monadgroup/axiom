@@ -6,6 +6,7 @@
 #include <QtGui/QClipboard>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMenu>
+#include <QtCore/QStringBuilder>
 
 #include "editor/model/Project.h"
 #include "editor/model/objects/NumControl.h"
@@ -31,10 +32,46 @@ static std::vector<std::pair<QString, NumControl::DisplayMode>> modes = {
 
 NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
-    control->valueChanged.connect(this, &NumControlItem::triggerUpdate);
+    control->valueChanged.connect(this, &NumControlItem::controlValueChanged);
     control->displayModeChanged.connect(this, &NumControlItem::triggerUpdate);
     control->connections().itemAdded.connect(this, &NumControlItem::triggerUpdate);
     control->connections().itemRemoved.connect(this, &NumControlItem::triggerUpdate);
+
+    connect(&showValueTimer, &QTimer::timeout, this, &NumControlItem::showValueExpired);
+}
+
+static std::array<QString, 12> noteNames {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+
+static QString getNoteName(float noteVal) {
+    auto intNote = static_cast<size_t>(noteVal);
+    auto noteNameIndex = intNote % noteNames.size();
+    auto octave = intNote / noteNames.size();
+
+    return QString::number(intNote) % " " % noteNames[noteNameIndex] % QString::number(octave);
+}
+
+QString NumControlItem::formatNumber(float val, MaximCommon::FormType form) {
+    switch (form) {
+        case MaximCommon::FormType::NONE:
+        case MaximCommon::FormType::CONTROL:
+        case MaximCommon::FormType::OSCILLATOR:
+        case MaximCommon::FormType::AMPLITUDE:
+        case MaximCommon::FormType::Q:
+            return QString::number(val, 'f', 2);
+        case MaximCommon::FormType::NOTE:
+            return getNoteName(val);
+        case MaximCommon::FormType::FREQUENCY:
+            return val < 1000 ? static_cast<QString>(QString::number(val, 'f', 2) % " Hz") : static_cast<QString>(QString::number(val / 1000, 'f', 2) % "KHz");
+        case MaximCommon::FormType::BEATS:
+            return QString::number(val, 'f', 1) % " beats";
+        case MaximCommon::FormType::SECONDS:
+            return val < 0.1 ? static_cast<QString>(QString::number(val * 1000, 'f', 2) % " ms") : static_cast<QString>(QString::number(val, 'f', 2) % " s");
+        case MaximCommon::FormType::SAMPLES:
+            return QString::number((int) val);
+        case MaximCommon::FormType::DB:
+            return QString::number(val, 'f', 1) % " dB";
+    }
+    unreachable;
 }
 
 void NumControlItem::paintControl(QPainter *painter) {
@@ -243,6 +280,18 @@ void NumControlItem::setStringValue(QString value) {
     setValue(stringAsValue(value, getCVal()));
 }
 
+void NumControlItem::controlValueChanged() {
+    isShowingValue = true;
+    showValueTimer.start(1000);
+    update();
+}
+
+void NumControlItem::showValueExpired() {
+    isShowingValue = false;
+    showValueTimer.stop();
+    update();
+}
+
 void NumControlItem::setValue(MaximRuntime::NumValue value) {
     if (value != control->value()) {
         control->root()->history().append(SetNumValueAction::create(control->uuid(), control->value(), value, control->root()));
@@ -325,4 +374,17 @@ void NumControlItem::setCVal(MaximRuntime::NumValue v) const {
 
     setVal = clampVal(setVal).withForm(MaximCommon::FormType::CONTROL);
     control->setValue(setVal);
+}
+
+QString NumControlItem::getLabelText() const {
+    if (hoverState() || isShowingValue) {
+        auto controlVal = control->value();
+        if (controlVal.left == controlVal.right) {
+            return formatNumber(controlVal.left, controlVal.form);
+        } else {
+            return QString("%1 / %2").arg(formatNumber(controlVal.left, controlVal.form), formatNumber(controlVal.right, controlVal.form));
+        }
+    } else {
+        return ControlItem::getLabelText();
+    }
 }
