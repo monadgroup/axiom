@@ -71,17 +71,14 @@ bool PasteBufferAction::forward(bool) {
     isBufferFormatted = true;
     buffer.clear();
 
-    auto needsBuild = false;
     for (const auto &obj : used) {
         if (auto node = dynamic_cast<Node*>(obj); node && obj->parentUuid() == surfaceUuid) {
             node->select(false);
         }
-
         usedUuids.push_back(obj->uuid());
-        if (obj->buildOnRemove()) needsBuild = true;
     }
 
-    return needsBuild;
+    return true;
 }
 
 bool PasteBufferAction::backward() {
@@ -96,12 +93,6 @@ bool PasteBufferAction::backward() {
 
     auto objs = findAll(dynamicCast<ModelObject*>(root()->pool().sequence()), usedSet);
     auto collected = collect(objs);
-    auto needsBuild = false;
-    for (const auto &obj : collected) {
-        if (!obj->buildOnRemove()) continue;
-        needsBuild = true;
-        break;
-    }
 
     stream << QPoint(0, 0);
     ModelRoot::serializeChunk(stream, surfaceUuid, collected);
@@ -112,5 +103,5 @@ bool PasteBufferAction::backward() {
         (*objs.begin())->remove();
     }
 
-    return needsBuild;
+    return true;
 }
