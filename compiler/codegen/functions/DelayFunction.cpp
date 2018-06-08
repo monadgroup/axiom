@@ -249,6 +249,7 @@ std::unique_ptr<Value> DelayFunction::generate(MaximCodegen::ComposableModuleCla
     );
     resultVec = b.CreateInsertElement(resultVec, b.CreateExtractValue(rightResult, {1}, "num.right"), 1, "result.vec");
     resultNum->setVec(b, resultVec);
+    resultNum->setForm(b, inputVal->form(b));
 
     auto resultActive = b.CreateOr(
         b.CreateExtractValue(leftResult, {0}, "active.left"),
