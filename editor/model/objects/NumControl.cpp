@@ -61,8 +61,8 @@ void NumControl::setChannel(AxiomModel::NumControl::Channel channel) {
 }
 
 void NumControl::setValue(MaximRuntime::NumValue value) {
-    setInternalValue(value);
-    restoreValue();
+    if (!runtime() || !(*runtime())->group()) setInternalValue(value);
+    else (*runtime())->group()->setNumValue(value);
 }
 
 void NumControl::doRuntimeUpdate() {
