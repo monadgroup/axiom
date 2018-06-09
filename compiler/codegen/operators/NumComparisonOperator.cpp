@@ -21,7 +21,7 @@ std::unique_ptr<NumComparisonOperator> NumComparisonOperator::create(MaximContex
 std::unique_ptr<Num> NumComparisonOperator::call(ModuleClassMethod *method, Num *numLeft, Num *numRight) {
     auto &b = method->builder();
     auto operatedInt = b.CreateFCmp(_op, numLeft->vec(b), numRight->vec(b), "op.ivec");
-    auto isActive = b.CreateAnd(getActive(b, numLeft, numRight), operatedInt, "op.active");
+    auto isActive = b.CreateAnd(getActive(b, numLeft, numRight), b.CreateOr(b.CreateExtractElement(operatedInt, (uint64_t) 0), b.CreateExtractElement(operatedInt, (uint64_t) 1)), "op.active");
     auto operatedVal = b.CreateUIToFP(operatedInt, context()->numType()->vecType(), "op.vec");
 
     auto undefPos = SourcePos(-1, -1);
