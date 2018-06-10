@@ -49,10 +49,14 @@ else (PORTAUDIO_LIBRARIES AND PORTAUDIO_INCLUDE_DIRS)
                 /sw/include
                 )
 
+        set(PORTAUDIO_LIB_SEARCH_NAMES portaudio)
+        if (AXIOM_STATIC_LINK)
+            set(PORTAUDIO_LIB_SEARCH_NAMES libportaudio.a ${PORTAUDIO_LIB_SEARCH_NAMES})
+        endif ()
+
         find_library(PORTAUDIO_LIBRARY
                 NAMES
-                libportaudio.a
-                portaudio
+                ${PORTAUDIO_LIB_SEARCH_NAMES}
                 PATHS
                 /usr/lib
                 /usr/local/lib

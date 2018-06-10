@@ -39,7 +39,7 @@ else ()
     set(AUDIO_SOURCES "StandaloneAudioPA.cpp")
 
     # statically linking PortAudio on Windows needs setupapi.lib
-    if (WIN32)
+    if (WIN32 AND AXIOM_STATIC_LINK)
         set(PORTAUDIO_LIBRARIES ${PORTAUDIO_LIBRARIES} setupapi)
     endif ()
 endif ()
