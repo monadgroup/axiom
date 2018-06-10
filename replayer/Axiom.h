@@ -16,22 +16,36 @@ typedef struct {
     uint8_t form;
 } AxiomNum;
 
+typedef enum : uint8_t {
+    AXIOM_EVENT_NOTE_ON,
+    AXIOM_EVENT_NOTE_OFF,
+    AXIOM_EVENT_POLYPHONIC_AFTERTOUCH,
+    AXIOM_EVENT_CHANNEL_AFTERTOUCH,
+    AXIOM_EVENT_PITCH_WHEEL
+} AxiomMidiEventType;
+
 typedef struct {
-    uint8_t type;
+    AxiomMidiEventType type;
     uint8_t channel;
     uint8_t note;
     uint8_t param;
 } AxiomMidiEvent;
 
-AxiomInstrument *axiom_create_instrument(AxiomDefinition *definition);
-AxiomInput *axiom_get_input(AxiomInstrument *instrument, uint32_t id);
-AxiomInput *axiom_get_output(AxiomInstrument *instrument, uint32_t id);
-void axiom_generate();
-void axiom_destroy_instrument(AxiomInstrument *instrument);
+#ifdef __cplusplus
+extern "C" {
+#endif
+AxiomInstrument* __cdecl axiom_create_instrument(AxiomDefinition *definition);
+AxiomInput* __cdecl axiom_get_input(AxiomInstrument *instrument, uint32_t id);
+AxiomInput* __cdecl axiom_get_output(AxiomInstrument *instrument, uint32_t id);
+void __cdecl axiom_generate();
+void __cdecl axiom_destroy_instrument(AxiomInstrument *instrument);
 
-void axiom_midi_push(AxiomInput *input, AxiomMidiEvent event);
-void axiom_midi_clear(AxiomInput *input);
-void axiom_num_write(AxiomInput *input, AxiomNum value);
-AxiomNum axiom_num_read(AxiomOutput *output);
+void __cdecl axiom_midi_push(AxiomInput *input, AxiomMidiEvent event);
+void __cdecl axiom_midi_clear(AxiomInput *input);
+void __cdecl axiom_num_write(AxiomInput *input, AxiomNum value);
+AxiomNum __cdecl axiom_num_read(AxiomOutput *output);
+#ifdef __cplusplus
+}
+#endif
 
 #endif
