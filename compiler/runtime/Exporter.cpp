@@ -31,7 +31,7 @@ Exporter::Exporter(MaximCodegen::MaximContext *context, const llvm::Module *comm
 
     _exportDefinitionTy = llvm::StructType::get(context->llvm(), {
         context->dataLayoutType(), // storage alloc size
-        context->voidPointerType(), // pointer to default memory
+        llvm::Type::getInt8PtrTy(context->llvm()), // pointer to default memory
         llvm::PointerType::get(context->dataLayoutType(), 0), // list of input indexes into storage array
         llvm::PointerType::get(context->dataLayoutType(), 0), // list of output indexes into storage array
         llvm::PointerType::get(llvm::FunctionType::get(llvm::Type::getVoidTy(context->llvm()), {context->voidPointerType()}, false), 0), // constructor func
@@ -108,9 +108,9 @@ void Exporter::addRuntime(MaximRuntime::Runtime *runtime, const std::string &exp
         module, _exportDefinitionTy, true, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
         llvm::ConstantStruct::get(_exportDefinitionTy, {
             llvm::ConstantInt::get(runtime->ctx()->dataLayoutType(), storageSize, false),
-            exportData,
-            inputList,
-            outputList,
+            llvm::ConstantExpr::getInBoundsGetElementPtr(exportArrayTy, exportData, std::vector<llvm::Constant*>{runtime->ctx()->constInt(64, 0, false), runtime->ctx()->constInt(32, 0, false)}),
+            llvm::ConstantExpr::getInBoundsGetElementPtr(inputArrayTy, inputList, std::vector<llvm::Constant*>{runtime->ctx()->constInt(64, 0, false), runtime->ctx()->constInt(32, 0, false)}),
+            llvm::ConstantExpr::getInBoundsGetElementPtr(outputArrayTy, outputList, std::vector<llvm::Constant*>{runtime->ctx()->constInt(64, 0, false), runtime->ctx()->constInt(32, 0, false)}),
             runConstructor,
             runGenerate,
             runDestructor
@@ -169,7 +169,7 @@ void Exporter::buildCreateInstrumentFunc(MaximCodegen::MaximContext *ctx) {
             llvm::Function::ExternalLinkage, "malloc", &module
         );
     }
-    auto memCopyFunc = llvm::Intrinsic::getDeclaration(&module, llvm::Intrinsic::memcpy, {llvm::IntegerType::getInt8PtrTy(ctx->llvm()), ctx->voidPointerType(), ctx->dataLayoutType()});
+    auto memCopyFunc = llvm::Intrinsic::getDeclaration(&module, llvm::Intrinsic::memcpy, {llvm::IntegerType::getInt8PtrTy(ctx->llvm()), llvm::IntegerType::getInt8PtrTy(ctx->llvm()), ctx->dataLayoutType()});
 
     auto createInstrumentFunc = llvm::Function::Create(
         llvm::FunctionType::get(llvm::PointerType::get(_exportInstrumentTy, 0), {llvm::PointerType::get(_exportDefinitionTy, 0)}, false),
