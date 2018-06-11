@@ -8,7 +8,7 @@ mod surface;
 mod var_type;
 
 pub use mir::block::{BlockId, Block};
-pub use mir::control::{ControlType, Control};
+pub use mir::control::Control;
 pub use mir::control_group::ControlGroup;
 pub use mir::mir_context::MIRContext;
 pub use mir::node::Node;

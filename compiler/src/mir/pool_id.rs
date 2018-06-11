@@ -20,7 +20,7 @@ impl<T> Eq for PoolId<T> {}
 
 impl<T> Ord for PoolId<T> {
     fn cmp(&self, other: &PoolId<T>) -> Ordering {
-        self.id.cmp(other.id.cmp)
+        self.id.cmp(&other.id)
     }
 }
 
@@ -37,7 +37,7 @@ impl<T> Hash for PoolId<T> {
 }
 
 impl<T> PoolId<T> {
-    pub fn create(debug_name: String, context: &mut MIRContext) -> PoolId<T> {
+    pub fn new(debug_name: String, context: &mut MIRContext) -> PoolId<T> {
         PoolId {
             id: context.alloc_id(),
             debug_name,

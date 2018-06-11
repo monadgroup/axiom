@@ -8,7 +8,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn create(controls: Vec<Control>, block_id: Option<BlockId>, surface_id: Option<SurfaceId>) -> Node {
+    pub fn new(controls: Vec<Control>, block_id: Option<BlockId>, surface_id: Option<SurfaceId>) -> Node {
         Node {
             controls,
             block_id,
