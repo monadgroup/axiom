@@ -12,9 +12,7 @@ namespace MaximCommon {
         SCOPE = 1 << 4,
 
         NUM_EXTRACT = 1 << 5,
-        MIDI_EXTRACT = 1 << 6,
-
-        EXTRACT = NUM_EXTRACT | MIDI_EXTRACT
+        MIDI_EXTRACT = 1 << 6
     };
 
     std::string controlType2String(ControlType type);

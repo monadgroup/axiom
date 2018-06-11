@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "../SourcePos.h"
+#include "../../SourcePos.h"
 
 namespace MaximAst {
 

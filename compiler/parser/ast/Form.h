@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "Expression.h"
-#include "../common/FormType.h"
+#include "../../common/FormType.h"
 
 namespace MaximAst {
 

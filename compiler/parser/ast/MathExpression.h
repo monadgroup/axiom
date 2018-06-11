@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Expression.h"
-#include "../common/OperatorType.h"
+#include "../../common/OperatorType.h"
 
 namespace MaximAst {
 
