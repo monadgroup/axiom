@@ -1,11 +1,16 @@
-set(CMAKE_CXX_STANDARD 17)
+include(ExternalProject)
 
-if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(COMPILER_CARGO_COMMAND cargo build)
+else ()
+    set(COMPILER_CARGO_COMMAND cargo build --release)
 endif ()
 
-include_directories(${LLVM_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
-
-add_subdirectory(common)
-add_subdirectory(parser)
+ExternalProject_Add(
+    compiler
+    DOWNLOAD_COMMAND ""
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ${COMPILER_CARGO_COMMAND}
+    BINARY_DIR "${CMAKE_SOURCE_DIR}/compiler"
+    INSTALL_COMMAND ""
+)

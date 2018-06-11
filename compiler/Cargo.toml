@@ -1,0 +1,10 @@
+[package]
+name = "compiler"
+version = "0.1.0"
+authors = ["cpdt <copodt@gmail.com>"]
+
+[lib]
+name = "compiler"
+crate-type = ["staticlib"]
+
+[dependencies]
