@@ -1,4 +1,19 @@
-use ast::{SourcePos, FormType};
+use ast::{SourcePos};
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum FormType {
+    None,
+    Control,
+    Oscillator,
+    Note,
+    Frequency,
+    Beats,
+    Seconds,
+    Samples,
+    Db,
+    Amplitude,
+    Q
+}
 
 #[derive(Debug, Clone)]
 pub struct Form {

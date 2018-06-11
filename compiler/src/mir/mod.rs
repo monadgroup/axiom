@@ -7,10 +7,10 @@ mod pool_id;
 mod surface;
 mod var_type;
 
-pub use mir::block::{BlockId, Block};
-pub use mir::control::Control;
-pub use mir::control_group::ControlGroup;
-pub use mir::mir_context::MIRContext;
-pub use mir::node::Node;
-pub use mir::surface::{SurfaceId, Surface};
-pub use mir::var_type::VarType;
+pub use self::block::{BlockId, Block};
+pub use self::control::Control;
+pub use self::control_group::ControlGroup;
+pub use self::mir_context::MIRContext;
+pub use self::node::Node;
+pub use self::surface::{SurfaceId, Surface};
+pub use self::var_type::VarType;
