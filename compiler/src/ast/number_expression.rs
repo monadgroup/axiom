@@ -26,3 +26,8 @@ impl NumberExpression {
         &self.form
     }
 }
+
+impl Expression for NumberExpression {
+    fn get_start_pos(&self) -> SourcePos { self.start_pos }
+    fn get_end_pos(&self) -> SourcePos { self.end_pos }
+}

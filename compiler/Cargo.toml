@@ -8,3 +8,5 @@ name = "compiler"
 crate-type = ["staticlib"]
 
 [dependencies]
+regex = "1.0.0"
+lazy_static = "1.0"
