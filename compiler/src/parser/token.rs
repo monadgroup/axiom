@@ -27,7 +27,6 @@ pub enum TokenType {
     BitwiseAnd,
     BitwiseOr,
     EndOfLine,
-    EndOfFile,
 
     // multi-char tokens
     Gte,
