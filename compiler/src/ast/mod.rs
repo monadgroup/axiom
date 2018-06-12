@@ -1,4 +1,5 @@
 mod assign_expression;
+mod block;
 mod call_expression;
 mod cast_expression;
 mod control_expression;
@@ -17,6 +18,7 @@ mod unary_expression;
 mod variable_expression;
 
 pub use self::assign_expression::AssignExpression;
+pub use self::block::Block;
 pub use self::call_expression::CallExpression;
 pub use self::cast_expression::CastExpression;
 pub use self::control_expression::ControlExpression;
@@ -29,7 +31,7 @@ pub use self::note_expression::NoteExpression;
 pub use self::number_expression::NumberExpression;
 pub use self::operator_type::OperatorType;
 pub use self::postfix_expression::{PostfixOperation, PostfixExpression};
-pub use self::source_pos::SourcePos;
+pub use self::source_pos::{SourcePos, SourceRange};
 pub use self::tuple_expression::TupleExpression;
 pub use self::unary_expression::{UnaryOperation, UnaryExpression};
 pub use self::variable_expression::VariableExpression;

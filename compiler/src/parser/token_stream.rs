@@ -1,5 +1,5 @@
 use parser::{Token, TokenType};
-use ast::SourcePos;
+use ast::{SourcePos, SourceRange};
 use regex::Regex;
 use std::iter::Peekable;
 
@@ -69,14 +69,14 @@ fn get_matcher(regex: &str, token_type: TokenType) -> TokenMatcher {
     (Regex::new(&regex_str).unwrap(), token_type)
 }
 
-struct TokenIterator {
-    data: String,
+struct TokenIterator<'a> {
+    data: &'a str,
     cursor: usize,
     current_pos: SourcePos
 }
 
-impl TokenIterator {
-    pub fn new(data: String) -> TokenIterator {
+impl<'a> TokenIterator<'a> {
+    pub fn new(data: &'a str) -> TokenIterator<'a> {
         TokenIterator {
             data,
             cursor: 0,
@@ -85,7 +85,7 @@ impl TokenIterator {
     }
 }
 
-impl Iterator for TokenIterator {
+impl<'a> Iterator for TokenIterator<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
@@ -115,18 +115,20 @@ impl Iterator for TokenIterator {
                 let token_content = if captures.len() > 1 { &captures[1] } else { "" };
 
                 self.current_pos = token_end.clone();
-                Some(Token::new(token_start, token_end, token_type, token_content.to_owned()))
+                Some(Token::new(SourceRange(token_start, token_end), token_type, token_content.to_owned()))
             },
-            None => Some(Token::new(token_start.clone(), token_start, TokenType::Unknown, "".to_owned()))
+            None => Some(Token::new(SourceRange(token_start.clone(), token_start), TokenType::Unknown, "".to_owned()))
         }
     }
 }
 
-pub fn get_token_stream(data: String) -> Peekable<impl Iterator> {
+pub type TokenStream<'a> = Peekable<Box<Iterator<Item = Token> + 'a>>;
+
+pub fn get_token_stream<'a>(data: &'a str) -> TokenStream<'a> {
     let mut in_single_comment = false;
     let mut multi_comment_depth = 0;
 
-    TokenIterator::new(data).filter(move |token| {
+    let boxed: Box<Iterator<Item = Token>> = Box::new(TokenIterator::<'a>::new(data).filter(move |token| {
         if token.get_token_type() == TokenType::Hash {
             in_single_comment = true;
         } else if token.get_token_type() == TokenType::EndOfLine {
@@ -142,5 +144,7 @@ pub fn get_token_stream(data: String) -> Peekable<impl Iterator> {
         }
 
         is_valid
-    }).peekable()
+    }));
+
+    boxed.peekable()
 }

@@ -1,4 +1,4 @@
-use ast::{SourcePos};
+use ast::SourceRange;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TokenType {
@@ -61,28 +61,22 @@ pub enum TokenType {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Token {
-    start_pos: SourcePos,
-    end_pos: SourcePos,
+    pos: SourceRange,
     token_type: TokenType,
     content: String
 }
 
 impl Token {
-    pub fn new(start_pos: SourcePos, end_pos: SourcePos, token_type: TokenType, content: String) -> Token {
+    pub fn new(pos: SourceRange, token_type: TokenType, content: String) -> Token {
         Token {
-            start_pos,
-            end_pos,
+            pos,
             token_type,
             content
         }
     }
 
-    pub fn get_start_pos(&self) -> SourcePos {
-        self.start_pos
-    }
-
-    pub fn get_end_pos(&self) -> SourcePos {
-        self.end_pos
+    pub fn get_pos(&self) -> &SourceRange {
+        &self.pos
     }
 
     pub fn get_token_type(&self) -> TokenType {
