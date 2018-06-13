@@ -1,4 +1,4 @@
-use ast::{SourcePos};
+use ast::SourceRange;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum FormType {
@@ -17,29 +17,18 @@ pub enum FormType {
 
 #[derive(Debug, Clone)]
 pub struct Form {
-    start_pos: SourcePos,
-    end_pos: SourcePos,
+    pos: SourceRange,
     form_type: FormType
 }
 
 impl Form {
-    pub fn new(start_pos: SourcePos, end_pos: SourcePos, form_type: FormType) -> Form {
+    pub fn new(pos: SourceRange, form_type: FormType) -> Form {
         Form {
-            start_pos,
-            end_pos,
+            pos,
             form_type
         }
     }
 
-    pub fn get_start_pos(&self) -> SourcePos {
-        self.start_pos
-    }
-
-    pub fn get_end_pos(&self) -> SourcePos {
-        self.end_pos
-    }
-
-    pub fn get_form_type(&self) -> FormType {
-        self.form_type
-    }
+    pub fn pos(&self) -> &SourceRange { &self.pos }
+    pub fn form_type(&self) -> FormType { self.form_type }
 }

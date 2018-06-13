@@ -1,33 +1,25 @@
-use ast::{SourcePos, Expression};
+use ast::{SourceRange, Expression};
 
 #[derive(Debug)]
 pub struct CallExpression {
-    start_pos: SourcePos,
-    end_pos: SourcePos,
+    pos: SourceRange,
     name: String,
     arguments: Vec<Box<Expression>>
 }
 
 impl CallExpression {
-    pub fn new(start_pos: SourcePos, end_pos: SourcePos, name: String, arguments: Vec<Box<Expression>>) -> CallExpression {
+    pub fn new(pos: SourceRange, name: String, arguments: Vec<Box<Expression>>) -> CallExpression {
         CallExpression {
-            start_pos,
-            end_pos,
+            pos,
             name,
             arguments
         }
     }
 
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn get_arguments(&self) -> &Vec<Box<Expression>> {
-        &self.arguments
-    }
+    pub fn name(&self) -> &str { &self.name }
+    pub fn arguments(&self) -> &Vec<Box<Expression>> { &self.arguments }
 }
 
 impl Expression for CallExpression {
-    fn get_start_pos(&self) -> SourcePos { self.start_pos }
-    fn get_end_pos(&self) -> SourcePos { self.end_pos }
+    fn pos(&self) -> &SourceRange { &self.pos }
 }

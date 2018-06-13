@@ -1,27 +1,22 @@
-use ast::{SourcePos, Expression};
+use ast::{SourceRange, Expression};
 
 #[derive(Debug)]
 pub struct TupleExpression {
-    start_pos: SourcePos,
-    end_pos: SourcePos,
+    pos: SourceRange,
     expressions: Vec<Box<Expression>>
 }
 
 impl TupleExpression {
-    pub fn new(start_pos: SourcePos, end_pos: SourcePos, expressions: Vec<Box<Expression>>) -> TupleExpression {
+    pub fn new(pos: SourceRange, expressions: Vec<Box<Expression>>) -> TupleExpression {
         TupleExpression {
-            start_pos,
-            end_pos,
+            pos,
             expressions
         }
     }
 
-    pub fn get_expressions(&self) -> &Vec<Box<Expression>> {
-        &self.expressions
-    }
+    pub fn expressions(&self) -> &Vec<Box<Expression>> { &self.expressions }
 }
 
 impl Expression for TupleExpression {
-    fn get_start_pos(&self) -> SourcePos { self.start_pos }
-    fn get_end_pos(&self) -> SourcePos { self.end_pos }
+    fn pos(&self) -> &SourceRange { &self.pos }
 }

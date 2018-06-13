@@ -1,4 +1,4 @@
-use ast::{SourcePos, Expression, LValueExpression};
+use ast::{SourceRange, Expression, LValueExpression};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum PostfixOperation {
@@ -8,32 +8,24 @@ pub enum PostfixOperation {
 
 #[derive(Debug)]
 pub struct PostfixExpression {
-    start_pos: SourcePos,
-    end_pos: SourcePos,
+    pos: SourceRange,
     left: Box<LValueExpression>,
     operation: PostfixOperation
 }
 
 impl PostfixExpression {
-    pub fn new(start_pos: SourcePos, end_pos: SourcePos, left: Box<LValueExpression>, operation: PostfixOperation) -> PostfixExpression {
+    pub fn new(pos: SourceRange, left: Box<LValueExpression>, operation: PostfixOperation) -> PostfixExpression {
         PostfixExpression {
-            start_pos,
-            end_pos,
+            pos,
             left,
             operation
         }
     }
 
-    pub fn get_left(&self) -> &Box<LValueExpression> {
-        &self.left
-    }
-
-    pub fn get_operation(&self) -> PostfixOperation {
-        self.operation
-    }
+    pub fn left(&self) -> &Box<LValueExpression> { &self.left }
+    pub fn operation(&self) -> PostfixOperation { self.operation }
 }
 
 impl Expression for PostfixExpression {
-    fn get_start_pos(&self) -> SourcePos { self.start_pos }
-    fn get_end_pos(&self) -> SourcePos { self.end_pos }
+    fn pos(&self) -> &SourceRange { &self.pos }
 }

@@ -1,9 +1,7 @@
 use std::fmt::Debug;
-use ast::SourcePos;
+use ast::SourceRange;
 
 pub trait Expression: Debug {
-    fn get_start_pos(&self) -> SourcePos;
-    fn get_end_pos(&self) -> SourcePos;
+    fn is_assignable(&self) -> bool { false }
+    fn pos(&self) -> &SourceRange;
 }
-
-pub trait AssignableExpression: Expression {}

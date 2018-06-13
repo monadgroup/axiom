@@ -1,4 +1,4 @@
-use ast::{SourcePos, Expression};
+use ast::{SourceRange, Expression};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum UnaryOperation {
@@ -9,32 +9,24 @@ pub enum UnaryOperation {
 
 #[derive(Debug)]
 pub struct UnaryExpression {
-    start_pos: SourcePos,
-    end_pos: SourcePos,
+    pos: SourceRange,
     operation: UnaryOperation,
     expr: Box<Expression>
 }
 
 impl UnaryExpression {
-    pub fn new(start_pos: SourcePos, end_pos: SourcePos, operation: UnaryOperation, expr: Box<Expression>) -> UnaryExpression {
+    pub fn new(pos: SourceRange, operation: UnaryOperation, expr: Box<Expression>) -> UnaryExpression {
         UnaryExpression {
-            start_pos,
-            end_pos,
+            pos,
             operation,
             expr
         }
     }
 
-    pub fn get_operation(&self) -> UnaryOperation {
-        self.operation
-    }
-
-    pub fn get_expr(&self) -> &Box<Expression> {
-        &self.expr
-    }
+    pub fn operation(&self) -> UnaryOperation { self.operation }
+    pub fn expr(&self) -> &Box<Expression> { &self.expr }
 }
 
 impl Expression for UnaryExpression {
-    fn get_start_pos(&self) -> SourcePos { self.start_pos }
-    fn get_end_pos(&self) -> SourcePos { self.end_pos }
+    fn pos(&self) -> &SourceRange { &self.pos }
 }

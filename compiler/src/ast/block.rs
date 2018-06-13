@@ -12,7 +12,5 @@ impl Block {
         }
     }
 
-    pub fn get_expressions(&self) -> &Vec<Box<Expression>> {
-        &self.expressions
-    }
+    pub fn expressions(&self) -> &Vec<Box<Expression>> { &self.expressions }
 }

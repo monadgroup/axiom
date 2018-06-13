@@ -1,27 +1,23 @@
-use ast::{SourcePos, Expression, AssignableExpression};
+use ast::{SourceRange, Expression};
 
 #[derive(Debug)]
 pub struct LValueExpression {
-    start_pos: SourcePos,
-    end_pos: SourcePos,
-    assignments: Vec<Box<AssignableExpression>>
+    pos: SourceRange,
+    assignments: Vec<Box<Expression>>
 }
 
 impl LValueExpression {
-    pub fn new(start_pos: SourcePos, end_pos: SourcePos, assignments: Vec<Box<AssignableExpression>>) -> LValueExpression {
+    pub fn new(pos: SourceRange, assignments: Vec<Box<Expression>>) -> LValueExpression {
         LValueExpression {
-            start_pos,
-            end_pos,
+            pos,
             assignments
         }
     }
 
-    pub fn get_assignments(&self) -> &Vec<Box<AssignableExpression>> {
-        &self.assignments
-    }
+    pub fn assignments(&self) -> &Vec<Box<Expression>> { &self.assignments }
 }
 
 impl Expression for LValueExpression {
-    fn get_start_pos(&self) -> SourcePos { self.start_pos }
-    fn get_end_pos(&self) -> SourcePos { self.end_pos }
+    fn is_assignable(&self) -> bool { true }
+    fn pos(&self) -> &SourceRange { &self.pos }
 }

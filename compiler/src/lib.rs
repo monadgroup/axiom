@@ -11,4 +11,4 @@ mod compile_error;
 pub use self::ast::*;
 pub use self::mir::*;
 pub use self::parser::*;
-pub use self::compile_error::CompileError;
+pub use self::compile_error::{CompileError, CompileResult};

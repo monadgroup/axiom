@@ -1,28 +1,23 @@
-use ast::{SourcePos, Expression, AssignableExpression};
+use ast::{SourceRange, Expression};
 
 #[derive(Debug)]
 pub struct VariableExpression {
-    start_pos: SourcePos,
-    end_pos: SourcePos,
+    pos: SourceRange,
     name: String
 }
 
 impl VariableExpression {
-    pub fn new(start_pos: SourcePos, end_pos: SourcePos, name: String) -> VariableExpression {
+    pub fn new(pos: SourceRange, name: String) -> VariableExpression {
         VariableExpression {
-            start_pos,
-            end_pos,
+            pos,
             name
         }
     }
 
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
+    pub fn get_name(&self) -> &str { &self.name }
 }
 
 impl Expression for VariableExpression {
-    fn get_start_pos(&self) -> SourcePos { self.start_pos }
-    fn get_end_pos(&self) -> SourcePos { self.end_pos }
+    fn is_assignable(&self) -> bool { true }
+    fn pos(&self) -> &SourceRange { &self.pos }
 }
-impl AssignableExpression for VariableExpression {}

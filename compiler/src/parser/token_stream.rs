@@ -129,17 +129,16 @@ pub fn get_token_stream<'a>(data: &'a str) -> TokenStream<'a> {
     let mut multi_comment_depth = 0;
 
     let boxed: Box<Iterator<Item = Token>> = Box::new(TokenIterator::<'a>::new(data).filter(move |token| {
-        if token.get_token_type() == TokenType::Hash {
-            in_single_comment = true;
-        } else if token.get_token_type() == TokenType::EndOfLine {
-            in_single_comment = false;
-        } else if token.get_token_type() == TokenType::CommentOpen {
-            multi_comment_depth += 1;
+        match token.token_type {
+            TokenType::Hash => in_single_comment = true,
+            TokenType::EndOfLine => in_single_comment = false,
+            TokenType::CommentOpen => multi_comment_depth += 1,
+            _ => {}
         }
 
         let is_valid = !in_single_comment && multi_comment_depth == 0;
 
-        if token.get_token_type() == TokenType::CommentClose && multi_comment_depth > 0 {
+        if token.token_type == TokenType::CommentClose && multi_comment_depth > 0 {
             multi_comment_depth -= 1;
         }
 

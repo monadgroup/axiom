@@ -61,9 +61,9 @@ pub enum TokenType {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Token {
-    pos: SourceRange,
-    token_type: TokenType,
-    content: String
+    pub pos: SourceRange,
+    pub token_type: TokenType,
+    pub content: String
 }
 
 impl Token {
@@ -73,17 +73,5 @@ impl Token {
             token_type,
             content
         }
-    }
-
-    pub fn get_pos(&self) -> &SourceRange {
-        &self.pos
-    }
-
-    pub fn get_token_type(&self) -> TokenType {
-        self.token_type
-    }
-
-    pub fn get_content(&self) -> &str {
-        &self.content
     }
 }
