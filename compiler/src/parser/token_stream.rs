@@ -140,7 +140,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     TokenType::Unknown,
                     "".to_owned(),
                 )
-            },
+            }
         };
         println!("Emit {:?}", &token);
         Some(token)

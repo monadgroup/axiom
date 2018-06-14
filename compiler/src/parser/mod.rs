@@ -4,7 +4,9 @@ mod token_stream;
 pub use self::token::{Token, TokenType};
 pub use self::token_stream::{get_token_stream, TokenStream};
 
-use ast::{Block, ControlType, Expression, ExpressionData, AssignableExpression, KnownExpression, LValueExpression, Form, FormType, OperatorType, PostfixOperation, SourcePos, SourceRange, UnaryOperation};
+use ast::{AssignableExpression, Block, ControlType, Expression, ExpressionData, Form, FormType,
+          KnownExpression, LValueExpression, OperatorType, PostfixOperation, SourcePos,
+          SourceRange, UnaryOperation};
 use regex::Regex;
 use {CompileError, CompileResult};
 
@@ -66,7 +68,7 @@ impl<'a> Parser<'a> {
                     ..
                 }) => {
                     stream.next();
-                },
+                }
                 Some(_) => {
                     match Parser::parse_expression(&mut stream, PRECEDENCE_ALL) {
                         Ok(expr) => expressions.push(expr),
@@ -271,7 +273,12 @@ impl<'a> Parser<'a> {
         let form_start = form.pos().0;
         let expr_end = expr.pos.1;
 
-        Ok(Expression::new_cast(SourceRange(form_start, expr_end), form, Box::new(expr), true))
+        Ok(Expression::new_cast(
+            SourceRange(form_start, expr_end),
+            form,
+            Box::new(expr),
+            true,
+        ))
     }
 
     fn parse_note_token_expr(stream: &mut TokenStream) -> ExprResult {
@@ -368,7 +375,11 @@ impl<'a> Parser<'a> {
             stream.next();
         }
 
-        Ok(Expression::new_number(SourceRange(num_token.pos.0, val_form.pos().1), num_val, val_form))
+        Ok(Expression::new_number(
+            SourceRange(num_token.pos.0, val_form.pos().1),
+            num_val,
+            val_form,
+        ))
     }
 
     fn parse_unary_token_expr(stream: &mut TokenStream) -> ExprResult {
@@ -397,7 +408,11 @@ impl<'a> Parser<'a> {
             Err(err) => return Err(err),
         };
 
-        Ok(Expression::new_unary(SourceRange(pos.0, expr.pos.1), operator, Box::new(expr)))
+        Ok(Expression::new_unary(
+            SourceRange(pos.0, expr.pos.1),
+            operator,
+            Box::new(expr),
+        ))
     }
 
     fn parse_identifier_token_expr(stream: &mut TokenStream) -> ExprResult {
@@ -417,7 +432,10 @@ impl<'a> Parser<'a> {
                 content,
                 pos,
             }) => Parser::parse_control_expr(stream, content.to_owned(), pos.0),
-            _ => Ok(Expression::new_variable(identifier_token.pos, identifier_token.content)),
+            _ => Ok(Expression::new_variable(
+                identifier_token.pos,
+                identifier_token.content,
+            )),
         }
     }
 
@@ -463,7 +481,10 @@ impl<'a> Parser<'a> {
         if expressions.len() == 1 {
             Ok(expressions.remove(0))
         } else {
-            Ok(Expression::new_tuple(SourceRange(open_pos, close_pos), expressions))
+            Ok(Expression::new_tuple(
+                SourceRange(open_pos, close_pos),
+                expressions,
+            ))
         }
     }
 
@@ -515,7 +536,12 @@ impl<'a> Parser<'a> {
             _ => ("value".to_owned(), type_token.pos.1),
         };
 
-        Ok(Expression::new_control(SourceRange(start_pos, end_pos), name, control_type, prop_name))
+        Ok(Expression::new_control(
+            SourceRange(start_pos, end_pos),
+            name,
+            control_type,
+            prop_name,
+        ))
     }
 
     fn parse_call_expr(stream: &mut TokenStream, name: String, start_pos: SourcePos) -> ExprResult {
@@ -540,7 +566,11 @@ impl<'a> Parser<'a> {
             Err(err) => return Err(err),
         };
 
-        Ok(Expression::new_call(SourceRange(start_pos, end_pos), name, args))
+        Ok(Expression::new_call(
+            SourceRange(start_pos, end_pos),
+            name,
+            args,
+        ))
     }
 
     fn parse_arg_list(stream: &mut TokenStream) -> CompileResult<Vec<Expression>> {
@@ -581,7 +611,12 @@ impl<'a> Parser<'a> {
             Ok(form) => form,
             Err(err) => return Err(err),
         };
-        Ok(Expression::new_cast(SourceRange(lhs.pos.0, form.pos().1), form, Box::new(lhs), false))
+        Ok(Expression::new_cast(
+            SourceRange(lhs.pos.0, form.pos().1),
+            form,
+            Box::new(lhs),
+            false,
+        ))
     }
 
     fn parse_postfix_expr(stream: &mut TokenStream, lhs: Expression) -> ExprResult {
@@ -601,7 +636,11 @@ impl<'a> Parser<'a> {
         };
 
         match Parser::get_lvalue(lhs) {
-            Ok(lvalue) => Ok(Expression::new_postfix(SourceRange(lvalue.pos.0, end_pos), lvalue, operation)),
+            Ok(lvalue) => Ok(Expression::new_postfix(
+                SourceRange(lvalue.pos.0, end_pos),
+                lvalue,
+                operation,
+            )),
             Err(err) => Err(err),
         }
     }
@@ -638,7 +677,12 @@ impl<'a> Parser<'a> {
                 Ok(expr) => expr,
                 Err(err) => return Err(err),
             };
-        Ok(Expression::new_math(SourceRange(lhs.pos.0, rhs.pos.1), Box::new(lhs), Box::new(rhs), operator))
+        Ok(Expression::new_math(
+            SourceRange(lhs.pos.0, rhs.pos.1),
+            Box::new(lhs),
+            Box::new(rhs),
+            operator,
+        ))
     }
 
     fn parse_assign_expr(stream: &mut TokenStream, lhs: Expression) -> ExprResult {
@@ -668,32 +712,44 @@ impl<'a> Parser<'a> {
                 Ok(expr) => expr,
                 Err(err) => return Err(err),
             };
-        Ok(Expression::new_assign(SourceRange(lvalue.pos.0, rhs.pos.1), lvalue, Box::new(rhs), operator))
+        Ok(Expression::new_assign(
+            SourceRange(lvalue.pos.0, rhs.pos.1),
+            lvalue,
+            Box::new(rhs),
+            operator,
+        ))
     }
 
     fn get_lvalue(expr: Expression) -> CompileResult<KnownExpression<LValueExpression>> {
         let expr_pos = expr.pos;
         match Parser::get_assignables(expr) {
-            Ok(assignments) => Ok(KnownExpression::new(expr_pos, LValueExpression { assignments })),
+            Ok(assignments) => Ok(KnownExpression::new(
+                expr_pos,
+                LValueExpression { assignments },
+            )),
             Err(range) => Err(CompileError::required_assignable(range)),
         }
     }
 
     fn get_assignables(expr: Expression) -> Result<Vec<AssignableExpression>, SourceRange> {
         match expr.data {
-            ExpressionData::Variable(var) => Ok(vec![AssignableExpression::new_variable(expr.pos, var)]),
-            ExpressionData::Control(control) => Ok(vec![AssignableExpression::new_control(expr.pos, control)]),
+            ExpressionData::Variable(var) => {
+                Ok(vec![AssignableExpression::new_variable(expr.pos, var)])
+            }
+            ExpressionData::Control(control) => {
+                Ok(vec![AssignableExpression::new_control(expr.pos, control)])
+            }
             ExpressionData::Tuple(tuple) => {
                 let mut assignables = Vec::new();
                 for expr in tuple.expressions {
                     match Parser::get_assignables(expr) {
                         Ok(mut assigns) => assignables.append(&mut assigns),
-                        Err(range) => return Err(range)
+                        Err(range) => return Err(range),
                     }
                 }
                 Ok(assignables)
-            },
-            _ => Err(expr.pos)
+            }
+            _ => Err(expr.pos),
         }
     }
 
