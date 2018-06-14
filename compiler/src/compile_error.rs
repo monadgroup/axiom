@@ -1,4 +1,4 @@
-use ast::{SourceRange, UNDEF_SOURCE_RANGE};
+use ast::{SourceRange, ControlType, UNDEF_SOURCE_RANGE};
 use parser::{Token, TokenType};
 use std::fmt::Write;
 
@@ -9,6 +9,7 @@ pub enum CompileError {
     UnknownForm(String, SourceRange),
     UnknownNote(String, SourceRange),
     UnknownControl(String, SourceRange),
+    UnknownField(ControlType, String, SourceRange),
     RequiredAssignable(SourceRange),
 }
 
@@ -35,6 +36,10 @@ impl CompileError {
         CompileError::UnknownControl(control, range)
     }
 
+    pub fn unknown_field(control: ControlType, field: String, range: SourceRange) -> CompileError {
+        CompileError::UnknownField(control, field, range)
+    }
+
     pub fn required_assignable(range: SourceRange) -> CompileError {
         CompileError::RequiredAssignable(range)
     }
@@ -48,6 +53,7 @@ impl CompileError {
             CompileError::UnknownForm(form, range) => (write!(&mut res, "Come on man, I don't support {} forms.", form), *range),
             CompileError::UnknownNote(note, range) => (write!(&mut res, "Ey my man, don't you know that {} isn't a valid note?", note), *range),
             CompileError::UnknownControl(control, range) => (write!(&mut res, "Come on man, I don't support {} controls.", control), *range),
+            CompileError::UnknownField(control, field, range) => (write!(&mut res, "Dude! {:?} controls don't have a {} field!", control, field), *range),
             CompileError::RequiredAssignable(range) => (write!(&mut res, "Hey! I need something I can assign to here, not this silly fudge you're giving me."), *range)
         };
         result.unwrap();

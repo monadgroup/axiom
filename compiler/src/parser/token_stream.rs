@@ -142,7 +142,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 )
             }
         };
-        println!("Emit {:?}", &token);
         Some(token)
     }
 }

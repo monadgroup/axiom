@@ -5,8 +5,8 @@ use std::marker::PhantomData;
 
 #[derive(Debug, Clone)]
 pub struct PoolId<T> {
-    id: u64,
-    debug_name: String,
+    pub id: u64,
+    pub debug_name: String,
     phantom: PhantomData<T>,
 }
 
@@ -43,13 +43,5 @@ impl<T> PoolId<T> {
             debug_name,
             phantom: PhantomData,
         }
-    }
-
-    pub fn get_id(&self) -> u64 {
-        self.id
-    }
-
-    pub fn get_debug_name(&self) -> &str {
-        &self.debug_name
     }
 }

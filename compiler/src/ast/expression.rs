@@ -1,4 +1,4 @@
-use ast::{ControlType, Form, OperatorType, PostfixOperation, SourceRange, UnaryOperation};
+use ast::{ControlField, Form, OperatorType, PostfixOperation, SourceRange, UnaryOperation};
 
 #[derive(Debug)]
 pub struct KnownExpression<T> {
@@ -31,8 +31,7 @@ pub struct CastExpression {
 #[derive(Debug)]
 pub struct ControlExpression {
     pub name: String,
-    pub control_type: ControlType,
-    pub prop: String,
+    pub field: ControlField,
 }
 
 #[derive(Debug)]
@@ -161,15 +160,13 @@ impl Expression {
     pub fn new_control(
         pos: SourceRange,
         name: String,
-        control_type: ControlType,
-        prop: String,
+        field: ControlField,
     ) -> Expression {
         Expression::new(
             pos,
             ExpressionData::Control(ControlExpression {
                 name,
-                control_type,
-                prop,
+                field,
             }),
         )
     }

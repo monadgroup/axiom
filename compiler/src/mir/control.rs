@@ -4,10 +4,10 @@ use ast::ControlType;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Control {
-    control_type: ControlType,
-    group_id: usize,
-    value_written: bool,
-    value_read: bool,
+    pub control_type: ControlType,
+    pub group_id: usize,
+    pub value_written: bool,
+    pub value_read: bool,
 }
 
 impl Control {
@@ -23,21 +23,5 @@ impl Control {
             value_written,
             value_read,
         }
-    }
-
-    pub fn get_control_type(&self) -> ControlType {
-        self.control_type
-    }
-
-    pub fn get_group_id(&self) -> usize {
-        self.group_id
-    }
-
-    pub fn get_value_written(&self) -> bool {
-        self.value_written
-    }
-
-    pub fn get_value_read(&self) -> bool {
-        self.value_read
     }
 }

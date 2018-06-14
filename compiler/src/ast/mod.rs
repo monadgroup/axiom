@@ -3,6 +3,7 @@ mod expression;
 mod form;
 mod source_pos;
 
+mod control_field;
 mod control_type;
 mod operator_type;
 
@@ -10,6 +11,7 @@ mod postfix_operation;
 mod unary_operation;
 
 pub use self::block::Block;
+pub use self::control_field::*;
 pub use self::control_type::ControlType;
 pub use self::expression::*;
 pub use self::form::{Form, FormType};

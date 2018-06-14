@@ -4,9 +4,7 @@ mod token_stream;
 pub use self::token::{Token, TokenType};
 pub use self::token_stream::{get_token_stream, TokenStream};
 
-use ast::{AssignableExpression, Block, ControlType, Expression, ExpressionData, Form, FormType,
-          KnownExpression, LValueExpression, OperatorType, PostfixOperation, SourcePos,
-          SourceRange, UnaryOperation};
+use ast::*;
 use regex::Regex;
 use {CompileError, CompileResult};
 
@@ -45,19 +43,12 @@ impl ParsedExpr {
     }
 }
 
-pub struct Parser<'a> {
-    content: &'a str,
-}
+pub struct Parser {}
 
 type ExprResult = CompileResult<Expression>;
 
-impl<'a> Parser<'a> {
-    pub fn new(content: &'a str) -> Parser<'a> {
-        Parser { content }
-    }
-
-    pub fn parse(&self) -> CompileResult<Block> {
-        let mut stream = get_token_stream(self.content);
+impl Parser {
+    pub fn parse(mut stream: &mut TokenStream) -> CompileResult<Block> {
         let mut expressions = Vec::new();
 
         // todo: this is probably really bad and can be made much nicer
@@ -520,7 +511,7 @@ impl<'a> Parser<'a> {
         };
 
         // parse the property name
-        let (prop_name, end_pos) = match stream.peek() {
+        let (prop_name, prop_pos) = match stream.peek() {
             Some(Token {
                 token_type: TokenType::Dot,
                 ..
@@ -529,18 +520,29 @@ impl<'a> Parser<'a> {
                 stream.next();
 
                 match Parser::expect_token(TokenType::Identifier, stream.next()) {
-                    Ok(Token { content, pos, .. }) => (content, pos.1),
+                    Ok(Token { content, pos, .. }) => (content, pos),
                     Err(err) => return Err(err),
                 }
             }
-            _ => ("value".to_owned(), type_token.pos.1),
+            _ => ("value".to_owned(), type_token.pos),
+        };
+
+        let control_field = match prop_name.as_ref() {
+            "value" if control_type == ControlType::Audio => ControlField::Audio(AudioField::Value),
+            "value" if control_type == ControlType::Graph => ControlField::Graph(GraphField::Value),
+            "speed" if control_type == ControlType::Graph => ControlField::Graph(GraphField::Speed),
+            "value" if control_type == ControlType::Midi => ControlField::Midi(MidiField::Value),
+            "value" if control_type == ControlType::Roll => ControlField::Roll(RollField::Value),
+            "speed" if control_type == ControlType::Roll => ControlField::Roll(RollField::Speed),
+            "value" if control_type == ControlType::NumExtract => ControlField::NumExtract(NumExtractField::Value),
+            "value" if control_type == ControlType::MidiExtract => ControlField::MidiExtract(MidiExtractField::Value),
+            _ => return Err(CompileError::unknown_field(control_type, prop_name, prop_pos))
         };
 
         Ok(Expression::new_control(
-            SourceRange(start_pos, end_pos),
+            SourceRange(start_pos, prop_pos.1),
             name,
-            control_type,
-            prop_name,
+            control_field
         ))
     }
 
