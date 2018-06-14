@@ -1,4 +1,4 @@
-use ast::{SourceRange, Expression};
+use ast::{SourceRange, Expression, Assignable};
 
 #[derive(Debug)]
 pub struct VariableExpression {
@@ -18,6 +18,11 @@ impl VariableExpression {
 }
 
 impl Expression for VariableExpression {
-    fn is_assignable(&self) -> bool { true }
+    fn assignables(&self) -> Result<Vec<Assignable>, SourceRange> {
+        Ok(vec![Assignable::Variable {
+            pos: self.pos,
+            name: self.name.to_owned()
+        }])
+    }
     fn pos(&self) -> &SourceRange { &self.pos }
 }

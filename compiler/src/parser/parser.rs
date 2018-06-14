@@ -1,10 +1,7 @@
 use {CompileError, CompileResult};
-use ast::{Block, CastExpression, ControlExpression, Expression, Form, FormType, NoteExpression, NumberExpression, SourcePos, SourceRange, UnaryExpression, UnaryOperation, VariableExpression};
+use ast::{Block, CastExpression, ControlExpression, Expression, Form, FormType, NoteExpression, NumberExpression, TupleExpression, CallExpression, LValueExpression, PostfixExpression, MathExpression, AssignExpression, SourcePos, SourceRange, UnaryExpression, UnaryOperation, VariableExpression, ControlType, PostfixOperation, OperatorType};
 use parser::{get_token_stream, Token, TokenStream, TokenType};
 use regex::Regex;
-use std::iter::{Peekable, repeat};
-
-const PRECEDENCE_NONE: i32 = 0;
 
 const PRECEDENCE_CASTING: i32 = 1;
 const PRECEDENCE_UNARY: i32 = 2;
@@ -30,6 +27,15 @@ const PRECEDENCE_ALL: i32 = 11;
 enum ParsedExpr {
     Continue(Box<Expression>),
     End(Box<Expression>),
+}
+
+impl ParsedExpr {
+    pub fn continue_expr(result: ExprResult) -> CompileResult<ParsedExpr> {
+        match result {
+            Ok(expr) => Ok(ParsedExpr::Continue(expr)),
+            Err(err) => Err(err)
+        }
+    }
 }
 
 pub struct Parser {
@@ -77,7 +83,7 @@ impl Parser {
 
     fn parse_expression(stream: &mut TokenStream, precedence: i32) -> ExprResult {
         // todo: there's probably a nice iterator-based solution for this
-        let mut result = match Parser::parse_prefix(stream, precedence) {
+        let mut result = match Parser::parse_prefix(stream) {
             Ok(prefix) => prefix,
             Err(err) => return Err(err)
         };
@@ -125,7 +131,7 @@ impl Parser {
         Ok(Form::new(SourceRange(start_pos, end_pos), form_type))
     }
 
-    fn parse_prefix(stream: &mut TokenStream, precedence: i32) -> ExprResult {
+    fn parse_prefix(stream: &mut TokenStream) -> ExprResult {
         let first_token = stream.peek().cloned();
 
         match first_token {
@@ -147,7 +153,46 @@ impl Parser {
     }
 
     fn parse_postfix(stream: &mut TokenStream, prefix: Box<Expression>, precedence: i32) -> CompileResult<ParsedExpr> {
-        unimplemented!();
+        let token_type = match stream.peek() {
+            Some(token) => token.token_type,
+            None => return Err(CompileError::UnexpectedEnd)
+        };
+
+        // if this token has a lower precedence than provided, end this expression
+        if Parser::get_operator_precedence(token_type) <= precedence {
+            return Ok(ParsedExpr::End(prefix));
+        }
+
+        match token_type {
+            TokenType::Cast => ParsedExpr::continue_expr(Parser::parse_cast_expr(stream, prefix)),
+            TokenType::Increment
+            | TokenType::Decrement => ParsedExpr::continue_expr(Parser::parse_postfix_expr(stream, prefix)),
+            TokenType::BitwiseAnd
+            | TokenType::BitwiseOr
+            | TokenType::BitwiseXor
+            | TokenType::LogicalAnd
+            | TokenType::LogicalOr
+            | TokenType::EqualTo
+            | TokenType::NotEqualTo
+            | TokenType::Lt
+            | TokenType::Gt
+            | TokenType::Lte
+            | TokenType::Gte
+            | TokenType::Plus
+            | TokenType::Minus
+            | TokenType::Times
+            | TokenType::Divide
+            | TokenType::Modulo
+            | TokenType::Power => ParsedExpr::continue_expr(Parser::parse_math_expr(stream, prefix)),
+            TokenType::Assign
+            | TokenType::PlusAssign
+            | TokenType::MinusAssign
+            | TokenType::TimesAssign
+            | TokenType::DivideAssign
+            | TokenType::ModuloAssign
+            | TokenType::PowerAssign => ParsedExpr::continue_expr(Parser::parse_assign_expr(stream, prefix)),
+            _ => Ok(ParsedExpr::End(prefix))
+        }
     }
 
     fn parse_open_square_token_expr(stream: &mut TokenStream) -> ExprResult {
@@ -215,13 +260,13 @@ impl Parser {
                 };
 
                 let remaining_content = if matched_mul { &post_mul_text[1..] } else { post_mul_text.as_ref() };
-                let (matched_form, new_form) = {
-                    if remaining_content == "HZ" { (true, FormType::Frequency) }
-                    else if remaining_content == "DB" { (true, FormType::Db) }
-                    else if remaining_content == "Q" { (true, FormType::Q) }
-                    else if remaining_content == "S" { (true, FormType::Seconds) }
-                    else if remaining_content == "B" { (true, FormType::Beats) }
-                    else { (false, FormType::None) }
+                let (matched_form, new_form) = match remaining_content {
+                    "HZ" => (true, FormType::Frequency),
+                    "DB" => (true, FormType::Db),
+                    "Q" => (true, FormType::Q),
+                    "S" => (true, FormType::Seconds),
+                    "B" => (true, FormType::Beats),
+                    _ => (false, FormType::None)
                 };
 
                 if matched_form || (matched_mul && post_mul_text.len() == 1) {
@@ -272,24 +317,275 @@ impl Parser {
     }
 
     fn parse_open_bracket_token_expr(stream: &mut TokenStream) -> ExprResult {
-        unimplemented!();
+        let open_pos = match Parser::expect_token(TokenType::OpenBracket, stream.next()) {
+            Ok(token) => token.pos.0,
+            Err(err) => return Err(err)
+        };
+
+        let mut is_first_iter = true;
+        let mut expressions = Vec::new();
+        let close_pos = loop {
+            match stream.peek() {
+                // if the next token is an end bracket, the sub-expression has ended
+                Some(Token { token_type: TokenType::CloseBracket, pos, .. }) => break pos.1,
+                None => return Err(CompileError::UnexpectedEnd),
+                _ => ()
+            };
+
+            // this iteration should start with a comma if it's not the first
+            if !is_first_iter {
+                match Parser::expect_token(TokenType::Comma, stream.next()) {
+                    Err(err) => return Err(err),
+                    _ => ()
+                };
+            } else {
+                is_first_iter = false;
+            }
+
+            expressions.push(match Parser::parse_expression(stream, PRECEDENCE_ALL) {
+                Ok(expr) => expr,
+                Err(err) => return Err(err)
+            });
+        };
+
+        // consume the last token (an end bracket)
+        stream.next();
+
+        // if only one expression was entered return that expression, otherwise provide the tuple
+        if expressions.len() == 1 {
+            Ok(expressions.remove(0))
+        } else {
+            Ok(Box::new(TupleExpression::new(
+                SourceRange(open_pos, close_pos),
+                expressions
+            )))
+        }
     }
 
     fn parse_control_expr(stream: &mut TokenStream, name: String, start_pos: SourcePos) -> ExprResult {
-        unimplemented!();
+        // ensure the expression starts with a colon
+        if let Err(err) = Parser::expect_token(TokenType::Colon, stream.next()) {
+            return Err(err)
+        }
+
+        let type_token = match Parser::expect_token(TokenType::Identifier, stream.next()) {
+            Ok(token) => token,
+            Err(err) => return Err(err)
+        };
+
+        let control_type = match type_token.content.as_ref() {
+            "num" => ControlType::Audio,
+            "graph" => ControlType::Graph,
+            "midi" => ControlType::Midi,
+            "roll" => ControlType::Roll,
+            "scope" => ControlType::Scope,
+            "num[]" => ControlType::NumExtract,
+            "midi[]" => ControlType::MidiExtract,
+            _ => return Err(CompileError::unknown_control(type_token.content, type_token.pos))
+        };
+
+        // parse the property name
+        let (prop_name, end_pos) = match stream.peek() {
+            Some(Token { token_type: TokenType::Dot, .. }) => {
+                // consume the dot token and get the next one
+                stream.next();
+
+                match Parser::expect_token(TokenType::Identifier, stream.next()) {
+                    Ok(Token { content, pos, .. }) => {
+                        (content, pos.1)
+                    },
+                    Err(err) => return Err(err)
+                }
+            },
+            _ => ("value".to_owned(), type_token.pos.1)
+        };
+
+        Ok(Box::new(ControlExpression::new(SourceRange(start_pos, end_pos), name, control_type, prop_name)))
     }
 
     fn parse_call_expr(stream: &mut TokenStream, name: String, start_pos: SourcePos) -> ExprResult {
-        unimplemented!();
+        if let Err(err) = Parser::expect_token(TokenType::OpenBracket, stream.next()) {
+            return Err(err)
+        }
+
+        let args = match stream.peek() {
+            Some(Token { token_type: TokenType::CloseBracket, .. }) | None => Vec::new(),
+            _ => match Parser::parse_arg_list(stream) {
+                Ok(args) => args,
+                Err(err) => return Err(err)
+            }
+        };
+
+        let end_pos = match Parser::expect_token(TokenType::CloseBracket, stream.next()) {
+            Ok(token) => token.pos.1,
+            Err(err) => return Err(err)
+        };
+
+        Ok(Box::new(CallExpression::new(SourceRange(start_pos, end_pos), name, args)))
+    }
+
+    fn parse_arg_list(stream: &mut TokenStream) -> CompileResult<Vec<Box<Expression>>> {
+        let mut result = Vec::new();
+        let mut is_first_iter = true;
+        loop {
+            // if this is not the first iteration, only continue if there isn't a comma
+            if !is_first_iter {
+                match stream.peek() {
+                    Some(Token { token_type: TokenType::Comma, .. }) => (),
+                    _ => break
+                }
+
+                // consume the comma we just read
+                stream.next();
+            } else {
+                is_first_iter = false;
+            }
+
+            match Parser::parse_expression(stream, PRECEDENCE_ALL) {
+                Ok(expr) => result.push(expr),
+                Err(err) => return Err(err)
+            }
+        }
+
+        Ok(result)
+    }
+
+    fn parse_cast_expr(stream: &mut TokenStream, lhs: Box<Expression>) -> ExprResult {
+        if let Err(err) = Parser::expect_token(TokenType::Cast, stream.next()) {
+            return Err(err)
+        }
+
+        let form = match Parser::parse_form(stream) {
+            Ok(form) => form,
+            Err(err) => return Err(err)
+        };
+        Ok(Box::new(CastExpression::new(SourceRange(lhs.pos().0, form.pos().1), form, lhs, false)))
+    }
+
+    fn parse_postfix_expr(stream: &mut TokenStream, lhs: Box<Expression>) -> ExprResult {
+        let (operation, end_pos) = match stream.next() {
+            Some(Token { token_type: TokenType::Increment, pos, .. }) => (PostfixOperation::Increment, pos.1),
+            Some(Token { token_type: TokenType::Decrement, pos, .. }) => (PostfixOperation::Decrement, pos.1),
+            Some(token) => return Err(CompileError::unexpected_token(token)),
+            None => return Err(CompileError::UnexpectedEnd)
+        };
+
+        match Parser::get_lvalue(&lhs) {
+            Ok(lvalue) => Ok(Box::new(PostfixExpression::new(SourceRange(lhs.pos().0, end_pos), lvalue, operation))),
+            Err(err) => Err(err)
+        }
+    }
+
+    fn parse_math_expr(stream: &mut TokenStream, lhs: Box<Expression>) -> ExprResult {
+        let (operator, token_type) = match stream.next() {
+            Some(token) => {
+                let op = match token.token_type {
+                    TokenType::BitwiseAnd => OperatorType::BitwiseAnd,
+                    TokenType::BitwiseOr => OperatorType::BitwiseOr,
+                    TokenType::BitwiseXor => OperatorType::BitwiseXor,
+                    TokenType::LogicalAnd => OperatorType::LogicalAnd,
+                    TokenType::LogicalOr => OperatorType::LogicalOr,
+                    TokenType::EqualTo => OperatorType::LogicalEqual,
+                    TokenType::NotEqualTo => OperatorType::LogicalNotEqual,
+                    TokenType::Lt => OperatorType::LogicalLt,
+                    TokenType::Gt => OperatorType::LogicalGt,
+                    TokenType::Lte => OperatorType::LogicalLte,
+                    TokenType::Gte => OperatorType::LogicalGte,
+                    TokenType::Plus => OperatorType::Add,
+                    TokenType::Minus => OperatorType::Subtract,
+                    TokenType::Divide => OperatorType::Divide,
+                    TokenType::Modulo => OperatorType::Modulo,
+                    TokenType::Power => OperatorType::Power,
+                    _ => return Err(CompileError::unexpected_token(token))
+                };
+                (op, token.token_type)
+            },
+            None => return Err(CompileError::UnexpectedEnd)
+        };
+
+        let rhs = match Parser::parse_expression(stream, Parser::get_operator_precedence(token_type)) {
+            Ok(expr) => expr,
+            Err(err) => return Err(err)
+        };
+        Ok(Box::new(MathExpression::new(SourceRange(lhs.pos().0, rhs.pos().1), lhs, rhs, operator)))
+    }
+
+    fn parse_assign_expr(stream: &mut TokenStream, lhs: Box<Expression>) -> ExprResult {
+        let (operator, token_type) = match stream.next() {
+            Some(token) => {
+                let op = match token.token_type {
+                    TokenType::Assign => OperatorType::Identity,
+                    TokenType::PlusAssign => OperatorType::Add,
+                    TokenType::MinusAssign => OperatorType::Subtract,
+                    TokenType::TimesAssign => OperatorType::Multiply,
+                    TokenType::DivideAssign => OperatorType::Divide,
+                    TokenType::ModuloAssign => OperatorType::Modulo,
+                    TokenType::PowerAssign => OperatorType::Power,
+                    _ => return Err(CompileError::unexpected_token(token))
+                };
+                (op, token.token_type)
+            },
+            None => return Err(CompileError::UnexpectedEnd)
+        };
+
+        let lvalue = match Parser::get_lvalue(&lhs) {
+            Ok(expr) => expr,
+            Err(err) => return Err(err)
+        };
+        let rhs = match Parser::parse_expression(stream, Parser::get_operator_precedence(token_type)) {
+            Ok(expr) => expr,
+            Err(err) => return Err(err)
+        };
+        Ok(Box::new(AssignExpression::new(SourceRange(lhs.pos().0, rhs.pos().1, ), lvalue, rhs, operator)))
+    }
+
+    fn get_lvalue(expr: &Box<Expression>) -> CompileResult<LValueExpression> {
+        match expr.assignables() {
+            Ok(assignables) => Ok(LValueExpression::new(*expr.pos(), assignables)),
+            Err(range) => Err(CompileError::required_assignable(range))
+        }
     }
 
     fn expect_token(expected_type: TokenType, token_stream: Option<Token>) -> CompileResult<Token> {
         match token_stream {
-            Some(token) => match token.token_type {
-                token_type if token_type == expected_type => Ok(token),
-                _ => Err(CompileError::mismatched_token(expected_type, token))
+            Some(token) => {
+                if token.token_type == expected_type { Ok(token) }
+                else { Err(CompileError::mismatched_token(expected_type, token)) }
             },
             None => Err(CompileError::UnexpectedEnd)
+        }
+    }
+
+    fn get_operator_precedence(token_type: TokenType) -> i32 {
+        match token_type {
+            TokenType::Cast => PRECEDENCE_CASTING,
+            TokenType::Increment
+            | TokenType::Decrement => PRECEDENCE_UNARY,
+            TokenType::BitwiseAnd
+            | TokenType::BitwiseOr
+            | TokenType::BitwiseXor => PRECEDENCE_BITWISE,
+            TokenType::Plus => PRECEDENCE_ADD,
+            TokenType::Minus => PRECEDENCE_SUBTRACT,
+            TokenType::Times => PRECEDENCE_MULTIPLY,
+            TokenType::Divide => PRECEDENCE_DIVIDE,
+            TokenType::Modulo => PRECEDENCE_MODULO,
+            TokenType::Power => PRECEDENCE_POWER,
+            TokenType::EqualTo
+            | TokenType::NotEqualTo
+            | TokenType::Lt
+            | TokenType::Gt
+            | TokenType::Lte
+            | TokenType::Gte => PRECEDENCE_EQUALITY,
+            TokenType::LogicalAnd
+            | TokenType::LogicalOr => PRECEDENCE_LOGICAL,
+            TokenType::Assign
+            | TokenType::PlusAssign
+            | TokenType::MinusAssign
+            | TokenType::TimesAssign
+            | TokenType::DivideAssign
+            | TokenType::ModuloAssign
+            | TokenType::PowerAssign => PRECEDENCE_ASSIGNMENT,
+            _ => PRECEDENCE_ALL
         }
     }
 }

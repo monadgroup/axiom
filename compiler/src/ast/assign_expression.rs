@@ -3,13 +3,13 @@ use ast::{SourceRange, Expression, LValueExpression, OperatorType};
 #[derive(Debug)]
 pub struct AssignExpression {
     pos: SourceRange,
-    left: Box<LValueExpression>,
+    left: LValueExpression,
     right: Box<Expression>,
     operator: OperatorType
 }
 
 impl AssignExpression {
-    pub fn new(pos: SourceRange, left: Box<LValueExpression>, right: Box<Expression>, operator: OperatorType) -> AssignExpression {
+    pub fn new(pos: SourceRange, left: LValueExpression, right: Box<Expression>, operator: OperatorType) -> AssignExpression {
         AssignExpression {
             pos,
             left,
@@ -18,7 +18,7 @@ impl AssignExpression {
         }
     }
 
-    pub fn left(&self) -> &Box<LValueExpression> { &self.left }
+    pub fn left(&self) -> &LValueExpression { &self.left }
     pub fn right(&self) -> &Box<Expression> { &self.right }
     pub fn operator(&self) -> OperatorType { self.operator }
 }

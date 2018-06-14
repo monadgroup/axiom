@@ -9,12 +9,12 @@ pub enum PostfixOperation {
 #[derive(Debug)]
 pub struct PostfixExpression {
     pos: SourceRange,
-    left: Box<LValueExpression>,
+    left: LValueExpression,
     operation: PostfixOperation
 }
 
 impl PostfixExpression {
-    pub fn new(pos: SourceRange, left: Box<LValueExpression>, operation: PostfixOperation) -> PostfixExpression {
+    pub fn new(pos: SourceRange, left: LValueExpression, operation: PostfixOperation) -> PostfixExpression {
         PostfixExpression {
             pos,
             left,
@@ -22,7 +22,7 @@ impl PostfixExpression {
         }
     }
 
-    pub fn left(&self) -> &Box<LValueExpression> { &self.left }
+    pub fn left(&self) -> &LValueExpression { &self.left }
     pub fn operation(&self) -> PostfixOperation { self.operation }
 }
 

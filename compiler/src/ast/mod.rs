@@ -23,7 +23,7 @@ pub use self::call_expression::CallExpression;
 pub use self::cast_expression::CastExpression;
 pub use self::control_expression::ControlExpression;
 pub use self::control_type::ControlType;
-pub use self::expression::Expression;
+pub use self::expression::{Expression, Assignable};
 pub use self::form::{FormType, Form};
 pub use self::lvalue_expression::LValueExpression;
 pub use self::math_expression::MathExpression;

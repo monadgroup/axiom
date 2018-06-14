@@ -1,4 +1,4 @@
-use ast::{SourceRange, Expression};
+use ast::{SourceRange, Expression, Assignable};
 
 #[derive(Debug)]
 pub struct TupleExpression {
@@ -18,5 +18,15 @@ impl TupleExpression {
 }
 
 impl Expression for TupleExpression {
+    fn assignables(&self) -> Result<Vec<Assignable>, SourceRange> {
+        let mut result = Vec::new();
+        for expr in self.expressions.iter() {
+            match expr.assignables() {
+                Ok(assignables) => result.extend(assignables),
+                Err(err) => return Err(err)
+            }
+        }
+        Ok(result)
+    }
     fn pos(&self) -> &SourceRange { &self.pos }
 }

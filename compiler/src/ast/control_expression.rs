@@ -1,4 +1,4 @@
-use ast::{SourceRange, Expression, ControlType};
+use ast::{SourceRange, Expression, Assignable, ControlType};
 
 #[derive(Debug)]
 pub struct ControlExpression {
@@ -24,6 +24,13 @@ impl ControlExpression {
 }
 
 impl Expression for ControlExpression {
-    fn is_assignable(&self) -> bool { true }
+    fn assignables(&self) -> Result<Vec<Assignable>, SourceRange> {
+        Ok(vec![Assignable::Control {
+            pos: self.pos,
+            name: self.name.to_owned(),
+            control_type: self.control_type,
+            prop: self.prop.to_owned()
+        }])
+    }
     fn pos(&self) -> &SourceRange { &self.pos }
 }
