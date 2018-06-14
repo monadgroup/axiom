@@ -1,8 +1,7 @@
-
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct SourcePos {
     pub line: usize,
-    pub column: usize
+    pub column: usize,
 }
 
 pub const UNDEF_SOURCE_POS: SourcePos = SourcePos { line: 0, column: 0 };

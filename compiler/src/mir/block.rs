@@ -4,9 +4,7 @@ pub type BlockId = PoolId<Block>;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Block {
-    id: BlockId
+    id: BlockId,
 }
 
-impl Block {
-
-}
+impl Block {}

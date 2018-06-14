@@ -1,28 +1,41 @@
-use ast::{SourceRange, Expression, OperatorType};
+use ast::{Expression, OperatorType, SourceRange};
 
 #[derive(Debug)]
 pub struct MathExpression {
     pos: SourceRange,
     left: Box<Expression>,
     right: Box<Expression>,
-    operator: OperatorType
+    operator: OperatorType,
 }
 
 impl MathExpression {
-    pub fn new(pos: SourceRange, left: Box<Expression>, right: Box<Expression>, operator: OperatorType) -> MathExpression {
+    pub fn new(
+        pos: SourceRange,
+        left: Box<Expression>,
+        right: Box<Expression>,
+        operator: OperatorType,
+    ) -> MathExpression {
         MathExpression {
             pos,
             left,
             right,
-            operator
+            operator,
         }
     }
 
-    pub fn left(&self) -> &Box<Expression> { &self.left }
-    pub fn right(&self) -> &Box<Expression> { &self.right }
-    pub fn operator(&self) -> OperatorType { self.operator }
+    pub fn left(&self) -> &Expression {
+        self.left.as_ref()
+    }
+    pub fn right(&self) -> &Expression {
+        self.right.as_ref()
+    }
+    pub fn operator(&self) -> OperatorType {
+        self.operator
+    }
 }
 
 impl Expression for MathExpression {
-    fn pos(&self) -> &SourceRange { &self.pos }
+    fn pos(&self) -> &SourceRange {
+        &self.pos
+    }
 }

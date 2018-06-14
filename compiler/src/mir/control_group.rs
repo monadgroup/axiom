@@ -9,12 +9,17 @@ pub struct ControlGroup {
 }
 
 impl ControlGroup {
-    pub fn new(value_type: VarType, extracted: bool, value_written: bool, value_read: bool) -> Self {
+    pub fn new(
+        value_type: VarType,
+        extracted: bool,
+        value_written: bool,
+        value_read: bool,
+    ) -> Self {
         ControlGroup {
             value_type,
             extracted,
             value_written,
-            value_read
+            value_read,
         }
     }
 

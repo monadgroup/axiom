@@ -1,10 +1,10 @@
-use ast::{SourceRange, Expression};
+use ast::{Expression, SourceRange};
 
 #[derive(Debug)]
 pub struct CallExpression {
     pos: SourceRange,
     name: String,
-    arguments: Vec<Box<Expression>>
+    arguments: Vec<Box<Expression>>,
 }
 
 impl CallExpression {
@@ -12,14 +12,20 @@ impl CallExpression {
         CallExpression {
             pos,
             name,
-            arguments
+            arguments,
         }
     }
 
-    pub fn name(&self) -> &str { &self.name }
-    pub fn arguments(&self) -> &Vec<Box<Expression>> { &self.arguments }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    pub fn arguments(&self) -> &Vec<Box<Expression>> {
+        &self.arguments
+    }
 }
 
 impl Expression for CallExpression {
-    fn pos(&self) -> &SourceRange { &self.pos }
+    fn pos(&self) -> &SourceRange {
+        &self.pos
+    }
 }

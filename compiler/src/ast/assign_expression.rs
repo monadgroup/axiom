@@ -1,28 +1,41 @@
-use ast::{SourceRange, Expression, LValueExpression, OperatorType};
+use ast::{Expression, LValueExpression, OperatorType, SourceRange};
 
 #[derive(Debug)]
 pub struct AssignExpression {
     pos: SourceRange,
     left: LValueExpression,
     right: Box<Expression>,
-    operator: OperatorType
+    operator: OperatorType,
 }
 
 impl AssignExpression {
-    pub fn new(pos: SourceRange, left: LValueExpression, right: Box<Expression>, operator: OperatorType) -> AssignExpression {
+    pub fn new(
+        pos: SourceRange,
+        left: LValueExpression,
+        right: Box<Expression>,
+        operator: OperatorType,
+    ) -> AssignExpression {
         AssignExpression {
             pos,
             left,
             right,
-            operator
+            operator,
         }
     }
 
-    pub fn left(&self) -> &LValueExpression { &self.left }
-    pub fn right(&self) -> &Box<Expression> { &self.right }
-    pub fn operator(&self) -> OperatorType { self.operator }
+    pub fn left(&self) -> &LValueExpression {
+        &self.left
+    }
+    pub fn right(&self) -> &Expression {
+        self.right.as_ref()
+    }
+    pub fn operator(&self) -> OperatorType {
+        self.operator
+    }
 }
 
 impl Expression for AssignExpression {
-    fn pos(&self) -> &SourceRange { &self.pos }
+    fn pos(&self) -> &SourceRange {
+        &self.pos
+    }
 }

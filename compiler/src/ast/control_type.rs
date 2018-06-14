@@ -6,5 +6,5 @@ pub enum ControlType {
     Roll,
     Scope,
     NumExtract,
-    MidiExtract
+    MidiExtract,
 }

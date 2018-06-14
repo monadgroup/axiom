@@ -1,5 +1,5 @@
-use parser::{Token, TokenType};
 use ast::{SourcePos, SourceRange};
+use parser::{Token, TokenType};
 use regex::Regex;
 use std::iter::Peekable;
 
@@ -16,7 +16,7 @@ lazy_static! {
         get_matcher(r"\+=", TokenType::PlusAssign),
         get_matcher(r"-=", TokenType::MinusAssign),
         get_matcher(r"\*=", TokenType::TimesAssign),
-        get_matcher(r"\/=", TokenType::DivideAssign),
+        get_matcher(r"/=", TokenType::DivideAssign),
         get_matcher(r"%=", TokenType::ModuloAssign),
         get_matcher(r"\^=", TokenType::PowerAssign),
         get_matcher(r"->", TokenType::Cast),
@@ -25,13 +25,13 @@ lazy_static! {
         get_matcher(r"\^\^", TokenType::BitwiseXor),
         get_matcher(r"&&", TokenType::LogicalAnd),
         get_matcher(r"\|\|", TokenType::LogicalOr),
-        get_matcher(r"\/\*", TokenType::CommentOpen),
-        get_matcher(r"\*\/", TokenType::CommentClose),
+        get_matcher(r"/\*", TokenType::CommentOpen),
+        get_matcher(r"\*/", TokenType::CommentClose),
 
         // free tokens
-        get_matcher(r"'((?:\\'|(?:(?!').))*)'", TokenType::SingleString),
-        get_matcher(r#""((?:\\\"|(?:(?!\").))*)""#, TokenType::DoubleString),
-        get_matcher(r"((?=\.\d|\d)(?:\d+)?(?:\.?\d*)(?:[eE][+-]?\d+)?)", TokenType::Number),
+        get_matcher(r"'((?:[^'\\]|\\.)*)'", TokenType::SingleString),
+        get_matcher(r#""((?:[^"\\]|\\.)*)""#, TokenType::DoubleString),
+        get_matcher(r"([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)", TokenType::Number),
         get_matcher(r":([a-gA-G]#?[0-9]+)", TokenType::Note),
         get_matcher(r"([_a-zA-Z][_a-zA-Z0-9]*(?:\[\])?)", TokenType::Identifier),
 
@@ -39,7 +39,7 @@ lazy_static! {
         get_matcher(r"\+", TokenType::Plus),
         get_matcher(r"-", TokenType::Minus),
         get_matcher(r"\*", TokenType::Times),
-        get_matcher(r"\/", TokenType::Divide),
+        get_matcher(r"/", TokenType::Divide),
         get_matcher(r"%", TokenType::Modulo),
         get_matcher(r"\^", TokenType::Power),
         get_matcher(r"=", TokenType::Assign),
@@ -72,7 +72,7 @@ fn get_matcher(regex: &str, token_type: TokenType) -> TokenMatcher {
 struct TokenIterator<'a> {
     data: &'a str,
     cursor: usize,
-    current_pos: SourcePos
+    current_pos: SourcePos,
 }
 
 impl<'a> TokenIterator<'a> {
@@ -80,7 +80,7 @@ impl<'a> TokenIterator<'a> {
         TokenIterator {
             data,
             cursor: 0,
-            current_pos: SourcePos { line: 0, column: 0 }
+            current_pos: SourcePos { line: 0, column: 0 },
         }
     }
 }
@@ -93,31 +93,48 @@ impl<'a> Iterator for TokenIterator<'a> {
             return None;
         }
 
-        let token_start = self.current_pos.clone();
+        let token_start = self.current_pos;
         let remaining_data = &self.data[self.cursor..];
 
-        let matched_pair = PAIR_MATCHES.iter().filter_map(|matcher| {
-            let maybe_caps = matcher.0.captures(remaining_data);
-            match maybe_caps {
-                Some(caps) => Some((matcher.1, caps)),
-                None => None
-            }
-        }).next();
+        let matched_pair = PAIR_MATCHES
+            .iter()
+            .filter_map(|matcher| {
+                let maybe_caps = matcher.0.captures(remaining_data);
+                match maybe_caps {
+                    Some(caps) => Some((matcher.1, caps)),
+                    None => None,
+                }
+            })
+            .next();
 
         match matched_pair {
             Some((token_type, captures)) => {
                 let capture_length = captures[0].len();
                 let token_end = if token_type == TokenType::EndOfLine {
-                    SourcePos { line: self.current_pos.line + 1, column: 0 }
+                    SourcePos {
+                        line: self.current_pos.line + 1,
+                        column: 0,
+                    }
                 } else {
-                    SourcePos { line: self.current_pos.line, column: self.current_pos.column + capture_length }
+                    SourcePos {
+                        line: self.current_pos.line,
+                        column: self.current_pos.column + capture_length,
+                    }
                 };
                 let token_content = if captures.len() > 1 { &captures[1] } else { "" };
 
-                self.current_pos = token_end.clone();
-                Some(Token::new(SourceRange(token_start, token_end), token_type, token_content.to_owned()))
-            },
-            None => Some(Token::new(SourceRange(token_start.clone(), token_start), TokenType::Unknown, "".to_owned()))
+                self.current_pos = token_end;
+                Some(Token::new(
+                    SourceRange(token_start, token_end),
+                    token_type,
+                    token_content.to_owned(),
+                ))
+            }
+            None => Some(Token::new(
+                SourceRange(token_start, token_start),
+                TokenType::Unknown,
+                "".to_owned(),
+            )),
         }
     }
 }
@@ -128,22 +145,23 @@ pub fn get_token_stream<'a>(data: &'a str) -> TokenStream<'a> {
     let mut in_single_comment = false;
     let mut multi_comment_depth = 0;
 
-    let boxed: Box<Iterator<Item = Token>> = Box::new(TokenIterator::<'a>::new(data).filter(move |token| {
-        match token.token_type {
-            TokenType::Hash => in_single_comment = true,
-            TokenType::EndOfLine => in_single_comment = false,
-            TokenType::CommentOpen => multi_comment_depth += 1,
-            _ => {}
-        }
+    let boxed: Box<Iterator<Item = Token>> =
+        Box::new(TokenIterator::<'a>::new(data).filter(move |token| {
+            match token.token_type {
+                TokenType::Hash => in_single_comment = true,
+                TokenType::EndOfLine => in_single_comment = false,
+                TokenType::CommentOpen => multi_comment_depth += 1,
+                _ => {}
+            }
 
-        let is_valid = !in_single_comment && multi_comment_depth == 0;
+            let is_valid = !in_single_comment && multi_comment_depth == 0;
 
-        if token.token_type == TokenType::CommentClose && multi_comment_depth > 0 {
-            multi_comment_depth -= 1;
-        }
+            if token.token_type == TokenType::CommentClose && multi_comment_depth > 0 {
+                multi_comment_depth -= 1;
+            }
 
-        is_valid
-    }));
+            is_valid
+        }));
 
     boxed.peekable()
 }

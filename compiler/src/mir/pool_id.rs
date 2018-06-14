@@ -1,13 +1,13 @@
+use mir::MIRContext;
+use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
-use std::cmp::Ordering;
-use mir::MIRContext;
 
 #[derive(Debug, Clone)]
 pub struct PoolId<T> {
     id: u64,
     debug_name: String,
-    phantom: PhantomData<T>
+    phantom: PhantomData<T>,
 }
 
 impl<T> PartialEq for PoolId<T> {
@@ -41,7 +41,7 @@ impl<T> PoolId<T> {
         PoolId {
             id: context.alloc_id(),
             debug_name,
-            phantom: PhantomData
+            phantom: PhantomData,
         }
     }
 

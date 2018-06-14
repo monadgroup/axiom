@@ -4,9 +4,7 @@ pub type SurfaceId = PoolId<Surface>;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Surface {
-    id: SurfaceId
+    id: SurfaceId,
 }
 
-impl Surface {
-
-}
+impl Surface {}

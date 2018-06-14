@@ -1,11 +1,11 @@
+use mir::{Block, BlockId, Surface, SurfaceId};
 use std::collections::HashMap;
-use mir::{Surface, SurfaceId, Block, BlockId};
 
 #[derive(Debug, Clone)]
 pub struct MIRContext {
     next_id: u64,
     surfaces: HashMap<SurfaceId, Surface>,
-    blocks: HashMap<BlockId, Block>
+    blocks: HashMap<BlockId, Block>,
 }
 
 impl MIRContext {

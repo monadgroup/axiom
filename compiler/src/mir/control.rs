@@ -7,16 +7,21 @@ pub struct Control {
     control_type: ControlType,
     group_id: usize,
     value_written: bool,
-    value_read: bool
+    value_read: bool,
 }
 
 impl Control {
-    pub fn new(control_type: ControlType, group_id: usize, value_written: bool, value_read: bool) -> Control {
+    pub fn new(
+        control_type: ControlType,
+        group_id: usize,
+        value_written: bool,
+        value_read: bool,
+    ) -> Control {
         Control {
             control_type,
             group_id,
             value_written,
-            value_read
+            value_read,
         }
     }
 

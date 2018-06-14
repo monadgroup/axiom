@@ -56,14 +56,14 @@ pub enum TokenType {
     Note,
     Identifier,
 
-    Unknown
+    Unknown,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Token {
     pub pos: SourceRange,
     pub token_type: TokenType,
-    pub content: String
+    pub content: String,
 }
 
 impl Token {
@@ -71,7 +71,7 @@ impl Token {
         Token {
             pos,
             token_type,
-            content
+            content,
         }
     }
 }

@@ -19,5 +19,5 @@ pub enum OperatorType {
     LogicalGt,
     LogicalLt,
     LogicalGte,
-    LogicalLte
+    LogicalLte,
 }
