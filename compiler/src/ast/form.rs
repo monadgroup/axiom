@@ -17,19 +17,12 @@ pub enum FormType {
 
 #[derive(Debug, Clone)]
 pub struct Form {
-    pos: SourceRange,
-    form_type: FormType,
+    pub pos: SourceRange,
+    pub form_type: FormType,
 }
 
 impl Form {
     pub fn new(pos: SourceRange, form_type: FormType) -> Form {
         Form { pos, form_type }
-    }
-
-    pub fn pos(&self) -> &SourceRange {
-        &self.pos
-    }
-    pub fn form_type(&self) -> FormType {
-        self.form_type
     }
 }

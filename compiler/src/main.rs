@@ -19,7 +19,7 @@ pub use self::parser::*;
 fn run_code(code: &str) {
     let parser = parser::Parser::new(code);
     match parser.parse() {
-        Ok(ast) => println!("AST: {:?}", ast),
+        Ok(ast) => println!("AST: {:#?}", ast),
         Err(err) => {
             let (text, pos) = err.formatted();
             println!(

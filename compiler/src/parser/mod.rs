@@ -270,7 +270,7 @@ impl<'a> Parser<'a> {
             Err(err) => return Err(err),
         };
 
-        let form_start = form.pos().0;
+        let form_start = form.pos.0;
         let expr_end = expr.pos.1;
 
         Ok(Expression::new_cast(
@@ -376,7 +376,7 @@ impl<'a> Parser<'a> {
         }
 
         Ok(Expression::new_number(
-            SourceRange(num_token.pos.0, val_form.pos().1),
+            SourceRange(num_token.pos.0, val_form.pos.1),
             num_val,
             val_form,
         ))
@@ -424,14 +424,14 @@ impl<'a> Parser<'a> {
         match stream.peek().cloned() {
             Some(Token {
                 token_type: TokenType::OpenBracket,
-                content,
                 pos,
-            }) => Parser::parse_call_expr(stream, content.to_owned(), pos.0),
+                ..
+            }) => Parser::parse_call_expr(stream, identifier_token.content, pos.0),
             Some(Token {
                 token_type: TokenType::Colon,
-                content,
                 pos,
-            }) => Parser::parse_control_expr(stream, content.to_owned(), pos.0),
+                ..
+            }) => Parser::parse_control_expr(stream, identifier_token.content, pos.0),
             _ => Ok(Expression::new_variable(
                 identifier_token.pos,
                 identifier_token.content,
@@ -612,7 +612,7 @@ impl<'a> Parser<'a> {
             Err(err) => return Err(err),
         };
         Ok(Expression::new_cast(
-            SourceRange(lhs.pos.0, form.pos().1),
+            SourceRange(lhs.pos.0, form.pos.1),
             form,
             Box::new(lhs),
             false,
