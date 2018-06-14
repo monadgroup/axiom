@@ -1,5 +1,6 @@
 use ast::{SourceRange, ControlType, UNDEF_SOURCE_RANGE};
 use parser::{Token, TokenType};
+use mir::VarType;
 use std::fmt::Write;
 
 pub enum CompileError {
@@ -11,6 +12,8 @@ pub enum CompileError {
     UnknownControl(String, SourceRange),
     UnknownField(ControlType, String, SourceRange),
     RequiredAssignable(SourceRange),
+    UnmatchedTuples(usize, usize, SourceRange),
+    MismatchedType { expected: VarType, found: VarType, range: SourceRange }
 }
 
 pub type CompileResult<T> = Result<T, CompileError>;
@@ -44,6 +47,14 @@ impl CompileError {
         CompileError::RequiredAssignable(range)
     }
 
+    pub fn unmatched_tuples(left_len: usize, right_len: usize, range: SourceRange) -> CompileError {
+        CompileError::UnmatchedTuples(left_len, right_len, range)
+    }
+
+    pub fn mismatched_type(expected: VarType, found: VarType, range: SourceRange) -> CompileError {
+        CompileError::MismatchedType { expected, found, range }
+    }
+
     pub fn formatted(&self) -> (String, SourceRange) {
         let mut res = "".to_owned();
         let (result, range) = match self {
@@ -54,7 +65,9 @@ impl CompileError {
             CompileError::UnknownNote(note, range) => (write!(&mut res, "Ey my man, don't you know that {} isn't a valid note?", note), *range),
             CompileError::UnknownControl(control, range) => (write!(&mut res, "Come on man, I don't support {} controls.", control), *range),
             CompileError::UnknownField(control, field, range) => (write!(&mut res, "Dude! {:?} controls don't have a {} field!", control, field), *range),
-            CompileError::RequiredAssignable(range) => (write!(&mut res, "Hey! I need something I can assign to here, not this silly fudge you're giving me."), *range)
+            CompileError::RequiredAssignable(range) => (write!(&mut res, "Hey! I need something I can assign to here, not this silly fudge you're giving me."), *range),
+            CompileError::UnmatchedTuples(left_len, right_len, range) => (write!(&mut res, "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to assign {} values to {} ones!", right_len, left_len), *range),
+            CompileError::MismatchedType { expected, found, range } => (write!(&mut res, "Oyyyy m80, I need a {:?} here, not this bad boi {:?}!", expected, found), *range)
         };
         result.unwrap();
         (res, range)

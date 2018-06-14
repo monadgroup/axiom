@@ -1,4 +1,4 @@
-mod block;
+pub mod block;
 mod control;
 mod control_group;
 mod mir_context;

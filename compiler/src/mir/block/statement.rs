@@ -10,6 +10,8 @@ pub enum Statement {
     NumPostfixOp { op: PostfixOperation, input: usize },
     NumMathOp { op: OperatorType, left: usize, right: usize },
 
+    ExtractOp { tuple: usize, index: usize },
+
     CallFunc { function: Function, args: Vec<usize> },
     StoreControl { control: usize, field: ControlField, value: usize },
     LoadControl { control: usize, field: ControlField }

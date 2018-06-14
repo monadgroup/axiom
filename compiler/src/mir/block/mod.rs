@@ -16,3 +16,13 @@ pub struct Block {
     pub controls: Vec<Control>,
     pub statements: Vec<Statement>
 }
+
+impl Block {
+    pub fn new(id: BlockId, controls: Vec<Control>, statements: Vec<Statement>) -> Block {
+        Block {
+            id,
+            controls,
+            statements
+        }
+    }
+}

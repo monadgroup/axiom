@@ -8,5 +8,6 @@ mod compile_error;
 pub mod ast;
 pub mod mir;
 pub mod parser;
+pub mod pass;
 
 pub use compile_error::{CompileError, CompileResult};
