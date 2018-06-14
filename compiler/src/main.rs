@@ -17,12 +17,7 @@ pub use self::mir::*;
 pub use self::parser::*;
 
 fn run_code(code: &str) {
-    let stream = parser::get_token_stream(code);
-    for token in stream {
-        println!("{:?}", token);
-    }
-
-    /*let parser = parser::Parser::new(code);
+    let parser = parser::Parser::new(code);
     match parser.parse() {
         Ok(ast) => println!("AST: {:?}", ast),
         Err(err) => {
@@ -32,7 +27,7 @@ fn run_code(code: &str) {
                 pos.0.line, pos.0.column, pos.1.line, pos.1.column, text
             );
         }
-    }*/
+    }
 }
 
 fn do_repl() {

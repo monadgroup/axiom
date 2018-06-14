@@ -107,7 +107,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             })
             .next();
 
-        match matched_pair {
+        let token = match matched_pair {
             Some((token_type, captures)) => {
                 let capture_length = captures[0].len();
                 let token_end = if token_type == TokenType::EndOfLine {
@@ -125,23 +125,25 @@ impl<'a> Iterator for TokenIterator<'a> {
 
                 self.cursor += capture_length;
                 self.current_pos = token_end;
-                Some(Token::new(
+                Token::new(
                     SourceRange(token_start, token_end),
                     token_type,
                     token_content.to_owned(),
-                ))
+                )
             }
             None => {
                 // move cursor to end so the next iteration returns None
                 self.cursor = self.data.len();
 
-                Some(Token::new(
+                Token::new(
                     SourceRange(token_start, token_start),
                     TokenType::Unknown,
                     "".to_owned(),
-                ))
+                )
             },
-        }
+        };
+        println!("Emit {:?}", &token);
+        Some(token)
     }
 }
 

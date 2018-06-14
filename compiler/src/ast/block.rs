@@ -2,15 +2,15 @@ use ast::Expression;
 
 #[derive(Debug)]
 pub struct Block {
-    expressions: Vec<Box<Expression>>,
+    expressions: Vec<Expression>,
 }
 
 impl Block {
-    pub fn new(expressions: Vec<Box<Expression>>) -> Block {
+    pub fn new(expressions: Vec<Expression>) -> Block {
         Block { expressions }
     }
 
-    pub fn expressions(&self) -> &Vec<Box<Expression>> {
+    pub fn expressions(&self) -> &Vec<Expression> {
         &self.expressions
     }
 }
