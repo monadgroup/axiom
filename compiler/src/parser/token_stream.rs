@@ -60,12 +60,12 @@ lazy_static! {
         get_matcher(r"&", TokenType::BitwiseAnd),
         get_matcher(r"\|", TokenType::BitwiseOr),
 
-        get_matcher(r"\n", TokenType::EndOfLine)
+        get_matcher("\n", TokenType::EndOfLine)
     ];
 }
 
 fn get_matcher(regex: &str, token_type: TokenType) -> TokenMatcher {
-    let regex_str = format!(r"[^\S\n]*{}[^\S\n]*", regex);
+    let regex_str = format!(r"^[^\S\n]*{}[^\S\n]*", regex);
     (Regex::new(&regex_str).unwrap(), token_type)
 }
 
@@ -123,6 +123,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 };
                 let token_content = if captures.len() > 1 { &captures[1] } else { "" };
 
+                self.cursor += capture_length;
                 self.current_pos = token_end;
                 Some(Token::new(
                     SourceRange(token_start, token_end),
@@ -130,11 +131,16 @@ impl<'a> Iterator for TokenIterator<'a> {
                     token_content.to_owned(),
                 ))
             }
-            None => Some(Token::new(
-                SourceRange(token_start, token_start),
-                TokenType::Unknown,
-                "".to_owned(),
-            )),
+            None => {
+                // move cursor to end so the next iteration returns None
+                self.cursor = self.data.len();
+
+                Some(Token::new(
+                    SourceRange(token_start, token_start),
+                    TokenType::Unknown,
+                    "".to_owned(),
+                ))
+            },
         }
     }
 }
