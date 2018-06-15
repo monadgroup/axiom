@@ -1,6 +1,6 @@
 use ast::ControlField;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ControlType {
     Audio,
     Graph,
@@ -20,7 +20,7 @@ impl From<ControlField> for ControlType {
             ControlField::Roll(_) => ControlType::Roll,
             ControlField::Scope(_) => ControlType::Scope,
             ControlField::NumExtract(_) => ControlType::NumExtract,
-            ControlField::MidiExtract(_) => ControlType::MidiExtract
+            ControlField::MidiExtract(_) => ControlType::MidiExtract,
         }
     }
 }

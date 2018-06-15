@@ -1,6 +1,7 @@
+use ast::{AudioField, ControlField, GraphField, MidiExtractField, MidiField, NumExtractField,
+          RollField, ScopeField};
+use mir::block::{ConstantValue, Function, Statement};
 use mir::Block;
-use mir::block::{Function, Statement};
-use ast::ControlField;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -8,34 +9,69 @@ pub enum VarType {
     Num,
     Midi,
     Tuple(Vec<VarType>),
-    Array(Box<VarType>)
+    Array(Box<VarType>),
 }
 
 impl VarType {
-    pub fn of_statement(block: &Block, index: usize) -> VarType {
-        match &block.statements[index] {
-            Statement::NumConstant { .. } => VarType::Num,
-            Statement::NumConvert { .. } => VarType::Num,
-            Statement::NumCast { .. } => VarType::Num,
-            Statement::NumUnaryOp { .. } => VarType::Num,
-            Statement::NumPostfixOp { .. } => VarType::Num,
-            Statement::NumMathOp { .. } => VarType::Num,
-            Statement::ExtractOp { tuple, index } => {
-                if let VarType::Tuple(mut types) = VarType::of_statement(block , *tuple) { types.remove(*index) }
-                    else { panic!("Attempted to extract element type of non-tuple") }
-            },
-            Statement::CallFunc { function, .. } => VarType::of_function(*function),
-            Statement::StoreControl { field, .. } => VarType::of_control_field(*field),
-            Statement::LoadControl { field, .. } => VarType::of_control_field(*field)
+    pub fn new_array(sub_type: VarType) -> VarType {
+        VarType::Array(Box::new(sub_type))
+    }
+
+    pub fn of_constant(constant: &ConstantValue) -> VarType {
+        match constant {
+            ConstantValue::Num(_) => VarType::Num,
+            ConstantValue::Tuple(tuple) => VarType::Tuple(
+                tuple
+                    .items
+                    .iter()
+                    .map(|const_val| VarType::of_constant(const_val))
+                    .collect(),
+            ),
         }
     }
 
-    pub fn of_function(function: Function) -> VarType {
+    pub fn of_statement(block: &Block, index: usize) -> VarType {
+        match &block.statements[index] {
+            Statement::Constant(ref constant) => VarType::of_constant(constant),
+            Statement::NumConvert { .. } => VarType::Num,
+            Statement::NumCast { .. } => VarType::Num,
+            Statement::NumUnaryOp { .. } => VarType::Num,
+            Statement::NumMathOp { .. } => VarType::Num,
+            Statement::Extract { tuple, index } => {
+                if let VarType::Tuple(mut types) = VarType::of_statement(block, *tuple) {
+                    types.remove(*index)
+                } else {
+                    panic!("Attempted to extract element type of non-tuple")
+                }
+            }
+            Statement::Combine { indexes } => VarType::Tuple(
+                indexes
+                    .iter()
+                    .map(|index| VarType::of_statement(block, *index))
+                    .collect(),
+            ),
+            Statement::CallFunc { ref function, .. } => VarType::of_function(function),
+            Statement::StoreControl { ref field, .. } => VarType::of_control_field(field),
+            Statement::LoadControl { ref field, .. } => VarType::of_control_field(field),
+        }
+    }
+
+    pub fn of_function(function: &Function) -> VarType {
         unimplemented!();
     }
 
-    pub fn of_control_field(field: ControlField) -> VarType {
-        unimplemented!();
+    pub fn of_control_field(field: &ControlField) -> VarType {
+        match field {
+            ControlField::Audio(AudioField::Value) => VarType::Num,
+            ControlField::Graph(GraphField::Value) => VarType::Num,
+            ControlField::Graph(GraphField::Speed) => VarType::Num,
+            ControlField::Midi(MidiField::Value) => VarType::Midi,
+            ControlField::Roll(RollField::Value) => VarType::Midi,
+            ControlField::Roll(RollField::Speed) => VarType::Num,
+            ControlField::Scope(ScopeField::Value) => VarType::Num,
+            ControlField::NumExtract(NumExtractField::Value) => VarType::new_array(VarType::Num),
+            ControlField::MidiExtract(MidiExtractField::Value) => VarType::new_array(VarType::Midi),
+        }
     }
 }
 
@@ -45,18 +81,22 @@ impl fmt::Display for VarType {
             VarType::Num => write!(f, "num"),
             VarType::Midi => write!(f, "midi"),
             VarType::Tuple(ref items) => {
-                if let Err(err) = write!(f, "tuple (") { return Err(err); }
+                if let Err(err) = write!(f, "tuple (") {
+                    return Err(err);
+                }
                 for (index, subtype) in items.iter().enumerate() {
-                    if let Err(err) = write!(f, "{:?}", subtype) { return Err(err); }
+                    if let Err(err) = write!(f, "{:?}", subtype) {
+                        return Err(err);
+                    }
                     if index < items.len() - 1 {
-                        if let Err(err) = write!(f, ", ") { return Err(err); }
+                        if let Err(err) = write!(f, ", ") {
+                            return Err(err);
+                        }
                     }
                 }
                 write!(f, ")")
-            },
-            VarType::Array(ref subtype) => {
-                write!(f, "array [{:?}]", subtype)
             }
+            VarType::Array(ref subtype) => write!(f, "array [{:?}]", subtype),
         }
     }
 }

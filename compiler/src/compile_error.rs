@@ -1,10 +1,14 @@
-use ast::{SourceRange, ControlType, UNDEF_SOURCE_RANGE};
-use parser::{Token, TokenType};
+use ast::{ControlType, SourceRange, UNDEF_SOURCE_RANGE};
 use mir::VarType;
+use parser::{Token, TokenType};
 use std::fmt::Write;
 
+#[derive(Debug, Clone)]
 pub enum CompileError {
-    MismatchedToken { expected: TokenType, found: Token },
+    MismatchedToken {
+        expected: TokenType,
+        found: Token,
+    },
     UnexpectedToken(Token),
     UnexpectedEnd,
     UnknownForm(String, SourceRange),
@@ -13,7 +17,17 @@ pub enum CompileError {
     UnknownField(ControlType, String, SourceRange),
     RequiredAssignable(SourceRange),
     UnmatchedTuples(usize, usize, SourceRange),
-    MismatchedType { expected: VarType, found: VarType, range: SourceRange }
+    MismatchedType {
+        expected: VarType,
+        found: VarType,
+        range: SourceRange,
+    },
+    AccessOutOfBounds {
+        actual_count: usize,
+        index: usize,
+        range: SourceRange,
+    },
+    UnknownVariable(String, SourceRange),
 }
 
 pub type CompileResult<T> = Result<T, CompileError>;
@@ -52,7 +66,27 @@ impl CompileError {
     }
 
     pub fn mismatched_type(expected: VarType, found: VarType, range: SourceRange) -> CompileError {
-        CompileError::MismatchedType { expected, found, range }
+        CompileError::MismatchedType {
+            expected,
+            found,
+            range,
+        }
+    }
+
+    pub fn access_out_of_bounds(
+        actual_count: usize,
+        index: usize,
+        range: SourceRange,
+    ) -> CompileError {
+        CompileError::AccessOutOfBounds {
+            actual_count,
+            index,
+            range,
+        }
+    }
+
+    pub fn unknown_variable(name: String, range: SourceRange) -> CompileError {
+        CompileError::UnknownVariable(name, range)
     }
 
     pub fn formatted(&self) -> (String, SourceRange) {
@@ -67,7 +101,9 @@ impl CompileError {
             CompileError::UnknownField(control, field, range) => (write!(&mut res, "Dude! {:?} controls don't have a {} field!", control, field), *range),
             CompileError::RequiredAssignable(range) => (write!(&mut res, "Hey! I need something I can assign to here, not this silly fudge you're giving me."), *range),
             CompileError::UnmatchedTuples(left_len, right_len, range) => (write!(&mut res, "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to assign {} values to {} ones!", right_len, left_len), *range),
-            CompileError::MismatchedType { expected, found, range } => (write!(&mut res, "Oyyyy m80, I need a {:?} here, not this bad boi {:?}!", expected, found), *range)
+            CompileError::MismatchedType { expected, found, range } => (write!(&mut res, "Oyyyy m80, I need a {:?} here, not this bad boi {:?}!", expected, found), *range),
+            CompileError::AccessOutOfBounds { actual_count, index, range } => (write!(&mut res, "Ohh hekkers, there's nothing at index {} in an {}-sized tuple!", index, actual_count), *range),
+            CompileError::UnknownVariable(name, range) => (write!(&mut res, "Ah hekkers mah dude! {} hasn't been set yet!", name), *range)
         };
         result.unwrap();
         (res, range)

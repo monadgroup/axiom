@@ -9,5 +9,6 @@ pub mod ast;
 pub mod mir;
 pub mod parser;
 pub mod pass;
+pub mod util;
 
 pub use compile_error::{CompileError, CompileResult};

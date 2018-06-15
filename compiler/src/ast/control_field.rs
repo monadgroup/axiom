@@ -1,38 +1,38 @@
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum AudioField {
-    Value
+    Value,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GraphField {
     Value,
-    Speed
+    Speed,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum MidiField {
-    Value
+    Value,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum RollField {
     Value,
-    Speed
+    Speed,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum ScopeField {
-    Value
+    Value,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum NumExtractField {
-    Value
+    Value,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum MidiExtractField {
-    Value
+    Value,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -43,5 +43,5 @@ pub enum ControlField {
     Roll(RollField),
     Scope(ScopeField),
     NumExtract(NumExtractField),
-    MidiExtract(MidiExtractField)
+    MidiExtract(MidiExtractField),
 }

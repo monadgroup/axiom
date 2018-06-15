@@ -85,7 +85,6 @@ pub enum ExpressionData {
     Call(CallExpression),
     Cast(CastExpression),
     Control(ControlExpression),
-    LValue(LValueExpression),
     Math(MathExpression),
     Note(NoteExpression),
     Number(NumberExpression),
@@ -157,24 +156,10 @@ impl Expression {
         )
     }
 
-    pub fn new_control(
-        pos: SourceRange,
-        name: String,
-        field: ControlField,
-    ) -> Expression {
+    pub fn new_control(pos: SourceRange, name: String, field: ControlField) -> Expression {
         Expression::new(
             pos,
-            ExpressionData::Control(ControlExpression {
-                name,
-                field,
-            }),
-        )
-    }
-
-    pub fn new_lvalue(pos: SourceRange, assignments: Vec<AssignableExpression>) -> Expression {
-        Expression::new(
-            pos,
-            ExpressionData::LValue(LValueExpression { assignments }),
+            ExpressionData::Control(ControlExpression { name, field }),
         )
     }
 
@@ -233,6 +218,14 @@ impl Expression {
 
     pub fn new_variable(pos: SourceRange, name: String) -> Expression {
         Expression::new(pos, ExpressionData::Variable(VariableExpression { name }))
+    }
+
+    pub fn from(expr: AssignableExpression) -> Expression {
+        let data = match expr.data {
+            AssignableData::Control(control) => ExpressionData::Control(control),
+            AssignableData::Variable(var) => ExpressionData::Variable(var),
+        };
+        Expression::new(expr.pos, data)
     }
 }
 

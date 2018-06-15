@@ -534,15 +534,25 @@ impl Parser {
             "value" if control_type == ControlType::Midi => ControlField::Midi(MidiField::Value),
             "value" if control_type == ControlType::Roll => ControlField::Roll(RollField::Value),
             "speed" if control_type == ControlType::Roll => ControlField::Roll(RollField::Speed),
-            "value" if control_type == ControlType::NumExtract => ControlField::NumExtract(NumExtractField::Value),
-            "value" if control_type == ControlType::MidiExtract => ControlField::MidiExtract(MidiExtractField::Value),
-            _ => return Err(CompileError::unknown_field(control_type, prop_name, prop_pos))
+            "value" if control_type == ControlType::NumExtract => {
+                ControlField::NumExtract(NumExtractField::Value)
+            }
+            "value" if control_type == ControlType::MidiExtract => {
+                ControlField::MidiExtract(MidiExtractField::Value)
+            }
+            _ => {
+                return Err(CompileError::unknown_field(
+                    control_type,
+                    prop_name,
+                    prop_pos,
+                ))
+            }
         };
 
         Ok(Expression::new_control(
             SourceRange(start_pos, prop_pos.1),
             name,
-            control_field
+            control_field,
         ))
     }
 

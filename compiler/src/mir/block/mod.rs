@@ -1,12 +1,12 @@
 use mir::pool_id::PoolId;
 
 mod control;
-mod statement;
 mod function;
+mod statement;
 
 pub use self::control::Control;
-pub use self::statement::Statement;
 pub use self::function::Function;
+pub use self::statement::{ConstantNum, ConstantTuple, ConstantValue, Statement};
 
 pub type BlockId = PoolId<Block>;
 
@@ -14,7 +14,7 @@ pub type BlockId = PoolId<Block>;
 pub struct Block {
     pub id: BlockId,
     pub controls: Vec<Control>,
-    pub statements: Vec<Statement>
+    pub statements: Vec<Statement>,
 }
 
 impl Block {
@@ -22,7 +22,7 @@ impl Block {
         Block {
             id,
             controls,
-            statements
+            statements,
         }
     }
 }

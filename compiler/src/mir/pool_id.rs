@@ -44,4 +44,12 @@ impl<T> PoolId<T> {
             phantom: PhantomData,
         }
     }
+
+    pub fn new_with_id(debug_name: String, id: u64) -> PoolId<T> {
+        PoolId {
+            id,
+            debug_name,
+            phantom: PhantomData,
+        }
+    }
 }
