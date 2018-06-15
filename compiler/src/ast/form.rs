@@ -1,6 +1,6 @@
 use ast::SourceRange;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum FormType {
     None,
     Control,

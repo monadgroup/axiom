@@ -19,6 +19,7 @@ struct AstLower<'a> {
     pub block: mir::Block,
     var_indexes: HashMap<&'a str, usize>,
     control_indexes: HashMap<(&'a str, ast::ControlType), usize>,
+    constant_indexes: HashMap<mir::block::ConstantValue, usize>
 }
 
 type LowerResult = CompileResult<usize>;
@@ -29,6 +30,7 @@ impl<'a> AstLower<'a> {
             block: mir::Block::new(id, Vec::new(), Vec::new()),
             var_indexes: HashMap::new(),
             control_indexes: HashMap::new(),
+            constant_indexes: HashMap::new()
         }
     }
 
@@ -395,6 +397,14 @@ impl<'a> AstLower<'a> {
     }
 
     fn add_statement(&mut self, statement: mir::block::Statement) -> usize {
+        // if the statement is a constant, look it up in the current constant table
+        if let mir::block::Statement::Constant(ref const_val) = statement {
+            if let Some(index) = self.constant_indexes.get(&const_val) {
+                return *index
+            }
+            self.constant_indexes.insert(const_val.clone(), self.block.statements.len());
+        }
+
         self.block.statements.push(statement);
         self.block.statements.len() - 1
     }

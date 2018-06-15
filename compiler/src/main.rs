@@ -2,6 +2,7 @@ use std::io;
 use std::io::prelude::*;
 
 extern crate regex;
+extern crate ordered_float;
 
 #[macro_use]
 extern crate lazy_static;

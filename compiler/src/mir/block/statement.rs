@@ -1,19 +1,21 @@
 use ast::{ControlField, FormType, OperatorType, UnaryOperation};
 use mir::block::Function;
+use std::hash;
+use ordered_float::OrderedFloat;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ConstantNum {
     pub left: f32,
     pub right: f32,
     pub form: FormType,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct ConstantTuple {
     pub items: Vec<ConstantValue>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum ConstantValue {
     Num(ConstantNum),
     Tuple(ConstantTuple),
@@ -92,6 +94,16 @@ impl ConstantNum {
         }
     }
 }
+
+impl hash::Hash for ConstantNum {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        OrderedFloat(self.left).hash(state);
+        OrderedFloat(self.right).hash(state);
+        self.form.hash(state);
+    }
+}
+
+impl Eq for ConstantNum {}
 
 impl ConstantValue {
     pub fn as_num(&self) -> Option<&ConstantNum> {
