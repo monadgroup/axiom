@@ -149,11 +149,17 @@ impl<'a> AstLower<'a> {
         pos: &ast::SourceRange,
         expr: &'a ast::CallExpression,
     ) -> LowerResult {
-        // todo
-        // function overloads are handled here, we also constant-propagate if all arguments are
-        // constants and the function supports it.
+        let func = match mir::block::Function::from_name(&expr.name) {
+            Some(func) => func,
+            None => return Err(CompileError::unknown_function(expr.name.clone(), *pos))
+        };
 
-        unimplemented!();
+        let values: CompileResult<Vec<_>> = expr.arguments.iter().map(|arg| { self.lower_expression(arg) }).collect();
+
+        match values {
+            Ok(vals) => self.add_call_func(func, vals),
+            Err(err) => Err(err)
+        }
     }
 
     fn lower_cast_expr(
@@ -581,8 +587,24 @@ impl<'a> AstLower<'a> {
         }
     }
 
-    fn add_call_func(&mut self, function: mir::block::Function, args: Vec<usize>) -> usize {
-        unimplemented!();
+    fn add_call_func(&mut self, function: mir::block::Function, args: Vec<usize>) -> LowerResult {
+        // if the function has no side effects and all arguments are constant, we can try to constant-fold
+        if !function.has_side_effects() {
+            let const_inputs: Option<Vec<_>> = args.iter().map(|index| self.get_constant(*index).cloned()).collect();
+
+            if let Some(const_vals) = const_inputs {
+                match constant_propagate::const_call(&function, const_vals) {
+                    Some(Ok(result)) => return Ok(self.add_statement(mir::block::Statement::Constant(result))),
+                    Some(Err(err)) => return Err(err),
+                    None => ()
+                }
+            }
+        }
+
+        Ok(self.add_statement(mir::block::Statement::CallFunc {
+            function,
+            args
+        }))
     }
 
     fn add_store_control(

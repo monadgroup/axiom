@@ -28,6 +28,7 @@ pub enum CompileError {
         range: SourceRange,
     },
     UnknownVariable(String, SourceRange),
+    UnknownFunction(String, SourceRange)
 }
 
 pub type CompileResult<T> = Result<T, CompileError>;
@@ -89,6 +90,10 @@ impl CompileError {
         CompileError::UnknownVariable(name, range)
     }
 
+    pub fn unknown_function(name: String, range: SourceRange) -> CompileError {
+        CompileError::UnknownFunction(name, range)
+    }
+
     pub fn formatted(&self) -> (String, SourceRange) {
         let mut res = "".to_owned();
         let (result, range) = match self {
@@ -103,7 +108,8 @@ impl CompileError {
             CompileError::UnmatchedTuples(left_len, right_len, range) => (write!(&mut res, "OOOOOOOOOOOOOOOOOOOOOOYYYYYY!!!!1! You're trying to assign {} values to {} ones!", right_len, left_len), *range),
             CompileError::MismatchedType { expected, found, range } => (write!(&mut res, "Oyyyy m80, I need a {:?} here, not this bad boi {:?}!", expected, found), *range),
             CompileError::AccessOutOfBounds { actual_count, index, range } => (write!(&mut res, "Ohh hekkers, there's nothing at index {} in an {}-sized tuple!", index, actual_count), *range),
-            CompileError::UnknownVariable(name, range) => (write!(&mut res, "Ah hekkers mah dude! {} hasn't been set yet!", name), *range)
+            CompileError::UnknownVariable(name, range) => (write!(&mut res, "Ah hekkers mah dude! {} hasn't been set yet!", name), *range),
+            CompileError::UnknownFunction(name, range) => (write!(&mut res, "WHAT IS THIS??!?! {} is def not a valid function :(", name), *range),
         };
         result.unwrap();
         (res, range)

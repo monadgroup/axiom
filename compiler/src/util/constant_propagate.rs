@@ -121,7 +121,7 @@ pub fn const_combine(values: Vec<ConstantValue>) -> ConstantTuple {
     ConstantTuple { items: values }
 }
 
-pub fn const_call(function: Function, args: &Iterator<Item = ConstantValue>) -> ConstantValue {
+pub fn const_call(function: &Function, args: Vec<ConstantValue>) -> Option<CompileResult<ConstantValue>> {
     unimplemented!();
 }
 

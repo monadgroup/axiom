@@ -57,7 +57,7 @@ impl VarType {
     }
 
     pub fn of_function(function: &Function) -> VarType {
-        unimplemented!();
+        function.return_type().clone()
     }
 
     pub fn of_control_field(field: &ControlField) -> VarType {
