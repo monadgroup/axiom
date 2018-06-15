@@ -625,6 +625,7 @@ impl<'a> AstLower<'a> {
             return Err(err);
         }
 
+        self.block.controls[control].value_written = true;
         self.block
             .statements
             .push(mir::block::Statement::StoreControl {
