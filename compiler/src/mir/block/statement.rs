@@ -131,4 +131,19 @@ impl Statement {
     pub fn new_const_tuple(tuple: ConstantTuple) -> Statement {
         Statement::Constant(ConstantValue::Tuple(tuple))
     }
+
+    pub fn has_side_effect(&self) -> bool {
+        match self {
+            Statement::Constant(_)
+            | Statement::NumConvert { .. }
+            | Statement::NumCast { .. }
+            | Statement::NumUnaryOp { .. }
+            | Statement::NumMathOp { .. }
+            | Statement::Extract { .. }
+            | Statement::Combine { .. }
+            | Statement::LoadControl { .. } => false,
+            Statement::StoreControl { .. } => true,
+            Statement::CallFunc { function, .. } => function.has_side_effects()
+        }
+    }
 }

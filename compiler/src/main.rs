@@ -3,6 +3,7 @@ use std::io::prelude::*;
 
 extern crate regex;
 extern crate ordered_float;
+extern crate time;
 
 #[macro_use]
 extern crate lazy_static;
@@ -23,11 +24,23 @@ pub use self::util::*;
 
 fn run_code(code: &str) {
     let mut stream = get_token_stream(code);
-    let mir = Parser::parse(&mut stream)
-        .and_then(|ast| lower_ast(mir::BlockId::new_with_id("test".to_owned(), 0), &ast));
+
+    let parse_start_time = time::precise_time_s();
+    let ast = Parser::parse(&mut stream);
+    println!("Parse took {}s", time::precise_time_s() - parse_start_time);
+
+    let mut mir = ast.and_then(|ast| {
+        let lower_start = time::precise_time_s();
+        let block = lower_ast(mir::BlockId::new_with_id("test".to_owned(), 0), &ast);
+        println!("Lower took {}s", time::precise_time_s() - lower_start);
+        block
+    });
 
     match mir {
-        Ok(block) => println!("{:#?}", block),
+        Ok(mut block) => {
+            remove_dead_code(&mut block);
+            println!("{:#?}", block)
+        },
         Err(err) => {
             let (text, pos) = err.formatted();
             println!(

@@ -9,6 +9,7 @@ license = "MIT"
 #crate-type = ["staticlib"]
 
 [dependencies]
-regex = "1.0.0"
+regex = "1.0"
 lazy_static = "1.0"
-ordered-float = "0.5.0"
+ordered-float = "0.5"
+time = "0.1"

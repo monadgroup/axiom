@@ -523,6 +523,15 @@ impl<'a> AstLower<'a> {
         tuple: usize,
         index: usize,
     ) -> LowerResult {
+        // if the tuple is a Combine operation, directly reference it
+        if let mir::block::Statement::Combine { ref indexes } = self.block.statements[tuple] {
+            return if index > indexes.len() {
+                Err(CompileError::access_out_of_bounds(indexes.len(), index, *pos))
+            } else {
+                Ok(indexes[index])
+            }
+        }
+
         let new_statement = if let Some(const_input) = self.get_tuple_constant(pos, tuple) {
             match const_input {
                 Ok(const_tuple) => match constant_propagate::const_extract(const_tuple, index, pos)
