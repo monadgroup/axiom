@@ -1,8 +1,8 @@
 use std::io;
 use std::io::prelude::*;
 
-extern crate regex;
 extern crate ordered_float;
+extern crate regex;
 extern crate time;
 
 #[macro_use]
@@ -29,7 +29,7 @@ fn run_code(code: &str) {
     let ast = Parser::parse(&mut stream);
     println!("Parse took {}s", time::precise_time_s() - parse_start_time);
 
-    let mut mir = ast.and_then(|ast| {
+    let mir = ast.and_then(|ast| {
         let lower_start = time::precise_time_s();
         let block = lower_ast(mir::BlockId::new_with_id("test".to_owned(), 0), &ast);
         println!("Lower took {}s", time::precise_time_s() - lower_start);
@@ -40,7 +40,7 @@ fn run_code(code: &str) {
         Ok(mut block) => {
             remove_dead_code(&mut block);
             println!("{:#?}", block)
-        },
+        }
         Err(err) => {
             let (text, pos) = err.formatted();
             println!(

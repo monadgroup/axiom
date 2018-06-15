@@ -1,5 +1,5 @@
-extern crate regex;
 extern crate ordered_float;
+extern crate regex;
 
 #[macro_use]
 extern crate lazy_static;

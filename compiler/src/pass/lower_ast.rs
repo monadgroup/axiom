@@ -19,7 +19,7 @@ struct AstLower<'a> {
     pub block: mir::Block,
     var_indexes: HashMap<&'a str, usize>,
     control_indexes: HashMap<(&'a str, ast::ControlType), usize>,
-    constant_indexes: HashMap<mir::block::ConstantValue, usize>
+    constant_indexes: HashMap<mir::block::ConstantValue, usize>,
 }
 
 type LowerResult = CompileResult<usize>;
@@ -30,13 +30,13 @@ impl<'a> AstLower<'a> {
             block: mir::Block::new(id, Vec::new(), Vec::new()),
             var_indexes: HashMap::new(),
             control_indexes: HashMap::new(),
-            constant_indexes: HashMap::new()
+            constant_indexes: HashMap::new(),
         }
     }
 
     pub fn lower_expression(&mut self, expr: &'a ast::Expression) -> LowerResult {
         match &expr.data {
-            ast::ExpressionData::Assign(ref assign) => self.lower_assign_expr(&expr.pos, assign),
+            ast::ExpressionData::Assign(ref assign) => self.lower_assign_expr(assign),
             ast::ExpressionData::Call(ref call) => self.lower_call_expr(&expr.pos, call),
             ast::ExpressionData::Cast(ref cast) => self.lower_cast_expr(&expr.pos, cast),
             ast::ExpressionData::Control(ref control) => self.lower_control_expr(control),
@@ -63,11 +63,7 @@ impl<'a> AstLower<'a> {
         }
     }
 
-    fn lower_assign_expr(
-        &mut self,
-        pos: &ast::SourceRange,
-        expr: &'a ast::AssignExpression,
-    ) -> LowerResult {
+    fn lower_assign_expr(&mut self, expr: &'a ast::AssignExpression) -> LowerResult {
         let rhs = match self.lower_expression(&expr.right) {
             Ok(v) => v,
             Err(err) => return Err(err),
@@ -110,7 +106,7 @@ impl<'a> AstLower<'a> {
                 return Some(CompileError::unmatched_tuples(
                     lvalue.data.assignments.len(),
                     right_vals.len(),
-                    lvalue.pos.clone(),
+                    lvalue.pos,
                 ));
             }
 
@@ -151,14 +147,17 @@ impl<'a> AstLower<'a> {
     ) -> LowerResult {
         let func = match mir::block::Function::from_name(&expr.name) {
             Some(func) => func,
-            None => return Err(CompileError::unknown_function(expr.name.clone(), *pos))
+            None => return Err(CompileError::unknown_function(expr.name.clone(), *pos)),
         };
 
-        let values: CompileResult<Vec<_>> = expr.arguments.iter().map(|arg| { self.lower_expression(arg) }).collect();
+        let values: CompileResult<Vec<_>> = expr.arguments
+            .iter()
+            .map(|arg| self.lower_expression(arg))
+            .collect();
 
         match values {
             Ok(vals) => self.add_call_func(func, vals),
-            Err(err) => Err(err)
+            Err(err) => Err(err),
         }
     }
 
@@ -263,8 +262,8 @@ impl<'a> AstLower<'a> {
     fn lower_math_op(
         &mut self,
         pos: &ast::SourceRange,
-        left_items: &Vec<usize>,
-        right_items: &Vec<usize>,
+        left_items: &[usize],
+        right_items: &[usize],
         op: ast::OperatorType,
     ) -> CompileResult<Vec<usize>> {
         if left_items.len() != 1 && right_items.len() != 1 {
@@ -273,7 +272,7 @@ impl<'a> AstLower<'a> {
                 return Err(CompileError::unmatched_tuples(
                     left_items.len(),
                     right_items.len(),
-                    pos.clone(),
+                    *pos,
                 ));
             }
 
@@ -328,7 +327,7 @@ impl<'a> AstLower<'a> {
             ast::PostfixOperation::Increment => ast::OperatorType::Add,
             ast::PostfixOperation::Decrement => ast::OperatorType::Subtract,
         };
-        let op_results = match self.lower_math_op(pos, &vals, &vec![one_constant], op_type) {
+        let op_results = match self.lower_math_op(pos, &vals, &[one_constant], op_type) {
             Ok(results) => results,
             Err(err) => return Err(err),
         };
@@ -406,9 +405,10 @@ impl<'a> AstLower<'a> {
         // if the statement is a constant, look it up in the current constant table
         if let mir::block::Statement::Constant(ref const_val) = statement {
             if let Some(index) = self.constant_indexes.get(&const_val) {
-                return *index
+                return *index;
             }
-            self.constant_indexes.insert(const_val.clone(), self.block.statements.len());
+            self.constant_indexes
+                .insert(const_val.clone(), self.block.statements.len());
         }
 
         self.block.statements.push(statement);
@@ -532,10 +532,14 @@ impl<'a> AstLower<'a> {
         // if the tuple is a Combine operation, directly reference it
         if let mir::block::Statement::Combine { ref indexes } = self.block.statements[tuple] {
             return if index > indexes.len() {
-                Err(CompileError::access_out_of_bounds(indexes.len(), index, *pos))
+                Err(CompileError::access_out_of_bounds(
+                    indexes.len(),
+                    index,
+                    *pos,
+                ))
             } else {
                 Ok(indexes[index])
-            }
+            };
         }
 
         let new_statement = if let Some(const_input) = self.get_tuple_constant(pos, tuple) {
@@ -590,21 +594,22 @@ impl<'a> AstLower<'a> {
     fn add_call_func(&mut self, function: mir::block::Function, args: Vec<usize>) -> LowerResult {
         // if the function has no side effects and all arguments are constant, we can try to constant-fold
         if !function.has_side_effects() {
-            let const_inputs: Option<Vec<_>> = args.iter().map(|index| self.get_constant(*index).cloned()).collect();
+            let const_inputs: Option<Vec<_>> = args.iter()
+                .map(|index| self.get_constant(*index).cloned())
+                .collect();
 
             if let Some(const_vals) = const_inputs {
-                match constant_propagate::const_call(&function, const_vals) {
-                    Some(Ok(result)) => return Ok(self.add_statement(mir::block::Statement::Constant(result))),
+                match constant_propagate::const_call(&function, &const_vals) {
+                    Some(Ok(result)) => {
+                        return Ok(self.add_statement(mir::block::Statement::Constant(result)))
+                    }
                     Some(Err(err)) => return Err(err),
-                    None => ()
+                    None => (),
                 }
             }
         }
 
-        Ok(self.add_statement(mir::block::Statement::CallFunc {
-            function,
-            args
-        }))
+        Ok(self.add_statement(mir::block::Statement::CallFunc { function, args }))
     }
 
     fn add_store_control(
@@ -707,7 +712,7 @@ impl<'a> AstLower<'a> {
             Some(CompileError::mismatched_type(
                 expected_type,
                 actual_type,
-                pos.clone(),
+                *pos,
             ))
         } else {
             None

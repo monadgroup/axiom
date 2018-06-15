@@ -28,7 +28,7 @@ pub enum CompileError {
         range: SourceRange,
     },
     UnknownVariable(String, SourceRange),
-    UnknownFunction(String, SourceRange)
+    UnknownFunction(String, SourceRange),
 }
 
 pub type CompileResult<T> = Result<T, CompileError>;

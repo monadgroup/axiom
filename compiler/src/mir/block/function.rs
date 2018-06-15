@@ -53,58 +53,138 @@ pub enum Function {
 
     Note,
     Voices,
-    Channel
+    Channel,
 }
 
 lazy_static! {
     static ref NUM_PARAM: ParamType = ParamType::new(false, false, VarType::Num);
     static ref MIDI_PARAM: ParamType = ParamType::new(false, false, VarType::Midi);
-    static ref NUM_INTRINSIC_FUNC: FunctionData = FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone()], None);
-    static ref TWO_NUM_INTRINSIC_FUNC: FunctionData = FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone(); 2], None);
-
-    static ref CLAMP_DATA: FunctionData = FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone(); 3], None);
-
-    static ref MIX_DATA: FunctionData = FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone(); 3], None);
-    static ref SEQUENCE_DATA: FunctionData = FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone(); 2], Some(VarArgType::new(false, VarType::Num)));
-    static ref MINMAX_DATA: FunctionData = FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone(); 2], Some(VarArgType::new(false, VarType::Num)));
-    static ref MIXDOWN_DATA: FunctionData = FunctionData::new(false, VarType::Num, vec![ParamType::new(false, false, VarType::new_array(VarType::Num))], None);
-    static ref CHANNEL_DATA: FunctionData = FunctionData::new(false, VarType::Midi, vec![MIDI_PARAM.clone(), NUM_PARAM.clone()], None);
-
-    static ref NEXT_DATA: FunctionData = FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone()], None);
-    static ref DELAY_DATA: FunctionData = FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(), NUM_PARAM.clone(), ParamType::new(true, false, VarType::Num)], None);
-    static ref AMPLITUDE_DATA: FunctionData = FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(), ParamType::new(false, true, VarType::Num)], None);
-    static ref HOLD_DATA: FunctionData = FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(), NUM_PARAM.clone(), ParamType::new(false, true, VarType::Num)], None);
-    static ref ACCUM_DATA: FunctionData = FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(), NUM_PARAM.clone(), ParamType::new(false, true, VarType::Num)], None);
-
-    static ref SVFILTER_DATA: FunctionData = FunctionData::new(true, VarType::Tuple(vec![VarType::Num; 4]), vec![NUM_PARAM.clone(); 2], None);
-    static ref BIQUADFILTER_DATA: FunctionData = FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(); 3], None);
-    static ref PEAKBQFILTER_DATA: FunctionData = FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(); 4], None);
-
+    static ref NUM_INTRINSIC_FUNC: FunctionData =
+        FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone()], None);
+    static ref TWO_NUM_INTRINSIC_FUNC: FunctionData =
+        FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone(); 2], None);
+    static ref CLAMP_DATA: FunctionData =
+        FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone(); 3], None);
+    static ref MIX_DATA: FunctionData =
+        FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone(); 3], None);
+    static ref SEQUENCE_DATA: FunctionData = FunctionData::new(
+        false,
+        VarType::Num,
+        vec![NUM_PARAM.clone(); 2],
+        Some(VarArgType::new(false, VarType::Num)),
+    );
+    static ref MINMAX_DATA: FunctionData = FunctionData::new(
+        false,
+        VarType::Num,
+        vec![NUM_PARAM.clone(); 2],
+        Some(VarArgType::new(false, VarType::Num)),
+    );
+    static ref MIXDOWN_DATA: FunctionData = FunctionData::new(
+        false,
+        VarType::Num,
+        vec![ParamType::new(
+            false,
+            false,
+            VarType::new_array(VarType::Num),
+        )],
+        None,
+    );
+    static ref CHANNEL_DATA: FunctionData = FunctionData::new(
+        false,
+        VarType::Midi,
+        vec![MIDI_PARAM.clone(), NUM_PARAM.clone()],
+        None,
+    );
+    static ref NEXT_DATA: FunctionData =
+        FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone()], None);
+    static ref DELAY_DATA: FunctionData = FunctionData::new(
+        true,
+        VarType::Num,
+        vec![
+            NUM_PARAM.clone(),
+            NUM_PARAM.clone(),
+            ParamType::new(true, false, VarType::Num),
+        ],
+        None,
+    );
+    static ref AMPLITUDE_DATA: FunctionData = FunctionData::new(
+        true,
+        VarType::Num,
+        vec![NUM_PARAM.clone(), ParamType::new(false, true, VarType::Num)],
+        None,
+    );
+    static ref HOLD_DATA: FunctionData = FunctionData::new(
+        true,
+        VarType::Num,
+        vec![
+            NUM_PARAM.clone(),
+            NUM_PARAM.clone(),
+            ParamType::new(false, true, VarType::Num),
+        ],
+        None,
+    );
+    static ref ACCUM_DATA: FunctionData = FunctionData::new(
+        true,
+        VarType::Num,
+        vec![
+            NUM_PARAM.clone(),
+            NUM_PARAM.clone(),
+            ParamType::new(false, true, VarType::Num),
+        ],
+        None,
+    );
+    static ref SVFILTER_DATA: FunctionData = FunctionData::new(
+        true,
+        VarType::Tuple(vec![VarType::Num; 4]),
+        vec![NUM_PARAM.clone(); 2],
+        None,
+    );
+    static ref BIQUADFILTER_DATA: FunctionData =
+        FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(); 3], None);
+    static ref PEAKBQFILTER_DATA: FunctionData =
+        FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(); 4], None);
     static ref NOISE_DATA: FunctionData = FunctionData::new(true, VarType::Num, vec![], None);
-    static ref PERIODIC_FUNC: FunctionData = FunctionData::new(true, VarType::Num, vec![NUM_PARAM.clone(), ParamType::new(false, true, VarType::Num)], None);
-
-    static ref NOTE_DATA: FunctionData = FunctionData::new(true, VarType::Tuple(vec![VarType::Num; 4]), vec![MIDI_PARAM.clone()], None);
-    static ref VOICES_DATA: FunctionData = FunctionData::new(true, VarType::new_array(VarType::Midi), vec![MIDI_PARAM.clone(), ParamType::new(false, false, VarType::new_array(VarType::Num))], None);
+    static ref PERIODIC_FUNC: FunctionData = FunctionData::new(
+        true,
+        VarType::Num,
+        vec![NUM_PARAM.clone(), ParamType::new(false, true, VarType::Num)],
+        None,
+    );
+    static ref NOTE_DATA: FunctionData = FunctionData::new(
+        true,
+        VarType::Tuple(vec![VarType::Num; 4]),
+        vec![MIDI_PARAM.clone()],
+        None,
+    );
+    static ref VOICES_DATA: FunctionData = FunctionData::new(
+        true,
+        VarType::new_array(VarType::Midi),
+        vec![
+            MIDI_PARAM.clone(),
+            ParamType::new(false, false, VarType::new_array(VarType::Num)),
+        ],
+        None,
+    );
 }
 
 #[derive(Debug, Clone)]
 pub struct ParamType {
     require_const: bool,
     optional: bool,
-    value_type: VarType
+    value_type: VarType,
 }
 
 #[derive(Debug, Clone)]
 pub struct VarArgType {
     require_const: bool,
-    value_type: VarType
+    value_type: VarType,
 }
 
 pub struct FunctionData {
     pub has_side_effects: bool,
     pub return_type: VarType,
     pub arg_types: Vec<ParamType>,
-    pub var_arg: Option<VarArgType>
+    pub var_arg: Option<VarArgType>,
 }
 
 impl Function {
@@ -158,7 +238,7 @@ impl Function {
             "note" => Some(Function::Note),
             "voices" => Some(Function::Voices),
             "channel" => Some(Function::Channel),
-            _ => None
+            _ => None,
         }
     }
 
@@ -191,8 +271,7 @@ impl Function {
             Function::Clamp => &CLAMP_DATA,
             Function::Mix => &MIX_DATA,
             Function::Sequence => &SEQUENCE_DATA,
-            Function::Min
-            | Function::Max => &MINMAX_DATA,
+            Function::Min | Function::Max => &MINMAX_DATA,
             Function::Mixdown => &MIXDOWN_DATA,
             Function::Channel => &CHANNEL_DATA,
             Function::Next => &NEXT_DATA,
@@ -201,8 +280,7 @@ impl Function {
             Function::Hold => &HOLD_DATA,
             Function::Accum => &ACCUM_DATA,
             Function::SvFilter => &SVFILTER_DATA,
-            Function::LowBqFilter
-            | Function::HighBqFilter => &BIQUADFILTER_DATA,
+            Function::LowBqFilter | Function::HighBqFilter => &BIQUADFILTER_DATA,
             Function::PeakBqFilter => &PEAKBQFILTER_DATA,
             Function::Noise => &NOISE_DATA,
             Function::SinOsc
@@ -211,7 +289,7 @@ impl Function {
             | Function::TriOsc
             | Function::RmpOsc => &PERIODIC_FUNC,
             Function::Note => &NOTE_DATA,
-            Function::Voices => &VOICES_DATA
+            Function::Voices => &VOICES_DATA,
         }
     }
 
@@ -237,7 +315,7 @@ impl ParamType {
         ParamType {
             require_const,
             optional,
-            value_type
+            value_type,
         }
     }
 }
@@ -246,18 +324,23 @@ impl VarArgType {
     pub fn new(require_const: bool, value_type: VarType) -> VarArgType {
         VarArgType {
             require_const,
-            value_type
+            value_type,
         }
     }
 }
 
 impl FunctionData {
-    pub fn new(has_side_effects: bool, return_type: VarType, arg_types: Vec<ParamType>, var_arg: Option<VarArgType>) -> FunctionData {
+    pub fn new(
+        has_side_effects: bool,
+        return_type: VarType,
+        arg_types: Vec<ParamType>,
+        var_arg: Option<VarArgType>,
+    ) -> FunctionData {
         FunctionData {
             has_side_effects,
             return_type,
             arg_types,
-            var_arg
+            var_arg,
         }
     }
 }

@@ -1,9 +1,9 @@
 use ast::{ControlField, FormType, OperatorType, UnaryOperation};
 use mir::block::Function;
-use std::hash;
 use ordered_float::OrderedFloat;
+use std::hash;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ConstantNum {
     pub left: f32,
     pub right: f32,
@@ -74,7 +74,7 @@ impl ConstantNum {
         ConstantNum {
             left,
             right: self.right,
-            form: self.form.clone(),
+            form: self.form,
         }
     }
 
@@ -82,7 +82,7 @@ impl ConstantNum {
         ConstantNum {
             left: self.left,
             right,
-            form: self.form.clone(),
+            form: self.form,
         }
     }
 
@@ -100,6 +100,14 @@ impl hash::Hash for ConstantNum {
         OrderedFloat(self.left).hash(state);
         OrderedFloat(self.right).hash(state);
         self.form.hash(state);
+    }
+}
+
+impl PartialEq for ConstantNum {
+    fn eq(&self, other: &ConstantNum) -> bool {
+        OrderedFloat(self.left).eq(&OrderedFloat(other.left))
+            && OrderedFloat(self.right).eq(&OrderedFloat(other.right))
+            && self.form.eq(&other.form)
     }
 }
 
@@ -143,7 +151,7 @@ impl Statement {
             | Statement::Combine { .. }
             | Statement::LoadControl { .. } => false,
             Statement::StoreControl { .. } => true,
-            Statement::CallFunc { function, .. } => function.has_side_effects()
+            Statement::CallFunc { function, .. } => function.has_side_effects(),
         }
     }
 }

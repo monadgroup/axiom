@@ -14,89 +14,80 @@ pub fn const_unary_op(constant: &ConstantNum, op: UnaryOperation) -> ConstantNum
     match op {
         UnaryOperation::Positive => constant.clone(),
         UnaryOperation::Negative => {
-            ConstantNum::new(-constant.left, -constant.right, constant.form.clone())
+            ConstantNum::new(-constant.left, -constant.right, constant.form)
         }
         UnaryOperation::Not => ConstantNum::new(
-            (constant.left == 0.) as i8 as f32,
-            (constant.right == 0.) as i8 as f32,
-            constant.form.clone(),
+            f32::from((constant.left == 0.) as i8),
+            f32::from((constant.right == 0.) as i8),
+            constant.form,
         ),
     }
 }
 
+#[allow(float_cmp)]
 pub fn const_math_op(a: &ConstantNum, b: &ConstantNum, op: OperatorType) -> ConstantNum {
     match op {
         OperatorType::Identity => b.clone(),
-        OperatorType::Add => ConstantNum::new(a.left + b.left, a.right + b.right, a.form.clone()),
-        OperatorType::Subtract => {
-            ConstantNum::new(a.left - b.left, a.right - b.right, a.form.clone())
-        }
-        OperatorType::Multiply => {
-            ConstantNum::new(a.left * b.left, a.right * b.right, a.form.clone())
-        }
-        OperatorType::Divide => {
-            ConstantNum::new(a.left / b.left, a.right / b.right, a.form.clone())
-        }
-        OperatorType::Modulo => {
-            ConstantNum::new(a.left % b.left, a.right % b.right, a.form.clone())
-        }
-        OperatorType::Power => {
-            ConstantNum::new(a.left.powf(b.left), a.right.powf(b.right), a.form.clone())
-        }
+        OperatorType::Add => ConstantNum::new(a.left + b.left, a.right + b.right, a.form),
+        OperatorType::Subtract => ConstantNum::new(a.left - b.left, a.right - b.right, a.form),
+        OperatorType::Multiply => ConstantNum::new(a.left * b.left, a.right * b.right, a.form),
+        OperatorType::Divide => ConstantNum::new(a.left / b.left, a.right / b.right, a.form),
+        OperatorType::Modulo => ConstantNum::new(a.left % b.left, a.right % b.right, a.form),
+        OperatorType::Power => ConstantNum::new(a.left.powf(b.left), a.right.powf(b.right), a.form),
         OperatorType::BitwiseAnd => ConstantNum::new(
             (a.left as i32 & b.left as i32) as f32,
             (a.right as i32 & b.right as i32) as f32,
-            a.form.clone(),
+            a.form,
         ),
         OperatorType::BitwiseOr => ConstantNum::new(
             (a.left as i32 | b.left as i32) as f32,
             (a.right as i32 | b.right as i32) as f32,
-            a.form.clone(),
+            a.form,
         ),
         OperatorType::BitwiseXor => ConstantNum::new(
             (a.left as i32 ^ b.left as i32) as f32,
             (a.right as i32 ^ b.right as i32) as f32,
-            a.form.clone(),
+            a.form,
         ),
         OperatorType::LogicalAnd => ConstantNum::new(
-            (a.left != 0. && b.left != 0.) as i8 as f32,
-            (a.right != 0. && b.right != 0.) as i8 as f32,
-            a.form.clone(),
+            f32::from((a.left != 0. && b.left != 0.) as i8),
+            f32::from((a.right != 0. && b.right != 0.) as i8),
+            a.form,
         ),
         OperatorType::LogicalOr => ConstantNum::new(
-            (a.left != 0. || b.left != 0.) as i8 as f32,
-            (a.right != 0. || b.right != 0.) as i8 as f32,
-            a.form.clone(),
+            f32::from((a.left != 0. || b.left != 0.) as i8),
+            f32::from((a.right != 0. || b.right != 0.) as i8),
+            a.form,
         ),
         OperatorType::LogicalEqual => ConstantNum::new(
-            (a.left == b.left) as i8 as f32,
-            (a.right == b.right) as i8 as f32,
-            a.form.clone(),
+            f32::from((a.left == b.left) as i8),
+            f32::from((a.right == b.right) as i8),
+            a.form,
         ),
         OperatorType::LogicalNotEqual => ConstantNum::new(
-            (a.left != b.left) as i8 as f32,
-            (a.right != b.right) as i8 as f32,
-            a.form.clone(),
+            f32::from((a.left != b.left) as i8),
+            f32::from((a.right != b.right) as i8),
+            a.form,
         ),
         OperatorType::LogicalGt => ConstantNum::new(
-            (a.left > b.left) as i8 as f32,
-            (a.right > b.right) as i8 as f32,
-            a.form.clone(),
+            f32::from((a.left > b.left) as i8),
+            f32::from((a.right > b.right) as i8),
+            a.form,
         ),
         OperatorType::LogicalLt => ConstantNum::new(
-            (a.left < b.left) as i8 as f32,
-            (a.right < b.right) as i8 as f32,
-            a.form.clone(),
+            f32::from((a.left < b.left) as i8),
+            f32::from((a.right < b.right) as i8),
+            a.form,
         ),
         OperatorType::LogicalGte => ConstantNum::new(
-            (a.left >= b.left) as i8 as f32,
-            (a.right >= b.right) as i8 as f32,
-            a.form.clone(),
+            f32::from((a.left >= b.left) as i8),
+            f32::from((a.right >= b.right) as i8),
+            a.form,
         ),
         OperatorType::LogicalLte => ConstantNum::new(
-            (a.left <= b.left) as i8 as f32,
-            (a.right <= b.right) as i8 as f32,
-            a.form.clone(),
+            f32::from((a.left <= b.left) as i8),
+            f32::from((a.right <= b.right) as i8),
+            a.form,
         ),
     }
 }
@@ -110,7 +101,7 @@ pub fn const_extract<'a>(
         Err(CompileError::access_out_of_bounds(
             tuple.items.len(),
             index,
-            range.clone(),
+            *range,
         ))
     } else {
         Ok(&tuple.items[index])
@@ -121,8 +112,9 @@ pub fn const_combine(values: Vec<ConstantValue>) -> ConstantTuple {
     ConstantTuple { items: values }
 }
 
-pub fn const_call(function: &Function, args: Vec<ConstantValue>) -> Option<CompileResult<ConstantValue>> {
+pub fn const_call(
+    function: &Function,
+    args: &[ConstantValue],
+) -> Option<CompileResult<ConstantValue>> {
     unimplemented!();
 }
-
-// todo: constant function call
