@@ -3,9 +3,9 @@ use std::fmt;
 
 #[derive(Clone, Copy)]
 pub enum FunctionArgRange {
-    Precise(usize), // number of arguments needed is precisely known
+    Precise(usize),      // number of arguments needed is precisely known
     Range(usize, usize), // number of arguments is in a range (optional args)
-    VarArg(usize) // max number of args is unbounded due to a vararg
+    VarArg(usize),       // max number of args is unbounded due to a vararg
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -193,14 +193,14 @@ pub struct FunctionData {
     pub var_arg: Option<VarArgType>,
 }
 
-impl fmt::Debug for FunctionArgRange  {
+impl fmt::Debug for FunctionArgRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
             FunctionArgRange::Precise(number) if *number == 1 => write!(f, "1 argument"),
             FunctionArgRange::Precise(number) => write!(f, "{} arguments", number),
             FunctionArgRange::Range(min, max) => write!(f, "between {} and {} arguments", min, max),
             FunctionArgRange::VarArg(number) if *number == 1 => write!(f, "at least 1 argument"),
-            FunctionArgRange::VarArg(number) => write!(f, "at least {} arguments", number)
+            FunctionArgRange::VarArg(number) => write!(f, "at least {} arguments", number),
         }
     }
 }
@@ -278,10 +278,9 @@ impl Function {
             | Function::Left
             | Function::Right
             | Function::Swap => &NUM_INTRINSIC_FUNC,
-            Function::Atan2
-            | Function::Hypot
-            | Function::Pan
-            | Function::Combine => &TWO_NUM_INTRINSIC_FUNC,
+            Function::Atan2 | Function::Hypot | Function::Pan | Function::Combine => {
+                &TWO_NUM_INTRINSIC_FUNC
+            }
             Function::Clamp => &CLAMP_DATA,
             Function::Mix => &MIX_DATA,
             Function::Sequence => &SEQUENCE_DATA,
@@ -324,7 +323,7 @@ impl Function {
     }
 
     pub fn required_args(&self) -> impl Iterator<Item = &ParamType> {
-        self.arg_types().iter().filter(|param| { !param.optional })
+        self.arg_types().iter().filter(|param| !param.optional)
     }
 
     pub fn arg_range(&self) -> FunctionArgRange {

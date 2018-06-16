@@ -159,15 +159,19 @@ impl<'a> AstLower<'a> {
         for (i, arg_type) in arg_types.iter().enumerate() {
             if expr.arguments.len() <= i {
                 if arg_type.optional {
-                    break
+                    break;
                 } else {
-                    return Err(CompileError::mismatched_arg_count(func.arg_range(), expr.arguments.len(), *pos))
+                    return Err(CompileError::mismatched_arg_count(
+                        func.arg_range(),
+                        expr.arguments.len(),
+                        *pos,
+                    ));
                 }
             }
 
             match self.lower_expression(&expr.arguments[i]) {
                 Ok(expr) => args.push(expr),
-                Err(err) => return Err(err)
+                Err(err) => return Err(err),
             }
         }
 
@@ -176,11 +180,15 @@ impl<'a> AstLower<'a> {
             for arg_expr in expr.arguments.iter().skip(args.len()) {
                 match self.lower_expression(arg_expr) {
                     Ok(expr) => varargs.push(expr),
-                    Err(err) => return Err(err)
+                    Err(err) => return Err(err),
                 }
             }
         } else if expr.arguments.len() > arg_types.len() {
-            return Err(CompileError::mismatched_arg_count(func.arg_range(), expr.arguments.len(), *pos))
+            return Err(CompileError::mismatched_arg_count(
+                func.arg_range(),
+                expr.arguments.len(),
+                *pos,
+            ));
         }
 
         self.add_call_func(pos, func, args, varargs)
@@ -455,11 +463,12 @@ impl<'a> AstLower<'a> {
                 Err(err) => return Err(err),
             }
         }*/
-        let new_statement = if let Some(err) = self.check_statement_type(pos, mir::VarType::Num, input) {
-            return Err(err);
-        } else {
-            mir::block::Statement::NumConvert { target_form, input }
-        };
+        let new_statement =
+            if let Some(err) = self.check_statement_type(pos, mir::VarType::Num, input) {
+                return Err(err);
+            } else {
+                mir::block::Statement::NumConvert { target_form, input }
+            };
 
         Ok(self.add_statement(new_statement))
     }
@@ -618,42 +627,66 @@ impl<'a> AstLower<'a> {
         }
     }
 
-    fn add_call_func(&mut self, pos: &ast::SourceRange, function: mir::block::Function, args: Vec<usize>, varargs: Vec<usize>) -> LowerResult {
+    fn add_call_func(
+        &mut self,
+        pos: &ast::SourceRange,
+        function: mir::block::Function,
+        args: Vec<usize>,
+        varargs: Vec<usize>,
+    ) -> LowerResult {
         let func_arg_types = function.arg_types();
         for (i, arg) in args.iter().enumerate() {
-            if let Some(err) = self.check_statement_type(pos, func_arg_types[i].value_type.clone(), *arg) {
+            if let Some(err) =
+                self.check_statement_type(pos, func_arg_types[i].value_type.clone(), *arg)
+            {
                 return Err(err);
             }
         }
 
         // all varargs must be of the same type
         if let Some(vararg_type) = function.var_arg() {
-            for arg in varargs.iter() {
-                if let Some(err) = self.check_statement_type(pos, vararg_type.value_type.clone(), *arg) {
-                    return Err(err)
+            for arg in &varargs {
+                if let Some(err) =
+                    self.check_statement_type(pos, vararg_type.value_type.clone(), *arg)
+                {
+                    return Err(err);
                 }
             }
         }
 
         // if the function has no side effects and all arguments are constant, we can try to constant-fold
         if !function.has_side_effects() {
-            let const_args: Option<Vec<_>> = args.iter().map(|index| self.get_constant(*index).cloned()).collect();
-            let const_varargs: Option<Vec<_>> = varargs.iter().map(|index| self.get_constant(*index).cloned()).collect();
+            let const_args: Option<Vec<_>> = args.iter()
+                .map(|index| self.get_constant(*index).cloned())
+                .collect();
+            let const_varargs: Option<Vec<_>> = varargs
+                .iter()
+                .map(|index| self.get_constant(*index).cloned())
+                .collect();
 
             if let Some(const_args) = const_args {
                 if let Some(const_varargs) = const_varargs {
-                    match constant_propagate::const_call(&function, &const_args, &const_varargs, pos) {
+                    match constant_propagate::const_call(
+                        &function,
+                        &const_args,
+                        &const_varargs,
+                        pos,
+                    ) {
                         Some(Ok(result)) => {
                             return Ok(self.add_statement(mir::block::Statement::Constant(result)))
-                        },
+                        }
                         Some(Err(err)) => return Err(err),
-                        None => ()
+                        None => (),
                     }
                 }
             }
         }
 
-        Ok(self.add_statement(mir::block::Statement::CallFunc { function, args, varargs }))
+        Ok(self.add_statement(mir::block::Statement::CallFunc {
+            function,
+            args,
+            varargs,
+        }))
     }
 
     fn add_store_control(

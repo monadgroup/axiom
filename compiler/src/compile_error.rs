@@ -1,5 +1,5 @@
 use ast::{ControlType, SourceRange, UNDEF_SOURCE_RANGE};
-use mir::{VarType, block::FunctionArgRange};
+use mir::{block::FunctionArgRange, VarType};
 use parser::{Token, TokenType};
 use std::fmt::Write;
 
@@ -29,7 +29,7 @@ pub enum CompileError {
     },
     UnknownVariable(String, SourceRange),
     UnknownFunction(String, SourceRange),
-    MismatchedArgCount(FunctionArgRange, usize, SourceRange)
+    MismatchedArgCount(FunctionArgRange, usize, SourceRange),
 }
 
 pub type CompileResult<T> = Result<T, CompileError>;
@@ -95,7 +95,11 @@ impl CompileError {
         CompileError::UnknownFunction(name, range)
     }
 
-    pub fn mismatched_arg_count(expected: FunctionArgRange, provided: usize, range: SourceRange) -> CompileError {
+    pub fn mismatched_arg_count(
+        expected: FunctionArgRange,
+        provided: usize,
+        range: SourceRange,
+    ) -> CompileError {
         CompileError::MismatchedArgCount(expected, provided, range)
     }
 

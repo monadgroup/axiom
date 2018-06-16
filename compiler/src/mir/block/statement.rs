@@ -53,7 +53,7 @@ pub enum Statement {
     CallFunc {
         function: Function,
         args: Vec<usize>,
-        varargs: Vec<usize>
+        varargs: Vec<usize>,
     },
     StoreControl {
         control: usize,
