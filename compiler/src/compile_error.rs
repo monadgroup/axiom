@@ -1,5 +1,5 @@
 use ast::{ControlType, SourceRange, UNDEF_SOURCE_RANGE};
-use mir::{VarType, block::Function, block::FunctionArgRange};
+use mir::{VarType, block::FunctionArgRange};
 use parser::{Token, TokenType};
 use std::fmt::Write;
 

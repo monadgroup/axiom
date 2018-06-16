@@ -446,14 +446,16 @@ impl<'a> AstLower<'a> {
         target_form: ast::FormType,
         input: usize,
     ) -> LowerResult {
-        let new_statement = if let Some(const_input) = self.get_num_constant(pos, input) {
+        // todo: implement conversion constant-folding?
+        /*if let Some(const_input) = self.get_num_constant(pos, input) {
             match const_input {
                 Ok(const_num) => mir::block::Statement::new_const_num(
                     constant_propagate::const_convert(const_num, &target_form),
                 ),
                 Err(err) => return Err(err),
             }
-        } else if let Some(err) = self.check_statement_type(pos, mir::VarType::Num, input) {
+        }*/
+        let new_statement = if let Some(err) = self.check_statement_type(pos, mir::VarType::Num, input) {
             return Err(err);
         } else {
             mir::block::Statement::NumConvert { target_form, input }

@@ -4,7 +4,7 @@ use mir::VarType;
 use {CompileError, CompileResult};
 use std::f32::consts;
 
-pub fn const_convert(constant: &ConstantNum, target_form: &FormType) -> ConstantNum {
+pub fn const_convert(_constant: &ConstantNum, _target_form: &FormType) -> ConstantNum {
     unimplemented!();
 }
 
@@ -26,6 +26,7 @@ pub fn const_unary_op(constant: &ConstantNum, op: UnaryOperation) -> ConstantNum
     }
 }
 
+#[allow(unknown_lints)]
 #[allow(float_cmp)]
 pub fn const_math_op(a: &ConstantNum, b: &ConstantNum, op: OperatorType) -> ConstantNum {
     match op {
