@@ -146,7 +146,7 @@ impl<'a> GroupExtractor<'a> {
         }
 
         // we can now remove all duplicate groups
-        extract_sources.retain(|group| !group.sources.is_empty());
+        extract_sources.retain(|group| !group.nodes.is_empty());
         extract_sources
     }
 

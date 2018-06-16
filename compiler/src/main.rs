@@ -66,24 +66,18 @@ fn do_repl() {
 
 fn main() {
     // build a basic MIR
-    let groups = vec![
-        ControlGroup::new(VarType::Num, true, true, None),
-        ControlGroup::new(VarType::Num, true, true, None),
-    ];
+    let groups = vec![ControlGroup::new(VarType::Num, true, true, None)];
     let nodes = vec![
         Node::new(
             vec![Control::new(ControlType::NumExtract, 0, true, false)],
             NodeData::Custom(BlockId::new_with_id("source1".to_string(), 0)),
         ),
         Node::new(
-            vec![Control::new(ControlType::NumExtract, 1, true, false)],
+            vec![Control::new(ControlType::NumExtract, 0, false, true)],
             NodeData::Custom(BlockId::new_with_id("source2".to_string(), 1)),
         ),
         Node::new(
-            vec![
-                Control::new(ControlType::Audio, 0, false, true),
-                Control::new(ControlType::Audio, 1, false, true),
-            ],
+            vec![Control::new(ControlType::Audio, 0, false, true)],
             NodeData::Custom(BlockId::new_with_id("consumer1".to_string(), 2)),
         ),
     ];
