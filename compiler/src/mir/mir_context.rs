@@ -1,11 +1,22 @@
 use mir::{Block, BlockId, Surface, SurfaceId};
 use std::collections::HashMap;
 
+pub struct Transaction {
+    pub surfaces: Vec<Surface>,
+    pub blocks: Vec<Block>,
+}
+
 #[derive(Debug, Clone)]
 pub struct MIRContext {
     next_id: u64,
     surfaces: HashMap<SurfaceId, Surface>,
     blocks: HashMap<BlockId, Block>,
+}
+
+impl Transaction {
+    pub fn new(surfaces: Vec<Surface>, blocks: Vec<Block>) -> Self {
+        Transaction { surfaces, blocks }
+    }
 }
 
 impl MIRContext {
@@ -15,19 +26,23 @@ impl MIRContext {
         new_id
     }
 
-    pub fn get_surface(&self, id: &SurfaceId) -> Option<&Surface> {
+    pub fn surface(&self, id: &SurfaceId) -> Option<&Surface> {
         self.surfaces.get(id)
     }
 
-    pub fn get_surface_mut(&mut self, id: &SurfaceId) -> Option<&mut Surface> {
+    pub fn surface_mut(&mut self, id: &SurfaceId) -> Option<&mut Surface> {
         self.surfaces.get_mut(id)
     }
 
-    pub fn get_block(&self, id: &BlockId) -> Option<&Block> {
+    pub fn block(&self, id: &BlockId) -> Option<&Block> {
         self.blocks.get(id)
     }
 
-    pub fn get_block_mut(&mut self, id: &BlockId) -> Option<&mut Block> {
+    pub fn block_mut(&mut self, id: &BlockId) -> Option<&mut Block> {
         self.blocks.get_mut(id)
+    }
+
+    pub fn commit(&mut self, transaction: Transaction) {
+        unimplemented!();
     }
 }
