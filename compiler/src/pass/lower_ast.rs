@@ -150,15 +150,40 @@ impl<'a> AstLower<'a> {
             None => return Err(CompileError::unknown_function(expr.name.clone(), *pos)),
         };
 
-        let values: CompileResult<Vec<_>> = expr.arguments
-            .iter()
-            .map(|arg| self.lower_expression(arg))
-            .collect();
+        // the arguments are valid if:
+        //  - all non-optional parameters have a counterpart, AND EITHER
+        //  - there is no vararg and the number of arguments is <= the number of parameters, OR
+        //  - there is a vararg (in this case, we need to collect them into a separate array
+        let mut args = Vec::new();
+        let arg_types = func.arg_types();
+        for (i, arg_type) in arg_types.iter().enumerate() {
+            if expr.arguments.len() <= i {
+                if arg_type.optional {
+                    break
+                } else {
+                    return Err(CompileError::mismatched_arg_count(func.arg_range(), expr.arguments.len(), *pos))
+                }
+            }
 
-        match values {
-            Ok(vals) => self.add_call_func(func, vals),
-            Err(err) => Err(err),
+            match self.lower_expression(&expr.arguments[i]) {
+                Ok(expr) => args.push(expr),
+                Err(err) => return Err(err)
+            }
         }
+
+        let mut varargs = Vec::new();
+        if func.var_arg().is_some() {
+            for arg_expr in expr.arguments.iter().skip(args.len()) {
+                match self.lower_expression(arg_expr) {
+                    Ok(expr) => varargs.push(expr),
+                    Err(err) => return Err(err)
+                }
+            }
+        } else if expr.arguments.len() > arg_types.len() {
+            return Err(CompileError::mismatched_arg_count(func.arg_range(), expr.arguments.len(), *pos))
+        }
+
+        self.add_call_func(pos, func, args, varargs)
     }
 
     fn lower_cast_expr(
@@ -591,25 +616,42 @@ impl<'a> AstLower<'a> {
         }
     }
 
-    fn add_call_func(&mut self, function: mir::block::Function, args: Vec<usize>) -> LowerResult {
-        // if the function has no side effects and all arguments are constant, we can try to constant-fold
-        if !function.has_side_effects() {
-            let const_inputs: Option<Vec<_>> = args.iter()
-                .map(|index| self.get_constant(*index).cloned())
-                .collect();
+    fn add_call_func(&mut self, pos: &ast::SourceRange, function: mir::block::Function, args: Vec<usize>, varargs: Vec<usize>) -> LowerResult {
+        let func_arg_types = function.arg_types();
+        for (i, arg) in args.iter().enumerate() {
+            if let Some(err) = self.check_statement_type(pos, func_arg_types[i].value_type.clone(), *arg) {
+                return Err(err);
+            }
+        }
 
-            if let Some(const_vals) = const_inputs {
-                match constant_propagate::const_call(&function, &const_vals) {
-                    Some(Ok(result)) => {
-                        return Ok(self.add_statement(mir::block::Statement::Constant(result)))
-                    }
-                    Some(Err(err)) => return Err(err),
-                    None => (),
+        // all varargs must be of the same type
+        if let Some(vararg_type) = function.var_arg() {
+            for arg in varargs.iter() {
+                if let Some(err) = self.check_statement_type(pos, vararg_type.value_type.clone(), *arg) {
+                    return Err(err)
                 }
             }
         }
 
-        Ok(self.add_statement(mir::block::Statement::CallFunc { function, args }))
+        // if the function has no side effects and all arguments are constant, we can try to constant-fold
+        if !function.has_side_effects() {
+            let const_args: Option<Vec<_>> = args.iter().map(|index| self.get_constant(*index).cloned()).collect();
+            let const_varargs: Option<Vec<_>> = varargs.iter().map(|index| self.get_constant(*index).cloned()).collect();
+
+            if let Some(const_args) = const_args {
+                if let Some(const_varargs) = const_varargs {
+                    match constant_propagate::const_call(&function, &const_args, &const_varargs, pos) {
+                        Some(Ok(result)) => {
+                            return Ok(self.add_statement(mir::block::Statement::Constant(result)))
+                        },
+                        Some(Err(err)) => return Err(err),
+                        None => ()
+                    }
+                }
+            }
+        }
+
+        Ok(self.add_statement(mir::block::Statement::CallFunc { function, args, varargs }))
     }
 
     fn add_store_control(

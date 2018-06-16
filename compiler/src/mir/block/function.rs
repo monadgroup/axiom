@@ -1,4 +1,12 @@
 use mir::VarType;
+use std::fmt;
+
+#[derive(Clone, Copy)]
+pub enum FunctionArgRange {
+    Precise(usize), // number of arguments needed is precisely known
+    Range(usize, usize), // number of arguments is in a range (optional args)
+    VarArg(usize) // max number of args is unbounded due to a vararg
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum Function {
@@ -16,13 +24,11 @@ pub enum Function {
     Asin,
     Atan,
     Atan2,
-    Logb,
     Hypot,
     ToRad,
     ToDeg,
     Clamp,
-    LinearPan,
-    PowerPan,
+    Pan,
     Left,
     Right,
     Swap,
@@ -169,15 +175,15 @@ lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct ParamType {
-    require_const: bool,
-    optional: bool,
-    value_type: VarType,
+    pub require_const: bool,
+    pub optional: bool,
+    pub value_type: VarType,
 }
 
 #[derive(Debug, Clone)]
 pub struct VarArgType {
-    require_const: bool,
-    value_type: VarType,
+    pub require_const: bool,
+    pub value_type: VarType,
 }
 
 pub struct FunctionData {
@@ -185,6 +191,18 @@ pub struct FunctionData {
     pub return_type: VarType,
     pub arg_types: Vec<ParamType>,
     pub var_arg: Option<VarArgType>,
+}
+
+impl fmt::Debug for FunctionArgRange  {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        match self {
+            FunctionArgRange::Precise(number) if *number == 1 => write!(f, "1 argument"),
+            FunctionArgRange::Precise(number) => write!(f, "{} arguments", number),
+            FunctionArgRange::Range(min, max) => write!(f, "between {} and {} arguments", min, max),
+            FunctionArgRange::VarArg(number) if *number == 1 => write!(f, "at least 1 argument"),
+            FunctionArgRange::VarArg(number) => write!(f, "at least {} arguments", number)
+        }
+    }
 }
 
 impl Function {
@@ -204,13 +222,11 @@ impl Function {
             "asin" => Some(Function::Asin),
             "atan" => Some(Function::Atan),
             "atan2" => Some(Function::Atan2),
-            "logb" => Some(Function::Logb),
             "hypot" => Some(Function::Hypot),
             "toRad" => Some(Function::ToRad),
             "toDeg" => Some(Function::ToDeg),
             "clamp" => Some(Function::Clamp),
-            "linPan" => Some(Function::LinearPan),
-            "powerPan" => Some(Function::PowerPan),
+            "pan" => Some(Function::Pan),
             "left" => Some(Function::Left),
             "right" => Some(Function::Right),
             "swap" => Some(Function::Swap),
@@ -257,7 +273,6 @@ impl Function {
             | Function::Acos
             | Function::Asin
             | Function::Atan
-            | Function::Logb
             | Function::ToRad
             | Function::ToDeg
             | Function::Left
@@ -265,8 +280,7 @@ impl Function {
             | Function::Swap => &NUM_INTRINSIC_FUNC,
             Function::Atan2
             | Function::Hypot
-            | Function::LinearPan
-            | Function::PowerPan
+            | Function::Pan
             | Function::Combine => &TWO_NUM_INTRINSIC_FUNC,
             Function::Clamp => &CLAMP_DATA,
             Function::Mix => &MIX_DATA,
@@ -301,12 +315,27 @@ impl Function {
         &self.data().return_type
     }
 
-    pub fn arg_types(&self) -> &Vec<ParamType> {
+    pub fn arg_types(&self) -> &[ParamType] {
         &self.data().arg_types
     }
 
     pub fn var_arg(&self) -> &Option<VarArgType> {
         &self.data().var_arg
+    }
+
+    pub fn required_args(&self) -> impl Iterator<Item = &ParamType> {
+        self.arg_types().iter().filter(|param| { !param.optional })
+    }
+
+    pub fn arg_range(&self) -> FunctionArgRange {
+        let required_count = self.required_args().count();
+        if self.var_arg().is_some() {
+            FunctionArgRange::VarArg(required_count)
+        } else if self.arg_types().len() == required_count {
+            FunctionArgRange::Precise(required_count)
+        } else {
+            FunctionArgRange::Range(required_count, self.arg_types().len())
+        }
     }
 }
 

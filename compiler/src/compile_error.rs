@@ -1,5 +1,5 @@
 use ast::{ControlType, SourceRange, UNDEF_SOURCE_RANGE};
-use mir::VarType;
+use mir::{VarType, block::Function, block::FunctionArgRange};
 use parser::{Token, TokenType};
 use std::fmt::Write;
 
@@ -29,6 +29,7 @@ pub enum CompileError {
     },
     UnknownVariable(String, SourceRange),
     UnknownFunction(String, SourceRange),
+    MismatchedArgCount(FunctionArgRange, usize, SourceRange)
 }
 
 pub type CompileResult<T> = Result<T, CompileError>;
@@ -94,6 +95,10 @@ impl CompileError {
         CompileError::UnknownFunction(name, range)
     }
 
+    pub fn mismatched_arg_count(expected: FunctionArgRange, provided: usize, range: SourceRange) -> CompileError {
+        CompileError::MismatchedArgCount(expected, provided, range)
+    }
+
     pub fn formatted(&self) -> (String, SourceRange) {
         let mut res = "".to_owned();
         let (result, range) = match self {
@@ -110,6 +115,8 @@ impl CompileError {
             CompileError::AccessOutOfBounds { actual_count, index, range } => (write!(&mut res, "Ohh hekkers, there's nothing at index {} in an {}-sized tuple!", index, actual_count), *range),
             CompileError::UnknownVariable(name, range) => (write!(&mut res, "Ah hekkers mah dude! {} hasn't been set yet!", name), *range),
             CompileError::UnknownFunction(name, range) => (write!(&mut res, "WHAT IS THIS??!?! {} is def not a valid function :(", name), *range),
+            CompileError::MismatchedArgCount(expected, provided, range) if *provided == 1 => (write!(&mut res, "Eyy! My dude, you're calling that function with 1 argument, but it needs {:?}!", expected), *range),
+            CompileError::MismatchedArgCount(expected, provided, range) => (write!(&mut res, "Eyy! My dude, you're calling that function with {} arguments, but it needs {:?}!", provided, expected), *range)
         };
         result.unwrap();
         (res, range)

@@ -5,7 +5,7 @@ mod function;
 mod statement;
 
 pub use self::control::Control;
-pub use self::function::Function;
+pub use self::function::{Function, FunctionArgRange};
 pub use self::statement::{ConstantNum, ConstantTuple, ConstantValue, Statement};
 
 pub type BlockId = PoolId<Block>;

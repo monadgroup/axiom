@@ -53,6 +53,7 @@ pub enum Statement {
     CallFunc {
         function: Function,
         args: Vec<usize>,
+        varargs: Vec<usize>
     },
     StoreControl {
         control: usize,
@@ -114,6 +115,10 @@ impl PartialEq for ConstantNum {
 impl Eq for ConstantNum {}
 
 impl ConstantValue {
+    pub fn new_num(left: f32, right: f32, form: FormType) -> ConstantValue {
+        ConstantValue::Num(ConstantNum::new(left, right, form))
+    }
+
     pub fn as_num(&self) -> Option<&ConstantNum> {
         if let ConstantValue::Num(ref num) = self {
             Some(num)
