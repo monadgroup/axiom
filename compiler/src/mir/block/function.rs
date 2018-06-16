@@ -82,7 +82,7 @@ lazy_static! {
     static ref MINMAX_DATA: FunctionData = FunctionData::new(
         false,
         VarType::Num,
-        vec![NUM_PARAM.clone(); 2],
+        vec![NUM_PARAM.clone()],
         Some(VarArgType::new(false, VarType::Num)),
     );
     static ref MIXDOWN_DATA: FunctionData = FunctionData::new(
