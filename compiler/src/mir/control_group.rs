@@ -1,4 +1,4 @@
-use mir::VarType;
+use mir::{ConstantValue, VarType};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ControlGroup {
@@ -6,6 +6,7 @@ pub struct ControlGroup {
     pub extracted: bool,
     pub value_written: bool,
     pub value_read: bool,
+    pub default_val: Option<ConstantValue>,
 }
 
 impl ControlGroup {
@@ -14,12 +15,14 @@ impl ControlGroup {
         extracted: bool,
         value_written: bool,
         value_read: bool,
+        default_val: Option<ConstantValue>,
     ) -> Self {
         ControlGroup {
             value_type,
             extracted,
             value_written,
             value_read,
+            default_val,
         }
     }
 }

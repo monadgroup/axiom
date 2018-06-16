@@ -1,7 +1,5 @@
 use ast::ControlType;
 
-// todo: control needs to store Option<value>
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Control {
     pub control_type: ControlType,
