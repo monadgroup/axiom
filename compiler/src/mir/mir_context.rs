@@ -42,7 +42,7 @@ impl MIRContext {
         self.blocks.get_mut(id)
     }
 
-    pub fn commit(&mut self, transaction: Transaction) {
+    /*pub fn commit(&mut self, transaction: Transaction) {
         unimplemented!();
-    }
+    }*/
 }

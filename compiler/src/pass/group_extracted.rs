@@ -18,14 +18,7 @@ struct GroupExtractor<'a> {
 }
 
 impl<'a> ExtractedGroup<'a> {
-    pub fn new() -> Self {
-        ExtractedGroup {
-            sources: Vec::new(),
-            nodes: Vec::new(),
-        }
-    }
-
-    pub fn new_from(source: &'a mir::Control) -> Self {
+    pub fn new(source: &'a mir::Control) -> Self {
         ExtractedGroup {
             sources: vec![source],
             nodes: Vec::new(),
@@ -76,18 +69,13 @@ impl<'a> GroupExtractor<'a> {
                     if control.value_written {
                         root_extract_sources
                             .insert(control as *const mir::Control, extract_sources.len());
-                        extract_sources.push(ExtractedGroup::new_from(control));
+                        extract_sources.push(ExtractedGroup::new(control));
                     }
                 }
             }
         }
 
-        loop {
-            let (control_node, next_control, scan_siblings) = match trace_queue.pop_front() {
-                Some(dat) => dat,
-                None => break,
-            };
-
+        while let Some((control_node, next_control, scan_siblings)) = trace_queue.pop_front() {
             let extract_group = match control_node {
                 Some(parent_node) => node_extract_sources.get(&(parent_node as *const mir::Node)),
                 None => root_extract_sources.get(&(next_control as *const mir::Control)),
@@ -158,7 +146,7 @@ impl<'a> GroupExtractor<'a> {
         }
 
         // we can now remove all duplicate groups
-        extract_sources.retain(|group| group.sources.len() > 0);
+        extract_sources.retain(|group| !group.sources.is_empty());
         extract_sources
     }
 

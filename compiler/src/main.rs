@@ -1,6 +1,3 @@
-use std::io;
-use std::io::prelude::*;
-
 extern crate ordered_float;
 extern crate regex;
 extern crate time;
@@ -22,7 +19,7 @@ pub use self::parser::*;
 pub use self::pass::*;
 pub use self::util::*;
 
-fn run_code(code: &str) {
+/*fn run_code(code: &str) {
     let mut stream = get_token_stream(code);
 
     let parse_start_time = time::precise_time_s();
@@ -65,7 +62,7 @@ fn do_repl() {
             return;
         }
     }
-}
+}*/
 
 fn main() {
     // build a basic MIR
