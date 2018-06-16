@@ -1,7 +1,8 @@
 use ast::{AudioField, ControlField, GraphField, MidiExtractField, MidiField, NumExtractField,
           RollField, ScopeField};
-use mir::block::{ConstantValue, Function, Statement};
+use mir::block::{Function, Statement};
 use mir::Block;
+use mir::ConstantValue;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]

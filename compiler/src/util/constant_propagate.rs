@@ -1,6 +1,6 @@
 use ast::{FormType, OperatorType, SourceRange, UnaryOperation};
-use mir::block::{ConstantNum, ConstantTuple, ConstantValue, Function};
-use mir::VarType;
+use mir::block::Function;
+use mir::{ConstantNum, ConstantTuple, ConstantValue, VarType};
 use std::f32::consts;
 use {CompileError, CompileResult};
 

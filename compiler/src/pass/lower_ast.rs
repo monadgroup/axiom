@@ -19,7 +19,7 @@ struct AstLower<'a> {
     pub block: mir::Block,
     var_indexes: HashMap<&'a str, usize>,
     control_indexes: HashMap<(&'a str, ast::ControlType), usize>,
-    constant_indexes: HashMap<mir::block::ConstantValue, usize>,
+    constant_indexes: HashMap<mir::ConstantValue, usize>,
 }
 
 type LowerResult = CompileResult<usize>;
@@ -326,15 +326,23 @@ impl<'a> AstLower<'a> {
     }
 
     fn lower_note_expr(&mut self, expr: &'a ast::NoteExpression) -> LowerResult {
-        Ok(self.add_statement(mir::block::Statement::new_const_num(
-            mir::block::ConstantNum::new(expr.note as f32, expr.note as f32, ast::FormType::Note),
-        )))
+        Ok(
+            self.add_statement(mir::block::Statement::new_const_num(mir::ConstantNum::new(
+                expr.note as f32,
+                expr.note as f32,
+                ast::FormType::Note,
+            ))),
+        )
     }
 
     fn lower_number_expr(&mut self, expr: &'a ast::NumberExpression) -> LowerResult {
-        Ok(self.add_statement(mir::block::Statement::new_const_num(
-            mir::block::ConstantNum::new(expr.value, expr.value, expr.form.form_type),
-        )))
+        Ok(
+            self.add_statement(mir::block::Statement::new_const_num(mir::ConstantNum::new(
+                expr.value,
+                expr.value,
+                expr.form.form_type,
+            ))),
+        )
     }
 
     fn lower_postfix_expr(
@@ -354,7 +362,7 @@ impl<'a> AstLower<'a> {
             Err(err) => return Err(err),
         };
         let one_constant = self.add_statement(mir::block::Statement::new_const_num(
-            mir::block::ConstantNum::new(1., 1., ast::FormType::None),
+            mir::ConstantNum::new(1., 1., ast::FormType::None),
         ));
         let op_type = match expr.operation {
             ast::PostfixOperation::Increment => ast::OperatorType::Add,
@@ -720,7 +728,7 @@ impl<'a> AstLower<'a> {
         self.block.statements.len() - 1
     }
 
-    fn get_constant(&self, value: usize) -> Option<&mir::block::ConstantValue> {
+    fn get_constant(&self, value: usize) -> Option<&mir::ConstantValue> {
         match &self.block.statements[value] {
             mir::block::Statement::Constant(ref val) => Some(val),
             _ => None,
@@ -731,7 +739,7 @@ impl<'a> AstLower<'a> {
         &self,
         pos: &ast::SourceRange,
         value: usize,
-    ) -> Option<CompileResult<&mir::block::ConstantNum>> {
+    ) -> Option<CompileResult<&mir::ConstantNum>> {
         if let Some(const_val) = self.get_constant(value) {
             Some(if let Some(num_val) = const_val.as_num() {
                 Ok(num_val)
@@ -751,7 +759,7 @@ impl<'a> AstLower<'a> {
         &self,
         pos: &ast::SourceRange,
         value: usize,
-    ) -> Option<CompileResult<&mir::block::ConstantTuple>> {
+    ) -> Option<CompileResult<&mir::ConstantTuple>> {
         if let Some(const_val) = self.get_constant(value) {
             Some(if let Some(tuple_val) = const_val.as_tuple() {
                 Ok(tuple_val)
