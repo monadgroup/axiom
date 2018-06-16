@@ -1,6 +1,6 @@
 use ast::ControlType;
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Control {
     pub control_type: ControlType,
     pub group_id: usize,

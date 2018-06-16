@@ -1,13 +1,13 @@
 use mir::{BlockId, Control, SurfaceId};
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum NodeData {
     Custom(BlockId),
     Group(SurfaceId),
     ExtractGroup(SurfaceId, Vec<usize>),
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Node {
     pub controls: Vec<Control>,
     pub data: NodeData,
