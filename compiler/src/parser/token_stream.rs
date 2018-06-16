@@ -31,7 +31,7 @@ lazy_static! {
         // free tokens
         get_matcher(r"'((?:[^'\\]|\\.)*)'", TokenType::SingleString),
         get_matcher(r#""((?:[^"\\]|\\.)*)""#, TokenType::DoubleString),
-        get_matcher(r"([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)", TokenType::Number),
+        get_matcher(r"([0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)", TokenType::Number),
         get_matcher(r":([a-gA-G]#?[0-9]+)", TokenType::Note),
         get_matcher(r"([_a-zA-Z][_a-zA-Z0-9]*(?:\[\])?)", TokenType::Identifier),
 

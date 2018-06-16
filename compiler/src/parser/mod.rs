@@ -83,13 +83,10 @@ impl Parser {
             }
         }
 
-        println!("Finished parse");
-
         Ok(Block::new(expressions))
     }
 
     fn parse_expression(stream: &mut TokenStream, precedence: i32) -> ExprResult {
-        // todo: there's probably a nice iterator-based solution for this
         let mut result = match Parser::parse_prefix(stream) {
             Ok(prefix) => prefix,
             Err(err) => return Err(err),
@@ -674,6 +671,7 @@ impl Parser {
                     TokenType::Gte => OperatorType::LogicalGte,
                     TokenType::Plus => OperatorType::Add,
                     TokenType::Minus => OperatorType::Subtract,
+                    TokenType::Times => OperatorType::Multiply,
                     TokenType::Divide => OperatorType::Divide,
                     TokenType::Modulo => OperatorType::Modulo,
                     TokenType::Power => OperatorType::Power,

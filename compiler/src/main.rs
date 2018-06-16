@@ -49,24 +49,6 @@ fn run_code(code: &str) {
             )
         }
     }
-
-    /*let ast = match Parser::parse(&mut stream) {
-        Ok(ast) => ast,
-        Err(err) => {
-            let (text, pos) = err.formatted();
-        }
-    }*/
-
-    /*match Parser::parse(&mut stream) {
-        Ok(ast) => println!("AST: {:#?}", ast),
-        Err(err) => {
-            let (text, pos) = err.formatted();
-            println!(
-                "Error {}:{} to {}:{} - {}",
-                pos.0.line, pos.0.column, pos.1.line, pos.1.column, text
-            );
-        }
-    }*/
 }
 
 fn do_repl() {

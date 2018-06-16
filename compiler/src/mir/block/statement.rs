@@ -149,9 +149,9 @@ impl Statement {
             | Statement::NumMathOp { .. }
             | Statement::Extract { .. }
             | Statement::Combine { .. }
-            | Statement::LoadControl { .. } => false,
+            | Statement::LoadControl { .. }
+            | Statement::CallFunc { .. } => false,
             Statement::StoreControl { .. } => true,
-            Statement::CallFunc { function, .. } => function.has_side_effects(),
         }
     }
 }
