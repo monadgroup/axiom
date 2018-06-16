@@ -63,8 +63,8 @@ pub enum Function {
 }
 
 lazy_static! {
-    static ref NUM_PARAM: ParamType = ParamType::new(false, false, VarType::Num);
-    static ref MIDI_PARAM: ParamType = ParamType::new(false, false, VarType::Midi);
+    static ref NUM_PARAM: ParamType = ParamType::new(false, VarType::Num);
+    static ref MIDI_PARAM: ParamType = ParamType::new(false, VarType::Midi);
     static ref NUM_INTRINSIC_FUNC: FunctionData =
         FunctionData::new(false, VarType::Num, vec![NUM_PARAM.clone()], None);
     static ref TWO_NUM_INTRINSIC_FUNC: FunctionData =
@@ -77,19 +77,18 @@ lazy_static! {
         false,
         VarType::Num,
         vec![NUM_PARAM.clone(); 2],
-        Some(VarArgType::new(false, VarType::Num)),
+        Some(VarArgType::new(VarType::Num)),
     );
     static ref MINMAX_DATA: FunctionData = FunctionData::new(
         false,
         VarType::Num,
         vec![NUM_PARAM.clone()],
-        Some(VarArgType::new(false, VarType::Num)),
+        Some(VarArgType::new(VarType::Num)),
     );
     static ref MIXDOWN_DATA: FunctionData = FunctionData::new(
         false,
         VarType::Num,
         vec![ParamType::new(
-            false,
             false,
             VarType::new_array(VarType::Num),
         )],
@@ -109,14 +108,14 @@ lazy_static! {
         vec![
             NUM_PARAM.clone(),
             NUM_PARAM.clone(),
-            ParamType::new(true, false, VarType::Num),
+            ParamType::new(false, VarType::Num),
         ],
         None,
     );
     static ref AMPLITUDE_DATA: FunctionData = FunctionData::new(
         true,
         VarType::Num,
-        vec![NUM_PARAM.clone(), ParamType::new(false, true, VarType::Num)],
+        vec![NUM_PARAM.clone(), ParamType::new(true, VarType::Num)],
         None,
     );
     static ref HOLD_DATA: FunctionData = FunctionData::new(
@@ -125,7 +124,7 @@ lazy_static! {
         vec![
             NUM_PARAM.clone(),
             NUM_PARAM.clone(),
-            ParamType::new(false, true, VarType::Num),
+            ParamType::new(true, VarType::Num),
         ],
         None,
     );
@@ -135,7 +134,7 @@ lazy_static! {
         vec![
             NUM_PARAM.clone(),
             NUM_PARAM.clone(),
-            ParamType::new(false, true, VarType::Num),
+            ParamType::new(true, VarType::Num),
         ],
         None,
     );
@@ -153,7 +152,7 @@ lazy_static! {
     static ref PERIODIC_FUNC: FunctionData = FunctionData::new(
         true,
         VarType::Num,
-        vec![NUM_PARAM.clone(), ParamType::new(false, true, VarType::Num)],
+        vec![NUM_PARAM.clone(), ParamType::new(true, VarType::Num)],
         None,
     );
     static ref NOTE_DATA: FunctionData = FunctionData::new(
@@ -167,7 +166,7 @@ lazy_static! {
         VarType::new_array(VarType::Midi),
         vec![
             MIDI_PARAM.clone(),
-            ParamType::new(false, false, VarType::new_array(VarType::Num)),
+            ParamType::new(false, VarType::new_array(VarType::Num)),
         ],
         None,
     );
@@ -175,14 +174,12 @@ lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct ParamType {
-    pub require_const: bool,
     pub optional: bool,
     pub value_type: VarType,
 }
 
 #[derive(Debug, Clone)]
 pub struct VarArgType {
-    pub require_const: bool,
     pub value_type: VarType,
 }
 
@@ -339,9 +336,8 @@ impl Function {
 }
 
 impl ParamType {
-    pub fn new(require_const: bool, optional: bool, value_type: VarType) -> ParamType {
+    pub fn new(optional: bool, value_type: VarType) -> ParamType {
         ParamType {
-            require_const,
             optional,
             value_type,
         }
@@ -349,9 +345,8 @@ impl ParamType {
 }
 
 impl VarArgType {
-    pub fn new(require_const: bool, value_type: VarType) -> VarArgType {
+    pub fn new(value_type: VarType) -> VarArgType {
         VarArgType {
-            require_const,
             value_type,
         }
     }
