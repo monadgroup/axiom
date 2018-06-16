@@ -6,7 +6,7 @@ pub fn group_extracted(surface: &mut mir::Surface) -> Vec<mir::Surface> {
     GroupExtractor::new(surface).extract_groups()
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct ExtractedGroup<'a> {
     sources: Vec<&'a mir::Control>,
     nodes: Vec<&'a mir::Node>,
@@ -42,6 +42,7 @@ impl<'a> GroupExtractor<'a> {
     }
 
     pub fn extract_groups(self) -> Vec<mir::Surface> {
+        println!("{:#?}", self.find_extracted_groups());
         self.new_surfaces
     }
 
@@ -69,11 +70,12 @@ impl<'a> GroupExtractor<'a> {
 
                 if control.control_type.is_extract() {
                     trace_queue.push_back((None, control, false));
-                    visited_controls.insert(control);
+                    visited_controls.insert(control as *const mir::Control);
                     control_groups[control.group_id].1 = true;
 
                     if control.value_written {
-                        root_extract_sources.insert(control, extract_sources.len());
+                        root_extract_sources
+                            .insert(control as *const mir::Control, extract_sources.len());
                         extract_sources.push(ExtractedGroup::new_from(control));
                     }
                 }
@@ -87,8 +89,8 @@ impl<'a> GroupExtractor<'a> {
             };
 
             let extract_group = match control_node {
-                Some(parent_node) => node_extract_sources.get(parent_node),
-                None => root_extract_sources.get(next_control),
+                Some(parent_node) => node_extract_sources.get(&(parent_node as *const mir::Node)),
+                None => root_extract_sources.get(&(next_control as *const mir::Control)),
             }.cloned();
 
             // if the control isn't an extractor, we also want to propagate from other controls
@@ -96,7 +98,7 @@ impl<'a> GroupExtractor<'a> {
             if scan_siblings {
                 if let Some(parent_node) = control_node {
                     for sibling_control in &parent_node.controls {
-                        if visited_controls.contains(sibling_control) {
+                        if visited_controls.contains(&(sibling_control as *const mir::Control)) {
                             continue;
                         };
                         visited_controls.insert(sibling_control);
@@ -118,31 +120,34 @@ impl<'a> GroupExtractor<'a> {
             // or merge groups with ours
             let (ref connected_controls, has_extractor) = control_groups[next_control.group_id];
             for &(node_control, connected_control) in connected_controls {
-                if visited_controls.contains(connected_control) {
+                if visited_controls.contains(&(connected_control as *const mir::Control)) {
                     continue;
                 };
                 visited_controls.insert(connected_control);
 
-                if let Some(current_group) = extract_group {
-                    if let Some(&connected_extract_group) = node_extract_sources.get(node_control) {
-                        // we need to merge the two groups
-                        GroupExtractor::merge_extract_groups(
-                            current_group,
-                            connected_extract_group,
-                            &mut extract_sources,
-                            &mut root_extract_sources,
-                            &mut node_extract_sources,
-                        );
-                    } else if !connected_control.control_type.is_extract() {
-                        // the node should inherit our group (but ONLY if the node isn't an extractor!)
-                        extract_sources[current_group].nodes.push(node_control);
-                        node_extract_sources.insert(node_control, current_group);
-                    }
-                }
-
                 if !connected_control.control_type.is_extract()
                     && (connected_control.value_read || has_extractor)
                 {
+                    if let Some(current_group) = extract_group {
+                        if let Some(&connected_extract_group) =
+                            node_extract_sources.get(&(node_control as *const mir::Node))
+                        {
+                            // we need to merge the two groups
+                            GroupExtractor::merge_extract_groups(
+                                current_group,
+                                connected_extract_group,
+                                &mut extract_sources,
+                                &mut root_extract_sources,
+                                &mut node_extract_sources,
+                            );
+                        } else if !connected_control.control_type.is_extract() {
+                            // the node should inherit our group (but ONLY if the node isn't an extractor!)
+                            extract_sources[current_group].nodes.push(node_control);
+                            node_extract_sources
+                                .insert(node_control as *const mir::Node, current_group);
+                        }
+                    }
+
                     trace_queue.push_back((
                         Some(node_control),
                         connected_control,
@@ -152,6 +157,8 @@ impl<'a> GroupExtractor<'a> {
             }
         }
 
+        // we can now remove all duplicate groups
+        extract_sources.retain(|group| group.sources.len() > 0);
         extract_sources
     }
 
@@ -159,8 +166,8 @@ impl<'a> GroupExtractor<'a> {
         dest_index: usize,
         src_index: usize,
         groups: &mut [ExtractedGroup<'b>],
-        root_extract_sources: &mut HashMap<&'b mir::Control, usize>,
-        node_extract_sources: &mut HashMap<&'b mir::Node, usize>,
+        root_extract_sources: &mut HashMap<*const mir::Control, usize>,
+        node_extract_sources: &mut HashMap<*const mir::Node, usize>,
     ) {
         // we don't want to try and merge if they're the same
         if dest_index == src_index {

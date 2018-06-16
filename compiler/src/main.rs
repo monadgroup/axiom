@@ -68,7 +68,33 @@ fn do_repl() {
 }
 
 fn main() {
-    loop {
-        do_repl();
-    }
+    // build a basic MIR
+    let groups = vec![
+        ControlGroup::new(VarType::Num, true, true, None),
+        ControlGroup::new(VarType::Num, true, true, None),
+    ];
+    let nodes = vec![
+        Node::new(
+            vec![Control::new(ControlType::NumExtract, 0, true, false)],
+            NodeData::Custom(BlockId::new_with_id("source1".to_string(), 0)),
+        ),
+        Node::new(
+            vec![Control::new(ControlType::NumExtract, 1, true, false)],
+            NodeData::Custom(BlockId::new_with_id("source2".to_string(), 1)),
+        ),
+        Node::new(
+            vec![
+                Control::new(ControlType::Audio, 0, false, true),
+                Control::new(ControlType::Audio, 1, false, true),
+            ],
+            NodeData::Custom(BlockId::new_with_id("consumer1".to_string(), 2)),
+        ),
+    ];
+    let mut surface = Surface::new(SurfaceId::new_with_id("test".to_string(), 0), groups, nodes);
+    let group_start_time = time::precise_time_s();
+    group_extracted(&mut surface);
+    println!(
+        "Grouping took {}s",
+        time::precise_time_s() - group_start_time
+    );
 }
