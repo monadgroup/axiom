@@ -66,7 +66,10 @@ fn do_repl() {
 
 fn main() {
     // build a basic MIR
-    let groups = vec![ControlGroup::new(VarType::Num, true, true, None)];
+    let groups = vec![
+        ControlGroup::new(VarType::Num, true, true, None),
+        ControlGroup::new(VarType::Num, true, true, None),
+    ];
     let nodes = vec![
         Node::new(
             vec![Control::new(ControlType::NumExtract, 0, true, false)],
@@ -77,8 +80,15 @@ fn main() {
             NodeData::Custom(BlockId::new_with_id("source2".to_string(), 1)),
         ),
         Node::new(
-            vec![Control::new(ControlType::Audio, 0, false, true)],
+            vec![
+                Control::new(ControlType::Audio, 0, false, true),
+                Control::new(ControlType::Audio, 1, true, false),
+            ],
             NodeData::Custom(BlockId::new_with_id("consumer1".to_string(), 2)),
+        ),
+        Node::new(
+            vec![Control::new(ControlType::Audio, 1, false, true)],
+            NodeData::Custom(BlockId::new_with_id("consumer2".to_string(), 3)),
         ),
     ];
     let mut surface = Surface::new(SurfaceId::new_with_id("test".to_string(), 0), groups, nodes);
