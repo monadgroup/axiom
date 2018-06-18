@@ -1,4 +1,4 @@
-use mir::{BlockId, Control, SurfaceId};
+use mir::{BlockId, Control, SurfaceId, ValueSocket};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum NodeData {
@@ -9,12 +9,17 @@ pub enum NodeData {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Node {
+    pub sockets: Vec<ValueSocket>,
     pub controls: Vec<Control>,
     pub data: NodeData,
 }
 
 impl Node {
-    pub fn new(controls: Vec<Control>, data: NodeData) -> Node {
-        Node { controls, data }
+    pub fn new(sockets: Vec<ValueSocket>, controls: Vec<Control>, data: NodeData) -> Node {
+        Node {
+            sockets,
+            controls,
+            data,
+        }
     }
 }

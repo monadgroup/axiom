@@ -1,24 +1,21 @@
 use mir::{ConstantValue, VarType};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct ControlGroup {
+pub struct ValueGroup {
     pub value_type: VarType,
-    pub value_written: bool,
-    pub value_read: bool,
+    pub exposer: Option<usize>,
     pub default_val: Option<ConstantValue>,
 }
 
-impl ControlGroup {
+impl ValueGroup {
     pub fn new(
         value_type: VarType,
-        value_written: bool,
-        value_read: bool,
+        exposer: Option<usize>,
         default_val: Option<ConstantValue>,
     ) -> Self {
-        ControlGroup {
+        ValueGroup {
             value_type,
-            value_written,
-            value_read,
+            exposer,
             default_val,
         }
     }

@@ -1,3 +1,6 @@
+use std::io;
+use std::io::BufRead;
+
 extern crate ordered_float;
 extern crate regex;
 extern crate time;
@@ -19,7 +22,7 @@ pub use self::parser::*;
 pub use self::pass::*;
 pub use self::util::*;
 
-/*fn run_code(code: &str) {
+fn run_code(code: &str) {
     let mut stream = get_token_stream(code);
 
     let parse_start_time = time::precise_time_s();
@@ -62,33 +65,50 @@ fn do_repl() {
             return;
         }
     }
-}*/
+}
 
 fn main() {
     // build a basic MIR
     let groups = vec![
-        ControlGroup::new(VarType::Num, true, true, None),
-        ControlGroup::new(VarType::Num, true, true, None),
+        ValueGroup::new(VarType::Num, None, None),
+        ValueGroup::new(VarType::Num, None, None),
+        ValueGroup::new(VarType::Num, None, None),
+        ValueGroup::new(VarType::Num, None, None),
     ];
     let nodes = vec![
         Node::new(
-            vec![Control::new(ControlType::NumExtract, 0, true, false)],
+            vec![ValueSocket::new(0, true, false, true)],
+            Vec::new(),
             NodeData::Custom(BlockId::new_with_id("source1".to_string(), 0)),
         ),
         Node::new(
-            vec![Control::new(ControlType::NumExtract, 0, false, true)],
-            NodeData::Custom(BlockId::new_with_id("source2".to_string(), 1)),
+            vec![
+                ValueSocket::new(0, false, true, false),
+                ValueSocket::new(1, true, false, true),
+            ],
+            Vec::new(),
+            NodeData::Custom(BlockId::new_with_id("reader1".to_string(), 1)),
         ),
         Node::new(
             vec![
-                Control::new(ControlType::Audio, 0, false, true),
-                Control::new(ControlType::Audio, 1, true, false),
+                ValueSocket::new(1, false, true, false),
+                ValueSocket::new(2, true, false, false),
             ],
-            NodeData::Custom(BlockId::new_with_id("consumer1".to_string(), 2)),
+            Vec::new(),
+            NodeData::Custom(BlockId::new_with_id("reader2".to_string(), 2)),
         ),
         Node::new(
-            vec![Control::new(ControlType::Audio, 1, false, true)],
-            NodeData::Custom(BlockId::new_with_id("consumer2".to_string(), 3)),
+            vec![
+                ValueSocket::new(2, false, true, true),
+                ValueSocket::new(3, true, false, false),
+            ],
+            Vec::new(),
+            NodeData::Custom(BlockId::new_with_id("reader3".to_string(), 3)),
+        ),
+        Node::new(
+            vec![ValueSocket::new(3, false, true, true)],
+            Vec::new(),
+            NodeData::Custom(BlockId::new_with_id("reader4".to_string(), 4)),
         ),
     ];
     let mut surface = Surface::new(SurfaceId::new_with_id("test".to_string(), 0), groups, nodes);
