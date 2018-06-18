@@ -1,5 +1,5 @@
 use mir;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 // groups extracted nodes into subsurfaces
 pub fn group_extracted(surface: &mut mir::Surface) -> Vec<mir::Surface> {
@@ -73,17 +73,17 @@ impl<'a> GroupExtractor<'a> {
                 let value_group = &mut value_groups[socket.group_id];
                 value_group.sockets.push(socket_ref);
 
-                if socket.is_extractor && socket.value_written {
-                    if value_group_extracts.get(&socket.group_id).is_none() {
-                        let extract_group_index = extract_groups.len();
-                        println!(
-                            "Extractor on value-group {} has extract group {}",
-                            socket.group_id, extract_group_index
-                        );
-                        value_group_extracts.insert(socket.group_id, extract_group_index);
-                        extract_groups.push(ExtractGroup::new(socket.group_id));
-                        trace_queue.push_back(socket.group_id);
-                    }
+                if socket.is_extractor && socket.value_written
+                    && value_group_extracts.get(&socket.group_id).is_none()
+                {
+                    let extract_group_index = extract_groups.len();
+                    println!(
+                        "Extractor on value-group {} has extract group {}",
+                        socket.group_id, extract_group_index
+                    );
+                    value_group_extracts.insert(socket.group_id, extract_group_index);
+                    extract_groups.push(ExtractGroup::new(socket.group_id));
+                    trace_queue.push_back(socket.group_id);
                 }
             }
         }
@@ -94,7 +94,7 @@ impl<'a> GroupExtractor<'a> {
         //  - Merging extract groups if it does
         // We only propagate into nodes where their socket _reads_ from a group, and never propagate into extract sockets
         while let Some(value_group_index) = trace_queue.pop_front() {
-            let extract_group_index = *(value_group_extracts.get(&value_group_index).unwrap());
+            let extract_group_index = value_group_extracts[&value_group_index];
             println!(
                 "Checking out value group {}, linked to extract group {}",
                 value_group_index, extract_group_index
@@ -154,7 +154,7 @@ impl<'a> GroupExtractor<'a> {
         }
 
         // remove any empty extract groups (with no nodes)
-        extract_groups.retain(|group| group.nodes.len() > 0);
+        extract_groups.retain(|group| !group.nodes.is_empty());
         extract_groups
     }
 
