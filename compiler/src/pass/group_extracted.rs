@@ -100,16 +100,16 @@ impl<'a> GroupExtractor<'a> {
                 value_group_index, extract_group_index
             );
 
+            extract_groups[extract_group_index]
+                .value_groups
+                .push(value_group_index);
+
             // look at each of the sockets connected to this value group
             for &(connected_node_index, connected_socket_index) in
                 &value_groups[value_group_index].sockets
             {
                 let connected_node = &self.surface.nodes[connected_node_index];
                 let connected_socket = &connected_node.sockets[connected_socket_index];
-
-                extract_groups[extract_group_index]
-                    .value_groups
-                    .push(value_group_index);
 
                 // skip if it's an extractor socket or doesn't read from the value group
                 if connected_socket.is_extractor || !connected_socket.value_read {
@@ -138,9 +138,6 @@ impl<'a> GroupExtractor<'a> {
                         &mut node_extracts,
                     )
                 } else {
-                    extract_groups[extract_group_index]
-                        .nodes
-                        .push(connected_node_index);
                     node_extracts.insert(connected_node_index, extract_group_index);
 
                     for socket in &connected_node.sockets {
