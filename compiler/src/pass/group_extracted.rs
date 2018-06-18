@@ -138,6 +138,9 @@ impl<'a> GroupExtractor<'a> {
                         &mut node_extracts,
                     )
                 } else {
+                    extract_groups[extract_group_index]
+                        .nodes
+                        .push(connected_node_index);
                     node_extracts.insert(connected_node_index, extract_group_index);
 
                     for socket in &connected_node.sockets {
@@ -150,6 +153,8 @@ impl<'a> GroupExtractor<'a> {
             }
         }
 
+        // remove any empty extract groups (with no nodes)
+        extract_groups.retain(|group| group.nodes.len() > 0);
         extract_groups
     }
 
