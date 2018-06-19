@@ -69,7 +69,7 @@ fn do_repl() {
 
 fn main() {
     // build a basic MIR
-    let groups = vec![
+    /*let groups = vec![
         ValueGroup::new(VarType::Num, None, None),
         ValueGroup::new(VarType::Num, None, None),
         ValueGroup::new(VarType::Num, None, None),
@@ -109,6 +109,31 @@ fn main() {
             vec![ValueSocket::new(3, false, true, true)],
             Vec::new(),
             NodeData::Custom(BlockId::new_with_id("reader4".to_string(), 4)),
+        ),
+    ];*/
+    let groups = vec![
+        ValueGroup::new(VarType::Num, None, None),
+        ValueGroup::new(VarType::Num, None, None),
+        ValueGroup::new(VarType::Num, None, None),
+    ];
+    let nodes = vec![
+        Node::new(
+            vec![ValueSocket::new(0, true, false, true)],
+            Vec::new(),
+            NodeData::Custom(BlockId::new_with_id("source".to_string(), 0)),
+        ),
+        Node::new(
+            vec![
+                ValueSocket::new(0, false, true, false),
+                ValueSocket::new(1, false, true, false),
+            ],
+            Vec::new(),
+            NodeData::Custom(BlockId::new_with_id("middle".to_string(), 1)),
+        ),
+        Node::new(
+            vec![ValueSocket::new(1, true, false, false)],
+            Vec::new(),
+            NodeData::Custom(BlockId::new_with_id("static".to_string(), 2)),
         ),
     ];
     let mut surface = Surface::new(SurfaceId::new_with_id("test".to_string(), 0), groups, nodes);

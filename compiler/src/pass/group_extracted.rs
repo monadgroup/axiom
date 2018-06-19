@@ -13,6 +13,7 @@ type ValueSocketRef = (NodeRef, usize);
 #[derive(Debug)]
 struct ExtractGroup {
     pub sources: Vec<ValueGroupRef>,
+    pub destinations: Vec<ValueGroupRef>,
     pub nodes: Vec<NodeRef>,
     pub value_groups: Vec<ValueGroupRef>,
 }
@@ -27,9 +28,10 @@ struct GroupExtractor<'a> {
 }
 
 impl ExtractGroup {
-    pub fn new(source: ValueGroupRef) -> Self {
+    pub fn new() -> Self {
         ExtractGroup {
-            sources: vec![source],
+            sources: Vec::new(),
+            destinations: Vec::new(),
             nodes: Vec::new(),
             value_groups: Vec::new(),
         }
@@ -73,17 +75,36 @@ impl<'a> GroupExtractor<'a> {
                 let value_group = &mut value_groups[socket.group_id];
                 value_group.sockets.push(socket_ref);
 
-                if socket.is_extractor && socket.value_written
-                    && value_group_extracts.get(&socket.group_id).is_none()
-                {
-                    let extract_group_index = extract_groups.len();
-                    println!(
-                        "Extractor on value-group {} has extract group {}",
-                        socket.group_id, extract_group_index
-                    );
-                    value_group_extracts.insert(socket.group_id, extract_group_index);
-                    extract_groups.push(ExtractGroup::new(socket.group_id));
+                if socket.is_extractor {
+                    let extract_group_index =
+                        if let Some(&existing_group) = value_group_extracts.get(&socket.group_id) {
+                            existing_group
+                        } else {
+                            let group_index = extract_groups.len();
+                            value_group_extracts.insert(socket.group_id, group_index);
+                            extract_groups.push(ExtractGroup::new());
+                            group_index
+                        };
                     trace_queue.push_back(socket.group_id);
+
+                    if socket.value_written {
+                        println!(
+                            "Socket {:?} writes to control group {}, extractor group {}",
+                            socket_ref, socket.group_id, extract_group_index
+                        );
+                        extract_groups[extract_group_index]
+                            .sources
+                            .push(socket.group_id);
+                    }
+                    if socket.value_read {
+                        println!(
+                            "Socket {:?} reads from control group {}, extractor group {}",
+                            socket_ref, socket.group_id, extract_group_index
+                        );
+                        extract_groups[extract_group_index]
+                            .destinations
+                            .push(socket.group_id);
+                    }
                 }
             }
         }
@@ -111,11 +132,6 @@ impl<'a> GroupExtractor<'a> {
                 let connected_node = &self.surface.nodes[connected_node_index];
                 let connected_socket = &connected_node.sockets[connected_socket_index];
 
-                // skip if it's an extractor socket or doesn't read from the value group
-                if connected_socket.is_extractor || !connected_socket.value_read {
-                    continue;
-                }
-
                 println!(
                     "Spreading to node {} through socket {}",
                     connected_node_index, connected_socket_index
@@ -137,7 +153,7 @@ impl<'a> GroupExtractor<'a> {
                         &mut value_group_extracts,
                         &mut node_extracts,
                     )
-                } else {
+                } else if !connected_socket.is_extractor && connected_socket.value_read {
                     extract_groups[extract_group_index]
                         .nodes
                         .push(connected_node_index);
@@ -176,6 +192,9 @@ impl<'a> GroupExtractor<'a> {
             for &source_ref in &src_group.sources {
                 value_group_extracts.insert(source_ref, dest_index);
             }
+            for &dest_ref in &src_group.destinations {
+                value_group_extracts.insert(dest_ref, dest_index);
+            }
             for &node_ref in &src_group.nodes {
                 node_extracts.insert(node_ref, dest_index);
             }
@@ -184,11 +203,13 @@ impl<'a> GroupExtractor<'a> {
         {
             // concatenate source/node/group values onto destination
             let sources = groups[src_index].sources.to_vec();
+            let destinations = groups[src_index].destinations.to_vec();
             let nodes = groups[src_index].nodes.to_vec();
             let value_groups = groups[src_index].value_groups.to_vec();
 
             let dest_group = &mut groups[dest_index];
             dest_group.sources.extend(sources);
+            dest_group.destinations.extend(destinations);
             dest_group.nodes.extend(nodes);
             dest_group.value_groups.extend(value_groups);
         }
@@ -197,6 +218,7 @@ impl<'a> GroupExtractor<'a> {
             // remove all items from the source
             let src_group = &mut groups[src_index];
             src_group.sources.clear();
+            src_group.destinations.clear();
             src_group.nodes.clear();
             src_group.value_groups.clear();
         }
