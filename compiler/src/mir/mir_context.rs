@@ -1,4 +1,4 @@
-use mir::{Block, BlockId, Surface, SurfaceId};
+use mir::{Block, BlockId, IdAllocator, Surface, SurfaceId};
 use std::collections::HashMap;
 
 pub struct Transaction {
@@ -20,10 +20,12 @@ impl Transaction {
 }
 
 impl MIRContext {
-    pub fn alloc_id(&mut self) -> u64 {
-        let new_id = self.next_id;
-        self.next_id += 1;
-        new_id
+    pub fn new() -> Self {
+        MIRContext {
+            next_id: 0,
+            surfaces: HashMap::new(),
+            blocks: HashMap::new(),
+        }
     }
 
     pub fn surface(&self, id: &SurfaceId) -> Option<&Surface> {
@@ -45,4 +47,12 @@ impl MIRContext {
     /*pub fn commit(&mut self, transaction: Transaction) {
         unimplemented!();
     }*/
+}
+
+impl IdAllocator for MIRContext {
+    fn alloc_id(&mut self) -> u64 {
+        let new_id = self.next_id;
+        self.next_id += 1;
+        new_id
+    }
 }

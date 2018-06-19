@@ -111,6 +111,7 @@ fn main() {
             NodeData::Custom(BlockId::new_with_id("reader4".to_string(), 4)),
         ),
     ];*/
+    let mut allocator = MIRContext::new();
     let groups = vec![
         ValueGroup::new(VarType::Num, None, None),
         ValueGroup::new(VarType::Num, None, None),
@@ -118,26 +119,28 @@ fn main() {
     ];
     let nodes = vec![
         Node::new(
-            vec![ValueSocket::new(0, true, false, true)],
-            NodeData::Custom(BlockId::new_with_id("source".to_string(), 0), Vec::new()),
+            vec![ValueSocket::new(1, true, false, true)],
+            NodeData::Custom(BlockId::new("source".to_string(), &mut allocator)),
         ),
         Node::new(
             vec![
-                ValueSocket::new(0, false, true, false),
                 ValueSocket::new(1, false, true, false),
+                ValueSocket::new(2, false, true, false),
             ],
-            NodeData::Custom(BlockId::new_with_id("middle".to_string(), 1), Vec::new()),
-        ),
-        Node::new(
-            vec![ValueSocket::new(1, true, false, false)],
-            NodeData::Custom(BlockId::new_with_id("static".to_string(), 2), Vec::new()),
+            NodeData::Custom(BlockId::new("middle".to_string(), &mut allocator)),
         ),
     ];
-    let mut surface = Surface::new(SurfaceId::new_with_id("test".to_string(), 0), groups, nodes);
+    let mut surface = Surface::new(
+        SurfaceId::new("test".to_string(), &mut allocator),
+        groups,
+        nodes,
+    );
     let group_start_time = time::precise_time_s();
-    group_extracted(&mut surface);
+    let new_surfaces = group_extracted(&mut surface, &mut allocator);
     println!(
         "Grouping took {}s",
         time::precise_time_s() - group_start_time
     );
+    println!("Surface now: {:#?}", surface);
+    println!("New surfaces: {:#?}", new_surfaces);
 }

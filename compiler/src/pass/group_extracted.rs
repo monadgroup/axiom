@@ -2,8 +2,11 @@ use mir;
 use std::collections::{HashMap, VecDeque};
 
 // groups extracted nodes into subsurfaces
-pub fn group_extracted(surface: &mut mir::Surface) -> Vec<mir::Surface> {
-    GroupExtractor::new(surface).extract_groups()
+pub fn group_extracted(
+    surface: &mut mir::Surface,
+    allocator: &mut mir::IdAllocator,
+) -> Vec<mir::Surface> {
+    GroupExtractor::new(surface).extract_groups(allocator)
 }
 
 type ValueGroupRef = usize;
@@ -51,10 +54,82 @@ impl<'a> GroupExtractor<'a> {
         GroupExtractor { surface }
     }
 
-    pub fn extract_groups(&mut self) -> Vec<mir::Surface> {
-        println!("{:#?}", self.find_extracted_groups());
+    pub fn extract_groups(&mut self, allocator: &mut mir::IdAllocator) -> Vec<mir::Surface> {
+        self.find_extracted_groups()
+            .into_iter()
+            .enumerate()
+            .map(|(index, group)| self.extract_group(allocator, index, group))
+            .collect()
+    }
 
-        Vec::new()
+    fn extract_group(
+        &mut self,
+        allocator: &mut mir::IdAllocator,
+        extract_index: usize,
+        extract_group: ExtractGroup,
+    ) -> mir::Surface {
+        // Here we move the extracted nodes into a new ExtractGroup node.
+        // We attempt to keep the surface structure as intact as possible: it's inevitable that
+        // we have to move nodes, but we avoid removing groups here, instead making sockets in the
+        // new node to "forward" the group out - the groups we need to do this to are those listed
+        // in the extract group provided.
+        // The combination of "remove_dead_sockets" and "remove_dead_groups" passes will remove any
+        // sockets that aren't necessary.
+
+        let mut new_value_groups = Vec::new();
+        let mut new_sockets = Vec::new();
+        let mut new_value_group_indexes = HashMap::new();
+        let mut new_nodes = Vec::new();
+
+        for &parent_group_index in &extract_group.value_groups {
+            let new_group_index = new_value_groups.len();
+            let parent_group = &self.surface.groups[parent_group_index];
+            new_value_groups.push(mir::ValueGroup::new(
+                parent_group.value_type.clone(),
+                Some(new_group_index),
+                None,
+            ));
+
+            // todo: determine value_written and value_read properly
+            new_sockets.push(mir::ValueSocket::new(parent_group_index, true, true, false));
+
+            new_value_group_indexes.insert(parent_group_index, new_group_index);
+        }
+
+        for (removed_count, &node_index) in extract_group.nodes.iter().enumerate() {
+            let real_node_index = node_index - removed_count;
+            let mut new_node = self.surface.nodes.remove(real_node_index);
+
+            // update socket indexes to the indexes in the new group
+            for socket in new_node.sockets.iter_mut() {
+                let remapped_id = new_value_group_indexes[&socket.group_id];
+                socket.group_id = remapped_id;
+            }
+
+            new_nodes.push(new_node)
+        }
+
+        let new_surface = mir::Surface::new(
+            mir::SurfaceId::new(
+                format!("{}.extracted{}", self.surface.id.debug_name, extract_index),
+                allocator,
+            ),
+            new_value_groups,
+            new_nodes,
+        );
+        let new_node = mir::Node::new(
+            new_sockets,
+            mir::NodeData::ExtractGroup {
+                surface: new_surface.id.clone(),
+                source_groups: extract_group.sources,
+                dest_groups: extract_group.destinations,
+            },
+        );
+
+        // add the new node to the parent surface
+        self.surface.nodes.push(new_node);
+
+        new_surface
     }
 
     fn find_extracted_groups(&self) -> Vec<ExtractGroup> {
@@ -66,8 +141,9 @@ impl<'a> GroupExtractor<'a> {
 
         // In order to find extracted groups, we need two things:
         //  - The sockets that are 'connected' to a group, and whether that group then contains an extractor
-        //  - The extractor sockets that write to their output, which seed our breadth-first search and are
-        //    used as "sources" to each extract group
+        //  - The extract sockets, which seed our breadth first search. Extract sockets that are
+        //    written to also become sources to their extract group, ones that are read from become
+        //    destinations.
         // For efficiency, we can do these both in the same loop!
         for (node_index, node) in self.surface.nodes.iter().enumerate() {
             for (socket_index, socket) in node.sockets.iter().enumerate() {

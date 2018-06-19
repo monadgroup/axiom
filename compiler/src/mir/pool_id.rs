@@ -37,9 +37,9 @@ impl<T> Hash for PoolId<T> {
 }
 
 impl<T> PoolId<T> {
-    pub fn new(debug_name: String, context: &mut MIRContext) -> PoolId<T> {
+    pub fn new(debug_name: String, allocator: &mut IdAllocator) -> PoolId<T> {
         PoolId {
-            id: context.alloc_id(),
+            id: allocator.alloc_id(),
             debug_name,
             phantom: PhantomData,
         }
@@ -52,4 +52,8 @@ impl<T> PoolId<T> {
             phantom: PhantomData,
         }
     }
+}
+
+pub trait IdAllocator {
+    fn alloc_id(&mut self) -> u64;
 }
