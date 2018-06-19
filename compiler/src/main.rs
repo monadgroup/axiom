@@ -119,21 +119,18 @@ fn main() {
     let nodes = vec![
         Node::new(
             vec![ValueSocket::new(0, true, false, true)],
-            Vec::new(),
-            NodeData::Custom(BlockId::new_with_id("source".to_string(), 0)),
+            NodeData::Custom(BlockId::new_with_id("source".to_string(), 0), Vec::new()),
         ),
         Node::new(
             vec![
                 ValueSocket::new(0, false, true, false),
                 ValueSocket::new(1, false, true, false),
             ],
-            Vec::new(),
-            NodeData::Custom(BlockId::new_with_id("middle".to_string(), 1)),
+            NodeData::Custom(BlockId::new_with_id("middle".to_string(), 1), Vec::new()),
         ),
         Node::new(
             vec![ValueSocket::new(1, true, false, false)],
-            Vec::new(),
-            NodeData::Custom(BlockId::new_with_id("static".to_string(), 2)),
+            NodeData::Custom(BlockId::new_with_id("static".to_string(), 2), Vec::new()),
         ),
     ];
     let mut surface = Surface::new(SurfaceId::new_with_id("test".to_string(), 0), groups, nodes);
