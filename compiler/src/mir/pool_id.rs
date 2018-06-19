@@ -1,4 +1,3 @@
-use mir::MIRContext;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
