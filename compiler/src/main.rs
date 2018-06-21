@@ -1,14 +1,17 @@
 use std::io;
 use std::io::BufRead;
 
+extern crate inkwell;
 extern crate ordered_float;
 extern crate regex;
 extern crate time;
+extern crate llvm_sys;
 
 #[macro_use]
 extern crate lazy_static;
 
 mod ast;
+mod codegen;
 mod compile_error;
 mod mir;
 mod parser;
@@ -16,6 +19,7 @@ mod pass;
 mod util;
 
 pub use self::ast::*;
+pub use self::codegen::*;
 pub use self::compile_error::{CompileError, CompileResult};
 pub use self::mir::*;
 pub use self::parser::*;

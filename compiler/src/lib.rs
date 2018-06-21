@@ -1,6 +1,7 @@
 extern crate inkwell;
 extern crate ordered_float;
 extern crate regex;
+extern crate llvm_sys;
 
 #[macro_use]
 extern crate lazy_static;
@@ -8,6 +9,7 @@ extern crate lazy_static;
 mod compile_error;
 
 pub mod ast;
+pub mod codegen;
 pub mod mir;
 pub mod parser;
 pub mod pass;
