@@ -2,6 +2,9 @@ use inkwell::values::{StructValue, VectorValue, IntValue, FloatValue, PointerVal
 use inkwell::types::{BasicTypeEnum, StructType, IntType, VectorType};
 use inkwell::context::Context;
 use inkwell::builder::Builder;
+use inkwell::module::Module;
+use codegen::util;
+use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]
 pub struct NumValue {
@@ -30,20 +33,21 @@ impl NumValue {
         NumValue::new(alloca_builder.build_alloca(&num_type, "num"))
     }
 
-    pub fn clone(context: &Context, alloca_builder: &mut Builder, builder: &mut Builder, val: &StructValue) -> Self {
-        let mut new_val = NumValue::new_undef(context, alloca_builder);
-        new_val.store(builder, val);
-        new_val
+    pub fn new_copy(module: &Module, alloca_builder: &mut Builder, builder: &mut Builder, base: &NumValue) -> Self {
+        let result = NumValue::new_undef(module.get_context().borrow(), alloca_builder);
+        base.copy_to(builder, module, &result);
+        result
     }
 
-    pub fn get_const(context: &Context, left: f64, right: f64, form: u8) -> StructValue {
+    pub fn get_const(context: &Context, left: f32, right: f32, form: u8) -> StructValue {
         NumValue::get_type(context).const_named_struct(&[
-            &BasicValueEnum::from(VectorType::const_vector(&[
-                &context.f32_type().const_float(left),
-                &context.f32_type().const_float(right)
-            ])),
+            &BasicValueEnum::from(util::get_const_vec(context, left, right)),
             &BasicValueEnum::from(context.i8_type().const_int(form as u64, false))
         ])
+    }
+
+    pub fn copy_to(&self, builder: &mut Builder, module: &Module, other: &NumValue) {
+        util::copy_ptr(builder, module, &self.val, &other.val)
     }
 
     pub fn load(&self, builder: &mut Builder) -> StructValue {
@@ -65,7 +69,7 @@ impl NumValue {
         builder.build_load(&vec, "num.vec").into_vector_value()
     }
 
-    pub fn set_vec(&mut self, builder: &mut Builder, value: &VectorValue) {
+    pub fn set_vec(&self, builder: &mut Builder, value: &VectorValue) {
         let vec = self.get_vec_ptr(builder);
         builder.build_store(&vec, value);
     }
@@ -81,7 +85,7 @@ impl NumValue {
         builder.build_load(&vec, "num.form").into_int_value()
     }
 
-    pub fn set_form(&mut self, builder: &mut Builder, value: &IntValue) {
+    pub fn set_form(&self, builder: &mut Builder, value: &IntValue) {
         let vec = self.get_form_ptr(builder);
         builder.build_store(&vec, value);
     }

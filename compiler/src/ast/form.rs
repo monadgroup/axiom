@@ -2,17 +2,17 @@ use ast::SourceRange;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum FormType {
-    None,
-    Control,
-    Oscillator,
-    Note,
-    Frequency,
-    Beats,
-    Seconds,
-    Samples,
-    Db,
-    Amplitude,
-    Q,
+    None = 0,
+    Control = 1,
+    Oscillator = 2,
+    Note = 3,
+    Frequency = 4,
+    Beats = 5,
+    Seconds = 6,
+    Samples = 7,
+    Db = 8,
+    Amplitude = 9,
+    Q = 10,
 }
 
 #[derive(Debug, Clone)]

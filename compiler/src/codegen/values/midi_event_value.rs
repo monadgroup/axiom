@@ -2,6 +2,8 @@ use inkwell::values::{PointerValue, IntValue, StructValue, BasicValueEnum};
 use inkwell::types::{StructType, BasicTypeEnum};
 use inkwell::context::Context;
 use inkwell::builder::Builder;
+use inkwell::module::Module;
+use codegen::util;
 
 #[derive(Debug, Clone)]
 pub struct MidiEventValue {
@@ -34,6 +36,10 @@ impl MidiEventValue {
             &BasicValueEnum::from(context.i8_type().const_int(note as u64, false)),
             &BasicValueEnum::from(context.i8_type().const_int(param as u64, false))
         ])
+    }
+
+    pub fn copy_to(&self, builder: &mut Builder, module: &Module, other: &MidiEventValue) {
+        util::copy_ptr(builder, module, &self.val, &other.val)
     }
 
     pub fn load(&self, builder: &mut Builder) -> StructValue {

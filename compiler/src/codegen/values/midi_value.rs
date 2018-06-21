@@ -40,6 +40,10 @@ impl MidiValue {
         MidiValue::new(alloca_builder.build_alloca(&midi_type, "midi"))
     }
 
+    pub fn copy_to(&self, builder: &mut Builder, module: &Module, other: &MidiValue) {
+        util::copy_ptr(builder, module, &self.val, &other.val)
+    }
+
     pub fn get_count_ptr(&self, builder: &mut Builder) -> PointerValue {
         unsafe {
             builder.build_struct_gep(&self.val, 0, "midi.count.ptr")
@@ -106,8 +110,8 @@ impl MidiValue {
         builder.build_conditional_branch(&can_push_cond, &can_push_block, &end_block);
         builder.position_at_end(&can_push_block);
 
-        let mut dest_event = current_midi.get_event(&mut builder, current_count);
-        util::copy_ptr(&mut builder, module, &push_evt.val, &mut dest_event.val);
+        let current_event = current_midi.get_event(&mut builder, current_count);
+        push_evt.copy_to(&mut builder, module, &current_event);
         let new_count = builder.build_int_add(
             &current_count,
             &context.i8_type().const_int(1, false),
