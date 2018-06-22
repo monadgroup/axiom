@@ -2,13 +2,9 @@ use codegen::intrinsics;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
-use inkwell::types::{
-    ArrayType, BasicTypeEnum, FloatType, FunctionType, IntType, PointerType, StructType, VectorType,
-};
-use inkwell::values::{BasicValueEnum, FunctionValue, IntValue, PointerValue};
-use inkwell::values::{FloatValue, VectorValue};
-use inkwell::AddressSpace;
-use llvm_sys::core::LLVMGetElementType;
+use inkwell::types::{BasicTypeEnum, FunctionType, VectorType};
+use inkwell::values::VectorValue;
+use inkwell::values::{FunctionValue, IntValue, PointerValue};
 
 pub fn get_size_of(t: &BasicTypeEnum) -> Option<IntValue> {
     match t {
@@ -30,7 +26,6 @@ pub fn get_or_create_func(
     if let Some(func) = module.get_function(name) {
         func
     } else {
-        let context = module.get_context();
         module.add_function(name, func_type, linkage)
     }
 }

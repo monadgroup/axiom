@@ -21,7 +21,7 @@ pub fn control(generator: &mut ConvertGenerator) {
 
 fn control_from_beats(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: &VectorValue,
 ) -> VectorValue {
@@ -80,7 +80,7 @@ fn control_from_frequency(
 
 fn control_from_note(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: &VectorValue,
 ) -> VectorValue {
@@ -89,7 +89,7 @@ fn control_from_note(
 
 fn control_from_oscillator(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: &VectorValue,
 ) -> VectorValue {
@@ -102,7 +102,7 @@ fn control_from_oscillator(
 
 fn control_from_q(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: &VectorValue,
 ) -> VectorValue {
@@ -138,7 +138,7 @@ fn control_from_samples(
 
 fn control_from_seconds(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: &VectorValue,
 ) -> VectorValue {

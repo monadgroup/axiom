@@ -2,8 +2,8 @@ use codegen::util;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::types::{BasicType, BasicTypeEnum};
-use inkwell::values::{BasicValue, BasicValueEnum, IntValue, PointerValue, StructValue};
+use inkwell::types::BasicType;
+use inkwell::values::{BasicValue, PointerValue, StructValue};
 
 #[derive(Debug, Clone)]
 pub struct TupleValue {

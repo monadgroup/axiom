@@ -1,5 +1,3 @@
-use mir;
-
 // remove controls that don't have any side-effect by existing
 // it is a common pattern to "break out" a control into a separate node, and then connect it to
 // any destinations, but the value-group system means we can safely remove these when they are

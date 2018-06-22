@@ -2,9 +2,8 @@ use ast::UnaryOperation;
 use codegen::util;
 use codegen::values::NumValue;
 use codegen::NodeContext;
-use inkwell::types::VectorType;
 use inkwell::values::InstructionOpcode;
-use inkwell::values::{BasicValueEnum, PointerValue};
+use inkwell::values::PointerValue;
 use inkwell::FloatPredicate;
 
 pub fn gen_unary_op_statement(

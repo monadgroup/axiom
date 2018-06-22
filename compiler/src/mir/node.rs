@@ -1,4 +1,4 @@
-use mir::{BlockId, Control, SurfaceId, ValueSocket};
+use mir::{BlockId, SurfaceId, ValueSocket};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum NodeData {

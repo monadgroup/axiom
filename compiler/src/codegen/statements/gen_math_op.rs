@@ -1,10 +1,8 @@
 use ast::OperatorType;
-use codegen::util;
 use codegen::values::NumValue;
 use codegen::NodeContext;
-use inkwell::builder::Builder;
 use inkwell::types::IntType;
-use inkwell::values::{FloatValue, InstructionOpcode, IntValue, PointerValue, VectorValue};
+use inkwell::values::{PointerValue, VectorValue};
 use inkwell::FloatPredicate;
 
 pub fn gen_math_op_statement(

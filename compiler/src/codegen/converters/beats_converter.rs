@@ -15,7 +15,7 @@ pub fn beats(generator: &mut ConvertGenerator) {
 
 fn beats_from_control(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: &VectorValue,
 ) -> VectorValue {

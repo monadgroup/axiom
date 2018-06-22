@@ -1,10 +1,9 @@
 use super::MidiEventValue;
 use codegen::util;
-use inkwell::basic_block::BasicBlock;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
-use inkwell::types::{ArrayType, BasicTypeEnum, StructType};
+use inkwell::types::{BasicTypeEnum, StructType};
 use inkwell::values::{FunctionValue, IntValue, PointerValue};
 use inkwell::AddressSpace;
 use inkwell::IntPredicate;
