@@ -17,12 +17,16 @@ use self::gen_extract::gen_extract_statement;
 use self::gen_global::gen_global_statement;
 use self::gen_math_op::gen_math_op_statement;
 use self::gen_num_cast::gen_num_cast_statement;
+use self::gen_num_convert::gen_num_convert_statement;
 use self::gen_unary_op::gen_unary_op_statement;
 
 pub fn gen_statement(statement: &Statement, node: &mut NodeContext) -> PointerValue {
     match statement {
         Statement::Constant(constant) => gen_constant_statement(constant, node),
         Statement::Global(global) => gen_global_statement(global, node),
+        Statement::NumConvert { target_form, input } => {
+            gen_num_convert_statement(target_form, *input, node)
+        }
         Statement::NumCast { target_form, input } => {
             gen_num_cast_statement(target_form, *input, node)
         }
