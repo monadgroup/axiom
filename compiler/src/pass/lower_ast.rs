@@ -1,6 +1,7 @@
 use ast;
 use mir;
 use std::collections::HashMap;
+use std::f32::consts;
 use util::constant_propagate;
 use {CompileError, CompileResult};
 
@@ -418,9 +419,23 @@ impl<'a> AstLower<'a> {
         pos: &ast::SourceRange,
         expr: &'a ast::VariableExpression,
     ) -> LowerResult {
-        match self.var_indexes.get::<str>(&expr.name) {
-            Some(index) => Ok(*index),
-            None => Err(CompileError::unknown_variable(expr.name.clone(), *pos)),
+        match self.var_indexes.get::<str>(&expr.name).cloned() {
+            Some(index) => Ok(index),
+            None => match expr.name.as_ref() {
+                "PI" => Ok(self.add_statement(mir::block::Statement::new_const_num(
+                    mir::ConstantNum::new(consts::PI, consts::PI, ast::FormType::None),
+                ))),
+                "E" => Ok(self.add_statement(mir::block::Statement::new_const_num(
+                    mir::ConstantNum::new(consts::E, consts::E, ast::FormType::None),
+                ))),
+                "SAMPLE_RATE" => Ok(self.add_statement(mir::block::Statement::Global(
+                    mir::block::Global::SampleRate,
+                ))),
+                "BPM" => {
+                    Ok(self.add_statement(mir::block::Statement::Global(mir::block::Global::BPM)))
+                }
+                _ => Err(CompileError::unknown_variable(expr.name.clone(), *pos)),
+            },
         }
     }
 

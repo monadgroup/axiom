@@ -3,8 +3,15 @@ use mir::block::Function;
 use mir::{ConstantNum, ConstantTuple, ConstantValue};
 
 #[derive(Debug, Clone)]
+pub enum Global {
+    SampleRate,
+    BPM,
+}
+
+#[derive(Debug, Clone)]
 pub enum Statement {
     Constant(ConstantValue),
+    Global(Global),
     NumConvert {
         target_form: FormType,
         input: usize,
@@ -59,6 +66,7 @@ impl Statement {
     pub fn has_side_effect(&self) -> bool {
         match self {
             Statement::Constant(_)
+            | Statement::Global(_)
             | Statement::NumConvert { .. }
             | Statement::NumCast { .. }
             | Statement::NumUnaryOp { .. }

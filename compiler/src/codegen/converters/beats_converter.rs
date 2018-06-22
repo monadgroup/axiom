@@ -29,7 +29,9 @@ fn beats_from_frequency(
     val: &VectorValue,
 ) -> VectorValue {
     builder.build_float_div(
-        &globals::get_bpm(module),
+        &builder
+            .build_load(&globals::get_bpm(module), "bpm")
+            .into_vector_value(),
         &builder.build_float_mul(&util::get_vec_spread(context, 60.), val, ""),
         "",
     )
@@ -42,9 +44,17 @@ fn beats_from_samples(
     val: &VectorValue,
 ) -> VectorValue {
     builder.build_float_div(
-        &builder.build_float_mul(val, &globals::get_bpm(module), ""),
         &builder.build_float_mul(
-            &globals::get_sample_rate(module),
+            val,
+            &builder
+                .build_load(&globals::get_bpm(module), "bpm")
+                .into_vector_value(),
+            "",
+        ),
+        &builder.build_float_mul(
+            &builder
+                .build_load(&globals::get_sample_rate(module), "samplerate")
+                .into_vector_value(),
             &util::get_vec_spread(context, 60.),
             "",
         ),
@@ -61,7 +71,9 @@ fn beats_from_seconds(
     builder.build_float_mul(
         val,
         &builder.build_float_mul(
-            &globals::get_bpm(module),
+            &builder
+                .build_load(&globals::get_bpm(module), "bpm")
+                .into_vector_value(),
             &util::get_vec_spread(context, 60.),
             "",
         ),

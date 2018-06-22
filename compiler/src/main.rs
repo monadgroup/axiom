@@ -115,7 +115,7 @@ fn main() {
             NodeData::Custom(BlockId::new_with_id("reader4".to_string(), 4)),
         ),
     ];*/
-    let mut allocator = MIRContext::new();
+    /*let mut allocator = MIRContext::new();
     let groups = vec![
         ValueGroup::new(VarType::Num, None, None),
         ValueGroup::new(VarType::Num, None, None),
@@ -146,5 +146,9 @@ fn main() {
         time::precise_time_s() - group_start_time
     );
     println!("Surface now: {:#?}", surface);
-    println!("New surfaces: {:#?}", new_surfaces);
+    println!("New surfaces: {:#?}", new_surfaces);*/
+
+    loop {
+        do_repl();
+    }
 }

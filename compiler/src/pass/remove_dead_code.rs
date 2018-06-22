@@ -70,7 +70,9 @@ impl<'a> DeadCodeRemover<'a> {
 
     fn get_statement_refs(statement: &mut mir::block::Statement) -> Vec<&mut usize> {
         match statement {
-            mir::block::Statement::Constant(_) => vec![],
+            mir::block::Statement::Constant(_)
+            | mir::block::Statement::Global(_)
+            | mir::block::Statement::LoadControl { .. } => vec![],
             mir::block::Statement::NumConvert { ref mut input, .. } => vec![input],
             mir::block::Statement::NumCast { ref mut input, .. } => vec![input],
             mir::block::Statement::NumUnaryOp { ref mut input, .. } => vec![input],
@@ -85,7 +87,6 @@ impl<'a> DeadCodeRemover<'a> {
             } => indexes.iter_mut().collect(),
             mir::block::Statement::CallFunc { ref mut args, .. } => args.iter_mut().collect(),
             mir::block::Statement::StoreControl { ref mut value, .. } => vec![value],
-            mir::block::Statement::LoadControl { .. } => vec![],
         }
     }
 }
