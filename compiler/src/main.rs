@@ -2,10 +2,10 @@ use std::io;
 use std::io::BufRead;
 
 extern crate inkwell;
+extern crate llvm_sys;
 extern crate ordered_float;
 extern crate regex;
 extern crate time;
-extern crate llvm_sys;
 
 #[macro_use]
 extern crate lazy_static;

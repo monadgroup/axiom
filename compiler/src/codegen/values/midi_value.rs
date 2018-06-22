@@ -1,13 +1,13 @@
-use inkwell::values::{PointerValue, IntValue, FunctionValue};
-use inkwell::types::{ArrayType, StructType, BasicTypeEnum};
-use inkwell::context::Context;
-use inkwell::builder::Builder;
-use inkwell::module::{Module, Linkage};
-use inkwell::AddressSpace;
-use inkwell::basic_block::BasicBlock;
-use inkwell::IntPredicate;
 use super::MidiEventValue;
 use codegen::util;
+use inkwell::basic_block::BasicBlock;
+use inkwell::builder::Builder;
+use inkwell::context::Context;
+use inkwell::module::{Linkage, Module};
+use inkwell::types::{ArrayType, BasicTypeEnum, StructType};
+use inkwell::values::{FunctionValue, IntValue, PointerValue};
+use inkwell::AddressSpace;
+use inkwell::IntPredicate;
 use std::borrow::Borrow;
 
 pub const MIDI_EVENT_COUNT: u8 = 16;
@@ -24,9 +24,9 @@ impl MidiValue {
         struct_type.set_body(
             &[
                 &BasicTypeEnum::from(context.i8_type()),
-                &BasicTypeEnum::from(event_type.array_type(MIDI_EVENT_COUNT as u32))
+                &BasicTypeEnum::from(event_type.array_type(MIDI_EVENT_COUNT as u32)),
             ],
-            false
+            false,
         );
         struct_type
     }
@@ -45,9 +45,7 @@ impl MidiValue {
     }
 
     pub fn get_count_ptr(&self, builder: &mut Builder) -> PointerValue {
-        unsafe {
-            builder.build_struct_gep(&self.val, 0, "midi.count.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, 0, "midi.count.ptr") }
     }
 
     pub fn get_count(&self, builder: &mut Builder) -> IntValue {
@@ -61,36 +59,47 @@ impl MidiValue {
     }
 
     pub fn get_events_ptr(&self, builder: &mut Builder) -> PointerValue {
-        unsafe {
-            builder.build_struct_gep(&self.val, 1, "midi.events.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, 1, "midi.events.ptr") }
     }
 
     pub fn get_event(&self, builder: &mut Builder, index: IntValue) -> MidiEventValue {
         let context = self.val.get_type().get_context();
         let ptr = unsafe {
-            builder.build_in_bounds_gep(&self.val, &[
-                context.i64_type().const_int(0, false),
-                context.i32_type().const_int(1, false),
-                index
-            ], "midi.event")
+            builder.build_in_bounds_gep(
+                &self.val,
+                &[
+                    context.i64_type().const_int(0, false),
+                    context.i32_type().const_int(1, false),
+                    index,
+                ],
+                "midi.event",
+            )
         };
         MidiEventValue::new(ptr)
     }
 
     pub fn push_event(&self, builder: &mut Builder, module: &Module, event: &MidiEventValue) {
         let push_func = MidiValue::get_push_event_func(module, module.get_context().borrow());
-        builder.build_call(&push_func, &[
-            &self.val,
-            &event.val
-        ], "", false);
+        builder.build_call(&push_func, &[&self.val, &event.val], "", false);
     }
 
     fn get_push_event_func(module: &Module, context: &Context) -> FunctionValue {
-        util::get_or_create_func(module, "maxim.midi.pushEvent", &context.void_type().fn_type(&[
-            &BasicTypeEnum::from(MidiValue::get_type(context).ptr_type(AddressSpace::Local)),
-            &BasicTypeEnum::from(MidiEventValue::get_type(context).ptr_type(AddressSpace::Local))
-        ], false), Some(&Linkage::ExternalLinkage))
+        util::get_or_create_func(
+            module,
+            "maxim.midi.pushEvent",
+            &context.void_type().fn_type(
+                &[
+                    &BasicTypeEnum::from(
+                        MidiValue::get_type(context).ptr_type(AddressSpace::Local),
+                    ),
+                    &BasicTypeEnum::from(
+                        MidiEventValue::get_type(context).ptr_type(AddressSpace::Local),
+                    ),
+                ],
+                false,
+            ),
+            Some(&Linkage::ExternalLinkage),
+        )
     }
 
     pub fn initialize(module: &Module, context: &Context) {
@@ -106,7 +115,12 @@ impl MidiValue {
         let push_evt = MidiEventValue::new(func.get_nth_param(1).unwrap().into_pointer_value());
 
         let current_count = current_midi.get_count(&mut builder);
-        let can_push_cond = builder.build_int_compare(IntPredicate::ULT, &current_count, &context.i8_type().const_int(MIDI_EVENT_COUNT as u64, false), "canpushcond");
+        let can_push_cond = builder.build_int_compare(
+            IntPredicate::ULT,
+            &current_count,
+            &context.i8_type().const_int(MIDI_EVENT_COUNT as u64, false),
+            "canpushcond",
+        );
         builder.build_conditional_branch(&can_push_cond, &can_push_block, &end_block);
         builder.position_at_end(&can_push_block);
 
@@ -115,7 +129,7 @@ impl MidiValue {
         let new_count = builder.build_int_add(
             &current_count,
             &context.i8_type().const_int(1, false),
-            "newcount"
+            "newcount",
         );
         current_midi.set_count(&mut builder, &new_count);
         builder.build_unconditional_branch(&end_block);

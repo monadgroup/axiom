@@ -1,7 +1,7 @@
 extern crate inkwell;
+extern crate llvm_sys;
 extern crate ordered_float;
 extern crate regex;
-extern crate llvm_sys;
 
 #[macro_use]
 extern crate lazy_static;

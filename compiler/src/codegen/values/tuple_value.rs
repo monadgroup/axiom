@@ -1,9 +1,9 @@
-use inkwell::values::{PointerValue, StructValue, BasicValue, IntValue, BasicValueEnum};
-use inkwell::types::{BasicTypeEnum, BasicType};
-use inkwell::context::Context;
-use inkwell::builder::Builder;
-use inkwell::module::Module;
 use codegen::util;
+use inkwell::builder::Builder;
+use inkwell::context::Context;
+use inkwell::module::Module;
+use inkwell::types::{BasicType, BasicTypeEnum};
+use inkwell::values::{BasicValue, BasicValueEnum, IntValue, PointerValue, StructValue};
 
 #[derive(Debug, Clone)]
 pub struct TupleValue {
@@ -15,9 +15,17 @@ impl TupleValue {
         TupleValue { val }
     }
 
-    pub fn new_from(module: &Module, alloca_builder: &mut Builder, builder: &mut Builder, values: &[PointerValue]) -> TupleValue {
-        let enum_types: Vec<_> = values.iter().map(|val| { val.get_type().element_type() }).collect();
-        let inner_types: Vec<_> = enum_types.iter().map(|val| { val as &BasicType }).collect();
+    pub fn new_from(
+        module: &Module,
+        alloca_builder: &mut Builder,
+        builder: &mut Builder,
+        values: &[PointerValue],
+    ) -> TupleValue {
+        let enum_types: Vec<_> = values
+            .iter()
+            .map(|val| val.get_type().element_type())
+            .collect();
+        let inner_types: Vec<_> = enum_types.iter().map(|val| val as &BasicType).collect();
         let new_type = module.get_context().struct_type(&inner_types, false);
         let new_tuple = TupleValue::new(alloca_builder.build_alloca(&new_type, "tuple"));
 
@@ -35,8 +43,6 @@ impl TupleValue {
 
     pub fn get_item_ptr(&self, builder: &mut Builder, index: u32) -> PointerValue {
         let context = self.val.get_type().get_context();
-        unsafe {
-            builder.build_struct_gep(&self.val, index, "tuple.item.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, index, "tuple.item.ptr") }
     }
 }

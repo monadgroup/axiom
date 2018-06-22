@@ -88,10 +88,7 @@ lazy_static! {
     static ref MIXDOWN_DATA: FunctionData = FunctionData::new(
         false,
         VarType::Num,
-        vec![ParamType::new(
-            false,
-            VarType::new_array(VarType::Num),
-        )],
+        vec![ParamType::new(false, VarType::new_array(VarType::Num))],
         None,
     );
     static ref CHANNEL_DATA: FunctionData = FunctionData::new(
@@ -346,9 +343,7 @@ impl ParamType {
 
 impl VarArgType {
     pub fn new(value_type: VarType) -> VarArgType {
-        VarArgType {
-            value_type,
-        }
+        VarArgType { value_type }
     }
 }
 

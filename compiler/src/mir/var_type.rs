@@ -1,5 +1,7 @@
-use ast::{AudioField, ControlField, GraphField, MidiExtractField, MidiField, NumExtractField,
-          RollField, ScopeField};
+use ast::{
+    AudioField, ControlField, GraphField, MidiExtractField, MidiField, NumExtractField, RollField,
+    ScopeField,
+};
 use mir::block::{Function, Statement};
 use mir::Block;
 use mir::ConstantValue;

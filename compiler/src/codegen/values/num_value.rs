@@ -1,9 +1,11 @@
-use inkwell::values::{StructValue, VectorValue, IntValue, FloatValue, PointerValue, BasicValueEnum};
-use inkwell::types::{BasicTypeEnum, StructType, IntType, VectorType};
-use inkwell::context::Context;
-use inkwell::builder::Builder;
-use inkwell::module::Module;
 use codegen::util;
+use inkwell::builder::Builder;
+use inkwell::context::Context;
+use inkwell::module::Module;
+use inkwell::types::{BasicTypeEnum, IntType, StructType, VectorType};
+use inkwell::values::{
+    BasicValueEnum, FloatValue, IntValue, PointerValue, StructValue, VectorValue,
+};
 use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]
@@ -17,9 +19,9 @@ impl NumValue {
         struct_type.set_body(
             &[
                 &BasicTypeEnum::from(context.f32_type().vec_type(2)),
-                &BasicTypeEnum::from(context.i8_type())
+                &BasicTypeEnum::from(context.i8_type()),
             ],
-            false
+            false,
         );
         struct_type
     }
@@ -33,7 +35,12 @@ impl NumValue {
         NumValue::new(alloca_builder.build_alloca(&num_type, "num"))
     }
 
-    pub fn new_copy(module: &Module, alloca_builder: &mut Builder, builder: &mut Builder, base: &NumValue) -> Self {
+    pub fn new_copy(
+        module: &Module,
+        alloca_builder: &mut Builder,
+        builder: &mut Builder,
+        base: &NumValue,
+    ) -> Self {
         let result = NumValue::new_undef(module.get_context().borrow(), alloca_builder);
         base.copy_to(builder, module, &result);
         result
@@ -42,7 +49,7 @@ impl NumValue {
     pub fn get_const(context: &Context, left: f32, right: f32, form: u8) -> StructValue {
         NumValue::get_type(context).const_named_struct(&[
             &BasicValueEnum::from(util::get_const_vec(context, left, right)),
-            &BasicValueEnum::from(context.i8_type().const_int(form as u64, false))
+            &BasicValueEnum::from(context.i8_type().const_int(form as u64, false)),
         ])
     }
 
@@ -51,7 +58,9 @@ impl NumValue {
     }
 
     pub fn load(&self, builder: &mut Builder) -> StructValue {
-        builder.build_load(&self.val, "num.loaded").into_struct_value()
+        builder
+            .build_load(&self.val, "num.loaded")
+            .into_struct_value()
     }
 
     pub fn store(&mut self, builder: &mut Builder, value: &StructValue) {
@@ -59,9 +68,7 @@ impl NumValue {
     }
 
     pub fn get_vec_ptr(&self, builder: &mut Builder) -> PointerValue {
-        unsafe {
-            builder.build_struct_gep(&self.val, 0, "num.vec.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, 0, "num.vec.ptr") }
     }
 
     pub fn get_vec(&self, builder: &mut Builder) -> VectorValue {
@@ -75,9 +82,7 @@ impl NumValue {
     }
 
     pub fn get_form_ptr(&self, builder: &mut Builder) -> PointerValue {
-        unsafe {
-            builder.build_struct_gep(&self.val, 1, "num.form.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, 1, "num.form.ptr") }
     }
 
     pub fn get_form(&self, builder: &mut Builder) -> IntValue {

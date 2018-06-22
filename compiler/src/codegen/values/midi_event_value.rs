@@ -1,9 +1,9 @@
-use inkwell::values::{PointerValue, IntValue, StructValue, BasicValueEnum};
-use inkwell::types::{StructType, BasicTypeEnum};
-use inkwell::context::Context;
-use inkwell::builder::Builder;
-use inkwell::module::Module;
 use codegen::util;
+use inkwell::builder::Builder;
+use inkwell::context::Context;
+use inkwell::module::Module;
+use inkwell::types::{BasicTypeEnum, StructType};
+use inkwell::values::{BasicValueEnum, IntValue, PointerValue, StructValue};
 
 #[derive(Debug, Clone)]
 pub struct MidiEventValue {
@@ -20,7 +20,7 @@ impl MidiEventValue {
                 &BasicTypeEnum::from(context.i8_type()), // note
                 &BasicTypeEnum::from(context.i8_type()), // param
             ],
-            false
+            false,
         );
         struct_type
     }
@@ -34,7 +34,7 @@ impl MidiEventValue {
             &BasicValueEnum::from(context.i8_type().const_int(name as u64, false)),
             &BasicValueEnum::from(context.i8_type().const_int(channel as u64, false)),
             &BasicValueEnum::from(context.i8_type().const_int(note as u64, false)),
-            &BasicValueEnum::from(context.i8_type().const_int(param as u64, false))
+            &BasicValueEnum::from(context.i8_type().const_int(param as u64, false)),
         ])
     }
 
@@ -43,7 +43,9 @@ impl MidiEventValue {
     }
 
     pub fn load(&self, builder: &mut Builder) -> StructValue {
-        builder.build_load(&self.val, "midi.event").into_struct_value()
+        builder
+            .build_load(&self.val, "midi.event")
+            .into_struct_value()
     }
 
     pub fn store(&mut self, builder: &mut Builder, value: &StructValue) {
@@ -51,9 +53,7 @@ impl MidiEventValue {
     }
 
     pub fn get_name_ptr(&self, builder: &mut Builder) -> PointerValue {
-        unsafe {
-            builder.build_struct_gep(&self.val, 0, "event.name.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, 0, "event.name.ptr") }
     }
 
     pub fn get_name(&self, builder: &mut Builder) -> IntValue {
@@ -62,9 +62,7 @@ impl MidiEventValue {
     }
 
     pub fn get_channel_ptr(&self, builder: &mut Builder) -> PointerValue {
-        unsafe {
-            builder.build_struct_gep(&self.val, 1, "event.channel.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, 1, "event.channel.ptr") }
     }
 
     pub fn get_channel(&self, builder: &mut Builder) -> IntValue {
@@ -73,9 +71,7 @@ impl MidiEventValue {
     }
 
     pub fn get_note_ptr(&self, builder: &mut Builder) -> PointerValue {
-        unsafe {
-            builder.build_struct_gep(&self.val, 2, "event.note.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, 2, "event.note.ptr") }
     }
 
     pub fn get_note(&self, builder: &mut Builder) -> IntValue {
@@ -84,9 +80,7 @@ impl MidiEventValue {
     }
 
     pub fn get_param_ptr(&self, builder: &mut Builder) -> PointerValue {
-        unsafe {
-            builder.build_struct_gep(&self.val, 3, "event.param.ptr")
-        }
+        unsafe { builder.build_struct_gep(&self.val, 3, "event.param.ptr") }
     }
 
     pub fn get_param(&self, builder: &mut Builder) -> IntValue {
