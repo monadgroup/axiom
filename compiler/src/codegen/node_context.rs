@@ -11,7 +11,7 @@ pub struct NodeContext<'a> {
 }
 
 impl<'a> NodeContext<'a> {
-    pub fn get_statement(&self, index: usize) -> PointerValue {
+    pub fn get_statement(&self, _index: usize) -> PointerValue {
         unimplemented!()
     }
 }

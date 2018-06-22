@@ -42,7 +42,6 @@ impl TupleValue {
     }
 
     pub fn get_item_ptr(&self, builder: &mut Builder, index: usize) -> PointerValue {
-        let context = self.val.get_type().get_context();
         unsafe { builder.build_struct_gep(&self.val, index as u32, "tuple.item.ptr") }
     }
 }
