@@ -1,4 +1,5 @@
-mod amplitude_converters;
+mod amplitude_converter;
+mod beats_converter;
 
 use ast::FormType;
 use codegen::util;
@@ -10,7 +11,6 @@ use inkwell::module::{Linkage, Module};
 use inkwell::types::BasicTypeEnum;
 use inkwell::values::{FunctionValue, IntValue, VectorValue};
 use inkwell::AddressSpace;
-use std::borrow::Borrow;
 
 pub type ConvertGeneratorCb = Fn(&Context, &Module, &mut Builder, &VectorValue) -> VectorValue;
 
@@ -60,7 +60,8 @@ pub fn get_convert_func(module: &Module, target_form: &FormType) -> FunctionValu
 
 fn run_converter(target_form: &FormType, generator: &mut ConvertGenerator) {
     match target_form {
-        FormType::Amplitude => amplitude_converters::amplitude(generator),
+        FormType::Amplitude => amplitude_converter::amplitude(generator),
+        FormType::Beats => beats_converter::beats(generator),
         _ => unimplemented!(),
     }
 }
