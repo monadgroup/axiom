@@ -1,7 +1,7 @@
 use ast::OperatorType;
 use codegen::NodeContext;
 use codegen::values::NumValue;
-use inkwell::values::{PointerValue, FloatValue, IntValue, InstructionOpcode};
+use inkwell::values::{PointerValue, FloatValue, IntValue, VectorValue, InstructionOpcode};
 use inkwell::types::IntType;
 use inkwell::builder::Builder;
 use inkwell::FloatPredicate;
@@ -14,9 +14,9 @@ pub fn gen_math_op_statement(op: &OperatorType, lhs: usize, rhs: usize, node: &m
     let left_form = left_num.get_form(node.builder);
     result_num.set_form(node.builder, &left_form);
 
-    let left_vec = util::vec2float(left_num.get_vec(node.builder));
-    let right_vec = util::vec2float(right_num.get_vec(node.builder));
-    let result_vec = util::float2vec(match op {
+    let left_vec = left_num.get_vec(node.builder);
+    let right_vec = right_num.get_vec(node.builder);
+    let result_vec = match op {
         OperatorType::Identity => left_vec,
         OperatorType::Add => node.builder.build_float_add(&left_vec, &right_vec, "num.add.vec"),
         OperatorType::Subtract => node.builder.build_float_sub(&left_vec, &right_vec, "num.sub.vec"),
@@ -35,23 +35,23 @@ pub fn gen_math_op_statement(op: &OperatorType, lhs: usize, rhs: usize, node: &m
         OperatorType::LogicalLt => int_to_float_vec(node, &node.builder.build_float_compare(FloatPredicate::OLT, &left_vec, &right_vec, "num.vec.lt")),
         OperatorType::LogicalGte => int_to_float_vec(node, &node.builder.build_float_compare(FloatPredicate::OGE, &left_vec, &right_vec, "num.vec.gte")),
         OperatorType::LogicalLte => int_to_float_vec(node, &node.builder.build_float_compare(FloatPredicate::OLE, &left_vec, &right_vec, "num.vec.lte"))
-    });
+    };
     result_num.set_vec(node.builder, &result_vec);
 
     result_num.val
 }
 
-fn apply_int_op(node: &NodeContext, lhs: &FloatValue, rhs: &FloatValue, num_type: &IntType, op: &Fn(&IntValue, &IntValue) -> IntValue) -> FloatValue {
+fn apply_int_op(node: &NodeContext, lhs: &VectorValue, rhs: &VectorValue, num_type: &IntType, op: &Fn(&VectorValue, &VectorValue) -> VectorValue) -> VectorValue {
     let left_int = float_vec_to_int(node, lhs, num_type);
     let right_int = float_vec_to_int(node, rhs, num_type);
     let result_int = op(&left_int, &right_int);
     int_to_float_vec(node, &result_int)
 }
 
-fn float_vec_to_int(node: &NodeContext, vec: &FloatValue, num_type: &IntType) -> IntValue {
-    node.builder.build_cast(InstructionOpcode::FPToSI, vec, &num_type.vec_type(2), "num.vec.int").into_int_value()
+fn float_vec_to_int(node: &NodeContext, vec: &VectorValue, num_type: &IntType) -> VectorValue {
+    node.builder.build_float_to_signed_int(vec, &num_type.vec_type(2), "num.vec.int")
 }
 
-fn int_to_float_vec(node: &NodeContext, int: &IntValue) -> FloatValue {
-    node.builder.build_cast(InstructionOpcode::SIToFP, int, &node.context.f32_type().vec_type(2), "num.vec.float").into_float_value()
+fn int_to_float_vec(node: &NodeContext, int: &VectorValue) -> VectorValue {
+    node.builder.build_signed_int_to_float(int, &node.context.f32_type().vec_type(2), "num.vec.float")
 }

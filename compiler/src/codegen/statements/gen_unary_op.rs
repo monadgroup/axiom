@@ -14,13 +14,13 @@ pub fn gen_unary_op_statement(op: &UnaryOperation, input: usize, node: &mut Node
         UnaryOperation::Positive => {},
         UnaryOperation::Negative => {
             let original_vec = new_num.get_vec(node.builder);
-            let new_vec = util::float2vec(node.builder.build_float_neg(&util::vec2float(original_vec), "num.vec.negate"));
+            let new_vec = node.builder.build_float_neg(&original_vec, "num.vec.negate");
             new_num.set_vec(node.builder, &new_vec);
         },
         UnaryOperation::Not => {
             let original_vec = new_num.get_vec(node.builder);
             let zero_vec = util::get_vec_spread(node.context, 0.);
-            let int_not = util::int2vec(node.builder.build_float_compare(FloatPredicate::OEQ, &util::vec2float(original_vec), &util::vec2float(zero_vec), "num.vec.not.int"));
+            let int_not = node.builder.build_float_compare(FloatPredicate::OEQ, &original_vec, &zero_vec, "num.vec.not.int");
             let float_not = node.builder.build_cast(InstructionOpcode::UIToFP, &int_not, &node.context.f32_type().vec_type(2), "num.vec.not").into_vector_value();
             new_num.set_vec(node.builder, &float_not);
         }
