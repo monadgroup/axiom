@@ -3,6 +3,7 @@ mod gen_constant;
 mod gen_extract;
 mod gen_math_op;
 mod gen_num_cast;
+mod gen_num_convert;
 mod gen_unary_op;
 
 use codegen::NodeContext;

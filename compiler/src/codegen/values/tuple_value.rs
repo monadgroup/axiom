@@ -30,7 +30,7 @@ impl TupleValue {
         let new_tuple = TupleValue::new(alloca_builder.build_alloca(&new_type, "tuple"));
 
         for (index, val) in values.iter().enumerate() {
-            let target_ptr = new_tuple.get_item_ptr(builder, index as u32);
+            let target_ptr = new_tuple.get_item_ptr(builder, index);
             util::copy_ptr(builder, module, val, &target_ptr);
         }
 
@@ -41,8 +41,8 @@ impl TupleValue {
         context.const_struct(values, false)
     }
 
-    pub fn get_item_ptr(&self, builder: &mut Builder, index: u32) -> PointerValue {
+    pub fn get_item_ptr(&self, builder: &mut Builder, index: usize) -> PointerValue {
         let context = self.val.get_type().get_context();
-        unsafe { builder.build_struct_gep(&self.val, index, "tuple.item.ptr") }
+        unsafe { builder.build_struct_gep(&self.val, index as u32, "tuple.item.ptr") }
     }
 }

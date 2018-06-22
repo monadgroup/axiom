@@ -1,3 +1,4 @@
+use codegen::intrinsics;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -34,27 +35,6 @@ pub fn get_or_create_func(
     }
 }
 
-pub fn get_memcpy_intrinsic(module: &Module) -> FunctionValue {
-    // todo: set correct attributes on arguments
-    // todo: use 64 or 32-bits depending on data layout
-    let context = module.get_context();
-    get_or_create_func(
-        module,
-        "llvm.memcpy.p0i8.p0i8.i64",
-        &context.void_type().fn_type(
-            &[
-                &BasicTypeEnum::from(context.i8_type().ptr_type(AddressSpace::Generic)),
-                &BasicTypeEnum::from(context.i8_type().ptr_type(AddressSpace::Generic)),
-                &BasicTypeEnum::from(context.i64_type()),
-                &BasicTypeEnum::from(context.i32_type()),
-                &BasicTypeEnum::from(context.bool_type()),
-            ],
-            false,
-        ),
-        Some(&Linkage::ExternalLinkage),
-    )
-}
-
 pub fn get_const_vec(context: &Context, left: f32, right: f32) -> VectorValue {
     VectorType::const_vector(&[
         &context.f32_type().const_float(left as f64),
@@ -72,10 +52,9 @@ pub fn copy_ptr(builder: &mut Builder, module: &Module, src: &PointerValue, dest
     assert_eq!(src_elem_type, dest_elem_type);
 
     let param_size = get_size_of(&src_elem_type).unwrap();
-    let memcpy_intrinsic = get_memcpy_intrinsic(module);
     let context = module.get_context();
     builder.build_call(
-        &memcpy_intrinsic,
+        &intrinsics::memcpy(module),
         &[
             dest,
             src,
