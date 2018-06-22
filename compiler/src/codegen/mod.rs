@@ -1,4 +1,5 @@
 pub mod converters;
+pub mod globals;
 pub mod intrinsics;
 mod node_context;
 pub mod statements;

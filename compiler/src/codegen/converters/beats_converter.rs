@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
 use ast::FormType;
-use codegen::util;
+use codegen::{globals, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -29,7 +29,7 @@ fn beats_from_frequency(
     val: &VectorValue,
 ) -> VectorValue {
     builder.build_float_div(
-        unimplemented!(), // todo: BPM
+        &globals::get_bpm(module),
         &builder.build_float_mul(&util::get_vec_spread(context, 60.), val, ""),
         "",
     )
@@ -42,13 +42,9 @@ fn beats_from_samples(
     val: &VectorValue,
 ) -> VectorValue {
     builder.build_float_div(
+        &builder.build_float_mul(val, &globals::get_bpm(module), ""),
         &builder.build_float_mul(
-            val,
-            unimplemented!(), // todo: BPM
-            "",
-        ),
-        &builder.build_float_mul(
-            unimplemented!(), // todo: sample rate
+            &globals::get_sample_rate(module),
             &util::get_vec_spread(context, 60.),
             "",
         ),
@@ -65,7 +61,7 @@ fn beats_from_seconds(
     builder.build_float_mul(
         val,
         &builder.build_float_mul(
-            unimplemented!(), // todo: BPM
+            &globals::get_bpm(module),
             &util::get_vec_spread(context, 60.),
             "",
         ),
