@@ -2,6 +2,12 @@ mod amplitude_converter;
 mod beats_converter;
 mod control_converter;
 mod db_converter;
+mod frequency_converter;
+mod note_converter;
+mod oscillator_converter;
+mod q_converter;
+mod samples_converter;
+mod seconds_converter;
 
 use ast::FormType;
 use codegen::util;
@@ -62,11 +68,17 @@ pub fn get_convert_func(module: &Module, target_form: &FormType) -> FunctionValu
 
 fn run_converter(target_form: &FormType, generator: &mut ConvertGenerator) {
     match target_form {
+        FormType::None => (),
         FormType::Amplitude => amplitude_converter::amplitude(generator),
         FormType::Beats => beats_converter::beats(generator),
         FormType::Control => control_converter::control(generator),
         FormType::Db => db_converter::db(generator),
-        _ => unimplemented!(),
+        FormType::Frequency => frequency_converter::frequency(generator),
+        FormType::Note => note_converter::note(generator),
+        FormType::Oscillator => oscillator_converter::oscillator(generator),
+        FormType::Q => q_converter::q(generator),
+        FormType::Samples => samples_converter::samples(generator),
+        FormType::Seconds => seconds_converter::seconds(generator),
     }
 }
 
