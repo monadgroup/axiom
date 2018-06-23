@@ -14,7 +14,7 @@ fn amplitude_from_db(
     context: &Context,
     module: &Module,
     builder: &mut Builder,
-    val: &VectorValue,
+    val: VectorValue,
 ) -> VectorValue {
     let pow_intrinsic = intrinsics::pow_v2f32(module);
     builder
@@ -24,7 +24,7 @@ fn amplitude_from_db(
                 &BasicValueEnum::from(util::get_vec_spread(context, 10.)),
                 &BasicValueEnum::from(builder.build_float_div(
                     val,
-                    &util::get_vec_spread(context, 20.),
+                    util::get_vec_spread(context, 20.),
                     "",
                 )),
             ],

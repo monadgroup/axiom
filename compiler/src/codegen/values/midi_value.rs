@@ -116,8 +116,8 @@ impl MidiValue {
         let current_count = current_midi.get_count(&mut builder);
         let can_push_cond = builder.build_int_compare(
             IntPredicate::ULT,
-            &current_count,
-            &context.i8_type().const_int(MIDI_EVENT_COUNT as u64, false),
+            current_count,
+            context.i8_type().const_int(MIDI_EVENT_COUNT as u64, false),
             "canpushcond",
         );
         builder.build_conditional_branch(&can_push_cond, &can_push_block, &end_block);
@@ -126,8 +126,8 @@ impl MidiValue {
         let current_event = current_midi.get_event(&mut builder, current_count);
         push_evt.copy_to(&mut builder, module, &current_event);
         let new_count = builder.build_int_add(
-            &current_count,
-            &context.i8_type().const_int(1, false),
+            current_count,
+            context.i8_type().const_int(1, false),
             "newcount",
         );
         current_midi.set_count(&mut builder, &new_count);

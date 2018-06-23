@@ -1,6 +1,6 @@
 use codegen::util;
 use inkwell::module::{Linkage, Module};
-use inkwell::types::BasicTypeEnum;
+use inkwell::types::{BasicType, BasicTypeEnum};
 use inkwell::values::FunctionValue;
 use inkwell::AddressSpace;
 
@@ -28,6 +28,7 @@ pub fn memcpy(module: &Module) -> FunctionValue {
 pub fn pow_v2f32(module: &Module) -> FunctionValue {
     let context = module.get_context();
     let v2f32_type = context.f32_type().vec_type(2);
+
     util::get_or_create_func(
         module,
         "llvm.pow.v2f32",

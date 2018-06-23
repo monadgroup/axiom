@@ -17,22 +17,22 @@ fn beats_from_control(
     context: &Context,
     _module: &Module,
     builder: &mut Builder,
-    val: &VectorValue,
+    val: VectorValue,
 ) -> VectorValue {
-    builder.build_float_mul(val, &util::get_vec_spread(context, 8.), "")
+    builder.build_float_mul(val, util::get_vec_spread(context, 8.), "")
 }
 
 fn beats_from_frequency(
     context: &Context,
     module: &Module,
     builder: &mut Builder,
-    val: &VectorValue,
+    val: VectorValue,
 ) -> VectorValue {
     builder.build_float_div(
-        &builder
+        builder
             .build_load(&globals::get_bpm(module), "bpm")
             .into_vector_value(),
-        &builder.build_float_mul(&util::get_vec_spread(context, 60.), val, ""),
+        builder.build_float_mul(util::get_vec_spread(context, 60.), val, ""),
         "",
     )
 }
@@ -41,21 +41,21 @@ fn beats_from_samples(
     context: &Context,
     module: &Module,
     builder: &mut Builder,
-    val: &VectorValue,
+    val: VectorValue,
 ) -> VectorValue {
     builder.build_float_div(
-        &builder.build_float_mul(
+        builder.build_float_mul(
             val,
-            &builder
+            builder
                 .build_load(&globals::get_bpm(module), "bpm")
                 .into_vector_value(),
             "",
         ),
-        &builder.build_float_mul(
-            &builder
+        builder.build_float_mul(
+            builder
                 .build_load(&globals::get_sample_rate(module), "samplerate")
                 .into_vector_value(),
-            &util::get_vec_spread(context, 60.),
+            util::get_vec_spread(context, 60.),
             "",
         ),
         "",
@@ -66,15 +66,15 @@ fn beats_from_seconds(
     context: &Context,
     module: &Module,
     builder: &mut Builder,
-    val: &VectorValue,
+    val: VectorValue,
 ) -> VectorValue {
     builder.build_float_mul(
         val,
-        &builder.build_float_mul(
-            &builder
+        builder.build_float_mul(
+            builder
                 .build_load(&globals::get_bpm(module), "bpm")
                 .into_vector_value(),
-            &util::get_vec_spread(context, 60.),
+            util::get_vec_spread(context, 60.),
             "",
         ),
         "",

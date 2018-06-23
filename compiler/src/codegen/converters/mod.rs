@@ -13,7 +13,7 @@ use inkwell::types::BasicTypeEnum;
 use inkwell::values::{FunctionValue, IntValue, VectorValue};
 use inkwell::AddressSpace;
 
-pub type ConvertGeneratorCb = Fn(&Context, &Module, &mut Builder, &VectorValue) -> VectorValue;
+pub type ConvertGeneratorCb = Fn(&Context, &Module, &mut Builder, VectorValue) -> VectorValue;
 
 pub trait ConvertGenerator {
     fn generate(&mut self, form: FormType, cb: &ConvertGeneratorCb);
@@ -36,7 +36,7 @@ impl<'a> ConvertGenerator for PrivateGenerator<'a> {
         let mut builder = self.context.create_builder();
         builder.position_at_end(&new_block);
 
-        let result_vec = cb(self.context, self.module, &mut builder, &self.input_vec);
+        let result_vec = cb(self.context, self.module, &mut builder, *self.input_vec);
         self.result_num.set_vec(&mut builder, &result_vec);
         builder.build_unconditional_branch(self.end_block);
 
