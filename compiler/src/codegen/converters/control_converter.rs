@@ -41,12 +41,8 @@ fn control_from_db(
             .build_call(
                 &pow_intrinsic,
                 &[
-                    &BasicValueEnum::from(util::get_vec_spread(context, 10.)),
-                    &BasicValueEnum::from(builder.build_float_div(
-                        val,
-                        util::get_vec_spread(context, 20.),
-                        "",
-                    )),
+                    &util::get_vec_spread(context, 10.),
+                    &builder.build_float_div(val, util::get_vec_spread(context, 20.), ""),
                 ],
                 "",
                 false,

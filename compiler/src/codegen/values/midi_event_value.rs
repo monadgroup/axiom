@@ -31,10 +31,10 @@ impl MidiEventValue {
 
     pub fn get_const(context: &Context, name: u8, channel: u8, note: u8, param: u8) -> StructValue {
         MidiEventValue::get_type(context).const_named_struct(&[
-            &BasicValueEnum::from(context.i8_type().const_int(name as u64, false)),
-            &BasicValueEnum::from(context.i8_type().const_int(channel as u64, false)),
-            &BasicValueEnum::from(context.i8_type().const_int(note as u64, false)),
-            &BasicValueEnum::from(context.i8_type().const_int(param as u64, false)),
+            &context.i8_type().const_int(name as u64, false),
+            &context.i8_type().const_int(channel as u64, false),
+            &context.i8_type().const_int(note as u64, false),
+            &context.i8_type().const_int(param as u64, false),
         ])
     }
 

@@ -46,8 +46,8 @@ impl NumValue {
 
     pub fn get_const(context: &Context, left: f32, right: f32, form: u8) -> StructValue {
         NumValue::get_type(context).const_named_struct(&[
-            &BasicValueEnum::from(util::get_const_vec(context, left, right)),
-            &BasicValueEnum::from(context.i8_type().const_int(form as u64, false)),
+            &util::get_const_vec(context, left, right),
+            &context.i8_type().const_int(form as u64, false),
         ])
     }
 
