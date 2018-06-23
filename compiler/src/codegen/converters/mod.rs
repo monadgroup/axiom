@@ -1,6 +1,7 @@
 mod amplitude_converter;
 mod beats_converter;
 mod control_converter;
+mod db_converter;
 
 use ast::FormType;
 use codegen::util;
@@ -64,6 +65,7 @@ fn run_converter(target_form: &FormType, generator: &mut ConvertGenerator) {
         FormType::Amplitude => amplitude_converter::amplitude(generator),
         FormType::Beats => beats_converter::beats(generator),
         FormType::Control => control_converter::control(generator),
+        FormType::Db => db_converter::db(generator),
         _ => unimplemented!(),
     }
 }
