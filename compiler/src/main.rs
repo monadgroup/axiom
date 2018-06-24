@@ -34,7 +34,7 @@ fn run_code(code: &str) {
 
     let mir = ast.and_then(|ast| {
         let lower_start = time::precise_time_s();
-        let block = lower_ast(mir::BlockId::new_with_id("test".to_owned(), 0), &ast);
+        let block = lower_ast(mir::BlockId::new_with_id("test".to_string(), 0), &ast);
         println!("Lower took {}s", time::precise_time_s() - lower_start);
         block
     });
@@ -57,7 +57,7 @@ fn run_code(code: &str) {
 fn do_repl() {
     println!("Enter code followed by two newlines...");
     let stdin = io::stdin();
-    let mut input = "".to_owned();
+    let mut input = "".to_string();
     for line in stdin.lock().lines() {
         let unwrapped = line.unwrap();
         input.push_str(&unwrapped);

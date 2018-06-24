@@ -16,7 +16,9 @@ impl<'a> NodeContext<'a> {
         unimplemented!()
     }
 
-    pub fn get_group_entry(&self, _index: usize) -> PointerValue {}
+    pub fn get_group_entry(&self, _index: usize) -> PointerValue {
+        unimplemented!()
+    }
 
     pub fn get_ui_entry(&self, _index: usize) -> Option<PointerValue> {
         unimplemented!()

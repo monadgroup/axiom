@@ -104,7 +104,7 @@ impl CompileError {
     }
 
     pub fn formatted(&self) -> (String, SourceRange) {
-        let mut res = "".to_owned();
+        let mut res = "".to_string();
         let (result, range) = match self {
             CompileError::MismatchedToken { expected, found } => (write!(&mut res, "Dude, why is there a {:?}? I expected a {:?} here.", found.token_type, expected), found.pos),
             CompileError::UnexpectedToken(token) => (write!(&mut res, "Hey man, not cool. I didn't expect this {:?}!", token.token_type), token.pos),

@@ -133,7 +133,7 @@ impl Parser {
                 token_type: TokenType::Colon,
                 ref pos,
                 ..
-            }) => Parser::parse_control_expr(stream, "".to_owned(), pos.0),
+            }) => Parser::parse_control_expr(stream, "".to_string(), pos.0),
             Some(Token {
                 token_type: TokenType::OpenSquare,
                 ..
@@ -476,7 +476,7 @@ impl Parser {
                     Parser::expect_token(TokenType::Identifier, stream.next())?;
                 (content, pos)
             }
-            _ => ("value".to_owned(), type_token.pos),
+            _ => ("value".to_string(), type_token.pos),
         };
 
         let control_field = match prop_name.as_ref() {

@@ -128,7 +128,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 Token::new(
                     SourceRange(token_start, token_end),
                     token_type,
-                    token_content.to_owned(),
+                    token_content.to_string(),
                 )
             }
             None => {
@@ -138,7 +138,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 Token::new(
                     SourceRange(token_start, token_start),
                     TokenType::Unknown,
-                    "".to_owned(),
+                    "".to_string(),
                 )
             }
         };
