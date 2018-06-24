@@ -6,6 +6,7 @@ use mir::block::{Function, Statement};
 use mir::Block;
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct BlockLayout {
     pub scratch_struct: StructType,
     pub groups_struct: StructType,

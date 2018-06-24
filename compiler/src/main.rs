@@ -42,7 +42,11 @@ fn run_code(code: &str) {
     match mir {
         Ok(mut block) => {
             remove_dead_code(&mut block);
-            println!("{:#?}", block)
+            let context = inkwell::context::Context::create();
+            let layout = codegen::data_analyzer::build_block_layout(&context, &block, true);
+            //let layout = codegen::data_analyzer::build_block_layout()
+            println!("{:#?}", block);
+            println!("{:#?}", layout)
         }
         Err(err) => {
             let (text, pos) = err.formatted();
@@ -175,11 +179,11 @@ fn main() {
     println!("Surface now: {:#?}", surface);
     println!("New surfaces: {:#?}", new_surfaces);*/
 
-    /*loop {
+    loop {
         do_repl();
-    }*/
+    }
 
-    let context = inkwell::context::Context::create();
+    /*let context = inkwell::context::Context::create();
     let module = context.create_module("test");
     codegen::converters::build_convert_func(&module, &ast::FormType::None);
     codegen::converters::build_convert_func(&module, &ast::FormType::Amplitude);
@@ -224,5 +228,5 @@ fn main() {
     }
     module_pass.run_on_module(&module);
 
-    module.print_to_stderr();
+    module.print_to_stderr();*/
 }

@@ -2,7 +2,7 @@ mod builder_context;
 mod control_context;
 pub mod controls;
 pub mod converters;
-mod data_analyzer;
+pub mod data_analyzer;
 pub mod globals;
 pub mod intrinsics;
 mod node_context;
