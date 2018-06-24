@@ -2,9 +2,9 @@ use codegen::intrinsics;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
-use inkwell::types::{BasicTypeEnum, FunctionType, VectorType};
+use inkwell::types::{BasicType, BasicTypeEnum, FunctionType, VectorType};
 use inkwell::values::VectorValue;
-use inkwell::values::{FunctionValue, IntValue, PointerValue};
+use inkwell::values::{FunctionValue, GlobalValue, IntValue, PointerValue};
 
 pub fn get_size_of(t: &BasicTypeEnum) -> Option<IntValue> {
     match t {
@@ -27,6 +27,14 @@ pub fn get_or_create_func(
         func
     } else {
         module.add_function(name, func_type, linkage)
+    }
+}
+
+pub fn get_or_create_global(module: &Module, name: &str, val_type: &BasicType) -> GlobalValue {
+    if let Some(global) = module.get_global(name) {
+        global
+    } else {
+        module.add_global(val_type, None, name)
     }
 }
 

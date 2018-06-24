@@ -13,15 +13,10 @@ pub struct NumValue {
 
 impl NumValue {
     pub fn get_type(context: &Context) -> StructType {
-        let struct_type = context.opaque_struct_type("struct.num");
-        struct_type.set_body(
-            &[
-                &BasicTypeEnum::from(context.f32_type().vec_type(2)),
-                &BasicTypeEnum::from(context.i8_type()),
-            ],
+        context.struct_type(
+            &[&context.f32_type().vec_type(2), &context.i8_type()],
             false,
-        );
-        struct_type
+        )
     }
 
     pub fn new(val: PointerValue) -> Self {

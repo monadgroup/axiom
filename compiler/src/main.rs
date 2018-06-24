@@ -2,7 +2,6 @@ use std::io;
 use std::io::BufRead;
 
 extern crate inkwell;
-extern crate llvm_sys;
 extern crate ordered_float;
 extern crate regex;
 extern crate time;
@@ -148,7 +147,26 @@ fn main() {
     println!("Surface now: {:#?}", surface);
     println!("New surfaces: {:#?}", new_surfaces);*/
 
-    loop {
+    /*loop {
         do_repl();
+    }*/
+
+    let context = inkwell::context::Context::create();
+    let module = context.create_module("test");
+    codegen::converters::build_convert_func(&module, &ast::FormType::None);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Amplitude);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Beats);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Control);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Db);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Frequency);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Note);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Oscillator);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Q);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Samples);
+    codegen::converters::build_convert_func(&module, &ast::FormType::Seconds);
+    if let Err(result_str) = module.verify() {
+        println!("{}", result_str.to_string())
+    } else {
+        module.print_to_stderr()
     }
 }

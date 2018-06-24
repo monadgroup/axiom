@@ -1,5 +1,4 @@
 extern crate inkwell;
-extern crate llvm_sys;
 extern crate ordered_float;
 extern crate regex;
 

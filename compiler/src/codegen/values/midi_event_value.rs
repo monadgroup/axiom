@@ -12,17 +12,15 @@ pub struct MidiEventValue {
 
 impl MidiEventValue {
     pub fn get_type(context: &Context) -> StructType {
-        let struct_type = context.opaque_struct_type("struct.midievent");
-        struct_type.set_body(
+        context.struct_type(
             &[
-                &BasicTypeEnum::from(context.i8_type()), // name
-                &BasicTypeEnum::from(context.i8_type()), // channel
-                &BasicTypeEnum::from(context.i8_type()), // note
-                &BasicTypeEnum::from(context.i8_type()), // param
+                &context.i8_type(), // name
+                &context.i8_type(), // channel
+                &context.i8_type(), // note
+                &context.i8_type(), // param
             ],
             false,
-        );
-        struct_type
+        )
     }
 
     pub fn new(val: PointerValue) -> Self {
