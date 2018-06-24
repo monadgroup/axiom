@@ -1,12 +1,11 @@
 use super::ConvertGenerator;
 use ast::FormType;
 use codegen::intrinsics;
-use codegen::{globals, util};
+use codegen::util;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::values::{BasicValueEnum, VectorValue};
-use std::f32::consts;
+use inkwell::values::VectorValue;
 
 pub fn db(generator: &mut ConvertGenerator) {
     generator.generate(FormType::Amplitude, &db_from_amplitude);

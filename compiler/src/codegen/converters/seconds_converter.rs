@@ -34,7 +34,7 @@ fn seconds_from_beats(
 
 fn seconds_from_control(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
@@ -51,7 +51,7 @@ fn seconds_from_control(
 
 fn seconds_from_frequency(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
@@ -59,7 +59,7 @@ fn seconds_from_frequency(
 }
 
 fn seconds_from_samples(
-    context: &Context,
+    _context: &Context,
     module: &Module,
     builder: &mut Builder,
     val: VectorValue,

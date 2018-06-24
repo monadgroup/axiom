@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
 use ast::FormType;
-use codegen::{globals, intrinsics, util};
+use codegen::{intrinsics, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -13,7 +13,7 @@ pub fn note(generator: &mut ConvertGenerator) {
 
 fn note_from_control(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {

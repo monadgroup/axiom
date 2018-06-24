@@ -2,8 +2,8 @@ use codegen::util;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::types::{BasicTypeEnum, StructType};
-use inkwell::values::{BasicValueEnum, IntValue, PointerValue, StructValue, VectorValue};
+use inkwell::types::StructType;
+use inkwell::values::{IntValue, PointerValue, StructValue, VectorValue};
 use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]

@@ -5,8 +5,7 @@ use codegen::{globals, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::values::{BasicValueEnum, VectorValue};
-use std::f32::consts;
+use inkwell::values::VectorValue;
 
 pub fn frequency(generator: &mut ConvertGenerator) {
     generator.generate(FormType::Beats, &frequency_from_beats);
@@ -83,7 +82,7 @@ fn frequency_from_note(
 }
 
 fn frequency_from_samples(
-    context: &Context,
+    _context: &Context,
     module: &Module,
     builder: &mut Builder,
     val: VectorValue,
@@ -99,7 +98,7 @@ fn frequency_from_samples(
 
 fn frequency_from_seconds(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {

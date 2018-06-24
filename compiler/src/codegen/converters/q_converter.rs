@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
 use ast::FormType;
-use codegen::{globals, util};
+use codegen::util;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -12,7 +12,7 @@ pub fn q(generator: &mut ConvertGenerator) {
 
 fn q_from_control(
     context: &Context,
-    module: &Module,
+    _module: &Module,
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {

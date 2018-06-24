@@ -5,7 +5,7 @@ use codegen::{globals, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::values::{BasicValueEnum, VectorValue};
+use inkwell::values::VectorValue;
 use std::f32::consts;
 
 pub fn control(generator: &mut ConvertGenerator) {

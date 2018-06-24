@@ -62,7 +62,7 @@ fn samples_from_control(
 }
 
 fn samples_from_frequency(
-    context: &Context,
+    _context: &Context,
     module: &Module,
     builder: &mut Builder,
     val: VectorValue,
@@ -77,7 +77,7 @@ fn samples_from_frequency(
 }
 
 fn samples_from_seconds(
-    context: &Context,
+    _context: &Context,
     module: &Module,
     builder: &mut Builder,
     val: VectorValue,

@@ -4,7 +4,7 @@ use codegen::{intrinsics, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::values::{BasicValueEnum, VectorValue};
+use inkwell::values::VectorValue;
 
 pub fn amplitude(generator: &mut ConvertGenerator) {
     generator.generate(FormType::Db, &amplitude_from_db);

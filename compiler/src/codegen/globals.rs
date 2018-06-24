@@ -1,7 +1,6 @@
 use codegen::util;
 use inkwell::module::Module;
 use inkwell::values::PointerValue;
-use inkwell::AddressSpace;
 
 pub fn get_sample_rate(module: &Module) -> PointerValue {
     util::get_or_create_global(
