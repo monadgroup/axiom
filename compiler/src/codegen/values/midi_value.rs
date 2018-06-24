@@ -86,8 +86,8 @@ impl MidiValue {
                 Linkage::ExternalLinkage,
                 context.void_type().fn_type(
                     &[
-                        &MidiValue::get_type(context).ptr_type(AddressSpace::Local),
-                        &MidiEventValue::get_type(context).ptr_type(AddressSpace::Local),
+                        &MidiValue::get_type(context).ptr_type(AddressSpace::Generic),
+                        &MidiEventValue::get_type(context).ptr_type(AddressSpace::Generic),
                     ],
                     false,
                 ),

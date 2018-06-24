@@ -57,7 +57,7 @@ pub fn get_convert_func(module: &Module, target_form: &FormType) -> FunctionValu
         let num_type = NumValue::get_type(&module.get_context());
         (
             Linkage::ExternalLinkage,
-            num_type.fn_type(&[&num_type.ptr_type(AddressSpace::Local)], false),
+            num_type.fn_type(&[&num_type.ptr_type(AddressSpace::Generic)], false),
         )
     })
 }

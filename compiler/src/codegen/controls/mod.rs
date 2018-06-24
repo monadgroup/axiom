@@ -124,8 +124,8 @@ fn get_lifecycle_func(
             Linkage::ExternalLinkage,
             context.void_type().fn_type(
                 &[
-                    &get_group_type(&context, control_type).ptr_type(AddressSpace::Local),
-                    &get_data_type(&context, control_type).ptr_type(AddressSpace::Local),
+                    &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                 ],
                 false,
             ),
@@ -145,9 +145,9 @@ fn get_ui_lifecycle_func(
             Linkage::ExternalLinkage,
             context.void_type().fn_type(
                 &[
-                    &get_group_type(&context, control_type).ptr_type(AddressSpace::Local),
-                    &get_data_type(&context, control_type).ptr_type(AddressSpace::Local),
-                    &get_ui_type(&context, control_type).ptr_type(AddressSpace::Local),
+                    &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_ui_type(&context, control_type).ptr_type(AddressSpace::Generic),
                 ],
                 false,
             ),
@@ -167,9 +167,9 @@ fn get_field_getter_setter_func(
             Linkage::ExternalLinkage,
             context.void_type().fn_type(
                 &[
-                    &get_group_type(&context, control_type).ptr_type(AddressSpace::Local),
-                    &get_data_type(&context, control_type).ptr_type(AddressSpace::Local),
-                    &get_field_type(&context, field).ptr_type(AddressSpace::Local),
+                    &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_field_type(&context, field).ptr_type(AddressSpace::Generic),
                 ],
                 false,
             ),
