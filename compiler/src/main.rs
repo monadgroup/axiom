@@ -70,6 +70,34 @@ fn do_repl() {
     }
 }
 
+struct ModuleFunctionIterator<'a> {
+    module: &'a inkwell::module::Module,
+    next_func: Option<inkwell::values::FunctionValue>,
+}
+
+impl<'a> ModuleFunctionIterator<'a> {
+    fn new(module: &'a inkwell::module::Module) -> ModuleFunctionIterator<'a> {
+        ModuleFunctionIterator {
+            module,
+            next_func: module.get_first_function(),
+        }
+    }
+}
+
+impl<'a> Iterator for ModuleFunctionIterator<'a> {
+    type Item = inkwell::values::FunctionValue;
+
+    fn next(&mut self) -> Option<inkwell::values::FunctionValue> {
+        match self.next_func {
+            Some(func) => {
+                self.next_func = func.get_next_function();
+                Some(func)
+            }
+            None => None,
+        }
+    }
+}
+
 fn main() {
     // build a basic MIR
     /*let groups = vec![
@@ -164,9 +192,28 @@ fn main() {
     codegen::converters::build_convert_func(&module, &ast::FormType::Q);
     codegen::converters::build_convert_func(&module, &ast::FormType::Samples);
     codegen::converters::build_convert_func(&module, &ast::FormType::Seconds);
+
     if let Err(result_str) = module.verify() {
-        println!("{}", result_str.to_string())
-    } else {
-        module.print_to_stderr()
+        println!("{}", result_str.to_string());
+        return;
     }
+
+    let pass_manager_builder = inkwell::passes::PassManagerBuilder::create();
+    pass_manager_builder.set_optimization_level(inkwell::OptimizationLevel::Aggressive);
+    pass_manager_builder.set_size_level(0);
+
+    let module_pass = inkwell::passes::PassManager::create_for_module();
+    pass_manager_builder.populate_module_pass_manager(&module_pass);
+
+    let func_pass = inkwell::passes::PassManager::create_for_function(&module);
+    pass_manager_builder.populate_function_pass_manager(&func_pass);
+
+    func_pass.initialize();
+    let func_iterator = ModuleFunctionIterator::new(&module);
+    for func in func_iterator {
+        func_pass.run_on_function(&func);
+    }
+    module_pass.run_on_module(&module);
+
+    module.print_to_stderr()
 }
