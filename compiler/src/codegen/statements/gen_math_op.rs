@@ -1,4 +1,5 @@
 use ast::OperatorType;
+use codegen::intrinsics;
 use codegen::values::NumValue;
 use codegen::NodeContext;
 use inkwell::types::IntType;
@@ -11,6 +12,7 @@ pub fn gen_math_op_statement(
     rhs: usize,
     node: &mut NodeContext,
 ) -> PointerValue {
+    let pow_intrinsic = intrinsics::pow_v2f32(node.ctx.module);
     let left_num = NumValue::new(node.get_statement(lhs));
     let right_num = NumValue::new(node.get_statement(rhs));
     let result_num = NumValue::new_undef(node.ctx.context, node.ctx.allocb);
@@ -36,7 +38,12 @@ pub fn gen_math_op_statement(
         OperatorType::Modulo => node.ctx
             .b
             .build_float_rem(left_vec, right_vec, "num.mod.vec"),
-        OperatorType::Power => unimplemented!(),
+        OperatorType::Power => node.ctx
+            .b
+            .build_call(&pow_intrinsic, &[&left_vec, &right_vec], "", false)
+            .left()
+            .unwrap()
+            .into_vector_value(),
         OperatorType::BitwiseAnd => apply_int_op(
             node,
             left_vec,
