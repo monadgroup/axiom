@@ -194,9 +194,13 @@ fn main() {
     codegen::converters::build_convert_func(&module, &ast::FormType::Seconds);
 
     use codegen::controls::Control;
-    codegen::controls::build_lifecycle_funcs::<codegen::controls::AudioControl>(&module);
-    codegen::controls::build_ui_lifecycle_funcs::<codegen::controls::AudioControl>(&module);
-    codegen::controls::build_field_funcs::<codegen::controls::AudioControl>(&module);
+    codegen::controls::build_funcs::<codegen::controls::AudioControl>(&module);
+    codegen::controls::build_funcs::<codegen::controls::AudioExtractControl>(&module);
+    codegen::controls::build_funcs::<codegen::controls::GraphControl>(&module);
+    codegen::controls::build_funcs::<codegen::controls::MidiControl>(&module);
+    codegen::controls::build_funcs::<codegen::controls::MidiExtractControl>(&module);
+    codegen::controls::build_funcs::<codegen::controls::RollControl>(&module);
+    codegen::controls::build_funcs::<codegen::controls::ScopeControl>(&module);
 
     if let Err(result_str) = module.verify() {
         println!("{}", result_str.to_string());

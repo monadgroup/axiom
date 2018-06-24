@@ -69,7 +69,7 @@ impl VarType {
             ControlType::Audio => VarType::Num,
             ControlType::Graph => VarType::Num,
             ControlType::Midi => VarType::Midi,
-            ControlType::Roll => VarType::Num,
+            ControlType::Roll => VarType::Midi,
             ControlType::Scope => VarType::Num,
             ControlType::AudioExtract => VarType::new_array(VarType::Num),
             ControlType::MidiExtract => VarType::new_array(VarType::Midi),

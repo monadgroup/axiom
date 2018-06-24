@@ -283,6 +283,12 @@ pub fn build_field_funcs<T: Control>(module: &Module) {
     T::gen_fields(&PrivateGenerator { module });
 }
 
+pub fn build_funcs<T: Control>(module: &Module) {
+    build_lifecycle_funcs::<T>(module);
+    build_ui_lifecycle_funcs::<T>(module);
+    build_field_funcs::<T>(module);
+}
+
 pub trait Control {
     fn control_type() -> ControlType;
 
