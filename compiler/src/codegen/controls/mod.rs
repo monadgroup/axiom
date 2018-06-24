@@ -16,8 +16,7 @@ pub use self::scope_control::ScopeControl;
 
 use ast::{ControlField, ControlType};
 use codegen::{
-    build_context_function, data_analyzer, util, values, BuilderContext, ControlContext,
-    ControlUiContext,
+    build_context_function, util, values, BuilderContext, ControlContext, ControlUiContext,
 };
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -295,17 +294,17 @@ pub trait Control {
         context.struct_type(&[], false)
     }
 
-    fn gen_construct(control: &mut ControlContext) {}
+    fn gen_construct(_control: &mut ControlContext) {}
 
-    fn gen_update(control: &mut ControlContext) {}
+    fn gen_update(_control: &mut ControlContext) {}
 
-    fn gen_destruct(control: &mut ControlContext) {}
+    fn gen_destruct(_control: &mut ControlContext) {}
 
-    fn gen_ui_construct(control: &mut ControlUiContext) {}
+    fn gen_ui_construct(_control: &mut ControlUiContext) {}
 
-    fn gen_ui_update(control: &mut ControlUiContext) {}
+    fn gen_ui_update(_control: &mut ControlUiContext) {}
 
-    fn gen_ui_destruct(control: &mut ControlUiContext) {}
+    fn gen_ui_destruct(_control: &mut ControlUiContext) {}
 
     fn gen_fields(generator: &ControlFieldGenerator);
 }
@@ -317,5 +316,3 @@ pub fn default_copy_getter(control: &mut ControlContext, out_val: PointerValue) 
 pub fn default_copy_setter(control: &mut ControlContext, in_val: PointerValue) {
     util::copy_ptr(control.ctx.b, control.ctx.module, in_val, control.val_ptr);
 }
-
-pub fn default_null_setter(control: &mut ControlContext, in_val: PointerValue) {}

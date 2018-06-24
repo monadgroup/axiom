@@ -1,6 +1,6 @@
 use codegen::util;
 use inkwell::module::{Linkage, Module};
-use inkwell::types::{BasicType, BasicTypeEnum};
+use inkwell::types::BasicType;
 use inkwell::values::FunctionValue;
 use inkwell::AddressSpace;
 

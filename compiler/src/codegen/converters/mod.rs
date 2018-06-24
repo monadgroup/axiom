@@ -16,7 +16,6 @@ use inkwell::basic_block::BasicBlock;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
-use inkwell::types::BasicTypeEnum;
 use inkwell::values::{FunctionValue, IntValue, VectorValue};
 use inkwell::AddressSpace;
 

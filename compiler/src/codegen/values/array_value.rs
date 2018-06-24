@@ -12,7 +12,6 @@ pub struct ArrayValue {
 
 impl ArrayValue {
     pub fn get_type(context: &Context, inner_type: StructType) -> StructType {
-        let bitmap_type = context.i32_type();
         context.struct_type(
             &[
                 &context.i32_type(),

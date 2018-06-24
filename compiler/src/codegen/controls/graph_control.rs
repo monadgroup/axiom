@@ -23,10 +23,10 @@ impl Control for GraphControl {
     }
 }
 
-fn speed_field_getter(control: &mut ControlContext, out_val: PointerValue) {
+fn speed_field_getter(_control: &mut ControlContext, _out_val: PointerValue) {
     // todo
 }
 
-fn speed_field_setter(control: &mut ControlContext, in_val: PointerValue) {
+fn speed_field_setter(_control: &mut ControlContext, _in_val: PointerValue) {
     // todo
 }

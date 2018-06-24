@@ -1,8 +1,4 @@
-use ast::ControlType;
-use codegen::controls::{
-    get_data_type, get_ui_type, AudioControl, AudioExtractControl, Control, GraphControl,
-    MidiControl, MidiExtractControl, RollControl, ScopeControl,
-};
+use codegen::controls::{get_data_type, get_ui_type};
 use inkwell::context::Context;
 use inkwell::types::{BasicType, StructType};
 use mir::block::{Function, Statement};
@@ -46,7 +42,7 @@ pub fn build_ui_data_type(context: &Context, block: &Block) -> StructType {
     context.struct_type(&result_type_refs, false)
 }
 
-pub fn build_function_data_type(context: &Context, function: &Function) -> StructType {
+pub fn build_function_data_type(_context: &Context, _function: &Function) -> StructType {
     unimplemented!()
 }
 
