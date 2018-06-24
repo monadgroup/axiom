@@ -9,9 +9,7 @@ use {CompileError, CompileResult};
 pub fn lower_ast(id: mir::BlockId, block: &ast::Block) -> CompileResult<mir::Block> {
     let mut lower = AstLower::new(id);
     for expr in &block.expressions {
-        if let Err(err) = lower.lower_expression(expr) {
-            return Err(err);
-        }
+        lower.lower_expression(expr)?;
     }
     Ok(lower.block)
 }
@@ -65,14 +63,8 @@ impl<'a> AstLower<'a> {
     }
 
     fn lower_assign_expr(&mut self, expr: &'a ast::AssignExpression) -> LowerResult {
-        let rhs = match self.lower_expression(&expr.right) {
-            Ok(v) => v,
-            Err(err) => return Err(err),
-        };
-        let right_values = match self.get_expr_values(&expr.right.pos, rhs) {
-            Ok(v) => v,
-            Err(err) => return Err(err),
-        };
+        let rhs = self.lower_expression(&expr.right)?;
+        let right_values = self.get_expr_values(&expr.right.pos, rhs)?;
 
         match self.lower_assign(&expr.left, right_values) {
             Some(err) => Err(err),
@@ -170,19 +162,13 @@ impl<'a> AstLower<'a> {
                 }
             }
 
-            match self.lower_expression(&expr.arguments[i]) {
-                Ok(expr) => args.push(expr),
-                Err(err) => return Err(err),
-            }
+            args.push(self.lower_expression(&expr.arguments[i])?);
         }
 
         let mut varargs = Vec::new();
         if func.var_arg().is_some() {
             for arg_expr in expr.arguments.iter().skip(args.len()) {
-                match self.lower_expression(arg_expr) {
-                    Ok(expr) => varargs.push(expr),
-                    Err(err) => return Err(err),
-                }
+                varargs.push(self.lower_expression(arg_expr)?);
             }
         } else if expr.arguments.len() > arg_types.len() {
             return Err(CompileError::mismatched_arg_count(
@@ -200,10 +186,7 @@ impl<'a> AstLower<'a> {
         pos: &ast::SourceRange,
         expr: &'a ast::CastExpression,
     ) -> LowerResult {
-        let rhs = match self.lower_expression(expr.expr.as_ref()) {
-            Ok(v) => v,
-            Err(err) => return Err(err),
-        };
+        let rhs = self.lower_expression(expr.expr.as_ref())?;
 
         // if the RHS is a tuple, iterate over each item, cast it individually, then combine all items back again
         if let mir::VarType::Tuple(subtypes) = mir::VarType::of_statement(&self.block, rhs) {
@@ -253,23 +236,14 @@ impl<'a> AstLower<'a> {
         // if both sides are a tuple, they must be the same size, we add piece-wise and combine the result
         // if only one side is a tuple, we "spread" that tuple out
 
-        let left_values = match self.lower_expression(expr.left.as_ref())
-            .and_then(|value| self.get_expr_values(&expr.left.pos, value))
-        {
-            Ok(v) => v,
-            Err(err) => return Err(err),
-        };
-        let right_values = match self.lower_expression(expr.right.as_ref())
-            .and_then(|value| self.get_expr_values(&expr.right.pos, value))
-        {
-            Ok(v) => v,
-            Err(err) => return Err(err),
-        };
+        let left_result = self.lower_expression(expr.left.as_ref())?;
+        let left_values = self.get_expr_values(&expr.left.pos, left_result)?;
 
-        match self.lower_math_op(pos, &left_values, &right_values, expr.operator) {
-            Ok(vals) => Ok(self.squash_values(vals)),
-            Err(err) => Err(err),
-        }
+        let right_result = self.lower_expression(expr.right.as_ref())?;
+        let right_values = self.get_expr_values(&expr.right.pos, right_result)?;
+
+        let result_values = self.lower_math_op(pos, &left_values, &right_values, expr.operator)?;
+        Ok(self.squash_values(result_values))
     }
 
     fn get_expr_values(
@@ -351,17 +325,13 @@ impl<'a> AstLower<'a> {
         pos: &ast::SourceRange,
         expr: &'a ast::PostfixExpression,
     ) -> LowerResult {
-        let maybe_vals: CompileResult<Vec<_>> = expr.left
+        let vals = expr.left
             .data
             .assignments
             .iter()
             .map(|assignment| self.lower_assignable(assignment))
-            .collect();
+            .collect::<CompileResult<Vec<_>>>()?;
 
-        let vals = match maybe_vals {
-            Ok(vals) => vals,
-            Err(err) => return Err(err),
-        };
         let one_constant = self.add_statement(mir::block::Statement::new_const_num(
             mir::ConstantNum::new(1., 1., ast::FormType::None),
         ));
@@ -369,10 +339,7 @@ impl<'a> AstLower<'a> {
             ast::PostfixOperation::Increment => ast::OperatorType::Add,
             ast::PostfixOperation::Decrement => ast::OperatorType::Subtract,
         };
-        let op_results = match self.lower_math_op(pos, &vals, &[one_constant], op_type) {
-            Ok(results) => results,
-            Err(err) => return Err(err),
-        };
+        let op_results = self.lower_math_op(pos, &vals, &[one_constant], op_type)?;
         if let Some(err) = self.lower_assign(&expr.left, op_results) {
             Err(err)
         } else {
@@ -385,21 +352,12 @@ impl<'a> AstLower<'a> {
         pos: &ast::SourceRange,
         expr: &'a ast::UnaryExpression,
     ) -> LowerResult {
-        let value = match self.lower_expression(expr.expr.as_ref()) {
-            Ok(v) => v,
-            Err(err) => return Err(err),
-        };
-
-        let results = self.get_expr_values(pos, value).and_then(|values| {
-            values
-                .iter()
-                .map(|value| self.add_num_unary_op(pos, expr.operation, *value))
-                .collect::<CompileResult<Vec<_>>>()
-        });
-        match results {
-            Ok(results) => Ok(self.squash_values(results)),
-            Err(err) => Err(err),
-        }
+        let value = self.lower_expression(expr.expr.as_ref())?;
+        let results = self.get_expr_values(pos, value)?
+            .iter()
+            .map(|value| self.add_num_unary_op(pos, expr.operation, *value))
+            .collect::<CompileResult<Vec<_>>>()?;
+        Ok(self.squash_values(results))
     }
 
     fn lower_tuple_expr(&mut self, expr: &'a ast::TupleExpression) -> LowerResult {
@@ -477,15 +435,6 @@ impl<'a> AstLower<'a> {
         target_form: ast::FormType,
         input: usize,
     ) -> LowerResult {
-        // todo: implement conversion constant-folding?
-        /*if let Some(const_input) = self.get_num_constant(pos, input) {
-            match const_input {
-                Ok(const_num) => mir::block::Statement::new_const_num(
-                    constant_propagate::const_convert(const_num, &target_form),
-                ),
-                Err(err) => return Err(err),
-            }
-        }*/
         let new_statement =
             if let Some(err) = self.check_statement_type(pos, mir::VarType::Num, input) {
                 return Err(err);
@@ -503,12 +452,10 @@ impl<'a> AstLower<'a> {
         input: usize,
     ) -> LowerResult {
         let new_statement = if let Some(const_input) = self.get_num_constant(pos, input) {
-            match const_input {
-                Ok(const_num) => mir::block::Statement::new_const_num(
-                    constant_propagate::const_cast(const_num, target_form),
-                ),
-                Err(err) => return Err(err),
-            }
+            mir::block::Statement::new_const_num(constant_propagate::const_cast(
+                const_input?,
+                target_form,
+            ))
         } else if let Some(err) = self.check_statement_type(pos, mir::VarType::Num, input) {
             return Err(err);
         } else {
@@ -525,12 +472,10 @@ impl<'a> AstLower<'a> {
         input: usize,
     ) -> LowerResult {
         let new_statement = if let Some(const_input) = self.get_num_constant(pos, input) {
-            match const_input {
-                Ok(const_num) => mir::block::Statement::new_const_num(
-                    constant_propagate::const_unary_op(const_num, op),
-                ),
-                Err(err) => return Err(err),
-            }
+            mir::block::Statement::new_const_num(constant_propagate::const_unary_op(
+                const_input?,
+                op,
+            ))
         } else if let Some(err) = self.check_statement_type(pos, mir::VarType::Num, input) {
             return Err(err);
         } else {
@@ -559,14 +504,8 @@ impl<'a> AstLower<'a> {
             };
 
             if let Some((const_lhs, const_rhs)) = const_vals {
-                let lhs_num = match const_lhs {
-                    Ok(const_num) => const_num.clone(),
-                    Err(err) => return Err(err),
-                };
-                let rhs_num = match const_rhs {
-                    Ok(const_num) => const_num.clone(),
-                    Err(err) => return Err(err),
-                };
+                let lhs_num = const_lhs?.clone();
+                let rhs_num = const_rhs?.clone();
                 mir::block::Statement::new_const_num(constant_propagate::const_math_op(
                     &lhs_num, &rhs_num, op,
                 ))
@@ -602,14 +541,9 @@ impl<'a> AstLower<'a> {
         }
 
         let new_statement = if let Some(const_input) = self.get_tuple_constant(pos, tuple) {
-            match const_input {
-                Ok(const_tuple) => match constant_propagate::const_extract(const_tuple, index, pos)
-                {
-                    Ok(constant) => mir::block::Statement::Constant(constant.clone()),
-                    Err(err) => return Err(err),
-                },
-                Err(err) => return Err(err),
-            }
+            mir::block::Statement::Constant(
+                constant_propagate::const_extract(const_input?, index, pos)?.clone(),
+            )
         } else {
             match mir::VarType::of_statement(&self.block, tuple) {
                 mir::VarType::Tuple(ref item_types) if index >= item_types.len() => {
@@ -695,10 +629,9 @@ impl<'a> AstLower<'a> {
                         &const_varargs,
                         pos,
                     ) {
-                        Some(Ok(result)) => {
-                            return Ok(self.add_statement(mir::block::Statement::Constant(result)))
+                        Some(result) => {
+                            return Ok(self.add_statement(mir::block::Statement::Constant(result?)))
                         }
-                        Some(Err(err)) => return Err(err),
                         None => (),
                     }
                 }

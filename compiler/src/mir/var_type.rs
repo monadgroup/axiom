@@ -99,17 +99,11 @@ impl fmt::Display for VarType {
             VarType::Num => write!(f, "num"),
             VarType::Midi => write!(f, "midi"),
             VarType::Tuple(ref items) => {
-                if let Err(err) = write!(f, "tuple (") {
-                    return Err(err);
-                }
+                write!(f, "tuple(")?;
                 for (index, subtype) in items.iter().enumerate() {
-                    if let Err(err) = write!(f, "{:?}", subtype) {
-                        return Err(err);
-                    }
+                    write!(f, "{:?}", subtype)?;
                     if index < items.len() - 1 {
-                        if let Err(err) = write!(f, ", ") {
-                            return Err(err);
-                        }
+                        write!(f, ", ")?;
                     }
                 }
                 write!(f, ")")

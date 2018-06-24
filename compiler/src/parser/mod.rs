@@ -61,10 +61,7 @@ impl Parser {
                     stream.next();
                 }
                 Some(_) => {
-                    match Parser::parse_expression(&mut stream, PRECEDENCE_ALL) {
-                        Ok(expr) => expressions.push(expr),
-                        Err(err) => return Err(err),
-                    }
+                    expressions.push(Parser::parse_expression(&mut stream, PRECEDENCE_ALL)?);
 
                     // ensure next token is a newline or end of stream
                     let next_token = stream.next();
@@ -87,31 +84,25 @@ impl Parser {
     }
 
     fn parse_expression(stream: &mut TokenStream, precedence: i32) -> ExprResult {
-        let mut result = match Parser::parse_prefix(stream) {
-            Ok(prefix) => prefix,
-            Err(err) => return Err(err),
-        };
+        let mut result = Parser::parse_prefix(stream)?;
         loop {
-            match Parser::parse_postfix(stream, result, precedence) {
-                Ok(ParsedExpr::Continue(expr)) => result = expr,
-                Ok(ParsedExpr::End(expr)) => return Ok(expr),
-                Err(err) => return Err(err),
+            match Parser::parse_postfix(stream, result, precedence)? {
+                ParsedExpr::Continue(expr) => result = expr,
+                ParsedExpr::End(expr) => return Ok(expr),
             }
         }
     }
 
     fn parse_form(stream: &mut TokenStream) -> CompileResult<Form> {
         // ensure it starts with an open square bracket
-        let start_pos = match Parser::expect_token(TokenType::OpenSquare, stream.next()) {
-            Ok(token) => token.pos.0,
-            Err(err) => return Err(err),
-        };
-
-        let (form_name, name_pos) = match Parser::expect_token(TokenType::Identifier, stream.next())
-        {
-            Ok(token) => (token.content, token.pos),
-            Err(err) => return Err(err),
-        };
+        let start_pos = Parser::expect_token(TokenType::OpenSquare, stream.next())?
+            .pos
+            .0;
+        let Token {
+            content: form_name,
+            pos: name_pos,
+            ..
+        } = Parser::expect_token(TokenType::Identifier, stream.next())?;
 
         let form_type = match form_name.as_ref() {
             "none" => FormType::None,
@@ -128,11 +119,9 @@ impl Parser {
             _ => return Err(CompileError::unknown_form(form_name, name_pos)),
         };
 
-        let end_pos = match Parser::expect_token(TokenType::CloseSquare, stream.next()) {
-            Ok(token) => token.pos.1,
-            Err(err) => return Err(err),
-        };
-
+        let end_pos = Parser::expect_token(TokenType::CloseSquare, stream.next())?
+            .pos
+            .1;
         Ok(Form::new(SourceRange(start_pos, end_pos), form_type))
     }
 
@@ -249,14 +238,8 @@ impl Parser {
     }
 
     fn parse_open_square_token_expr(stream: &mut TokenStream) -> ExprResult {
-        let form = match Parser::parse_form(stream) {
-            Ok(form) => form,
-            Err(err) => return Err(err),
-        };
-        let expr = match Parser::parse_expression(stream, PRECEDENCE_UNARY) {
-            Ok(expr) => expr,
-            Err(err) => return Err(err),
-        };
+        let form = Parser::parse_form(stream)?;
+        let expr = Parser::parse_expression(stream, PRECEDENCE_UNARY)?;
 
         let form_start = form.pos.0;
         let expr_end = expr.pos.1;
@@ -277,11 +260,7 @@ impl Parser {
             static ref NOTE_REGEX: Regex = Regex::new(r"([a-gA-G]#?)([0-9]+)").unwrap();
         }
 
-        let note_token = match Parser::expect_token(TokenType::Note, stream.next()) {
-            Ok(token) => token,
-            Err(err) => return Err(err),
-        };
-
+        let note_token = Parser::expect_token(TokenType::Note, stream.next())?;
         let captures = NOTE_REGEX.captures(&note_token.content).unwrap();
         let note_name = captures[1].to_uppercase();
         let note_num = match NOTE_NAMES.iter().position(|&s| s == note_name) {
@@ -294,11 +273,7 @@ impl Parser {
     }
 
     fn parse_number_token_expr(stream: &mut TokenStream) -> ExprResult {
-        let num_token = match Parser::expect_token(TokenType::Number, stream.next()) {
-            Ok(token) => token,
-            Err(err) => return Err(err),
-        };
-
+        let num_token = Parser::expect_token(TokenType::Number, stream.next())?;
         let base_num_val = num_token.content.parse::<f32>().unwrap();
 
         // Attempt to find a postfix after the number to set a magnitude or form.
@@ -391,11 +366,7 @@ impl Parser {
             None => return Err(CompileError::UnexpectedEnd),
         };
 
-        let expr = match Parser::parse_expression(stream, PRECEDENCE_UNARY) {
-            Ok(expr) => expr,
-            Err(err) => return Err(err),
-        };
-
+        let expr = Parser::parse_expression(stream, PRECEDENCE_UNARY)?;
         Ok(Expression::new_unary(
             SourceRange(pos.0, expr.pos.1),
             operator,
@@ -404,10 +375,7 @@ impl Parser {
     }
 
     fn parse_identifier_token_expr(stream: &mut TokenStream) -> ExprResult {
-        let identifier_token = match Parser::expect_token(TokenType::Identifier, stream.next()) {
-            Ok(token) => token,
-            Err(err) => return Err(err),
-        };
+        let identifier_token = Parser::expect_token(TokenType::Identifier, stream.next())?;
 
         match stream.peek().cloned() {
             Some(Token {
@@ -428,10 +396,9 @@ impl Parser {
     }
 
     fn parse_open_bracket_token_expr(stream: &mut TokenStream) -> ExprResult {
-        let open_pos = match Parser::expect_token(TokenType::OpenBracket, stream.next()) {
-            Ok(token) => token.pos.0,
-            Err(err) => return Err(err),
-        };
+        let open_pos = Parser::expect_token(TokenType::OpenBracket, stream.next())?
+            .pos
+            .0;
 
         let mut is_first_iter = true;
         let mut expressions = Vec::new();
@@ -449,17 +416,12 @@ impl Parser {
 
             // this iteration should start with a comma if it's not the first
             if !is_first_iter {
-                if let Err(err) = Parser::expect_token(TokenType::Comma, stream.next()) {
-                    return Err(err);
-                }
+                Parser::expect_token(TokenType::Comma, stream.next())?;
             } else {
                 is_first_iter = false;
             }
 
-            expressions.push(match Parser::parse_expression(stream, PRECEDENCE_ALL) {
-                Ok(expr) => expr,
-                Err(err) => return Err(err),
-            });
+            expressions.push(Parser::parse_expression(stream, PRECEDENCE_ALL)?);
         };
 
         // consume the last token (an end bracket)
@@ -482,15 +444,9 @@ impl Parser {
         start_pos: SourcePos,
     ) -> ExprResult {
         // ensure the expression starts with a colon
-        if let Err(err) = Parser::expect_token(TokenType::Colon, stream.next()) {
-            return Err(err);
-        }
+        Parser::expect_token(TokenType::Colon, stream.next())?;
 
-        let type_token = match Parser::expect_token(TokenType::Identifier, stream.next()) {
-            Ok(token) => token,
-            Err(err) => return Err(err),
-        };
-
+        let type_token = Parser::expect_token(TokenType::Identifier, stream.next())?;
         let control_type = match type_token.content.as_ref() {
             "num" => ControlType::Audio,
             "graph" => ControlType::Graph,
@@ -516,10 +472,9 @@ impl Parser {
                 // consume the dot token and get the next one
                 stream.next();
 
-                match Parser::expect_token(TokenType::Identifier, stream.next()) {
-                    Ok(Token { content, pos, .. }) => (content, pos),
-                    Err(err) => return Err(err),
-                }
+                let Token { content, pos, .. } =
+                    Parser::expect_token(TokenType::Identifier, stream.next())?;
+                (content, pos)
             }
             _ => ("value".to_owned(), type_token.pos),
         };
@@ -554,9 +509,7 @@ impl Parser {
     }
 
     fn parse_call_expr(stream: &mut TokenStream, name: String, start_pos: SourcePos) -> ExprResult {
-        if let Err(err) = Parser::expect_token(TokenType::OpenBracket, stream.next()) {
-            return Err(err);
-        }
+        Parser::expect_token(TokenType::OpenBracket, stream.next())?;
 
         let args = match stream.peek() {
             Some(Token {
@@ -564,16 +517,12 @@ impl Parser {
                 ..
             })
             | None => Vec::new(),
-            _ => match Parser::parse_arg_list(stream) {
-                Ok(args) => args,
-                Err(err) => return Err(err),
-            },
+            _ => Parser::parse_arg_list(stream)?,
         };
 
-        let end_pos = match Parser::expect_token(TokenType::CloseBracket, stream.next()) {
-            Ok(token) => token.pos.1,
-            Err(err) => return Err(err),
-        };
+        let end_pos = Parser::expect_token(TokenType::CloseBracket, stream.next())?
+            .pos
+            .1;
 
         Ok(Expression::new_call(
             SourceRange(start_pos, end_pos),
@@ -602,24 +551,16 @@ impl Parser {
                 is_first_iter = false;
             }
 
-            match Parser::parse_expression(stream, PRECEDENCE_ALL) {
-                Ok(expr) => result.push(expr),
-                Err(err) => return Err(err),
-            }
+            result.push(Parser::parse_expression(stream, PRECEDENCE_ALL)?);
         }
 
         Ok(result)
     }
 
     fn parse_cast_expr(stream: &mut TokenStream, lhs: Expression) -> ExprResult {
-        if let Err(err) = Parser::expect_token(TokenType::Cast, stream.next()) {
-            return Err(err);
-        }
+        Parser::expect_token(TokenType::Cast, stream.next())?;
 
-        let form = match Parser::parse_form(stream) {
-            Ok(form) => form,
-            Err(err) => return Err(err),
-        };
+        let form = Parser::parse_form(stream)?;
         Ok(Expression::new_cast(
             SourceRange(lhs.pos.0, form.pos.1),
             form,
@@ -682,11 +623,7 @@ impl Parser {
             None => return Err(CompileError::UnexpectedEnd),
         };
 
-        let rhs =
-            match Parser::parse_expression(stream, Parser::get_operator_precedence(token_type)) {
-                Ok(expr) => expr,
-                Err(err) => return Err(err),
-            };
+        let rhs = Parser::parse_expression(stream, Parser::get_operator_precedence(token_type))?;
         Ok(Expression::new_math(
             SourceRange(lhs.pos.0, rhs.pos.1),
             Box::new(lhs),
@@ -713,15 +650,8 @@ impl Parser {
             None => return Err(CompileError::UnexpectedEnd),
         };
 
-        let lvalue = match Parser::get_lvalue(lhs) {
-            Ok(expr) => expr,
-            Err(err) => return Err(err),
-        };
-        let rhs =
-            match Parser::parse_expression(stream, Parser::get_operator_precedence(token_type)) {
-                Ok(expr) => expr,
-                Err(err) => return Err(err),
-            };
+        let lvalue = Parser::get_lvalue(lhs)?;
+        let rhs = Parser::parse_expression(stream, Parser::get_operator_precedence(token_type))?;
         Ok(Expression::new_assign(
             SourceRange(lvalue.pos.0, rhs.pos.1),
             lvalue,
