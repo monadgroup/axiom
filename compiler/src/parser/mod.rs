@@ -497,7 +497,7 @@ impl Parser {
             "midi" => ControlType::Midi,
             "roll" => ControlType::Roll,
             "scope" => ControlType::Scope,
-            "num[]" => ControlType::NumExtract,
+            "num[]" => ControlType::AudioExtract,
             "midi[]" => ControlType::MidiExtract,
             _ => {
                 return Err(CompileError::unknown_control(
@@ -531,8 +531,8 @@ impl Parser {
             "value" if control_type == ControlType::Midi => ControlField::Midi(MidiField::Value),
             "value" if control_type == ControlType::Roll => ControlField::Roll(RollField::Value),
             "speed" if control_type == ControlType::Roll => ControlField::Roll(RollField::Speed),
-            "value" if control_type == ControlType::NumExtract => {
-                ControlField::NumExtract(NumExtractField::Value)
+            "value" if control_type == ControlType::AudioExtract => {
+                ControlField::AudioExtract(AudioExtractField::Value)
             }
             "value" if control_type == ControlType::MidiExtract => {
                 ControlField::MidiExtract(MidiExtractField::Value)

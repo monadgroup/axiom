@@ -38,7 +38,7 @@ impl MidiValue {
     }
 
     pub fn copy_to(&self, builder: &mut Builder, module: &Module, other: &MidiValue) {
-        util::copy_ptr(builder, module, &self.val, &other.val)
+        util::copy_ptr(builder, module, self.val, other.val)
     }
 
     pub fn get_count_ptr(&self, builder: &mut Builder) -> PointerValue {
@@ -81,22 +81,18 @@ impl MidiValue {
     }
 
     fn get_push_event_func(module: &Module, context: &Context) -> FunctionValue {
-        util::get_or_create_func(
-            module,
-            "maxim.midi.pushEvent",
-            &context.void_type().fn_type(
-                &[
-                    &BasicTypeEnum::from(
-                        MidiValue::get_type(context).ptr_type(AddressSpace::Local),
-                    ),
-                    &BasicTypeEnum::from(
-                        MidiEventValue::get_type(context).ptr_type(AddressSpace::Local),
-                    ),
-                ],
-                false,
-            ),
-            Some(&Linkage::ExternalLinkage),
-        )
+        util::get_or_create_func(module, "maxim.midi.pushEvent", &|| {
+            (
+                Linkage::ExternalLinkage,
+                context.void_type().fn_type(
+                    &[
+                        &MidiValue::get_type(context).ptr_type(AddressSpace::Local),
+                        &MidiEventValue::get_type(context).ptr_type(AddressSpace::Local),
+                    ],
+                    false,
+                ),
+            )
+        })
     }
 
     pub fn initialize(module: &Module, context: &Context) {

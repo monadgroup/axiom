@@ -1,6 +1,6 @@
 use ast::{
-    AudioField, ControlField, GraphField, MidiExtractField, MidiField, NumExtractField, RollField,
-    ScopeField,
+    AudioExtractField, AudioField, ControlField, ControlType, GraphField, MidiExtractField,
+    MidiField, RollField, ScopeField,
 };
 use mir::block::{Function, Statement};
 use mir::Block;
@@ -64,6 +64,18 @@ impl VarType {
         function.return_type().clone()
     }
 
+    pub fn of_control_value(control: &ControlType) -> VarType {
+        match control {
+            ControlType::Audio => VarType::Num,
+            ControlType::Graph => VarType::Num,
+            ControlType::Midi => VarType::Midi,
+            ControlType::Roll => VarType::Num,
+            ControlType::Scope => VarType::Num,
+            ControlType::AudioExtract => VarType::new_array(VarType::Num),
+            ControlType::MidiExtract => VarType::new_array(VarType::Midi),
+        }
+    }
+
     pub fn of_control_field(field: &ControlField) -> VarType {
         match field {
             ControlField::Audio(AudioField::Value) => VarType::Num,
@@ -73,7 +85,9 @@ impl VarType {
             ControlField::Roll(RollField::Value) => VarType::Midi,
             ControlField::Roll(RollField::Speed) => VarType::Num,
             ControlField::Scope(ScopeField::Value) => VarType::Num,
-            ControlField::NumExtract(NumExtractField::Value) => VarType::new_array(VarType::Num),
+            ControlField::AudioExtract(AudioExtractField::Value) => {
+                VarType::new_array(VarType::Num)
+            }
             ControlField::MidiExtract(MidiExtractField::Value) => VarType::new_array(VarType::Midi),
         }
     }

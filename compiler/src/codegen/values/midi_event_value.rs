@@ -37,7 +37,7 @@ impl MidiEventValue {
     }
 
     pub fn copy_to(&self, builder: &mut Builder, module: &Module, other: &MidiEventValue) {
-        util::copy_ptr(builder, module, &self.val, &other.val)
+        util::copy_ptr(builder, module, self.val, other.val)
     }
 
     pub fn load(&self, builder: &mut Builder) -> StructValue {

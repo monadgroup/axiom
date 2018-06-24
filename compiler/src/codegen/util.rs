@@ -5,6 +5,7 @@ use inkwell::module::{Linkage, Module};
 use inkwell::types::{BasicType, BasicTypeEnum, FunctionType, VectorType};
 use inkwell::values::VectorValue;
 use inkwell::values::{FunctionValue, GlobalValue, IntValue, PointerValue};
+use inkwell::AddressSpace;
 
 pub fn get_size_of(t: &BasicTypeEnum) -> Option<IntValue> {
     match t {
@@ -20,13 +21,13 @@ pub fn get_size_of(t: &BasicTypeEnum) -> Option<IntValue> {
 pub fn get_or_create_func(
     module: &Module,
     name: &str,
-    func_type: &FunctionType,
-    linkage: Option<&Linkage>,
+    cb: &Fn() -> (Linkage, FunctionType),
 ) -> FunctionValue {
     if let Some(func) = module.get_function(name) {
         func
     } else {
-        module.add_function(name, func_type, linkage)
+        let (linkage, func_type) = cb();
+        module.add_function(name, &func_type, Some(&linkage))
     }
 }
 
@@ -49,18 +50,24 @@ pub fn get_vec_spread(context: &Context, val: f32) -> VectorValue {
     get_const_vec(context, val, val)
 }
 
-pub fn copy_ptr(builder: &mut Builder, module: &Module, src: &PointerValue, dest: &PointerValue) {
+pub fn copy_ptr(builder: &mut Builder, module: &Module, src: PointerValue, dest: PointerValue) {
     let src_elem_type = src.get_type().element_type();
     let dest_elem_type = dest.get_type().element_type();
     assert_eq!(src_elem_type, dest_elem_type);
 
     let param_size = get_size_of(&src_elem_type).unwrap();
     let context = module.get_context();
+
+    // cast src and dest to the correct pointer types
+    let nullptr_type = context.i8_type().ptr_type(AddressSpace::Generic);
+    let src_p0i8 = builder.build_pointer_cast(src, nullptr_type, "");
+    let dest_p0i8 = builder.build_pointer_cast(dest, nullptr_type, "");
+
     builder.build_call(
         &intrinsics::memcpy(module),
         &[
-            dest,
-            src,
+            &dest_p0i8,
+            &src_p0i8,
             &param_size,
             &context.i32_type().const_int(0, false),
             &context.bool_type().const_int(0, false),

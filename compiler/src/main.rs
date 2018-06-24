@@ -193,6 +193,11 @@ fn main() {
     codegen::converters::build_convert_func(&module, &ast::FormType::Samples);
     codegen::converters::build_convert_func(&module, &ast::FormType::Seconds);
 
+    use codegen::controls::Control;
+    codegen::controls::build_lifecycle_funcs::<codegen::controls::AudioControl>(&module);
+    codegen::controls::build_ui_lifecycle_funcs::<codegen::controls::AudioControl>(&module);
+    codegen::controls::build_field_funcs::<codegen::controls::AudioControl>(&module);
+
     if let Err(result_str) = module.verify() {
         println!("{}", result_str.to_string());
         return;
@@ -215,5 +220,5 @@ fn main() {
     }
     module_pass.run_on_module(&module);
 
-    module.print_to_stderr()
+    module.print_to_stderr();
 }

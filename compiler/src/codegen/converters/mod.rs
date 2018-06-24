@@ -54,16 +54,13 @@ impl<'a> ConvertGenerator for PrivateGenerator<'a> {
 
 pub fn get_convert_func(module: &Module, target_form: &FormType) -> FunctionValue {
     let func_name = format!("maxim.converter.{}", target_form);
-    let num_type = NumValue::get_type(&module.get_context());
-    util::get_or_create_func(
-        module,
-        &func_name,
-        &num_type.fn_type(
-            &[&BasicTypeEnum::from(num_type.ptr_type(AddressSpace::Local))],
-            false,
-        ),
-        Some(&Linkage::ExternalLinkage),
-    )
+    util::get_or_create_func(module, &func_name, &|| {
+        let num_type = NumValue::get_type(&module.get_context());
+        (
+            Linkage::ExternalLinkage,
+            num_type.fn_type(&[&num_type.ptr_type(AddressSpace::Local)], false),
+        )
+    })
 }
 
 fn run_converter(target_form: &FormType, generator: &mut ConvertGenerator) {
