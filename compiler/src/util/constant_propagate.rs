@@ -4,10 +4,6 @@ use mir::{ConstantNum, ConstantTuple, ConstantValue, VarType};
 use std::f32::consts;
 use {CompileError, CompileResult};
 
-pub fn const_convert(_constant: &ConstantNum, _target_form: &FormType) -> ConstantNum {
-    unimplemented!();
-}
-
 pub fn const_cast(constant: &ConstantNum, target_form: FormType) -> ConstantNum {
     constant.with_form(target_form)
 }
