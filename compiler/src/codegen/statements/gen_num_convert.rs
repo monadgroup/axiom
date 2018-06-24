@@ -11,9 +11,9 @@ pub fn gen_num_convert_statement(
 ) -> PointerValue {
     let base_num = NumValue::new(node.get_statement(input));
     converters::build_convert(
-        node.alloca_builder,
-        node.builder,
-        node.module,
+        node.ctx.allocb,
+        node.ctx.b,
+        node.ctx.module,
         &base_num,
         target_form,
     ).val

@@ -7,11 +7,7 @@ pub fn gen_combine_statement(indexes: &[usize], node: &mut NodeContext) -> Point
         .iter()
         .map(|&index| node.get_statement(index))
         .collect();
-    let new_tuple = TupleValue::new_from(
-        node.module,
-        node.alloca_builder,
-        node.builder,
-        &pointer_vals,
-    );
+    let new_tuple =
+        TupleValue::new_from(node.ctx.module, node.ctx.allocb, node.ctx.b, &pointer_vals);
     new_tuple.val
 }

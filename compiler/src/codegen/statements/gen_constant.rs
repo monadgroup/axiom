@@ -5,10 +5,11 @@ use inkwell::values::{BasicValue, BasicValueEnum, PointerValue};
 use mir::ConstantValue;
 
 pub fn gen_constant_statement(value: &ConstantValue, node: &mut NodeContext) -> PointerValue {
-    let const_val = get_constant_val(node.context, value);
-    let alloca = node.alloca_builder
+    let const_val = get_constant_val(node.ctx.context, value);
+    let alloca = node.ctx
+        .allocb
         .build_alloca(&const_val.get_type(), "constant");
-    node.alloca_builder.build_store(&alloca, &const_val);
+    node.ctx.allocb.build_store(&alloca, &const_val);
     alloca
 }
 
