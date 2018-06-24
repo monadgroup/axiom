@@ -18,6 +18,7 @@ use ast::{ControlField, ControlType};
 use codegen::{
     build_context_function, util, values, BuilderContext, ControlContext, ControlUiContext,
 };
+use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
@@ -48,19 +49,16 @@ impl<'a> ControlFieldGenerator for PrivateGenerator<'a> {
         get_cb: &ControlFieldGeneratorCb,
         set_cb: &ControlFieldGeneratorCb,
     ) {
-        let get_func = get_field_getter_setter_func(
+        build_field_func(
             self.module,
-            field,
-            &format!("maxim.control.{}.getter", field),
+            get_field_getter_func(self.module, field),
+            get_cb,
         );
-        build_field_func(self.module, get_func, get_cb);
-
-        let set_func = get_field_getter_setter_func(
+        build_field_func(
             self.module,
-            field,
-            &format!("maxim.control.{}.setter", field),
+            get_field_setter_func(self.module, field),
+            set_cb,
         );
-        build_field_func(self.module, set_func, set_cb);
     }
 }
 
@@ -175,6 +173,43 @@ fn get_field_getter_setter_func(
             ),
         )
     })
+}
+
+pub fn get_field_getter_func(module: &Module, field: ControlField) -> FunctionValue {
+    get_field_getter_setter_func(module, field, &format!("maxim.control.{}.getter", field))
+}
+
+pub fn get_field_setter_func(module: &Module, field: ControlField) -> FunctionValue {
+    get_field_getter_setter_func(module, field, &format!("maxim.control.{}.setter", field))
+}
+
+pub fn build_field_get(
+    module: &Module,
+    builder: &mut Builder,
+    field: ControlField,
+    group_ptr: PointerValue,
+    data_ptr: PointerValue,
+    out_val: PointerValue,
+) {
+    let func = get_field_getter_func(module, field);
+    builder.build_call(
+        &func,
+        &[&group_ptr, &data_ptr, &out_val],
+        "field.get",
+        false,
+    );
+}
+
+pub fn build_field_set(
+    module: &Module,
+    builder: &mut Builder,
+    field: ControlField,
+    group_ptr: PointerValue,
+    data_ptr: PointerValue,
+    in_val: PointerValue,
+) {
+    let func = get_field_setter_func(module, field);
+    builder.build_call(&func, &[&group_ptr, &data_ptr, &in_val], "field.set", false);
 }
 
 fn build_lifecycle_func(
