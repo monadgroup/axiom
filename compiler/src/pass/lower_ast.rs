@@ -83,6 +83,8 @@ impl<'a> AstLower<'a> {
         //  - if only the left is a tuple, assign the item on the right to all items on the left
         // the return value is _always_ what was on the RHS!
 
+        // todo: this currently doesn't work with operators like += !
+
         if lvalue.data.assignments.len() == 1 {
             let tuple = self.squash_values(right_vals);
             if let Some(err) = self.set_assignable(&lvalue.data.assignments[0], tuple) {
