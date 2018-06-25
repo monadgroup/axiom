@@ -1,5 +1,6 @@
 mod audio_control;
 mod audio_extract_control;
+mod control_context;
 mod graph_control;
 mod midi_control;
 mod midi_extract_control;
@@ -14,10 +15,10 @@ pub use self::midi_extract_control::MidiExtractControl;
 pub use self::roll_control::RollControl;
 pub use self::scope_control::ScopeControl;
 
+use self::control_context::{ControlContext, ControlUiContext};
 use ast::{ControlField, ControlType};
 use codegen::{
-    build_context_function, util, values, BuilderContext, ControlContext, ControlUiContext,
-    LifecycleFunc, TargetProperties,
+    build_context_function, util, values, BuilderContext, LifecycleFunc, TargetProperties,
 };
 use inkwell::builder::Builder;
 use inkwell::context::Context;

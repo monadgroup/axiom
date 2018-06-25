@@ -1,5 +1,5 @@
+use super::BlockContext;
 use codegen::values::{NumValue, TupleValue};
-use codegen::BlockContext;
 use inkwell::context::Context;
 use inkwell::values::{BasicValue, BasicValueEnum, PointerValue};
 use mir::ConstantValue;

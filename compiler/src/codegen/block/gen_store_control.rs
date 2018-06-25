@@ -1,5 +1,6 @@
+use super::BlockContext;
 use ast::ControlField;
-use codegen::{controls, BlockContext};
+use codegen::controls;
 use inkwell::values::PointerValue;
 use inkwell::AddressSpace;
 

@@ -1,6 +1,6 @@
+use super::BlockContext;
 use ast::FormType;
 use codegen::values::NumValue;
-use codegen::BlockContext;
 use inkwell::values::PointerValue;
 
 pub fn gen_num_cast_statement(

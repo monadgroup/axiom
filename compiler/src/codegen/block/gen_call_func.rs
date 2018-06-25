@@ -1,4 +1,5 @@
-use codegen::{functions, BlockContext};
+use super::BlockContext;
+use codegen::functions;
 use inkwell::values::PointerValue;
 use mir::block::Function;
 

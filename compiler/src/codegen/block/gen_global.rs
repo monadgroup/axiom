@@ -1,5 +1,6 @@
+use super::BlockContext;
+use codegen::globals;
 use codegen::values::NumValue;
-use codegen::{globals, BlockContext};
 use inkwell::values::PointerValue;
 use mir::block::Global;
 

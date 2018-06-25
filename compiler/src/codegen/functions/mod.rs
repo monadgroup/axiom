@@ -36,3 +36,11 @@ pub fn build_call(
 ) {
     unimplemented!()
 }
+
+/*pub trait Function {
+    fn function_type() -> Function;
+
+    fn data_type(context: &Context) -> StructType {
+        context.struct_type(&[], false)
+    }
+}*/
