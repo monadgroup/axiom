@@ -13,8 +13,20 @@ pub mod values;
 pub use self::builder_context::{build_context_function, BuilderContext};
 pub use self::target_properties::TargetProperties;
 
+use std::fmt;
+
 pub enum LifecycleFunc {
     Construct,
     Update,
     Destruct,
+}
+
+impl fmt::Display for LifecycleFunc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        match self {
+            LifecycleFunc::Construct => write!(f, "construct"),
+            LifecycleFunc::Update => write!(f, "update"),
+            LifecycleFunc::Destruct => write!(f, "destruct"),
+        }
+    }
 }

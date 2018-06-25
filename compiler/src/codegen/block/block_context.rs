@@ -1,5 +1,5 @@
-use super::data_analyzer::BlockLayout;
-use super::BuilderContext;
+use codegen::data_analyzer::BlockLayout;
+use codegen::BuilderContext;
 use inkwell::values::PointerValue;
 
 pub struct BlockContext<'a> {

@@ -68,3 +68,63 @@ pub fn log2_v2f32(module: &Module) -> FunctionValue {
         )
     })
 }
+
+pub fn cos_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.cos.v2f32", &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type], false),
+        )
+    })
+}
+
+pub fn sin_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.sin.v2f32", &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type], false),
+        )
+    })
+}
+
+pub fn sqrt_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.sqrt.v2f32", &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type], false),
+        )
+    })
+}
+
+pub fn ceil_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.ceil.v2f32", &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type], false),
+        )
+    })
+}
+
+pub fn floor_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.floor.v2f32", &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type], false),
+        )
+    })
+}
+
+pub fn fabs_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.fabs.v2f32", &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type], false),
+        )
+    })
+}

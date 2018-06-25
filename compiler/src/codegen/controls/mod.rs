@@ -96,16 +96,6 @@ pub fn get_ui_type(context: &Context, control_type: ControlType) -> StructType {
     }
 }
 
-impl fmt::Display for LifecycleFunc {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        match self {
-            LifecycleFunc::Construct => write!(f, "construct"),
-            LifecycleFunc::Update => write!(f, "update"),
-            LifecycleFunc::Destruct => write!(f, "destruct"),
-        }
-    }
-}
-
 fn get_lifecycle_func(
     module: &Module,
     control_type: ControlType,

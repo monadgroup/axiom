@@ -1,4 +1,4 @@
-use super::BuilderContext;
+use codegen::BuilderContext;
 use inkwell::values::PointerValue;
 
 pub struct ControlContext<'a> {

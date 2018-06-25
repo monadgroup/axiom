@@ -603,9 +603,7 @@ impl<'a> AstLower<'a> {
         // all varargs must be of the same type
         if let Some(vararg_type) = function.var_arg() {
             for arg in &varargs {
-                if let Some(err) =
-                    self.check_statement_type(pos, vararg_type.value_type.clone(), *arg)
-                {
+                if let Some(err) = self.check_statement_type(pos, vararg_type.clone(), *arg) {
                     return Err(err);
                 }
             }
