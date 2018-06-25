@@ -1,7 +1,7 @@
 use ast::OperatorType;
 use codegen::intrinsics;
 use codegen::values::NumValue;
-use codegen::NodeContext;
+use codegen::BlockContext;
 use inkwell::types::IntType;
 use inkwell::values::{PointerValue, VectorValue};
 use inkwell::FloatPredicate;
@@ -10,7 +10,7 @@ pub fn gen_math_op_statement(
     op: &OperatorType,
     lhs: usize,
     rhs: usize,
-    node: &mut NodeContext,
+    node: &mut BlockContext,
 ) -> PointerValue {
     let pow_intrinsic = intrinsics::pow_v2f32(node.ctx.module);
     let left_num = NumValue::new(node.get_statement(lhs));
@@ -128,7 +128,7 @@ pub fn gen_math_op_statement(
 }
 
 fn apply_int_op(
-    node: &NodeContext,
+    node: &BlockContext,
     lhs: VectorValue,
     rhs: VectorValue,
     num_type: IntType,
@@ -140,13 +140,13 @@ fn apply_int_op(
     int_to_float_vec(node, result_int)
 }
 
-fn float_vec_to_int(node: &NodeContext, vec: VectorValue, num_type: IntType) -> VectorValue {
+fn float_vec_to_int(node: &BlockContext, vec: VectorValue, num_type: IntType) -> VectorValue {
     node.ctx
         .b
         .build_float_to_signed_int(vec, num_type.vec_type(2), "num.vec.int")
 }
 
-fn int_to_float_vec(node: &NodeContext, int: VectorValue) -> VectorValue {
+fn int_to_float_vec(node: &BlockContext, int: VectorValue) -> VectorValue {
     node.ctx.b.build_signed_int_to_float(
         int,
         node.ctx.context.f32_type().vec_type(2),

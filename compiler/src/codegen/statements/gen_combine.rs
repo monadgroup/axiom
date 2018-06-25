@@ -1,8 +1,8 @@
 use codegen::values::TupleValue;
-use codegen::NodeContext;
+use codegen::BlockContext;
 use inkwell::values::PointerValue;
 
-pub fn gen_combine_statement(indexes: &[usize], node: &mut NodeContext) -> PointerValue {
+pub fn gen_combine_statement(indexes: &[usize], node: &mut BlockContext) -> PointerValue {
     let pointer_vals: Vec<_> = indexes
         .iter()
         .map(|&index| node.get_statement(index))

@@ -1,14 +1,14 @@
 use ast::UnaryOperation;
 use codegen::util;
 use codegen::values::NumValue;
-use codegen::NodeContext;
+use codegen::BlockContext;
 use inkwell::values::PointerValue;
 use inkwell::FloatPredicate;
 
 pub fn gen_unary_op_statement(
     op: &UnaryOperation,
     input: usize,
-    node: &mut NodeContext,
+    node: &mut BlockContext,
 ) -> PointerValue {
     let base_num = NumValue::new(node.get_statement(input));
     let new_num = NumValue::new_copy(node.ctx.module, node.ctx.allocb, node.ctx.b, &base_num);

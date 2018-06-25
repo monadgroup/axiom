@@ -1,12 +1,12 @@
 use ast::FormType;
 use codegen::values::NumValue;
-use codegen::NodeContext;
+use codegen::BlockContext;
 use inkwell::values::PointerValue;
 
 pub fn gen_num_cast_statement(
     target_form: &FormType,
     input: usize,
-    node: &mut NodeContext,
+    node: &mut BlockContext,
 ) -> PointerValue {
     let base_num = NumValue::new(node.get_statement(input));
     let new_num = NumValue::new_copy(node.ctx.module, node.ctx.allocb, node.ctx.b, &base_num);

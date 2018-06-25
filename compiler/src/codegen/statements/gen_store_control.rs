@@ -1,5 +1,5 @@
 use ast::ControlField;
-use codegen::{controls, NodeContext};
+use codegen::{controls, BlockContext};
 use inkwell::values::PointerValue;
 use inkwell::AddressSpace;
 
@@ -7,7 +7,7 @@ pub fn gen_store_control_statement(
     control: usize,
     field: &ControlField,
     value: usize,
-    node: &mut NodeContext,
+    node: &mut BlockContext,
 ) -> PointerValue {
     let layout_index = node.layout.control_index(control);
     let control_data = node.get_data_entry(layout_index);

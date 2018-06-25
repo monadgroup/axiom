@@ -1,10 +1,10 @@
 use codegen::values::{NumValue, TupleValue};
-use codegen::NodeContext;
+use codegen::BlockContext;
 use inkwell::context::Context;
 use inkwell::values::{BasicValue, BasicValueEnum, PointerValue};
 use mir::ConstantValue;
 
-pub fn gen_constant_statement(value: &ConstantValue, node: &mut NodeContext) -> PointerValue {
+pub fn gen_constant_statement(value: &ConstantValue, node: &mut BlockContext) -> PointerValue {
     let const_val = get_constant_val(node.ctx.context, value);
     let alloca = node.ctx
         .allocb
