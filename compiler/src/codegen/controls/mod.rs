@@ -17,6 +17,7 @@ pub use self::scope_control::ScopeControl;
 use ast::{ControlField, ControlType};
 use codegen::{
     build_context_function, util, values, BuilderContext, ControlContext, ControlUiContext,
+    LifecycleFunc, TargetProperties,
 };
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -92,12 +93,6 @@ pub fn get_ui_type(context: &Context, control_type: ControlType) -> StructType {
         ControlType::Roll => RollControl::data_type(context),
         ControlType::Scope => ScopeControl::data_type(context),
     }
-}
-
-enum LifecycleFunc {
-    Construct,
-    Update,
-    Destruct,
 }
 
 impl fmt::Display for LifecycleFunc {
@@ -212,6 +207,31 @@ pub fn build_field_set(
     builder.build_call(&func, &[&group_ptr, &data_ptr, &in_val], "field.set", false);
 }
 
+pub fn build_lifecycle_call(
+    module: &Module,
+    builder: &mut Builder,
+    control_type: ControlType,
+    lifecycle: LifecycleFunc,
+    group_ptr: PointerValue,
+    data_ptr: PointerValue,
+) {
+    let func = get_lifecycle_func(module, control_type, lifecycle);
+    builder.build_call(&func, &[&group_ptr, &data_ptr], "", false);
+}
+
+pub fn build_ui_lifecycle_call(
+    module: &Module,
+    builder: &mut Builder,
+    control_type: ControlType,
+    lifecycle: LifecycleFunc,
+    group_ptr: PointerValue,
+    data_ptr: PointerValue,
+    ui_ptr: PointerValue,
+) {
+    let func = get_ui_lifecycle_func(module, control_type, lifecycle);
+    builder.build_call(&func, &[&group_ptr, &data_ptr, &ui_ptr], "", false);
+}
+
 fn build_lifecycle_func(
     module: &Module,
     control: ControlType,
@@ -272,58 +292,6 @@ fn build_field_func(module: &Module, func: FunctionValue, builder: &ControlField
     });
 }
 
-pub fn build_lifecycle_funcs<T: Control>(module: &Module) {
-    build_lifecycle_func(
-        module,
-        T::control_type(),
-        LifecycleFunc::Construct,
-        &T::gen_construct,
-    );
-    build_lifecycle_func(
-        module,
-        T::control_type(),
-        LifecycleFunc::Update,
-        &T::gen_update,
-    );
-    build_lifecycle_func(
-        module,
-        T::control_type(),
-        LifecycleFunc::Destruct,
-        &T::gen_destruct,
-    );
-}
-
-pub fn build_ui_lifecycle_funcs<T: Control>(module: &Module) {
-    build_ui_lifecycle_func(
-        module,
-        T::control_type(),
-        LifecycleFunc::Construct,
-        &T::gen_ui_construct,
-    );
-    build_ui_lifecycle_func(
-        module,
-        T::control_type(),
-        LifecycleFunc::Update,
-        &T::gen_ui_update,
-    );
-    build_ui_lifecycle_func(
-        module,
-        T::control_type(),
-        LifecycleFunc::Destruct,
-        &T::gen_ui_destruct,
-    );
-}
-
-pub fn build_field_funcs<T: Control>(module: &Module) {
-    T::gen_fields(&PrivateGenerator { module });
-}
-
-pub fn build_funcs<T: Control>(module: &Module) {
-    build_lifecycle_funcs::<T>(module);
-    build_ui_lifecycle_funcs::<T>(module);
-    build_field_funcs::<T>(module);
-}
-
 pub trait Control {
     fn control_type() -> ControlType;
 
@@ -348,6 +316,61 @@ pub trait Control {
     fn gen_ui_destruct(_control: &mut ControlUiContext) {}
 
     fn gen_fields(generator: &ControlFieldGenerator);
+
+    fn build_lifecycle_funcs(module: &Module) {
+        build_lifecycle_func(
+            module,
+            Self::control_type(),
+            LifecycleFunc::Construct,
+            &Self::gen_construct,
+        );
+        build_lifecycle_func(
+            module,
+            Self::control_type(),
+            LifecycleFunc::Update,
+            &Self::gen_update,
+        );
+        build_lifecycle_func(
+            module,
+            Self::control_type(),
+            LifecycleFunc::Destruct,
+            &Self::gen_destruct,
+        );
+    }
+
+    fn build_ui_lifecycle_funcs(module: &Module) {
+        build_ui_lifecycle_func(
+            module,
+            Self::control_type(),
+            LifecycleFunc::Construct,
+            &Self::gen_ui_construct,
+        );
+        build_ui_lifecycle_func(
+            module,
+            Self::control_type(),
+            LifecycleFunc::Update,
+            &Self::gen_ui_update,
+        );
+        build_ui_lifecycle_func(
+            module,
+            Self::control_type(),
+            LifecycleFunc::Destruct,
+            &Self::gen_ui_destruct,
+        );
+    }
+
+    fn build_field_funcs(module: &Module) {
+        Self::gen_fields(&PrivateGenerator { module });
+    }
+
+    fn build_funcs(module: &Module, target: &TargetProperties) {
+        Self::build_lifecycle_funcs(module);
+        Self::build_field_funcs(module);
+
+        if target.include_ui {
+            Self::build_ui_lifecycle_funcs(module);
+        }
+    }
 }
 
 pub fn default_copy_getter(control: &mut ControlContext, out_val: PointerValue) {

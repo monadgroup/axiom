@@ -43,10 +43,25 @@ fn run_code(code: &str) {
         Ok(mut block) => {
             remove_dead_code(&mut block);
             let context = inkwell::context::Context::create();
-            let layout = codegen::data_analyzer::build_block_layout(&context, &block, true);
-            //let layout = codegen::data_analyzer::build_block_layout()
+            let module = context.create_module("test");
+            let target = codegen::TargetProperties::new(true);
+
+            use codegen::controls::Control;
+            let codegen_start = time::precise_time_s();
+            codegen::controls::AudioControl::build_funcs(&module, &target);
+
+            codegen::block::build_construct_func(&module, &block, &target);
+            codegen::block::build_update_func(&module, &block, &target);
+            codegen::block::build_destruct_func(&module, &block, &target);
+            println!("Codegen took {}s", time::precise_time_s() - codegen_start);
+
             println!("{:#?}", block);
-            println!("{:#?}", layout)
+            if let Err(err) = module.verify() {
+                println!("{}", err.to_string());
+            } else {
+                optimize_module(&module);
+                module.print_to_stderr();
+            }
         }
         Err(err) => {
             let (text, pos) = err.formatted();
@@ -100,6 +115,29 @@ impl<'a> Iterator for ModuleFunctionIterator<'a> {
             None => None,
         }
     }
+}
+
+fn optimize_module(module: &inkwell::module::Module) {
+    let pass_manager_builder = inkwell::passes::PassManagerBuilder::create();
+    pass_manager_builder.set_optimization_level(inkwell::OptimizationLevel::Aggressive);
+    pass_manager_builder.set_size_level(0);
+
+    // threshold for -O3, see http://llvm.org/doxygen/InlineCost_8h_source.html#l00041
+    pass_manager_builder.set_inliner_with_threshold(250);
+
+    let module_pass = inkwell::passes::PassManager::create_for_module();
+    pass_manager_builder.populate_module_pass_manager(&module_pass);
+
+    let func_pass = inkwell::passes::PassManager::create_for_function(&module);
+    pass_manager_builder.populate_function_pass_manager(&func_pass);
+
+    func_pass.initialize();
+    let func_iterator = ModuleFunctionIterator::new(&module);
+    for func in func_iterator {
+        func_pass.run_on_function(&func);
+    }
+    module_pass.initialize();
+    module_pass.run_on_module(&module);
 }
 
 fn main() {

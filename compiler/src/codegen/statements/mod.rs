@@ -26,7 +26,7 @@ use self::gen_num_convert::gen_num_convert_statement;
 use self::gen_store_control::gen_store_control_statement;
 use self::gen_unary_op::gen_unary_op_statement;
 
-pub fn gen_statement(statement: &Statement, node: &mut BlockContext) -> PointerValue {
+pub fn gen_statement(index: usize, statement: &Statement, node: &mut BlockContext) -> PointerValue {
     match statement {
         Statement::Constant(constant) => gen_constant_statement(constant, node),
         Statement::Global(global) => gen_global_statement(global, node),
@@ -44,7 +44,7 @@ pub fn gen_statement(statement: &Statement, node: &mut BlockContext) -> PointerV
             function,
             args,
             varargs,
-        } => gen_call_func_statement(function, args, varargs, node),
+        } => gen_call_func_statement(index, function, args, varargs, node),
         Statement::StoreControl {
             control,
             field,

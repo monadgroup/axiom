@@ -1,4 +1,5 @@
 use codegen::controls::{get_data_type, get_group_type, get_ui_type};
+use codegen::TargetProperties;
 use inkwell::context::Context;
 use inkwell::types::{BasicType, StructType};
 use inkwell::AddressSpace;
@@ -11,6 +12,8 @@ pub struct BlockLayout {
     pub scratch_struct: StructType,
     pub groups_struct: StructType,
     pub ui_struct: Option<StructType>,
+    pub functions: Vec<Function>,
+    control_count: usize,
     func_indexes: HashMap<usize, usize>,
 }
 
@@ -22,10 +25,19 @@ pub struct BlockLayout {
 ///  - `groups` is a struct with an entry per control pointing to the group values.
 ///  - `ui` is a zero-initialized struct similar to `scratch` which contains UI data for controls
 ///    that use it.
-pub fn build_block_layout(context: &Context, block: &Block, include_ui: bool) -> BlockLayout {
+pub fn build_block_layout(
+    context: &Context,
+    block: &Block,
+    target: &TargetProperties,
+) -> BlockLayout {
     let mut scratch_types = Vec::new();
     let mut group_types = Vec::new();
-    let mut ui_types = if include_ui { Some(Vec::new()) } else { None };
+    let mut ui_types = if target.include_ui {
+        Some(Vec::new())
+    } else {
+        None
+    };
+    let mut functions = Vec::new();
     let mut func_indexes = HashMap::new();
 
     for control in &block.controls {
@@ -40,6 +52,7 @@ pub fn build_block_layout(context: &Context, block: &Block, include_ui: bool) ->
 
     for (index, statement) in block.statements.iter().enumerate() {
         if let Statement::CallFunc { function, .. } = statement {
+            functions.push(*function);
             func_indexes.insert(index, scratch_types.len());
             scratch_types.push(build_function_data_type(context, &function));
         }
@@ -57,6 +70,8 @@ pub fn build_block_layout(context: &Context, block: &Block, include_ui: bool) ->
         } else {
             None
         },
+        functions,
+        control_count: block.controls.len(),
         func_indexes,
     }
 }
@@ -71,7 +86,11 @@ impl BlockLayout {
         control
     }
 
-    pub fn function_index(&self, statement: usize) -> Option<usize> {
+    pub fn function_index(&self, function: usize) -> usize {
+        self.control_count + function
+    }
+
+    pub fn statement_index(&self, statement: usize) -> Option<usize> {
         self.func_indexes.get(&statement).cloned()
     }
 }

@@ -12,6 +12,27 @@ pub struct BlockContext<'a> {
 }
 
 impl<'a> BlockContext<'a> {
+    pub fn new(
+        ctx: BuilderContext<'a>,
+        layout: BlockLayout,
+        data_ptr: PointerValue,
+        group_ptr: PointerValue,
+        ui_ptr: Option<PointerValue>,
+    ) -> Self {
+        BlockContext {
+            ctx,
+            layout,
+            statement_ptrs: Vec::new(),
+            data_ptr,
+            group_ptr,
+            ui_ptr,
+        }
+    }
+
+    pub fn push_statement(&mut self, ptr: PointerValue) {
+        self.statement_ptrs.push(ptr)
+    }
+
     pub fn get_statement(&self, index: usize) -> PointerValue {
         self.statement_ptrs[index]
     }
@@ -28,7 +49,15 @@ impl<'a> BlockContext<'a> {
         unsafe {
             self.ctx
                 .b
-                .build_struct_gep(&self.group_ptr, index as u32, "ctx.groupentry")
+                .build_load(
+                    &self.ctx.b.build_struct_gep(
+                        &self.group_ptr,
+                        index as u32,
+                        "ctx.groupentry.ptr",
+                    ),
+                    "ctx.groupentry",
+                )
+                .into_pointer_value()
         }
     }
 
