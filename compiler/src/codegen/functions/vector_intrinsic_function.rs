@@ -8,7 +8,6 @@ use mir::block;
 fn gen_intrinsic_call(
     func: &mut FunctionContext,
     args: &[PointerValue],
-    varargs: &VarArgs,
     result: PointerValue,
     intrinsic: FunctionValue,
 ) {
@@ -34,9 +33,9 @@ macro_rules! define_vector_intrinsic (
         pub struct $func_name {}
         impl Function for $func_name {
             fn function_type() -> block::Function { $func_type }
-            fn gen_call(func: &mut FunctionContext, args: &[PointerValue], varargs: &VarArgs, result: PointerValue) {
+            fn gen_call(func: &mut FunctionContext, args: &[PointerValue], _varargs: Option<VarArgs>, result: PointerValue) {
                 let intrinsic = $intrinsic_name(func.ctx.module);
-                gen_intrinsic_call(func, args, varargs, result, intrinsic)
+                gen_intrinsic_call(func, args, result, intrinsic)
             }
         }
     );

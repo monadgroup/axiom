@@ -2,12 +2,14 @@ mod function_context;
 mod vector_intrinsic_function;
 
 use codegen::LifecycleFunc;
-use codegen::{util, values, BuilderContext};
+use codegen::{build_context_function, util, values, BuilderContext};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::{BasicType, BasicTypeEnum, StructType};
-use inkwell::values::{BasicValue, BasicValueEnum, FunctionValue, IntValue, PointerValue};
+use inkwell::values::{
+    BasicValue, BasicValueEnum, FunctionValue, IntValue, PointerValue, StructValue,
+};
 use inkwell::AddressSpace;
 use mir::{block, VarType};
 use std::{fmt, ops};
@@ -30,28 +32,29 @@ impl fmt::Display for FunctionLifecycleFunc {
     }
 }
 
-pub trait VarArgs {
-    fn len(&self, builder: &mut Builder) -> IntValue;
-    fn index(&self, index: IntValue) -> &PointerValue;
+pub struct VarArgs {
+    param: StructValue,
 }
 
-impl ops::Index<IntValue> for VarArgs {
-    type Output = PointerValue;
-
-    fn index(&self, index: IntValue) -> &PointerValue {
-        self.index(index)
-    }
-}
-
-struct InternalVarArgs {}
-
-impl VarArgs for InternalVarArgs {
-    fn len(&self, builder: &mut Builder) -> IntValue {
-        unimplemented!()
+impl VarArgs {
+    pub fn new(param: StructValue) -> Self {
+        VarArgs { param }
     }
 
-    fn index(&self, index: IntValue) -> &PointerValue {
-        unimplemented!()
+    fn len(&self, builder: &Builder) -> IntValue {
+        builder
+            .build_extract_value(self.param, 0, "vararg.count")
+            .into_int_value()
+    }
+
+    fn at(&self, index: IntValue, builder: &Builder) -> PointerValue {
+        let arr_ptr = builder
+            .build_extract_value(self.param, 1, "vararg.arr")
+            .into_pointer_value();
+        let item_ptr_ptr = unsafe { builder.build_gep(&arr_ptr, &[index], "vararg.item.ptr") };
+        builder
+            .build_load(&item_ptr_ptr, "vararg.item")
+            .into_pointer_value()
     }
 }
 
@@ -154,6 +157,57 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
     })
 }
 
+fn build_lifecycle_func(
+    module: &Module,
+    function: block::Function,
+    lifecycle: FunctionLifecycleFunc,
+    builder: &Fn(&mut FunctionContext),
+) {
+    let func = get_lifecycle_func(module, function, lifecycle);
+    build_context_function(module, func, &|ctx: BuilderContext| {
+        let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
+        let mut function_context = FunctionContext { ctx, data_ptr };
+        builder(&mut function_context);
+
+        function_context.ctx.b.build_return(None);
+    })
+}
+
+fn build_update_func(
+    module: &Module,
+    function: block::Function,
+    builder: &Fn(&mut FunctionContext, &[PointerValue], Option<VarArgs>, PointerValue),
+) {
+    let func = get_update_func(module, function);
+    build_context_function(module, func, &|ctx: BuilderContext| {
+        let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
+        let return_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let has_vararg = function.var_arg().is_some();
+        let arg_pointers: Vec<_> = ctx.func
+            .params()
+            .take(if has_vararg {
+                ctx.func.count_params() - 1
+            } else {
+                ctx.func.count_params()
+            } as usize)
+            .skip(2)
+            .map(|val| val.into_pointer_value())
+            .collect();
+
+        let vararg = if has_vararg {
+            Some(VarArgs::new(
+                ctx.func.get_last_param().unwrap().into_struct_value(),
+            ))
+        } else {
+            None
+        };
+        let mut function_context = FunctionContext { ctx, data_ptr };
+        builder(&mut function_context, &arg_pointers, vararg, return_ptr);
+
+        function_context.ctx.b.build_return(None);
+    })
+}
+
 pub fn build_lifecycle_call(
     module: &Module,
     builder: &mut Builder,
@@ -178,7 +232,7 @@ pub fn build_call(
     pass_args.extend(
         map_real_args(function, ctx, args)
             .into_iter()
-            .map(|ptr| BasicValueEnum::from(ptr)),
+            .map(|ptr| -> BasicValueEnum { ptr.into() }),
     );
 
     // build the vararg struct
@@ -236,9 +290,25 @@ pub trait Function {
     fn gen_call(
         func: &mut FunctionContext,
         args: &[PointerValue],
-        varargs: &VarArgs,
+        varargs: Option<VarArgs>,
         result: PointerValue,
     );
 
     fn gen_destruct(func: &mut FunctionContext) {}
+
+    fn build_lifecycle_funcs(module: &Module) {
+        build_lifecycle_func(
+            module,
+            Self::function_type(),
+            FunctionLifecycleFunc::Construct,
+            &Self::gen_construct,
+        );
+        build_update_func(module, Self::function_type(), &Self::gen_call);
+        build_lifecycle_func(
+            module,
+            Self::function_type(),
+            FunctionLifecycleFunc::Destruct,
+            &Self::gen_destruct,
+        );
+    }
 }
