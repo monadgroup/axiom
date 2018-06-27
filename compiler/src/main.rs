@@ -51,6 +51,7 @@ fn run_code(code: &str) {
             let codegen_start = time::precise_time_s();
             codegen::controls::AudioControl::build_funcs(&module, &target);
             codegen::functions::SinFunction::build_lifecycle_funcs(&module);
+            codegen::functions::TanFunction::build_lifecycle_funcs(&module);
 
             codegen::block::build_construct_func(&module, &block, &target);
             codegen::block::build_update_func(&module, &block, &target);

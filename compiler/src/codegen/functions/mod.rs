@@ -1,4 +1,5 @@
 mod function_context;
+mod scalar_intrinsic_function;
 mod vector_intrinsic_function;
 
 use codegen::LifecycleFunc;
@@ -16,6 +17,7 @@ use std::{fmt, ops};
 
 use self::function_context::FunctionContext;
 
+pub use self::scalar_intrinsic_function::*;
 pub use self::vector_intrinsic_function::*;
 
 pub enum FunctionLifecycleFunc {
@@ -89,7 +91,13 @@ map_functions! {
     Sqrt => SqrtFunction,
     Ceil => CeilFunction,
     Floor => FloorFunction,
-    Abs => AbsFunction
+    Abs => AbsFunction,
+    Tan => TanFunction,
+    Acos => AcosFunction,
+    Asin => AsinFunction,
+    Atan => AtanFunction,
+    Atan2 => Atan2Function,
+    Hypot => HypotFunction
 }
 
 fn get_lifecycle_func(
