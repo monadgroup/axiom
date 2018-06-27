@@ -43,6 +43,8 @@ fn run_code(code: &str) {
     match mir {
         Ok(mut block) => {
             remove_dead_code(&mut block);
+            println!("{:#?}", block);
+
             let context = inkwell::context::Context::create();
             let module = context.create_module("test");
             let target = codegen::TargetProperties::new(true);
@@ -50,6 +52,7 @@ fn run_code(code: &str) {
             use codegen::controls::Control;
             use codegen::functions::Function;
             let codegen_start = time::precise_time_s();
+            codegen::intrinsics::build_intrinsics(&module);
             codegen::controls::build_funcs(&module, &target);
             codegen::functions::build_funcs(&module);
 
@@ -58,7 +61,6 @@ fn run_code(code: &str) {
             codegen::block::build_destruct_func(&module, &block, &target);
             println!("Codegen took {}s", time::precise_time_s() - codegen_start);
 
-            println!("{:#?}", block);
             if let Err(err) = module.verify() {
                 module.print_to_stderr();
                 println!("{}", err.to_string());

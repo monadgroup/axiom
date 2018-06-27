@@ -1,6 +1,8 @@
 mod function_context;
+mod num_function;
 mod scalar_intrinsic_function;
 mod vector_intrinsic_function;
+mod vector_shuffle_function;
 
 use codegen::LifecycleFunc;
 use codegen::{build_context_function, util, values, BuilderContext};
@@ -9,7 +11,8 @@ use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::{BasicType, BasicTypeEnum, StructType};
 use inkwell::values::{
-    BasicValue, BasicValueEnum, FunctionValue, IntValue, PointerValue, StructValue,
+    BasicValue, BasicValueEnum, FunctionValue, InstructionOpcode, IntValue, PointerValue,
+    StructValue,
 };
 use inkwell::AddressSpace;
 use mir::{block, VarType};
@@ -17,8 +20,10 @@ use std::{fmt, ops};
 
 use self::function_context::FunctionContext;
 
+pub use self::num_function::*;
 pub use self::scalar_intrinsic_function::*;
 pub use self::vector_intrinsic_function::*;
+pub use self::vector_shuffle_function::*;
 
 pub enum FunctionLifecycleFunc {
     Construct,
@@ -73,6 +78,10 @@ macro_rules! map_functions {
             }
         }
 
+        pub fn build_funcs(module: &Module) {
+            $( $class_name::build_lifecycle_funcs(module); )*
+        }
+
         fn map_real_args(function_type: block::Function, ctx: &mut BuilderContext, args: Vec<PointerValue>) -> Vec<PointerValue> {
             match function_type {
                 $( block::Function::$enum_name => $class_name::gen_real_args(ctx, args), )*
@@ -97,7 +106,20 @@ map_functions! {
     Asin => AsinFunction,
     Atan => AtanFunction,
     Atan2 => Atan2Function,
-    Hypot => HypotFunction
+    Hypot => HypotFunction,
+    ToRad => ToRadFunction,
+    ToDeg => ToDegFunction,
+    Clamp => ClampFunction,
+    Pan => PanFunction,
+    Left => LeftFunction,
+    Right => RightFunction,
+    Swap => SwapFunction,
+    Combine => CombineFunction,
+    Mix => MixFunction,
+    Sequence => SequenceFunction,
+    Min => MinFunction,
+    Max => MaxFunction,
+    Next => NextFunction
 }
 
 fn get_lifecycle_func(
@@ -117,6 +139,7 @@ fn get_lifecycle_func(
         )
     })
 }
+
 fn get_update_func(module: &Module, function: block::Function) -> FunctionValue {
     let func_name = format!("maxim.function.{}.update", function);
     util::get_or_create_func(module, &func_name, &|| {
@@ -257,6 +280,14 @@ pub fn build_call(
         let va_array_type = ll_vararg_type.array_type(varargs.len() as u32);
         let va_array = ctx.allocb.build_alloca(&va_array_type, "va.arr");
 
+        // the struct accepts a pointer to a pointer, which we can get by bitcasting
+        let va_array_ptr = ctx.b.build_cast(
+            InstructionOpcode::BitCast,
+            &va_array,
+            &ll_vararg_type.ptr_type(AddressSpace::Generic),
+            "",
+        );
+
         // build the vararg struct with size and pointing to the array we allocated
         let va_struct = ctx.b.build_insert_value(
             va_struct_type.get_undef(),
@@ -264,7 +295,7 @@ pub fn build_call(
             0,
             "va.withsize",
         );
-        let va_struct = ctx.b.build_insert_value(va_struct, &va_array, 1, "va");
+        let va_struct = ctx.b.build_insert_value(va_struct, &va_array_ptr, 1, "va");
 
         // fill the array with the provided pointers
         for (vararg_index, vararg_ptr) in varargs.iter().enumerate() {

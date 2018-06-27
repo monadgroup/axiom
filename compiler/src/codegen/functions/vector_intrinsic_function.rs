@@ -50,3 +50,5 @@ define_vector_intrinsic!(SqrtFunction: block::Function::Sqrt => intrinsics::sqrt
 define_vector_intrinsic!(CeilFunction: block::Function::Ceil => intrinsics::ceil_v2f32);
 define_vector_intrinsic!(FloorFunction: block::Function::Floor => intrinsics::floor_v2f32);
 define_vector_intrinsic!(AbsFunction: block::Function::Abs => intrinsics::fabs_v2f32);
+define_vector_intrinsic!(MinFunction: block::Function::Min => intrinsics::minnum_v2f32);
+define_vector_intrinsic!(MaxFunction: block::Function::Max => intrinsics::maxnum_v2f32);

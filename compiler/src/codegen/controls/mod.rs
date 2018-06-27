@@ -72,28 +72,34 @@ pub fn get_field_type(context: &Context, field: ControlField) -> StructType {
     values::remap_type(context, &VarType::of_control_field(&field))
 }
 
-pub fn get_data_type(context: &Context, control_type: ControlType) -> StructType {
-    match control_type {
-        ControlType::Audio => AudioControl::data_type(context),
-        ControlType::Midi => MidiControl::data_type(context),
-        ControlType::AudioExtract => AudioExtractControl::data_type(context),
-        ControlType::MidiExtract => MidiExtractControl::data_type(context),
-        ControlType::Graph => GraphControl::data_type(context),
-        ControlType::Roll => RollControl::data_type(context),
-        ControlType::Scope => ScopeControl::data_type(context),
-    }
+macro_rules! map_controls {
+    ($($enum_name:ident => $class_name:ident),*) => (
+        pub fn get_data_type(context: &Context, control_type: ControlType) -> StructType {
+            match control_type {
+                $( ControlType::$enum_name => $class_name::data_type(context), )*
+            }
+        }
+
+        pub fn get_ui_type(context: &Context, control_type: ControlType) -> StructType {
+            match control_type {
+                $( ControlType::$enum_name => $class_name::ui_type(context), )*
+            }
+        }
+
+        pub fn build_funcs(module: &Module, target: &TargetProperties) {
+            $( $class_name::build_funcs(module, target); )*
+        }
+    )
 }
 
-pub fn get_ui_type(context: &Context, control_type: ControlType) -> StructType {
-    match control_type {
-        ControlType::Audio => AudioControl::ui_type(context),
-        ControlType::Midi => MidiControl::ui_type(context),
-        ControlType::AudioExtract => AudioExtractControl::ui_type(context),
-        ControlType::MidiExtract => MidiExtractControl::ui_type(context),
-        ControlType::Graph => GraphControl::data_type(context),
-        ControlType::Roll => RollControl::data_type(context),
-        ControlType::Scope => ScopeControl::data_type(context),
-    }
+map_controls! {
+    Audio => AudioControl,
+    Midi => MidiControl,
+    AudioExtract => AudioExtractControl,
+    MidiExtract => MidiExtractControl,
+    Graph => GraphControl,
+    Roll => RollControl,
+    Scope => ScopeControl
 }
 
 fn get_lifecycle_func(

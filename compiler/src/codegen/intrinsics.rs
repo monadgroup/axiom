@@ -1,8 +1,8 @@
 use codegen::util;
 use inkwell::module::{Linkage, Module};
-use inkwell::types::BasicType;
+use inkwell::types::{BasicType, VectorType};
 use inkwell::values::FunctionValue;
-use inkwell::AddressSpace;
+use inkwell::{AddressSpace, IntPredicate};
 
 pub fn memcpy(module: &Module) -> FunctionValue {
     // todo: set correct attributes on arguments
@@ -79,12 +79,32 @@ pub fn cos_v2f32(module: &Module) -> FunctionValue {
     })
 }
 
+pub fn cos_f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.cos.f32", &|| {
+        let f32_type = module.get_context().f32_type();
+        (
+            Linkage::ExternalLinkage,
+            f32_type.fn_type(&[&f32_type], false),
+        )
+    })
+}
+
 pub fn sin_v2f32(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "llvm.sin.v2f32", &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
             v2f32_type.fn_type(&[&v2f32_type], false),
+        )
+    })
+}
+
+pub fn sin_f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.sin.f32", &|| {
+        let f32_type = module.get_context().f32_type();
+        (
+            Linkage::ExternalLinkage,
+            f32_type.fn_type(&[&f32_type], false),
         )
     })
 }
@@ -127,4 +147,66 @@ pub fn fabs_v2f32(module: &Module) -> FunctionValue {
             v2f32_type.fn_type(&[&v2f32_type], false),
         )
     })
+}
+
+pub fn minnum_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.minnum.v2f32", &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+        )
+    })
+}
+
+pub fn maxnum_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.maxnum.v2f32", &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+        )
+    })
+}
+
+pub fn eucrem_v2i32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.eucrem.v2i32", &|| {
+        let v2i32_type = module.get_context().i32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2i32_type.fn_type(&[&v2i32_type, &v2i32_type], false),
+        )
+    })
+}
+
+pub fn build_intrinsics(module: &Module) {
+    build_eucrem_v2i32(module);
+}
+
+fn build_eucrem_v2i32(module: &Module) {
+    let func = eucrem_v2i32(module);
+    let context = module.get_context();
+    let entry_block = context.append_basic_block(&func, "entry");
+    let builder = context.create_builder();
+    builder.position_at_end(&entry_block);
+
+    let x_val = func.get_nth_param(0).unwrap().into_vector_value();
+    let y_val = func.get_nth_param(1).unwrap().into_vector_value();
+
+    // if we assume y is always positive (which we do here), this is equal to
+    // x % y when x is positive, otherwise x % y + y
+    let rem_val = builder.build_int_signed_rem(x_val, y_val, "rem");
+    let const_zero = VectorType::const_vector(&[
+        &context.i32_type().const_int(0, false),
+        &context.i32_type().const_int(0, false),
+    ]);
+    let lt_zero = builder.build_int_compare(IntPredicate::SLT, x_val, const_zero, "");
+    let shift_amt = builder.build_int_mul(
+        y_val,
+        builder.build_int_z_extend(lt_zero, y_val.get_type(), ""),
+        "",
+    );
+
+    let result_val = builder.build_int_add(rem_val, shift_amt, "");
+    builder.build_return(Some(&result_val));
 }
