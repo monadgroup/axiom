@@ -172,7 +172,7 @@ pub fn build_construct_func(module: &Module, block: &Block, target: &TargetPrope
                 functions::build_lifecycle_call(
                     module,
                     &mut block_ctx.ctx.b,
-                    function,
+                    *function,
                     functions::FunctionLifecycleFunc::Construct,
                     data_ptr,
                 );
@@ -261,7 +261,7 @@ pub fn build_destruct_func(module: &Module, block: &Block, target: &TargetProper
                 functions::build_lifecycle_call(
                     module,
                     &mut block_ctx.ctx.b,
-                    function,
+                    *function,
                     functions::FunctionLifecycleFunc::Destruct,
                     data_ptr,
                 );

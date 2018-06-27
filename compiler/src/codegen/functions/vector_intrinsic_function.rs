@@ -31,7 +31,7 @@ fn gen_intrinsic_call(
 
 macro_rules! define_vector_intrinsic (
     ($func_name:ident: $func_type:expr => $intrinsic_name:expr) => (
-        struct $func_name {}
+        pub struct $func_name {}
         impl Function for $func_name {
             fn function_type() -> block::Function { $func_type }
             fn gen_call(func: &mut FunctionContext, args: &[PointerValue], varargs: &VarArgs, result: PointerValue) {

@@ -57,6 +57,7 @@ fn run_code(code: &str) {
 
             println!("{:#?}", block);
             if let Err(err) = module.verify() {
+                module.print_to_stderr();
                 println!("{}", err.to_string());
             } else {
                 optimize_module(&module);

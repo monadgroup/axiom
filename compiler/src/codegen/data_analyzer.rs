@@ -1,4 +1,5 @@
-use codegen::controls::{get_data_type, get_group_type, get_ui_type};
+use codegen::controls;
+use codegen::functions;
 use codegen::TargetProperties;
 use inkwell::context::Context;
 use inkwell::types::{BasicType, StructType};
@@ -41,12 +42,13 @@ pub fn build_block_layout(
     let mut func_indexes = HashMap::new();
 
     for control in &block.controls {
-        scratch_types.push(get_data_type(context, control.control_type));
-        group_types
-            .push(get_group_type(context, control.control_type).ptr_type(AddressSpace::Generic));
+        scratch_types.push(controls::get_data_type(context, control.control_type));
+        group_types.push(
+            controls::get_group_type(context, control.control_type).ptr_type(AddressSpace::Generic),
+        );
 
         if let Some(ref mut ui_types) = ui_types {
-            ui_types.push(get_ui_type(context, control.control_type));
+            ui_types.push(controls::get_ui_type(context, control.control_type));
         }
     }
 
@@ -54,7 +56,7 @@ pub fn build_block_layout(
         if let Statement::CallFunc { function, .. } = statement {
             functions.push(*function);
             func_indexes.insert(index, scratch_types.len());
-            scratch_types.push(build_function_data_type(context, &function));
+            scratch_types.push(functions::get_data_type(context, *function));
         }
     }
 
@@ -74,10 +76,6 @@ pub fn build_block_layout(
         control_count: block.controls.len(),
         func_indexes,
     }
-}
-
-pub fn build_function_data_type(_context: &Context, _function: &Function) -> StructType {
-    unimplemented!()
 }
 
 impl BlockLayout {
