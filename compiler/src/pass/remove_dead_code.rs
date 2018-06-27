@@ -85,7 +85,11 @@ impl<'a> DeadCodeRemover<'a> {
             mir::block::Statement::Combine {
                 ref mut indexes, ..
             } => indexes.iter_mut().collect(),
-            mir::block::Statement::CallFunc { ref mut args, .. } => args.iter_mut().collect(),
+            mir::block::Statement::CallFunc {
+                ref mut args,
+                ref mut varargs,
+                ..
+            } => args.iter_mut().chain(varargs.iter_mut()).collect(),
             mir::block::Statement::StoreControl { ref mut value, .. } => vec![value],
         }
     }
