@@ -10,13 +10,13 @@ pub enum FunctionArgRange {
 
 macro_rules! func {
     (($($arg_type:expr),*) -> $return_type:expr) => (
-        FunctionData::new(false, $return_type, vec![$( ParamType::new(false, $arg_type), )*], None)
+        FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )*], None)
     );
     (($($arg_type:expr),*, $(?$optional_arg_type:expr),*) -> $return_type:expr) => (
-        FunctionData::new(false, $return_type, vec![$( ParamType::new(false, $arg_type), )* $( ParamType::new(true, $optional_arg_type) )*], None)
+        FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )* $( ParamType::new(true, $optional_arg_type) )*], None)
     );
     (($($arg_type:expr),* => $vararg_type:expr) -> $return_type:expr) => (
-        FunctionData::new(false, $return_type, vec![$( ParamType::new(false, $arg_type), )*], Some($vararg_type))
+        FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )*], Some($vararg_type))
     );
 }
 
@@ -109,7 +109,6 @@ pub struct ParamType {
 }
 
 pub struct FunctionData {
-    pub has_side_effects: bool,
     pub return_type: VarType,
     pub arg_types: Vec<ParamType>,
     pub var_arg: Option<VarType>,
@@ -128,10 +127,6 @@ impl fmt::Display for FunctionArgRange {
 }
 
 impl Function {
-    pub fn has_side_effects(&self) -> bool {
-        self.data().has_side_effects
-    }
-
     pub fn return_type(&self) -> VarType {
         self.data().return_type
     }
@@ -174,13 +169,11 @@ impl ParamType {
 
 impl FunctionData {
     pub fn new(
-        has_side_effects: bool,
         return_type: VarType,
         arg_types: Vec<ParamType>,
         var_arg: Option<VarType>,
     ) -> FunctionData {
         FunctionData {
-            has_side_effects,
             return_type,
             arg_types,
             var_arg,

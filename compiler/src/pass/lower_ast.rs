@@ -611,29 +611,24 @@ impl<'a> AstLower<'a> {
             }
         }
 
-        // if the function has no side effects and all arguments are constant, we can try to constant-fold
-        if !function.has_side_effects() {
-            let const_args: Option<Vec<_>> = args.iter()
-                .map(|index| self.get_constant(*index).cloned())
-                .collect();
+        // if all arguments are constant, we can try to constant-fold
+        // todo: might be good to only actually try this if we know the function can be constant
+        // folded
+        let const_args: Option<Vec<_>> = args.iter()
+            .map(|index| self.get_constant(*index).cloned())
+            .collect();
+        if let Some(const_args) = const_args {
             let const_varargs: Option<Vec<_>> = varargs
                 .iter()
                 .map(|index| self.get_constant(*index).cloned())
                 .collect();
 
-            if let Some(const_args) = const_args {
-                if let Some(const_varargs) = const_varargs {
-                    match constant_propagate::const_call(
-                        &function,
-                        &const_args,
-                        &const_varargs,
-                        pos,
-                    ) {
-                        Some(result) => {
-                            return Ok(self.add_statement(mir::block::Statement::Constant(result?)))
-                        }
-                        None => (),
+            if let Some(const_varargs) = const_varargs {
+                match constant_propagate::const_call(&function, &const_args, &const_varargs, pos) {
+                    Some(result) => {
+                        return Ok(self.add_statement(mir::block::Statement::Constant(result?)))
                     }
+                    None => (),
                 }
             }
         }
