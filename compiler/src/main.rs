@@ -49,8 +49,6 @@ fn run_code(code: &str) {
             let module = context.create_module("test");
             let target = codegen::TargetProperties::new(true);
 
-            use codegen::controls::Control;
-            use codegen::functions::Function;
             let codegen_start = time::precise_time_s();
             codegen::intrinsics::build_intrinsics(&module);
             codegen::controls::build_funcs(&module, &target);

@@ -1,7 +1,6 @@
 use super::{Function, FunctionContext, VarArgs};
 use codegen::intrinsics;
 use codegen::values::NumValue;
-use inkwell::module::Module;
 use inkwell::values::{BasicValue, FunctionValue, PointerValue};
 use mir::block;
 

@@ -12,7 +12,6 @@ mod gen_store_control;
 mod gen_unary_op;
 
 use self::block_context::BlockContext;
-use ast::ControlType;
 use codegen::{
     build_context_function, controls, data_analyzer, functions, util, BuilderContext,
     LifecycleFunc, TargetProperties,

@@ -4,7 +4,6 @@ mod scalar_intrinsic_function;
 mod vector_intrinsic_function;
 mod vector_shuffle_function;
 
-use codegen::LifecycleFunc;
 use codegen::{build_context_function, util, values, BuilderContext};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -16,7 +15,7 @@ use inkwell::values::{
 };
 use inkwell::AddressSpace;
 use mir::{block, VarType};
-use std::{fmt, ops};
+use std::fmt;
 
 use self::function_context::FunctionContext;
 
@@ -320,9 +319,9 @@ pub trait Function {
         context.struct_type(&[], false)
     }
 
-    fn gen_construct(func: &mut FunctionContext) {}
+    fn gen_construct(_func: &mut FunctionContext) {}
 
-    fn gen_real_args(ctx: &mut BuilderContext, args: Vec<PointerValue>) -> Vec<PointerValue> {
+    fn gen_real_args(_ctx: &mut BuilderContext, args: Vec<PointerValue>) -> Vec<PointerValue> {
         args
     }
 
@@ -333,7 +332,7 @@ pub trait Function {
         result: PointerValue,
     );
 
-    fn gen_destruct(func: &mut FunctionContext) {}
+    fn gen_destruct(_func: &mut FunctionContext) {}
 
     fn build_lifecycle_funcs(module: &Module) {
         build_lifecycle_func(

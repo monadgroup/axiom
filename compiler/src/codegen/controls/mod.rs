@@ -27,7 +27,6 @@ use inkwell::types::StructType;
 use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::AddressSpace;
 use mir::VarType;
-use std::fmt;
 
 pub type ControlFieldGeneratorCb = Fn(&mut ControlContext, PointerValue);
 

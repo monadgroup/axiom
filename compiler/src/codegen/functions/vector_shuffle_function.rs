@@ -1,9 +1,7 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::intrinsics;
 use codegen::values::NumValue;
-use inkwell::module::Module;
 use inkwell::types::VectorType;
-use inkwell::values::{BasicValue, FunctionValue, PointerValue};
+use inkwell::values::PointerValue;
 use mir::block;
 
 fn gen_shuffle_call(

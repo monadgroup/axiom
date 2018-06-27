@@ -2,12 +2,10 @@ use super::{Function, FunctionContext, VarArgs};
 use codegen::values::NumValue;
 use codegen::{intrinsics, util};
 use inkwell::context::Context;
-use inkwell::module::{Linkage, Module};
-use inkwell::types::{BasicType, StructType, VectorType};
-use inkwell::values::{BasicValue, FunctionValue, PointerValue};
+use inkwell::types::{StructType, VectorType};
+use inkwell::values::PointerValue;
 use mir::block;
 use std::f32::consts;
-use std::iter;
 
 pub struct ToRadFunction {}
 impl Function for ToRadFunction {

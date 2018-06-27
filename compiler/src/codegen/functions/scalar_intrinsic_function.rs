@@ -1,9 +1,9 @@
 use super::{Function, FunctionContext, VarArgs};
 use codegen::util;
 use codegen::values::NumValue;
-use inkwell::module::{Linkage, Module};
+use inkwell::module::Linkage;
 use inkwell::types::BasicType;
-use inkwell::values::{BasicValue, FunctionValue, PointerValue};
+use inkwell::values::{BasicValue, PointerValue};
 use mir::block;
 use std::iter;
 
