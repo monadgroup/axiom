@@ -1,3 +1,4 @@
+extern crate divrem;
 extern crate inkwell;
 extern crate ordered_float;
 extern crate regex;

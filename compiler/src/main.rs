@@ -1,6 +1,7 @@
 use std::io;
 use std::io::BufRead;
 
+extern crate divrem;
 extern crate inkwell;
 extern crate ordered_float;
 extern crate regex;
@@ -49,9 +50,8 @@ fn run_code(code: &str) {
             use codegen::controls::Control;
             use codegen::functions::Function;
             let codegen_start = time::precise_time_s();
-            codegen::controls::AudioControl::build_funcs(&module, &target);
-            codegen::functions::SinFunction::build_lifecycle_funcs(&module);
-            codegen::functions::TanFunction::build_lifecycle_funcs(&module);
+            codegen::controls::build_funcs(&module, &target);
+            codegen::functions::build_funcs(&module);
 
             codegen::block::build_construct_func(&module, &block, &target);
             codegen::block::build_update_func(&module, &block, &target);

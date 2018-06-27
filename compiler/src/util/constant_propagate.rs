@@ -1,4 +1,5 @@
 use ast::{FormType, OperatorType, SourceRange, UnaryOperation};
+use divrem::RemEuclid;
 use mir::block::Function;
 use mir::{ConstantNum, ConstantTuple, ConstantValue, VarType};
 use std::f32::consts;
@@ -249,9 +250,10 @@ pub fn const_call(
         })),
         Function::Sequence => Some(
             consts_to_nums(args.iter().chain(varargs.iter()), range).and_then(|args| {
-                let param_count = args.len() - 1;
-                let left_index = (args[0].left as usize) % param_count;
-                let right_index = (args[0].right as usize) % param_count;
+                let param_count = args.len() as isize - 1;
+
+                let left_index = (args[0].left as isize).rem_euclid(param_count) as usize;
+                let right_index = (args[0].right as isize).rem_euclid(param_count) as usize;
 
                 Ok(ConstantValue::new_num(
                     args[left_index + 1].left,
