@@ -161,37 +161,65 @@ fn main() {
         vec![ValueGroup::new(VarType::Num, ValueGroupSource::None)],
         vec![Node::new(
             vec![ValueSocket::new(0, true, false, false)],
-            NodeData::Custom(block_id),
+            NodeData::Custom(block_id.clone()),
         )],
     );
     ctx.register_surface(surface);
 
-    let parent_id = SurfaceId::new("root".to_string(), &mut ctx);
+    /*let parent_id = SurfaceId::new("root".to_string(), &mut ctx);
     let mut parent = Surface::new(
         parent_id.clone(),
         vec![ValueGroup::new(VarType::Num, ValueGroupSource::None)],
         vec![Node::new(vec![], NodeData::Group(surface_id))],
     );
-    ctx.register_surface(parent);
+    ctx.register_surface(parent);*/
 
     println!("{:#?}", ctx);
 
     let context = inkwell::context::Context::create();
-    let target = TargetProperties::new(true, false);
-    let layout = data_analyzer::build_surface_layout(
-        &context,
+    let module = context.create_module("test");
+    let target = TargetProperties::new(true, true);
+
+    // build standard library
+    codegen::intrinsics::build_intrinsics(&module);
+    codegen::controls::build_funcs(&module, &target);
+    codegen::functions::build_funcs(&module, &target);
+
+    // build the block
+    let block_ref = ctx.block(&block_id).unwrap();
+    codegen::block::build_construct_func(&module, block_ref, &target);
+    codegen::block::build_update_func(&module, block_ref, &target);
+    codegen::block::build_destruct_func(&module, block_ref, &target);
+
+    // build the surface
+    let surface_ref = ctx.surface(&surface_id).unwrap();
+    codegen::surface::build_lifecycle_func(
+        &module,
         &ctx,
-        ctx.surface(&parent_id).unwrap(),
+        surface_ref,
         &target,
+        LifecycleFunc::Construct,
     );
-    println!("{:#?}", layout);
+    codegen::surface::build_lifecycle_func(
+        &module,
+        &ctx,
+        surface_ref,
+        &target,
+        LifecycleFunc::Update,
+    );
+    codegen::surface::build_lifecycle_func(
+        &module,
+        &ctx,
+        surface_ref,
+        &target,
+        LifecycleFunc::Destruct,
+    );
 
-    /*let block = Block::new(
-        BlockId::new("block", &mut ctx),
-
-    )*/
-
-    /*let node = Node::new(
-
-    )*/
+    if let Err(e) = module.verify() {
+        module.print_to_stderr();
+        println!("{}", e.to_string());
+    } else {
+        optimize_module(&module);
+        module.print_to_stderr();
+    }
 }

@@ -203,7 +203,7 @@ pub fn build_field_set(
     in_val: PointerValue,
 ) {
     let func = get_field_setter_func(module, field);
-    builder.build_call(&func, &[&group_ptr, &data_ptr, &in_val], "field.set", false);
+    builder.build_call(&func, &[&group_ptr, &data_ptr, &in_val], "", false);
 }
 
 pub fn build_lifecycle_call(

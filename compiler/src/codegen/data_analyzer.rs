@@ -172,6 +172,9 @@ pub fn build_block_layout(
 ///  - `initialized` is a struct containing pre-initialized value group values.
 ///  - `scratch` is a struct initialized to zero, containing the scratch data for each node and groups that are initialized to zero.
 ///  - `pointers` is a struct initialized to pointers to other structs.
+///
+// todo: this is quite an expensive operation (since it recurses all the way through the tree) - it
+// would be good to be able to cache layouts, maybe on the MIRContext?
 pub fn build_surface_layout(
     context: &Context,
     mir: &MIRContext,
@@ -285,11 +288,11 @@ fn remap_pointer_source(
 }
 
 impl NodeLayout {
-    pub fn scratch_index(&self) -> usize {
+    pub fn scratch_index() -> usize {
         0
     }
 
-    pub fn ui_index(&self) -> usize {
+    pub fn ui_index() -> usize {
         1
     }
 }
@@ -317,5 +320,9 @@ impl SurfaceLayout {
 
     pub fn node_index(&self, node: usize) -> usize {
         self.group_count + node
+    }
+
+    pub fn node_ptr_index(&self, node: usize) -> usize {
+        node
     }
 }

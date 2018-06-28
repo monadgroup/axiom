@@ -16,6 +16,7 @@ pub use self::target_properties::TargetProperties;
 
 use std::fmt;
 
+#[derive(Debug, Clone, Copy)]
 pub enum LifecycleFunc {
     Construct,
     Update,
