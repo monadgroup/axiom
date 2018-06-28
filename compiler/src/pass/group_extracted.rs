@@ -89,8 +89,12 @@ impl<'a> GroupExtractor<'a> {
                 mir::ValueGroupSource::Socket(new_group_index),
             ));
 
-            // todo: determine value_written and value_read properly
-            new_sockets.push(mir::ValueSocket::new(parent_group_index, true, true, false));
+            new_sockets.push(mir::ValueSocket::new(
+                parent_group_index,
+                false,
+                false,
+                false,
+            ));
 
             new_value_group_indexes.insert(parent_group_index, new_group_index);
         }
@@ -103,6 +107,14 @@ impl<'a> GroupExtractor<'a> {
             for socket in new_node.sockets.iter_mut() {
                 let remapped_id = new_value_group_indexes[&socket.group_id];
                 socket.group_id = remapped_id;
+
+                // update the sockets `value_written` and `value_read` flags
+                if socket.value_written {
+                    new_sockets[remapped_id].value_written = true;
+                }
+                if sockets.value_read {
+                    new_sockets[remapped_id].value_read = true;
+                }
             }
 
             new_nodes.push(new_node)
@@ -163,19 +175,11 @@ impl<'a> GroupExtractor<'a> {
                     trace_queue.push_back(socket.group_id);
 
                     if socket.value_written {
-                        println!(
-                            "Socket {:?} writes to control group {}, extractor group {}",
-                            socket_ref, socket.group_id, extract_group_index
-                        );
                         extract_groups[extract_group_index]
                             .sources
                             .push(socket.group_id);
                     }
                     if socket.value_read {
-                        println!(
-                            "Socket {:?} reads from control group {}, extractor group {}",
-                            socket_ref, socket.group_id, extract_group_index
-                        );
                         extract_groups[extract_group_index]
                             .destinations
                             .push(socket.group_id);
@@ -191,10 +195,6 @@ impl<'a> GroupExtractor<'a> {
         // We only propagate into nodes where their socket _reads_ from a group, and never propagate into extract sockets
         while let Some(value_group_index) = trace_queue.pop_front() {
             let extract_group_index = value_group_extracts[&value_group_index];
-            println!(
-                "Checking out value group {}, linked to extract group {}",
-                value_group_index, extract_group_index
-            );
 
             extract_groups[extract_group_index]
                 .value_groups
@@ -207,20 +207,11 @@ impl<'a> GroupExtractor<'a> {
                 let connected_node = &self.surface.nodes[connected_node_index];
                 let connected_socket = &connected_node.sockets[connected_socket_index];
 
-                println!(
-                    "Spreading to node {} through socket {}",
-                    connected_node_index, connected_socket_index
-                );
-
                 // if the node already has an extractor group, merge it with ours and stop there
                 // otherwise, it becomes part of our group and we propagate to all of its value groups
                 if let Some(connected_extract_group_index) =
                     node_extracts.get(&connected_node_index).cloned()
                 {
-                    println!(
-                        "Merging groups {} and {}",
-                        extract_group_index, connected_extract_group_index
-                    );
                     GroupExtractor::merge_extract_groups(
                         extract_group_index,
                         connected_extract_group_index,
