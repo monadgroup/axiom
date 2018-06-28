@@ -150,7 +150,7 @@ fn main() {
     let block_id = BlockId::new("block".to_string(), &mut ctx);
     let mut block = lower_ast(
         block_id.clone(),
-        &Parser::parse(&mut get_token_stream("out:num = 10\n")).unwrap(),
+        &Parser::parse(&mut get_token_stream("out:num = min(in:num, 10)\n")).unwrap(),
     ).unwrap();
     remove_dead_code(&mut block);
     ctx.register_block(block);
@@ -158,27 +158,36 @@ fn main() {
     let surface_id = SurfaceId::new("surface".to_string(), &mut ctx);
     let mut surface = Surface::new(
         surface_id.clone(),
-        vec![ValueGroup::new(VarType::Num, ValueGroupSource::None)],
+        vec![
+            ValueGroup::new(VarType::Num, ValueGroupSource::None),
+            ValueGroup::new(VarType::Num, ValueGroupSource::Socket(0)),
+        ],
         vec![Node::new(
-            vec![ValueSocket::new(0, true, false, false)],
+            vec![
+                ValueSocket::new(1, false, true, false),
+                ValueSocket::new(0, true, false, false),
+            ],
             NodeData::Custom(block_id.clone()),
         )],
     );
     ctx.register_surface(surface);
 
-    /*let parent_id = SurfaceId::new("root".to_string(), &mut ctx);
+    let parent_id = SurfaceId::new("root".to_string(), &mut ctx);
     let mut parent = Surface::new(
         parent_id.clone(),
         vec![ValueGroup::new(VarType::Num, ValueGroupSource::None)],
-        vec![Node::new(vec![], NodeData::Group(surface_id))],
+        vec![Node::new(
+            vec![ValueSocket::new(0, false, true, false)],
+            NodeData::Group(surface_id.clone()),
+        )],
     );
-    ctx.register_surface(parent);*/
+    ctx.register_surface(parent);
 
     println!("{:#?}", ctx);
 
     let context = inkwell::context::Context::create();
     let module = context.create_module("test");
-    let target = TargetProperties::new(true, true);
+    let target = TargetProperties::new(true, false);
 
     // build standard library
     codegen::intrinsics::build_intrinsics(&module);
@@ -186,40 +195,26 @@ fn main() {
     codegen::functions::build_funcs(&module, &target);
 
     // build the block
+    println!("Building block");
     let block_ref = ctx.block(&block_id).unwrap();
-    codegen::block::build_construct_func(&module, block_ref, &target);
-    codegen::block::build_update_func(&module, block_ref, &target);
-    codegen::block::build_destruct_func(&module, block_ref, &target);
+    codegen::block::build_funcs(&module, block_ref, &target);
 
     // build the surface
+    println!("Building first surface");
     let surface_ref = ctx.surface(&surface_id).unwrap();
-    codegen::surface::build_lifecycle_func(
-        &module,
-        &ctx,
-        surface_ref,
-        &target,
-        LifecycleFunc::Construct,
-    );
-    codegen::surface::build_lifecycle_func(
-        &module,
-        &ctx,
-        surface_ref,
-        &target,
-        LifecycleFunc::Update,
-    );
-    codegen::surface::build_lifecycle_func(
-        &module,
-        &ctx,
-        surface_ref,
-        &target,
-        LifecycleFunc::Destruct,
-    );
+    codegen::surface::build_funcs(&module, &ctx, surface_ref, &target);
 
+    // build the parent surface
+    println!("Building parent surface");
+    let parent_ref = ctx.surface(&parent_id).unwrap();
+    codegen::surface::build_funcs(&module, &ctx, parent_ref, &target);
+
+    println!("Done");
     if let Err(e) = module.verify() {
         module.print_to_stderr();
         println!("{}", e.to_string());
     } else {
-        optimize_module(&module);
+        //optimize_module(&module);
         module.print_to_stderr();
     }
 }

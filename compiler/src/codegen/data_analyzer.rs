@@ -41,7 +41,8 @@ pub struct SurfaceLayout {
     pub scratch_struct: StructType,
     pub pointer_struct: StructType,
     pub pointer_sources: Vec<PointerSource>,
-    group_count: usize,
+    node_scratch_offset: usize,
+    node_initializer_offset: usize,
 }
 
 /// Builds up the structure types used for initializing/retaining state of a node.
@@ -210,6 +211,9 @@ pub fn build_surface_layout(
         })
         .collect();
 
+    let node_scratch_offset = scratch_types.len();
+    let node_initializer_offset = initialized_values.len();
+
     for node in &surface.nodes {
         let layout = build_node_layout(context, mir, node, target);
         let initialized_index = initialized_values.len();
@@ -248,7 +252,8 @@ pub fn build_surface_layout(
         scratch_struct: context.struct_type(&scratch_type_refs, false),
         pointer_struct: context.struct_type(&pointer_type_refs, false),
         pointer_sources,
-        group_count: surface.groups.len(),
+        node_scratch_offset,
+        node_initializer_offset,
     }
 }
 
@@ -318,8 +323,12 @@ impl SurfaceLayout {
         group
     }
 
-    pub fn node_index(&self, node: usize) -> usize {
-        self.group_count + node
+    pub fn node_scratch_index(&self, node: usize) -> usize {
+        self.node_scratch_offset + node
+    }
+
+    pub fn node_initializer_index(&self, node: usize) -> usize {
+        self.node_initializer_offset + node
     }
 
     pub fn node_ptr_index(&self, node: usize) -> usize {

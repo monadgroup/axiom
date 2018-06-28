@@ -96,11 +96,13 @@ pub fn build_lifecycle_func(
         let pointers_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
 
         for (node_index, node) in surface.nodes.iter().enumerate() {
-            let layout_index = layout.node_index(node_index);
             let layout_ptr_index = layout.node_ptr_index(node_index);
             let node_scratch_ptr = unsafe {
-                ctx.b
-                    .build_struct_gep(&scratch_ptr, layout_index as u32, "")
+                ctx.b.build_struct_gep(
+                    &scratch_ptr,
+                    layout.node_scratch_index(node_index) as u32,
+                    "",
+                )
             };
             let node_pointers_ptr = unsafe {
                 ctx.b
@@ -120,6 +122,17 @@ pub fn build_lifecycle_func(
 
         ctx.b.build_return(None);
     })
+}
+
+pub fn build_funcs(
+    module: &Module,
+    mir: &MIRContext,
+    surface: &Surface,
+    target: &TargetProperties,
+) {
+    build_lifecycle_func(module, mir, surface, target, LifecycleFunc::Construct);
+    build_lifecycle_func(module, mir, surface, target, LifecycleFunc::Update);
+    build_lifecycle_func(module, mir, surface, target, LifecycleFunc::Destruct);
 }
 
 pub fn build_lifecycle_call(

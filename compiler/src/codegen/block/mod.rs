@@ -269,6 +269,12 @@ pub fn build_destruct_func(module: &Module, block: &Block, target: &TargetProper
     )
 }
 
+pub fn build_funcs(module: &Module, block: &Block, target: &TargetProperties) {
+    build_construct_func(module, block, target);
+    build_update_func(module, block, target);
+    build_destruct_func(module, block, target);
+}
+
 pub fn build_lifecycle_call(
     module: &Module,
     builder: &mut Builder,
