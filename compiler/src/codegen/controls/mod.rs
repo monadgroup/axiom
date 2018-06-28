@@ -41,6 +41,7 @@ pub trait ControlFieldGenerator {
 
 struct PrivateGenerator<'a> {
     module: &'a Module,
+    target: &'a TargetProperties,
 }
 
 impl<'a> ControlFieldGenerator for PrivateGenerator<'a> {
@@ -53,11 +54,13 @@ impl<'a> ControlFieldGenerator for PrivateGenerator<'a> {
         build_field_func(
             self.module,
             get_field_getter_func(self.module, field),
+            self.target,
             get_cb,
         );
         build_field_func(
             self.module,
             get_field_setter_func(self.module, field),
+            self.target,
             set_cb,
         );
     }
@@ -231,11 +234,12 @@ pub fn build_ui_lifecycle_call(
 fn build_lifecycle_func(
     module: &Module,
     control: ControlType,
+    target: &TargetProperties,
     lifecycle: LifecycleFunc,
     builder: &Fn(&mut ControlContext),
 ) {
     let func = get_lifecycle_func(module, control, lifecycle);
-    build_context_function(module, func, &|ctx: BuilderContext| {
+    build_context_function(module, func, target, &|ctx: BuilderContext| {
         let val_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let data_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let mut control_context = ControlContext {
@@ -252,11 +256,12 @@ fn build_lifecycle_func(
 fn build_ui_lifecycle_func(
     module: &Module,
     control: ControlType,
+    target: &TargetProperties,
     lifecycle: LifecycleFunc,
     builder: &Fn(&mut ControlUiContext),
 ) {
     let func = get_ui_lifecycle_func(module, control, lifecycle);
-    build_context_function(module, func, &|ctx: BuilderContext| {
+    build_context_function(module, func, target, &|ctx: BuilderContext| {
         let val_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let data_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let ui_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
@@ -272,8 +277,13 @@ fn build_ui_lifecycle_func(
     });
 }
 
-fn build_field_func(module: &Module, func: FunctionValue, builder: &ControlFieldGeneratorCb) {
-    build_context_function(module, func, &|ctx: BuilderContext| {
+fn build_field_func(
+    module: &Module,
+    func: FunctionValue,
+    target: &TargetProperties,
+    builder: &ControlFieldGeneratorCb,
+) {
+    build_context_function(module, func, target, &|ctx: BuilderContext| {
         let val_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let data_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let field_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
@@ -313,58 +323,64 @@ pub trait Control {
 
     fn gen_fields(generator: &ControlFieldGenerator);
 
-    fn build_lifecycle_funcs(module: &Module) {
+    fn build_lifecycle_funcs(module: &Module, target: &TargetProperties) {
         build_lifecycle_func(
             module,
             Self::control_type(),
+            target,
             LifecycleFunc::Construct,
             &Self::gen_construct,
         );
         build_lifecycle_func(
             module,
             Self::control_type(),
+            target,
             LifecycleFunc::Update,
             &Self::gen_update,
         );
         build_lifecycle_func(
             module,
             Self::control_type(),
+            target,
             LifecycleFunc::Destruct,
             &Self::gen_destruct,
         );
     }
 
-    fn build_ui_lifecycle_funcs(module: &Module) {
+    fn build_ui_lifecycle_funcs(module: &Module, target: &TargetProperties) {
         build_ui_lifecycle_func(
             module,
             Self::control_type(),
+            target,
             LifecycleFunc::Construct,
             &Self::gen_ui_construct,
         );
         build_ui_lifecycle_func(
             module,
             Self::control_type(),
+            target,
             LifecycleFunc::Update,
             &Self::gen_ui_update,
         );
         build_ui_lifecycle_func(
             module,
             Self::control_type(),
+            target,
             LifecycleFunc::Destruct,
             &Self::gen_ui_destruct,
         );
     }
 
-    fn build_field_funcs(module: &Module) {
-        Self::gen_fields(&PrivateGenerator { module });
+    fn build_field_funcs(module: &Module, target: &TargetProperties) {
+        Self::gen_fields(&PrivateGenerator { module, target });
     }
 
     fn build_funcs(module: &Module, target: &TargetProperties) {
-        Self::build_lifecycle_funcs(module);
-        Self::build_field_funcs(module);
+        Self::build_lifecycle_funcs(module, target);
+        Self::build_field_funcs(module, target);
 
         if target.include_ui {
-            Self::build_ui_lifecycle_funcs(module);
+            Self::build_ui_lifecycle_funcs(module, target);
         }
     }
 }

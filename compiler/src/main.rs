@@ -47,12 +47,12 @@ fn run_code(code: &str) {
 
             let context = inkwell::context::Context::create();
             let module = context.create_module("test");
-            let target = codegen::TargetProperties::new(true);
+            let target = codegen::TargetProperties::new(true, false);
 
             let codegen_start = time::precise_time_s();
             codegen::intrinsics::build_intrinsics(&module);
             codegen::controls::build_funcs(&module, &target);
-            codegen::functions::build_funcs(&module);
+            codegen::functions::build_funcs(&module, &target);
 
             codegen::block::build_construct_func(&module, &block, &target);
             codegen::block::build_update_func(&module, &block, &target);

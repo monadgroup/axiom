@@ -117,7 +117,7 @@ fn build_lifecycle_func(
     cb: &Fn(&mut BlockContext),
 ) {
     let func = get_lifecycle_func(module, block, target, lifecycle);
-    build_context_function(module, func, &|ctx: BuilderContext| {
+    build_context_function(module, func, target, &|ctx: BuilderContext| {
         let layout = data_analyzer::build_block_layout(&module.get_context(), block, target);
         let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let group_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();

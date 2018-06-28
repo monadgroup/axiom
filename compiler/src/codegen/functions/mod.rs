@@ -4,7 +4,7 @@ mod scalar_intrinsic_function;
 mod vector_intrinsic_function;
 mod vector_shuffle_function;
 
-use codegen::{build_context_function, util, values, BuilderContext};
+use codegen::{build_context_function, util, values, BuilderContext, TargetProperties};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -77,8 +77,8 @@ macro_rules! map_functions {
             }
         }
 
-        pub fn build_funcs(module: &Module) {
-            $( $class_name::build_lifecycle_funcs(module); )*
+        pub fn build_funcs(module: &Module, target: &TargetProperties) {
+            $( $class_name::build_lifecycle_funcs(module, target); )*
         }
 
         fn map_real_args(function_type: block::Function, ctx: &mut BuilderContext, args: Vec<PointerValue>) -> Vec<PointerValue> {
@@ -190,11 +190,12 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
 fn build_lifecycle_func(
     module: &Module,
     function: block::Function,
+    target: &TargetProperties,
     lifecycle: FunctionLifecycleFunc,
     builder: &Fn(&mut FunctionContext),
 ) {
     let func = get_lifecycle_func(module, function, lifecycle);
-    build_context_function(module, func, &|ctx: BuilderContext| {
+    build_context_function(module, func, target, &|ctx: BuilderContext| {
         let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let mut function_context = FunctionContext { ctx, data_ptr };
         builder(&mut function_context);
@@ -206,10 +207,11 @@ fn build_lifecycle_func(
 fn build_update_func(
     module: &Module,
     function: block::Function,
+    target: &TargetProperties,
     builder: &Fn(&mut FunctionContext, &[PointerValue], Option<VarArgs>, PointerValue),
 ) {
     let func = get_update_func(module, function);
-    build_context_function(module, func, &|ctx: BuilderContext| {
+    build_context_function(module, func, target, &|ctx: BuilderContext| {
         let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let return_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let has_vararg = function.var_arg().is_some();
@@ -334,17 +336,19 @@ pub trait Function {
 
     fn gen_destruct(_func: &mut FunctionContext) {}
 
-    fn build_lifecycle_funcs(module: &Module) {
+    fn build_lifecycle_funcs(module: &Module, target: &TargetProperties) {
         build_lifecycle_func(
             module,
             Self::function_type(),
+            target,
             FunctionLifecycleFunc::Construct,
             &Self::gen_construct,
         );
-        build_update_func(module, Self::function_type(), &Self::gen_call);
+        build_update_func(module, Self::function_type(), target, &Self::gen_call);
         build_lifecycle_func(
             module,
             Self::function_type(),
+            target,
             FunctionLifecycleFunc::Destruct,
             &Self::gen_destruct,
         );
