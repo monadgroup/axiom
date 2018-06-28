@@ -91,6 +91,13 @@ impl VarType {
             ControlField::MidiExtract(MidiExtractField::Value) => VarType::new_array(VarType::Midi),
         }
     }
+
+    pub fn base_type(&self) -> Option<&VarType> {
+        match self {
+            VarType::Array(base) => Some(base.as_ref()),
+            _ => None,
+        }
+    }
 }
 
 impl fmt::Display for VarType {

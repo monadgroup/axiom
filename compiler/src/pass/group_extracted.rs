@@ -84,8 +84,17 @@ impl<'a> GroupExtractor<'a> {
         for &parent_group_index in &extract_group.value_groups {
             let new_group_index = new_value_groups.len();
             let parent_group = &self.surface.groups[parent_group_index];
+
+            // Note: we expect the parent value group to have an array type here instead of
+            // 'upgrading' the group's type here or later on. This ensures we don't need to do
+            // anything messy like update sockets and value groups up the tree.
+            // Inside the extracted surface though, the group does not have an array type.
             new_value_groups.push(mir::ValueGroup::new(
-                parent_group.value_type.clone(),
+                parent_group
+                    .value_type
+                    .base_type()
+                    .unwrap_or(&parent_group.value_type)
+                    .clone(),
                 mir::ValueGroupSource::Socket(new_group_index),
             ));
 
@@ -112,7 +121,7 @@ impl<'a> GroupExtractor<'a> {
                 if socket.value_written {
                     new_sockets[remapped_id].value_written = true;
                 }
-                if sockets.value_read {
+                if socket.value_read {
                     new_sockets[remapped_id].value_read = true;
                 }
             }

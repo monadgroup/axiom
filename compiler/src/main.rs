@@ -146,7 +146,34 @@ fn optimize_module(module: &inkwell::module::Module) {
 
 fn main() {
     // build a basic MIR
-    let mut ctx = MIRContext::new();
+    let mut allocator = MIRContext::new();
+    let groups = vec![
+        ValueGroup::new(VarType::new_array(VarType::Num), ValueGroupSource::None),
+        ValueGroup::new(VarType::Num, ValueGroupSource::Socket(0)),
+    ];
+    let nodes = vec![
+        Node::new(
+            vec![ValueSocket::new(0, true, false, true)],
+            NodeData::Custom(BlockId::new("source1".to_string(), &mut allocator)),
+        ),
+        Node::new(
+            vec![
+                ValueSocket::new(0, false, true, false),
+                ValueSocket::new(1, true, false, false),
+            ],
+            NodeData::Custom(BlockId::new("reader1".to_string(), &mut allocator)),
+        ),
+    ];
+    let mut surface = Surface::new(
+        SurfaceId::new("test".to_string(), &mut allocator),
+        groups,
+        nodes,
+    );
+    let new_surfaces = group_extracted(&mut surface, &mut allocator);
+    println!("Surface now: {:#?}", surface);
+    println!("New surfaces: {:#?}", new_surfaces);
+
+    /*let mut ctx = MIRContext::new();
     let block_id = BlockId::new("block".to_string(), &mut ctx);
     let mut block = lower_ast(
         block_id.clone(),
@@ -216,5 +243,5 @@ fn main() {
     } else {
         //optimize_module(&module);
         module.print_to_stderr();
-    }
+    }*/
 }
