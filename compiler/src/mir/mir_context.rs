@@ -44,9 +44,13 @@ impl MIRContext {
         self.blocks.get_mut(id)
     }
 
-    /*pub fn commit(&mut self, transaction: Transaction) {
-        unimplemented!();
-    }*/
+    pub fn register_surface(&mut self, surface: Surface) {
+        self.surfaces.insert(surface.id.clone(), surface);
+    }
+
+    pub fn register_block(&mut self, block: Block) {
+        self.blocks.insert(block.id.clone(), block);
+    }
 }
 
 impl IdAllocator for MIRContext {

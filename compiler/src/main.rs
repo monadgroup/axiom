@@ -146,129 +146,52 @@ fn optimize_module(module: &inkwell::module::Module) {
 
 fn main() {
     // build a basic MIR
-    /*let groups = vec![
-        ValueGroup::new(VarType::Num, None, None),
-        ValueGroup::new(VarType::Num, None, None),
-        ValueGroup::new(VarType::Num, None, None),
-        ValueGroup::new(VarType::Num, None, None),
-    ];
-    let nodes = vec![
-        Node::new(
-            vec![ValueSocket::new(0, true, false, true)],
-            Vec::new(),
-            NodeData::Custom(BlockId::new_with_id("source1".to_string(), 0)),
-        ),
-        Node::new(
-            vec![
-                ValueSocket::new(0, false, true, false),
-                ValueSocket::new(1, true, false, true),
-            ],
-            Vec::new(),
-            NodeData::Custom(BlockId::new_with_id("reader1".to_string(), 1)),
-        ),
-        Node::new(
-            vec![
-                ValueSocket::new(1, false, true, false),
-                ValueSocket::new(2, true, false, false),
-            ],
-            Vec::new(),
-            NodeData::Custom(BlockId::new_with_id("reader2".to_string(), 2)),
-        ),
-        Node::new(
-            vec![
-                ValueSocket::new(2, false, true, true),
-                ValueSocket::new(3, true, false, false),
-            ],
-            Vec::new(),
-            NodeData::Custom(BlockId::new_with_id("reader3".to_string(), 3)),
-        ),
-        Node::new(
-            vec![ValueSocket::new(3, false, true, true)],
-            Vec::new(),
-            NodeData::Custom(BlockId::new_with_id("reader4".to_string(), 4)),
-        ),
-    ];*/
-    /*let mut allocator = MIRContext::new();
-    let groups = vec![
-        ValueGroup::new(VarType::Num, None, None),
-        ValueGroup::new(VarType::Num, None, None),
-        ValueGroup::new(VarType::Num, None, None),
-    ];
-    let nodes = vec![
-        Node::new(
-            vec![ValueSocket::new(1, true, false, true)],
-            NodeData::Custom(BlockId::new("source".to_string(), &mut allocator)),
-        ),
-        Node::new(
-            vec![
-                ValueSocket::new(1, false, true, false),
-                ValueSocket::new(2, false, true, false),
-            ],
-            NodeData::Custom(BlockId::new("middle".to_string(), &mut allocator)),
-        ),
-    ];
+    let mut ctx = MIRContext::new();
+    let block_id = BlockId::new("block".to_string(), &mut ctx);
+    let mut block = lower_ast(
+        block_id.clone(),
+        &Parser::parse(&mut get_token_stream("out:num = 10\n")).unwrap(),
+    ).unwrap();
+    remove_dead_code(&mut block);
+    ctx.register_block(block);
+
+    let surface_id = SurfaceId::new("surface".to_string(), &mut ctx);
     let mut surface = Surface::new(
-        SurfaceId::new("test".to_string(), &mut allocator),
-        groups,
-        nodes,
+        surface_id.clone(),
+        vec![ValueGroup::new(VarType::Num, ValueGroupSource::None)],
+        vec![Node::new(
+            vec![ValueSocket::new(0, true, false, false)],
+            NodeData::Custom(block_id),
+        )],
     );
-    let group_start_time = time::precise_time_s();
-    let new_surfaces = group_extracted(&mut surface, &mut allocator);
-    println!(
-        "Grouping took {}s",
-        time::precise_time_s() - group_start_time
+    ctx.register_surface(surface);
+
+    let parent_id = SurfaceId::new("root".to_string(), &mut ctx);
+    let mut parent = Surface::new(
+        parent_id.clone(),
+        vec![ValueGroup::new(VarType::Num, ValueGroupSource::None)],
+        vec![Node::new(vec![], NodeData::Group(surface_id))],
     );
-    println!("Surface now: {:#?}", surface);
-    println!("New surfaces: {:#?}", new_surfaces);*/
+    ctx.register_surface(parent);
 
-    loop {
-        do_repl();
-    }
+    println!("{:#?}", ctx);
 
-    /*let context = inkwell::context::Context::create();
-    let module = context.create_module("test");
-    codegen::converters::build_convert_func(&module, &ast::FormType::None);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Amplitude);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Beats);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Control);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Db);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Frequency);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Note);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Oscillator);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Q);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Samples);
-    codegen::converters::build_convert_func(&module, &ast::FormType::Seconds);
+    let context = inkwell::context::Context::create();
+    let target = TargetProperties::new(true, false);
+    let layout = data_analyzer::build_surface_layout(
+        &context,
+        &ctx,
+        ctx.surface(&parent_id).unwrap(),
+        &target,
+    );
+    println!("{:#?}", layout);
 
-    use codegen::controls::Control;
-    codegen::controls::build_funcs::<codegen::controls::AudioControl>(&module);
-    codegen::controls::build_funcs::<codegen::controls::AudioExtractControl>(&module);
-    codegen::controls::build_funcs::<codegen::controls::GraphControl>(&module);
-    codegen::controls::build_funcs::<codegen::controls::MidiControl>(&module);
-    codegen::controls::build_funcs::<codegen::controls::MidiExtractControl>(&module);
-    codegen::controls::build_funcs::<codegen::controls::RollControl>(&module);
-    codegen::controls::build_funcs::<codegen::controls::ScopeControl>(&module);
+    /*let block = Block::new(
+        BlockId::new("block", &mut ctx),
 
-    if let Err(result_str) = module.verify() {
-        println!("{}", result_str.to_string());
-        return;
-    }
+    )*/
 
-    let pass_manager_builder = inkwell::passes::PassManagerBuilder::create();
-    pass_manager_builder.set_optimization_level(inkwell::OptimizationLevel::Aggressive);
-    pass_manager_builder.set_size_level(0);
+    /*let node = Node::new(
 
-    let module_pass = inkwell::passes::PassManager::create_for_module();
-    pass_manager_builder.populate_module_pass_manager(&module_pass);
-
-    let func_pass = inkwell::passes::PassManager::create_for_function(&module);
-    pass_manager_builder.populate_function_pass_manager(&func_pass);
-
-    func_pass.initialize();
-    let func_iterator = ModuleFunctionIterator::new(&module);
-    for func in func_iterator {
-        func_pass.run_on_function(&func);
-    }
-    module_pass.run_on_module(&module);
-
-    module.print_to_stderr();*/
+    )*/
 }

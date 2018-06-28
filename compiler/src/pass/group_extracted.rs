@@ -86,8 +86,7 @@ impl<'a> GroupExtractor<'a> {
             let parent_group = &self.surface.groups[parent_group_index];
             new_value_groups.push(mir::ValueGroup::new(
                 parent_group.value_type.clone(),
-                Some(new_group_index),
-                None,
+                mir::ValueGroupSource::Socket(new_group_index),
             ));
 
             // todo: determine value_written and value_read properly

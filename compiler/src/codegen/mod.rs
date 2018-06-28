@@ -6,6 +6,7 @@ pub mod data_analyzer;
 pub mod functions;
 pub mod globals;
 pub mod intrinsics;
+pub mod surface;
 mod target_properties;
 pub mod util;
 pub mod values;

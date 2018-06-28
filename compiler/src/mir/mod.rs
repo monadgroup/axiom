@@ -16,6 +16,6 @@ pub use self::mir_context::MIRContext;
 pub use self::node::{Node, NodeData};
 pub use self::pool_id::IdAllocator;
 pub use self::surface::{Surface, SurfaceId};
-pub use self::value_group::ValueGroup;
+pub use self::value_group::{ValueGroup, ValueGroupSource};
 pub use self::value_socket::ValueSocket;
 pub use self::var_type::VarType;

@@ -1,22 +1,20 @@
 use mir::{ConstantValue, VarType};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
+pub enum ValueGroupSource {
+    None,
+    Socket(usize),
+    Default(ConstantValue),
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ValueGroup {
     pub value_type: VarType,
-    pub exposer: Option<usize>,
-    pub default_val: Option<ConstantValue>,
+    pub source: ValueGroupSource,
 }
 
 impl ValueGroup {
-    pub fn new(
-        value_type: VarType,
-        exposer: Option<usize>,
-        default_val: Option<ConstantValue>,
-    ) -> Self {
-        ValueGroup {
-            value_type,
-            exposer,
-            default_val,
-        }
+    pub fn new(value_type: VarType, source: ValueGroupSource) -> Self {
+        ValueGroup { value_type, source }
     }
 }

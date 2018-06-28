@@ -1,8 +1,9 @@
 use std::cmp::Ordering;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PoolId<T> {
     pub id: u64,
     pub debug_name: String,
@@ -32,6 +33,12 @@ impl<T> PartialOrd for PoolId<T> {
 impl<T> Hash for PoolId<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id.hash(state);
+    }
+}
+
+impl<T> fmt::Debug for PoolId<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "{}-{}", self.debug_name, self.id)
     }
 }
 
