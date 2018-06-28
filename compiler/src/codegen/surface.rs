@@ -1,11 +1,11 @@
 use codegen::{
-    block, build_context_function, data_analyzer, util, BuilderContext, LifecycleFunc,
+    block, build_context_function, data_analyzer, util, values, BuilderContext, LifecycleFunc,
     TargetProperties,
 };
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
-use inkwell::AddressSpace;
+use inkwell::{AddressSpace, IntPredicate};
 use mir::{MIRContext, Node, NodeData, Surface};
 
 fn get_lifecycle_func(
@@ -78,7 +78,163 @@ fn build_node_call(
                 pointers_ptr,
             );
         }
-        NodeData::ExtractGroup { .. } => unimplemented!(),
+        NodeData::ExtractGroup {
+            surface: surface_id,
+            source_sockets,
+            dest_sockets,
+        } => {
+            let surface = mir.surface(&surface_id).unwrap();
+
+            // if this is the update lifecycle function and there are source groups, generate a
+            // bitmap of which indices are valid
+            let valid_bitmap = if lifecycle == LifecycleFunc::Update && !source_sockets.is_empty() {
+                let first_array = values::ArrayValue::new(
+                    ctx.b
+                        .build_load(
+                            &unsafe {
+                                ctx.b
+                                    .build_struct_gep(&pointers_ptr, source_sockets[0] as u32, "")
+                            },
+                            "",
+                        )
+                        .into_pointer_value(),
+                );
+                let first_bitmap = first_array.get_bitmap(ctx.b);
+
+                Some(
+                    source_sockets
+                        .iter()
+                        .skip(1)
+                        .fold(first_bitmap, |acc, socket| {
+                            let nth_array = values::ArrayValue::new(
+                                ctx.b
+                                    .build_load(
+                                        &unsafe {
+                                            ctx.b.build_struct_gep(
+                                                &pointers_ptr,
+                                                *socket as u32,
+                                                "",
+                                            )
+                                        },
+                                        "",
+                                    )
+                                    .into_pointer_value(),
+                            );
+                            let nth_bitmap = nth_array.get_bitmap(ctx.b);
+                            ctx.b.build_or(acc, nth_bitmap, "")
+                        }),
+                )
+            } else {
+                None
+            };
+
+            // build a for loop to iterate over each instance
+            let index_ptr = ctx.allocb
+                .build_alloca(&ctx.context.i8_type(), "voiceindex.ptr");
+
+            let check_block = ctx.context.append_basic_block(&ctx.func, "voice.check");
+            let check_active_block = ctx.context
+                .append_basic_block(&ctx.func, "voice.checkactive");
+            let run_block = ctx.context.append_basic_block(&ctx.func, "voice.run");
+            let end_block = ctx.context.append_basic_block(&ctx.func, "voice.end");
+
+            ctx.b.build_unconditional_branch(&check_block);
+            ctx.b.position_at_end(&check_block);
+
+            let current_index = ctx.b.build_load(&index_ptr, "voiceindex").into_int_value();
+            let iter_limit = ctx.context
+                .i8_type()
+                .const_int(values::ARRAY_CAPACITY as u64, false);
+            let can_continue_loop = ctx.b.build_int_compare(
+                IntPredicate::ULT,
+                current_index,
+                iter_limit,
+                "cancontinue",
+            );
+
+            ctx.b
+                .build_conditional_branch(&can_continue_loop, &check_active_block, &end_block);
+            ctx.b.position_at_end(&check_active_block);
+
+            // increment the stored value
+            let next_index = ctx.b.build_int_add(
+                current_index,
+                ctx.context.i8_type().const_int(1, false),
+                "nextindex",
+            );
+            ctx.b.build_store(&index_ptr, &next_index);
+
+            if let Some(active_bitmap) = valid_bitmap {
+                // check if this iteration is active according to the bitmap
+                let bitmask = ctx.b.build_left_shift(
+                    ctx.context.i8_type().const_int(1, false),
+                    current_index,
+                    "bitmask",
+                );
+                let active_bits = ctx.b.build_and(active_bitmap, bitmask, "activebits");
+                let active_bit = ctx.b.build_int_cast(
+                    ctx.b
+                        .build_right_shift(active_bits, current_index, false, "activebit"),
+                    ctx.context.bool_type(),
+                    "",
+                );
+
+                ctx.b
+                    .build_conditional_branch(&active_bit, &run_block, &check_block);
+            } else {
+                ctx.b.build_unconditional_branch(&run_block);
+            }
+
+            ctx.b.position_at_end(&run_block);
+
+            let voice_scratch_ptr = unsafe {
+                ctx.b
+                    .build_in_bounds_gep(&scratch_ptr, &[current_index], "scratchptr")
+            };
+            let voice_pointers_ptr = unsafe {
+                ctx.b
+                    .build_in_bounds_gep(&pointers_ptr, &[current_index], "pointersptr")
+            };
+
+            build_lifecycle_call(
+                ctx.module,
+                ctx.b,
+                mir,
+                surface,
+                target,
+                lifecycle,
+                voice_scratch_ptr,
+                voice_pointers_ptr,
+            );
+
+            ctx.b.build_unconditional_branch(&check_block);
+            ctx.b.position_at_end(&end_block);
+
+            // set the bitmaps of all output arrays to be this input
+            if lifecycle == LifecycleFunc::Update {
+                let active_bitmap = if let Some(active_bitmap) = valid_bitmap {
+                    active_bitmap
+                } else {
+                    ctx.b
+                        .build_not(&ctx.context.i8_type().const_int(0, false), "")
+                };
+
+                for dest_socket in dest_sockets {
+                    let dest_array = values::ArrayValue::new(
+                        ctx.b
+                            .build_load(
+                                &unsafe {
+                                    ctx.b
+                                        .build_struct_gep(&pointers_ptr, *dest_socket as u32, "")
+                                },
+                                "",
+                            )
+                            .into_pointer_value(),
+                    );
+                    dest_array.set_bitmap(ctx.b, &active_bitmap);
+                }
+            }
+        }
     }
 }
 

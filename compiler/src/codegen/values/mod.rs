@@ -4,7 +4,7 @@ mod midi_value;
 mod num_value;
 mod tuple_value;
 
-pub use self::array_value::ArrayValue;
+pub use self::array_value::{ArrayValue, ARRAY_CAPACITY};
 pub use self::midi_event_value::MidiEventValue;
 pub use self::midi_value::MidiValue;
 pub use self::num_value::NumValue;

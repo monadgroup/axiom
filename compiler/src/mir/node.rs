@@ -6,8 +6,8 @@ pub enum NodeData {
     Group(SurfaceId),
     ExtractGroup {
         surface: SurfaceId,
-        source_groups: Vec<usize>,
-        dest_groups: Vec<usize>,
+        source_sockets: Vec<usize>,
+        dest_sockets: Vec<usize>,
     },
 }
 

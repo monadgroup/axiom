@@ -7,6 +7,7 @@ use inkwell::AddressSpace;
 use mir::block::{Function, Statement};
 use mir::{Block, MIRContext, Node, NodeData, Surface, ValueGroupSource};
 use std::collections::HashMap;
+use std::iter;
 
 #[derive(Debug, Clone)]
 pub enum PointerSource {
@@ -93,7 +94,7 @@ pub fn build_node_layout(
             let surface_layout =
                 build_surface_layout(context, mir, mir.surface(surface_id).unwrap(), target);
 
-            // the surface mapping is currently just 1:1
+            // surface mapping is just 1:1
             NodeLayout {
                 initialized_const: surface_layout.initialized_const,
                 scratch_struct: surface_layout.scratch_struct,
@@ -101,7 +102,43 @@ pub fn build_node_layout(
                 pointer_sources: surface_layout.pointer_sources,
             }
         }
-        NodeData::ExtractGroup { .. } => unimplemented!(),
+        NodeData::ExtractGroup { ref surface, .. } => {
+            let surface_layout =
+                build_surface_layout(context, mir, mir.surface(surface).unwrap(), target);
+
+            // each struct is duplicated by the number of items in an array type
+            // todo: should we use arrays here? or are structs fine?
+
+            let pointer_sources: Vec<_> = iter::repeat(&surface_layout.pointer_sources)
+                .take(values::ARRAY_CAPACITY as usize)
+                .enumerate()
+                .flat_map(|(voice_index, pointer_sources)| {
+                    pointer_sources.iter().map(move |source| {
+                        unimplemented!()
+                        //reparent_pointer_source(source.clone(), voice_index, voice_index, None)
+                    })
+                })
+                .collect();
+
+            NodeLayout {
+                initialized_const: context.const_struct(
+                    &[&surface_layout.initialized_const as &BasicValue;
+                        values::ARRAY_CAPACITY as usize][..],
+                    false,
+                ),
+                scratch_struct: context.struct_type(
+                    &[&surface_layout.scratch_struct as &BasicType;
+                        values::ARRAY_CAPACITY as usize][..],
+                    false,
+                ),
+                pointer_struct: context.struct_type(
+                    &[&surface_layout.pointer_struct as &BasicType;
+                        values::ARRAY_CAPACITY as usize][..],
+                    false,
+                ),
+                pointer_sources,
+            }
+        }
     }
 }
 
@@ -227,11 +264,11 @@ pub fn build_surface_layout(
                 .pointer_sources
                 .into_iter()
                 .map(|original_src| {
-                    remap_pointer_source(
+                    reparent_pointer_source(
                         original_src,
-                        node,
                         initialized_index,
                         scratch_index,
+                        node,
                         &group_pointers,
                     )
                 })
@@ -257,11 +294,11 @@ pub fn build_surface_layout(
     }
 }
 
-fn remap_pointer_source(
+fn reparent_pointer_source(
     source: PointerSource,
-    node: &Node,
     initialized_index: usize,
     scratch_index: usize,
+    node: &Node,
     pointer_sources: &[PointerSource],
 ) -> PointerSource {
     match source {
@@ -279,11 +316,11 @@ fn remap_pointer_source(
         }
         PointerSource::Struct(mut sources) => {
             for src in sources.iter_mut() {
-                *src = remap_pointer_source(
+                *src = reparent_pointer_source(
                     src.clone(),
-                    node,
                     initialized_index,
                     scratch_index,
+                    node,
                     pointer_sources,
                 )
             }

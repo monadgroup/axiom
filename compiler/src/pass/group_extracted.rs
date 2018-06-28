@@ -141,8 +141,16 @@ impl<'a> GroupExtractor<'a> {
             new_sockets,
             mir::NodeData::ExtractGroup {
                 surface: new_surface.id.clone(),
-                source_groups: extract_group.sources,
-                dest_groups: extract_group.destinations,
+                source_sockets: extract_group
+                    .sources
+                    .into_iter()
+                    .map(|group| new_value_group_indexes[&group])
+                    .collect(),
+                dest_sockets: extract_group
+                    .destinations
+                    .into_iter()
+                    .map(|group| new_value_group_indexes[&group])
+                    .collect(),
             },
         );
 
