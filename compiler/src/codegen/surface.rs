@@ -184,7 +184,6 @@ fn build_node_call(
             ctx.b.position_at_end(&run_block);
 
             let const_zero = ctx.context.i32_type().const_int(0, false);
-            println!("scratch ptr type: {:#?}", scratch_ptr.get_type());
             let voice_scratch_ptr = unsafe {
                 ctx.b.build_in_bounds_gep(
                     &scratch_ptr,

@@ -2,10 +2,10 @@ use codegen::{data_analyzer, TargetProperties};
 use inkwell::context::Context;
 use mir::{Block, BlockRef, Surface, SurfaceRef};
 
-pub trait ObjectCache<'a> {
-    fn context(&self) -> &'a Context;
+pub trait ObjectCache {
+    fn context(&self) -> &Context;
 
-    fn target(&self) -> &'a TargetProperties;
+    fn target(&self) -> &TargetProperties;
 
     fn surface_mir(&self, id: SurfaceRef) -> Option<&Surface>;
 

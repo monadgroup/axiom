@@ -27,7 +27,7 @@ pub use self::parser::*;
 pub use self::pass::*;
 pub use self::util::*;
 
-pub use frontend::mir_builder::{
+pub use frontend::c_api::{
     maxim_build_block, maxim_build_custom_node, maxim_build_group_node, maxim_build_surface,
     maxim_build_value_group, maxim_build_value_socket, maxim_compile_block, maxim_constant_num,
     maxim_constant_tuple, maxim_create_transaction, maxim_destroy_error,
@@ -88,9 +88,8 @@ fn optimize_module(module: &inkwell::module::Module) {
 
 fn main() {
     // build a basic MIR
-    let context = inkwell::context::Context::create();
     let target = codegen::TargetProperties::new(true, false);
-    let mut runtime = frontend::Runtime::new(&context, &target);
+    let mut runtime = frontend::Runtime::new(target);
 
     let source_id = runtime.alloc_id();
     let source_block = mir::Block::new(
@@ -137,7 +136,11 @@ fn main() {
     );
 
     let transaction = frontend::Transaction::new(vec![surface], vec![source_block, reader_block]);
-    runtime.commit(transaction);
 
-    println!("{:#?}", runtime);
+    let commit_start_time = time::precise_time_s();
+    runtime.commit(transaction);
+    println!(
+        "Commit took {}ms",
+        (time::precise_time_s() - commit_start_time) * 1000.
+    );
 }

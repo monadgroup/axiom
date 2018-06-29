@@ -1,10 +1,35 @@
-use super::Transaction;
+use super::{Runtime, Transaction};
 use ast;
+use codegen;
 use mir;
 use parser;
 use pass;
 use std;
 use CompileError;
+
+#[no_mangle]
+pub extern "C" fn maxim_create_runtime(include_ui: bool, min_size: bool) -> *mut Runtime {
+    let target = codegen::TargetProperties::new(include_ui, min_size);
+    Box::into_raw(Box::new(Runtime::new(target)))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_runtime(runtime: *mut Runtime) {
+    Box::from_raw(runtime);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
+    use mir::IdAllocator;
+    (*runtime).alloc_id()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_commit(runtime: *mut Runtime, transaction: *mut Transaction) {
+    let owned_transaction = Box::from_raw(transaction);
+    (*runtime).commit(*owned_transaction)
+}
 
 #[no_mangle]
 pub extern "C" fn maxim_create_transaction() -> *mut Transaction {
@@ -70,12 +95,12 @@ pub unsafe extern "C" fn maxim_constant_tuple(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_valuegroupsource_none() -> *mut mir::ValueGroupSource {
+pub extern "C" fn maxim_valuegroupsource_none() -> *mut mir::ValueGroupSource {
     Box::into_raw(Box::new(mir::ValueGroupSource::None))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_valuegroupsource_socket(index: usize) -> *mut mir::ValueGroupSource {
+pub extern "C" fn maxim_valuegroupsource_socket(index: usize) -> *mut mir::ValueGroupSource {
     Box::into_raw(Box::new(mir::ValueGroupSource::Socket(index)))
 }
 
