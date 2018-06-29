@@ -163,52 +163,83 @@ fn main() {
     let reader_id = BlockId::new("reader1".to_string(), &mut allocator);
     let reader_block = mir::Block::new(
         reader_id.clone(),
-        vec![mir::block::Control::new(
-            "bla".to_string(),
-            ControlType::Audio,
-            false,
-            true,
-        )],
+        vec![
+            mir::block::Control::new("input".to_string(), ControlType::Audio, false, true),
+            mir::block::Control::new("output".to_string(), ControlType::Audio, false, true),
+        ],
         vec![],
     );
     allocator.register_block(reader_block);
 
-    let groups = vec![ValueGroup::new(
-        VarType::new_array(VarType::Num),
-        ValueGroupSource::None,
-    )];
+    let groups = vec![
+        ValueGroup::new(VarType::Num, ValueGroupSource::None),
+        ValueGroup::new(VarType::new_array(VarType::Num), ValueGroupSource::None),
+    ];
     let nodes = vec![
         Node::new(
-            vec![ValueSocket::new(0, true, false, true)],
+            vec![ValueSocket::new(1, true, false, true)],
             NodeData::Custom(source_id.clone()),
         ),
         Node::new(
-            vec![ValueSocket::new(0, false, true, false)],
+            vec![
+                ValueSocket::new(1, false, true, false),
+                ValueSocket::new(0, true, false, false),
+            ],
             NodeData::Custom(reader_id.clone()),
         ),
     ];
     let surface_id = SurfaceId::new("test".to_string(), &mut allocator);
     let mut surface = Surface::new(surface_id.clone(), groups, nodes);
 
-    let new_surfaces = group_extracted(&mut surface, &mut allocator);
-    allocator.register_surface(surface);
-    for new_surface in new_surfaces.into_iter() {
-        allocator.register_surface(new_surface);
-    }
-
-    println!("{:#?}", allocator);
-
     let context = inkwell::context::Context::create();
     let module = context.create_module("test");
     let target = TargetProperties::new(true, false);
 
-    let surface_layout = codegen::data_analyzer::build_surface_layout(
-        &context,
-        &allocator,
-        allocator.surface(&surface_id).unwrap(),
-        &target,
+    let new_surfaces = group_extracted(&mut surface, &mut allocator);
+    for new_surface in new_surfaces.into_iter() {
+        println!(
+            "Surface {:?}: {:#?}",
+            new_surface.id,
+            codegen::data_analyzer::build_surface_layout(
+                &context,
+                &allocator,
+                &new_surface,
+                &target
+            )
+        );
+        allocator.register_surface(new_surface);
+    }
+
+    remove_dead_groups(&mut surface);
+    println!(
+        "Root surface {:?}: {:#?}",
+        surface.id,
+        codegen::data_analyzer::build_surface_layout(&context, &allocator, &surface, &target)
     );
-    println!("{:#?}", surface_layout);
+
+    codegen::surface::build_funcs(&module, &allocator, &surface, &target);
+    if let Err(e) = module.verify() {
+        module.print_to_stderr();
+        println!("{}", e.to_string());
+    } else {
+        optimize_module(&module);
+        module.print_to_stderr();
+    }
+
+    /*let context = inkwell::context::Context::create();
+    let module = context.create_module("test");
+    let target = TargetProperties::new(true, false);
+
+    let new_surfaces = group_extracted(&mut surface, &mut allocator);
+    for new_surface in new_surfaces.into_iter() {
+        println!("New surface: {:#?}", new_surface);
+        println!("{:#?}", codegen::data_analyzer::build_surface_layout(&context, &allocator, &new_surface, &target));
+        allocator.register_surface(new_surface);
+    }
+
+    println!("Root surface: {:#?}", surface);
+    println!("{:#?}", codegen::data_analyzer::build_surface_layout(&context, &allocator, &surface, &target));
+    allocator.register_surface(surface);
 
     codegen::surface::build_funcs(
         &module,
@@ -223,5 +254,5 @@ fn main() {
     } else {
         optimize_module(&module);
         module.print_to_stderr();
-    }
+    }*/
 }

@@ -1,5 +1,6 @@
 use mir;
 use std::collections::{HashMap, VecDeque};
+use std::mem;
 
 // groups extracted nodes into subsurfaces
 pub fn group_extracted(
@@ -62,71 +63,100 @@ impl<'a> GroupExtractor<'a> {
             .collect()
     }
 
+    /// Here we move the extracted nodes into a new ExtractGroup node.
+    /// We attempt to keep the surface structure as intact as possible: it's inevitable that
+    /// we have to move nodes, but we don't remove value groups that should only exist in the
+    /// group here, instead leaving orphaned ones on the surface. The "remove_dead_groups" pass
+    /// will remove any groups that aren't necessary.
     fn extract_group(
         &mut self,
         allocator: &mut mir::IdAllocator,
         extract_index: usize,
         extract_group: ExtractGroup,
     ) -> mir::Surface {
-        // Here we move the extracted nodes into a new ExtractGroup node.
-        // We attempt to keep the surface structure as intact as possible: it's inevitable that
-        // we have to move nodes, but we avoid removing groups here, instead making sockets in the
-        // new node to "forward" the group out - the groups we need to do this to are those listed
-        // in the extract group provided.
-        // The combination of "remove_dead_sockets" and "remove_dead_groups" passes will remove any
-        // sockets that aren't necessary.
-
-        let mut new_value_groups = Vec::new();
-        let mut new_sockets = Vec::new();
+        // Build up an index of value group mappings (from the old surface to the new surface).
+        // Note that the groups in the new surface are indexed based on where they are in the
+        // value_groups array - this makes things easier later on when we actually create the
+        // groups.
+        let mut value_group_read_write = Vec::new();
         let mut new_value_group_indexes = HashMap::new();
-        let mut new_nodes = Vec::new();
-
-        for &parent_group_index in &extract_group.value_groups {
-            let new_group_index = new_value_groups.len();
-            let parent_group = &self.surface.groups[parent_group_index];
-
-            // Note: we expect the parent value group to have an array type here instead of
-            // 'upgrading' the group's type here or later on. This ensures we don't need to do
-            // anything messy like update sockets and value groups up the tree.
-            // Inside the extracted surface though, the group does not have an array type.
-            new_value_groups.push(mir::ValueGroup::new(
-                parent_group
-                    .value_type
-                    .base_type()
-                    .unwrap_or(&parent_group.value_type)
-                    .clone(),
-                mir::ValueGroupSource::Socket(new_group_index),
-            ));
-
-            new_sockets.push(mir::ValueSocket::new(
-                parent_group_index,
-                false,
-                false,
-                false,
-            ));
-
-            new_value_group_indexes.insert(parent_group_index, new_group_index);
+        for (internal_index, &parent_group_index) in extract_group.value_groups.iter().enumerate() {
+            value_group_read_write.push((false, false));
+            new_value_group_indexes.insert(parent_group_index, internal_index);
         }
 
+        // Move nodes into the new surface, remapping value group indices as we go.
+        // We also need to know whether value groups are written to/read from later on, so this
+        // info is recorded here.
+        let mut new_nodes = Vec::new();
         for (removed_count, &node_index) in extract_group.nodes.iter().enumerate() {
             let real_node_index = node_index - removed_count;
             let mut new_node = self.surface.nodes.remove(real_node_index);
 
-            // update socket indexes to the indexes in the new group
+            // update socket indices to the indices in the new surface
             for socket in new_node.sockets.iter_mut() {
                 let remapped_id = new_value_group_indexes[&socket.group_id];
                 socket.group_id = remapped_id;
 
-                // update the sockets `value_written` and `value_read` flags
-                if socket.value_written {
-                    new_sockets[remapped_id].value_written = true;
-                }
+                // update the value groups `value_written` and `value_read` flags
                 if socket.value_read {
-                    new_sockets[remapped_id].value_read = true;
+                    value_group_read_write[remapped_id].0 = true;
+                }
+                if socket.value_written {
+                    value_group_read_write[remapped_id].1 = true;
                 }
             }
 
             new_nodes.push(new_node)
+        }
+
+        // Build the new value groups and sockets where necessary
+        let mut new_value_groups = Vec::new();
+        let mut new_sockets = Vec::new();
+        for (internal_index, &parent_group_index) in extract_group.value_groups.iter().enumerate() {
+            // There are a few cases where we want to expose an internal value group as a socket:
+            //  - If the group is one of the source or destination groups (in this case, we also
+            //    need to 'unwrap' the group type from an array for our internal group)
+            //  - If the group is exposed by the main surface
+            //  - If the group is only read from by the internal nodes
+            //    The reason for this is two-fold: "input-only" groups (where there's a
+            //    non-extracted node feeding into the extract group), and to allow users to
+            //    configure controls from the UI
+
+            let (group_read, group_written) = value_group_read_write[internal_index];
+            let parent_group = &self.surface.groups[parent_group_index];
+
+            // if the group is a source or destination, unwrap and expose it
+            let is_source_or_destination = extract_group.sources.contains(&parent_group_index)
+                || extract_group.destinations.contains(&parent_group_index);
+
+            let is_socket_source = if let mir::ValueGroupSource::Socket(_) = parent_group.source {
+                true
+            } else {
+                false
+            };
+            if is_source_or_destination || is_socket_source || !group_written {
+                let socket_index = new_sockets.len();
+
+                // if it's a source or destination group, we want the actual array item
+                let value_group_type = if is_source_or_destination {
+                    parent_group.value_type.base_type().unwrap()
+                } else {
+                    &parent_group.value_type
+                };
+                new_value_groups.push(mir::ValueGroup::new(
+                    value_group_type.clone(),
+                    mir::ValueGroupSource::Socket(socket_index),
+                ));
+                new_sockets.push(mir::ValueSocket::new(
+                    parent_group_index,
+                    group_written,
+                    group_read,
+                    false,
+                ));
+            } else {
+                new_value_groups.push(parent_group.clone());
+            }
         }
 
         let new_surface = mir::Surface::new(

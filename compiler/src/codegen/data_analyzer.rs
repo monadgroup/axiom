@@ -7,7 +7,7 @@ use inkwell::AddressSpace;
 use mir::block::{Function, Statement};
 use mir::{Block, MIRContext, Node, NodeData, Surface, ValueGroup, ValueGroupSource};
 use std::collections::HashMap;
-use std::iter;
+use std::{fmt, iter};
 
 #[derive(Debug, Clone, Copy)]
 pub enum PointerSourceAggregateType {
@@ -15,12 +15,25 @@ pub enum PointerSourceAggregateType {
     Array,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum PointerSource {
     Initialized(Vec<usize>),
     Scratch(Vec<usize>),
     Socket(usize, Vec<usize>),
     Aggregate(PointerSourceAggregateType, Vec<PointerSource>),
+}
+
+impl fmt::Debug for PointerSource {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        match self {
+            PointerSource::Initialized(path) => write!(f, "Initialized{:?}", path),
+            PointerSource::Scratch(path) => write!(f, "Scratch{:?}", path),
+            PointerSource::Socket(base, path) => write!(f, "Socket {}{:?}", base, path),
+            PointerSource::Aggregate(aggregate_type, items) => {
+                write!(f, "{:?}{:?}", aggregate_type, items)
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -496,10 +509,6 @@ impl SurfaceLayout {
 
     pub fn node_scratch_index(&self, node: usize) -> usize {
         self.node_scratch_offset + node
-    }
-
-    pub fn node_initializer_index(&self, node: usize) -> usize {
-        self.node_initializer_offset + node
     }
 
     pub fn node_ptr_index(&self, node: usize) -> usize {
