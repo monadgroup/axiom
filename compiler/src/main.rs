@@ -147,101 +147,81 @@ fn optimize_module(module: &inkwell::module::Module) {
 fn main() {
     // build a basic MIR
     let mut allocator = MIRContext::new();
-    let groups = vec![
-        ValueGroup::new(VarType::new_array(VarType::Num), ValueGroupSource::None),
-        ValueGroup::new(VarType::Num, ValueGroupSource::Socket(0)),
-    ];
+    let source_id = BlockId::new("source1".to_string(), &mut allocator);
+    let source_block = mir::Block::new(
+        source_id.clone(),
+        vec![mir::block::Control::new(
+            "bla".to_string(),
+            ControlType::AudioExtract,
+            true,
+            false,
+        )],
+        vec![],
+    );
+    allocator.register_block(source_block);
+
+    let reader_id = BlockId::new("reader1".to_string(), &mut allocator);
+    let reader_block = mir::Block::new(
+        reader_id.clone(),
+        vec![mir::block::Control::new(
+            "bla".to_string(),
+            ControlType::Audio,
+            false,
+            true,
+        )],
+        vec![],
+    );
+    allocator.register_block(reader_block);
+
+    let groups = vec![ValueGroup::new(
+        VarType::new_array(VarType::Num),
+        ValueGroupSource::None,
+    )];
     let nodes = vec![
         Node::new(
             vec![ValueSocket::new(0, true, false, true)],
-            NodeData::Custom(BlockId::new("source1".to_string(), &mut allocator)),
+            NodeData::Custom(source_id.clone()),
         ),
         Node::new(
-            vec![
-                ValueSocket::new(0, false, true, false),
-                ValueSocket::new(1, true, false, false),
-            ],
-            NodeData::Custom(BlockId::new("reader1".to_string(), &mut allocator)),
+            vec![ValueSocket::new(0, false, true, false)],
+            NodeData::Custom(reader_id.clone()),
         ),
     ];
-    let mut surface = Surface::new(
-        SurfaceId::new("test".to_string(), &mut allocator),
-        groups,
-        nodes,
-    );
+    let surface_id = SurfaceId::new("test".to_string(), &mut allocator);
+    let mut surface = Surface::new(surface_id.clone(), groups, nodes);
+
     let new_surfaces = group_extracted(&mut surface, &mut allocator);
-    println!("Surface now: {:#?}", surface);
-    println!("New surfaces: {:#?}", new_surfaces);
+    allocator.register_surface(surface);
+    for new_surface in new_surfaces.into_iter() {
+        allocator.register_surface(new_surface);
+    }
 
-    /*let mut ctx = MIRContext::new();
-    let block_id = BlockId::new("block".to_string(), &mut ctx);
-    let mut block = lower_ast(
-        block_id.clone(),
-        &Parser::parse(&mut get_token_stream("out:num = min(in:num, 10)\n")).unwrap(),
-    ).unwrap();
-    remove_dead_code(&mut block);
-    ctx.register_block(block);
-
-    let surface_id = SurfaceId::new("surface".to_string(), &mut ctx);
-    let mut surface = Surface::new(
-        surface_id.clone(),
-        vec![
-            ValueGroup::new(VarType::Num, ValueGroupSource::None),
-            ValueGroup::new(VarType::Num, ValueGroupSource::Socket(0)),
-        ],
-        vec![Node::new(
-            vec![
-                ValueSocket::new(1, false, true, false),
-                ValueSocket::new(0, true, false, false),
-            ],
-            NodeData::Custom(block_id.clone()),
-        )],
-    );
-    ctx.register_surface(surface);
-
-    let parent_id = SurfaceId::new("root".to_string(), &mut ctx);
-    let mut parent = Surface::new(
-        parent_id.clone(),
-        vec![ValueGroup::new(VarType::Num, ValueGroupSource::None)],
-        vec![Node::new(
-            vec![ValueSocket::new(0, false, true, false)],
-            NodeData::Group(surface_id.clone()),
-        )],
-    );
-    ctx.register_surface(parent);
-
-    println!("{:#?}", ctx);
+    println!("{:#?}", allocator);
 
     let context = inkwell::context::Context::create();
     let module = context.create_module("test");
     let target = TargetProperties::new(true, false);
 
-    // build standard library
-    codegen::intrinsics::build_intrinsics(&module);
-    codegen::controls::build_funcs(&module, &target);
-    codegen::functions::build_funcs(&module, &target);
+    let surface_layout = codegen::data_analyzer::build_surface_layout(
+        &context,
+        &allocator,
+        allocator.surface(&surface_id).unwrap(),
+        &target,
+    );
+    println!("{:#?}", surface_layout);
 
-    // build the block
-    println!("Building block");
-    let block_ref = ctx.block(&block_id).unwrap();
-    codegen::block::build_funcs(&module, block_ref, &target);
+    codegen::surface::build_funcs(
+        &module,
+        &allocator,
+        allocator.surface(&surface_id).unwrap(),
+        &target,
+    );
 
-    // build the surface
-    println!("Building first surface");
-    let surface_ref = ctx.surface(&surface_id).unwrap();
-    codegen::surface::build_funcs(&module, &ctx, surface_ref, &target);
-
-    // build the parent surface
-    println!("Building parent surface");
-    let parent_ref = ctx.surface(&parent_id).unwrap();
-    codegen::surface::build_funcs(&module, &ctx, parent_ref, &target);
-
-    println!("Done");
     if let Err(e) = module.verify() {
         module.print_to_stderr();
         println!("{}", e.to_string());
     } else {
-        //optimize_module(&module);
+        optimize_module(&module);
         module.print_to_stderr();
-    }*/
+    }
 }

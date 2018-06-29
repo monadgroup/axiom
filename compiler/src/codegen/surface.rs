@@ -85,45 +85,47 @@ fn build_node_call(
         } => {
             let surface = mir.surface(&surface_id).unwrap();
 
+            let source_socket_pointers =
+                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 0, "sources.ptr") };
+            let dest_socket_pointers =
+                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 1, "dests.ptr") };
+            let voice_socket_pointers =
+                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 2, "voices.ptr") };
+
             // if this is the update lifecycle function and there are source groups, generate a
             // bitmap of which indices are valid
             let valid_bitmap = if lifecycle == LifecycleFunc::Update && !source_sockets.is_empty() {
                 let first_array = values::ArrayValue::new(
                     ctx.b
                         .build_load(
-                            &unsafe {
-                                ctx.b
-                                    .build_struct_gep(&pointers_ptr, source_sockets[0] as u32, "")
-                            },
+                            &unsafe { ctx.b.build_struct_gep(&source_socket_pointers, 0, "") },
                             "",
                         )
                         .into_pointer_value(),
                 );
                 let first_bitmap = first_array.get_bitmap(ctx.b);
 
-                Some(
-                    source_sockets
-                        .iter()
-                        .skip(1)
-                        .fold(first_bitmap, |acc, socket| {
-                            let nth_array = values::ArrayValue::new(
-                                ctx.b
-                                    .build_load(
-                                        &unsafe {
-                                            ctx.b.build_struct_gep(
-                                                &pointers_ptr,
-                                                *socket as u32,
-                                                "",
-                                            )
-                                        },
-                                        "",
-                                    )
-                                    .into_pointer_value(),
-                            );
-                            let nth_bitmap = nth_array.get_bitmap(ctx.b);
-                            ctx.b.build_or(acc, nth_bitmap, "")
-                        }),
-                )
+                Some(source_sockets.iter().enumerate().skip(1).fold(
+                    first_bitmap,
+                    |acc, (socket_index, socket)| {
+                        let nth_array = values::ArrayValue::new(
+                            ctx.b
+                                .build_load(
+                                    &unsafe {
+                                        ctx.b.build_struct_gep(
+                                            &source_socket_pointers,
+                                            socket_index as u32,
+                                            "",
+                                        )
+                                    },
+                                    "",
+                                )
+                                .into_pointer_value(),
+                        );
+                        let nth_bitmap = nth_array.get_bitmap(ctx.b);
+                        ctx.b.build_or(acc, nth_bitmap, "")
+                    },
+                ))
             } else {
                 None
             };
@@ -131,6 +133,8 @@ fn build_node_call(
             // build a for loop to iterate over each instance
             let index_ptr = ctx.allocb
                 .build_alloca(&ctx.context.i8_type(), "voiceindex.ptr");
+            ctx.b
+                .build_store(&index_ptr, &ctx.context.i8_type().const_int(0, false));
 
             let check_block = ctx.context.append_basic_block(&ctx.func, "voice.check");
             let check_active_block = ctx.context
@@ -164,17 +168,19 @@ fn build_node_call(
             );
             ctx.b.build_store(&index_ptr, &next_index);
 
+            let index_32 = ctx.b
+                .build_int_z_extend(current_index, ctx.context.i32_type(), "");
             if let Some(active_bitmap) = valid_bitmap {
                 // check if this iteration is active according to the bitmap
                 let bitmask = ctx.b.build_left_shift(
-                    ctx.context.i8_type().const_int(1, false),
-                    current_index,
+                    ctx.context.i32_type().const_int(1, false),
+                    index_32,
                     "bitmask",
                 );
                 let active_bits = ctx.b.build_and(active_bitmap, bitmask, "activebits");
                 let active_bit = ctx.b.build_int_cast(
                     ctx.b
-                        .build_right_shift(active_bits, current_index, false, "activebit"),
+                        .build_right_shift(active_bits, index_32, false, "activebit"),
                     ctx.context.bool_type(),
                     "",
                 );
@@ -187,13 +193,21 @@ fn build_node_call(
 
             ctx.b.position_at_end(&run_block);
 
+            let const_zero = ctx.context.i32_type().const_int(0, false);
+            println!("scratch ptr type: {:#?}", scratch_ptr.get_type());
             let voice_scratch_ptr = unsafe {
-                ctx.b
-                    .build_in_bounds_gep(&scratch_ptr, &[current_index], "scratchptr")
+                ctx.b.build_in_bounds_gep(
+                    &scratch_ptr,
+                    &[const_zero, const_zero, index_32],
+                    "scratchptr",
+                )
             };
             let voice_pointers_ptr = unsafe {
-                ctx.b
-                    .build_in_bounds_gep(&pointers_ptr, &[current_index], "pointersptr")
+                ctx.b.build_in_bounds_gep(
+                    &voice_socket_pointers,
+                    &[const_zero, index_32],
+                    "pointersptr",
+                )
             };
 
             build_lifecycle_call(
@@ -224,8 +238,11 @@ fn build_node_call(
                         ctx.b
                             .build_load(
                                 &unsafe {
-                                    ctx.b
-                                        .build_struct_gep(&pointers_ptr, *dest_socket as u32, "")
+                                    ctx.b.build_struct_gep(
+                                        &dest_socket_pointers,
+                                        *dest_socket as u32,
+                                        "",
+                                    )
                                 },
                                 "",
                             )

@@ -38,7 +38,7 @@ impl<T> Hash for PoolId<T> {
 
 impl<T> fmt::Debug for PoolId<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{}-{}", self.debug_name, self.id)
+        write!(f, "{} {}", self.id, self.debug_name)
     }
 }
 
