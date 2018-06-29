@@ -27,6 +27,14 @@ pub use self::parser::*;
 pub use self::pass::*;
 pub use self::util::*;
 
+pub use frontend::mir_builder::{
+    maxim_build_block, maxim_build_custom_node, maxim_build_group_node, maxim_build_surface,
+    maxim_build_value_group, maxim_build_value_socket, maxim_compile_block, maxim_constant_num,
+    maxim_constant_tuple, maxim_create_transaction, maxim_destroy_error,
+    maxim_valuegroupsource_default, maxim_valuegroupsource_none, maxim_valuegroupsource_socket,
+    maxim_vararg_array, maxim_vartype_midi, maxim_vartype_num, maxim_vartype_tuple,
+};
+
 fn run_code(code: &str) {
     let mut stream = get_token_stream(code);
 
