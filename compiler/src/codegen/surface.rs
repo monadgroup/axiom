@@ -1,27 +1,23 @@
 use codegen::{
-    block, build_context_function, data_analyzer, util, values, BuilderContext, LifecycleFunc,
+    block, build_context_function, util, values, BuilderContext, LifecycleFunc, ObjectCache,
     TargetProperties,
 };
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::{AddressSpace, IntPredicate};
-use mir::{MIRContext, Node, NodeData, Surface};
+use mir::{Node, NodeData, Surface, SurfaceRef};
 
 fn get_lifecycle_func(
     module: &Module,
-    mir: &MIRContext,
-    surface: &Surface,
-    target: &TargetProperties,
+    cache: &ObjectCache,
+    surface: SurfaceRef,
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
-    let func_name = format!(
-        "maxim.surface.{}.{}.{}",
-        surface.id.id, surface.id.debug_name, lifecycle
-    );
+    let func_name = format!("maxim.surface.{}.{}", surface, lifecycle);
     util::get_or_create_func(module, &func_name, &|| {
         let context = module.get_context();
-        let layout = data_analyzer::build_surface_layout(&context, mir, surface, target);
+        let layout = cache.surface_layout(surface).unwrap();
         (
             Linkage::ExternalLinkage,
             context.void_type().fn_type(
@@ -37,18 +33,16 @@ fn get_lifecycle_func(
 
 fn build_node_call(
     ctx: &mut BuilderContext,
-    mir: &MIRContext,
+    cache: &ObjectCache,
     node: &Node,
-    target: &TargetProperties,
     lifecycle: LifecycleFunc,
     scratch_ptr: PointerValue,
     pointers_ptr: PointerValue,
 ) {
     match &node.data {
         NodeData::Custom(block_id) => {
-            let block = mir.block(&block_id).unwrap();
             let data_ptr = unsafe { ctx.b.build_struct_gep(&scratch_ptr, 0, "") };
-            let ui_ptr = if target.include_ui {
+            let ui_ptr = if cache.target().include_ui {
                 Some(unsafe { ctx.b.build_struct_gep(&scratch_ptr, 1, "") })
             } else {
                 None
@@ -56,9 +50,9 @@ fn build_node_call(
 
             block::build_lifecycle_call(
                 ctx.module,
+                cache,
                 ctx.b,
-                block,
-                target,
+                *block_id,
                 lifecycle,
                 data_ptr,
                 pointers_ptr,
@@ -66,13 +60,11 @@ fn build_node_call(
             );
         }
         NodeData::Group(surface_id) => {
-            let surface = mir.surface(&surface_id).unwrap();
             build_lifecycle_call(
                 ctx.module,
+                cache,
                 ctx.b,
-                mir,
-                surface,
-                target,
+                *surface_id,
                 lifecycle,
                 scratch_ptr,
                 pointers_ptr,
@@ -83,8 +75,6 @@ fn build_node_call(
             source_sockets,
             dest_sockets,
         } => {
-            let surface = mir.surface(&surface_id).unwrap();
-
             let source_socket_pointers =
                 unsafe { ctx.b.build_struct_gep(&pointers_ptr, 0, "sources.ptr") };
             let dest_socket_pointers =
@@ -212,10 +202,9 @@ fn build_node_call(
 
             build_lifecycle_call(
                 ctx.module,
+                cache,
                 ctx.b,
-                mir,
-                surface,
-                target,
+                *surface_id,
                 lifecycle,
                 voice_scratch_ptr,
                 voice_pointers_ptr,
@@ -257,14 +246,13 @@ fn build_node_call(
 
 pub fn build_lifecycle_func(
     module: &Module,
-    mir: &MIRContext,
+    cache: &ObjectCache,
     surface: &Surface,
-    target: &TargetProperties,
     lifecycle: LifecycleFunc,
 ) {
-    let func = get_lifecycle_func(module, mir, surface, target, lifecycle);
-    build_context_function(module, func, target, &|mut ctx: BuilderContext| {
-        let layout = data_analyzer::build_surface_layout(ctx.context, mir, surface, target);
+    let func = get_lifecycle_func(module, cache, surface.id.id, lifecycle);
+    build_context_function(module, func, cache.target(), &|mut ctx: BuilderContext| {
+        let layout = cache.surface_layout(surface.id.id).unwrap();
         let scratch_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let pointers_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
 
@@ -284,9 +272,8 @@ pub fn build_lifecycle_func(
 
             build_node_call(
                 &mut ctx,
-                mir,
+                cache,
                 node,
-                target,
                 lifecycle,
                 node_scratch_ptr,
                 node_pointers_ptr,
@@ -297,27 +284,21 @@ pub fn build_lifecycle_func(
     })
 }
 
-pub fn build_funcs(
-    module: &Module,
-    mir: &MIRContext,
-    surface: &Surface,
-    target: &TargetProperties,
-) {
-    build_lifecycle_func(module, mir, surface, target, LifecycleFunc::Construct);
-    build_lifecycle_func(module, mir, surface, target, LifecycleFunc::Update);
-    build_lifecycle_func(module, mir, surface, target, LifecycleFunc::Destruct);
+pub fn build_funcs(module: &Module, cache: &ObjectCache, surface: &Surface) {
+    build_lifecycle_func(module, cache, surface, LifecycleFunc::Construct);
+    build_lifecycle_func(module, cache, surface, LifecycleFunc::Update);
+    build_lifecycle_func(module, cache, surface, LifecycleFunc::Destruct);
 }
 
 pub fn build_lifecycle_call(
     module: &Module,
+    cache: &ObjectCache,
     builder: &mut Builder,
-    mir: &MIRContext,
-    surface: &Surface,
-    target: &TargetProperties,
+    surface: SurfaceRef,
     lifecycle: LifecycleFunc,
     scratch_ptr: PointerValue,
     pointer_ptr: PointerValue,
 ) {
-    let func = get_lifecycle_func(module, mir, surface, target, lifecycle);
+    let func = get_lifecycle_func(module, cache, surface, lifecycle);
     builder.build_call(&func, &[&scratch_ptr, &pointer_ptr], "", false);
 }

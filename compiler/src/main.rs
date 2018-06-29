@@ -35,73 +35,6 @@ pub use frontend::mir_builder::{
     maxim_vararg_array, maxim_vartype_midi, maxim_vartype_num, maxim_vartype_tuple,
 };
 
-fn run_code(code: &str) {
-    let mut stream = get_token_stream(code);
-
-    let parse_start_time = time::precise_time_s();
-    let ast = Parser::parse(&mut stream);
-    println!("Parse took {}s", time::precise_time_s() - parse_start_time);
-
-    let mir = ast.and_then(|ast| {
-        let lower_start = time::precise_time_s();
-        let block = lower_ast(mir::BlockId::new_with_id("test".to_string(), 0), &ast);
-        println!("Lower took {}s", time::precise_time_s() - lower_start);
-        block
-    });
-
-    match mir {
-        Ok(mut block) => {
-            remove_dead_code(&mut block);
-            println!("{:#?}", block);
-
-            let context = inkwell::context::Context::create();
-            let module = context.create_module("test");
-            let target = codegen::TargetProperties::new(true, false);
-
-            let codegen_start = time::precise_time_s();
-            codegen::intrinsics::build_intrinsics(&module);
-            codegen::controls::build_funcs(&module, &target);
-            codegen::functions::build_funcs(&module, &target);
-
-            codegen::block::build_construct_func(&module, &block, &target);
-            codegen::block::build_update_func(&module, &block, &target);
-            codegen::block::build_destruct_func(&module, &block, &target);
-            println!("Codegen took {}s", time::precise_time_s() - codegen_start);
-
-            if let Err(err) = module.verify() {
-                module.print_to_stderr();
-                println!("{}", err.to_string());
-            } else {
-                optimize_module(&module);
-                module.print_to_stderr();
-            }
-        }
-        Err(err) => {
-            let (text, pos) = err.formatted();
-            println!(
-                "Error {}:{} to {}:{} - {}",
-                pos.0.line, pos.0.column, pos.1.line, pos.1.column, text
-            )
-        }
-    }
-}
-
-fn do_repl() {
-    println!("Enter code followed by two newlines...");
-    let stdin = io::stdin();
-    let mut input = "".to_string();
-    for line in stdin.lock().lines() {
-        let unwrapped = line.unwrap();
-        input.push_str(&unwrapped);
-        input.push_str("\n");
-
-        if unwrapped.is_empty() {
-            run_code(&input);
-            return;
-        }
-    }
-}
-
 struct ModuleFunctionIterator<'a> {
     module: &'a inkwell::module::Module,
     next_func: Option<inkwell::values::FunctionValue>,
@@ -155,7 +88,7 @@ fn optimize_module(module: &inkwell::module::Module) {
 
 fn main() {
     // build a basic MIR
-    let mut allocator = MIRContext::new();
+    /*let mut allocator = MIRContext::new();
     let source_id = BlockId::new("source1".to_string(), &mut allocator);
     let source_block = mir::Block::new(
         source_id.clone(),
@@ -263,5 +196,5 @@ fn main() {
     } else {
         optimize_module(&module);
         module.print_to_stderr();
-    }*/
+    }*/*/
 }

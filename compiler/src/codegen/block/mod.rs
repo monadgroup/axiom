@@ -14,14 +14,14 @@ mod gen_unary_op;
 use self::block_context::BlockContext;
 use codegen::{
     build_context_function, controls, data_analyzer, functions, util, BuilderContext,
-    LifecycleFunc, TargetProperties,
+    LifecycleFunc, ObjectCache, TargetProperties,
 };
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::AddressSpace;
 use mir::block::Statement;
-use mir::Block;
+use mir::{Block, BlockRef};
 
 use self::gen_call_func::gen_call_func_statement;
 use self::gen_combine::gen_combine_statement;
@@ -67,17 +67,14 @@ fn gen_statement(index: usize, statement: &Statement, node: &mut BlockContext) -
 
 fn get_lifecycle_func(
     module: &Module,
-    block: &Block,
-    target: &TargetProperties,
+    cache: &ObjectCache,
+    block: BlockRef,
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
-    let func_name = format!(
-        "maxim.block.{}.{}.{}",
-        block.id.id, block.id.debug_name, lifecycle
-    );
+    let func_name = format!("maxim.block.{}.{}", block, lifecycle);
     util::get_or_create_func(module, &func_name, &|| {
         let context = module.get_context();
-        let layout = data_analyzer::build_block_layout(&context, block, target);
+        let layout = cache.block_layout(block).unwrap();
 
         let func_type = if let Some(ui_struct) = layout.ui_struct {
             context.void_type().fn_type(
@@ -111,14 +108,14 @@ fn get_lifecycle_func(
 // destructed before.
 fn build_lifecycle_func(
     module: &Module,
-    block: &Block,
-    target: &TargetProperties,
+    cache: &ObjectCache,
+    block: BlockRef,
     lifecycle: LifecycleFunc,
     cb: &Fn(&mut BlockContext),
 ) {
-    let func = get_lifecycle_func(module, block, target, lifecycle);
-    build_context_function(module, func, target, &|ctx: BuilderContext| {
-        let layout = data_analyzer::build_block_layout(&module.get_context(), block, target);
+    let func = get_lifecycle_func(module, cache, block, lifecycle);
+    build_context_function(module, func, cache.target(), &|ctx: BuilderContext| {
+        let layout = cache.block_layout(block).unwrap();
         let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let group_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let ui_ptr = if let Some(param) = ctx.func.get_nth_param(2) {
@@ -132,11 +129,11 @@ fn build_lifecycle_func(
     });
 }
 
-pub fn build_construct_func(module: &Module, block: &Block, target: &TargetProperties) {
+pub fn build_construct_func(module: &Module, cache: &ObjectCache, block: &Block) {
     build_lifecycle_func(
         module,
-        block,
-        target,
+        cache,
+        block.id.id,
         LifecycleFunc::Construct,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
@@ -180,11 +177,11 @@ pub fn build_construct_func(module: &Module, block: &Block, target: &TargetPrope
     )
 }
 
-pub fn build_update_func(module: &Module, block: &Block, target: &TargetProperties) {
+pub fn build_update_func(module: &Module, cache: &ObjectCache, block: &Block) {
     build_lifecycle_func(
         module,
-        block,
-        target,
+        cache,
+        block.id.id,
         LifecycleFunc::Update,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
@@ -221,11 +218,11 @@ pub fn build_update_func(module: &Module, block: &Block, target: &TargetProperti
     )
 }
 
-pub fn build_destruct_func(module: &Module, block: &Block, target: &TargetProperties) {
+pub fn build_destruct_func(module: &Module, cache: &ObjectCache, block: &Block) {
     build_lifecycle_func(
         module,
-        block,
-        target,
+        cache,
+        block.id.id,
         LifecycleFunc::Destruct,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
@@ -269,23 +266,23 @@ pub fn build_destruct_func(module: &Module, block: &Block, target: &TargetProper
     )
 }
 
-pub fn build_funcs(module: &Module, block: &Block, target: &TargetProperties) {
-    build_construct_func(module, block, target);
-    build_update_func(module, block, target);
-    build_destruct_func(module, block, target);
+pub fn build_funcs(module: &Module, cache: &ObjectCache, block: &Block) {
+    build_construct_func(module, cache, block);
+    build_update_func(module, cache, block);
+    build_destruct_func(module, cache, block);
 }
 
 pub fn build_lifecycle_call(
     module: &Module,
+    cache: &ObjectCache,
     builder: &mut Builder,
-    block: &Block,
-    target: &TargetProperties,
+    block: BlockRef,
     lifecycle: LifecycleFunc,
     scratch_ptr: PointerValue,
     groups_ptr: PointerValue,
     ui_ptr: Option<PointerValue>,
 ) {
-    let func = get_lifecycle_func(module, block, target, lifecycle);
+    let func = get_lifecycle_func(module, cache, block, lifecycle);
     if let Some(ui_ptr) = ui_ptr {
         builder.build_call(&func, &[&scratch_ptr, &groups_ptr, &ui_ptr], "", false);
     } else {

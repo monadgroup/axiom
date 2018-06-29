@@ -4,7 +4,7 @@ use inkwell::values::PointerValue;
 
 pub struct BlockContext<'a> {
     pub ctx: BuilderContext<'a>,
-    pub layout: BlockLayout,
+    pub layout: &'a BlockLayout,
     statement_ptrs: Vec<PointerValue>,
     data_ptr: PointerValue,
     group_ptr: PointerValue,
@@ -14,7 +14,7 @@ pub struct BlockContext<'a> {
 impl<'a> BlockContext<'a> {
     pub fn new(
         ctx: BuilderContext<'a>,
-        layout: BlockLayout,
+        layout: &'a BlockLayout,
         data_ptr: PointerValue,
         group_ptr: PointerValue,
         ui_ptr: Option<PointerValue>,

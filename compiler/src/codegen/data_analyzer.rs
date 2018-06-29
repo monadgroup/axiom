@@ -1,11 +1,11 @@
 use codegen::TargetProperties;
-use codegen::{controls, functions, values};
+use codegen::{controls, functions, values, ObjectCache};
 use inkwell::context::Context;
 use inkwell::types::{BasicType, BasicTypeEnum, StructType};
 use inkwell::values::{BasicValue, StructValue};
 use inkwell::AddressSpace;
 use mir::block::{Function, Statement};
-use mir::{Block, MIRContext, Node, NodeData, Surface, ValueGroup, ValueGroupSource};
+use mir::{Block, Node, NodeData, Surface, ValueGroup, ValueGroupSource};
 use std::collections::HashMap;
 use std::{fmt, iter};
 
@@ -76,15 +76,16 @@ pub struct SurfaceLayout {
 ///    recording where each entry should point, either to initialized or scratch with a GEP path, or to a
 ///    socket.
 pub fn build_node_layout(
-    context: &Context,
-    mir: &MIRContext,
+    cache: &ObjectCache,
     node: &Node,
-    target: &TargetProperties,
     parent_groups: &[ValueGroup],
 ) -> NodeLayout {
+    let context = cache.context();
+    let target = cache.target();
+
     match node.data {
-        NodeData::Custom(ref block_id) => {
-            let block_layout = build_block_layout(context, mir.block(block_id).unwrap(), target);
+        NodeData::Custom(block_id) => {
+            let block_layout = cache.block_layout(block_id).unwrap();
 
             // a block never has an initialized struct
             let initialized_const = context.const_struct(&[], false);
@@ -99,8 +100,8 @@ pub fn build_node_layout(
             let pointer_struct = block_layout.groups_struct;
             let pointer_sources: Vec<_> = block_layout
                 .group_sources
-                .into_iter()
-                .map(|socket_index| PointerSource::Socket(socket_index, vec![]))
+                .iter()
+                .map(|&socket_index| PointerSource::Socket(socket_index, vec![]))
                 .collect();
 
             NodeLayout {
@@ -110,25 +111,23 @@ pub fn build_node_layout(
                 pointer_sources,
             }
         }
-        NodeData::Group(ref surface_id) => {
-            let surface_layout =
-                build_surface_layout(context, mir, mir.surface(surface_id).unwrap(), target);
+        NodeData::Group(surface_id) => {
+            let surface_layout = cache.surface_layout(surface_id).unwrap();
 
             // surface mapping is just 1:1
             NodeLayout {
-                initialized_const: surface_layout.initialized_const,
-                scratch_struct: surface_layout.scratch_struct,
-                pointer_struct: surface_layout.pointer_struct,
-                pointer_sources: surface_layout.pointer_sources,
+                initialized_const: surface_layout.initialized_const.clone(),
+                scratch_struct: surface_layout.scratch_struct.clone(),
+                pointer_struct: surface_layout.pointer_struct.clone(),
+                pointer_sources: surface_layout.pointer_sources.clone(),
             }
         }
         NodeData::ExtractGroup {
-            ref surface,
+            surface,
             ref source_sockets,
             ref dest_sockets,
         } => {
-            let surface_layout =
-                build_surface_layout(context, mir, mir.surface(surface).unwrap(), target);
+            let surface_layout = cache.surface_layout(surface).unwrap();
 
             // generate new pointer sources that point to each voice
             let voice_pointer_sources: Vec<_> = iter::repeat(&surface_layout.pointer_sources)
@@ -331,14 +330,14 @@ pub fn build_block_layout(
 ///  - `scratch` is a struct initialized to zero, containing the scratch data for each node and groups that are initialized to zero.
 ///  - `pointers` is a struct initialized to pointers to other structs.
 ///
-// todo: this is quite an expensive operation (since it recurses all the way through the tree) - it
-// would be good to be able to cache layouts, maybe on the MIRContext?
 pub fn build_surface_layout(
-    context: &Context,
-    mir: &MIRContext,
+    cache: &ObjectCache,
     surface: &Surface,
     target: &TargetProperties,
 ) -> SurfaceLayout {
+    let context = cache.context();
+    let target = cache.target();
+
     let mut initialized_values = Vec::new();
     let mut scratch_types = Vec::new();
 
@@ -374,7 +373,7 @@ pub fn build_surface_layout(
     let node_initializer_offset = initialized_values.len();
 
     for node in &surface.nodes {
-        let layout = build_node_layout(context, mir, node, target, &surface.groups);
+        let layout = build_node_layout(cache, node, &surface.groups);
         let initialized_index = initialized_values.len();
         let scratch_index = scratch_types.len();
 

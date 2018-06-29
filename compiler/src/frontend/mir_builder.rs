@@ -1,3 +1,4 @@
+use super::Transaction;
 use ast;
 use mir;
 use parser;
@@ -6,8 +7,8 @@ use std;
 use CompileError;
 
 #[no_mangle]
-pub extern "C" fn maxim_create_transaction() -> *mut mir::Transaction {
-    Box::into_raw(Box::new(mir::Transaction::new(Vec::new(), Vec::new())))
+pub extern "C" fn maxim_create_transaction() -> *mut Transaction {
+    Box::into_raw(Box::new(Transaction::new(Vec::new(), Vec::new())))
 }
 
 #[no_mangle]
@@ -88,7 +89,7 @@ pub unsafe extern "C" fn maxim_valuegroupsource_default(
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_build_surface(
-    transaction: *mut mir::Transaction,
+    transaction: *mut Transaction,
     id: u64,
     c_name: *const std::os::raw::c_char,
 ) -> *mut mir::Surface {
@@ -156,10 +157,7 @@ pub unsafe extern "C" fn maxim_build_value_socket(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_build_block(
-    transaction: *mut mir::Transaction,
-    block: *mut mir::Block,
-) {
+pub unsafe extern "C" fn maxim_build_block(transaction: *mut Transaction, block: *mut mir::Block) {
     let owned_block = Box::from_raw(block);
     (*transaction).blocks.push(*owned_block);
 }
