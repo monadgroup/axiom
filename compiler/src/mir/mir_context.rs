@@ -1,4 +1,4 @@
-use mir::{Block, BlockId, IdAllocator, Surface, SurfaceId};
+use mir::{Block, BlockRef, IdAllocator, Surface, SurfaceRef};
 use std::collections::HashMap;
 
 pub struct Transaction {
@@ -9,8 +9,8 @@ pub struct Transaction {
 #[derive(Debug, Clone)]
 pub struct MIRContext {
     next_id: u64,
-    surfaces: HashMap<SurfaceId, Surface>,
-    blocks: HashMap<BlockId, Block>,
+    surfaces: HashMap<SurfaceRef, Surface>,
+    blocks: HashMap<BlockRef, Block>,
 }
 
 impl Transaction {
@@ -28,28 +28,28 @@ impl MIRContext {
         }
     }
 
-    pub fn surface(&self, id: &SurfaceId) -> Option<&Surface> {
+    pub fn surface(&self, id: &SurfaceRef) -> Option<&Surface> {
         self.surfaces.get(id)
     }
 
-    pub fn surface_mut(&mut self, id: &SurfaceId) -> Option<&mut Surface> {
+    pub fn surface_mut(&mut self, id: &SurfaceRef) -> Option<&mut Surface> {
         self.surfaces.get_mut(id)
     }
 
-    pub fn block(&self, id: &BlockId) -> Option<&Block> {
+    pub fn block(&self, id: &BlockRef) -> Option<&Block> {
         self.blocks.get(id)
     }
 
-    pub fn block_mut(&mut self, id: &BlockId) -> Option<&mut Block> {
+    pub fn block_mut(&mut self, id: &BlockRef) -> Option<&mut Block> {
         self.blocks.get_mut(id)
     }
 
     pub fn register_surface(&mut self, surface: Surface) {
-        self.surfaces.insert(surface.id.clone(), surface);
+        self.surfaces.insert(surface.id.id, surface);
     }
 
     pub fn register_block(&mut self, block: Block) {
-        self.blocks.insert(block.id.clone(), block);
+        self.blocks.insert(block.id.id, block);
     }
 }
 

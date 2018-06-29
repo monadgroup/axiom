@@ -10,6 +10,7 @@ mod compile_error;
 
 pub mod ast;
 pub mod codegen;
+pub mod frontend;
 pub mod mir;
 pub mod parser;
 pub mod pass;

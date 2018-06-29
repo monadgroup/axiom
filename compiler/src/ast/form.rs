@@ -2,6 +2,7 @@ use ast::SourceRange;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[repr(i8)]
 pub enum FormType {
     None = 0,
     Control = 1,

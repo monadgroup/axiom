@@ -1,4 +1,4 @@
-use mir::pool_id::PoolId;
+use mir::pool_id::{PoolId, PoolRef};
 
 mod control;
 mod function;
@@ -8,6 +8,7 @@ pub use self::control::Control;
 pub use self::function::{Function, FunctionArgRange};
 pub use self::statement::{Global, Statement};
 
+pub type BlockRef = PoolRef;
 pub type BlockId = PoolId<Block>;
 
 #[derive(Debug, Clone)]

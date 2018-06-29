@@ -170,7 +170,7 @@ impl<'a> GroupExtractor<'a> {
         let new_node = mir::Node::new(
             new_sockets,
             mir::NodeData::ExtractGroup {
-                surface: new_surface.id.clone(),
+                surface: new_surface.id.id,
                 source_sockets: extract_group
                     .sources
                     .into_iter()

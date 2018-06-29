@@ -13,6 +13,7 @@ extern crate lazy_static;
 mod ast;
 mod codegen;
 mod compile_error;
+mod frontend;
 mod mir;
 mod parser;
 mod pass;
@@ -178,14 +179,14 @@ fn main() {
     let nodes = vec![
         Node::new(
             vec![ValueSocket::new(1, true, false, true)],
-            NodeData::Custom(source_id.clone()),
+            NodeData::Custom(source_id.id),
         ),
         Node::new(
             vec![
                 ValueSocket::new(1, false, true, false),
                 ValueSocket::new(0, true, false, false),
             ],
-            NodeData::Custom(reader_id.clone()),
+            NodeData::Custom(reader_id.id),
         ),
     ];
     let surface_id = SurfaceId::new("test".to_string(), &mut allocator);

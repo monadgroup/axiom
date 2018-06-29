@@ -1,11 +1,11 @@
-use mir::{BlockId, SurfaceId, ValueSocket};
+use mir::{BlockRef, SurfaceRef, ValueSocket};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum NodeData {
-    Custom(BlockId),
-    Group(SurfaceId),
+    Custom(BlockRef),
+    Group(SurfaceRef),
     ExtractGroup {
-        surface: SurfaceId,
+        surface: SurfaceRef,
         source_sockets: Vec<usize>,
         dest_sockets: Vec<usize>,
     },

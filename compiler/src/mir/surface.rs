@@ -1,9 +1,10 @@
-use mir::pool_id::PoolId;
+use mir::pool_id::{PoolId, PoolRef};
 use mir::{Node, ValueGroup};
 
+pub type SurfaceRef = PoolRef;
 pub type SurfaceId = PoolId<Surface>;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Clone)]
 pub struct Surface {
     pub id: SurfaceId,
     pub groups: Vec<ValueGroup>,
