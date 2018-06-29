@@ -36,7 +36,7 @@ impl fmt::Debug for PointerSource {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NodeLayout {
     pub initialized_const: StructValue,
     pub scratch_struct: StructType,
@@ -44,7 +44,7 @@ pub struct NodeLayout {
     pub pointer_sources: Vec<PointerSource>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BlockLayout {
     pub scratch_struct: StructType,
     pub groups_struct: StructType,
@@ -55,7 +55,7 @@ pub struct BlockLayout {
     func_indexes: HashMap<usize, usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SurfaceLayout {
     pub initialized_const: StructValue,
     pub scratch_struct: StructType,
@@ -330,11 +330,7 @@ pub fn build_block_layout(
 ///  - `scratch` is a struct initialized to zero, containing the scratch data for each node and groups that are initialized to zero.
 ///  - `pointers` is a struct initialized to pointers to other structs.
 ///
-pub fn build_surface_layout(
-    cache: &ObjectCache,
-    surface: &Surface,
-    target: &TargetProperties,
-) -> SurfaceLayout {
+pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLayout {
     let context = cache.context();
     let target = cache.target();
 

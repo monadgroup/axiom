@@ -88,10 +88,13 @@ fn optimize_module(module: &inkwell::module::Module) {
 
 fn main() {
     // build a basic MIR
-    /*let mut allocator = MIRContext::new();
-    let source_id = BlockId::new("source1".to_string(), &mut allocator);
+    let context = inkwell::context::Context::create();
+    let target = codegen::TargetProperties::new(true, false);
+    let mut runtime = frontend::Runtime::new(&context, &target);
+
+    let source_id = runtime.alloc_id();
     let source_block = mir::Block::new(
-        source_id.clone(),
+        BlockId::new_with_id("source1".to_string(), source_id),
         vec![mir::block::Control::new(
             "bla".to_string(),
             ControlType::AudioExtract,
@@ -100,101 +103,41 @@ fn main() {
         )],
         vec![],
     );
-    allocator.register_block(source_block);
 
-    let reader_id = BlockId::new("reader1".to_string(), &mut allocator);
+    let reader_id = runtime.alloc_id();
     let reader_block = mir::Block::new(
-        reader_id.clone(),
+        BlockId::new_with_id("reader1".to_string(), reader_id),
         vec![
             mir::block::Control::new("input".to_string(), ControlType::Audio, false, true),
             mir::block::Control::new("output".to_string(), ControlType::Audio, false, true),
         ],
         vec![],
     );
-    allocator.register_block(reader_block);
 
-    let groups = vec![
-        ValueGroup::new(VarType::Num, ValueGroupSource::None),
-        ValueGroup::new(VarType::new_array(VarType::Num), ValueGroupSource::None),
-    ];
-    let nodes = vec![
-        Node::new(
-            vec![ValueSocket::new(1, true, false, true)],
-            NodeData::Custom(source_id.id),
-        ),
-        Node::new(
-            vec![
-                ValueSocket::new(1, false, true, false),
-                ValueSocket::new(0, true, false, false),
-            ],
-            NodeData::Custom(reader_id.id),
-        ),
-    ];
-    let surface_id = SurfaceId::new("test".to_string(), &mut allocator);
-    let mut surface = Surface::new(surface_id.clone(), groups, nodes);
-
-    let context = inkwell::context::Context::create();
-    let module = context.create_module("test");
-    let target = TargetProperties::new(true, false);
-
-    let new_surfaces = group_extracted(&mut surface, &mut allocator);
-    for new_surface in new_surfaces.into_iter() {
-        println!(
-            "Surface {:?}: {:#?}",
-            new_surface.id,
-            codegen::data_analyzer::build_surface_layout(
-                &context,
-                &allocator,
-                &new_surface,
-                &target
-            )
-        );
-        allocator.register_surface(new_surface);
-    }
-
-    remove_dead_groups(&mut surface);
-    println!(
-        "Root surface {:?}: {:#?}",
-        surface.id,
-        codegen::data_analyzer::build_surface_layout(&context, &allocator, &surface, &target)
+    let surface_id = 0;
+    let surface = mir::Surface::new(
+        SurfaceId::new_with_id("surface".to_string(), surface_id),
+        vec![
+            ValueGroup::new(VarType::Num, ValueGroupSource::None),
+            ValueGroup::new(VarType::new_array(VarType::Num), ValueGroupSource::None),
+        ],
+        vec![
+            Node::new(
+                vec![ValueSocket::new(1, true, false, true)],
+                NodeData::Custom(source_id),
+            ),
+            Node::new(
+                vec![
+                    ValueSocket::new(1, false, true, false),
+                    ValueSocket::new(0, true, false, false),
+                ],
+                NodeData::Custom(reader_id),
+            ),
+        ],
     );
 
-    codegen::surface::build_funcs(&module, &allocator, &surface, &target);
-    if let Err(e) = module.verify() {
-        module.print_to_stderr();
-        println!("{}", e.to_string());
-    } else {
-        optimize_module(&module);
-        module.print_to_stderr();
-    }
+    let transaction = frontend::Transaction::new(vec![surface], vec![source_block, reader_block]);
+    runtime.commit(transaction);
 
-    /*let context = inkwell::context::Context::create();
-    let module = context.create_module("test");
-    let target = TargetProperties::new(true, false);
-
-    let new_surfaces = group_extracted(&mut surface, &mut allocator);
-    for new_surface in new_surfaces.into_iter() {
-        println!("New surface: {:#?}", new_surface);
-        println!("{:#?}", codegen::data_analyzer::build_surface_layout(&context, &allocator, &new_surface, &target));
-        allocator.register_surface(new_surface);
-    }
-
-    println!("Root surface: {:#?}", surface);
-    println!("{:#?}", codegen::data_analyzer::build_surface_layout(&context, &allocator, &surface, &target));
-    allocator.register_surface(surface);
-
-    codegen::surface::build_funcs(
-        &module,
-        &allocator,
-        allocator.surface(&surface_id).unwrap(),
-        &target,
-    );
-
-    if let Err(e) = module.verify() {
-        module.print_to_stderr();
-        println!("{}", e.to_string());
-    } else {
-        optimize_module(&module);
-        module.print_to_stderr();
-    }*/*/
+    println!("{:#?}", runtime);
 }

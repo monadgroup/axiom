@@ -7,6 +7,7 @@ pub mod functions;
 pub mod globals;
 pub mod intrinsics;
 mod object_cache;
+mod optimizer;
 pub mod surface;
 mod target_properties;
 pub mod util;
@@ -14,6 +15,7 @@ pub mod values;
 
 pub use self::builder_context::{build_context_function, BuilderContext};
 pub use self::object_cache::ObjectCache;
+pub use self::optimizer::Optimizer;
 pub use self::target_properties::TargetProperties;
 
 use std::fmt;

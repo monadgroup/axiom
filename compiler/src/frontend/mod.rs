@@ -1,4 +1,8 @@
+pub mod dependency_walker;
 pub mod mir_builder;
+mod runtime;
+
+pub use self::runtime::Runtime;
 
 use mir::{Block, Surface};
 
