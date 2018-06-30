@@ -13,7 +13,7 @@ fn gen_scalar_call(
     result: PointerValue,
     name: &str,
 ) {
-    let call_func = util::get_or_create_func(func.ctx.module, name, &|| {
+    let call_func = util::get_or_create_func(func.ctx.module, name, true, &|| {
         let f32_type = func.ctx.context.f32_type();
         let param_types: Vec<_> = iter::repeat(&f32_type as &BasicType)
             .take(args.len())

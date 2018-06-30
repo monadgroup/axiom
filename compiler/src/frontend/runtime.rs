@@ -159,6 +159,17 @@ impl Runtime {
             None => None,
         }
     }
+
+    pub fn print_modules(&self) {
+        for (_, &(ref block, _, ref module)) in &self.blocks {
+            println!("Block {:?}", block.id);
+            module.print_to_stderr();
+        }
+        for (_, &(ref surface, _, ref module)) in &self.surfaces {
+            println!("Surface {:?}", surface.id);
+            module.print_to_stderr();
+        }
+    }
 }
 
 impl ObjectCache for Runtime {

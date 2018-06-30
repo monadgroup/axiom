@@ -81,7 +81,7 @@ impl MidiValue {
     }
 
     fn get_push_event_func(module: &Module, context: &Context) -> FunctionValue {
-        util::get_or_create_func(module, "maxim.midi.pushEvent", &|| {
+        util::get_or_create_func(module, "maxim.midi.pushEvent", true, &|| {
             (
                 Linkage::ExternalLinkage,
                 context.void_type().fn_type(

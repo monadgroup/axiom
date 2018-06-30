@@ -110,7 +110,7 @@ fn get_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.control.{}.{}", control_type, lifecycle);
-    util::get_or_create_func(module, &func_name, &|| {
+    util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -131,7 +131,7 @@ fn get_ui_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.control.{}.ui_{}", control_type, lifecycle);
-    util::get_or_create_func(module, &func_name, &|| {
+    util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -152,7 +152,7 @@ fn get_field_getter_setter_func(
     field: ControlField,
     func_name: &str,
 ) -> FunctionValue {
-    util::get_or_create_func(module, &func_name, &|| {
+    util::get_or_create_func(module, &func_name, true, &|| {
         let control_type = ControlType::from(field);
         let context = module.get_context();
         (

@@ -143,4 +143,6 @@ fn main() {
         "Commit took {}ms",
         (time::precise_time_s() - commit_start_time) * 1000.
     );
+
+    runtime.print_modules();
 }

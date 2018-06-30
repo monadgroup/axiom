@@ -53,7 +53,7 @@ impl<'a> ConvertGenerator for PrivateGenerator<'a> {
 
 pub fn get_convert_func(module: &Module, target_form: &FormType) -> FunctionValue {
     let func_name = format!("maxim.converter.{}", target_form);
-    util::get_or_create_func(module, &func_name, &|| {
+    util::get_or_create_func(module, &func_name, true, &|| {
         let num_type = NumValue::get_type(&module.get_context());
         (
             Linkage::ExternalLinkage,

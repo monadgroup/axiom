@@ -15,7 +15,7 @@ fn get_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.surface.{}.{}", surface, lifecycle);
-    util::get_or_create_func(module, &func_name, &|| {
+    util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         let layout = cache.surface_layout(surface).unwrap();
         (

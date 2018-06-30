@@ -127,7 +127,7 @@ fn get_lifecycle_func(
     lifecycle: FunctionLifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.function.{}.{}", function, lifecycle);
-    util::get_or_create_func(module, &func_name, &|| {
+    util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -141,7 +141,7 @@ fn get_lifecycle_func(
 
 fn get_update_func(module: &Module, function: block::Function) -> FunctionValue {
     let func_name = format!("maxim.function.{}.update", function);
-    util::get_or_create_func(module, &func_name, &|| {
+    util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         let mut arg_types: Vec<BasicTypeEnum> = vec![
             get_data_type(&context, function)

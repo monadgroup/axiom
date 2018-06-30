@@ -5,9 +5,7 @@ use inkwell::values::FunctionValue;
 use inkwell::{AddressSpace, IntPredicate};
 
 pub fn memcpy(module: &Module) -> FunctionValue {
-    // todo: set correct attributes on arguments
-    // todo: use 64 or 32-bits depending on data layout
-    util::get_or_create_func(module, "llvm.memcpy.p0i8.p0i8.i64", &|| {
+    util::get_or_create_func(module, "llvm.memcpy.p0i8.p0i8.i32", false, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -15,7 +13,7 @@ pub fn memcpy(module: &Module) -> FunctionValue {
                 &[
                     &context.i8_type().ptr_type(AddressSpace::Generic),
                     &context.i8_type().ptr_type(AddressSpace::Generic),
-                    &context.i64_type(),
+                    &context.i32_type(),
                     &context.i32_type(),
                     &context.bool_type(),
                 ],
@@ -26,7 +24,7 @@ pub fn memcpy(module: &Module) -> FunctionValue {
 }
 
 pub fn pow_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.pow.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.pow.v2f32", false, &|| {
         let context = module.get_context();
         let v2f32_type = context.f32_type().vec_type(2);
         (
@@ -37,7 +35,7 @@ pub fn pow_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn log_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.log.v2f32", false, &|| {
         let context = module.get_context();
         let v2f32_type = context.f32_type().vec_type(2);
         (
@@ -48,7 +46,7 @@ pub fn log_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn log10_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log10.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.log10.v2f32", false, &|| {
         let context = module.get_context();
         let v2f32_type = context.f32_type().vec_type(2);
         (
@@ -59,7 +57,7 @@ pub fn log10_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn log2_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log2.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.log2.v2f32", false, &|| {
         let context = module.get_context();
         let v2f32_type = context.f32_type().vec_type(2);
         (
@@ -70,7 +68,7 @@ pub fn log2_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn cos_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.cos.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.cos.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -80,7 +78,7 @@ pub fn cos_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn cos_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.cos.f32", &|| {
+    util::get_or_create_func(module, "llvm.cos.f32", false, &|| {
         let f32_type = module.get_context().f32_type();
         (
             Linkage::ExternalLinkage,
@@ -90,7 +88,7 @@ pub fn cos_f32(module: &Module) -> FunctionValue {
 }
 
 pub fn sin_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sin.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.sin.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -100,7 +98,7 @@ pub fn sin_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn sin_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sin.f32", &|| {
+    util::get_or_create_func(module, "llvm.sin.f32", false, &|| {
         let f32_type = module.get_context().f32_type();
         (
             Linkage::ExternalLinkage,
@@ -110,7 +108,7 @@ pub fn sin_f32(module: &Module) -> FunctionValue {
 }
 
 pub fn sqrt_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sqrt.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.sqrt.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -120,7 +118,7 @@ pub fn sqrt_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn ceil_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.ceil.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.ceil.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -130,7 +128,7 @@ pub fn ceil_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn floor_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.floor.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.floor.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -140,7 +138,7 @@ pub fn floor_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn fabs_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.fabs.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.fabs.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -150,7 +148,7 @@ pub fn fabs_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn minnum_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.minnum.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.minnum.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -160,7 +158,7 @@ pub fn minnum_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn maxnum_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.maxnum.v2f32", &|| {
+    util::get_or_create_func(module, "llvm.maxnum.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -170,7 +168,7 @@ pub fn maxnum_v2f32(module: &Module) -> FunctionValue {
 }
 
 pub fn eucrem_v2i32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.eucrem.v2i32", &|| {
+    util::get_or_create_func(module, "maxim.eucrem.v2i32", true, &|| {
         let v2i32_type = module.get_context().i32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
