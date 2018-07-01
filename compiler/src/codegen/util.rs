@@ -2,9 +2,8 @@ use codegen::intrinsics;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
-use inkwell::types::{BasicType, BasicTypeEnum, FunctionType, VectorType};
-use inkwell::values::VectorValue;
-use inkwell::values::{FunctionValue, GlobalValue, IntValue, PointerValue};
+use inkwell::types::{ArrayType, BasicType, BasicTypeEnum, FunctionType, VectorType};
+use inkwell::values::{FunctionValue, GlobalValue, IntValue, PointerValue, VectorValue};
 use inkwell::AddressSpace;
 
 pub fn get_size_of(t: &BasicTypeEnum) -> Option<IntValue> {
@@ -15,6 +14,17 @@ pub fn get_size_of(t: &BasicTypeEnum) -> Option<IntValue> {
         BasicTypeEnum::StructType(val) => val.size_of(),
         BasicTypeEnum::ArrayType(val) => val.size_of(),
         BasicTypeEnum::VectorType(val) => val.size_of(),
+    }
+}
+
+pub fn get_array_type(t: &BasicTypeEnum, size: u32) -> ArrayType {
+    match t {
+        BasicTypeEnum::IntType(val) => val.array_type(size),
+        BasicTypeEnum::FloatType(val) => val.array_type(size),
+        BasicTypeEnum::PointerType(val) => val.array_type(size),
+        BasicTypeEnum::StructType(val) => val.array_type(size),
+        BasicTypeEnum::ArrayType(val) => val.array_type(size),
+        BasicTypeEnum::VectorType(val) => val.array_type(size),
     }
 }
 

@@ -12,7 +12,7 @@ pub struct Runtime {
     next_id: u64,
     context: Context,
     target: TargetProperties,
-    optimizer: Optimizer,
+    pub optimizer: Optimizer,
     surfaces: HashMap<SurfaceRef, (Surface, data_analyzer::SurfaceLayout, Module)>,
     blocks: HashMap<BlockRef, (Block, data_analyzer::BlockLayout, Module)>,
 }

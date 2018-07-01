@@ -39,7 +39,7 @@ impl fmt::Debug for PointerSource {
 #[derive(Debug, Clone)]
 pub struct NodeLayout {
     pub initialized_const: StructValue,
-    pub scratch_struct: StructType,
+    pub scratch_struct: BasicTypeEnum,
     pub pointer_struct: StructType,
     pub pointer_sources: Vec<PointerSource>,
 }
@@ -106,7 +106,7 @@ pub fn build_node_layout(
 
             NodeLayout {
                 initialized_const,
-                scratch_struct,
+                scratch_struct: scratch_struct.into(),
                 pointer_struct,
                 pointer_sources,
             }
@@ -116,9 +116,9 @@ pub fn build_node_layout(
 
             // surface mapping is just 1:1
             NodeLayout {
-                initialized_const: surface_layout.initialized_const.clone(),
-                scratch_struct: surface_layout.scratch_struct.clone(),
-                pointer_struct: surface_layout.pointer_struct.clone(),
+                initialized_const: surface_layout.initialized_const,
+                scratch_struct: surface_layout.scratch_struct.into(),
+                pointer_struct: surface_layout.pointer_struct,
                 pointer_sources: surface_layout.pointer_sources.clone(),
             }
         }
@@ -206,12 +206,10 @@ pub fn build_node_layout(
             // pre-initialized data, since this is immutable.
             NodeLayout {
                 initialized_const: surface_layout.initialized_const,
-                scratch_struct: context.struct_type(
-                    &[&surface_layout
-                        .scratch_struct
-                        .array_type(values::ARRAY_CAPACITY as u32)],
-                    false,
-                ),
+                scratch_struct: surface_layout
+                    .scratch_struct
+                    .array_type(values::ARRAY_CAPACITY as u32)
+                    .into(),
                 pointer_struct,
                 pointer_sources,
             }
@@ -335,7 +333,7 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
     let target = cache.target();
 
     let mut initialized_values = Vec::new();
-    let mut scratch_types = Vec::new();
+    let mut scratch_types: Vec<BasicTypeEnum> = Vec::new();
 
     let mut pointer_types = Vec::new();
     let mut pointer_sources = Vec::new();
@@ -348,7 +346,7 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
             match group.source {
                 ValueGroupSource::None => {
                     let scratch_index = scratch_types.len();
-                    scratch_types.push(value_type);
+                    scratch_types.push(value_type.into());
 
                     PointerSource::Scratch(vec![scratch_index])
                 }

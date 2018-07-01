@@ -8,6 +8,7 @@ pub mod globals;
 pub mod intrinsics;
 mod object_cache;
 mod optimizer;
+pub mod root;
 pub mod surface;
 mod target_properties;
 pub mod util;

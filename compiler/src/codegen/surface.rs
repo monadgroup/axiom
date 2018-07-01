@@ -185,11 +185,8 @@ fn build_node_call(
 
             let const_zero = ctx.context.i32_type().const_int(0, false);
             let voice_scratch_ptr = unsafe {
-                ctx.b.build_in_bounds_gep(
-                    &scratch_ptr,
-                    &[const_zero, const_zero, index_32],
-                    "scratchptr",
-                )
+                ctx.b
+                    .build_in_bounds_gep(&scratch_ptr, &[const_zero, index_32], "scratchptr")
             };
             let voice_pointers_ptr = unsafe {
                 ctx.b.build_in_bounds_gep(
