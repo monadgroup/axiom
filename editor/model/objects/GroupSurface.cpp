@@ -20,3 +20,11 @@ std::unique_ptr<GroupSurface> GroupSurface::create(const QUuid &uuid, const QUui
 QString GroupSurface::name() {
     return _node->name();
 }
+
+uint64_t GroupSurface::getRuntimeId(MaximCompiler::Runtime &runtime) {
+    if (runtimeId) {
+        return runtimeId;
+    } else {
+        return runtime.nextId();
+    }
+}

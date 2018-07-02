@@ -6,8 +6,8 @@ if (NOT MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
 endif ()
 
-set(CMAKE_AUTOMOCC ON)
-set(CMAKE_AUTORCC ON)
+set(SOURCE_FILES
+        SurfaceMirBuilder.h SurfaceMirBuilder.cpp)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(COMPILER_LINK_LIBS "${CMAKE_SOURCE_DIR}/compiler/target/debug/compiler.lib")
@@ -20,7 +20,7 @@ if (WIN32)
     set(COMPILER_LINK_LIBS ${COMPILER_LINK_LIBS} ws2_32 userenv advapi32 psapi)
 endif ()
 
-add_library(maxim_compiler)
+add_library(maxim_compiler ${SOURCE_FILES})
 add_dependencies(maxim_compiler compiler)
 target_link_libraries(maxim_compiler ${COMPILER_LINK_LIBS})
 

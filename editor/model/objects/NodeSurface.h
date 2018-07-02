@@ -3,6 +3,7 @@
 #include "common/Event.h"
 #include "../grid/GridSurface.h"
 #include "../ModelObject.h"
+#include "editor/compiler/interface/Runtime.h"
 
 namespace AxiomModel {
 
@@ -55,6 +56,8 @@ namespace AxiomModel {
         void setZoom(float zoom);
 
         Sequence<ModelObject *> getCopyItems() const;
+
+        virtual uint64_t getRuntimeId(MaximCompiler::Runtime &runtime) = 0;
 
         void saveValue();
 

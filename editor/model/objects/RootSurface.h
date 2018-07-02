@@ -13,6 +13,8 @@ namespace AxiomModel {
         bool canExposeControl() const override { return false; }
 
         bool canHaveAutomation() const override { return true; }
+
+        uint64_t getRuntimeId(MaximCompiler::Runtime &runtime) override { return 0; }
     };
 
 }

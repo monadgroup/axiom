@@ -21,8 +21,11 @@ namespace AxiomModel {
 
         GroupNode *node() const { return _node; }
 
+        uint64_t getRuntimeId(MaximCompiler::Runtime &runtime) override;
+
     private:
         GroupNode *_node;
+        uint64_t runtimeId = 0;
     };
 
 }
