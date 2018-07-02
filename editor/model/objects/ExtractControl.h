@@ -32,8 +32,6 @@ namespace AxiomModel {
 
         void setActiveSlots(ActiveSlotFlags activeSlots);
 
-        void doRuntimeUpdate() override;
-
         // todo: implement these?
         void saveValue() override { }
 

@@ -83,8 +83,6 @@ namespace AxiomGui {
 
         void addWire(AxiomModel::ConnectionWire *wire);
 
-        void doRuntimeUpdate();
-
     private:
         bool isSelecting = false;
         std::set<AxiomModel::GridItem *> lastSelectedItems;

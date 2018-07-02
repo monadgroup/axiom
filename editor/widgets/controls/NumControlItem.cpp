@@ -12,8 +12,6 @@
 #include "editor/model/objects/NumControl.h"
 #include "editor/model/actions/SetNumModeAction.h"
 #include "editor/model/actions/SetNumValueAction.h"
-#include "compiler/runtime/Control.h"
-#include "compiler/runtime/Runtime.h"
 #include "../node/NodeItem.h"
 #include "../CommonColors.h"
 #include "../FloatingValueEditor.h"
@@ -50,26 +48,26 @@ static QString getNoteName(float noteVal) {
     return QString::number(intNote) % " " % noteNames[noteNameIndex] % QString::number(octave);
 }
 
-QString NumControlItem::formatNumber(float val, MaximCommon::FormType form) {
+QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
     switch (form) {
-        case MaximCommon::FormType::NONE:
-        case MaximCommon::FormType::CONTROL:
-        case MaximCommon::FormType::OSCILLATOR:
-        case MaximCommon::FormType::AMPLITUDE:
+        case AxiomModel::FormType::NONE:
+        case AxiomModel::FormType::CONTROL:
+        case AxiomModel::FormType::OSCILLATOR:
+        case AxiomModel::FormType::AMPLITUDE:
             return QString::number(val, 'f', 2);
-        case MaximCommon::FormType::Q:
+        case AxiomModel::FormType::Q:
             return QString::number(val, 'f', 1);
-        case MaximCommon::FormType::NOTE:
+        case AxiomModel::FormType::NOTE:
             return getNoteName(val);
-        case MaximCommon::FormType::FREQUENCY:
+        case AxiomModel::FormType::FREQUENCY:
             return val < 1000 ? static_cast<QString>(QString::number(val, 'f', 2) % " Hz") : static_cast<QString>(QString::number(val / 1000, 'f', 2) % "KHz");
-        case MaximCommon::FormType::BEATS:
+        case AxiomModel::FormType::BEATS:
             return QString::number(val, 'f', 1) % " beats";
-        case MaximCommon::FormType::SECONDS:
+        case AxiomModel::FormType::SECONDS:
             return val < 0.1 ? static_cast<QString>(QString::number(val * 1000, 'f', 2) % " ms") : static_cast<QString>(QString::number(val, 'f', 2) % " s");
-        case MaximCommon::FormType::SAMPLES:
+        case AxiomModel::FormType::SAMPLES:
             return QString::number((int) val);
-        case MaximCommon::FormType::DB:
+        case AxiomModel::FormType::DB:
             return QString::number(val, 'f', 1) % " dB";
     }
     unreachable;
@@ -293,13 +291,13 @@ void NumControlItem::showValueExpired() {
     update();
 }
 
-void NumControlItem::setValue(MaximRuntime::NumValue value) {
+void NumControlItem::setValue(NumValue value) {
     if (value != control->value()) {
         control->root()->history().append(SetNumValueAction::create(control->uuid(), control->value(), value, control->root()));
     }
 }
 
-QString NumControlItem::valueAsString(MaximRuntime::NumValue num) {
+QString NumControlItem::valueAsString(NumValue num) {
     switch (control->channel()) {
         case NumControl::Channel::LEFT:
             return QString::number(num.left);
@@ -313,7 +311,7 @@ QString NumControlItem::valueAsString(MaximRuntime::NumValue num) {
     unreachable;
 }
 
-MaximRuntime::NumValue NumControlItem::stringAsValue(const QString &str, MaximRuntime::NumValue oldNum) {
+NumValue NumControlItem::stringAsValue(const QString &str, NumValue oldNum) {
     auto commaIndex = str.indexOf(',');
     auto leftStr = commaIndex >= 0 ? str.left(commaIndex) : str;
     auto rightStr = commaIndex >= 0 ? str.mid(commaIndex + 1) : str;
@@ -333,18 +331,15 @@ MaximRuntime::NumValue NumControlItem::stringAsValue(const QString &str, MaximRu
     unreachable;
 }
 
-MaximRuntime::NumValue NumControlItem::clampVal(const MaximRuntime::NumValue &val) {
+NumValue NumControlItem::clampVal(const NumValue &val) {
     return val.withLR(
         val.left < 0 ? 0 : val.left > 1 ? 1 : val.left,
         val.right < 0 ? 0 : val.right > 1 ? 1 : val.right
     );
 }
 
-MaximRuntime::NumValue NumControlItem::getCVal() const {
+NumValue NumControlItem::getCVal() const {
     auto v = control->value();
-    if (control->runtime()) {
-        v = (*control->runtime())->runtime()->op().convertNum(MaximCommon::FormType::CONTROL, v);
-    }
     v = clampVal(v);
 
     switch (control->channel()) {
@@ -358,8 +353,8 @@ MaximRuntime::NumValue NumControlItem::getCVal() const {
     unreachable;
 }
 
-void NumControlItem::setCVal(MaximRuntime::NumValue v) const {
-    MaximRuntime::NumValue setVal;
+void NumControlItem::setCVal(NumValue v) const {
+    NumValue setVal;
 
     switch (control->channel()) {
         case NumControl::Channel::LEFT:
@@ -373,7 +368,7 @@ void NumControlItem::setCVal(MaximRuntime::NumValue v) const {
             break;
     }
 
-    setVal = clampVal(setVal).withForm(MaximCommon::FormType::CONTROL);
+    setVal = clampVal(setVal).withForm(FormType::CONTROL);
     control->setValue(setVal);
 }
 

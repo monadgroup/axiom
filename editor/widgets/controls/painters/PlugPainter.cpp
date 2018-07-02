@@ -1,10 +1,11 @@
 #include "PlugPainter.h"
 
 #include "editor/util.h"
+#include "editor/model/Value.h"
 
 using namespace AxiomGui;
 
-void PlugPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, std::optional<MaximRuntime::NumValue> val, const QColor &valBaseColor) {
+void PlugPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, std::optional<AxiomModel::NumValue> val, const QColor &valBaseColor) {
     auto scaledBorder = 0.06f * aspectBoundingRect.width();
     auto externBr = getBounds(aspectBoundingRect);
 

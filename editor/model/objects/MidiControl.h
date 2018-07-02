@@ -2,13 +2,13 @@
 
 #include "common/Event.h"
 #include "Control.h"
-#include "compiler/runtime/ValueOperator.h"
+#include "../Value.h"
 
 namespace AxiomModel {
 
     class MidiControl : public Control {
     public:
-        AxiomCommon::Event<const MaximRuntime::MidiValue &> valueChanged;
+        AxiomCommon::Event<const MidiValue &> valueChanged;
 
         MidiControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                     bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, ModelRoot *root);
@@ -24,20 +24,18 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        const MaximRuntime::MidiValue &value() const { return _value; }
+        const MidiValue &value() const { return _value; }
 
-        void setValue(const MaximRuntime::MidiValue &value);
-
-        void doRuntimeUpdate() override;
+        void setValue(const MidiValue &value);
 
         void saveValue() override;
 
         void restoreValue() override;
 
     private:
-        MaximRuntime::MidiValue _value;
+        MidiValue _value;
 
-        void setInternalValue(MaximRuntime::MidiValue value);
+        void setInternalValue(MidiValue value);
     };
 
 }

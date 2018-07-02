@@ -6,7 +6,6 @@
 #include "../PoolOperators.h"
 #include "../PromiseOperators.h"
 #include "../ReferenceMapper.h"
-#include "compiler/runtime/Control.h"
 
 using namespace AxiomModel;
 
@@ -27,14 +26,8 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
         controlB->isActiveChanged.connect(&wire, &ConnectionWire::setEndActive);
         wire.activeChanged.connect(controlA, &Control::setIsActive);
         wire.activeChanged.connect(controlB, &Control::setIsActive);
-        controlA->runtimeAttached.connect(this, &Connection::attachRuntime);
-        controlB->runtimeAttached.connect(this, &Connection::attachRuntime);
-        controlA->runtimeAboutToDetach.connect(this, &Connection::detachRuntime);
-        controlB->runtimeAboutToDetach.connect(this, &Connection::detachRuntime);
         controlA->removed.connect(this, &Connection::remove);
         controlB->removed.connect(this, &Connection::remove);
-
-        attachRuntime();
     });
 }
 
@@ -61,24 +54,7 @@ void Connection::serialize(QDataStream &stream, const QUuid &parent, bool withCo
     stream << _controlBUuid;
 }
 
-void Connection::attachRuntime() {
-    auto controlA = findMaybe(root()->controls(), _controlAUuid);
-    auto controlB = findMaybe(root()->controls(), _controlBUuid);
-
-    if (!controlA || !controlB || !(*controlA)->runtime() || !(*controlB)->runtime()) return;
-    (*(*controlA)->runtime())->connectTo(*(*controlB)->runtime());
-}
-
-void Connection::detachRuntime() {
-    auto controlA = findMaybe(root()->controls(), _controlAUuid);
-    auto controlB = findMaybe(root()->controls(), _controlBUuid);
-
-    if (!controlA || !controlB || !(*controlA)->runtime() || !(*controlB)->runtime()) return;
-    (*(*controlA)->runtime())->disconnectFrom(*(*controlB)->runtime());
-}
-
 void Connection::remove() {
-    detachRuntime();
     if (_wire.value()) (*_wire.value()).remove();
     ModelObject::remove();
 }

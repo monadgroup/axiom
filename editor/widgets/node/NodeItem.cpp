@@ -30,7 +30,6 @@
 #include "editor/widgets/controls/ExtractControlItem.h"
 #include "editor/widgets/controls/PortalControlItem.h"
 #include "editor/widgets/controls/ScopeControlItem.h"
-#include "compiler/runtime/IONode.h"
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
 #include "../FloatingValueEditor.h"
@@ -304,9 +303,10 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
     } else if (selectedAction == fiddleAction && automationNode) {
-        if (automationNode->runtime()) {
+        // todo
+        /*if (automationNode->runtime()) {
             (*automationNode->runtime())->fiddle();
-        }
+        }*/
     }
 }
 

@@ -84,24 +84,6 @@ void CustomNodePanel::setOpen(bool open) {
     setVisible(open);
 }
 
-void CustomNodePanel::setError(const MaximRuntime::ErrorLog &log) {
-    //hasErrors = true;
-    //QList<QTextEdit::ExtraSelection> selections;
-    //for (const auto &err : log.errors) {
-    //    QTextCursor cursor(textEditor->document());
-    //    moveCursor(cursor, err.start, QTextCursor::MoveAnchor);
-    //    moveCursor(cursor, err.end, QTextCursor::KeepAnchor);
-
-    //    QTextCharFormat squigglyFormat;
-    //    squigglyFormat.setUnderlineColor(QColor::fromRgb(255, 0, 0));
-    //    squigglyFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-
-    //    selections.push_back({cursor, squigglyFormat});
-    //}
-    //textEditor->setExtraSelections(selections);
-    //update();
-}
-
 void CustomNodePanel::clearError() {
     //hasErrors = false;
     //showingErrors = false;
@@ -156,10 +138,4 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
 
 void CustomNodePanel::controlTextChanged() {
     node->setCode(textEditor->toPlainText());
-}
-
-void CustomNodePanel::moveCursor(QTextCursor &cursor, SourcePos pos, QTextCursor::MoveMode mode) {
-    cursor.movePosition(QTextCursor::Start, mode);
-    cursor.movePosition(QTextCursor::Down, mode, pos.line);
-    cursor.movePosition(QTextCursor::Right, mode, pos.column);
 }

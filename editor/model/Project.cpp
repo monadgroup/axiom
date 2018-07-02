@@ -4,13 +4,10 @@
 #include "objects/RootSurface.h"
 #include "objects/PortalNode.h"
 #include "actions/CreatePortalNodeAction.h"
-#include "compiler/runtime/Runtime.h"
 
 using namespace AxiomModel;
 
 Project::Project() : _mainRoot(this) {
-    init();
-
     // setup default project
     //  1. create default surface
     auto surfaceId = QUuid::createUuid();
@@ -26,8 +23,6 @@ Project::Project() : _mainRoot(this) {
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(this, stream), _library(this, stream) {
-    init();
-
     auto rootSurfaces = findChildren(mainRoot().nodeSurfaces(), QUuid());
     assert(rootSurfaces.size() == 1);
     _rootSurface = dynamic_cast<RootSurface*>(takeAt(rootSurfaces, 0));
@@ -67,34 +62,6 @@ void Project::serialize(QDataStream &stream) {
     _library.serialize(stream);
 }
 
-void Project::attachRuntime(MaximRuntime::Runtime *runtime) {
-    assert(!_runtime);
-    _runtime = runtime;
-    _rootSurface->attachRuntime(runtime->mainSurface());
-
-    // todo: make this not hardcoded!
-    auto t = takeAt(_rootSurface->nodes(), 0);
-    auto inputNode = dynamic_cast<PortalNode*>(t);
-    assert(inputNode);
-    inputNode->attachRuntime(runtime->mainSurface()->input);
-
-    auto outputNode = dynamic_cast<PortalNode*>(takeAt(_rootSurface->nodes(), 1));
-    assert(outputNode);
-    outputNode->attachRuntime(runtime->mainSurface()->output);
-
-    rebuild();
-}
-
-void Project::rebuild() const {
-    _rootSurface->saveValue();
-    if (_runtime) (*_runtime)->compile();
-    _rootSurface->restoreValue();
-}
-
 void Project::destroy() {
     _mainRoot.destroy();
-}
-
-void Project::init() {
-    _mainRoot.history().rebuildRequested.connect([this]() { rebuild(); });
 }

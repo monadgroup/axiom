@@ -61,8 +61,6 @@ namespace AxiomModel {
 
         const GridSurface &grid() const { return _grid; }
 
-        void doRuntimeUpdate();
-
         void saveValue();
 
         void restoreValue();

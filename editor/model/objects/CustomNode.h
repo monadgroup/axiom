@@ -5,12 +5,6 @@
 #include "common/Event.h"
 #include "Node.h"
 
-namespace MaximRuntime {
-    class CustomNode;
-
-    class Control;
-}
-
 namespace AxiomModel {
 
     class Control;
@@ -53,27 +47,11 @@ namespace AxiomModel {
 
         void setPanelHeight(float panelHeight);
 
-        void createAndAttachRuntime(MaximRuntime::Surface *parent) override;
-
-        void attachRuntime(MaximRuntime::CustomNode *runtime);
-
-        void detachRuntime();
-
     private:
         QString _code;
         bool _isPanelOpen;
         float _panelHeight;
         CompositeAction *changeCodeAction = nullptr;
-
-        std::optional<MaximRuntime::CustomNode *> _runtime;
-
-        void runtimeAddedControl(MaximRuntime::Control *control);
-
-        void runtimeRemovedControl(Control *control);
-
-        void runtimeFinishedCodegen();
-
-        void surfaceControlAdded(Control *control);
     };
 
 }

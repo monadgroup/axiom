@@ -3,15 +3,15 @@
 #include <QtCore/QUuid>
 
 #include "Action.h"
-#include "compiler/runtime/ValueOperator.h"
+#include "../Value.h"
 
 namespace AxiomModel {
 
     class SetNumValueAction : public Action {
     public:
-        SetNumValueAction(const QUuid &uuid, MaximRuntime::NumValue beforeVal, MaximRuntime::NumValue afterVal, ModelRoot *root);
+        SetNumValueAction(const QUuid &uuid, NumValue beforeVal, NumValue afterVal, ModelRoot *root);
 
-        static std::unique_ptr<SetNumValueAction> create(const QUuid &uuid, MaximRuntime::NumValue beforeVal, MaximRuntime::NumValue afterVal, ModelRoot *root);
+        static std::unique_ptr<SetNumValueAction> create(const QUuid &uuid, NumValue beforeVal, NumValue afterVal, ModelRoot *root);
 
         static std::unique_ptr<SetNumValueAction> deserialize(QDataStream &stream, ModelRoot *root);
 
@@ -24,8 +24,8 @@ namespace AxiomModel {
     private:
 
         QUuid uuid;
-        MaximRuntime::NumValue beforeVal;
-        MaximRuntime::NumValue afterVal;
+        NumValue beforeVal;
+        NumValue afterVal;
     };
 
 }

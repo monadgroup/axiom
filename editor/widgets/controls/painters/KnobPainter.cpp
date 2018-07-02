@@ -5,11 +5,12 @@
 #include <math.h>
 
 #include "editor/util.h"
+#include "editor/model/objects/NumControl.h"
 
 using namespace AxiomGui;
 
 void
-KnobPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, MaximRuntime::NumValue cv,
+KnobPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, AxiomModel::NumValue cv,
                    const QColor &baseColor, const QColor &activeColor) {
     auto aspectWidth = aspectBoundingRect.width();
     auto scaledThickness = (0.06f + 0.04f * hoverState) * aspectWidth;

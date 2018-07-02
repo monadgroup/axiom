@@ -5,14 +5,12 @@
 #include <mutex>
 #include <iostream>
 
-#include "compiler/runtime/Runtime.h"
-
 static PaStream *stream;
 
 static int paCallback(const void *, void *outputBuffer, unsigned long framesPerBuffer,
                       const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags,
                       void *userData) {
-    auto runtime = (MaximRuntime::Runtime *) userData;
+    /*auto runtime = (MaximRuntime::Runtime *) userData;
     std::lock_guard<std::mutex> lock(runtime->mutex());
 
     auto outputPtr = runtime->mainSurface()->output->control()->group()->currentValuePtr();
@@ -25,7 +23,7 @@ static int paCallback(const void *, void *outputBuffer, unsigned long framesPerB
         auto outputNum = runtime->op().readNum(outputPtr);
         *outputNums++ = outputNum.left;
         *outputNums++ = outputNum.right;
-    }
+    }*/
 }
 
 static void checkError(PaError error) {
@@ -35,8 +33,8 @@ static void checkError(PaError error) {
     }
 }
 
-void AxiomStandalone::startupAudio(MaximRuntime::Runtime *runtime) {
-    checkError(Pa_Initialize());
+void AxiomStandalone::startupAudio() {
+    /*checkError(Pa_Initialize());
     checkError(Pa_OpenDefaultStream(&stream,
                                     0, // no inputs
                                     2, // stereo output
@@ -45,7 +43,7 @@ void AxiomStandalone::startupAudio(MaximRuntime::Runtime *runtime) {
                                     paFramesPerBufferUnspecified,
                                     paCallback,
                                     runtime));
-    checkError(Pa_StartStream(stream));
+    checkError(Pa_StartStream(stream));*/
 }
 
 void AxiomStandalone::shutdownAudio() {

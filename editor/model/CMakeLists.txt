@@ -17,10 +17,9 @@ set(SOURCE_FILES
         Pool.cpp
         PoolObject.cpp
         Project.cpp
-        ValueWriters.cpp)
+        Value.cpp)
 
-include_directories(${LLVM_INCLUDE_DIRS} ${QT5_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
+include_directories(${QT5_INCLUDE_DIRS})
 
 add_library(axiom_model ${SOURCE_FILES})
 

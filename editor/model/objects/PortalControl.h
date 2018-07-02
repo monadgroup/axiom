@@ -32,8 +32,6 @@ namespace AxiomModel {
 
         PortalType portalType() const { return _portalType; }
 
-        void doRuntimeUpdate() override {}
-
         void saveValue() override {}
 
         void restoreValue() override {}

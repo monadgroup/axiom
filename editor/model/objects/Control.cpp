@@ -12,9 +12,6 @@
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
-#include "compiler/codegen/Control.h"
-#include "compiler/runtime/Control.h"
-#include "compiler/runtime/GroupNode.h"
 
 using namespace AxiomModel;
 
@@ -44,24 +41,13 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
     }
 }
 
-Control::ControlType Control::fromRuntimeType(MaximCommon::ControlType type) {
-    switch (type) {
-        case MaximCommon::ControlType::NUMBER: return Control::ControlType::NUM_SCALAR;
-        case MaximCommon::ControlType::MIDI: return Control::ControlType::MIDI_SCALAR;
-        case MaximCommon::ControlType::NUM_EXTRACT: return Control::ControlType::NUM_EXTRACT;
-        case MaximCommon::ControlType::MIDI_EXTRACT: return Control::ControlType::MIDI_EXTRACT;
-        case MaximCommon::ControlType::SCOPE: return Control::ControlType::SCOPE;
-        default: unreachable;
-    }
-}
-
 std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType type, const QUuid &uuid,
                                                 const QUuid &parentUuid, const QString &name,
                                                 const QUuid &exposingUuid, AxiomModel::ModelRoot *root) {
     switch (type) {
         case Control::ControlType::NUM_SCALAR:
             return NumControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(), exposingUuid, NumControl::DisplayMode::KNOB, NumControl::Channel::BOTH, {
-                true, 0, 0, MaximCommon::FormType::CONTROL
+                0, 0, FormType::CONTROL
             }, root);
         case Control::ControlType::MIDI_SCALAR:
             return MidiControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(), exposingUuid, root);
@@ -157,8 +143,6 @@ void Control::setExposerUuid(QUuid exposerUuid) {
     if (exposerUuid != _exposerUuid) {
         _exposerUuid = exposerUuid;
         exposerUuidChanged.trigger(exposerUuid);
-
-        updateExposerRuntime();
     }
 }
 
@@ -172,25 +156,6 @@ void Control::setIsActive(bool isActive) {
 QPointF Control::worldPos() const {
     auto worldPos = pos() + ControlSurface::nodeToControl(_surface->node()->pos());
     return ControlSurface::controlToNode(worldPos);
-}
-
-bool Control::canAttachRuntime(MaximRuntime::Control *runtime) {
-    return fromRuntimeType(runtime->type()->type()) == controlType() && name() == QString::fromStdString(runtime->name()) && !_runtime;
-}
-
-void Control::attachRuntime(MaximRuntime::Control *runtime) {
-    assert(!_runtime);
-
-    _runtime = runtime;
-    runtime->removed.connect(this, &Control::detachRuntime);
-
-    runtimeAttached.trigger(runtime);
-    updateExposerRuntime();
-}
-
-void Control::detachRuntime() {
-    runtimeAboutToDetach.trigger();
-    _runtime.reset();
 }
 
 Sequence<ModelObject*> Control::links() {
@@ -207,28 +172,6 @@ void Control::remove() {
 
 void Control::updateSinkPos() {
     worldPosChanged.trigger(worldPos());
-}
-
-void Control::updateExposerRuntime() {
-    if (_runtime && !_exposerUuid.isNull()) {
-        std::cout << "Attaching runtime when control becomes available..." << std::endl;
-        findLater<Control*>(root()->controls(), _exposerUuid).then([this](Control *const &control) {
-            auto controlNode = dynamic_cast<GroupNode*>(control->surface()->node());
-            assert(controlNode);
-            assert(controlNode->runtime());
-
-            std::cout << "Attaching runtime!" << std::endl;
-            auto newRuntime = (*controlNode->runtime())->forwardControl(*_runtime);
-            control->attachRuntime(newRuntime);
-            control->removed.connect([control]() {
-                if (control->runtime()) {
-                    std::cout << "Removing runtime" << std::endl;
-                    (*control->runtime())->remove();
-                }
-            });
-            std::cout << "Finished attaching runtime" << std::endl;
-        });
-    }
 }
 
 void Control::updateExposerRemoved() {

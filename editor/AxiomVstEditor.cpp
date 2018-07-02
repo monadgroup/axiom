@@ -3,7 +3,7 @@
 #include "AxiomVstPlugin.h"
 #include "widgets/surface/NodeSurfacePanel.h"
 
-AxiomVstEditor::AxiomVstEditor(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomModel::Project> project) : window(runtime, std::move(project)) {
+AxiomVstEditor::AxiomVstEditor(std::unique_ptr<AxiomModel::Project> project) : window(std::move(project)) {
 }
 
 AxiomModel::Project* AxiomVstEditor::project() const {

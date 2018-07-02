@@ -24,14 +24,13 @@ else ()
     set(AXIOM_LINK_FLAGS "")
 endif ()
 
-find_package(LLVM REQUIRED CONFIG)
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-
 find_package(Qt5Widgets REQUIRED)
 find_package(PortAudio)
 
 if (NOT PORTAUDIO_FOUND)
     message(WARNING "PortAudio could not be found, the standalone editor won't have audio output support.")
+    set(PORTAUDIO_INCLUDE_DIRS "")
+    set(PORTAUDIO_LIBRARIES "")
     set(AUDIO_SOURCES "StandaloneAudioNull.cpp")
 else ()
     message(STATUS "Found Portaudio in ${PORTAUDIO_LIBRARIES}")
@@ -59,16 +58,13 @@ set(VST_SOURCE_FILES ${SOURCE_FILES} AxiomVstEditor.cpp AxiomVstPlugin.cpp ${VST
 
 set(RES_FILES resources/axiom.rc resources/res.qrc resources/AxiomVst.def)
 
-include_directories(../ ${LLVM_INCLUDE_DIRS} ${VST2_SDK_ROOT} ${PORTAUDIO_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
+include_directories(../ ${VST2_SDK_ROOT} ${PORTAUDIO_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 
-llvm_map_components_to_libnames(llvm_libs support core orcjit native linker ipo)
-set(LINK_LIBS axiom_widgets axiom_model maxim_runtime maxim_codegen maxim_common axiom_common Qt5::Widgets ${llvm_libs})
+set(LINK_LIBS axiom_widgets axiom_model axiom_common Qt5::Widgets)
 
 add_subdirectory(../common common)
 add_subdirectory(model)
 add_subdirectory(widgets)
-add_subdirectory(../compiler compiler)
 
 add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
 target_link_libraries(axiom_editor ${AXIOM_LINK_FLAGS} ${LINK_LIBS})

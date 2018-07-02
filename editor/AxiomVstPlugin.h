@@ -2,7 +2,6 @@
 
 #include <public.sdk/source/vst2.x/audioeffectx.h>
 #include "AxiomApplication.h"
-#include "compiler/runtime/Runtime.h"
 #include "model/Project.h"
 #include "AxiomVstEditor.h"
 
@@ -10,8 +9,6 @@ class AxiomVstEditor;
 
 class AxiomVstPlugin : public AudioEffectX, public AxiomCommon::Hookable {
 public:
-    MaximRuntime::Runtime runtime;
-
     explicit AxiomVstPlugin(audioMasterCallback audioMaster);
 
     ~AxiomVstPlugin() override;

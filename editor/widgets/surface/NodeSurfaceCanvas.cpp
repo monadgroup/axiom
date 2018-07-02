@@ -12,7 +12,6 @@
 #include <QtGui/QClipboard>
 
 #include "AddNodeMenu.h"
-#include "compiler/runtime/Runtime.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/grid/GridItem.h"
@@ -69,12 +68,6 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
         connection->wire().then([this](ConnectionWire &wire) { addWire(&wire); });
     }));
-
-    auto timer = new QTimer(this);
-    connect(timer, &QTimer::timeout,
-            this, &NodeSurfaceCanvas::doRuntimeUpdate);
-    timer->start(16);
-
 }
 
 QPoint NodeSurfaceCanvas::nodeRealPos(const QPoint &p) {
@@ -213,10 +206,6 @@ void NodeSurfaceCanvas::addWire(AxiomModel::ConnectionWire *wire) {
     auto item = new WireItem(this, wire);
     item->setZValue(wireZVal);
     addItem(item);
-}
-
-void NodeSurfaceCanvas::doRuntimeUpdate() {
-    surface->doRuntimeUpdate();
 }
 
 void NodeSurfaceCanvas::drawBackground(QPainter *painter, const QRectF &rect) {

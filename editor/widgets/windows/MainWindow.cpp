@@ -16,13 +16,11 @@
 #include "editor/model/objects/RootSurface.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/LibraryEntry.h"
-#include "compiler/runtime/Runtime.h"
-#include "compiler/runtime/Exporter.h"
 #include "../GlobalActions.h"
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomModel::Project> project) : runtime(runtime) {
+MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -134,7 +132,6 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     }
 
     _project = std::move(project);
-    _project->attachRuntime(runtime);
 
     // find root surface and show it
     auto defaultSurface = AxiomModel::getFirst(
@@ -205,13 +202,13 @@ void MainWindow::openProject() {
 }
 
 void MainWindow::exportProject() {
-    project()->rootSurface()->saveValue();
+    /*project()->rootSurface()->saveValue();
     MaximRuntime::Exporter exporter(runtime->ctx(), &runtime->libModule());
     exporter.addRuntime(runtime, "definition");
     std::error_code err;
     llvm::raw_fd_ostream dest("output.o", err, llvm::sys::fs::F_None);
     exporter.exportObject(dest, 2, 2);
-    project()->rootSurface()->restoreValue();
+    project()->rootSurface()->restoreValue();*/
 }
 
 void MainWindow::importLibrary() {

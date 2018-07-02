@@ -16,8 +16,7 @@ set(SOURCE_FILES
         ItemResizer.cpp
         SpaceCompleter.cpp)
 
-include_directories(../../ ${LLVM_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
-add_definitions(${LLVM_DEFINITIONS})
+include_directories(../../ ${Qt5Widgets_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
 
 add_library(axiom_widgets ${SOURCE_FILES})
 

@@ -1,27 +1,26 @@
-#include "ValueWriters.h"
+#include "Value.h"
 
 using namespace AxiomModel;
 
-QDataStream &AxiomModel::operator<<(QDataStream &stream, const MaximRuntime::NumValue &val) {
-    stream << val.active;
+QDataStream &AxiomModel::operator<<(QDataStream &stream, const NumValue &val) {
+    // todo: backwards compatability: stream << val.active;
     stream << val.left;
     stream << val.right;
     stream << (uint8_t) val.form;
     return stream;
 }
 
-QDataStream &AxiomModel::operator>>(QDataStream &stream, MaximRuntime::NumValue &val) {
-    stream >> val.active;
+QDataStream &AxiomModel::operator>>(QDataStream &stream, NumValue &val) {
     stream >> val.left;
     stream >> val.right;
 
     uint8_t intForm;
     stream >> intForm;
-    val.form = (MaximCommon::FormType) intForm;
+    val.form = (FormType) intForm;
     return stream;
 }
 
-QDataStream &AxiomModel::operator<<(QDataStream &stream, const MaximRuntime::MidiEventValue &val) {
+QDataStream &AxiomModel::operator<<(QDataStream &stream, const MidiEventValue &val) {
     stream << (uint8_t) val.event;
     stream << val.channel;
     stream << val.note;
@@ -29,10 +28,10 @@ QDataStream &AxiomModel::operator<<(QDataStream &stream, const MaximRuntime::Mid
     return stream;
 }
 
-QDataStream &AxiomModel::operator>>(QDataStream &stream, MaximRuntime::MidiEventValue &val) {
+QDataStream &AxiomModel::operator>>(QDataStream &stream, MidiEventValue &val) {
     uint8_t intEvent;
     stream >> intEvent;
-    val.event = (MaximCommon::MidiEventType) intEvent;
+    val.event = (MidiEventType) intEvent;
 
     stream >> val.channel;
     stream >> val.note;
@@ -40,8 +39,8 @@ QDataStream &AxiomModel::operator>>(QDataStream &stream, MaximRuntime::MidiEvent
     return stream;
 }
 
-QDataStream &AxiomModel::operator<<(QDataStream &stream, const MaximRuntime::MidiValue &val) {
-    stream << val.active;
+QDataStream &AxiomModel::operator<<(QDataStream &stream, const MidiValue &val) {
+    // todo: backwards compatability: stream << val.active;
     stream << val.count;
 
     for (uint8_t i = 0; i < val.count; i++) {
@@ -50,8 +49,7 @@ QDataStream &AxiomModel::operator<<(QDataStream &stream, const MaximRuntime::Mid
     return stream;
 }
 
-QDataStream &AxiomModel::operator>>(QDataStream &stream, MaximRuntime::MidiValue &val) {
-    stream >> val.active;
+QDataStream &AxiomModel::operator>>(QDataStream &stream, MidiValue &val) {
     stream >> val.count;
 
     for (uint8_t i = 0; i < val.count; i++) {

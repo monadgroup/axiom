@@ -168,10 +168,6 @@ void Node::doSizeAction() {
     }
 }
 
-void Node::doRuntimeUpdate() {
-    if (_controls.value()) (*_controls.value())->doRuntimeUpdate();
-}
-
 void Node::saveValue() {
     if (_controls.value()) (*_controls.value())->saveValue();
 }

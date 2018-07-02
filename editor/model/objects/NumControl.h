@@ -2,7 +2,7 @@
 
 #include "common/Event.h"
 #include "Control.h"
-#include "compiler/runtime/ValueOperator.h"
+#include "../Value.h"
 
 namespace AxiomModel {
 
@@ -24,17 +24,17 @@ namespace AxiomModel {
 
         AxiomCommon::Event<DisplayMode> displayModeChanged;
         AxiomCommon::Event<Channel> channelChanged;
-        AxiomCommon::Event<const MaximRuntime::NumValue &> valueChanged;
+        AxiomCommon::Event<const NumValue &> valueChanged;
 
         NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                    bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, DisplayMode displayMode,
-                   Channel channel, MaximRuntime::NumValue value, ModelRoot *root);
+                   Channel channel, NumValue value, ModelRoot *root);
 
         static std::unique_ptr<NumControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                   bool selected, QString name, bool showName,
                                                   const QUuid &exposerUuid, const QUuid &exposingUuid,
                                                   DisplayMode displayMode, Channel channel,
-                                                  MaximRuntime::NumValue value, ModelRoot *root);
+                                                  NumValue value, ModelRoot *root);
 
         static std::unique_ptr<NumControl>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
@@ -51,11 +51,9 @@ namespace AxiomModel {
 
         void setChannel(Channel channel);
 
-        const MaximRuntime::NumValue &value() const { return _value; }
+        const NumValue &value() const { return _value; }
 
-        void setValue(MaximRuntime::NumValue value);
-
-        void doRuntimeUpdate() override;
+        void setValue(NumValue value);
 
         void saveValue() override;
 
@@ -64,9 +62,9 @@ namespace AxiomModel {
     private:
         DisplayMode _displayMode;
         Channel _channel;
-        MaximRuntime::NumValue _value;
+        NumValue _value;
 
-        void setInternalValue(MaximRuntime::NumValue value);
+        void setInternalValue(NumValue value);
     };
 
 }

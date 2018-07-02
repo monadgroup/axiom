@@ -3,10 +3,6 @@
 #include <QApplication>
 #include "widgets/windows/MainWindow.h"
 
-namespace MaximRuntime {
-    class Runtime;
-}
-
 namespace AxiomModel {
     class Project;
 }

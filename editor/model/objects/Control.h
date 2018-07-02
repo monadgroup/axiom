@@ -8,11 +8,6 @@
 #include "../grid/GridItem.h"
 #include "../WatchSequence.h"
 #include "../ConnectionWire.h"
-#include "compiler/common/ControlType.h"
-
-namespace MaximRuntime {
-    class Control;
-}
 
 namespace AxiomModel {
 
@@ -37,14 +32,10 @@ namespace AxiomModel {
         AxiomCommon::Event<QPointF> worldPosChanged;
         AxiomCommon::Event<bool> isActiveChanged;
         AxiomCommon::Event<QUuid> exposerUuidChanged;
-        AxiomCommon::Event<MaximRuntime::Control*> runtimeAttached;
-        AxiomCommon::Event<> runtimeAboutToDetach;
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid,
                 QPoint pos, QSize size, bool selected, QString name, bool showName, const QUuid &exposerUuid,
                 const QUuid &exposingUuid, ModelRoot *root);
-
-        static ControlType fromRuntimeType(MaximCommon::ControlType type);
 
         static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid, const QString &name, const QUuid &exposingUuid, ModelRoot *root);
 
@@ -95,16 +86,6 @@ namespace AxiomModel {
 
         QPointF worldPos() const;
 
-        std::optional<MaximRuntime::Control *> runtime() const { return _runtime; }
-
-        bool canAttachRuntime(MaximRuntime::Control *runtime);
-
-        void attachRuntime(MaximRuntime::Control *runtime);
-
-        void detachRuntime();
-
-        virtual void doRuntimeUpdate() = 0;
-
         virtual void saveValue() = 0;
 
         virtual void restoreValue() = 0;
@@ -123,16 +104,12 @@ namespace AxiomModel {
         QUuid _exposingUuid;
         bool _isActive = false;
 
-        std::optional<MaximRuntime::Control *> _runtime;
-
         WatchSequence<Connection *> _connections;
         WatchSequence<QUuid> _connectedControls;
 
         void updateSinkPos();
 
         void updateExposerRemoved();
-
-        void updateExposerRuntime();
     };
 
 }

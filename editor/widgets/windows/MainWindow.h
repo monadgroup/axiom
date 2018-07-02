@@ -24,7 +24,7 @@ namespace AxiomGui {
     Q_OBJECT
 
     public:
-        MainWindow(MaximRuntime::Runtime *runtime, std::unique_ptr<AxiomModel::Project> project);
+        MainWindow(std::unique_ptr<AxiomModel::Project> project);
 
         ~MainWindow() override;
 
@@ -54,7 +54,6 @@ namespace AxiomGui {
 
     private:
 
-        MaximRuntime::Runtime *runtime;
         std::unique_ptr<AxiomModel::Project> _project;
         std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
         std::unique_ptr<HistoryPanel> _historyPanel;

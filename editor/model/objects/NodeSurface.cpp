@@ -7,7 +7,6 @@
 #include "Connection.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "compiler/runtime/Surface.h"
 
 using namespace AxiomModel;
 
@@ -16,7 +15,6 @@ NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan
     : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
       _nodes(findChildrenWatch(root->nodes(), uuid)), _connections(findChildrenWatch(root->connections(), uuid)),
       _grid(staticCastWatch<GridItem *>(_nodes)), _pan(pan), _zoom(zoom) {
-    _nodes.itemAdded.connect(this, &NodeSurface::nodeAdded);
 }
 
 std::unique_ptr<NodeSurface> NodeSurface::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
@@ -83,21 +81,6 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
     });
 }
 
-void NodeSurface::attachRuntime(MaximRuntime::Surface *runtime) {
-    assert(!_runtime);
-    _runtime = runtime;
-
-    for (const auto &node : _nodes) {
-        node->createAndAttachRuntime(runtime);
-    }
-}
-
-void NodeSurface::doRuntimeUpdate() {
-    for (const auto &node : nodes()) {
-        node->doRuntimeUpdate();
-    }
-}
-
 void NodeSurface::saveValue() {
     for (const auto &node : nodes()) {
         node->saveValue();
@@ -118,10 +101,4 @@ void NodeSurface::remove() {
         (*_connections.begin())->remove();
     }
     ModelObject::remove();
-}
-
-void NodeSurface::nodeAdded(AxiomModel::Node *node) const {
-    if (_runtime) {
-        node->createAndAttachRuntime(*_runtime);
-    }
 }
