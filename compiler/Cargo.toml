@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["cpdt <copodt@gmail.com>"]
 license = "MIT"
 
-#[lib]
-#name = "compiler"
-#crate-type = ["staticlib"]
+[lib]
+name = "compiler"
+crate-type = ["staticlib"]
 
 [dependencies]
 regex = "1.0"

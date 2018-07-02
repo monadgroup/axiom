@@ -1,11 +1,17 @@
 use super::{Runtime, Transaction};
 use ast;
 use codegen;
+use inkwell::targets;
 use mir;
 use parser;
 use pass;
 use std;
 use CompileError;
+
+#[no_mangle]
+pub extern "C" fn maxim_initialize() {
+    targets::Target::initialize_native(&targets::InitializationConfig::default()).unwrap();
+}
 
 #[no_mangle]
 pub extern "C" fn maxim_create_runtime(include_ui: bool, min_size: bool) -> *mut Runtime {
@@ -61,8 +67,13 @@ pub unsafe extern "C" fn maxim_vartype_tuple(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_vararg_array(subtype: *mut mir::VarType) -> *mut mir::VarType {
+pub unsafe extern "C" fn maxim_vartype_array(subtype: *mut mir::VarType) -> *mut mir::VarType {
     Box::into_raw(Box::new(mir::VarType::Array(Box::from_raw(subtype))))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_vartype_clone(base: *const mir::VarType) -> *mut mir::VarType {
+    Box::into_raw(Box::new((*base).clone()))
 }
 
 #[no_mangle]
@@ -92,6 +103,13 @@ pub unsafe extern "C" fn maxim_constant_tuple(
     Box::into_raw(Box::new(mir::ConstantValue::Tuple(mir::ConstantTuple {
         items: items_vec,
     })))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_constant_clone(
+    base: *const mir::ConstantValue,
+) -> *mut mir::ConstantValue {
+    Box::into_raw(Box::new((*base).clone()))
 }
 
 #[no_mangle]

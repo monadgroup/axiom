@@ -4,8 +4,10 @@
 #include "widgets/surface/NodeSurfacePanel.h"
 #include "AxiomApplication.h"
 #include "StandaloneAudio.h"
+#include "compiler/Frontend.h"
 
 int main(int argc, char *argv[]) {
+    MaximFrontend::maxim_initialize();
     auto project = std::make_unique<AxiomModel::Project>();
     AxiomGui::MainWindow window(std::move(project));
     //AxiomStandalone::startupAudio();
