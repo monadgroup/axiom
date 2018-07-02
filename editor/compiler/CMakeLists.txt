@@ -9,20 +9,6 @@ endif ()
 set(CMAKE_AUTOMOCC ON)
 set(CMAKE_AUTORCC ON)
 
-set(SOURCE_FILES
-        Frontend.h
-        Block.h Block.cpp
-        ConstantValue.h ConstantValue.cpp
-        ControlRef.h ControlRef.cpp
-        Error.h Error.cpp
-        NodeRef.h NodeRef.cpp
-        OwnedObject.h OwnedObject.cpp
-        Runtime.h Runtime.cpp
-        SurfaceRef.h SurfaceRef.cpp
-        Transaction.h Transaction.cpp
-        ValueGroupSource.h ValueGroupSource.cpp
-        VarType.h VarType.cpp)
-
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(COMPILER_LINK_LIBS "${CMAKE_SOURCE_DIR}/compiler/target/debug/compiler.lib")
 else ()
@@ -34,6 +20,8 @@ if (WIN32)
     set(COMPILER_LINK_LIBS ${COMPILER_LINK_LIBS} ws2_32 userenv advapi32 psapi)
 endif ()
 
-add_library(maxim_compiler ${SOURCE_FILES})
+add_library(maxim_compiler)
 add_dependencies(maxim_compiler compiler)
 target_link_libraries(maxim_compiler ${COMPILER_LINK_LIBS})
+
+add_subdirectory(interface)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OwnedObject.h"
-#include "../model/Value.h"
+#include "../../model/Value.h"
 
 namespace MaximCompiler {
 

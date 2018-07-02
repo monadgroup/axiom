@@ -4,7 +4,7 @@
 #include "widgets/surface/NodeSurfacePanel.h"
 #include "AxiomApplication.h"
 #include "StandaloneAudio.h"
-#include "compiler/Frontend.h"
+#include "compiler/interface/Frontend.h"
 
 int main(int argc, char *argv[]) {
     MaximFrontend::maxim_initialize();
