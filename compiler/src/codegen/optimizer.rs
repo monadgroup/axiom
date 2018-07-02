@@ -4,21 +4,19 @@ use inkwell::passes::{PassManager, PassManagerBuilder};
 use inkwell::values::FunctionValue;
 use inkwell::OptimizationLevel;
 
-struct ModuleFunctionIterator<'a> {
-    module: &'a Module,
+struct ModuleFunctionIterator {
     next_func: Option<FunctionValue>,
 }
 
-impl<'a> ModuleFunctionIterator<'a> {
-    pub fn new(module: &'a Module) -> ModuleFunctionIterator<'a> {
+impl ModuleFunctionIterator {
+    pub fn new(module: &Module) -> ModuleFunctionIterator {
         ModuleFunctionIterator {
-            module,
             next_func: module.get_first_function(),
         }
     }
 }
 
-impl<'a> Iterator for ModuleFunctionIterator<'a> {
+impl Iterator for ModuleFunctionIterator {
     type Item = FunctionValue;
 
     fn next(&mut self) -> Option<FunctionValue> {

@@ -1,6 +1,5 @@
 use mir;
 use std::collections::{HashMap, VecDeque};
-use std::mem;
 
 // groups extracted nodes into subsurfaces
 pub fn group_extracted(

@@ -81,7 +81,6 @@ pub fn build_node_layout(
     parent_groups: &[ValueGroup],
 ) -> NodeLayout {
     let context = cache.context();
-    let target = cache.target();
 
     match node.data {
         NodeData::Custom(block_id) => {
@@ -334,7 +333,6 @@ pub fn build_block_layout(
 ///
 pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLayout {
     let context = cache.context();
-    let target = cache.target();
 
     let mut initialized_values = Vec::new();
     let mut scratch_types: Vec<BasicTypeEnum> = Vec::new();

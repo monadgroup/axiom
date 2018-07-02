@@ -1,7 +1,6 @@
 use super::BlockContext;
-use codegen::values::{remap_constant, NumValue, TupleValue};
-use inkwell::context::Context;
-use inkwell::values::{BasicValue, BasicValueEnum, PointerValue};
+use codegen::values::remap_constant;
+use inkwell::values::PointerValue;
 use mir::ConstantValue;
 
 pub fn gen_constant_statement(value: &ConstantValue, node: &mut BlockContext) -> PointerValue {

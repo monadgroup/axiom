@@ -2,11 +2,11 @@ use mir;
 
 // removes dead sockets from all nodes in the provided surfaces
 // sockets are 'dead' if they're in a value group that has no other sockets connected
-pub fn remove_dead_sockets(surfaces: &mut [mir::Surface]) {
-    DeadSocketRemover::new(surfaces).remove_dead_sockets()
+pub fn remove_dead_sockets(_surfaces: &mut [mir::Surface]) {
+    unimplemented!()
 }
 
-struct DeadSocketRemover<'a> {
+/*struct DeadSocketRemover<'a> {
     surfaces: &'a mut [mir::Surface],
 }
 
@@ -26,4 +26,4 @@ impl<'a> DeadSocketRemover<'a> {
         //     at all places (since removal affects the node MIR object)
         //  4. the node's value groups `exposer` indexes need to be changed
     }
-}
+}*/

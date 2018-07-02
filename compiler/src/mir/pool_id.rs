@@ -1,6 +1,4 @@
-use std::cmp::Ordering;
 use std::fmt;
-use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 
 pub type PoolRef = u64;

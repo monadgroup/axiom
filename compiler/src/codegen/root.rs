@@ -3,7 +3,6 @@ use codegen::{build_context_function, surface, util, BuilderContext, LifecycleFu
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{BasicValue, BasicValueEnum, GlobalValue, IntValue, PointerValue};
-use inkwell::AddressSpace;
 use mir::SurfaceRef;
 use std::iter;
 
@@ -130,7 +129,7 @@ pub fn build_lifecycle_func(
             module.get_context().void_type().fn_type(&[], false),
         )
     });
-    build_context_function(module, func, cache.target(), &|mut ctx: BuilderContext| {
+    build_context_function(module, func, cache.target(), &|ctx: BuilderContext| {
         surface::build_lifecycle_call(module, cache, ctx.b, surface, lifecycle, scratch, pointers);
         ctx.b.build_return(None);
     });

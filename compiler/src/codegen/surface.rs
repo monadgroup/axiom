@@ -1,6 +1,5 @@
 use codegen::{
     block, build_context_function, util, values, BuilderContext, LifecycleFunc, ObjectCache,
-    TargetProperties,
 };
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
@@ -95,9 +94,8 @@ fn build_node_call(
                 );
                 let first_bitmap = first_array.get_bitmap(ctx.b);
 
-                Some(source_sockets.iter().enumerate().skip(1).fold(
-                    first_bitmap,
-                    |acc, (socket_index, socket)| {
+                Some(
+                    (1..source_sockets.len()).fold(first_bitmap, |acc, socket_index| {
                         let nth_array = values::ArrayValue::new(
                             ctx.b
                                 .build_load(
@@ -114,8 +112,8 @@ fn build_node_call(
                         );
                         let nth_bitmap = nth_array.get_bitmap(ctx.b);
                         ctx.b.build_or(acc, nth_bitmap, "")
-                    },
-                ))
+                    }),
+                )
             } else {
                 None
             };
