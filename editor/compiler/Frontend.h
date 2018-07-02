@@ -3,6 +3,7 @@
 
 namespace MaximFrontend {
     using MaximError = void;
+    using MaximErrorRef = MaximError;
 
     using MaximRuntime = void;
     using MaximRuntimeRef = MaximRuntime;
@@ -24,6 +25,16 @@ namespace MaximFrontend {
 
     using MaximValueGroupSource = void;
 
+    struct SourcePos {
+        size_t line;
+        size_t column;
+    };
+
+    struct SourceRange {
+        SourcePos front;
+        SourcePos back;
+    };
+
     extern "C" {
         void maxim_initialize();
 
@@ -34,22 +45,27 @@ namespace MaximFrontend {
         void maxim_destroy_string(const char *);
 
         MaximTransaction *maxim_create_transaction();
+        void maxim_destroy_transaction(MaximTransaction *);
 
         MaximVarType *maxim_vartype_num();
         MaximVarType *maxim_vartype_midi();
         MaximVarType *maxim_vartype_tuple(MaximVarType **subtypes, size_t subtype_count);
         MaximVarType *maxim_vartype_array(MaximVarType *subtype);
         MaximVarType *maxim_vartype_clone(MaximVarTypeRef *base);
+        void maxim_destroy_vartype(MaximVarType *);
 
         MaximConstantValue *maxim_constant_num(float left, float right, uint8_t form);
         MaximConstantValue *maxim_constant_tuple(MaximConstantValue **items, size_t item_count);
         MaximConstantValue *maxim_constant_clone(MaximConstantValueRef *base);
+        void maxim_destroy_constant(MaximConstantValue *);
 
         MaximSurfaceRef *maxim_build_surface(MaximTransactionRef *transaction, uint64_t id, const char *name);
 
         MaximValueGroupSource *maxim_valuegroupsource_none();
         MaximValueGroupSource *maxim_valuegroupsource_socket(size_t index);
         MaximValueGroupSource *maxim_valuegroupsource_default(MaximConstantValue *value);
+        MaximValueGroupSource *maxim_valuegroupsource_clone(MaximValueGroupSource *base);
+        void maxim_destroy_valuegroupsource(MaximValueGroupSource *);
         void maxim_build_value_group(MaximSurfaceRef *surface, MaximVarType *vartype, MaximValueGroupSource *source);
 
         MaximNodeRef *maxim_build_custom_node(MaximSurfaceRef *surface, uint64_t block_id);
@@ -57,6 +73,10 @@ namespace MaximFrontend {
         void maxim_build_value_socket(MaximNodeRef *node, size_t group_id, bool value_written, bool value_read, bool is_extractor);
 
         bool maxim_compile_block(uint64_t id, const char *name, const char *code, MaximBlock *success_block_out, MaximError *fail_error_out);
+        void maxim_destroy_block(MaximBlock *);
+
+        const char *maxim_error_get_description(MaximErrorRef *);
+        SourceRange maxim_error_get_range(MaximErrorRef *);
         void maxim_destroy_error(MaximError *);
 
         size_t maxim_block_get_control_count(MaximBlockRef *block);

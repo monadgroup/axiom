@@ -2,6 +2,7 @@ use ast::ControlField;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[repr(u8)]
 pub enum ControlType {
     Audio,
     Graph,

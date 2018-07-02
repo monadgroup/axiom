@@ -2,19 +2,19 @@ use ast::SourceRange;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-#[repr(i8)]
+#[repr(u8)]
 pub enum FormType {
-    None = 0,
-    Control = 1,
-    Oscillator = 2,
-    Note = 3,
-    Frequency = 4,
-    Beats = 5,
-    Seconds = 6,
-    Samples = 7,
-    Db = 8,
-    Amplitude = 9,
-    Q = 10,
+    None,
+    Control,
+    Oscillator,
+    Note,
+    Frequency,
+    Beats,
+    Seconds,
+    Samples,
+    Db,
+    Amplitude,
+    Q,
 }
 
 #[derive(Debug, Clone)]

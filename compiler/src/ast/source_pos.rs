@@ -1,6 +1,7 @@
 use std::fmt;
 
 #[derive(Eq, PartialEq, Clone, Copy, Hash)]
+#[repr(C)]
 pub struct SourcePos {
     pub line: usize,
     pub column: usize,
@@ -15,6 +16,7 @@ impl fmt::Debug for SourcePos {
 pub const UNDEF_SOURCE_POS: SourcePos = SourcePos { line: 0, column: 0 };
 
 #[derive(Eq, PartialEq, Clone, Copy, Hash)]
+#[repr(C)]
 pub struct SourceRange(pub SourcePos, pub SourcePos);
 
 impl fmt::Debug for SourceRange {

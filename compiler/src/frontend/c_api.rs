@@ -1,4 +1,5 @@
 use super::{Runtime, Transaction};
+use ast;
 use codegen;
 use inkwell::targets;
 use mir;
@@ -48,6 +49,12 @@ pub extern "C" fn maxim_create_transaction() -> *mut Transaction {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_transaction(val: *mut Transaction) {
+    Box::from_raw(val);
+    // box will be dropped here
+}
+
+#[no_mangle]
 pub extern "C" fn maxim_vartype_num() -> *mut mir::VarType {
     Box::into_raw(Box::new(mir::VarType::Num))
 }
@@ -79,6 +86,12 @@ pub unsafe extern "C" fn maxim_vartype_array(subtype: *mut mir::VarType) -> *mut
 #[no_mangle]
 pub unsafe extern "C" fn maxim_vartype_clone(base: *const mir::VarType) -> *mut mir::VarType {
     Box::into_raw(Box::new((*base).clone()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_vartype(val: *mut mir::VarType) {
+    Box::from_raw(val);
+    // box will be dropped here
 }
 
 #[no_mangle]
@@ -118,6 +131,12 @@ pub unsafe extern "C" fn maxim_constant_clone(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_constant(val: *mut mir::ConstantValue) {
+    Box::from_raw(val);
+    // box will be dropped here
+}
+
+#[no_mangle]
 pub extern "C" fn maxim_valuegroupsource_none() -> *mut mir::ValueGroupSource {
     Box::into_raw(Box::new(mir::ValueGroupSource::None))
 }
@@ -133,6 +152,19 @@ pub unsafe extern "C" fn maxim_valuegroupsource_default(
 ) -> *mut mir::ValueGroupSource {
     let const_val = Box::from_raw(value);
     Box::into_raw(Box::new(mir::ValueGroupSource::Default(*const_val)))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_valuegroupsource_clone(
+    base: *const mir::ValueGroupSource,
+) -> *mut mir::ValueGroupSource {
+    Box::into_raw(Box::new((*base).clone()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_valuegroupsource(val: *mut mir::ValueGroupSource) {
+    Box::from_raw(val);
+    // box will be dropped here
 }
 
 #[no_mangle]
@@ -240,6 +272,26 @@ pub unsafe extern "C" fn maxim_compile_block(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_block(val: *mut CompileError) {
+    Box::from_raw(val);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_error_get_description(
+    error: *const CompileError,
+) -> *mut std::os::raw::c_char {
+    std::ffi::CString::new((*error).to_string())
+        .unwrap()
+        .into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_error_get_range(error: *const CompileError) -> ast::SourceRange {
+    (*error).range()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_destroy_error(error: *mut CompileError) {
     Box::from_raw(error);
     // box will be dropped here
@@ -251,13 +303,20 @@ pub unsafe extern "C" fn maxim_block_get_control_count(block: *const mir::Block)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_block_get_control(block: *mut mir::Block, index: usize) -> *mut mir::block::Control {
+pub unsafe extern "C" fn maxim_block_get_control(
+    block: *mut mir::Block,
+    index: usize,
+) -> *mut mir::block::Control {
     &mut (*block).controls[index]
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_control_get_name(control: *const mir::block::Control) -> *mut std::os::raw::c_char {
-    std::ffi::CString::new((*control).name.clone()).unwrap().into_raw()
+pub unsafe extern "C" fn maxim_control_get_name(
+    control: *const mir::block::Control,
+) -> *mut std::os::raw::c_char {
+    std::ffi::CString::new((*control).name.clone())
+        .unwrap()
+        .into_raw()
 }
 
 #[no_mangle]

@@ -60,20 +60,14 @@ set(RES_FILES resources/axiom.rc resources/res.qrc resources/AxiomVst.def)
 
 include_directories(../ ${VST2_SDK_ROOT} ${PORTAUDIO_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 
-set(LINK_LIBS axiom_widgets axiom_model axiom_common Qt5::Widgets)
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(LINK_LIBS ${LINK_LIBS} "${CMAKE_SOURCE_DIR}/compiler/target/debug/compiler.lib")
-else ()
-    set(LINK_LIBS ${LINK_LIBS} "${CMAKE_SOURCE_DIR}/compiler/target/release/compiler.lib")
-endif ()
-set(LINK_LIBS ${LINK_LIBS} ws2_32 userenv advapi32 z psapi)
+set(LINK_LIBS axiom_widgets axiom_model axiom_common maxim_compiler Qt5::Widgets)
 
 add_subdirectory(../common common)
 add_subdirectory(model)
 add_subdirectory(widgets)
+add_subdirectory(compiler)
 
 add_library(axiom_editor SHARED ${VST_SOURCE_FILES} ${RES_FILES})
-add_dependencies(axiom_editor compiler)
 target_link_libraries(axiom_editor ${AXIOM_LINK_FLAGS} ${LINK_LIBS})
 
 set(AXIOM_STANDALONE_PROPERTIES )
@@ -82,7 +76,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 
 add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} ${STANDALONE_SOURCE_FILES} ${RES_FILES})
-add_dependencies(axiom_standalone compiler)
 target_link_libraries(axiom_standalone ${AXIOM_LINK_FLAGS} ${LINK_LIBS} ${PORTAUDIO_LIBRARIES})
 
 set_target_properties(axiom_editor PROPERTIES
