@@ -31,6 +31,12 @@ pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_string(string: *mut std::os::raw::c_char) {
+    std::ffi::CString::from_raw(string);
+    // string will be dropped here
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_commit(runtime: *mut Runtime, transaction: *mut Transaction) {
     let owned_transaction = Box::from_raw(transaction);
     (*runtime).commit(*owned_transaction)
@@ -237,4 +243,34 @@ pub unsafe extern "C" fn maxim_compile_block(
 pub unsafe extern "C" fn maxim_destroy_error(error: *mut CompileError) {
     Box::from_raw(error);
     // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_block_get_control_count(block: *const mir::Block) -> usize {
+    (*block).controls.len()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_block_get_control(block: *mut mir::Block, index: usize) -> *mut mir::block::Control {
+    &mut (*block).controls[index]
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_control_get_name(control: *const mir::block::Control) -> *mut std::os::raw::c_char {
+    std::ffi::CString::new((*control).name.clone()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_control_get_type(control: *const mir::block::Control) -> u8 {
+    (*control).control_type as u8
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_control_get_written(control: *const mir::block::Control) -> bool {
+    (*control).value_written
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_control_get_read(control: *const mir::block::Control) -> bool {
+    (*control).value_read
 }
