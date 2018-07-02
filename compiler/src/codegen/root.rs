@@ -51,9 +51,9 @@ pub fn remap_pointer_source(
                 }
                 PointerSourceAggregateType::Array => {
                     // we need to use the first item to figure out the array type
-                    let array_type =
-                        util::get_array_type(&sub_values[0].get_type(), sub_values.len() as u32);
-                    array_type.const_array(&sub_values).into()
+                    let array_val =
+                        util::get_constant_array(&sub_values[0].get_type(), &sub_values);
+                    array_val.into()
                 }
             }
         }

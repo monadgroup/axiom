@@ -175,7 +175,7 @@ fn main() {
         scratch_global.as_pointer_value(),
         pointers_global.as_pointer_value(),
     );
-    root_module.print_to_stderr();
     root_module.verify().unwrap();
     runtime.optimizer.optimize_module(&root_module);
+    root_module.print_to_stderr();
 }

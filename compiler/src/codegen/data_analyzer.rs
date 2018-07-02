@@ -133,15 +133,19 @@ pub fn build_node_layout(
             let voice_pointer_sources: Vec<_> = iter::repeat(&surface_layout.pointer_sources)
                 .take(values::ARRAY_CAPACITY as usize)
                 .enumerate()
-                .flat_map(|(voice_index, pointer_sources)| {
-                    pointer_sources.iter().map(move |source| {
-                        map_extract_pointer_source(
-                            source.clone(),
-                            voice_index,
-                            source_sockets,
-                            dest_sockets,
-                        )
-                    })
+                .map(|(voice_index, pointer_sources)| {
+                    let sub_sources = pointer_sources
+                        .iter()
+                        .map(move |source| {
+                            map_extract_pointer_source(
+                                source.clone(),
+                                voice_index,
+                                source_sockets,
+                                dest_sockets,
+                            )
+                        })
+                        .collect();
+                    PointerSource::Aggregate(PointerSourceAggregateType::Struct, sub_sources)
                 })
                 .collect();
 
