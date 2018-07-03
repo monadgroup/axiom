@@ -192,7 +192,7 @@ impl Parser {
     ) -> CompileResult<ParsedExpr> {
         let token_type = match stream.peek() {
             Some(token) => token.token_type,
-            None => return Err(CompileError::UnexpectedEnd),
+            None => return Ok(ParsedExpr::End(prefix)),
         };
 
         // if this token has a lower precedence than provided, end this expression
