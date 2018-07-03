@@ -2,8 +2,8 @@
 
 #include <optional>
 
-#include "common/Event.h"
 #include "Node.h"
+#include "common/Event.h"
 #include "editor/compiler/interface/Block.h"
 
 namespace AxiomModel {
@@ -26,27 +26,34 @@ namespace AxiomModel {
         CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                    const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, ModelRoot *root);
 
-        static std::unique_ptr<CustomNode>
-        create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-               const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, ModelRoot *root);
+        static std::unique_ptr<CustomNode> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                                                  bool selected, QString name, const QUuid &controlsUuid, QString code,
+                                                  bool panelOpen, float panelHeight, ModelRoot *root);
 
-        static std::unique_ptr<CustomNode>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, const QUuid &controlsUuid, ReferenceMapper *ref, ModelRoot *root);
+        static std::unique_ptr<CustomNode> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                       QPoint pos, QSize size, bool selected, QString name,
+                                                       const QUuid &controlsUuid, ReferenceMapper *ref,
+                                                       ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        const QString &code() const { return _code; }
+        const QString &code() const {
+            return _code;
+        }
 
         void setCode(const QString &code);
 
         void doSetCodeAction(QString beforeCode, QString afterCode);
 
-        bool isPanelOpen() const { return _isPanelOpen; }
+        bool isPanelOpen() const {
+            return _isPanelOpen;
+        }
 
         void setPanelOpen(bool panelOpen);
 
-        float panelHeight() const { return _panelHeight; }
+        float panelHeight() const {
+            return _panelHeight;
+        }
 
         void setPanelHeight(float panelHeight);
 
@@ -68,5 +75,4 @@ namespace AxiomModel {
 
         void updateControls(CompositeAction *actionGroup);
     };
-
 }

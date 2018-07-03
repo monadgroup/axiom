@@ -1,10 +1,5 @@
 #include "StandaloneAudio.h"
 
-void AxiomStandalone::startupAudio() {
+void AxiomStandalone::startupAudio() {}
 
-}
-
-void AxiomStandalone::shutdownAudio() {
-
-}
-
+void AxiomStandalone::shutdownAudio() {}

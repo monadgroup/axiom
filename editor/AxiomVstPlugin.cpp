@@ -3,9 +3,9 @@
 #include <QtCore/QBuffer>
 #include <QtWidgets/QMessageBox>
 
+#include "editor/model/Value.h"
 #include "resources/resource.h"
 #include "widgets/surface/NodeSurfacePanel.h"
-#include "editor/model/Value.h"
 
 AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
     return new AxiomVstPlugin(audioMaster);
@@ -28,9 +28,7 @@ AxiomVstPlugin::~AxiomVstPlugin() {
     setEditor(nullptr);
 }
 
-void AxiomVstPlugin::open() {
-
-}
+void AxiomVstPlugin::open() {}
 
 void AxiomVstPlugin::suspend() {
     saveBuffer.reset();
@@ -169,13 +167,18 @@ VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) 
         if (readVersion) {
             QMessageBox(QMessageBox::Critical, "Failed to load project",
                         "This project was created with an incompatible version of Axiom.\n\n"
-                        "Expected version: between " + QString::number(AxiomModel::Project::minSchemaVersion) +
-                        " and " + QString::number(AxiomModel::Project::schemaVersion) + ", actual version: " +
-                        QString::number(readVersion) + ".", QMessageBox::Ok).exec();
+                        "Expected version: between " +
+                            QString::number(AxiomModel::Project::minSchemaVersion) + " and " +
+                            QString::number(AxiomModel::Project::schemaVersion) +
+                            ", actual version: " + QString::number(readVersion) + ".",
+                        QMessageBox::Ok)
+                .exec();
         } else {
             QMessageBox(QMessageBox::Critical, "Failed to load project",
                         "This project is an invalid project file (bad magic header).\n"
-                        "Maybe it's corrupt?", QMessageBox::Ok).exec();
+                        "Maybe it's corrupt?",
+                        QMessageBox::Ok)
+                .exec();
         }
     } else {
         _editor.setProject(std::move(newProject));
@@ -217,8 +220,8 @@ VstInt32 AxiomVstPlugin::getNumMidiInputChannels() {
 }
 
 bool AxiomVstPlugin::canParameterBeAutomated(VstInt32 index) {
-    //auto node = runtime.mainSurface()->getAutomationNode(index);
-    //return node != nullptr;
+    // auto node = runtime.mainSurface()->getAutomationNode(index);
+    // return node != nullptr;
     return false;
 }
 

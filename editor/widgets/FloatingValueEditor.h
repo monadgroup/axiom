@@ -7,10 +7,9 @@ class QLineEdit;
 namespace AxiomGui {
 
     class FloatingValueEditor : public QGraphicsProxyWidget {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
-
         explicit FloatingValueEditor(QString initialValue, QPointF scenePos);
 
     signals:
@@ -22,8 +21,6 @@ namespace AxiomGui {
         void editingFinished();
 
     private:
-
         QLineEdit *editor;
     };
-
 }

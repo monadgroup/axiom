@@ -92,7 +92,6 @@ void LibraryEntry::removeTag(const QString &tag) {
     }
 }
 
-
 void LibraryEntry::modified() {
     _modificationUuid = QUuid::createUuid();
     _modificationDateTime = QDateTime::currentDateTimeUtc();

@@ -14,5 +14,4 @@ namespace AxiomModel {
             return input;
         }
     };
-
 }

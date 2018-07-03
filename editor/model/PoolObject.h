@@ -12,11 +12,17 @@ namespace AxiomModel {
     public:
         PoolObject(const QUuid &uuid, const QUuid &parentUuid, Pool *pool);
 
-        const QUuid &uuid() const { return _uuid; }
+        const QUuid &uuid() const {
+            return _uuid;
+        }
 
-        const QUuid &parentUuid() const { return _parentUuid; }
+        const QUuid &parentUuid() const {
+            return _parentUuid;
+        }
 
-        Pool *pool() const { return _pool; }
+        Pool *pool() const {
+            return _pool;
+        }
 
         virtual void remove();
 
@@ -27,5 +33,4 @@ namespace AxiomModel {
 
         Pool *_pool;
     };
-
 }

@@ -14,9 +14,13 @@ namespace AxiomCommon {
 
         Promise() : _value(std::make_shared<std::optional<A>>(std::optional<A>())) {}
 
-        std::optional<A> &value() { return *_value; }
+        std::optional<A> &value() {
+            return *_value;
+        }
 
-        const std::optional<A> &value() const { return *_value; }
+        const std::optional<A> &value() const {
+            return *_value;
+        }
 
         void then(func_type func) {
             if (*_value) {
@@ -46,5 +50,4 @@ namespace AxiomCommon {
         Event<A &> event;
         std::shared_ptr<std::optional<A>> _value;
     };
-
 }

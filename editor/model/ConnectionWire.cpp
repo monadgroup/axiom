@@ -47,21 +47,19 @@ void ConnectionWire::remove() {
 
 void ConnectionWire::updateActive() {
     if (activeState == ActiveState::NONE) {
-        activeState = _startActive ? ActiveState::START :
-                      _endActive ? ActiveState::END :
-                      ActiveState::NONE;
+        activeState = _startActive ? ActiveState::START : _endActive ? ActiveState::END : ActiveState::NONE;
     }
 
     auto newActive = false;
     switch (activeState) {
-        case ActiveState::START:
-            newActive = _startActive;
-            break;
-        case ActiveState::END:
-            newActive = _endActive;
-            break;
-        default:
-            break;
+    case ActiveState::START:
+        newActive = _startActive;
+        break;
+    case ActiveState::END:
+        newActive = _endActive;
+        break;
+    default:
+        break;
     }
 
     if (newActive != _active) {
@@ -75,10 +73,6 @@ void ConnectionWire::updateActive() {
 }
 
 void ConnectionWire::updateRoute() {
-    _route = _grid->grid().findPath(
-        QPoint(_startPos.x(), _startPos.y()),
-        QPoint(_endPos.x(), _endPos.y()),
-        1, 10, 4
-    );
+    _route = _grid->grid().findPath(QPoint(_startPos.x(), _startPos.y()), QPoint(_endPos.x(), _endPos.y()), 1, 10, 4);
     routeChanged.trigger(_route);
 }

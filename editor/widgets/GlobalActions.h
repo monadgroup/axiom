@@ -23,5 +23,4 @@ namespace AxiomGui {
 
         void setupActions();
     }
-
 }

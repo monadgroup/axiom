@@ -2,16 +2,16 @@
 
 #include <iostream>
 
-#include "WatchSequence.h"
-#include "SequenceOperators.h"
 #include "PromiseOperators.h"
+#include "SequenceOperators.h"
+#include "WatchSequence.h"
 #include "common/Promise.h"
 
 namespace AxiomModel {
 
     template<class OutputItem, class InputItem>
-    WatchSequence<OutputItem>
-    mapFilterWatch(WatchSequence<InputItem> input, std::function<std::optional<OutputItem>(const InputItem &)> next) {
+    WatchSequence<OutputItem> mapFilterWatch(WatchSequence<InputItem> input,
+                                             std::function<std::optional<OutputItem>(const InputItem &)> next) {
         return WatchSequence(mapFilter(input.sequence(), std::move(next)), input);
     };
 
@@ -42,9 +42,7 @@ namespace AxiomModel {
         }
 
         AxiomCommon::Promise<Item> result;
-        input.itemAdded.connect([result](const Item &item) mutable {
-            result.resolve(item);
-        });
+        input.itemAdded.connect([result](const Item &item) mutable { result.resolve(item); });
 
         return std::move(result);
     };
@@ -64,5 +62,4 @@ namespace AxiomModel {
 
         return std::move(result);
     }
-
 }

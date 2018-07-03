@@ -1,15 +1,15 @@
 #include "CustomNode.h"
 
-#include "ControlSurface.h"
-#include "NumControl.h"
-#include "MidiControl.h"
-#include "ExtractControl.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../actions/CompositeAction.h"
-#include "../actions/SetCodeAction.h"
 #include "../actions/CreateControlAction.h"
 #include "../actions/DeleteObjectAction.h"
+#include "../actions/SetCodeAction.h"
+#include "ControlSurface.h"
+#include "ExtractControl.h"
+#include "MidiControl.h"
+#include "NumControl.h"
 #include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
@@ -137,12 +137,13 @@ void CustomNode::updateControls(CompositeAction *actionGroup) {
         auto compiledName = compiledControl.getName();
 
         // find a control that matches name and type
-        // todo: after all name matches have been claimed, assign to an unnamed one (allows renaming in code to rename
-        // the actual control)
+        // todo: after all name matches have been claimed, assign to an unnamed one
+        // (allows renaming in code to rename the actual control)
         auto foundControl = false;
         for (const auto &candidateControl : controlList) {
             if (candidateControl->name() == compiledName && candidateControl->controlType() == compiledModelType) {
-                // todo: assign control metadata - we will need the index and read/write flags
+                // todo: assign control metadata - we will need the index and read/write
+                // flags
 
                 retainedControls.insert(candidateControl->uuid());
                 foundControl = true;
@@ -152,8 +153,8 @@ void CustomNode::updateControls(CompositeAction *actionGroup) {
 
         // no candidate found, create a new one
         if (!foundControl) {
-            auto createAction = CreateControlAction::create((*controls().value())->uuid(), compiledModelType,
-                                                            compiledName, root());
+            auto createAction =
+                CreateControlAction::create((*controls().value())->uuid(), compiledModelType, compiledName, root());
             createAction->forward(true);
             actionGroup->actions().push_back(std::move(createAction));
 

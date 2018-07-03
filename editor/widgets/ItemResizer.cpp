@@ -1,8 +1,8 @@
 #include "ItemResizer.h"
 
-#include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtGui/QCursor>
 #include <QtGui/QPainter>
+#include <QtWidgets/QGraphicsSceneMouseEvent>
 
 using namespace AxiomGui;
 
@@ -11,22 +11,22 @@ ItemResizer::ItemResizer(Direction dir, QSizeF minSize, float marginSize)
     setAcceptedMouseButtons(Qt::LeftButton);
 
     switch (dir) {
-        case TOP:
-        case BOTTOM:
-            setCursor(Qt::SizeVerCursor);
-            break;
-        case LEFT:
-        case RIGHT:
-            setCursor(Qt::SizeHorCursor);
-            break;
-        case TOP_RIGHT:
-        case BOTTOM_LEFT:
-            setCursor(Qt::SizeBDiagCursor);
-            break;
-        case TOP_LEFT:
-        case BOTTOM_RIGHT:
-            setCursor(Qt::SizeFDiagCursor);
-            break;
+    case TOP:
+    case BOTTOM:
+        setCursor(Qt::SizeVerCursor);
+        break;
+    case LEFT:
+    case RIGHT:
+        setCursor(Qt::SizeHorCursor);
+        break;
+    case TOP_RIGHT:
+    case BOTTOM_LEFT:
+        setCursor(Qt::SizeBDiagCursor);
+        break;
+    case TOP_LEFT:
+    case BOTTOM_RIGHT:
+        setCursor(Qt::SizeFDiagCursor);
+        break;
     }
 }
 

@@ -44,10 +44,11 @@ namespace AxiomCommon {
     public:
         virtual ~Hookable() = default;
 
-        HookContext *getContext() override { return &context; }
+        HookContext *getContext() override {
+            return &context;
+        }
 
     private:
         HookContext context;
     };
-
 }

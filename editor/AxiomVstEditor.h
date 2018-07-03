@@ -1,7 +1,7 @@
 #pragma once
 
-#include <public.sdk/source/vst2.x/aeffeditor.h>
 #include "widgets/windows/MainWindow.h"
+#include <public.sdk/source/vst2.x/aeffeditor.h>
 
 class AxiomVstPlugin;
 
@@ -20,7 +20,5 @@ public:
     void idle() override;
 
 private:
-
     AxiomGui::MainWindow window;
-
 };

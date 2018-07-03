@@ -1,12 +1,12 @@
 #include <QtCore/QFile>
 
-#include "widgets/windows/MainWindow.h"
-#include "widgets/surface/NodeSurfacePanel.h"
 #include "AxiomApplication.h"
 #include "StandaloneAudio.h"
 #include "compiler/interface/Frontend.h"
 #include "compiler/interface/Runtime.h"
 #include "model/objects/RootSurface.h"
+#include "widgets/surface/NodeSurfacePanel.h"
+#include "widgets/windows/MainWindow.h"
 
 int main(int argc, char *argv[]) {
     MaximFrontend::maxim_initialize();
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     project->rootSurface()->attachRuntime(&runtime);
 
     AxiomGui::MainWindow window(std::move(project));
-    //AxiomStandalone::startupAudio();
+    // AxiomStandalone::startupAudio();
     window.show();
     auto result = AxiomApplication::main.exec();
     AxiomStandalone::shutdownAudio();

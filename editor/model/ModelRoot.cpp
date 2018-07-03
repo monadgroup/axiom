@@ -1,21 +1,21 @@
 #include "ModelRoot.h"
 
+#include "IdentityReferenceMapper.h"
 #include "ModelObject.h"
 #include "WatchSequenceOperators.h"
-#include "IdentityReferenceMapper.h"
-#include "objects/NodeSurface.h"
-#include "objects/Node.h"
-#include "objects/ControlSurface.h"
 #include "objects/Connection.h"
+#include "objects/ControlSurface.h"
+#include "objects/Node.h"
+#include "objects/NodeSurface.h"
 
 using namespace AxiomModel;
 
-ModelRoot::ModelRoot(Project *project) : _project(project),
-                                         _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.sequence())),
-                                         _nodes(dynamicCastWatch<Node *>(_pool.sequence())),
-                                         _controlSurfaces(dynamicCastWatch<ControlSurface *>(_pool.sequence())),
-                                         _controls(dynamicCastWatch<Control *>(_pool.sequence())),
-                                         _connections(dynamicCastWatch<Connection *>(_pool.sequence())) {}
+ModelRoot::ModelRoot(Project *project)
+    : _project(project), _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.sequence())),
+      _nodes(dynamicCastWatch<Node *>(_pool.sequence())),
+      _controlSurfaces(dynamicCastWatch<ControlSurface *>(_pool.sequence())),
+      _controls(dynamicCastWatch<Control *>(_pool.sequence())),
+      _connections(dynamicCastWatch<Connection *>(_pool.sequence())) {}
 
 ModelRoot::ModelRoot(Project *project, QDataStream &stream) : ModelRoot(project) {
     IdentityReferenceMapper ref;

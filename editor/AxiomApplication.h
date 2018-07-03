@@ -1,18 +1,17 @@
 #pragma once
 
-#include <QApplication>
 #include "widgets/windows/MainWindow.h"
+#include <QApplication>
 
 namespace AxiomModel {
     class Project;
 }
 
 class AxiomApplication : public QApplication {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     static AxiomApplication main;
 
     AxiomApplication();
-
 };

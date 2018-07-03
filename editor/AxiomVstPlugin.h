@@ -1,9 +1,9 @@
 #pragma once
 
-#include <public.sdk/source/vst2.x/audioeffectx.h>
 #include "AxiomApplication.h"
-#include "model/Project.h"
 #include "AxiomVstEditor.h"
+#include "model/Project.h"
+#include <public.sdk/source/vst2.x/audioeffectx.h>
 
 class AxiomVstEditor;
 
@@ -60,10 +60,8 @@ public:
     bool canParameterBeAutomated(VstInt32 index) override;
 
 private:
-
     AxiomVstEditor _editor;
     std::unique_ptr<QByteArray> saveBuffer;
 
     void fiddleParam(VstInt32 param);
-
 };

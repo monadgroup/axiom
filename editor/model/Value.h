@@ -4,19 +4,7 @@
 
 namespace AxiomModel {
 
-    enum class FormType {
-        NONE,
-        CONTROL,
-        OSCILLATOR,
-        NOTE,
-        FREQUENCY,
-        BEATS,
-        SECONDS,
-        SAMPLES,
-        DB,
-        AMPLITUDE,
-        Q
-    };
+    enum class FormType { NONE, CONTROL, OSCILLATOR, NOTE, FREQUENCY, BEATS, SECONDS, SAMPLES, DB, AMPLITUDE, Q };
 
     struct NumValue {
         float left = 0;
@@ -48,13 +36,7 @@ namespace AxiomModel {
         }
     };
 
-    enum class MidiEventType {
-        NOTE_ON,
-        NOTE_OFF,
-        POLYPHONIC_AFTERTOUCH,
-        CHANNEL_AFTERTOUCH,
-        PITCH_WHEEL
-    };
+    enum class MidiEventType { NOTE_ON, NOTE_OFF, POLYPHONIC_AFTERTOUCH, CHANNEL_AFTERTOUCH, PITCH_WHEEL };
 
     struct MidiEventValue {
         MidiEventType event = MidiEventType::NOTE_OFF;
@@ -108,5 +90,4 @@ namespace AxiomModel {
     QDataStream &operator<<(QDataStream &stream, const MidiValue &val);
 
     QDataStream &operator>>(QDataStream &stream, MidiValue &val);
-
 }

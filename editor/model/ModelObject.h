@@ -15,32 +15,31 @@ namespace AxiomModel {
 
     class ModelObject : public PoolObject {
     public:
-        enum class ModelType {
-            NODE_SURFACE,
-            NODE,
-            CONTROL_SURFACE,
-            CONTROL,
-            CONNECTION
-        };
+        enum class ModelType { NODE_SURFACE, NODE, CONTROL_SURFACE, CONTROL, CONNECTION };
 
         AxiomCommon::Event<> removed;
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
-        static std::unique_ptr<ModelObject>
-        deserialize(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref, ModelRoot *root);
+        static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref,
+                                                        ModelRoot *root);
 
-        static std::unique_ptr<ModelObject>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
-                    ModelRoot *root);
+        static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                        ReferenceMapper *ref, ModelRoot *root);
 
         virtual void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const;
 
-        virtual bool buildOnRemove() const { return false; }
+        virtual bool buildOnRemove() const {
+            return false;
+        }
 
-        ModelType modelType() const { return _modelType; }
+        ModelType modelType() const {
+            return _modelType;
+        }
 
-        ModelRoot *root() const { return _root; }
+        ModelRoot *root() const {
+            return _root;
+        }
 
         virtual Sequence<ModelObject *> links();
 
@@ -50,5 +49,4 @@ namespace AxiomModel {
         ModelType _modelType;
         ModelRoot *_root;
     };
-
 }

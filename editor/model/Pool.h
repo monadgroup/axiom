@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QtCore/QUuid>
-#include <unordered_set>
 #include <memory>
+#include <unordered_set>
 
 #include "PoolObject.h"
 #include "WatchSequence.h"
@@ -23,9 +23,13 @@ namespace AxiomModel {
 
         std::unique_ptr<PoolObject> removeObj(PoolObject *obj);
 
-        WatchSequence<PoolObject *> &sequence() { return _sequence; }
+        WatchSequence<PoolObject *> &sequence() {
+            return _sequence;
+        }
 
-        const WatchSequence<PoolObject *> &sequence() const { return _sequence; }
+        const WatchSequence<PoolObject *> &sequence() const {
+            return _sequence;
+        }
 
         void destroy();
 
@@ -34,5 +38,4 @@ namespace AxiomModel {
         std::vector<PoolObject *> _objects;
         WatchSequence<PoolObject *> _sequence;
     };
-
 }

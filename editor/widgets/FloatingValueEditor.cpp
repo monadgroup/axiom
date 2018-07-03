@@ -1,7 +1,7 @@
 #include "FloatingValueEditor.h"
 
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGraphicsScene>
+#include <QtWidgets/QLineEdit>
 
 using namespace AxiomGui;
 
@@ -12,16 +12,12 @@ FloatingValueEditor::FloatingValueEditor(QString initialValue, QPointF scenePos)
     setWidget(editor);
 
     // todo: handle ESC to stop editing
-    connect(editor, &QLineEdit::editingFinished,
-            this, &FloatingValueEditor::editingFinished);
+    connect(editor, &QLineEdit::editingFinished, this, &FloatingValueEditor::editingFinished);
 
     editor->selectAll();
     editor->setFocus();
 
-    setPos(QPointF(
-        scenePos.x() + 30,
-        scenePos.y()
-    ));
+    setPos(QPointF(scenePos.x() + 30, scenePos.y()));
     setZValue(100);
 }
 

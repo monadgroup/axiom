@@ -1,15 +1,14 @@
 #include "StandaloneAudio.h"
 
-#include <portaudio.h>
 #include <cassert>
-#include <mutex>
 #include <iostream>
+#include <mutex>
+#include <portaudio.h>
 
 static PaStream *stream;
 
 static int paCallback(const void *, void *outputBuffer, unsigned long framesPerBuffer,
-                      const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags,
-                      void *userData) {
+                      const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags, void *userData) {
     /*auto runtime = (MaximRuntime::Runtime *) userData;
     std::lock_guard<std::mutex> lock(runtime->mutex());
 

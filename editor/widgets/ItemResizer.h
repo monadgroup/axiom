@@ -5,7 +5,7 @@
 namespace AxiomGui {
 
     class ItemResizer : public QGraphicsObject {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
         enum Direction {
@@ -26,7 +26,9 @@ namespace AxiomGui {
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-        bool doPaint() const { return m_doPaint; }
+        bool doPaint() const {
+            return m_doPaint;
+        }
 
     public slots:
 
@@ -36,9 +38,13 @@ namespace AxiomGui {
 
         void setDoPaint(bool newDoPaint);
 
-        void enablePainting() { setDoPaint(true); }
+        void enablePainting() {
+            setDoPaint(true);
+        }
 
-        void disablePainting() { setDoPaint(false); }
+        void disablePainting() {
+            setDoPaint(false);
+        }
 
     signals:
 
@@ -68,5 +74,4 @@ namespace AxiomGui {
         QPointF m_pos;
         QSizeF m_size;
     };
-
 }

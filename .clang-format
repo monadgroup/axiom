@@ -1,0 +1,31 @@
+---
+Language:        Cpp
+BasedOnStyle:  WebKit
+AlignAfterOpenBracket: Align
+AlignEscapedNewlines: DontAlign
+AlignOperands:   true
+AllowShortFunctionsOnASingleLine: Empty
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: true
+BraceWrapping:   
+  AfterFunction:   false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+BreakConstructorInitializers: BeforeColon
+ColumnLimit:     120
+Cpp11BracedListStyle: true
+IndentWrappedFunctionNames: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+NamespaceIndentation: All
+PointerAlignment: Right
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: false
+SpacesInContainerLiterals: false
+Standard:        Cpp11
+TabWidth:        8
+UseTab:          Never
+...
+

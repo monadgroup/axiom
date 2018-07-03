@@ -5,5 +5,4 @@ namespace AxiomStandalone {
     void startupAudio();
 
     void shutdownAudio();
-
 }

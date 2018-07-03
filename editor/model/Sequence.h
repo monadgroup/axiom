@@ -1,8 +1,8 @@
 #pragma once
 
 #include <functional>
-#include <optional>
 #include <memory>
+#include <optional>
 
 namespace AxiomModel {
 
@@ -103,7 +103,9 @@ namespace AxiomModel {
 
         explicit Sequence(iter_functor iter) : _iter(std::move(iter)) {}
 
-        const iter_functor &iter() const { return _iter; }
+        const iter_functor &iter() const {
+            return _iter;
+        }
 
         const_iterator begin() const {
             return iterator(_iter());
@@ -128,5 +130,4 @@ namespace AxiomModel {
     private:
         iter_functor _iter;
     };
-
 }

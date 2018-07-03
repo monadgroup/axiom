@@ -11,8 +11,6 @@ namespace MaximCompiler {
 
     class CustomNodeMirBuilder {
     public:
-
         static void build(Runtime &runtime, Transaction &transaction, AxiomModel::CustomNode *node);
     };
-
 }

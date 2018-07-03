@@ -1,13 +1,13 @@
 #pragma once
 
-#include <vector>
-#include <optional>
-#include <functional>
-#include <set>
-#include <utility>
 #include <cassert>
-#include <tuple>
+#include <functional>
 #include <memory>
+#include <optional>
+#include <set>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include "SharedHookable.h"
 
@@ -99,9 +99,13 @@ namespace AxiomCommon {
 
         explicit Event(func_type callback) : impl(std::make_shared<SharedEvent>(callback)) {}
 
-        bool operator==(const Event &other) const { return impl == other.impl; }
+        bool operator==(const Event &other) const {
+            return impl == other.impl;
+        }
 
-        bool operator!=(const Event &other) const { return impl != other.impl; }
+        bool operator!=(const Event &other) const {
+            return impl != other.impl;
+        }
 
         void trigger(const Args &... params) const {
             impl->trigger(params...);
@@ -114,9 +118,8 @@ namespace AxiomCommon {
         }
 
         Event connect(Event *other) {
-            auto evt = connect(Event(std::function([other](Args &&... params) {
-                other->trigger(std::forward<Args>(params)...);
-            })));
+            auto evt = connect(
+                Event(std::function([other](Args &&... params) { other->trigger(std::forward<Args>(params)...); })));
             evt.follow(other);
             return evt;
         }
@@ -144,24 +147,24 @@ namespace AxiomCommon {
         template<class TR, class... TA>
         Event connect(AbstractHookable *follow, std::function<TR(TA...)> listener) {
             return connect(follow, Event(std::function([listener](Args &&... params) {
-                applyFunc<sizeof...(TA)>(listener, std::forward<Args>(params)...);
-            })));
+                               applyFunc<sizeof...(TA)>(listener, std::forward<Args>(params)...);
+                           })));
         }
 
         template<class TB, class TFB, class TR, class... TA>
         Event connect(TB *follow, TR (TFB::*listener)(TA...)) {
             auto wrapper = std::mem_fn(listener);
             return connect(follow, Event(std::function([follow, wrapper](Args &&... params) {
-                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-            })));
+                               applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+                           })));
         }
 
         template<class TB, class TFB, class TR, class... TA>
         Event connect(TB *follow, TR (TFB::*listener)(TA...) const) {
             auto wrapper = std::mem_fn(listener);
             return connect(follow, Event(std::function([follow, wrapper](Args &&... params) {
-                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-            })));
+                               applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+                           })));
         };
 
         template<class TB, class TFB, class TR, class... TA>

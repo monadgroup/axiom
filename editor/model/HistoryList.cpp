@@ -42,7 +42,8 @@ void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forwar
     // if the stack is going to be longer than max size, remove the first item
     if (_stack.size() == maxActions) {
         _stack.erase(_stack.begin());
-    } else _stackPos++;
+    } else
+        _stackPos++;
 
     _stack.push_back(std::move(action));
 

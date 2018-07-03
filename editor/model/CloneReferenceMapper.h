@@ -20,5 +20,4 @@ namespace AxiomModel {
         QHash<QUuid, QPoint> _pos;
         QHash<QUuid, QUuid> _values;
     };
-
 }

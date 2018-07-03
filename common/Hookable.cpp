@@ -20,7 +20,9 @@ HookContext::HookContext(HookContext &&a) noexcept {
     a.notifiables.clear();
 }
 
-HookContext &HookContext::operator=(const HookContext &a) { return *this; }
+HookContext &HookContext::operator=(const HookContext &a) {
+    return *this;
+}
 
 HookContext &HookContext::operator=(HookContext &&a) noexcept {
     a.doDestruct();

@@ -4,8 +4,8 @@
 #include <QtCore/QMap>
 #include <QtWidgets/QMessageBox>
 
-#include "LibraryEntry.h"
 #include "../util.h"
+#include "LibraryEntry.h"
 
 using namespace AxiomModel;
 
@@ -33,8 +33,9 @@ void Library::serialize(QDataStream &stream) {
     }
 }
 
-void Library::import(AxiomModel::Library *library, const std::function<Library::ConflictResolution(LibraryEntry *,
-                                                                                                   LibraryEntry *)> &resolveConflict) {
+void Library::import(
+    AxiomModel::Library *library,
+    const std::function<Library::ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict) {
     // create a mapping of uuid/entry pairs for checking conflicts
     QMap<QUuid, LibraryEntry *> currentEntries;
     for (const auto &entry : _entries) {
@@ -58,17 +59,17 @@ void Library::import(AxiomModel::Library *library, const std::function<Library::
                 auto resolution = resolveConflict(curEntry, entry.get());
 
                 switch (resolution) {
-                    case ConflictResolution::KEEP_OLD:
-                        // no action needed
-                        break;
-                    case ConflictResolution::KEEP_NEW:
-                        currentEntries.remove(curEntry->baseUuid());
-                        curEntry->remove();
-                        addEntry(std::move(entry));
-                        break;
-                    case ConflictResolution::KEEP_BOTH:
-                        // todo
-                        break;
+                case ConflictResolution::KEEP_OLD:
+                    // no action needed
+                    break;
+                case ConflictResolution::KEEP_NEW:
+                    currentEntries.remove(curEntry->baseUuid());
+                    curEntry->remove();
+                    addEntry(std::move(entry));
+                    break;
+                case ConflictResolution::KEEP_BOTH:
+                    // todo
+                    break;
                 }
             }
         }

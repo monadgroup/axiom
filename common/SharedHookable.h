@@ -12,10 +12,11 @@ namespace AxiomCommon {
 
         ~SharedHookable() = default;
 
-        HookContext *getContext() { return impl.get(); }
+        HookContext *getContext() {
+            return impl.get();
+        }
 
     private:
         std::shared_ptr<HookContext> impl;
     };
-
 }

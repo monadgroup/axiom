@@ -1,9 +1,9 @@
 #include "Project.h"
 
 #include "PoolOperators.h"
-#include "objects/RootSurface.h"
-#include "objects/PortalNode.h"
 #include "actions/CreatePortalNodeAction.h"
+#include "objects/PortalNode.h"
+#include "objects/RootSurface.h"
 
 using namespace AxiomModel;
 
@@ -17,9 +17,11 @@ Project::Project() : _mainRoot(this) {
 
     //  2. add default inputs and outputs
     CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
-                                   PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
+                                   PortalControl::PortalType::INPUT, &mainRoot())
+        ->forward(true);
     CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
-                                   PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
+                                   PortalControl::PortalType::OUTPUT, &mainRoot())
+        ->forward(true);
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(this, stream), _library(this, stream) {
@@ -53,7 +55,6 @@ bool Project::readHeader(QDataStream &stream, uint64_t expectedMagic, uint32_t *
     stream >> version;
     if (versionOut) *versionOut = version;
     return version >= minSchemaVersion && version <= schemaVersion;
-
 }
 
 void Project::serialize(QDataStream &stream) {

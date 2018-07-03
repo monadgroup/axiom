@@ -20,28 +20,34 @@ namespace AxiomModel {
         template<class InputCollection>
         SequenceMapFilter(InputCollection input, next_functor next)
             : _next(next), _sequence([next, input]() {
-            std::optional<typename InputCollection::const_iterator> begin;
-            std::optional<typename InputCollection::const_iterator> end;
-            return [input, next, begin, end]() mutable -> std::optional<OutputItem> {
-                if (!begin || !end) {
-                    begin = input.begin();
-                    end = input.end();
-                }
+                  std::optional<typename InputCollection::const_iterator> begin;
+                  std::optional<typename InputCollection::const_iterator> end;
+                  return [input, next, begin, end]() mutable -> std::optional<OutputItem> {
+                      if (!begin || !end) {
+                          begin = input.begin();
+                          end = input.end();
+                      }
 
-                while (*begin != *end) {
-                    auto newVal = next(**begin);
-                    (*begin)++;
-                    if (newVal) return *newVal;
-                }
-                return std::optional<OutputItem>();
-            };
-        }) {}
+                      while (*begin != *end) {
+                          auto newVal = next(**begin);
+                          (*begin)++;
+                          if (newVal) return *newVal;
+                      }
+                      return std::optional<OutputItem>();
+                  };
+              }) {}
 
-        const next_functor &next() const { return _next; }
+        const next_functor &next() const {
+            return _next;
+        }
 
-        sequence_type &sequence() { return _sequence; }
+        sequence_type &sequence() {
+            return _sequence;
+        }
 
-        const sequence_type &sequence() const { return _sequence; }
+        const sequence_type &sequence() const {
+            return _sequence;
+        }
 
         const_iterator begin() const {
             return _sequence.begin();
@@ -63,5 +69,4 @@ namespace AxiomModel {
         next_functor _next;
         sequence_type _sequence;
     };
-
 }

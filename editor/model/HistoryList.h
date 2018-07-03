@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
-#include "common/Event.h"
 #include "actions/Action.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
@@ -25,9 +25,13 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream);
 
-        const std::vector<std::unique_ptr<Action>> &stack() const { return _stack; }
+        const std::vector<std::unique_ptr<Action>> &stack() const {
+            return _stack;
+        }
 
-        size_t stackPos() const { return _stackPos; }
+        size_t stackPos() const {
+            return _stackPos;
+        }
 
         void append(std::unique_ptr<Action> action, bool forward = true, bool forceForwards = false);
 
@@ -47,5 +51,4 @@ namespace AxiomModel {
         size_t _stackPos = 0;
         std::vector<std::unique_ptr<Action>> _stack;
     };
-
 }

@@ -1,11 +1,11 @@
 #include "SurfaceMirBuilder.h"
 
-#include "../model/objects/NodeSurface.h"
-#include "../model/objects/Node.h"
-#include "../model/objects/ControlSurface.h"
-#include "../model/objects/NumControl.h"
-#include "../model/PoolOperators.h"
 #include "../model/ModelRoot.h"
+#include "../model/PoolOperators.h"
+#include "../model/objects/ControlSurface.h"
+#include "../model/objects/Node.h"
+#include "../model/objects/NodeSurface.h"
+#include "../model/objects/NumControl.h"
 
 using namespace MaximCompiler;
 
@@ -37,9 +37,8 @@ AxiomModel::Control::ControlType getGroupType(const std::vector<AxiomModel::Cont
     return controls[0]->controlType();
 }
 
-void
-SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &transaction, AxiomModel::NodeSurface *surface,
-                         const QHash<QUuid, NodeMirData> &nodeData) {
+void SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &transaction,
+                              AxiomModel::NodeSurface *surface, const QHash<QUuid, NodeMirData> &nodeData) {
     auto mir = transaction.buildSurface(surface->getRuntimeId(runtime), surface->name());
 
     // build control groups
@@ -99,8 +98,8 @@ SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &transacti
     for (const auto &pair : groups) {
         auto currentIndex = index++;
         valueGroupIndices.emplace(pair.first, currentIndex);
-        auto controlPointers = AxiomModel::collect(
-            AxiomModel::findMap(pair.first->controls, surface->root()->controls()));
+        auto controlPointers =
+            AxiomModel::collect(AxiomModel::findMap(pair.first->controls, surface->root()->controls()));
 
         auto isExposed = areAnyExposed(controlPointers);
         auto groupType = getGroupType(controlPointers);
