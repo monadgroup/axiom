@@ -11,7 +11,9 @@ namespace MaximCompiler {
     public:
         Transaction();
 
-        SurfaceRef buildSurface(uint64_t id, const std::string &name);
+        SurfaceRef buildSurface(uint64_t id, const QString &name);
+
+        void printToStdout() const;
     };
 
 }

@@ -24,6 +24,8 @@ namespace AxiomModel {
         bool isCopyable() const override { return false; }
 
         bool isDeletable() const override { return false; }
+
+        void attachRuntime(MaximCompiler::Runtime *runtime) override {}
     };
 
 }

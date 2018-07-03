@@ -59,6 +59,8 @@ namespace AxiomModel {
 
         virtual uint64_t getRuntimeId(MaximCompiler::Runtime &runtime) = 0;
 
+        void attachRuntime(MaximCompiler::Runtime *runtime);
+
         void saveValue();
 
         void restoreValue();
@@ -71,6 +73,10 @@ namespace AxiomModel {
         GridSurface _grid;
         QPointF _pan;
         float _zoom;
+
+        MaximCompiler::Runtime *_runtime = nullptr;
+
+        void nodeAdded(Node *node) const;
     };
 
 }

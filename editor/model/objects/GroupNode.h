@@ -27,6 +27,8 @@ namespace AxiomModel {
 
         const AxiomCommon::Promise<NodeSurface *> &nodes() const { return _nodes; }
 
+        void attachRuntime(MaximCompiler::Runtime *runtime) override;
+
         void saveValue() override;
 
         void restoreValue() override;

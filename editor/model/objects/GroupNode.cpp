@@ -36,6 +36,10 @@ void GroupNode::serialize(QDataStream &stream, const QUuid &parent, bool withCon
     stream << (*_nodes.value())->uuid();
 }
 
+void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime) {
+    nodes().then([runtime](NodeSurface *const &surface) { surface->attachRuntime(runtime); });
+}
+
 void GroupNode::saveValue() {
     if (_nodes.value()) (*_nodes.value())->saveValue();
     Node::saveValue();

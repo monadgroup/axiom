@@ -118,7 +118,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 } else {
                     SourcePos {
                         line: self.current_pos.line,
-                        column: self.current_pos.column + capture_length,
+                        column: self.current_pos.column + capture_length as isize,
                     }
                 };
                 let token_content = if captures.len() > 1 { &captures[1] } else { "" };

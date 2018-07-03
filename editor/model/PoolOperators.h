@@ -46,6 +46,13 @@ namespace AxiomModel {
         return find<typename InputCollection::value_type>(collection, uuid);
     };
 
+    template<class UuidCollection, class FindCollection>
+    SequenceMapFilter<typename FindCollection::value_type, typename UuidCollection::value_type> findMap(UuidCollection uuids, const FindCollection &src) {
+        return map(uuids, std::function([src](const typename UuidCollection::value_type &base) -> typename FindCollection::value_type {
+            return find(src, base);
+        }));
+    }
+
     template<class InputCollection>
     std::vector<typename InputCollection::value_type> heapSort(const InputCollection &input) {
         auto collection = collect(input);

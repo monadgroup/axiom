@@ -3,8 +3,8 @@ use std::fmt;
 #[derive(Eq, PartialEq, Clone, Copy, Hash)]
 #[repr(C)]
 pub struct SourcePos {
-    pub line: usize,
-    pub column: usize,
+    pub line: isize,
+    pub column: isize,
 }
 
 impl fmt::Debug for SourcePos {
@@ -13,7 +13,10 @@ impl fmt::Debug for SourcePos {
     }
 }
 
-pub const UNDEF_SOURCE_POS: SourcePos = SourcePos { line: 0, column: 0 };
+pub const UNDEF_SOURCE_POS: SourcePos = SourcePos {
+    line: -1,
+    column: -1,
+};
 
 #[derive(Eq, PartialEq, Clone, Copy, Hash)]
 #[repr(C)]

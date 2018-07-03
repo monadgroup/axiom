@@ -10,7 +10,7 @@ OwnedObject::~OwnedObject() {
     if (handle) destroy(handle);
 }
 
-OwnedObject::OwnedObject(OwnedObject &&other) noexcept : handle(other.handle) {
+OwnedObject::OwnedObject(OwnedObject &&other) noexcept : handle(other.handle), destroy(other.destroy) {
     other.handle = nullptr;
 }
 

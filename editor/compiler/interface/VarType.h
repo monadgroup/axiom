@@ -3,6 +3,7 @@
 #include <cstddef>
 
 #include "OwnedObject.h"
+#include "ControlRef.h"
 
 namespace MaximCompiler {
 
@@ -15,6 +16,8 @@ namespace MaximCompiler {
         static VarType tuple(VarType *types, size_t count);
 
         static VarType array(VarType subtype);
+
+        static VarType ofControl(ControlType controlType);
 
         VarType clone();
 

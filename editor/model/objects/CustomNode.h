@@ -4,6 +4,7 @@
 
 #include "common/Event.h"
 #include "Node.h"
+#include "editor/compiler/interface/Block.h"
 
 namespace AxiomModel {
 
@@ -16,6 +17,8 @@ namespace AxiomModel {
         static constexpr float minPanelHeight = 40;
 
         AxiomCommon::Event<const QString &> codeChanged;
+        AxiomCommon::Event<const QString &, MaximFrontend::SourceRange> codeCompileError;
+        AxiomCommon::Event<> codeCompileSuccess;
         AxiomCommon::Event<bool> panelOpenChanged;
         AxiomCommon::Event<float> beforePanelHeightChanged;
         AxiomCommon::Event<float> panelHeightChanged;
@@ -47,11 +50,22 @@ namespace AxiomModel {
 
         void setPanelHeight(float panelHeight);
 
+        uint64_t getRuntimeId(MaximCompiler::Runtime &runtime);
+
+        void attachRuntime(MaximCompiler::Runtime *runtime) override;
+
+        std::optional<MaximCompiler::Block> compiledBlock() const;
+
     private:
         QString _code;
         bool _isPanelOpen;
         float _panelHeight;
-        CompositeAction *changeCodeAction = nullptr;
+        uint64_t runtimeId = 0;
+        MaximCompiler::Runtime *_runtime = nullptr;
+        std::optional<MaximCompiler::Block> _compiledBlock;
+
+        void buildCode();
+        void updateControls(CompositeAction *actionGroup);
     };
 
 }

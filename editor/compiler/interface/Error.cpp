@@ -4,9 +4,9 @@ using namespace MaximCompiler;
 
 Error::Error(void *handle) : OwnedObject(handle, &MaximFrontend::maxim_destroy_error) {}
 
-std::string Error::getDescription() const {
+QString Error::getDescription() const {
     auto cStr = MaximFrontend::maxim_error_get_description(get());
-    std::string resultStr(cStr);
+    auto resultStr = QString::fromUtf8(cStr);
     MaximFrontend::maxim_destroy_string(cStr);
     return resultStr;
 }

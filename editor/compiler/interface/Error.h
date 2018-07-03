@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtCore/QString>
+
 #include <string>
 
 #include "OwnedObject.h"
@@ -11,7 +13,7 @@ namespace MaximCompiler {
     public:
         explicit Error(void *handle);
 
-        std::string getDescription() const;
+        QString getDescription() const;
         MaximFrontend::SourceRange getRange() const;
     };
 

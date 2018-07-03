@@ -26,8 +26,8 @@ namespace MaximFrontend {
     using MaximValueGroupSource = void;
 
     struct SourcePos {
-        size_t line;
-        size_t column;
+        ssize_t line;
+        ssize_t column;
     };
 
     struct SourceRange {
@@ -46,11 +46,13 @@ namespace MaximFrontend {
 
         MaximTransaction *maxim_create_transaction();
         void maxim_destroy_transaction(MaximTransaction *);
+        void maxim_print_transaction_to_stdout(MaximTransactionRef *);
 
         MaximVarType *maxim_vartype_num();
         MaximVarType *maxim_vartype_midi();
         MaximVarType *maxim_vartype_tuple(MaximVarType **subtypes, size_t subtype_count);
         MaximVarType *maxim_vartype_array(MaximVarType *subtype);
+        MaximVarType *maxim_vartype_of_control(uint8_t control_type);
         MaximVarType *maxim_vartype_clone(MaximVarTypeRef *base);
         void maxim_destroy_vartype(MaximVarType *);
 
@@ -72,8 +74,9 @@ namespace MaximFrontend {
         MaximNodeRef *maxim_build_group_node(MaximSurfaceRef *surface, uint64_t surface_id);
         void maxim_build_value_socket(MaximNodeRef *node, size_t group_id, bool value_written, bool value_read, bool is_extractor);
 
-        bool maxim_compile_block(uint64_t id, const char *name, const char *code, MaximBlock *success_block_out, MaximError *fail_error_out);
+        bool maxim_compile_block(uint64_t id, const char *name, const char *code, MaximBlock **success_block_out, MaximError **fail_error_out);
         void maxim_destroy_block(MaximBlock *);
+        MaximBlock *maxim_block_clone(MaximBlockRef *);
 
         const char *maxim_error_get_description(MaximErrorRef *);
         SourceRange maxim_error_get_range(MaximErrorRef *);

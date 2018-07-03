@@ -15,6 +15,7 @@ NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan
     : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
       _nodes(findChildrenWatch(root->nodes(), uuid)), _connections(findChildrenWatch(root->connections(), uuid)),
       _grid(staticCastWatch<GridItem *>(_nodes)), _pan(pan), _zoom(zoom) {
+    _nodes.itemAdded.connect(this, &NodeSurface::nodeAdded);
 }
 
 std::unique_ptr<NodeSurface> NodeSurface::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
@@ -81,6 +82,13 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
     });
 }
 
+void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime) {
+    _runtime = runtime;
+    for (const auto &node : nodes()) {
+        node->attachRuntime(runtime);
+    }
+}
+
 void NodeSurface::saveValue() {
     for (const auto &node : nodes()) {
         node->saveValue();
@@ -101,4 +109,10 @@ void NodeSurface::remove() {
         (*_connections.begin())->remove();
     }
     ModelObject::remove();
+}
+
+void NodeSurface::nodeAdded(AxiomModel::Node *node) const {
+    if (_runtime) {
+        node->attachRuntime(_runtime);
+    }
 }

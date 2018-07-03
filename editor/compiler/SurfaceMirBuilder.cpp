@@ -2,9 +2,10 @@
 
 #include <vector>
 
+#include "../model/objects/NodeSurface.h"
 #include "../model/objects/Node.h"
 #include "../model/objects/ControlSurface.h"
-#include "../model/objects/Control.h"
+#include "../model/objects/NumControl.h"
 #include "../model/PoolOperators.h"
 #include "../model/ModelRoot.h"
 
@@ -18,8 +19,27 @@ struct ValueGroup {
     }
 };
 
-void SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &transaction, AxiomModel::NodeSurface *surface) {
-    auto mir = transaction.buildSurface(surface->getRuntimeId(runtime), surface->name().toStdString());
+bool areAnyExposed(const std::vector<AxiomModel::Control*> &controls) {
+    for (const auto &control : controls) {
+        if (!control->exposerUuid().isNull()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+AxiomModel::Control::ControlType getGroupType(const std::vector<AxiomModel::Control*> &controls) {
+    assert(!controls.empty());
+    for (const auto &control : controls) {
+        if (control->controlType() == AxiomModel::Control::ControlType::NUM_EXTRACT || control->controlType() == AxiomModel::Control::ControlType::MIDI_EXTRACT) {
+            return control->controlType();
+        }
+    }
+    return controls[0]->controlType();
+}
+
+void SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &transaction, AxiomModel::NodeSurface *surface, const QHash<QUuid, NodeMirData> &nodeData) {
+    auto mir = transaction.buildSurface(surface->getRuntimeId(runtime), surface->name());
 
     // build control groups
     std::unordered_map<ValueGroup *, std::unique_ptr<ValueGroup>> groups;
@@ -73,13 +93,60 @@ void SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &tran
 
     // build a map of value groups to indices while building the MIR
     std::unordered_map<ValueGroup *, size_t> valueGroupIndices;
-    std::vector<size_t> portals;
+    std::vector<size_t> sockets;
     size_t index = 0;
     for (const auto &pair : groups) {
-        valueGroupIndices.emplace(pair.first, index++);
+        auto currentIndex = index++;
+        valueGroupIndices.emplace(pair.first, currentIndex);
+        auto controlPointers = AxiomModel::collect(AxiomModel::findMap(pair.first->controls, surface->root()->controls()));
 
-        // todo
+        auto isExposed = areAnyExposed(controlPointers);
+        auto groupType = getGroupType(controlPointers);
+
+        auto vartype = VarType::ofControl(fromModelType(groupType));
+
+        if (isExposed) {
+            auto socketIndex = sockets.size();
+            sockets.push_back(currentIndex);
+            mir.addValueGroup(std::move(vartype), ValueGroupSource::socket(socketIndex));
+            continue;
+        } else if (groupType == AxiomModel::Control::ControlType::NUM_SCALAR) {
+            // determine if the group is written to
+            auto isWrittenTo = false;
+            for (const auto &control : controlPointers) {
+                auto controlNodeData = nodeData.find(control->surface()->node()->uuid());
+                assert(controlNodeData != nodeData.end());
+
+                auto controlData = controlNodeData->controls.find(control->uuid());
+                assert(controlData != controlNodeData->controls.end());
+
+                if (controlData->writtenTo) {
+                    isWrittenTo = true;
+                    break;
+                }
+            }
+
+            if (!isWrittenTo) {
+                // save a constant value
+                auto numControl = dynamic_cast<AxiomModel::NumControl*>(controlPointers[0]);
+                assert(numControl);
+
+                auto numVal = numControl->value();
+                if (numVal.left != 0 || numVal.right != 0 || (int) numVal.form != 0) {
+                    auto constVal = ConstantValue::num(numVal);
+                    mir.addValueGroup(std::move(vartype), ValueGroupSource::default_val(std::move(constVal)));
+                    continue;
+                }
+            }
+        }
+
+        mir.addValueGroup(std::move(vartype), ValueGroupSource::none());
     }
 
     // build nodes
+    /*for (const auto &node : surface->nodes()) {
+
+    }*/
+
+    // todo
 }

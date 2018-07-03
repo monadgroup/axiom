@@ -1,6 +1,8 @@
 #pragma once
 
-#include <string>
+#include <QtCore/QString>
+
+#include "editor/model/objects/Control.h"
 
 namespace MaximCompiler {
 
@@ -20,7 +22,7 @@ namespace MaximCompiler {
 
         void *get() const { return handle; }
 
-        std::string getName() const;
+        QString getName() const;
 
         ControlType getType() const;
 
@@ -31,5 +33,9 @@ namespace MaximCompiler {
     private:
         void *handle;
     };
+
+    ControlType fromModelType(AxiomModel::Control::ControlType modelType);
+
+    AxiomModel::Control::ControlType toModelType(ControlType type);
 
 }

@@ -55,6 +55,11 @@ pub unsafe extern "C" fn maxim_destroy_transaction(val: *mut Transaction) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_print_transaction_to_stdout(val: *const Transaction) {
+    println!("{:#?}", *val);
+}
+
+#[no_mangle]
 pub extern "C" fn maxim_vartype_num() -> *mut mir::VarType {
     Box::into_raw(Box::new(mir::VarType::Num))
 }
@@ -81,6 +86,13 @@ pub unsafe extern "C" fn maxim_vartype_tuple(
 #[no_mangle]
 pub unsafe extern "C" fn maxim_vartype_array(subtype: *mut mir::VarType) -> *mut mir::VarType {
     Box::into_raw(Box::new(mir::VarType::Array(Box::from_raw(subtype))))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_vartype_of_control(control_type: u8) -> *mut mir::VarType {
+    Box::into_raw(Box::new(mir::VarType::of_control_value(
+        &std::mem::transmute(control_type),
+    )))
 }
 
 #[no_mangle]
@@ -272,9 +284,14 @@ pub unsafe extern "C" fn maxim_compile_block(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_destroy_block(val: *mut CompileError) {
+pub unsafe extern "C" fn maxim_destroy_block(val: *mut mir::Block) {
     Box::from_raw(val);
     // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_block_clone(block: *const mir::Block) -> *mut mir::Block {
+    Box::into_raw(Box::new((*block).clone()))
 }
 
 #[no_mangle]

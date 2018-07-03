@@ -29,6 +29,10 @@ VarType VarType::array(MaximCompiler::VarType subtype) {
     return VarType(MaximFrontend::maxim_vartype_array(subtype.release()));
 }
 
+VarType VarType::ofControl(ControlType controlType) {
+    return VarType(MaximFrontend::maxim_vartype_of_control((uint8_t) controlType));
+}
+
 VarType VarType::clone() {
     return VarType(MaximFrontend::maxim_vartype_clone(get()));
 }

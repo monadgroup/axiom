@@ -5,6 +5,10 @@
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
 
+namespace MaximCompiler {
+    class Runtime;
+}
+
 namespace AxiomModel {
 
     class NodeSurface;
@@ -61,6 +65,8 @@ namespace AxiomModel {
         void setCorners(QPoint topLeft, QPoint bottomRight) override;
 
         void doSizeAction();
+
+        virtual void attachRuntime(MaximCompiler::Runtime *runtime) = 0;
 
         virtual void saveValue();
 
