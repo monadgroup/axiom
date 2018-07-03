@@ -33,7 +33,8 @@ void Library::serialize(QDataStream &stream) {
     }
 }
 
-void Library::import(AxiomModel::Library *library, const std::function<Library::ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict) {
+void Library::import(AxiomModel::Library *library, const std::function<Library::ConflictResolution(LibraryEntry *,
+                                                                                                   LibraryEntry *)> &resolveConflict) {
     // create a mapping of uuid/entry pairs for checking conflicts
     QMap<QUuid, LibraryEntry *> currentEntries;
     for (const auto &entry : _entries) {
@@ -89,7 +90,7 @@ void Library::setActiveSearch(const QString &search) {
 }
 
 std::vector<LibraryEntry *> Library::entries() const {
-    std::vector<LibraryEntry*> result;
+    std::vector<LibraryEntry *> result;
     result.reserve(_entries.size());
     for (const auto &entry : _entries) {
         result.push_back(entry.get());
@@ -118,7 +119,7 @@ void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
     entryPtr->cleanup.connect(this, [this, entryPtr]() { removeEntry(entryPtr); });
 }
 
-LibraryEntry* Library::findById(const QUuid &id) {
+LibraryEntry *Library::findById(const QUuid &id) {
     for (const auto &entry : _entries) {
         if (entry->baseUuid() == id) return entry.get();
     }

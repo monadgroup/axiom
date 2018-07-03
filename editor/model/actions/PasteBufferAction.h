@@ -11,11 +11,15 @@ namespace AxiomModel {
 
     class PasteBufferAction : public Action {
     public:
-        PasteBufferAction(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer, QVector<QUuid> usedUuids, QPoint center, ModelRoot *root);
+        PasteBufferAction(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer, QVector<QUuid> usedUuids,
+                          QPoint center, ModelRoot *root);
 
-        static std::unique_ptr<PasteBufferAction> create(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer, QVector<QUuid> usedUuids, QPoint center, ModelRoot *root);
+        static std::unique_ptr<PasteBufferAction>
+        create(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer, QVector<QUuid> usedUuids,
+               QPoint center, ModelRoot *root);
 
-        static std::unique_ptr<PasteBufferAction> create(const QUuid &surfaceUuid, QByteArray buffer, QPoint center, ModelRoot *root);
+        static std::unique_ptr<PasteBufferAction>
+        create(const QUuid &surfaceUuid, QByteArray buffer, QPoint center, ModelRoot *root);
 
         static std::unique_ptr<PasteBufferAction> deserialize(QDataStream &stream, ModelRoot *root);
 

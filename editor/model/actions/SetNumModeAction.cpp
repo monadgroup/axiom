@@ -18,9 +18,12 @@ std::unique_ptr<SetNumModeAction> SetNumModeAction::create(const QUuid &uuid,
 }
 
 std::unique_ptr<SetNumModeAction> SetNumModeAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    uint8_t beforeModeInt; stream >> beforeModeInt;
-    uint8_t afterModeInt; stream >> afterModeInt;
+    QUuid uuid;
+    stream >> uuid;
+    uint8_t beforeModeInt;
+    stream >> beforeModeInt;
+    uint8_t afterModeInt;
+    stream >> afterModeInt;
 
     return create(uuid, (NumControl::DisplayMode) beforeModeInt, (NumControl::DisplayMode) afterModeInt, root);
 }
@@ -34,11 +37,11 @@ void SetNumModeAction::serialize(QDataStream &stream) const {
 }
 
 bool SetNumModeAction::forward(bool) {
-    find<NumControl*>(root()->controls(), uuid)->setDisplayMode(afterMode);
+    find<NumControl *>(root()->controls(), uuid)->setDisplayMode(afterMode);
     return false;
 }
 
 bool SetNumModeAction::backward() {
-    find<NumControl*>(root()->controls(), uuid)->setDisplayMode(beforeMode);
+    find<NumControl *>(root()->controls(), uuid)->setDisplayMode(beforeMode);
     return false;
 }

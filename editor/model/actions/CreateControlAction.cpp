@@ -5,7 +5,6 @@
 #include "../objects/NumControl.h"
 #include "../objects/MidiControl.h"
 #include "../objects/ExtractControl.h"
-#include "../../util.h"
 
 using namespace AxiomModel;
 
@@ -26,11 +25,15 @@ std::unique_ptr<CreateControlAction> CreateControlAction::create(const QUuid &pa
 }
 
 std::unique_ptr<CreateControlAction> CreateControlAction::deserialize(QDataStream &stream,
-                                                                            AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    QUuid parentUuid; stream >> parentUuid;
-    uint8_t typeInt; stream >> typeInt;
-    QString name; stream >> name;
+                                                                      AxiomModel::ModelRoot *root) {
+    QUuid uuid;
+    stream >> uuid;
+    QUuid parentUuid;
+    stream >> parentUuid;
+    uint8_t typeInt;
+    stream >> typeInt;
+    QString name;
+    stream >> name;
 
     return create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), root);
 }

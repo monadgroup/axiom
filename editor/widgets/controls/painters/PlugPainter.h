@@ -10,7 +10,8 @@ namespace AxiomGui {
     class PlugPainter {
     public:
 
-        void paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, std::optional<AxiomModel::NumValue> val, const QColor &valBaseColor);
+        void paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState,
+                   std::optional<AxiomModel::NumValue> val, const QColor &valBaseColor);
 
         void shape(QPainterPath &path, const QRectF &aspectBoundingRect) const;
 

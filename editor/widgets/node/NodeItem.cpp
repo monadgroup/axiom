@@ -286,7 +286,9 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();
 
-            auto newEntry = LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()), node->root()->project());
+            auto newEntry = LibraryEntry::create(std::move(enteredName),
+                                                 std::set<QString>(enteredTags.begin(), enteredTags.end()),
+                                                 node->root()->project());
             auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems());
             QByteArray serializeArray;
             QDataStream serializeStream(&serializeArray, QIODevice::WriteOnly);

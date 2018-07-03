@@ -25,7 +25,7 @@ Project::Project() : _mainRoot(this) {
 Project::Project(QDataStream &stream) : _mainRoot(this, stream), _library(this, stream) {
     auto rootSurfaces = findChildren(mainRoot().nodeSurfaces(), QUuid());
     assert(rootSurfaces.size() == 1);
-    _rootSurface = dynamic_cast<RootSurface*>(takeAt(rootSurfaces, 0));
+    _rootSurface = dynamic_cast<RootSurface *>(takeAt(rootSurfaces, 0));
     assert(_rootSurface);
 }
 

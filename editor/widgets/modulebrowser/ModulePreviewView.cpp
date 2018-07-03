@@ -12,7 +12,6 @@
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
 #include "editor/model/PoolOperators.h"
-#include "editor/model/Library.h"
 #include "editor/model/LibraryEntry.h"
 #include "editor/model/grid/GridItem.h"
 #include "editor/model/objects/RootSurface.h"
@@ -49,7 +48,9 @@ void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
         QByteArray serializeArray;
         QDataStream stream(&serializeArray, QIODevice::WriteOnly);
         stream << centerPos;
-        AxiomModel::ModelRoot::serializeChunk(stream, entry->rootSurface()->uuid(), AxiomModel::findDependents(AxiomModel::dynamicCast<AxiomModel::ModelObject*>(entry->root()->pool().sequence()), entry->rootSurface()->uuid(), false));
+        AxiomModel::ModelRoot::serializeChunk(stream, entry->rootSurface()->uuid(), AxiomModel::findDependents(
+            AxiomModel::dynamicCast<AxiomModel::ModelObject *>(entry->root()->pool().sequence()),
+            entry->rootSurface()->uuid(), false));
 
         auto mimeData = new QMimeData();
         mimeData->setData("application/axiom-partial-surface", serializeArray);
@@ -104,8 +105,9 @@ void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
             }
         }
     } else if (selectedAction == deleteAction) {
-        QMessageBox confirmBox(QMessageBox::Warning, "Confirm Delete", "Are you sure you want to delete this module?\n\n"
-                                                                       "This operation cannot be undone.");
+        QMessageBox confirmBox(QMessageBox::Warning, "Confirm Delete",
+                               "Are you sure you want to delete this module?\n\n"
+                               "This operation cannot be undone.");
         confirmBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
         confirmBox.setDefaultButton(QMessageBox::Yes);
 
@@ -119,7 +121,7 @@ void ModulePreviewView::updateScaling() {
     // figure out the bounding box size of the scene
     QRectF boundingRect;
     for (const auto &item : scene()->items()) {
-        if (auto node = dynamic_cast<NodeItem*>(item)) {
+        if (auto node = dynamic_cast<NodeItem *>(item)) {
             auto br = node->drawBoundingRect();
             br.setTopLeft(node->scenePos());
             boundingRect = boundingRect.united(br);
@@ -130,7 +132,8 @@ void ModulePreviewView::updateScaling() {
     // figure out correct scaling with some padding
     auto selfWidth = width() - 30;
     auto selfHeight = height() - 30;
-    auto scaleFactor = boundingRect.width() > boundingRect.height() ? selfWidth / boundingRect.width() : selfHeight / boundingRect.height();
+    auto scaleFactor = boundingRect.width() > boundingRect.height() ? selfWidth / boundingRect.width() : selfHeight /
+                                                                                                         boundingRect.height();
 
     scale(1 / currentScale, 1 / currentScale);
     centerOn(boundingRect.center());

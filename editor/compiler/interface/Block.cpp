@@ -1,7 +1,5 @@
 #include "Block.h"
 
-#include "Frontend.h"
-
 using namespace MaximCompiler;
 
 Block::Block(void *handle) : OwnedObject(handle, &MaximFrontend::maxim_destroy_block) {}

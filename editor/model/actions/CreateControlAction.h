@@ -9,11 +9,14 @@ namespace AxiomModel {
 
     class CreateControlAction : public Action {
     public:
-        CreateControlAction(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type, QString name, ModelRoot *root);
+        CreateControlAction(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type, QString name,
+                            ModelRoot *root);
 
-        static std::unique_ptr<CreateControlAction> create(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type, QString name, ModelRoot *root);
+        static std::unique_ptr<CreateControlAction>
+        create(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type, QString name, ModelRoot *root);
 
-        static std::unique_ptr<CreateControlAction> create(const QUuid &parentUuid, Control::ControlType type, QString name, ModelRoot *root);
+        static std::unique_ptr<CreateControlAction>
+        create(const QUuid &parentUuid, Control::ControlType type, QString name, ModelRoot *root);
 
         static std::unique_ptr<CreateControlAction> deserialize(QDataStream &stream, ModelRoot *root);
 

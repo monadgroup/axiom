@@ -25,7 +25,8 @@ namespace AxiomModel {
     };
 
     template<class InputCollection>
-    std::optional<typename InputCollection::value_type> findMaybe(const InputCollection &collection, const QUuid &uuid) {
+    std::optional<typename InputCollection::value_type>
+    findMaybe(const InputCollection &collection, const QUuid &uuid) {
         return findMaybe<typename InputCollection::value_type>(collection, uuid);
     }
 
@@ -47,10 +48,12 @@ namespace AxiomModel {
     };
 
     template<class UuidCollection, class FindCollection>
-    SequenceMapFilter<typename FindCollection::value_type, typename UuidCollection::value_type> findMap(UuidCollection uuids, const FindCollection &src) {
-        return map(uuids, std::function([src](const typename UuidCollection::value_type &base) -> typename FindCollection::value_type {
-            return find(src, base);
-        }));
+    SequenceMapFilter<typename FindCollection::value_type, typename UuidCollection::value_type>
+    findMap(UuidCollection uuids, const FindCollection &src) {
+        return map(uuids, std::function(
+            [src](const typename UuidCollection::value_type &base) -> typename FindCollection::value_type {
+                return find(src, base);
+            }));
     }
 
     template<class InputCollection>
@@ -86,7 +89,8 @@ namespace AxiomModel {
     }
 
     template<class InputCollection, class IdCollection>
-    SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type> findAll(InputCollection collection, IdCollection uuids) {
+    SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type>
+    findAll(InputCollection collection, IdCollection uuids) {
         return filter(collection, std::function([uuids](const typename InputCollection::value_type &base) -> bool {
             return uuids.find(base->uuid()) != uuids.end();
         }));
@@ -118,7 +122,8 @@ namespace AxiomModel {
     }
 
     template<class InputCollection>
-    Sequence<typename InputCollection::value_type> findDependents(InputCollection input, QUuid uuid, bool includeSelf = true) {
+    Sequence<typename InputCollection::value_type>
+    findDependents(InputCollection input, QUuid uuid, bool includeSelf = true) {
         // Objects in a pool are always in heap-sorted order - this means that a child is _always_ after a parent
         // in the array. We can take advantage of that here by doing a simple iteration over all items in the input
         // pool, and checking to see if we've seen the items parent before, by keeping a set of all seen UUIDs.

@@ -6,7 +6,7 @@
 AxiomVstEditor::AxiomVstEditor(std::unique_ptr<AxiomModel::Project> project) : window(std::move(project)) {
 }
 
-AxiomModel::Project* AxiomVstEditor::project() const {
+AxiomModel::Project *AxiomVstEditor::project() const {
     return window.project();
 }
 

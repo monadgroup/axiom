@@ -14,6 +14,7 @@ namespace MaximCompiler {
         explicit Error(void *handle);
 
         QString getDescription() const;
+
         MaximFrontend::SourceRange getRange() const;
     };
 

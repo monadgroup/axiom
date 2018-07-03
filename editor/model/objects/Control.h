@@ -37,10 +37,13 @@ namespace AxiomModel {
                 QPoint pos, QSize size, bool selected, QString name, bool showName, const QUuid &exposerUuid,
                 const QUuid &exposingUuid, ModelRoot *root);
 
-        static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid, const QString &name, const QUuid &exposingUuid, ModelRoot *root);
+        static std::unique_ptr<Control>
+        createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid, const QString &name,
+                      const QUuid &exposingUuid, ModelRoot *root);
 
         static std::unique_ptr<Control>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref, ModelRoot *root);
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
+                    ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -90,7 +93,7 @@ namespace AxiomModel {
 
         virtual void restoreValue() = 0;
 
-        Sequence<ModelObject*> links() override;
+        Sequence<ModelObject *> links() override;
 
         void remove() override;
 

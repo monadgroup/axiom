@@ -27,10 +27,12 @@ namespace AxiomModel {
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
-        static std::unique_ptr<ModelObject> deserialize(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref, ModelRoot *root);
+        static std::unique_ptr<ModelObject>
+        deserialize(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref, ModelRoot *root);
 
         static std::unique_ptr<ModelObject>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref, ModelRoot *root);
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
+                    ModelRoot *root);
 
         virtual void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const;
 
@@ -40,7 +42,7 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
-        virtual Sequence<ModelObject*> links();
+        virtual Sequence<ModelObject *> links();
 
         void remove() override;
 

@@ -10,9 +10,9 @@ public:
     explicit AxiomVstEditor(std::unique_ptr<AxiomModel::Project> project);
 
     AxiomModel::Project *project() const;
-    
+
     void setProject(std::unique_ptr<AxiomModel::Project> project);
-    
+
     bool open(void *ptr) override;
 
     void close() override;

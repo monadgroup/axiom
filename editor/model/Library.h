@@ -36,7 +36,8 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream);
 
-        void import(Library *library, const std::function<ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict);
+        void import(Library *library,
+                    const std::function<ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict);
 
         const QString &activeTag() const { return _activeTag; }
 

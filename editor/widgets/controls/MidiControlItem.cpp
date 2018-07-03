@@ -5,7 +5,6 @@
 
 #include "editor/model/Project.h"
 #include "editor/model/objects/MidiControl.h"
-#include "editor/model/Value.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;

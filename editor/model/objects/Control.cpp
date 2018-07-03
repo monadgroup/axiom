@@ -35,7 +35,7 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
 
     if (!_exposingUuid.isNull()) {
-        findLater<Control*>(root->controls(), _exposingUuid).then([uuid](Control *exposing) {
+        findLater<Control *>(root->controls(), _exposingUuid).then([uuid](Control *exposing) {
             exposing->setExposerUuid(uuid);
         });
     }
@@ -46,18 +46,24 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
                                                 const QUuid &exposingUuid, AxiomModel::ModelRoot *root) {
     switch (type) {
         case Control::ControlType::NUM_SCALAR:
-            return NumControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(), exposingUuid, NumControl::DisplayMode::KNOB, NumControl::Channel::BOTH, {
-                0, 0, FormType::CONTROL
-            }, root);
+            return NumControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(),
+                                      exposingUuid, NumControl::DisplayMode::KNOB, NumControl::Channel::BOTH, {
+                                          0, 0, FormType::CONTROL
+                                      }, root);
         case Control::ControlType::MIDI_SCALAR:
-            return MidiControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(), exposingUuid, root);
+            return MidiControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(),
+                                       exposingUuid, root);
         case Control::ControlType::NUM_EXTRACT:
-            return ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(), exposingUuid, ConnectionWire::WireType::NUM, 0, root);
+            return ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(),
+                                          exposingUuid, ConnectionWire::WireType::NUM, 0, root);
         case Control::ControlType::MIDI_EXTRACT:
-            return ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(), exposingUuid, ConnectionWire::WireType::MIDI, 0, root);
+            return ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(),
+                                          exposingUuid, ConnectionWire::WireType::MIDI, 0, root);
         case Control::ControlType::SCOPE:
-            return ScopeControl::create(uuid, parentUuid, QPoint(0, 0), QSize(6, 6), false, name, true, QUuid(), exposingUuid, root);
-        default: unreachable;
+            return ScopeControl::create(uuid, parentUuid, QPoint(0, 0), QSize(6, 6), false, name, true, QUuid(),
+                                        exposingUuid, root);
+        default:
+        unreachable;
     }
 }
 
@@ -88,10 +94,10 @@ std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &
     switch ((ControlType) controlTypeInt) {
         case ControlType::NUM_SCALAR:
             return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                exposerUuid, exposingUuid, ref, root);
+                                           exposerUuid, exposingUuid, ref, root);
         case ControlType::MIDI_SCALAR:
             return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                exposerUuid, exposingUuid, ref, root);
+                                            exposerUuid, exposingUuid, ref, root);
         case ControlType::NUM_EXTRACT:
             return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name),
                                                showName, exposerUuid, exposingUuid, ConnectionWire::WireType::NUM, ref,
@@ -158,11 +164,12 @@ QPointF Control::worldPos() const {
     return ControlSurface::controlToNode(worldPos);
 }
 
-Sequence<ModelObject*> Control::links() {
+Sequence<ModelObject *> Control::links() {
     auto expId = exposerUuid();
-    return flatten(std::array<Sequence<ModelObject*>, 2> {
-        staticCast<ModelObject*>(filter(root()->controls(), std::function([expId](Control *const &obj) -> bool { return obj->uuid() == expId; }))).sequence(),
-        staticCast<ModelObject*>(_connections.sequence()).sequence()
+    return flatten(std::array<Sequence<ModelObject *>, 2>{
+        staticCast<ModelObject *>(filter(root()->controls(), std::function(
+            [expId](Control *const &obj) -> bool { return obj->uuid() == expId; }))).sequence(),
+        staticCast<ModelObject *>(_connections.sequence()).sequence()
     });
 }
 

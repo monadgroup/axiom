@@ -13,7 +13,8 @@ HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
     _stackPos = stackPos;
     _stack.reserve(stackSize);
     for (uint32_t i = 0; i < stackSize; i++) {
-        QByteArray actionBuffer; stream >> actionBuffer;
+        QByteArray actionBuffer;
+        stream >> actionBuffer;
         QDataStream actionStream(&actionBuffer, QIODevice::ReadOnly);
         _stack.push_back(Action::deserialize(actionStream, root));
     }

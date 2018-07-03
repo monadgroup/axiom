@@ -1,8 +1,5 @@
 #include "CustomNode.h"
 
-#include <iostream>
-#include <variant>
-
 #include "ControlSurface.h"
 #include "NumControl.h"
 #include "MidiControl.h"
@@ -13,7 +10,6 @@
 #include "../actions/SetCodeAction.h"
 #include "../actions/CreateControlAction.h"
 #include "../actions/DeleteObjectAction.h"
-#include "../../util.h"
 #include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
@@ -59,7 +55,6 @@ void CustomNode::setCode(const QString &code) {
         _code = code;
         codeChanged.trigger(code);
 
-        std::cout << "Runtime = " << _runtime << std::endl;
         if (_runtime) {
             buildCode();
         }
@@ -122,7 +117,9 @@ void CustomNode::buildCode() {
     if (MaximCompiler::Error *err = std::get_if<MaximCompiler::Error>(&compileResult)) {
         auto errorDescription = err->getDescription();
         auto errorRange = err->getRange();
-        std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> " << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString() << std::endl;
+        std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> "
+                  << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString()
+                  << std::endl;
         codeCompileError.trigger(errorDescription, errorRange);
     } else {
         _compiledBlock = std::optional<MaximCompiler::Block>(std::move(std::get<MaximCompiler::Block>(compileResult)));
@@ -155,7 +152,8 @@ void CustomNode::updateControls(CompositeAction *actionGroup) {
 
         // no candidate found, create a new one
         if (!foundControl) {
-            auto createAction = CreateControlAction::create((*controls().value())->uuid(), compiledModelType, compiledName, root());
+            auto createAction = CreateControlAction::create((*controls().value())->uuid(), compiledModelType,
+                                                            compiledName, root());
             createAction->forward(true);
             actionGroup->actions().push_back(std::move(createAction));
 

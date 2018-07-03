@@ -26,7 +26,7 @@ void HistoryPanel::appendItem(size_t i, AxiomModel::Action *action, QString prep
     item->setForeground(itemBrush);
     listWidget->addItem(item);
 
-    if (auto composite = dynamic_cast<AxiomModel::CompositeAction*>(action)) {
+    if (auto composite = dynamic_cast<AxiomModel::CompositeAction *>(action)) {
         for (const auto &subAction : composite->actions()) {
             appendItem(i, subAction.get(), prepend + "  ");
         }

@@ -33,9 +33,9 @@ namespace AxiomModel {
         void setActiveSlots(ActiveSlotFlags activeSlots);
 
         // todo: implement these?
-        void saveValue() override { }
+        void saveValue() override {}
 
-        void restoreValue() override { }
+        void restoreValue() override {}
 
     private:
         ActiveSlotFlags _activeSlots;

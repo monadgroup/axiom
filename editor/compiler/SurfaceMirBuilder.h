@@ -23,7 +23,8 @@ namespace MaximCompiler {
     class SurfaceMirBuilder {
     public:
 
-        static void build(Runtime &runtime, Transaction &transaction, AxiomModel::NodeSurface *surface, const QHash<QUuid, NodeMirData> &nodeData);
+        static void build(Runtime &runtime, Transaction &transaction, AxiomModel::NodeSurface *surface,
+                          const QHash<QUuid, NodeMirData> &nodeData);
     };
 
 }

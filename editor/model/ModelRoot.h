@@ -80,7 +80,7 @@ namespace AxiomModel {
 
         const ConnectionCollection &connections() const { return _connections; }
 
-        std::vector<ModelObject*> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
+        std::vector<ModelObject *> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
 
         void destroy();
 

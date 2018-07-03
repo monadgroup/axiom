@@ -38,7 +38,7 @@ NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     connect(&showValueTimer, &QTimer::timeout, this, &NumControlItem::showValueExpired);
 }
 
-static std::array<QString, 12> noteNames {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+static std::array<QString, 12> noteNames{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 static QString getNoteName(float noteVal) {
     auto intNote = static_cast<size_t>(noteVal);
@@ -60,11 +60,13 @@ QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
         case AxiomModel::FormType::NOTE:
             return getNoteName(val);
         case AxiomModel::FormType::FREQUENCY:
-            return val < 1000 ? static_cast<QString>(QString::number(val, 'f', 2) % " Hz") : static_cast<QString>(QString::number(val / 1000, 'f', 2) % "KHz");
+            return val < 1000 ? static_cast<QString>(QString::number(val, 'f', 2) % " Hz") : static_cast<QString>(
+                QString::number(val / 1000, 'f', 2) % "KHz");
         case AxiomModel::FormType::BEATS:
             return QString::number(val, 'f', 1) % " beats";
         case AxiomModel::FormType::SECONDS:
-            return val < 0.1 ? static_cast<QString>(QString::number(val * 1000, 'f', 2) % " ms") : static_cast<QString>(QString::number(val, 'f', 2) % " s");
+            return val < 0.1 ? static_cast<QString>(QString::number(val * 1000, 'f', 2) % " ms") : static_cast<QString>(
+                QString::number(val, 'f', 2) % " s");
         case AxiomModel::FormType::SAMPLES:
             return QString::number((int) val);
         case AxiomModel::FormType::DB:
@@ -165,7 +167,8 @@ void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         auto isActive = cv.left != 0 || cv.right != 0;
         auto newVal = !isActive;
         setCVal(cv.withLR(newVal, newVal));
-        control->root()->history().append(SetNumValueAction::create(control->uuid(), cv, control->value(), control->root()));
+        control->root()->history().append(
+            SetNumValueAction::create(control->uuid(), cv, control->value(), control->root()));
     } else if (!isDragging) {
         isDragging = true;
         beforeDragVal = getCVal();
@@ -208,7 +211,8 @@ void NumControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (isDragging) {
         isDragging = false;
         if (control->value() != beforeDragVal) {
-            control->root()->history().append(SetNumValueAction::create(control->uuid(), beforeDragVal, control->value(), control->root()));
+            control->root()->history().append(
+                SetNumValueAction::create(control->uuid(), beforeDragVal, control->value(), control->root()));
         }
     }
 }
@@ -243,7 +247,9 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
         connect(action, &QAction::triggered,
                 [this, modePair]() {
-                    control->root()->history().append(SetNumModeAction::create(control->uuid(), control->displayMode(), modePair.second, control->root()));
+                    control->root()->history().append(
+                        SetNumModeAction::create(control->uuid(), control->displayMode(), modePair.second,
+                                                 control->root()));
                 });
     }
 
@@ -293,7 +299,8 @@ void NumControlItem::showValueExpired() {
 
 void NumControlItem::setValue(NumValue value) {
     if (value != control->value()) {
-        control->root()->history().append(SetNumValueAction::create(control->uuid(), control->value(), value, control->root()));
+        control->root()->history().append(
+            SetNumValueAction::create(control->uuid(), control->value(), value, control->root()));
     }
 }
 
@@ -378,7 +385,8 @@ QString NumControlItem::getLabelText() const {
         if (controlVal.left == controlVal.right) {
             return formatNumber(controlVal.left, controlVal.form);
         } else {
-            return QString("%1 / %2").arg(formatNumber(controlVal.left, controlVal.form), formatNumber(controlVal.right, controlVal.form));
+            return QString("%1 / %2").arg(formatNumber(controlVal.left, controlVal.form),
+                                          formatNumber(controlVal.right, controlVal.form));
         }
     } else {
         return ControlItem::getLabelText();

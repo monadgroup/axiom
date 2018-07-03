@@ -13,8 +13,6 @@
 #include "editor/model/Project.h"
 #include "editor/model/actions/PasteBufferAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
-#include "editor/model/actions/CompositeAction.h"
-#include "editor/model/actions/PasteBufferAction.h"
 #include "editor/model/actions/GridItemMoveAction.h"
 #include "editor/model/PoolOperators.h"
 #include "NodeSurfaceCanvas.h"
@@ -168,7 +166,8 @@ void NodeSurfaceView::dropEvent(QDropEvent *event) {
         auto afterPos = selectedNode->pos();
 
         if (beforePos != afterPos) {
-            dragAndDropAction->actions().push_back(GridItemMoveAction::create(selectedNode->uuid(), beforePos, afterPos, surface->root()));
+            dragAndDropAction->actions().push_back(
+                GridItemMoveAction::create(selectedNode->uuid(), beforePos, afterPos, surface->root()));
         }
     }
 
@@ -247,7 +246,8 @@ void NodeSurfaceView::pasteBuffer() {
         qRound((float) scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
         qRound((float) scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
     );
-    surface->root()->history().append(PasteBufferAction::create(surface->uuid(), std::move(buffer), targetPos, surface->root()));
+    surface->root()->history().append(
+        PasteBufferAction::create(surface->uuid(), std::move(buffer), targetPos, surface->root()));
 }
 
 void NodeSurfaceView::doUndo() {
@@ -268,8 +268,10 @@ float NodeSurfaceView::zoomToScale(float zoom) {
 
 void NodeSurfaceView::updateHistoryState() {
     if (!hasFocus()) return;
-    GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(surface->root()->history().undoType()));
-    GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(surface->root()->history().redoType()));
+    GlobalActions::editUndo->setText(
+        "&Undo " + AxiomModel::Action::typeToString(surface->root()->history().undoType()));
+    GlobalActions::editRedo->setText(
+        "&Redo " + AxiomModel::Action::typeToString(surface->root()->history().redoType()));
     GlobalActions::editUndo->setEnabled(surface->root()->history().canUndo());
     GlobalActions::editRedo->setEnabled(surface->root()->history().canRedo());
 }

@@ -11,7 +11,7 @@ ConstantValue ConstantValue::num(AxiomModel::NumValue value) {
 }
 
 ConstantValue ConstantValue::tuple(MaximCompiler::ConstantValue *items, size_t count) {
-    std::vector<void*> mapped_values;
+    std::vector<void *> mapped_values;
     mapped_values.reserve(count);
     for (size_t i = 0; i < count; i++) {
         mapped_values[i] = items[i].release();

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <cstdint>
 
 namespace MaximFrontend {
@@ -36,59 +37,61 @@ namespace MaximFrontend {
     };
 
     extern "C" {
-        void maxim_initialize();
+    void maxim_initialize();
 
-        MaximRuntime *maxim_create_runtime();
-        void maxim_destroy_runtime(MaximRuntime *);
+    MaximRuntime *maxim_create_runtime();
+    void maxim_destroy_runtime(MaximRuntime *);
 
-        uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
-        void maxim_destroy_string(const char *);
+    uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
+    void maxim_destroy_string(const char *);
 
-        MaximTransaction *maxim_create_transaction();
-        void maxim_destroy_transaction(MaximTransaction *);
-        void maxim_print_transaction_to_stdout(MaximTransactionRef *);
+    MaximTransaction *maxim_create_transaction();
+    void maxim_destroy_transaction(MaximTransaction *);
+    void maxim_print_transaction_to_stdout(MaximTransactionRef *);
 
-        MaximVarType *maxim_vartype_num();
-        MaximVarType *maxim_vartype_midi();
-        MaximVarType *maxim_vartype_tuple(MaximVarType **subtypes, size_t subtype_count);
-        MaximVarType *maxim_vartype_array(MaximVarType *subtype);
-        MaximVarType *maxim_vartype_of_control(uint8_t control_type);
-        MaximVarType *maxim_vartype_clone(MaximVarTypeRef *base);
-        void maxim_destroy_vartype(MaximVarType *);
+    MaximVarType *maxim_vartype_num();
+    MaximVarType *maxim_vartype_midi();
+    MaximVarType *maxim_vartype_tuple(MaximVarType **subtypes, size_t subtype_count);
+    MaximVarType *maxim_vartype_array(MaximVarType *subtype);
+    MaximVarType *maxim_vartype_of_control(uint8_t control_type);
+    MaximVarType *maxim_vartype_clone(MaximVarTypeRef *base);
+    void maxim_destroy_vartype(MaximVarType *);
 
-        MaximConstantValue *maxim_constant_num(float left, float right, uint8_t form);
-        MaximConstantValue *maxim_constant_tuple(MaximConstantValue **items, size_t item_count);
-        MaximConstantValue *maxim_constant_clone(MaximConstantValueRef *base);
-        void maxim_destroy_constant(MaximConstantValue *);
+    MaximConstantValue *maxim_constant_num(float left, float right, uint8_t form);
+    MaximConstantValue *maxim_constant_tuple(MaximConstantValue **items, size_t item_count);
+    MaximConstantValue *maxim_constant_clone(MaximConstantValueRef *base);
+    void maxim_destroy_constant(MaximConstantValue *);
 
-        MaximSurfaceRef *maxim_build_surface(MaximTransactionRef *transaction, uint64_t id, const char *name);
+    MaximSurfaceRef *maxim_build_surface(MaximTransactionRef *transaction, uint64_t id, const char *name);
 
-        MaximValueGroupSource *maxim_valuegroupsource_none();
-        MaximValueGroupSource *maxim_valuegroupsource_socket(size_t index);
-        MaximValueGroupSource *maxim_valuegroupsource_default(MaximConstantValue *value);
-        MaximValueGroupSource *maxim_valuegroupsource_clone(MaximValueGroupSource *base);
-        void maxim_destroy_valuegroupsource(MaximValueGroupSource *);
-        void maxim_build_value_group(MaximSurfaceRef *surface, MaximVarType *vartype, MaximValueGroupSource *source);
+    MaximValueGroupSource *maxim_valuegroupsource_none();
+    MaximValueGroupSource *maxim_valuegroupsource_socket(size_t index);
+    MaximValueGroupSource *maxim_valuegroupsource_default(MaximConstantValue *value);
+    MaximValueGroupSource *maxim_valuegroupsource_clone(MaximValueGroupSource *base);
+    void maxim_destroy_valuegroupsource(MaximValueGroupSource *);
+    void maxim_build_value_group(MaximSurfaceRef *surface, MaximVarType *vartype, MaximValueGroupSource *source);
 
-        MaximNodeRef *maxim_build_custom_node(MaximSurfaceRef *surface, uint64_t block_id);
-        MaximNodeRef *maxim_build_group_node(MaximSurfaceRef *surface, uint64_t surface_id);
-        void maxim_build_value_socket(MaximNodeRef *node, size_t group_id, bool value_written, bool value_read, bool is_extractor);
+    MaximNodeRef *maxim_build_custom_node(MaximSurfaceRef *surface, uint64_t block_id);
+    MaximNodeRef *maxim_build_group_node(MaximSurfaceRef *surface, uint64_t surface_id);
+    void maxim_build_value_socket(MaximNodeRef *node, size_t group_id, bool value_written, bool value_read,
+                                  bool is_extractor);
 
-        bool maxim_compile_block(uint64_t id, const char *name, const char *code, MaximBlock **success_block_out, MaximError **fail_error_out);
-        void maxim_destroy_block(MaximBlock *);
-        MaximBlock *maxim_block_clone(MaximBlockRef *);
+    bool maxim_compile_block(uint64_t id, const char *name, const char *code, MaximBlock **success_block_out,
+                             MaximError **fail_error_out);
+    void maxim_destroy_block(MaximBlock *);
+    MaximBlock *maxim_block_clone(MaximBlockRef *);
 
-        const char *maxim_error_get_description(MaximErrorRef *);
-        SourceRange maxim_error_get_range(MaximErrorRef *);
-        void maxim_destroy_error(MaximError *);
+    const char *maxim_error_get_description(MaximErrorRef *);
+    SourceRange maxim_error_get_range(MaximErrorRef *);
+    void maxim_destroy_error(MaximError *);
 
-        size_t maxim_block_get_control_count(MaximBlockRef *block);
-        MaximBlockControlRef *maxim_block_get_control(MaximBlockRef *block, size_t index);
-        const char *maxim_control_get_name(MaximBlockControlRef *control);
-        uint8_t maxim_control_get_type(MaximBlockControlRef *control);
-        bool maxim_control_get_written(MaximBlockControlRef *control);
-        bool maxim_control_get_read(MaximBlockControlRef *control);
+    size_t maxim_block_get_control_count(MaximBlockRef *block);
+    MaximBlockControlRef *maxim_block_get_control(MaximBlockRef *block, size_t index);
+    const char *maxim_control_get_name(MaximBlockControlRef *control);
+    uint8_t maxim_control_get_type(MaximBlockControlRef *control);
+    bool maxim_control_get_written(MaximBlockControlRef *control);
+    bool maxim_control_get_read(MaximBlockControlRef *control);
 
-        void maxim_commit(MaximRuntimeRef *runtime, MaximTransaction *transaction);
+    void maxim_commit(MaximRuntimeRef *runtime, MaximTransaction *transaction);
     }
 }

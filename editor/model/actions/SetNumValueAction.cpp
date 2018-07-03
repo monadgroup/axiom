@@ -1,6 +1,5 @@
 #include "SetNumValueAction.h"
 
-#include "editor/model/Value.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../objects/NumControl.h"
@@ -19,9 +18,12 @@ std::unique_ptr<SetNumValueAction> SetNumValueAction::create(const QUuid &uuid, 
 }
 
 std::unique_ptr<SetNumValueAction> SetNumValueAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    NumValue beforeVal; stream >> beforeVal;
-    NumValue afterVal; stream >> afterVal;
+    QUuid uuid;
+    stream >> uuid;
+    NumValue beforeVal;
+    stream >> beforeVal;
+    NumValue afterVal;
+    stream >> afterVal;
 
     return create(uuid, beforeVal, afterVal, root);
 }
@@ -35,11 +37,11 @@ void SetNumValueAction::serialize(QDataStream &stream) const {
 }
 
 bool SetNumValueAction::forward(bool first) {
-    find<NumControl*>(root()->controls(), uuid)->setValue(afterVal);
+    find<NumControl *>(root()->controls(), uuid)->setValue(afterVal);
     return false;
 }
 
 bool SetNumValueAction::backward() {
-    find<NumControl*>(root()->controls(), uuid)->setValue(beforeVal);
+    find<NumControl *>(root()->controls(), uuid)->setValue(beforeVal);
     return false;
 }

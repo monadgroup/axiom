@@ -1,7 +1,6 @@
 #include "AddNodeMenu.h"
 
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QWidgetAction>
 
 #include "editor/model/Project.h"
 #include "editor/model/LibraryEntry.h"

@@ -1,7 +1,5 @@
 #include "NumControl.h"
 
-#include "editor/model/Value.h"
-
 using namespace AxiomModel;
 
 NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,

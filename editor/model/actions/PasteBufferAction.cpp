@@ -10,16 +10,20 @@
 
 using namespace AxiomModel;
 
-PasteBufferAction::PasteBufferAction(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer, QVector<QUuid> usedUuids,
+PasteBufferAction::PasteBufferAction(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer,
+                                     QVector<QUuid> usedUuids,
                                      QPoint center, AxiomModel::ModelRoot *root)
-    : Action(ActionType::PASTE_BUFFER, root), surfaceUuid(surfaceUuid), isBufferFormatted(isBufferFormatted), buffer(std::move(buffer)),
-    usedUuids(std::move(usedUuids)), center(center) {
+    : Action(ActionType::PASTE_BUFFER, root), surfaceUuid(surfaceUuid), isBufferFormatted(isBufferFormatted),
+      buffer(std::move(buffer)),
+      usedUuids(std::move(usedUuids)), center(center) {
 }
 
-std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer,
-                                                             QVector<QUuid> usedUuids, QPoint center,
-                                                             AxiomModel::ModelRoot *root) {
-    return std::make_unique<PasteBufferAction>(surfaceUuid, isBufferFormatted, std::move(buffer), std::move(usedUuids), center, root);
+std::unique_ptr<PasteBufferAction>
+PasteBufferAction::create(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer,
+                          QVector<QUuid> usedUuids, QPoint center,
+                          AxiomModel::ModelRoot *root) {
+    return std::make_unique<PasteBufferAction>(surfaceUuid, isBufferFormatted, std::move(buffer), std::move(usedUuids),
+                                               center, root);
 }
 
 std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfaceUuid, QByteArray buffer, QPoint center,
@@ -28,11 +32,16 @@ std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfac
 }
 
 std::unique_ptr<PasteBufferAction> PasteBufferAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid surfaceUuid; stream >> surfaceUuid;
-    bool isBufferFormatted; stream >> isBufferFormatted;
-    QByteArray buffer; stream >> buffer;
-    QVector<QUuid> usedUuids; stream >> usedUuids;
-    QPoint center; stream >> center;
+    QUuid surfaceUuid;
+    stream >> surfaceUuid;
+    bool isBufferFormatted;
+    stream >> isBufferFormatted;
+    QByteArray buffer;
+    stream >> buffer;
+    QVector<QUuid> usedUuids;
+    stream >> usedUuids;
+    QPoint center;
+    stream >> center;
 
     return create(surfaceUuid, isBufferFormatted, std::move(buffer), std::move(usedUuids), center, root);
 }
@@ -52,12 +61,13 @@ bool PasteBufferAction::forward(bool) {
     assert(usedUuids.isEmpty());
 
     QDataStream stream(&buffer, QIODevice::ReadOnly);
-    QPoint objectCenter; stream >> objectCenter;
+    QPoint objectCenter;
+    stream >> objectCenter;
 
     // deselect all nodes so we can just select the new ones
     find(root()->nodeSurfaces(), surfaceUuid)->grid().deselectAll();
 
-    std::vector<ModelObject*> used;
+    std::vector<ModelObject *> used;
     if (isBufferFormatted) {
         IdentityReferenceMapper ref;
         used = root()->deserializeChunk(stream, surfaceUuid, &ref);
@@ -72,7 +82,7 @@ bool PasteBufferAction::forward(bool) {
     buffer.clear();
 
     for (const auto &obj : used) {
-        if (auto node = dynamic_cast<Node*>(obj); node && obj->parentUuid() == surfaceUuid) {
+        if (auto node = dynamic_cast<Node *>(obj); node && obj->parentUuid() == surfaceUuid) {
             node->select(false);
         }
         usedUuids.push_back(obj->uuid());
@@ -91,7 +101,7 @@ bool PasteBufferAction::backward() {
         usedSet.insert(uuid);
     }
 
-    auto objs = findAll(dynamicCast<ModelObject*>(root()->pool().sequence()), usedSet);
+    auto objs = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), usedSet);
     auto collected = collect(objs);
 
     stream << QPoint(0, 0);

@@ -10,7 +10,8 @@ namespace AxiomModel {
     public:
         ExposeControlAction(const QUuid &controlUuid, const QUuid &exposeUuid, ModelRoot *root);
 
-        static std::unique_ptr<ExposeControlAction> create(const QUuid &controlUuid, const QUuid &exposeUuid, ModelRoot *root);
+        static std::unique_ptr<ExposeControlAction>
+        create(const QUuid &controlUuid, const QUuid &exposeUuid, ModelRoot *root);
 
         static std::unique_ptr<ExposeControlAction> create(const QUuid &controlUuid, ModelRoot *root);
 

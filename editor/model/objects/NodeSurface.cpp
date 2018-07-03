@@ -3,7 +3,6 @@
 #include "RootSurface.h"
 #include "GroupSurface.h"
 #include "Node.h"
-#include "Control.h"
 #include "Connection.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
@@ -62,11 +61,12 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
     auto copyNodes = filter(_nodes, [](Node *const &node) {
         return node->isSelected() && node->isCopyable();
     });
-    auto poolSequence = dynamicCast<ModelObject*>(pool()->sequence().sequence());
-    auto copyChildren = flatten(map<Sequence<ModelObject*>, Sequence<Node*>>(copyNodes.sequence(), [poolSequence](Node *const &node) -> Sequence<ModelObject*> {
+    auto poolSequence = dynamicCast<ModelObject *>(pool()->sequence().sequence());
+    auto copyChildren = flatten(map<Sequence<ModelObject *>, Sequence<Node *>>(copyNodes.sequence(), [poolSequence](
+        Node *const &node) -> Sequence<ModelObject *> {
         return findDependents(poolSequence, node->uuid());
     }));
-    auto copyControls = dynamicCast<Control*>(copyChildren);
+    auto copyControls = dynamicCast<Control *>(copyChildren);
     QSet<QUuid> controlUuids;
     for (const auto &control : copyControls) {
         controlUuids.insert(control->uuid());
@@ -76,9 +76,9 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
         return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
     });
 
-    return flatten(std::array<Sequence<ModelObject*>, 2> {
+    return flatten(std::array<Sequence<ModelObject *>, 2>{
         copyChildren,
-        staticCast<ModelObject*>(copyConnections).sequence()
+        staticCast<ModelObject *>(copyConnections).sequence()
     });
 }
 

@@ -1,7 +1,6 @@
 #include "SliderPainter.h"
 
 #include "editor/util.h"
-#include "editor/model/Value.h"
 
 using namespace AxiomGui;
 

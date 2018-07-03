@@ -6,7 +6,6 @@
 #include "objects/NodeSurface.h"
 #include "objects/CustomNode.h"
 #include "objects/ControlSurface.h"
-#include "objects/Control.h"
 #include "objects/Connection.h"
 #include "../util.h"
 
@@ -17,7 +16,7 @@ ModelObject::ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &pa
 }
 
 std::unique_ptr<ModelObject> ModelObject::deserialize(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref,
-    ModelRoot *root) {
+                                                      ModelRoot *root) {
     QUuid uuid;
     stream >> uuid;
     uuid = ref->mapUuid(uuid);
@@ -59,8 +58,8 @@ void ModelObject::serialize(QDataStream &stream, const QUuid &parent, bool withC
     stream << (uint8_t) modelType();
 }
 
-Sequence<ModelObject*> ModelObject::links() {
-    return blank<ModelObject*>();
+Sequence<ModelObject *> ModelObject::links() {
+    return blank<ModelObject *>();
 }
 
 void ModelObject::remove() {

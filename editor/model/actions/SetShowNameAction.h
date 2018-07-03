@@ -10,7 +10,8 @@ namespace AxiomModel {
     public:
         SetShowNameAction(const QUuid &uuid, bool beforeVal, bool afterVal, ModelRoot *root);
 
-        static std::unique_ptr<SetShowNameAction> create(const QUuid &uuid, bool beforeVal, bool afterVal, ModelRoot *root);
+        static std::unique_ptr<SetShowNameAction>
+        create(const QUuid &uuid, bool beforeVal, bool afterVal, ModelRoot *root);
 
         static std::unique_ptr<SetShowNameAction> deserialize(QDataStream &stream, ModelRoot *root);
 

@@ -2,7 +2,6 @@
 
 #include "NodeSurface.h"
 #include "ControlSurface.h"
-#include "Control.h"
 #include "CustomNode.h"
 #include "GroupNode.h"
 #include "PortalNode.h"
@@ -43,13 +42,16 @@ std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, 
 
     switch ((NodeType) nodeTypeInt) {
         case NodeType::CUSTOM_NODE:
-            return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
+            return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref,
+                                           root);
         case NodeType::GROUP_NODE:
             return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
         case NodeType::PORTAL_NODE:
-            return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
+            return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref,
+                                           root);
         case NodeType::AUTOMATION_NODE:
-            return AutomationNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
+            return AutomationNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref,
+                                               root);
     }
 
     unreachable;
@@ -154,7 +156,8 @@ void Node::doSizeAction() {
             auto endSurfacePos = pos() * 2 + control->pos();
 
             if (startSurfacePos != endSurfacePos) {
-                actions.push_back(GridItemMoveAction::create(control->uuid(), control->dragStartPos(), control->pos(), root()));
+                actions.push_back(
+                    GridItemMoveAction::create(control->uuid(), control->dragStartPos(), control->pos(), root()));
             }
         }
     }

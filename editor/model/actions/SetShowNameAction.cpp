@@ -16,9 +16,12 @@ std::unique_ptr<SetShowNameAction> SetShowNameAction::create(const QUuid &uuid, 
 }
 
 std::unique_ptr<SetShowNameAction> SetShowNameAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    bool beforeVal; stream >> beforeVal;
-    bool afterVal; stream >> afterVal;
+    QUuid uuid;
+    stream >> uuid;
+    bool beforeVal;
+    stream >> beforeVal;
+    bool afterVal;
+    stream >> afterVal;
 
     return create(uuid, beforeVal, afterVal, root);
 }

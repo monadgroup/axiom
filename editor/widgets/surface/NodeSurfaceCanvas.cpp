@@ -14,9 +14,7 @@
 #include "AddNodeMenu.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/PoolOperators.h"
-#include "editor/model/grid/GridItem.h"
 #include "editor/model/objects/NodeSurface.h"
-#include "editor/model/objects/Control.h"
 #include "editor/model/objects/Connection.h"
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/CreateCustomNodeAction.h"
@@ -149,7 +147,8 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
 
     auto currentItem = itemAt(mousePos, QTransform());
 
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() == sourceControl->wireType()) {
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() ==
+                                                                                     sourceControl->wireType()) {
         // if the sinks are already connected, remove the connection
         auto otherUuid = connectable->sink()->uuid();
         auto connectors = filter(sourceControl->connections(), [otherUuid](Connection *const &connection) {
@@ -198,7 +197,8 @@ void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, AxiomModel::Node
             surface->root()->history().append(
                 CreateAutomationNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
             break;
-        default: break;
+        default:
+            break;
     }
 }
 

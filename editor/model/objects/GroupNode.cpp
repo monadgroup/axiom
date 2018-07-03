@@ -1,6 +1,5 @@
 #include "GroupNode.h"
 
-#include "Control.h"
 #include "ControlSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"

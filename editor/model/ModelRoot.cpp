@@ -6,7 +6,6 @@
 #include "objects/NodeSurface.h"
 #include "objects/Node.h"
 #include "objects/ControlSurface.h"
-#include "objects/Control.h"
 #include "objects/Connection.h"
 
 using namespace AxiomModel;
@@ -29,8 +28,8 @@ void ModelRoot::serialize(QDataStream &stream) {
     _history.serialize(stream);
 }
 
-std::vector<ModelObject*> ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref) {
-    std::vector<ModelObject*> usedObjects;
+std::vector<ModelObject *> ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref) {
+    std::vector<ModelObject *> usedObjects;
 
     uint32_t objectCount;
     stream >> objectCount;

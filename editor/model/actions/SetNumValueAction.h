@@ -11,7 +11,8 @@ namespace AxiomModel {
     public:
         SetNumValueAction(const QUuid &uuid, NumValue beforeVal, NumValue afterVal, ModelRoot *root);
 
-        static std::unique_ptr<SetNumValueAction> create(const QUuid &uuid, NumValue beforeVal, NumValue afterVal, ModelRoot *root);
+        static std::unique_ptr<SetNumValueAction>
+        create(const QUuid &uuid, NumValue beforeVal, NumValue afterVal, ModelRoot *root);
 
         static std::unique_ptr<SetNumValueAction> deserialize(QDataStream &stream, ModelRoot *root);
 

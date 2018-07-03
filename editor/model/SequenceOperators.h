@@ -5,7 +5,7 @@
 namespace AxiomModel {
 
     template<class ItemType>
-    Sequence<ItemType> blank() {
+    Sequence <ItemType> blank() {
         return Sequence(std::function([]() -> std::function<std::optional<ItemType>()> {
             return []() -> std::optional<ItemType> {
                 return std::optional<ItemType>();
@@ -14,7 +14,7 @@ namespace AxiomModel {
     }
 
     template<class ItemType>
-    Sequence<ItemType> oneShot(ItemType item) {
+    Sequence <ItemType> oneShot(ItemType item) {
         return Sequence(std::function([item]() -> std::function<std::optional<ItemType>()> {
             bool hasEmitted = false;
             return [hasEmitted, item]() mutable -> std::optional<ItemType> {
@@ -43,30 +43,31 @@ namespace AxiomModel {
     template<class Collection>
     Sequence<typename Collection::value_type::value_type> flatten(Collection collection) {
         return Sequence(
-            std::function([collection]() -> std::function<std::optional<typename Collection::value_type::value_type>()> {
-                std::optional<typename Collection::const_iterator> begin;
-                std::optional<typename Collection::const_iterator> end;
-                std::optional<typename Collection::value_type::const_iterator> innerBegin;
-                std::optional<typename Collection::value_type::const_iterator> innerEnd;
-                return [collection, begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
-                    if (!begin || !end) {
-                        begin = collection.begin();
-                        end = collection.end();
-                    }
+            std::function(
+                [collection]() -> std::function<std::optional<typename Collection::value_type::value_type>()> {
+                    std::optional<typename Collection::const_iterator> begin;
+                    std::optional<typename Collection::const_iterator> end;
+                    std::optional<typename Collection::value_type::const_iterator> innerBegin;
+                    std::optional<typename Collection::value_type::const_iterator> innerEnd;
+                    return [collection, begin, end, innerBegin, innerEnd]() mutable -> std::optional<typename Collection::value_type::value_type> {
+                        if (!begin || !end) {
+                            begin = collection.begin();
+                            end = collection.end();
+                        }
 
-                    while (!innerBegin || !innerEnd || *innerBegin == *innerEnd) {
-                        if (*begin == *end) return std::optional<typename Collection::value_type::value_type>();
-                        auto &nextCollection = **begin;
-                        innerBegin = nextCollection.begin();
-                        innerEnd = nextCollection.end();
-                        (*begin)++;
-                    }
+                        while (!innerBegin || !innerEnd || *innerBegin == *innerEnd) {
+                            if (*begin == *end) return std::optional<typename Collection::value_type::value_type>();
+                            auto &nextCollection = **begin;
+                            innerBegin = nextCollection.begin();
+                            innerEnd = nextCollection.end();
+                            (*begin)++;
+                        }
 
-                    auto result = **innerBegin;
-                    (*innerBegin)++;
-                    return std::move(result);
-                };
-            })
+                        auto result = **innerBegin;
+                        (*innerBegin)++;
+                        return std::move(result);
+                    };
+                })
         );
     }
 

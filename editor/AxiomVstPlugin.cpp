@@ -4,7 +4,6 @@
 #include <QtWidgets/QMessageBox>
 
 #include "resources/resource.h"
-#include "AxiomVstEditor.h"
 #include "widgets/surface/NodeSurfacePanel.h"
 #include "editor/model/Value.h"
 

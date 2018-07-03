@@ -23,6 +23,7 @@ namespace MaximCompiler {
 
     private:
         void *handle;
+
         void (*destroy)(void *);
     };
 

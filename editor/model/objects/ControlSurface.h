@@ -19,7 +19,8 @@ namespace AxiomModel {
         create(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
         static std::unique_ptr<ControlSurface>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref, AxiomModel::ModelRoot *root);
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
+                    AxiomModel::ModelRoot *root);
 
         static QPoint nodeToControl(QPoint p) { return p * 2; }
 

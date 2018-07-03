@@ -32,7 +32,7 @@ namespace AxiomModel {
 
         static std::unique_ptr<Node>
         deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
-            ModelRoot *root);
+                    ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 

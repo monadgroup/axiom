@@ -4,7 +4,8 @@
 
 using namespace MaximCompiler;
 
-ValueGroupSource::ValueGroupSource(void *handle) : OwnedObject(handle, &MaximFrontend::maxim_destroy_valuegroupsource) {}
+ValueGroupSource::ValueGroupSource(void *handle) : OwnedObject(handle,
+                                                               &MaximFrontend::maxim_destroy_valuegroupsource) {}
 
 ValueGroupSource ValueGroupSource::none() {
     return ValueGroupSource(MaximFrontend::maxim_valuegroupsource_none());

@@ -4,7 +4,8 @@
 
 using namespace MaximCompiler;
 
-Transaction::Transaction() : OwnedObject(MaximFrontend::maxim_create_transaction(), &MaximFrontend::maxim_destroy_transaction) {}
+Transaction::Transaction() : OwnedObject(MaximFrontend::maxim_create_transaction(),
+                                         &MaximFrontend::maxim_destroy_transaction) {}
 
 SurfaceRef Transaction::buildSurface(uint64_t id, const QString &name) {
     return SurfaceRef(MaximFrontend::maxim_build_surface(get(), id, name.toUtf8().constData()));

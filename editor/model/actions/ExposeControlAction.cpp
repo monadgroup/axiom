@@ -26,8 +26,10 @@ std::unique_ptr<ExposeControlAction> ExposeControlAction::create(const QUuid &co
 
 std::unique_ptr<ExposeControlAction> ExposeControlAction::deserialize(QDataStream &stream,
                                                                       AxiomModel::ModelRoot *root) {
-    QUuid controlUuid; stream >> controlUuid;
-    QUuid exposeUuid; stream >> exposeUuid;
+    QUuid controlUuid;
+    stream >> controlUuid;
+    QUuid exposeUuid;
+    stream >> exposeUuid;
 
     return create(controlUuid, exposeUuid, root);
 }
@@ -42,12 +44,13 @@ void ExposeControlAction::serialize(QDataStream &stream) const {
 bool ExposeControlAction::forward(bool) {
     auto controlToExpose = find(root()->controls(), controlUuid);
     controlToExpose->setExposerUuid(exposeUuid);
-    auto controlSurface = dynamic_cast<GroupSurface*>(controlToExpose->surface()->node()->surface());
+    auto controlSurface = dynamic_cast<GroupSurface *>(controlToExpose->surface()->node()->surface());
     assert(controlSurface);
     auto exposeNode = controlSurface->node();
     auto exposeSurface = *exposeNode->controls().value();
 
-    auto newControl = Control::createDefault(controlToExpose->controlType(), exposeUuid, exposeSurface->uuid(), controlToExpose->name(), controlUuid, root());
+    auto newControl = Control::createDefault(controlToExpose->controlType(), exposeUuid, exposeSurface->uuid(),
+                                             controlToExpose->name(), controlUuid, root());
     root()->pool().registerObj(std::move(newControl));
     return true;
 }

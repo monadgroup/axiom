@@ -5,7 +5,6 @@
 #include "editor/model/Project.h"
 #include "editor/model/objects/CustomNode.h"
 #include "editor/model/grid/GridSurface.h"
-#include "editor/model/actions/SetCodeAction.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "../CommonColors.h"
 #include "../ItemResizer.h"

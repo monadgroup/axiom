@@ -65,6 +65,7 @@ namespace AxiomModel {
         std::optional<MaximCompiler::Block> _compiledBlock;
 
         void buildCode();
+
         void updateControls(CompositeAction *actionGroup);
     };
 

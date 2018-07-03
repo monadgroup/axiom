@@ -1,7 +1,5 @@
 #include "VarType.h"
 
-#include <vector>
-
 #include "Frontend.h"
 
 using namespace MaximCompiler;
@@ -17,7 +15,7 @@ VarType VarType::midi() {
 }
 
 VarType VarType::tuple(MaximCompiler::VarType *types, size_t count) {
-    std::vector<void*> mapped_types;
+    std::vector<void *> mapped_types;
     mapped_types.reserve(count);
     for (size_t i = 0; i < count; i++) {
         mapped_types[i] = types[i].release();
