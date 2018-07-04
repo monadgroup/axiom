@@ -11,18 +11,8 @@ namespace AxiomModel {
 
 namespace MaximCompiler {
 
-    struct ControlMirData {
-        bool writtenTo;
-        bool readFrom;
-    };
-
-    struct NodeMirData {
-        QHash<QUuid, ControlMirData> controls;
-    };
-
     class SurfaceMirBuilder {
     public:
-        static void build(Runtime &runtime, Transaction &transaction, AxiomModel::NodeSurface *surface,
-                          const QHash<QUuid, NodeMirData> &nodeData);
+        static void build(Runtime &runtime, Transaction &transaction, AxiomModel::NodeSurface *surface);
     };
 }

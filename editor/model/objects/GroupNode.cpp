@@ -1,17 +1,16 @@
 #include "GroupNode.h"
 
-#include "ControlSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
+#include "ControlSurface.h"
 
 using namespace AxiomModel;
 
 GroupNode::GroupNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                      const QUuid &controlsUuid, const QUuid &innerUuid, AxiomModel::ModelRoot *root)
     : Node(NodeType::GROUP_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
-      _nodes(findLater<NodeSurface *>(root->nodeSurfaces(), innerUuid)) {
-}
+      _nodes(findLater<GroupSurface *>(root->nodeSurfaces(), innerUuid)) {}
 
 std::unique_ptr<GroupNode> GroupNode::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                              bool selected, QString name, const QUuid &controlsUuid,
@@ -21,8 +20,8 @@ std::unique_ptr<GroupNode> GroupNode::create(const QUuid &uuid, const QUuid &par
 
 std::unique_ptr<GroupNode> GroupNode::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                                   QPoint pos, QSize size, bool selected, QString name,
-                                                  const QUuid &controlsUuid,
-                                                  ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
+                                                  const QUuid &controlsUuid, ReferenceMapper *ref,
+                                                  AxiomModel::ModelRoot *root) {
     QUuid innerUuid;
     stream >> innerUuid;
     innerUuid = ref->mapUuid(innerUuid);

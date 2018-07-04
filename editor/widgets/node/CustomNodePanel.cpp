@@ -2,12 +2,12 @@
 
 #include <QtWidgets/QGraphicsProxyWidget>
 
-#include "editor/model/Project.h"
-#include "editor/model/objects/CustomNode.h"
-#include "editor/model/grid/GridSurface.h"
-#include "../surface/NodeSurfaceCanvas.h"
 #include "../CommonColors.h"
 #include "../ItemResizer.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "editor/model/Project.h"
+#include "editor/model/grid/GridSurface.h"
+#include "editor/model/objects/CustomNode.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -25,10 +25,8 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     node->codeChanged.connect(this, &CustomNodePanel::codeChanged);
 
     auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, CustomNode::minPanelHeight));
-    connect(this, &CustomNodePanel::resizerSizeChanged,
-            resizer, &ItemResizer::setSize);
-    connect(resizer, &ItemResizer::changed,
-            this, &CustomNodePanel::resizerChanged);
+    connect(this, &CustomNodePanel::resizerSizeChanged, resizer, &ItemResizer::setSize);
+    connect(resizer, &ItemResizer::changed, this, &CustomNodePanel::resizerChanged);
     resizer->setParentItem(this);
     resizer->setZValue(0);
 
@@ -41,8 +39,7 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     textEditor->installEventFilter(this);
     textEditor->setWordWrapMode(QTextOption::NoWrap);
     textEditor->setPlainText(node->code());
-    connect(textEditor, &QPlainTextEdit::textChanged,
-            this, &CustomNodePanel::controlTextChanged);
+    connect(textEditor, &QPlainTextEdit::textChanged, this, &CustomNodePanel::controlTextChanged);
 
     codeChanged(node->code());
     setOpen(node->isPanelOpen());
@@ -56,7 +53,7 @@ QRectF CustomNodePanel::boundingRect() const {
 
 void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     auto br = boundingRect();
-    //if (showingErrors) {
+    // if (showingErrors) {
     //    painter->setPen(QPen(CommonColors::errorNodeBorder, 1));
     //} else {
     //    painter->setPen(QPen(CommonColors::customNodeBorder, 1));
@@ -71,10 +68,7 @@ void CustomNodePanel::updateSize() {
     auto br = boundingRect();
     auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
 
-    textProxy->setGeometry(QRectF(
-        QPointF(0, nodeSize.height() + 5),
-        QSizeF(br.width() - 10, node->panelHeight() - 5)
-    ));
+    textProxy->setGeometry(QRectF(QPointF(0, nodeSize.height() + 5), QSizeF(br.width() - 10, node->panelHeight() - 5)));
 
     emit resizerSizeChanged(br.size() - QSizeF(5, 5));
 }
@@ -84,8 +78,8 @@ void CustomNodePanel::setOpen(bool open) {
 }
 
 void CustomNodePanel::clearError() {
-    //hasErrors = false;
-    //showingErrors = false;
+    // hasErrors = false;
+    // showingErrors = false;
     textEditor->setExtraSelections({});
     update();
 }
@@ -117,7 +111,7 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
     if (object == textEditor) {
         if (event->type() == QEvent::FocusOut) {
             if (beforeCode != node->code()) {
-                node->doSetCodeAction(std::move(beforeCode), node->code());
+                // todo node->doSetCodeAction(std::move(beforeCode), node->code());
                 beforeCode = node->code();
             }
         } else if (event->type() == QEvent::FocusIn) {

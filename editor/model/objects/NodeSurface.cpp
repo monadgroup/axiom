@@ -1,19 +1,20 @@
 #include "NodeSurface.h"
 
-#include "RootSurface.h"
-#include "GroupSurface.h"
-#include "Node.h"
-#include "Connection.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "Connection.h"
+#include "GroupSurface.h"
+#include "Node.h"
+#include "RootSurface.h"
+#include "editor/compiler/SurfaceMirBuilder.h"
 
 using namespace AxiomModel;
 
 NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                          AxiomModel::ModelRoot *root)
-    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
-      _nodes(findChildrenWatch(root->nodes(), uuid)), _connections(findChildrenWatch(root->connections(), uuid)),
-      _grid(staticCastWatch<GridItem *>(_nodes)), _pan(pan), _zoom(zoom) {
+    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root), _nodes(findChildrenWatch(root->nodes(), uuid)),
+      _connections(findChildrenWatch(root->connections(), uuid)), _grid(staticCastWatch<GridItem *>(_nodes)), _pan(pan),
+      _zoom(zoom) {
     _nodes.itemAdded.connect(this, &NodeSurface::nodeAdded);
 }
 
@@ -58,14 +59,12 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
     // all nodes and their children (but NOT nodes that aren't copyable!)
     // all connections that connect to controls in nodes that are selected
 
-    auto copyNodes = filter(_nodes, [](Node *const &node) {
-        return node->isSelected() && node->isCopyable();
-    });
+    auto copyNodes = filter(_nodes, [](Node *const &node) { return node->isSelected() && node->isCopyable(); });
     auto poolSequence = dynamicCast<ModelObject *>(pool()->sequence().sequence());
-    auto copyChildren = flatten(map<Sequence<ModelObject *>, Sequence<Node *>>(copyNodes.sequence(), [poolSequence](
-        Node *const &node) -> Sequence<ModelObject *> {
-        return findDependents(poolSequence, node->uuid());
-    }));
+    auto copyChildren = flatten(map<Sequence<ModelObject *>, Sequence<Node *>>(
+        copyNodes.sequence(), [poolSequence](Node *const &node) -> Sequence<ModelObject *> {
+            return findDependents(poolSequence, node->uuid());
+        }));
     auto copyControls = dynamicCast<Control *>(copyChildren);
     QSet<QUuid> controlUuids;
     for (const auto &control : copyControls) {
@@ -76,10 +75,8 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
         return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
     });
 
-    return flatten(std::array<Sequence<ModelObject *>, 2>{
-        copyChildren,
-        staticCast<ModelObject *>(copyConnections).sequence()
-    });
+    return flatten(
+        std::array<Sequence<ModelObject *>, 2>{copyChildren, staticCast<ModelObject *>(copyConnections).sequence()});
 }
 
 void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime) {
@@ -87,6 +84,10 @@ void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime) {
     for (const auto &node : nodes()) {
         node->attachRuntime(runtime);
     }
+}
+
+void NodeSurface::build(MaximCompiler::Runtime &runtime, MaximCompiler::Transaction &transaction) {
+    MaximCompiler::SurfaceMirBuilder::build(runtime, transaction, this);
 }
 
 void NodeSurface::saveValue() {

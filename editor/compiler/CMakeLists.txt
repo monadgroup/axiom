@@ -7,7 +7,6 @@ if (NOT MSVC)
 endif ()
 
 set(SOURCE_FILES
-        CustomNodeMirBuilder.h CustomNodeMirBuilder.cpp
         SurfaceMirBuilder.h SurfaceMirBuilder.cpp)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

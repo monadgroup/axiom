@@ -1,9 +1,10 @@
 #pragma once
 
-#include "common/Event.h"
-#include "common/Promise.h"
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
+#include "common/Event.h"
+#include "common/Promise.h"
+#include "editor/compiler/interface/Transaction.h"
 
 namespace MaximCompiler {
     class Runtime;
@@ -17,12 +18,7 @@ namespace AxiomModel {
 
     class Node : public GridItem, public ModelObject {
     public:
-        enum class NodeType {
-            CUSTOM_NODE,
-            GROUP_NODE,
-            PORTAL_NODE,
-            AUTOMATION_NODE
-        };
+        enum class NodeType { CUSTOM_NODE, GROUP_NODE, PORTAL_NODE, AUTOMATION_NODE };
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> extractedChanged;
@@ -30,35 +26,54 @@ namespace AxiomModel {
         Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
              QString name, const QUuid &controlsUuid, ModelRoot *root);
 
-        static std::unique_ptr<Node>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
-                    ModelRoot *root);
+        static std::unique_ptr<Node> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                 ReferenceMapper *ref, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        NodeSurface *surface() const { return _surface; }
+        NodeSurface *surface() const {
+            return _surface;
+        }
 
-        AxiomCommon::Promise<ControlSurface *> &controls() { return _controls; }
+        AxiomCommon::Promise<ControlSurface *> &controls() {
+            return _controls;
+        }
 
-        const AxiomCommon::Promise<ControlSurface *> &controls() const { return _controls; }
+        const AxiomCommon::Promise<ControlSurface *> &controls() const {
+            return _controls;
+        }
 
-        NodeType nodeType() const { return _nodeType; }
+        NodeType nodeType() const {
+            return _nodeType;
+        }
 
-        const QString &name() const { return _name; }
+        const QString &name() const {
+            return _name;
+        }
 
         void setName(const QString &name);
 
-        bool isExtracted() const { return _isExtracted; }
+        bool isExtracted() const {
+            return _isExtracted;
+        }
 
         void setExtracted(bool extracted);
 
-        bool isMovable() const override { return true; }
+        bool isMovable() const override {
+            return true;
+        }
 
-        bool isResizable() const override { return true; }
+        bool isResizable() const override {
+            return true;
+        }
 
-        bool isCopyable() const override { return true; }
+        bool isCopyable() const override {
+            return true;
+        }
 
-        bool isDeletable() const override { return true; }
+        bool isDeletable() const override {
+            return true;
+        }
 
         void startSize();
 
@@ -67,6 +82,8 @@ namespace AxiomModel {
         void doSizeAction();
 
         virtual void attachRuntime(MaximCompiler::Runtime *runtime) = 0;
+
+        virtual void build(MaximCompiler::Transaction &transaction) {}
 
         virtual void saveValue();
 
@@ -82,5 +99,4 @@ namespace AxiomModel {
         AxiomCommon::Promise<ControlSurface *> _controls;
         QRect sizeStartRect;
     };
-
 }

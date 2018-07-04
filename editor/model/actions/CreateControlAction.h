@@ -2,8 +2,8 @@
 
 #include <QtCore/QUuid>
 
-#include "Action.h"
 #include "../objects/Control.h"
+#include "Action.h"
 
 namespace AxiomModel {
 
@@ -12,11 +12,11 @@ namespace AxiomModel {
         CreateControlAction(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type, QString name,
                             ModelRoot *root);
 
-        static std::unique_ptr<CreateControlAction>
-        create(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type, QString name, ModelRoot *root);
+        static std::unique_ptr<CreateControlAction> create(const QUuid &uuid, const QUuid &parentUuid,
+                                                           Control::ControlType type, QString name, ModelRoot *root);
 
-        static std::unique_ptr<CreateControlAction>
-        create(const QUuid &parentUuid, Control::ControlType type, QString name, ModelRoot *root);
+        static std::unique_ptr<CreateControlAction> create(const QUuid &parentUuid, Control::ControlType type,
+                                                           QString name, ModelRoot *root);
 
         static std::unique_ptr<CreateControlAction> deserialize(QDataStream &stream, ModelRoot *root);
 
@@ -26,11 +26,14 @@ namespace AxiomModel {
 
         bool backward() override;
 
+        const QUuid &getUuid() const {
+            return uuid;
+        }
+
     private:
         QUuid uuid;
         QUuid parentUuid;
         Control::ControlType type;
         QString name;
     };
-
 }

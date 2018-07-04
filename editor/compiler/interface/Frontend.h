@@ -76,6 +76,7 @@ namespace MaximFrontend {
     void maxim_build_value_socket(MaximNodeRef *node, size_t group_id, bool value_written, bool value_read,
                                   bool is_extractor);
 
+    void maxim_build_block(MaximTransactionRef *transaction, MaximBlock *);
     bool maxim_compile_block(uint64_t id, const char *name, const char *code, MaximBlock **success_block_out,
                              MaximError **fail_error_out);
     void maxim_destroy_block(MaximBlock *);

@@ -43,7 +43,7 @@ namespace AxiomModel {
 
         void setCode(const QString &code);
 
-        void doSetCodeAction(QString beforeCode, QString afterCode);
+        // void doSetCodeAction(QString beforeCode, QString afterCode);
 
         bool isPanelOpen() const {
             return _isPanelOpen;
@@ -62,6 +62,8 @@ namespace AxiomModel {
         void attachRuntime(MaximCompiler::Runtime *runtime) override;
 
         std::optional<MaximCompiler::Block> compiledBlock() const;
+
+        void build(MaximCompiler::Transaction &transaction) override;
 
     private:
         QString _code;

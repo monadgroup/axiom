@@ -1,13 +1,15 @@
+#include <utility>
+
 #pragma once
 
 #include <optional>
 
+#include "../ConnectionWire.h"
+#include "../ModelObject.h"
+#include "../WatchSequence.h"
+#include "../grid/GridItem.h"
 #include "common/Event.h"
 #include "common/Promise.h"
-#include "../ModelObject.h"
-#include "../grid/GridItem.h"
-#include "../WatchSequence.h"
-#include "../ConnectionWire.h"
 
 namespace AxiomModel {
 
@@ -15,17 +17,18 @@ namespace AxiomModel {
 
     class Connection;
 
+    struct ControlCompileMeta {
+        size_t index;
+        bool writtenTo;
+        bool readFrom;
+
+        ControlCompileMeta(size_t index, bool writtenTo, bool readFrom)
+            : index(index), writtenTo(writtenTo), readFrom(readFrom) {}
+    };
+
     class Control : public GridItem, public ModelObject {
     public:
-        enum class ControlType {
-            NUM_SCALAR,
-            MIDI_SCALAR,
-            NUM_EXTRACT,
-            MIDI_EXTRACT,
-            NUM_PORTAL,
-            MIDI_PORTAL,
-            SCOPE
-        };
+        enum class ControlType { NUM_SCALAR, MIDI_SCALAR, NUM_EXTRACT, MIDI_EXTRACT, NUM_PORTAL, MIDI_PORTAL, SCOPE };
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> showNameChanged;
@@ -37,57 +40,95 @@ namespace AxiomModel {
                 QPoint pos, QSize size, bool selected, QString name, bool showName, const QUuid &exposerUuid,
                 const QUuid &exposingUuid, ModelRoot *root);
 
-        static std::unique_ptr<Control>
-        createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid, const QString &name,
-                      const QUuid &exposingUuid, ModelRoot *root);
+        static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid,
+                                                      const QString &name, const QUuid &exposingUuid, ModelRoot *root);
 
-        static std::unique_ptr<Control>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
-                    ModelRoot *root);
+        static std::unique_ptr<Control> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                    ReferenceMapper *ref, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        ControlSurface *surface() const { return _surface; }
+        ControlSurface *surface() const {
+            return _surface;
+        }
 
-        ControlType controlType() const { return _controlType; }
+        ControlType controlType() const {
+            return _controlType;
+        }
 
-        ConnectionWire::WireType wireType() const { return _wireType; }
+        ConnectionWire::WireType wireType() const {
+            return _wireType;
+        }
 
-        bool isMovable() const override { return true; }
+        bool isMovable() const override {
+            return true;
+        }
 
-        bool isResizable() const override { return true; }
+        bool isResizable() const override {
+            return true;
+        }
 
-        bool isCopyable() const override { return false; }
+        bool isCopyable() const override {
+            return false;
+        }
 
-        bool isDeletable() const override { return false; }
+        bool isDeletable() const override {
+            return false;
+        }
 
-        const QString &name() const { return _name; }
+        const QString &name() const {
+            return _name;
+        }
 
         void setName(const QString &name);
 
-        bool showName() const { return _showName; }
+        bool showName() const {
+            return _showName;
+        }
 
         void setShowName(bool showName);
 
-        QUuid exposerUuid() const { return _exposerUuid; }
+        QUuid exposerUuid() const {
+            return _exposerUuid;
+        }
 
         void setExposerUuid(QUuid exposerUuid);
 
-        QUuid exposingUuid() const { return _exposingUuid; }
+        QUuid exposingUuid() const {
+            return _exposingUuid;
+        }
 
-        bool isActive() const { return _isActive; }
+        bool isActive() const {
+            return _isActive;
+        }
 
         void setIsActive(bool isActive);
 
-        WatchSequence<Connection *> &connections() { return _connections; }
+        WatchSequence<Connection *> &connections() {
+            return _connections;
+        }
 
-        const WatchSequence<Connection *> &connections() const { return _connections; }
+        const WatchSequence<Connection *> &connections() const {
+            return _connections;
+        }
 
-        WatchSequence<QUuid> &connectedControls() { return _connectedControls; }
+        WatchSequence<QUuid> &connectedControls() {
+            return _connectedControls;
+        }
 
-        const WatchSequence<QUuid> &connectedControls() const { return _connectedControls; }
+        const WatchSequence<QUuid> &connectedControls() const {
+            return _connectedControls;
+        }
 
         QPointF worldPos() const;
+
+        const std::optional<ControlCompileMeta> &compileMeta() const {
+            return _compileMeta;
+        }
+
+        void setCompileMeta(std::optional<ControlCompileMeta> compileMeta) {
+            _compileMeta = std::move(compileMeta);
+        }
 
         virtual void saveValue() = 0;
 
@@ -106,6 +147,7 @@ namespace AxiomModel {
         QUuid _exposerUuid;
         QUuid _exposingUuid;
         bool _isActive = false;
+        std::optional<ControlCompileMeta> _compileMeta;
 
         WatchSequence<Connection *> _connections;
         WatchSequence<QUuid> _connectedControls;
@@ -114,5 +156,4 @@ namespace AxiomModel {
 
         void updateExposerRemoved();
     };
-
 }
