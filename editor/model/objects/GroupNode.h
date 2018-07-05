@@ -23,15 +23,11 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        AxiomCommon::Promise<GroupSurface *> &nodes() {
-            return _nodes;
-        }
+        AxiomCommon::Promise<GroupSurface *> &nodes() { return _nodes; }
 
-        const AxiomCommon::Promise<GroupSurface *> &nodes() const {
-            return _nodes;
-        }
+        const AxiomCommon::Promise<GroupSurface *> &nodes() const { return _nodes; }
 
-        void attachRuntime(MaximCompiler::Runtime *runtime) override;
+        void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 
         void saveValue() override;
 

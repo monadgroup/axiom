@@ -2,7 +2,8 @@
 
 #include "IdentityReferenceMapper.h"
 #include "ModelObject.h"
-#include "WatchSequenceOperators.h"
+#include "PoolOperators.h"
+#include "editor/compiler/interface/Runtime.h"
 #include "objects/Connection.h"
 #include "objects/ControlSurface.h"
 #include "objects/Node.h"
@@ -11,7 +12,9 @@
 using namespace AxiomModel;
 
 ModelRoot::ModelRoot(Project *project)
-    : _project(project), _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.sequence())),
+    : _project(project),
+      _history([this](MaximCompiler::Transaction transaction) { applyTransaction(std::move(transaction)); }),
+      _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.sequence())),
       _nodes(dynamicCastWatch<Node *>(_pool.sequence())),
       _controlSurfaces(dynamicCastWatch<ControlSurface *>(_pool.sequence())),
       _controls(dynamicCastWatch<Control *>(_pool.sequence())),
@@ -44,6 +47,23 @@ std::vector<ModelObject *> ModelRoot::deserializeChunk(QDataStream &stream, cons
     }
 
     return std::move(usedObjects);
+}
+
+void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
+    _runtime = runtime;
+
+    auto rootSurface = find(nodeSurfaces(), QUuid());
+    MaximCompiler::Transaction buildTransaction;
+    rootSurface->attachRuntime(_runtime, &buildTransaction);
+    applyTransaction(std::move(buildTransaction));
+}
+
+void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
+    transaction.printToStdout();
+
+    /*if (_runtime) {
+        _runtime->commit(std::move(transaction));
+    }*/
 }
 
 void ModelRoot::destroy() {

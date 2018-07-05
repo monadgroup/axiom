@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QtCore/QUuid>
 #include <QtCore/QString>
+#include <QtCore/QUuid>
 
 #include "Action.h"
 
@@ -11,22 +11,20 @@ namespace AxiomModel {
     public:
         RenameNodeAction(const QUuid &uuid, QString oldName, QString newName, ModelRoot *root);
 
-        static std::unique_ptr<RenameNodeAction>
-        create(const QUuid &uuid, QString oldName, QString newName, ModelRoot *root);
+        static std::unique_ptr<RenameNodeAction> create(const QUuid &uuid, QString oldName, QString newName,
+                                                        ModelRoot *root);
 
         static std::unique_ptr<RenameNodeAction> deserialize(QDataStream &stream, ModelRoot *root);
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, MaximCompiler::Transaction *transaction) override;
 
-        bool backward() override;
+        void backward(MaximCompiler::Transaction *transaction) override;
 
     private:
-
         QUuid uuid;
         QString oldName;
         QString newName;
     };
-
 }

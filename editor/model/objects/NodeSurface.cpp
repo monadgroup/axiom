@@ -79,14 +79,18 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
         std::array<Sequence<ModelObject *>, 2>{copyChildren, staticCast<ModelObject *>(copyConnections).sequence()});
 }
 
-void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime) {
+void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     _runtime = runtime;
     for (const auto &node : nodes()) {
-        node->attachRuntime(runtime);
+        node->attachRuntime(runtime, transaction);
+    }
+
+    if (transaction) {
+        build(transaction);
     }
 }
 
-void NodeSurface::build(MaximCompiler::Transaction &transaction) {
+void NodeSurface::build(MaximCompiler::Transaction *transaction) {
     MaximCompiler::SurfaceMirBuilder::build(transaction, this);
 }
 
@@ -114,6 +118,6 @@ void NodeSurface::remove() {
 
 void NodeSurface::nodeAdded(AxiomModel::Node *node) const {
     if (_runtime) {
-        node->attachRuntime(_runtime);
+        node->attachRuntime(_runtime, nullptr);
     }
 }

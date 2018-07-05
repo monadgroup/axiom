@@ -38,8 +38,8 @@ AxiomModel::Control::ControlType getGroupType(const std::vector<AxiomModel::Cont
     return controls[0]->controlType();
 }
 
-void SurfaceMirBuilder::build(MaximCompiler::Transaction &transaction, AxiomModel::NodeSurface *surface) {
-    auto mir = transaction.buildSurface(surface->getRuntimeId(), surface->name());
+void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomModel::NodeSurface *surface) {
+    auto mir = transaction->buildSurface(surface->getRuntimeId(), surface->name());
 
     // build control groups
     std::unordered_map<ValueGroup *, std::unique_ptr<ValueGroup>> groups;
@@ -229,7 +229,10 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction &transaction, AxiomMode
         auto controlPointers =
             AxiomModel::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls()));
         for (const auto &control : controlPointers) {
-            if (!control->exposerUuid().isNull()) externalControls.push_back(control->exposerUuid());
+            if (!control->exposerUuid().isNull()) {
+                // todo: set compile meta on exposed control
+                externalControls.push_back(control->exposerUuid());
+            }
 
             if (control->compileMeta()->writtenTo) valueWritten = true;
             if (control->compileMeta()->readFrom) valueRead = true;

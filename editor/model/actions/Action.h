@@ -1,9 +1,13 @@
 #pragma once
 
-#include <memory>
 #include <QtCore/QDataStream>
+#include <memory>
 
 #include "common/Hookable.h"
+
+namespace MaximCompiler {
+    class Transaction;
+}
 
 namespace AxiomModel {
 
@@ -44,13 +48,12 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
-        virtual bool forward(bool first) = 0;
+        virtual void forward(bool first, MaximCompiler::Transaction *transaction) = 0;
 
-        virtual bool backward() = 0;
+        virtual void backward(MaximCompiler::Transaction *transaction) = 0;
 
     private:
         ActionType _actionType;
         ModelRoot *_root;
     };
-
 }

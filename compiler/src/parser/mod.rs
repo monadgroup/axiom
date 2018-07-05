@@ -51,7 +51,6 @@ impl Parser {
     pub fn parse(mut stream: &mut TokenStream) -> CompileResult<Block> {
         let mut expressions = Vec::new();
 
-        // todo: this is probably really bad and can be made much nicer
         loop {
             match stream.peek().cloned() {
                 Some(Token {

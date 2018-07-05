@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QtCore/QUuid>
 #include <QtCore/QPoint>
+#include <QtCore/QUuid>
 
 #include "Action.h"
 
@@ -11,22 +11,20 @@ namespace AxiomModel {
     public:
         GridItemMoveAction(const QUuid &uuid, QPoint beforePos, QPoint afterPos, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<GridItemMoveAction>
-        create(const QUuid &uuid, QPoint beforePos, QPoint afterPos, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<GridItemMoveAction> create(const QUuid &uuid, QPoint beforePos, QPoint afterPos,
+                                                          AxiomModel::ModelRoot *root);
 
         static std::unique_ptr<GridItemMoveAction> deserialize(QDataStream &stream, AxiomModel::ModelRoot *root);
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, MaximCompiler::Transaction *transaction) override;
 
-        bool backward() override;
+        void backward(MaximCompiler::Transaction *transaction) override;
 
     private:
-
         QUuid uuid;
         QPoint beforePos;
         QPoint afterPos;
     };
-
 }

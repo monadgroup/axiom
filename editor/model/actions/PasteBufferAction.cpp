@@ -1,27 +1,23 @@
 #include "PasteBufferAction.h"
 
-#include "../ModelRoot.h"
-#include "../ModelObject.h"
-#include "../PoolOperators.h"
 #include "../CloneReferenceMapper.h"
 #include "../IdentityReferenceMapper.h"
-#include "../objects/NodeSurface.h"
+#include "../ModelObject.h"
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
 #include "../objects/Node.h"
+#include "../objects/NodeSurface.h"
 
 using namespace AxiomModel;
 
 PasteBufferAction::PasteBufferAction(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer,
-                                     QVector<QUuid> usedUuids,
-                                     QPoint center, AxiomModel::ModelRoot *root)
+                                     QVector<QUuid> usedUuids, QPoint center, AxiomModel::ModelRoot *root)
     : Action(ActionType::PASTE_BUFFER, root), surfaceUuid(surfaceUuid), isBufferFormatted(isBufferFormatted),
-      buffer(std::move(buffer)),
-      usedUuids(std::move(usedUuids)), center(center) {
-}
+      buffer(std::move(buffer)), usedUuids(std::move(usedUuids)), center(center) {}
 
-std::unique_ptr<PasteBufferAction>
-PasteBufferAction::create(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer,
-                          QVector<QUuid> usedUuids, QPoint center,
-                          AxiomModel::ModelRoot *root) {
+std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfaceUuid, bool isBufferFormatted,
+                                                             QByteArray buffer, QVector<QUuid> usedUuids, QPoint center,
+                                                             AxiomModel::ModelRoot *root) {
     return std::make_unique<PasteBufferAction>(surfaceUuid, isBufferFormatted, std::move(buffer), std::move(usedUuids),
                                                center, root);
 }
@@ -56,7 +52,7 @@ void PasteBufferAction::serialize(QDataStream &stream) const {
     stream << center;
 }
 
-bool PasteBufferAction::forward(bool) {
+void PasteBufferAction::forward(bool, MaximCompiler::Transaction *) {
     assert(!buffer.isEmpty());
     assert(usedUuids.isEmpty());
 
@@ -88,10 +84,10 @@ bool PasteBufferAction::forward(bool) {
         usedUuids.push_back(obj->uuid());
     }
 
-    return true;
+    // todo: handle transaction
 }
 
-bool PasteBufferAction::backward() {
+void PasteBufferAction::backward(MaximCompiler::Transaction *) {
     assert(buffer.isEmpty());
     assert(!usedUuids.isEmpty());
 
@@ -113,5 +109,5 @@ bool PasteBufferAction::backward() {
         (*objs.begin())->remove();
     }
 
-    return true;
+    // todo: handle transaction
 }

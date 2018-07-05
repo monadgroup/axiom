@@ -13,12 +13,12 @@ int main(int argc, char *argv[]) {
     MaximCompiler::Runtime runtime;
 
     auto project = std::make_unique<AxiomModel::Project>();
-    project->rootSurface()->attachRuntime(&runtime);
+    project->mainRoot().attachRuntime(&runtime);
 
     AxiomGui::MainWindow window(std::move(project));
     // AxiomStandalone::startupAudio();
     window.show();
     auto result = AxiomApplication::main.exec();
-    AxiomStandalone::shutdownAudio();
+    // AxiomStandalone::shutdownAudio();
     return result;
 }

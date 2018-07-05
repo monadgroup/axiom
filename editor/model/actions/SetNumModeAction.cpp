@@ -7,8 +7,7 @@ using namespace AxiomModel;
 
 SetNumModeAction::SetNumModeAction(const QUuid &uuid, AxiomModel::NumControl::DisplayMode beforeMode,
                                    AxiomModel::NumControl::DisplayMode afterMode, AxiomModel::ModelRoot *root)
-    : Action(ActionType::SET_NUM_MODE, root), uuid(uuid), beforeMode(beforeMode), afterMode(afterMode) {
-}
+    : Action(ActionType::SET_NUM_MODE, root), uuid(uuid), beforeMode(beforeMode), afterMode(afterMode) {}
 
 std::unique_ptr<SetNumModeAction> SetNumModeAction::create(const QUuid &uuid,
                                                            AxiomModel::NumControl::DisplayMode beforeMode,
@@ -36,12 +35,10 @@ void SetNumModeAction::serialize(QDataStream &stream) const {
     stream << (uint8_t) afterMode;
 }
 
-bool SetNumModeAction::forward(bool) {
+void SetNumModeAction::forward(bool, MaximCompiler::Transaction *) {
     find<NumControl *>(root()->controls(), uuid)->setDisplayMode(afterMode);
-    return false;
 }
 
-bool SetNumModeAction::backward() {
+void SetNumModeAction::backward(MaximCompiler::Transaction *transaction) {
     find<NumControl *>(root()->controls(), uuid)->setDisplayMode(beforeMode);
-    return false;
 }

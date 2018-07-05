@@ -33,7 +33,9 @@ namespace AxiomModel {
     template<class OutputItem, class InputIterator>
     OutputItem find(InputIterator begin, InputIterator end, const QUuid &uuid) {
         auto result = findMaybe<OutputItem>(std::move(begin), std::move(end), uuid);
-        assert(result.has_value());
+        if (!result.has_value()) {
+            assert(false);
+        }
         return std::move(*result);
     };
 

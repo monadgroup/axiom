@@ -2,16 +2,16 @@
 
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../objects/CustomNode.h"
 #include "../objects/ControlSurface.h"
+#include "../objects/CustomNode.h"
+#include "../objects/NodeSurface.h"
 
 using namespace AxiomModel;
 
 CreateCustomNodeAction::CreateCustomNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name,
                                                const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
     : Action(ActionType::CREATE_CUSTOM_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos), name(std::move(name)),
-      controlsUuid(controlsUuid) {
-}
+      controlsUuid(controlsUuid) {}
 
 std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUuid &uuid, const QUuid &parentUuid,
                                                                        QPoint pos, QString name,
@@ -51,15 +51,21 @@ void CreateCustomNodeAction::serialize(QDataStream &stream) const {
     stream << controlsUuid;
 }
 
-bool CreateCustomNodeAction::forward(bool) {
-    root()->pool().registerObj(
-        CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "", false,
-                           CustomNode::minPanelHeight, root()));
+void CreateCustomNodeAction::forward(bool, MaximCompiler::Transaction *transaction) {
+    root()->pool().registerObj(CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "",
+                                                  false, CustomNode::minPanelHeight, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
-    return false;
+
+    if (transaction) {
+        find<CustomNode *>(root()->nodes(), uuid)->build(transaction);
+        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
+    }
 }
 
-bool CreateCustomNodeAction::backward() {
+void CreateCustomNodeAction::backward(MaximCompiler::Transaction *transaction) {
     find(root()->nodes(), uuid)->remove();
-    return true;
+
+    if (transaction) {
+        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
+    }
 }

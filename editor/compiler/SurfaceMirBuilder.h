@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QHash>
-
-#include "interface/Runtime.h"
-#include "interface/Transaction.h"
+namespace MaximCompiler {
+    class Runtime;
+    class Transaction;
+}
 
 namespace AxiomModel {
     class NodeSurface;
@@ -13,6 +13,6 @@ namespace MaximCompiler {
 
     class SurfaceMirBuilder {
     public:
-        static void build(Transaction &transaction, AxiomModel::NodeSurface *surface);
+        static void build(Transaction *transaction, AxiomModel::NodeSurface *surface);
     };
 }

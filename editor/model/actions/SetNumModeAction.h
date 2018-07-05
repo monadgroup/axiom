@@ -2,8 +2,8 @@
 
 #include <QtCore/QUuid>
 
-#include "Action.h"
 #include "../objects/NumControl.h"
+#include "Action.h"
 
 namespace AxiomModel {
 
@@ -12,23 +12,20 @@ namespace AxiomModel {
         SetNumModeAction(const QUuid &uuid, NumControl::DisplayMode beforeMode, NumControl::DisplayMode afterMode,
                          ModelRoot *root);
 
-        static std::unique_ptr<SetNumModeAction>
-        create(const QUuid &uuid, NumControl::DisplayMode beforeMode, NumControl::DisplayMode afterMode,
-               ModelRoot *root);
+        static std::unique_ptr<SetNumModeAction> create(const QUuid &uuid, NumControl::DisplayMode beforeMode,
+                                                        NumControl::DisplayMode afterMode, ModelRoot *root);
 
         static std::unique_ptr<SetNumModeAction> deserialize(QDataStream &stream, ModelRoot *root);
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, MaximCompiler::Transaction *transaction) override;
 
-        bool backward() override;
+        void backward(MaximCompiler::Transaction *transaction) override;
 
     private:
-
         QUuid uuid;
         NumControl::DisplayMode beforeMode;
         NumControl::DisplayMode afterMode;
     };
-
 }

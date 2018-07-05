@@ -1,15 +1,14 @@
 #include "DeleteObjectAction.h"
 
+#include "../IdentityReferenceMapper.h"
 #include "../ModelObject.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../IdentityReferenceMapper.h"
 
 using namespace AxiomModel;
 
 DeleteObjectAction::DeleteObjectAction(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root)
-    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), buffer(std::move(buffer)) {
-}
+    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), buffer(std::move(buffer)) {}
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, QByteArray buffer,
                                                                AxiomModel::ModelRoot *root) {
@@ -35,9 +34,8 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
     stream << buffer;
 }
 
-bool DeleteObjectAction::forward(bool) {
+void DeleteObjectAction::forward(bool, MaximCompiler::Transaction *) {
     auto removeItems = getRemoveItems();
-    auto needsRebuild = anyNeedRebuild(removeItems);
 
     auto sortedItems = heapSort(removeItems);
 
@@ -58,37 +56,28 @@ bool DeleteObjectAction::forward(bool) {
     while (!itemsToDelete.empty()) {
         (*itemsToDelete.begin())->remove();
     }
-    return needsRebuild;
+
+    // todo: handle transaction
 }
 
-bool DeleteObjectAction::backward() {
+void DeleteObjectAction::backward(MaximCompiler::Transaction *) {
     QDataStream stream(&buffer, QIODevice::ReadOnly);
     IdentityReferenceMapper ref;
     root()->deserializeChunk(stream, QUuid(), &ref);
     buffer.clear();
 
-    return anyNeedRebuild(getRemoveItems());
+    // todo: handle transaction
 }
 
 Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
     auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
     auto links = flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })));
-    auto linkDependents = flatten(
-        map(links, std::function([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
+    auto linkDependents =
+        flatten(map(links, std::function([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
 
-    return distinctByUuid(flatten(std::array<Sequence<ModelObject *>, 2>{
-        dependents,
-        linkDependents
-    }));
+    return distinctByUuid(flatten(std::array<Sequence<ModelObject *>, 2>{dependents, linkDependents}));
 }
 
 Sequence<ModelObject *> DeleteObjectAction::getRemoveItems() const {
     return getLinkedItems(uuid);
-}
-
-bool DeleteObjectAction::anyNeedRebuild(const Sequence<AxiomModel::ModelObject *> &sequence) const {
-    for (const auto &itm : sequence) {
-        if (itm->buildOnRemove()) return true;
-    }
-    return false;
 }

@@ -8,6 +8,7 @@
 
 namespace MaximCompiler {
     class Runtime;
+    class Transaction;
 }
 
 namespace AxiomModel {
@@ -31,49 +32,29 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        NodeSurface *surface() const {
-            return _surface;
-        }
+        NodeSurface *surface() const { return _surface; }
 
-        AxiomCommon::Promise<ControlSurface *> &controls() {
-            return _controls;
-        }
+        AxiomCommon::Promise<ControlSurface *> &controls() { return _controls; }
 
-        const AxiomCommon::Promise<ControlSurface *> &controls() const {
-            return _controls;
-        }
+        const AxiomCommon::Promise<ControlSurface *> &controls() const { return _controls; }
 
-        NodeType nodeType() const {
-            return _nodeType;
-        }
+        NodeType nodeType() const { return _nodeType; }
 
-        const QString &name() const {
-            return _name;
-        }
+        const QString &name() const { return _name; }
 
         void setName(const QString &name);
 
-        bool isExtracted() const {
-            return _isExtracted;
-        }
+        bool isExtracted() const { return _isExtracted; }
 
         void setExtracted(bool extracted);
 
-        bool isMovable() const override {
-            return true;
-        }
+        bool isMovable() const override { return true; }
 
-        bool isResizable() const override {
-            return true;
-        }
+        bool isResizable() const override { return true; }
 
-        bool isCopyable() const override {
-            return true;
-        }
+        bool isCopyable() const override { return true; }
 
-        bool isDeletable() const override {
-            return true;
-        }
+        bool isDeletable() const override { return true; }
 
         void startSize();
 
@@ -81,9 +62,7 @@ namespace AxiomModel {
 
         void doSizeAction();
 
-        virtual void attachRuntime(MaximCompiler::Runtime *runtime) = 0;
-
-        virtual void build(MaximCompiler::Transaction &transaction) {}
+        virtual void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) = 0;
 
         virtual void saveValue();
 

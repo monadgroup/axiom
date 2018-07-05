@@ -2,10 +2,8 @@
 
 using namespace AxiomModel;
 
-CompositeAction::CompositeAction(std::vector<std::unique_ptr<AxiomModel::Action>> actions,
-                                 AxiomModel::ModelRoot *root)
-    : Action(ActionType::COMPOSITE, root), _actions(std::move(actions)) {
-}
+CompositeAction::CompositeAction(std::vector<std::unique_ptr<AxiomModel::Action>> actions, AxiomModel::ModelRoot *root)
+    : Action(ActionType::COMPOSITE, root), _actions(std::move(actions)) {}
 
 std::unique_ptr<CompositeAction> CompositeAction::create(std::vector<std::unique_ptr<AxiomModel::Action>> actions,
                                                          AxiomModel::ModelRoot *root) {
@@ -34,18 +32,14 @@ void CompositeAction::serialize(QDataStream &stream) const {
     }
 }
 
-bool CompositeAction::forward(bool first) {
-    auto needsRebuild = false;
+void CompositeAction::forward(bool first, MaximCompiler::Transaction *transaction) {
     for (const auto &action : _actions) {
-        if (action->forward(first)) needsRebuild = true;
+        action->forward(first, transaction);
     }
-    return needsRebuild;
 }
 
-bool CompositeAction::backward() {
-    auto needsRebuild = false;
+void CompositeAction::backward(MaximCompiler::Transaction *transaction) {
     for (auto i = _actions.end() - 1; i >= _actions.begin(); i--) {
-        if ((*i)->backward()) needsRebuild = true;
+        (*i)->backward(transaction);
     }
-    return needsRebuild;
 }

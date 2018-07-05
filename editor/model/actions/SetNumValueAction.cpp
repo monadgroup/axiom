@@ -6,13 +6,11 @@
 
 using namespace AxiomModel;
 
-SetNumValueAction::SetNumValueAction(const QUuid &uuid, NumValue beforeVal,
-                                     NumValue afterVal, AxiomModel::ModelRoot *root)
-    : Action(ActionType::SET_NUM_VALUE, root), uuid(uuid), beforeVal(beforeVal), afterVal(afterVal) {
-}
+SetNumValueAction::SetNumValueAction(const QUuid &uuid, NumValue beforeVal, NumValue afterVal,
+                                     AxiomModel::ModelRoot *root)
+    : Action(ActionType::SET_NUM_VALUE, root), uuid(uuid), beforeVal(beforeVal), afterVal(afterVal) {}
 
-std::unique_ptr<SetNumValueAction> SetNumValueAction::create(const QUuid &uuid, NumValue beforeVal,
-                                                             NumValue afterVal,
+std::unique_ptr<SetNumValueAction> SetNumValueAction::create(const QUuid &uuid, NumValue beforeVal, NumValue afterVal,
                                                              AxiomModel::ModelRoot *root) {
     return std::make_unique<SetNumValueAction>(uuid, beforeVal, afterVal, root);
 }
@@ -36,12 +34,10 @@ void SetNumValueAction::serialize(QDataStream &stream) const {
     stream << afterVal;
 }
 
-bool SetNumValueAction::forward(bool first) {
+void SetNumValueAction::forward(bool, MaximCompiler::Transaction *) {
     find<NumControl *>(root()->controls(), uuid)->setValue(afterVal);
-    return false;
 }
 
-bool SetNumValueAction::backward() {
+void SetNumValueAction::backward(MaximCompiler::Transaction *) {
     find<NumControl *>(root()->controls(), uuid)->setValue(beforeVal);
-    return false;
 }

@@ -111,7 +111,7 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
     if (object == textEditor) {
         if (event->type() == QEvent::FocusOut) {
             if (beforeCode != node->code()) {
-                // todo node->doSetCodeAction(std::move(beforeCode), node->code());
+                node->doSetCodeAction(std::move(beforeCode), node->code());
                 beforeCode = node->code();
             }
         } else if (event->type() == QEvent::FocusIn) {

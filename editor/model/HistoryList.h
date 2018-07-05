@@ -6,6 +6,10 @@
 #include "actions/Action.h"
 #include "common/Event.h"
 
+namespace MaximCompiler {
+    class Transaction;
+}
+
 namespace AxiomModel {
 
     class ModelRoot;
@@ -14,12 +18,13 @@ namespace AxiomModel {
 
     class HistoryList : public AxiomCommon::Hookable {
     public:
-        AxiomCommon::Event<> rebuildRequested;
         AxiomCommon::Event<> stackChanged;
 
         size_t maxActions = 256;
 
-        HistoryList();
+        using TransactionApplyer = std::function<void(MaximCompiler::Transaction)>;
+
+        HistoryList(TransactionApplyer applyer);
 
         explicit HistoryList(QDataStream &stream, ModelRoot *root);
 
@@ -29,7 +34,7 @@ namespace AxiomModel {
 
         size_t stackPos() const { return _stackPos; }
 
-        void append(std::unique_ptr<Action> action, bool forward = true, bool forceForwards = false);
+        void append(std::unique_ptr<Action> action, bool forward = true);
 
         bool canUndo() const;
 
@@ -46,5 +51,6 @@ namespace AxiomModel {
     private:
         size_t _stackPos = 0;
         std::vector<std::unique_ptr<Action>> _stack;
+        TransactionApplyer applyTransaction;
     };
 }

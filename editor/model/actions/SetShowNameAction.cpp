@@ -7,8 +7,7 @@
 using namespace AxiomModel;
 
 SetShowNameAction::SetShowNameAction(const QUuid &uuid, bool beforeVal, bool afterVal, AxiomModel::ModelRoot *root)
-    : Action(ActionType::SET_SHOW_NAME, root), uuid(uuid), beforeVal(beforeVal), afterVal(afterVal) {
-}
+    : Action(ActionType::SET_SHOW_NAME, root), uuid(uuid), beforeVal(beforeVal), afterVal(afterVal) {}
 
 std::unique_ptr<SetShowNameAction> SetShowNameAction::create(const QUuid &uuid, bool beforeVal, bool afterVal,
                                                              AxiomModel::ModelRoot *root) {
@@ -34,12 +33,10 @@ void SetShowNameAction::serialize(QDataStream &stream) const {
     stream << afterVal;
 }
 
-bool SetShowNameAction::forward(bool first) {
+void SetShowNameAction::forward(bool first, MaximCompiler::Transaction *) {
     find(root()->controls(), uuid)->setShowName(afterVal);
-    return false;
 }
 
-bool SetShowNameAction::backward() {
+void SetShowNameAction::backward(MaximCompiler::Transaction *) {
     find(root()->controls(), uuid)->setShowName(beforeVal);
-    return false;
 }

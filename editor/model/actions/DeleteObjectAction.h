@@ -2,8 +2,8 @@
 
 #include <QtCore/QUuid>
 
-#include "Action.h"
 #include "../Sequence.h"
+#include "Action.h"
 
 namespace AxiomModel {
 
@@ -13,8 +13,8 @@ namespace AxiomModel {
     public:
         DeleteObjectAction(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<DeleteObjectAction>
-        create(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<DeleteObjectAction> create(const QUuid &uuid, QByteArray buffer,
+                                                          AxiomModel::ModelRoot *root);
 
         static std::unique_ptr<DeleteObjectAction> create(const QUuid &uuid, AxiomModel::ModelRoot *root);
 
@@ -22,20 +22,16 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, MaximCompiler::Transaction *transaction);
 
-        bool backward() override;
+        void backward(MaximCompiler::Transaction *transaction);
 
     private:
-
         QUuid uuid;
         QByteArray buffer;
 
         Sequence<ModelObject *> getLinkedItems(const QUuid &seed) const;
 
         Sequence<ModelObject *> getRemoveItems() const;
-
-        bool anyNeedRebuild(const Sequence<ModelObject *> &sequence) const;
     };
-
 }

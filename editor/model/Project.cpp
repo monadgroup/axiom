@@ -10,18 +10,17 @@ using namespace AxiomModel;
 Project::Project() : _mainRoot(this) {
     // setup default project
     //  1. create default surface
-    auto surfaceId = QUuid::createUuid();
-    auto rootSurface = std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot());
+    auto rootSurface = std::make_unique<RootSurface>(QUuid(), QPointF(0, 0), 0, &mainRoot());
     _rootSurface = rootSurface.get();
     mainRoot().pool().registerObj(std::move(rootSurface));
 
     //  2. add default inputs and outputs
-    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
+    CreatePortalNodeAction::create(QUuid(), QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
                                    PortalControl::PortalType::INPUT, &mainRoot())
-        ->forward(true);
-    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
+        ->forward(true, nullptr);
+    CreatePortalNodeAction::create(QUuid(), QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
                                    PortalControl::PortalType::OUTPUT, &mainRoot())
-        ->forward(true);
+        ->forward(true, nullptr);
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(this, stream), _library(this, stream) {

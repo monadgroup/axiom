@@ -4,6 +4,7 @@
 #include <QtWidgets/QMenu>
 
 #include "common/Hookable.h"
+#include "editor/compiler/interface/Transaction.h"
 #include "editor/model/actions/CompositeAction.h"
 
 namespace AxiomModel {
@@ -17,13 +18,12 @@ namespace AxiomGui {
     class NodeSurfaceCanvas;
 
     class NodeSurfaceView : public QGraphicsView, public AxiomCommon::Hookable {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
         explicit NodeSurfaceView(NodeSurfacePanel *panel, AxiomModel::NodeSurface *surface);
 
     protected:
-
         void mousePressEvent(QMouseEvent *event) override;
 
         void mouseMoveEvent(QMouseEvent *event) override;
@@ -72,11 +72,10 @@ namespace AxiomGui {
         QPointF startPan;
         float lastScale = 1;
         std::unique_ptr<AxiomModel::CompositeAction> dragAndDropAction;
-        bool dragAndDropRebuild = false;
+        std::optional<MaximCompiler::Transaction> dragAndDropTransaction;
 
         static float zoomToScale(float zoom);
 
         void updateHistoryState();
     };
-
 }

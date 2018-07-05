@@ -6,6 +6,11 @@
 #include "HistoryList.h"
 #include "Pool.h"
 #include "WatchSequence.h"
+#include "editor/compiler/interface/Transaction.h"
+
+namespace MaximCompiler {
+    class Runtime;
+}
 
 namespace AxiomModel {
 
@@ -33,7 +38,7 @@ namespace AxiomModel {
         using ControlCollection = WatchSequence<Control *>;
         using ConnectionCollection = WatchSequence<Connection *>;
 
-        ModelRoot(Project *project);
+        explicit ModelRoot(Project *project);
 
         ModelRoot(Project *project, QDataStream &stream);
 
@@ -82,6 +87,10 @@ namespace AxiomModel {
 
         std::vector<ModelObject *> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
 
+        void attachRuntime(MaximCompiler::Runtime *runtime);
+
+        void applyTransaction(MaximCompiler::Transaction transaction);
+
         void destroy();
 
     private:
@@ -93,5 +102,7 @@ namespace AxiomModel {
         ControlSurfaceCollection _controlSurfaces;
         ControlCollection _controls;
         ConnectionCollection _connections;
+
+        MaximCompiler::Runtime *_runtime = nullptr;
     };
 }

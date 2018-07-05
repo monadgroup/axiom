@@ -8,8 +8,7 @@ using namespace AxiomModel;
 
 GridItemMoveAction::GridItemMoveAction(const QUuid &uuid, QPoint beforePos, QPoint afterPos,
                                        AxiomModel::ModelRoot *root)
-    : Action(ActionType::MOVE_GRID_ITEM, root), uuid(uuid), beforePos(beforePos), afterPos(afterPos) {
-}
+    : Action(ActionType::MOVE_GRID_ITEM, root), uuid(uuid), beforePos(beforePos), afterPos(afterPos) {}
 
 std::unique_ptr<GridItemMoveAction> GridItemMoveAction::create(const QUuid &uuid, QPoint beforePos, QPoint afterPos,
                                                                AxiomModel::ModelRoot *root) {
@@ -35,12 +34,10 @@ void GridItemMoveAction::serialize(QDataStream &stream) const {
     stream << afterPos;
 }
 
-bool GridItemMoveAction::forward(bool) {
+void GridItemMoveAction::forward(bool, MaximCompiler::Transaction *) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setPos(afterPos);
-    return false;
 }
 
-bool GridItemMoveAction::backward() {
+void GridItemMoveAction::backward(MaximCompiler::Transaction *) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setPos(beforePos);
-    return false;
 }

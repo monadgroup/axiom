@@ -4,6 +4,7 @@
 #include "../PoolOperators.h"
 #include "../objects/AutomationNode.h"
 #include "../objects/ControlSurface.h"
+#include "../objects/NodeSurface.h"
 
 using namespace AxiomModel;
 
@@ -11,8 +12,7 @@ CreateAutomationNodeAction::CreateAutomationNodeAction(const QUuid &uuid, const 
                                                        QString name, const QUuid &controlsUuid,
                                                        const QUuid &controlUuid, AxiomModel::ModelRoot *root)
     : Action(ActionType::CREATE_AUTOMATION_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos),
-      name(std::move(name)), controlsUuid(controlsUuid), controlUuid(controlUuid) {
-}
+      name(std::move(name)), controlsUuid(controlsUuid), controlUuid(controlUuid) {}
 
 std::unique_ptr<CreateAutomationNodeAction> CreateAutomationNodeAction::create(const QUuid &uuid,
                                                                                const QUuid &parentUuid, QPoint pos,
@@ -23,9 +23,8 @@ std::unique_ptr<CreateAutomationNodeAction> CreateAutomationNodeAction::create(c
                                                         controlUuid, root);
 }
 
-std::unique_ptr<CreateAutomationNodeAction> CreateAutomationNodeAction::create(const QUuid &parentUuid, QPoint pos,
-                                                                               QString name,
-                                                                               AxiomModel::ModelRoot *root) {
+std::unique_ptr<CreateAutomationNodeAction>
+    CreateAutomationNodeAction::create(const QUuid &parentUuid, QPoint pos, QString name, AxiomModel::ModelRoot *root) {
     return create(QUuid::createUuid(), parentUuid, pos, std::move(name), QUuid::createUuid(), QUuid::createUuid(),
                   root);
 }
@@ -59,17 +58,23 @@ std::unique_ptr<CreateAutomationNodeAction> CreateAutomationNodeAction::deserial
     return create(uuid, parentUuid, pos, std::move(name), controlsUuid, controlUuid, root);
 }
 
-bool CreateAutomationNodeAction::forward(bool) {
+void CreateAutomationNodeAction::forward(bool, MaximCompiler::Transaction *transaction) {
     root()->pool().registerObj(
         AutomationNode::create(uuid, parentUuid, pos, QSize(1, 1), false, name, controlsUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
-    root()->pool().registerObj(
-        PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "", false, QUuid(), QUuid(),
-                              ConnectionWire::WireType::NUM, PortalControl::PortalType::AUTOMATION, root()));
-    return true;
+    root()->pool().registerObj(PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "",
+                                                     false, QUuid(), QUuid(), ConnectionWire::WireType::NUM,
+                                                     PortalControl::PortalType::AUTOMATION, root()));
+
+    if (transaction) {
+        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
+    }
 }
 
-bool CreateAutomationNodeAction::backward() {
+void CreateAutomationNodeAction::backward(MaximCompiler::Transaction *transaction) {
     find(root()->nodes(), uuid)->remove();
-    return true;
+
+    if (transaction) {
+        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
+    }
 }

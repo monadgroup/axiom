@@ -9,10 +9,8 @@
 
 using namespace AxiomModel;
 
-ExposeControlAction::ExposeControlAction(const QUuid &controlUuid, const QUuid &exposeUuid,
-                                         AxiomModel::ModelRoot *root)
-    : Action(ActionType::EXPOSE_CONTROL, root), controlUuid(controlUuid), exposeUuid(exposeUuid) {
-}
+ExposeControlAction::ExposeControlAction(const QUuid &controlUuid, const QUuid &exposeUuid, AxiomModel::ModelRoot *root)
+    : Action(ActionType::EXPOSE_CONTROL, root), controlUuid(controlUuid), exposeUuid(exposeUuid) {}
 
 std::unique_ptr<ExposeControlAction> ExposeControlAction::create(const QUuid &controlUuid, const QUuid &exposeUuid,
                                                                  AxiomModel::ModelRoot *root) {
@@ -41,7 +39,7 @@ void ExposeControlAction::serialize(QDataStream &stream) const {
     stream << exposeUuid;
 }
 
-bool ExposeControlAction::forward(bool) {
+void ExposeControlAction::forward(bool, MaximCompiler::Transaction *transaction) {
     auto controlToExpose = find(root()->controls(), controlUuid);
     controlToExpose->setExposerUuid(exposeUuid);
     auto controlSurface = dynamic_cast<GroupSurface *>(controlToExpose->surface()->node()->surface());
@@ -52,10 +50,24 @@ bool ExposeControlAction::forward(bool) {
     auto newControl = Control::createDefault(controlToExpose->controlType(), exposeUuid, exposeSurface->uuid(),
                                              controlToExpose->name(), controlUuid, root());
     root()->pool().registerObj(std::move(newControl));
-    return true;
+
+    if (transaction) {
+        controlSurface->build(transaction);
+        exposeNode->surface()->build(transaction);
+    }
 }
 
-bool ExposeControlAction::backward() {
-    find(root()->controls(), exposeUuid)->remove();
-    return true;
+void ExposeControlAction::backward(MaximCompiler::Transaction *transaction) {
+    auto innerControl = find(root()->controls(), controlUuid);
+    auto innerSurface = innerControl->surface()->node()->surface();
+
+    auto exposedControl = find(root()->controls(), exposeUuid);
+    auto exposeSurface = exposedControl->surface()->node()->surface();
+
+    exposedControl->remove();
+
+    if (transaction) {
+        innerSurface->build(transaction);
+        exposeSurface->build(transaction);
+    }
 }

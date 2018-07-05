@@ -7,8 +7,7 @@
 using namespace AxiomModel;
 
 RenameNodeAction::RenameNodeAction(const QUuid &uuid, QString oldName, QString newName, AxiomModel::ModelRoot *root)
-    : Action(ActionType::RENAME_NODE, root), uuid(uuid), oldName(std::move(oldName)), newName(std::move(newName)) {
-}
+    : Action(ActionType::RENAME_NODE, root), uuid(uuid), oldName(std::move(oldName)), newName(std::move(newName)) {}
 
 std::unique_ptr<RenameNodeAction> RenameNodeAction::create(const QUuid &uuid, QString oldName, QString newName,
                                                            AxiomModel::ModelRoot *root) {
@@ -34,12 +33,10 @@ void RenameNodeAction::serialize(QDataStream &stream) const {
     stream << newName;
 }
 
-bool RenameNodeAction::forward(bool) {
+void RenameNodeAction::forward(bool, MaximCompiler::Transaction *) {
     find(root()->nodes(), uuid)->setName(newName);
-    return false;
 }
 
-bool RenameNodeAction::backward() {
+void RenameNodeAction::backward(MaximCompiler::Transaction *) {
     find(root()->nodes(), uuid)->setName(oldName);
-    return false;
 }

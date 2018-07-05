@@ -3,7 +3,11 @@
 #include "../ModelObject.h"
 #include "../grid/GridSurface.h"
 #include "common/Event.h"
-#include "editor/compiler/interface/Runtime.h"
+
+namespace MaximCompiler {
+    class Runtime;
+    class Transaction;
+}
 
 namespace AxiomModel {
 
@@ -29,29 +33,17 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        ChildCollection &nodes() {
-            return _nodes;
-        }
+        ChildCollection &nodes() { return _nodes; }
 
-        const ChildCollection &nodes() const {
-            return _nodes;
-        }
+        const ChildCollection &nodes() const { return _nodes; }
 
-        ConnectionCollection &connections() {
-            return _connections;
-        }
+        ConnectionCollection &connections() { return _connections; }
 
-        const ConnectionCollection &connections() const {
-            return _connections;
-        }
+        const ConnectionCollection &connections() const { return _connections; }
 
-        GridSurface &grid() {
-            return _grid;
-        }
+        GridSurface &grid() { return _grid; }
 
-        const GridSurface &grid() const {
-            return _grid;
-        }
+        const GridSurface &grid() const { return _grid; }
 
         virtual QString name() = 0;
 
@@ -59,15 +51,11 @@ namespace AxiomModel {
 
         virtual bool canHaveAutomation() const = 0;
 
-        QPointF pan() const {
-            return _pan;
-        }
+        QPointF pan() const { return _pan; }
 
         void setPan(QPointF pan);
 
-        float zoom() const {
-            return _zoom;
-        }
+        float zoom() const { return _zoom; }
 
         void setZoom(float zoom);
 
@@ -75,9 +63,9 @@ namespace AxiomModel {
 
         virtual uint64_t getRuntimeId() = 0;
 
-        virtual void attachRuntime(MaximCompiler::Runtime *runtime);
+        virtual void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction);
 
-        void build(MaximCompiler::Transaction &transaction);
+        void build(MaximCompiler::Transaction *transaction);
 
         void saveValue();
 

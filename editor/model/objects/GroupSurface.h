@@ -32,27 +32,17 @@ namespace AxiomModel {
 
         QString name() override;
 
-        bool canExposeControl() const override {
-            return true;
-        }
+        bool canExposeControl() const override { return true; }
 
-        bool canHaveAutomation() const override {
-            return false;
-        }
+        bool canHaveAutomation() const override { return false; }
 
-        GroupNode *node() const {
-            return _node;
-        }
+        GroupNode *node() const { return _node; }
 
-        uint64_t getRuntimeId() override {
-            return runtimeId;
-        }
+        uint64_t getRuntimeId() override { return runtimeId; }
 
-        void attachRuntime(MaximCompiler::Runtime *runtime) override;
+        void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 
-        const std::optional<GroupSurfaceCompileMeta> &compileMeta() const {
-            return _compileMeta;
-        }
+        const std::optional<GroupSurfaceCompileMeta> &compileMeta() const { return _compileMeta; }
 
         void setCompileMeta(std::optional<GroupSurfaceCompileMeta> compileMeta) {
             _compileMeta = std::move(compileMeta);

@@ -37,35 +37,29 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        const QString &code() const {
-            return _code;
-        }
+        const QString &code() const { return _code; }
 
         void setCode(const QString &code);
 
-        // void doSetCodeAction(QString beforeCode, QString afterCode);
+        void doSetCodeAction(QString beforeCode, QString afterCode);
 
-        bool isPanelOpen() const {
-            return _isPanelOpen;
-        }
+        void updateControls();
+
+        bool isPanelOpen() const { return _isPanelOpen; }
 
         void setPanelOpen(bool panelOpen);
 
-        float panelHeight() const {
-            return _panelHeight;
-        }
+        float panelHeight() const { return _panelHeight; }
 
         void setPanelHeight(float panelHeight);
 
-        uint64_t getRuntimeId() {
-            return runtimeId;
-        }
+        uint64_t getRuntimeId() { return runtimeId; }
 
-        void attachRuntime(MaximCompiler::Runtime *runtime) override;
+        void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 
         std::optional<MaximCompiler::Block> compiledBlock() const;
 
-        void build(MaximCompiler::Transaction &transaction) override;
+        void build(MaximCompiler::Transaction *transaction);
 
     private:
         QString _code;
@@ -75,7 +69,5 @@ namespace AxiomModel {
         std::optional<MaximCompiler::Block> _compiledBlock;
 
         void buildCode();
-
-        void updateControls(CompositeAction *actionGroup);
     };
 }

@@ -11,20 +11,20 @@ namespace AxiomModel {
         CreateConnectionAction(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB,
                                ModelRoot *root);
 
-        static std::unique_ptr<CreateConnectionAction>
-        create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB,
-               ModelRoot *root);
+        static std::unique_ptr<CreateConnectionAction> create(const QUuid &uuid, const QUuid &parentUuid,
+                                                              const QUuid &controlA, const QUuid &controlB,
+                                                              ModelRoot *root);
 
-        static std::unique_ptr<CreateConnectionAction>
-        create(const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB, ModelRoot *root);
+        static std::unique_ptr<CreateConnectionAction> create(const QUuid &parentUuid, const QUuid &controlA,
+                                                              const QUuid &controlB, ModelRoot *root);
 
         static std::unique_ptr<CreateConnectionAction> deserialize(QDataStream &stream, ModelRoot *root);
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, MaximCompiler::Transaction *transaction) override;
 
-        bool backward() override;
+        void backward(MaximCompiler::Transaction *transaction) override;
 
     private:
         QUuid uuid;
@@ -32,5 +32,4 @@ namespace AxiomModel {
         QUuid controlA;
         QUuid controlB;
     };
-
 }

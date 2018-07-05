@@ -60,14 +60,17 @@ void CustomNode::setCode(const QString &code) {
     }
 }
 
-/*void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
-    auto action = CompositeAction::create({}, root());
+void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
+    /*auto action = CompositeAction::create({}, root());
     auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), root());
     setCodeAction->forward(true);
     action->actions().push_back(std::move(setCodeAction));
     //updateControls(action.get());
-    root()->history().append(std::move(action), false);
-}*/
+    root()->history().append(std::move(action), false);*/
+
+    auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), root());
+    root()->history().append(std::move(setCodeAction));
+}
 
 void CustomNode::setPanelOpen(bool panelOpen) {
     if (_isPanelOpen != panelOpen) {
@@ -85,12 +88,16 @@ void CustomNode::setPanelHeight(float panelHeight) {
     }
 }
 
-void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime) {
+void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     if (runtime) {
         runtimeId = runtime->nextId();
         buildCode();
     } else {
         runtimeId = 0;
+    }
+
+    if (transaction) {
+        build(transaction);
     }
 }
 
@@ -102,28 +109,12 @@ std::optional<MaximCompiler::Block> CustomNode::compiledBlock() const {
     }
 }
 
-void CustomNode::build(MaximCompiler::Transaction &transaction) {
+void CustomNode::build(MaximCompiler::Transaction *transaction) {
     if (!_compiledBlock) return;
-    transaction.buildBlock(_compiledBlock->clone());
+    transaction->buildBlock(_compiledBlock->clone());
 }
 
-void CustomNode::buildCode() {
-    auto compileResult = MaximCompiler::Block::compile(getRuntimeId(), name(), code());
-
-    if (MaximCompiler::Error *err = std::get_if<MaximCompiler::Error>(&compileResult)) {
-        auto errorDescription = err->getDescription();
-        auto errorRange = err->getRange();
-        std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> "
-                  << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString()
-                  << std::endl;
-        codeCompileError.trigger(errorDescription, errorRange);
-    } else {
-        _compiledBlock = std::optional<MaximCompiler::Block>(std::move(std::get<MaximCompiler::Block>(compileResult)));
-        codeCompileSuccess.trigger();
-    }
-}
-
-void CustomNode::updateControls(CompositeAction *actionGroup) {
+void CustomNode::updateControls() {
     if (!_compiledBlock || !controls().value()) return;
 
     QSet<QUuid> retainedControls;
@@ -153,14 +144,14 @@ void CustomNode::updateControls(CompositeAction *actionGroup) {
             std::cout << "Creating new control for " << compiledName.toStdString() << std::endl;
             auto createAction =
                 CreateControlAction::create((*controls().value())->uuid(), compiledModelType, compiledName, root());
-            createAction->forward(true);
+            createAction->forward(true, nullptr);
 
             auto newControl = find(root()->controls(), createAction->getUuid());
             newControl->setCompileMeta(compileMeta);
 
-            if (actionGroup) {
+            /*if (actionGroup) {
                 actionGroup->actions().push_back(std::move(createAction));
-            }
+            }*/
         }
     }
 
@@ -170,10 +161,26 @@ void CustomNode::updateControls(CompositeAction *actionGroup) {
 
         std::cout << "Deleting old control " << existingControl->name().toStdString() << std::endl;
         auto deleteAction = DeleteObjectAction::create(existingControl->uuid(), root());
-        deleteAction->forward(true);
+        deleteAction->forward(true, nullptr);
 
-        if (actionGroup) {
+        /*if (actionGroup) {
             actionGroup->actions().push_back(std::move(deleteAction));
-        }
+        }*/
+    }
+}
+
+void CustomNode::buildCode() {
+    auto compileResult = MaximCompiler::Block::compile(getRuntimeId(), name(), code());
+
+    if (MaximCompiler::Error *err = std::get_if<MaximCompiler::Error>(&compileResult)) {
+        auto errorDescription = err->getDescription();
+        auto errorRange = err->getRange();
+        std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> "
+                  << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString()
+                  << std::endl;
+        codeCompileError.trigger(errorDescription, errorRange);
+    } else {
+        _compiledBlock = std::optional<MaximCompiler::Block>(std::move(std::get<MaximCompiler::Block>(compileResult)));
+        codeCompileSuccess.trigger();
     }
 }

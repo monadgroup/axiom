@@ -1,8 +1,10 @@
 #include "HistoryList.h"
 
+#include "editor/compiler/interface/Transaction.h"
+
 using namespace AxiomModel;
 
-HistoryList::HistoryList() = default;
+HistoryList::HistoryList(TransactionApplyer applyer) : applyTransaction(std::move(applyer)) {}
 
 HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
     uint32_t stackPos;
@@ -31,10 +33,13 @@ void HistoryList::serialize(QDataStream &stream) {
     }
 }
 
-void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward, bool forceForwards) {
+void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward) {
     // run the action forward
-    auto needsForward = forward && action->forward(true);
-    if (needsForward || forceForwards) rebuildRequested.trigger();
+    if (forward) {
+        MaximCompiler::Transaction transaction;
+        action->forward(true, &transaction);
+        applyTransaction(std::move(transaction));
+    }
 
     // remove items ahead of where we are
     _stack.erase(_stack.begin() + _stackPos, _stack.end());
@@ -64,9 +69,9 @@ void HistoryList::undo() {
 
     _stackPos--;
     auto undoAction = _stack[_stackPos].get();
-    auto needsRebuild = undoAction->backward();
-
-    if (needsRebuild) rebuildRequested.trigger();
+    MaximCompiler::Transaction transaction;
+    undoAction->backward(&transaction);
+    applyTransaction(std::move(transaction));
 
     stackChanged.trigger();
 }
@@ -84,10 +89,11 @@ void HistoryList::redo() {
     if (!canRedo()) return;
 
     auto redoAction = _stack[_stackPos].get();
-    auto needsRebuild = redoAction->forward(false);
+    MaximCompiler::Transaction transaction;
+    redoAction->forward(false, &transaction);
     _stackPos++;
 
-    if (needsRebuild) rebuildRequested.trigger();
+    applyTransaction(std::move(transaction));
 
     stackChanged.trigger();
 }
