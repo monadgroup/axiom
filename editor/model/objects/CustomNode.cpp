@@ -54,7 +54,7 @@ void CustomNode::setCode(const QString &code) {
         _code = code;
         codeChanged.trigger(code);
 
-        if (_runtime) {
+        if (runtimeId) {
             buildCode();
         }
     }
@@ -85,18 +85,12 @@ void CustomNode::setPanelHeight(float panelHeight) {
     }
 }
 
-uint64_t CustomNode::getRuntimeId(MaximCompiler::Runtime &runtime) {
-    if (runtimeId) {
-        return runtimeId;
-    } else {
-        return runtime.nextId();
-    }
-}
-
 void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime) {
-    _runtime = runtime;
     if (runtime) {
+        runtimeId = runtime->nextId();
         buildCode();
+    } else {
+        runtimeId = 0;
     }
 }
 
@@ -114,8 +108,7 @@ void CustomNode::build(MaximCompiler::Transaction &transaction) {
 }
 
 void CustomNode::buildCode() {
-    auto blockId = getRuntimeId(*_runtime);
-    auto compileResult = MaximCompiler::Block::compile(blockId, name(), code());
+    auto compileResult = MaximCompiler::Block::compile(getRuntimeId(), name(), code());
 
     if (MaximCompiler::Error *err = std::get_if<MaximCompiler::Error>(&compileResult)) {
         auto errorDescription = err->getDescription();

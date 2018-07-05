@@ -13,6 +13,6 @@ namespace MaximCompiler {
 
     class SurfaceMirBuilder {
     public:
-        static void build(Runtime &runtime, Transaction &transaction, AxiomModel::NodeSurface *surface);
+        static void build(Transaction &transaction, AxiomModel::NodeSurface *surface);
     };
 }

@@ -57,7 +57,9 @@ namespace AxiomModel {
 
         void setPanelHeight(float panelHeight);
 
-        uint64_t getRuntimeId(MaximCompiler::Runtime &runtime);
+        uint64_t getRuntimeId() {
+            return runtimeId;
+        }
 
         void attachRuntime(MaximCompiler::Runtime *runtime) override;
 
@@ -70,7 +72,6 @@ namespace AxiomModel {
         bool _isPanelOpen;
         float _panelHeight;
         uint64_t runtimeId = 0;
-        MaximCompiler::Runtime *_runtime = nullptr;
         std::optional<MaximCompiler::Block> _compiledBlock;
 
         void buildCode();

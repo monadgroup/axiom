@@ -73,11 +73,11 @@ namespace AxiomModel {
 
         Sequence<ModelObject *> getCopyItems() const;
 
-        virtual uint64_t getRuntimeId(MaximCompiler::Runtime &runtime) = 0;
+        virtual uint64_t getRuntimeId() = 0;
 
-        void attachRuntime(MaximCompiler::Runtime *runtime);
+        virtual void attachRuntime(MaximCompiler::Runtime *runtime);
 
-        void build(MaximCompiler::Runtime &runtime, MaximCompiler::Transaction &transaction);
+        void build(MaximCompiler::Transaction &transaction);
 
         void saveValue();
 

@@ -86,8 +86,8 @@ void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime) {
     }
 }
 
-void NodeSurface::build(MaximCompiler::Runtime &runtime, MaximCompiler::Transaction &transaction) {
-    MaximCompiler::SurfaceMirBuilder::build(runtime, transaction, this);
+void NodeSurface::build(MaximCompiler::Transaction &transaction) {
+    MaximCompiler::SurfaceMirBuilder::build(transaction, this);
 }
 
 void NodeSurface::saveValue() {

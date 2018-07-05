@@ -1,8 +1,8 @@
 #include "GroupSurface.h"
 
-#include "GroupNode.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "GroupNode.h"
 
 using namespace AxiomModel;
 
@@ -21,10 +21,11 @@ QString GroupSurface::name() {
     return _node->name();
 }
 
-uint64_t GroupSurface::getRuntimeId(MaximCompiler::Runtime &runtime) {
-    if (runtimeId) {
-        return runtimeId;
+void GroupSurface::attachRuntime(MaximCompiler::Runtime *runtime) {
+    if (runtime) {
+        runtimeId = runtime->nextId();
     } else {
-        return runtime.nextId();
+        runtimeId = 0;
     }
+    NodeSurface::attachRuntime(runtime);
 }

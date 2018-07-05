@@ -38,9 +38,8 @@ AxiomModel::Control::ControlType getGroupType(const std::vector<AxiomModel::Cont
     return controls[0]->controlType();
 }
 
-void SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &transaction,
-                              AxiomModel::NodeSurface *surface) {
-    auto mir = transaction.buildSurface(surface->getRuntimeId(runtime), surface->name());
+void SurfaceMirBuilder::build(MaximCompiler::Transaction &transaction, AxiomModel::NodeSurface *surface) {
+    auto mir = transaction.buildSurface(surface->getRuntimeId(), surface->name());
 
     // build control groups
     std::unordered_map<ValueGroup *, std::unique_ptr<ValueGroup>> groups;
@@ -179,7 +178,7 @@ void SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &tran
     // build nodes
     for (const auto &node : surface->nodes()) {
         if (auto customNode = dynamic_cast<AxiomModel::CustomNode *>(node)) {
-            auto mirNode = mir.addCustomNode(customNode->getRuntimeId(runtime));
+            auto mirNode = mir.addCustomNode(customNode->getRuntimeId());
             auto nodeBlock = customNode->compiledBlock().value();
 
             // we need a sorted list of controls
@@ -201,7 +200,7 @@ void SurfaceMirBuilder::build(Runtime &runtime, MaximCompiler::Transaction &tran
             }
         } else if (auto groupNode = dynamic_cast<AxiomModel::GroupNode *>(node)) {
             auto groupSurface = *groupNode->nodes().value();
-            auto mirNode = mir.addGroupNode(groupSurface->getRuntimeId(runtime));
+            auto mirNode = mir.addGroupNode(groupSurface->getRuntimeId());
             auto &portalControlGroups = groupSurface->compileMeta()->portals;
 
             for (const auto &group : portalControlGroups) {

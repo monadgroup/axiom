@@ -8,13 +8,20 @@ namespace AxiomModel {
     public:
         RootSurface(const QUuid &uuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 
-        QString name() override { return "Root"; }
+        QString name() override {
+            return "Root";
+        }
 
-        bool canExposeControl() const override { return false; }
+        bool canExposeControl() const override {
+            return false;
+        }
 
-        bool canHaveAutomation() const override { return true; }
+        bool canHaveAutomation() const override {
+            return true;
+        }
 
-        uint64_t getRuntimeId(MaximCompiler::Runtime &runtime) override { return 0; }
+        uint64_t getRuntimeId() override {
+            return 0;
+        }
     };
-
 }
