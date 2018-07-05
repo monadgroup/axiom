@@ -46,29 +46,17 @@ namespace AxiomModel {
         WatchSequence(const SequenceMapFilter<Item, InputItem> &mapFilter, WatchSequence<InputItem> &parent)
             : WatchSequence(mapFilter, parent.itemAdded, parent.itemRemoved) {}
 
-        sequence_type &sequence() {
-            return _sequence;
-        }
+        sequence_type &sequence() { return _sequence; }
 
-        const sequence_type &sequence() const {
-            return _sequence;
-        }
+        const sequence_type &sequence() const { return _sequence; }
 
-        const_iterator begin() const {
-            return _sequence.begin();
-        }
+        const_iterator begin() const { return _sequence.begin(); }
 
-        const_iterator end() const {
-            return _sequence.end();
-        }
+        const_iterator end() const { return _sequence.end(); }
 
-        bool empty() const {
-            return _sequence.empty();
-        }
+        bool empty() const { return _sequence.empty(); }
 
-        size_t size() const {
-            return _sequence.size();
-        }
+        size_t size() const { return _sequence.size(); }
 
     private:
         sequence_type _sequence;

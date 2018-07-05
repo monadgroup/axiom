@@ -28,25 +28,15 @@ namespace AxiomModel {
 
         static bool readHeader(QDataStream &stream, uint64_t expectedMagic, uint32_t *versionOut);
 
-        ModelRoot &mainRoot() {
-            return _mainRoot;
-        }
+        ModelRoot &mainRoot() { return _mainRoot; }
 
-        const ModelRoot &mainRoot() const {
-            return _mainRoot;
-        }
+        const ModelRoot &mainRoot() const { return _mainRoot; }
 
-        Library &library() {
-            return _library;
-        }
+        Library &library() { return _library; }
 
-        const Library &library() const {
-            return _library;
-        }
+        const Library &library() const { return _library; }
 
-        RootSurface *rootSurface() const {
-            return _rootSurface;
-        }
+        RootSurface *rootSurface() const { return _rootSurface; }
 
         void serialize(QDataStream &stream);
 

@@ -33,39 +33,25 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream);
 
-        const QString &name() const {
-            return _name;
-        }
+        const QString &name() const { return _name; }
 
         void setName(const QString &newName);
 
-        const QUuid &baseUuid() const {
-            return _baseUuid;
-        }
+        const QUuid &baseUuid() const { return _baseUuid; }
 
-        const QUuid &modificationUuid() const {
-            return _modificationUuid;
-        }
+        const QUuid &modificationUuid() const { return _modificationUuid; }
 
-        const QDateTime &modificationDateTime() const {
-            return _modificationDateTime;
-        }
+        const QDateTime &modificationDateTime() const { return _modificationDateTime; }
 
-        const std::set<QString> &tags() const {
-            return _tags;
-        }
+        const std::set<QString> &tags() const { return _tags; }
 
         void addTag(const QString &tag);
 
         void removeTag(const QString &tag);
 
-        ModelRoot *root() const {
-            return _root.get();
-        }
+        ModelRoot *root() const { return _root.get(); }
 
-        RootSurface *rootSurface() const {
-            return _rootSurface;
-        }
+        RootSurface *rootSurface() const { return _rootSurface; }
 
         void modified();
 

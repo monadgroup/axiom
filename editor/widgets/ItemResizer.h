@@ -26,9 +26,7 @@ namespace AxiomGui {
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-        bool doPaint() const {
-            return m_doPaint;
-        }
+        bool doPaint() const { return m_doPaint; }
 
     public slots:
 
@@ -38,13 +36,9 @@ namespace AxiomGui {
 
         void setDoPaint(bool newDoPaint);
 
-        void enablePainting() {
-            setDoPaint(true);
-        }
+        void enablePainting() { setDoPaint(true); }
 
-        void disablePainting() {
-            setDoPaint(false);
-        }
+        void disablePainting() { setDoPaint(false); }
 
     signals:
 

@@ -35,15 +35,11 @@ namespace AxiomModel {
         void import(Library *library,
                     const std::function<ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict);
 
-        const QString &activeTag() const {
-            return _activeTag;
-        }
+        const QString &activeTag() const { return _activeTag; }
 
         void setActiveTag(const QString &activeTag);
 
-        const QString &activeSearch() const {
-            return _activeSearch;
-        }
+        const QString &activeSearch() const { return _activeSearch; }
 
         void setActiveSearch(const QString &search);
 

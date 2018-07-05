@@ -29,17 +29,11 @@ namespace AxiomModel {
 
         virtual void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const;
 
-        virtual bool buildOnRemove() const {
-            return false;
-        }
+        virtual bool buildOnRemove() const { return false; }
 
-        ModelType modelType() const {
-            return _modelType;
-        }
+        ModelType modelType() const { return _modelType; }
 
-        ModelRoot *root() const {
-            return _root;
-        }
+        ModelRoot *root() const { return _root; }
 
         virtual Sequence<ModelObject *> links();
 

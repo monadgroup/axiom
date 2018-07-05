@@ -50,65 +50,35 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream);
 
-        Project *project() const {
-            return _project;
-        }
+        Project *project() const { return _project; }
 
-        Pool &pool() {
-            return _pool;
-        }
+        Pool &pool() { return _pool; }
 
-        const Pool &pool() const {
-            return _pool;
-        }
+        const Pool &pool() const { return _pool; }
 
-        HistoryList &history() {
-            return _history;
-        }
+        HistoryList &history() { return _history; }
 
-        const HistoryList &history() const {
-            return _history;
-        }
+        const HistoryList &history() const { return _history; }
 
-        NodeSurfaceCollection &nodeSurfaces() {
-            return _nodeSurfaces;
-        }
+        NodeSurfaceCollection &nodeSurfaces() { return _nodeSurfaces; }
 
-        const NodeSurfaceCollection &nodeSurfaces() const {
-            return _nodeSurfaces;
-        }
+        const NodeSurfaceCollection &nodeSurfaces() const { return _nodeSurfaces; }
 
-        NodeCollection &nodes() {
-            return _nodes;
-        }
+        NodeCollection &nodes() { return _nodes; }
 
-        const NodeCollection &nodes() const {
-            return _nodes;
-        }
+        const NodeCollection &nodes() const { return _nodes; }
 
-        ControlSurfaceCollection &controlSurfaces() {
-            return _controlSurfaces;
-        }
+        ControlSurfaceCollection &controlSurfaces() { return _controlSurfaces; }
 
-        const ControlSurfaceCollection &controlSurfaces() const {
-            return _controlSurfaces;
-        }
+        const ControlSurfaceCollection &controlSurfaces() const { return _controlSurfaces; }
 
-        ControlCollection &controls() {
-            return _controls;
-        }
+        ControlCollection &controls() { return _controls; }
 
-        const ControlCollection &controls() const {
-            return _controls;
-        }
+        const ControlCollection &controls() const { return _controls; }
 
-        ConnectionCollection &connections() {
-            return _connections;
-        }
+        ConnectionCollection &connections() { return _connections; }
 
-        const ConnectionCollection &connections() const {
-            return _connections;
-        }
+        const ConnectionCollection &connections() const { return _connections; }
 
         std::vector<ModelObject *> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
 

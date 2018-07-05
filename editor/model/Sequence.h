@@ -46,13 +46,9 @@ namespace AxiomModel {
 
             iterator() {}
 
-            bool ended() const {
-                return !impl;
-            }
+            bool ended() const { return !impl; }
 
-            size_t index() const {
-                return impl->index;
-            }
+            size_t index() const { return impl->index; }
 
             self_type operator++() {
                 self_type i = *this;
@@ -75,17 +71,11 @@ namespace AxiomModel {
                 return index() == rhs.index();
             }
 
-            bool operator!=(const iterator &rhs) const {
-                return !(*this == rhs);
-            }
+            bool operator!=(const iterator &rhs) const { return !(*this == rhs); }
 
-            reference operator*() {
-                return *impl->currentVal;
-            }
+            reference operator*() { return *impl->currentVal; }
 
-            pointer operator->() {
-                return &*impl->currentVal;
-            }
+            pointer operator->() { return &*impl->currentVal; }
 
         private:
             std::shared_ptr<SequenceStorage> impl;
@@ -103,21 +93,13 @@ namespace AxiomModel {
 
         explicit Sequence(iter_functor iter) : _iter(std::move(iter)) {}
 
-        const iter_functor &iter() const {
-            return _iter;
-        }
+        const iter_functor &iter() const { return _iter; }
 
-        const_iterator begin() const {
-            return iterator(_iter());
-        }
+        const_iterator begin() const { return iterator(_iter()); }
 
-        const_iterator end() const {
-            return iterator();
-        }
+        const_iterator end() const { return iterator(); }
 
-        bool empty() const {
-            return begin() == end();
-        }
+        bool empty() const { return begin() == end(); }
 
         size_t size() const {
             size_t acc = 0;

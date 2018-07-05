@@ -4,7 +4,7 @@ BasedOnStyle:  WebKit
 AlignAfterOpenBracket: Align
 AlignEscapedNewlines: DontAlign
 AlignOperands:   true
-AllowShortFunctionsOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Inline
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: true

@@ -22,45 +22,29 @@ namespace AxiomModel {
 
         ConnectionWire(GridSurface *grid, WireType wireType, const QPointF &startPos, const QPointF &endPos);
 
-        GridSurface *grid() const {
-            return _grid;
-        }
+        GridSurface *grid() const { return _grid; }
 
-        WireType wireType() const {
-            return _wireType;
-        }
+        WireType wireType() const { return _wireType; }
 
-        const QPointF &startPos() const {
-            return _startPos;
-        }
+        const QPointF &startPos() const { return _startPos; }
 
         void setStartPos(const QPointF &startPos);
 
-        const QPointF &endPos() const {
-            return _endPos;
-        }
+        const QPointF &endPos() const { return _endPos; }
 
         void setEndPos(const QPointF &endPos);
 
-        const std::deque<QPoint> &route() const {
-            return _route;
-        }
+        const std::deque<QPoint> &route() const { return _route; }
 
-        bool startActive() const {
-            return _startActive;
-        }
+        bool startActive() const { return _startActive; }
 
         void setStartActive(bool active);
 
-        bool endActive() const {
-            return _endActive;
-        }
+        bool endActive() const { return _endActive; }
 
         void setEndActive(bool active);
 
-        bool active() const {
-            return _active;
-        }
+        bool active() const { return _active; }
 
         void remove();
 

@@ -15,25 +15,15 @@ namespace AxiomModel {
             return left == other.left && right == other.right && form == other.form;
         }
 
-        bool operator!=(const NumValue &other) const {
-            return !(*this == other);
-        }
+        bool operator!=(const NumValue &other) const { return !(*this == other); }
 
-        NumValue withLR(float l, float r) const {
-            return {l, r, form};
-        }
+        NumValue withLR(float l, float r) const { return {l, r, form}; }
 
-        NumValue withL(float l) const {
-            return {l, right, form};
-        }
+        NumValue withL(float l) const { return {l, right, form}; }
 
-        NumValue withR(float r) const {
-            return {left, r, form};
-        }
+        NumValue withR(float r) const { return {left, r, form}; }
 
-        NumValue withForm(FormType form) const {
-            return {left, right, form};
-        }
+        NumValue withForm(FormType form) const { return {left, right, form}; }
     };
 
     enum class MidiEventType { NOTE_ON, NOTE_OFF, POLYPHONIC_AFTERTOUCH, CHANNEL_AFTERTOUCH, PITCH_WHEEL };
@@ -48,9 +38,7 @@ namespace AxiomModel {
             return event == other.event && channel == other.channel && note == other.note && param == other.param;
         }
 
-        bool operator!=(const MidiEventValue &other) const {
-            return !(*this == other);
-        }
+        bool operator!=(const MidiEventValue &other) const { return !(*this == other); }
     };
 
     struct MidiValue {
@@ -67,9 +55,7 @@ namespace AxiomModel {
             return true;
         }
 
-        bool operator!=(const MidiValue &other) const {
-            return !(*this == other);
-        }
+        bool operator!=(const MidiValue &other) const { return !(*this == other); }
 
         void pushEvent(const MidiEventValue &event) {
             if (count >= MAX_EVENTS) return;
