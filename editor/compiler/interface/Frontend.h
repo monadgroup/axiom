@@ -17,6 +17,7 @@ namespace MaximFrontend {
     using MaximConstantValue = void;
     using MaximConstantValueRef = MaximConstantValue;
 
+    using MaximRootRef = void;
     using MaximSurfaceRef = void;
     using MaximNodeRef = void;
     using MaximBlock = void;
@@ -43,6 +44,8 @@ namespace MaximFrontend {
     void maxim_destroy_runtime(MaximRuntime *);
 
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
+    void maxim_run_update(MaximRuntimeRef *runtime);
+
     void maxim_destroy_string(const char *);
 
     MaximTransaction *maxim_create_transaction();
@@ -61,6 +64,9 @@ namespace MaximFrontend {
     MaximConstantValue *maxim_constant_tuple(MaximConstantValue **items, size_t item_count);
     MaximConstantValue *maxim_constant_clone(MaximConstantValueRef *base);
     void maxim_destroy_constant(MaximConstantValue *);
+
+    MaximRootRef *maxim_build_root(MaximTransactionRef *transaction);
+    void maxim_build_root_socket(MaximRootRef *root, MaximVarType *vartype);
 
     MaximSurfaceRef *maxim_build_surface(MaximTransactionRef *transaction, uint64_t id, const char *name);
 

@@ -1,7 +1,7 @@
 use super::{Runtime, Transaction};
 use ast;
 use codegen;
-use inkwell::targets;
+use inkwell::{orc, targets};
 use mir;
 use parser;
 use pass;
@@ -11,12 +11,13 @@ use CompileError;
 #[no_mangle]
 pub extern "C" fn maxim_initialize() {
     targets::Target::initialize_native(&targets::InitializationConfig::default()).unwrap();
+    orc::Orc::link_in_jit();
 }
 
 #[no_mangle]
 pub extern "C" fn maxim_create_runtime(include_ui: bool, min_size: bool) -> *mut Runtime {
     let target = codegen::TargetProperties::new(include_ui, min_size);
-    Box::into_raw(Box::new(Runtime::new(target)))
+    Box::into_raw(Box::new(Runtime::new(target, None)))
 }
 
 #[no_mangle]
@@ -29,6 +30,11 @@ pub unsafe extern "C" fn maxim_destroy_runtime(runtime: *mut Runtime) {
 pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
     use mir::IdAllocator;
     (*runtime).alloc_id()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_run_update(runtime: *const Runtime) {
+    (*runtime).run_update();
 }
 
 #[no_mangle]
@@ -45,7 +51,7 @@ pub unsafe extern "C" fn maxim_commit(runtime: *mut Runtime, transaction: *mut T
 
 #[no_mangle]
 pub extern "C" fn maxim_create_transaction() -> *mut Transaction {
-    Box::into_raw(Box::new(Transaction::new(Vec::new(), Vec::new())))
+    Box::into_raw(Box::new(Transaction::new(None, Vec::new(), Vec::new())))
 }
 
 #[no_mangle]
@@ -180,6 +186,22 @@ pub unsafe extern "C" fn maxim_destroy_valuegroupsource(val: *mut mir::ValueGrou
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_build_root(transaction: *mut Transaction) -> *mut mir::Root {
+    if let Some(ref mut root) = (*transaction).root {
+        root
+    } else {
+        (*transaction).root = Some(mir::Root::new(Vec::new()));
+        (*transaction).root.as_mut().unwrap()
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_build_root_socket(root: *mut mir::Root, vartype: *mut mir::VarType) {
+    let owned_vartype = Box::from_raw(vartype);
+    (*root).sockets.push(*owned_vartype);
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_build_surface(
     transaction: *mut Transaction,
     id: u64,
@@ -194,8 +216,8 @@ pub unsafe extern "C" fn maxim_build_surface(
         Vec::new(),
         Vec::new(),
     );
-    (*transaction).surfaces.push(new_surface);
-    &mut (*transaction).surfaces[(*transaction).surfaces.len() - 1]
+    (*transaction).add_surface(new_surface);
+    (*transaction).surfaces.get_mut(&id).unwrap()
 }
 
 #[no_mangle]
@@ -251,7 +273,7 @@ pub unsafe extern "C" fn maxim_build_value_socket(
 #[no_mangle]
 pub unsafe extern "C" fn maxim_build_block(transaction: *mut Transaction, block: *mut mir::Block) {
     let owned_block = Box::from_raw(block);
-    (*transaction).blocks.push(*owned_block);
+    (*transaction).add_block(*owned_block);
 }
 
 #[no_mangle]

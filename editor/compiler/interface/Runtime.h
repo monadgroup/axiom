@@ -11,7 +11,8 @@ namespace MaximCompiler {
 
         uint64_t nextId();
 
+        void runUpdate();
+
         void commit(Transaction transaction);
     };
-
 }

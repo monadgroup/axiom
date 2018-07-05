@@ -1,9 +1,11 @@
 use codegen::data_analyzer::{PointerSource, PointerSourceAggregateType};
+use codegen::values::remap_type;
 use codegen::{build_context_function, surface, util, BuilderContext, LifecycleFunc, ObjectCache};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
+use inkwell::types::BasicType;
 use inkwell::values::{BasicValue, BasicValueEnum, GlobalValue, IntValue, PointerValue};
-use mir::SurfaceRef;
+use mir::{Root, SurfaceRef};
 use std::iter;
 
 fn get_gep_indices(context: &Context, path: impl IntoIterator<Item = u64>) -> Vec<IntValue> {
@@ -85,6 +87,20 @@ pub fn build_scratch_global(
     global
 }
 
+pub fn build_sockets_global(module: &Module, root: &Root, name: &str) -> GlobalValue {
+    let context = module.get_context();
+    let struct_types: Vec<_> = root.sockets
+        .iter()
+        .map(|vartype| remap_type(&context, vartype))
+        .collect();
+    let type_refs: Vec<_> = struct_types.iter().map(|ty| ty as &BasicType).collect();
+    let struct_type = context.struct_type(&type_refs, false);
+    let global = util::get_or_create_global(module, name, &struct_type);
+    global.set_initializer(&struct_type.const_null());
+    global.set_section("maxim.sockets");
+    global
+}
+
 pub fn build_pointers_global(
     module: &Module,
     cache: &ObjectCache,
@@ -106,9 +122,6 @@ pub fn build_pointers_global(
         scratch,
         sockets,
     );
-    println!("Expected type: {:#?}", layout.pointer_struct);
-    println!("Actual type: {:#?}", const_val.get_type());
-    println!("Layout: {:?}", layout.pointer_sources);
     global.set_initializer(&const_val);
     global.set_section("maxim.pointers_data");
     global
