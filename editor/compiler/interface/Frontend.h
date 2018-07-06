@@ -6,6 +6,9 @@ namespace MaximFrontend {
     using MaximError = void;
     using MaximErrorRef = MaximError;
 
+    using MaximJit = void;
+    using MaximJitRefOption = void;
+
     using MaximRuntime = void;
     using MaximRuntimeRef = MaximRuntime;
 
@@ -40,7 +43,10 @@ namespace MaximFrontend {
     extern "C" {
     void maxim_initialize();
 
-    MaximRuntime *maxim_create_runtime();
+    MaximJit *maxim_create_jit();
+    void maxim_destroy_jit(MaximJit *jit);
+
+    MaximRuntime *maxim_create_runtime(bool includeUi, bool minSize, MaximJitRefOption *jit);
     void maxim_destroy_runtime(MaximRuntime *);
 
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);

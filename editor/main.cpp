@@ -3,6 +3,7 @@
 #include "AxiomApplication.h"
 #include "StandaloneAudio.h"
 #include "compiler/interface/Frontend.h"
+#include "compiler/interface/Jit.h"
 #include "compiler/interface/Runtime.h"
 #include "model/objects/RootSurface.h"
 #include "widgets/surface/NodeSurfacePanel.h"
@@ -10,7 +11,8 @@
 
 int main(int argc, char *argv[]) {
     MaximFrontend::maxim_initialize();
-    MaximCompiler::Runtime runtime;
+    MaximCompiler::Jit jit;
+    MaximCompiler::Runtime runtime(true, false, &jit);
 
     auto project = std::make_unique<AxiomModel::Project>();
     project->mainRoot().attachRuntime(&runtime);

@@ -11,8 +11,8 @@ pub fn remove_dead_groups(surface: &mut mir::Surface) {
         if usage_count > 0 {
             new_group_indices.insert(group_index, group_index - removed_count);
         } else {
+            surface.groups.remove(group_index - removed_count);
             removed_count += 1;
-            surface.groups.remove(group_index);
         }
     }
 

@@ -1,7 +1,6 @@
 use inkwell::module::Module;
 use inkwell::orc::{Orc, OrcError, OrcModuleKey};
-use inkwell::targets::{CodeModel, RelocMode, Target, TargetMachine};
-use inkwell::OptimizationLevel;
+use inkwell::targets::TargetMachine;
 
 pub type JitKey = OrcModuleKey;
 
@@ -12,19 +11,15 @@ pub struct Jit {
 
 impl Jit {
     pub fn new() -> Self {
-        let triple_llvm = TargetMachine::get_default_triple();
-        let triple = triple_llvm.to_string_lossy();
-        let target = Target::from_triple(&triple).unwrap();
-        let machine = target
-            .create_target_machine(
-                &triple,
-                "",
-                "",
-                OptimizationLevel::Aggressive,
-                RelocMode::Default,
-                CodeModel::Default,
-            )
-            .unwrap();
+        let machine = TargetMachine::select();
+        println!(
+            "{:?} {:?} {:?} {:?} {:?}",
+            machine.get_triple(),
+            machine.get_cpu(),
+            machine.get_feature_string(),
+            machine.get_target().get_name(),
+            machine.get_target().get_description()
+        );
 
         Jit {
             orc: Orc::new(machine),
@@ -32,7 +27,7 @@ impl Jit {
     }
 
     pub fn deploy(&self, module: &Module) -> JitKey {
-        self.orc.add_module(module, false).unwrap()
+        self.orc.add_module(module, true).unwrap()
     }
 
     pub fn remove(&self, key: JitKey) {
@@ -41,6 +36,7 @@ impl Jit {
 
     pub fn get_symbol_address(&self, symbol: &str) -> Result<u64, OrcError> {
         let mangled_name = self.orc.mangle_symbol(symbol);
+        println!("{} mangled is {}", symbol, mangled_name);
         self.orc
             .get_symbol_address(mangled_name.to_string_lossy().as_ref())
     }

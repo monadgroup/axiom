@@ -5,9 +5,11 @@
 
 namespace MaximCompiler {
 
+    class Jit;
+
     class Runtime : public OwnedObject {
     public:
-        Runtime();
+        Runtime(bool includeUi, bool minSize, Jit *jit);
 
         uint64_t nextId();
 

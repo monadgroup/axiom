@@ -3,6 +3,8 @@ mod dependency_graph;
 mod jit;
 mod runtime;
 
+pub use self::dependency_graph::DependencyGraph;
+pub use self::jit::Jit;
 pub use self::runtime::Runtime;
 
 use mir::{Block, BlockRef, Root, Surface, SurfaceRef};

@@ -60,10 +60,9 @@ void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
 
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     transaction.printToStdout();
-
-    /*if (_runtime) {
+    if (_runtime) {
         _runtime->commit(std::move(transaction));
-    }*/
+    }
 }
 
 void ModelRoot::destroy() {

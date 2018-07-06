@@ -216,14 +216,14 @@ fn build_node_call(
                         .build_not(&ctx.context.i8_type().const_int(0, false), "")
                 };
 
-                for dest_socket in dest_sockets {
+                for dest_socket_index in 0..dest_sockets.len() {
                     let dest_array = values::ArrayValue::new(
                         ctx.b
                             .build_load(
                                 &unsafe {
                                     ctx.b.build_struct_gep(
                                         &dest_socket_pointers,
-                                        *dest_socket as u32,
+                                        dest_socket_index as u32,
                                         "",
                                     )
                                 },

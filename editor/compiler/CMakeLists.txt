@@ -22,6 +22,6 @@ endif ()
 
 add_library(maxim_compiler ${SOURCE_FILES})
 add_dependencies(maxim_compiler compiler)
-target_link_libraries(maxim_compiler ${COMPILER_LINK_LIBS})
+target_link_libraries(maxim_compiler ${COMPILER_LINK_LIBS} llvm_axiom)
 
 add_subdirectory(interface)

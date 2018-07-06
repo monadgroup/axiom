@@ -1,5 +1,5 @@
 use mir;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 // groups extracted nodes into subsurfaces
 pub fn group_extracted(
@@ -15,8 +15,8 @@ type ValueSocketRef = (NodeRef, usize);
 
 #[derive(Debug)]
 struct ExtractGroup {
-    pub sources: Vec<ValueGroupRef>,
-    pub destinations: Vec<ValueGroupRef>,
+    pub sources: HashSet<ValueGroupRef>,
+    pub destinations: HashSet<ValueGroupRef>,
     pub nodes: Vec<NodeRef>,
     pub value_groups: Vec<ValueGroupRef>,
 }
@@ -33,8 +33,8 @@ struct GroupExtractor<'a> {
 impl ExtractGroup {
     pub fn new() -> Self {
         ExtractGroup {
-            sources: Vec::new(),
-            destinations: Vec::new(),
+            sources: HashSet::new(),
+            destinations: HashSet::new(),
             nodes: Vec::new(),
             value_groups: Vec::new(),
         }
@@ -223,12 +223,12 @@ impl<'a> GroupExtractor<'a> {
                     if socket.value_written {
                         extract_groups[extract_group_index]
                             .sources
-                            .push(socket.group_id);
+                            .insert(socket.group_id);
                     }
                     if socket.value_read {
                         extract_groups[extract_group_index]
                             .destinations
-                            .push(socket.group_id);
+                            .insert(socket.group_id);
                     }
                 }
             }
@@ -314,10 +314,10 @@ impl<'a> GroupExtractor<'a> {
 
         {
             // concatenate source/node/group values onto destination
-            let sources = groups[src_index].sources.to_vec();
-            let destinations = groups[src_index].destinations.to_vec();
-            let nodes = groups[src_index].nodes.to_vec();
-            let value_groups = groups[src_index].value_groups.to_vec();
+            let sources = groups[src_index].sources.clone();
+            let destinations = groups[src_index].destinations.clone();
+            let nodes = groups[src_index].nodes.clone();
+            let value_groups = groups[src_index].value_groups.clone();
 
             let dest_group = &mut groups[dest_index];
             dest_group.sources.extend(sources);

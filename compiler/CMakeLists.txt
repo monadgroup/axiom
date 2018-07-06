@@ -17,3 +17,5 @@ ExternalProject_Add(
     BUILD_ALWAYS ON
     USE_TERMINAL_BUILD ON
 )
+
+add_subdirectory(llvmmaxim)

@@ -47,34 +47,42 @@ struct RuntimePointers {
 
 impl RuntimePointers {
     pub fn new(jit: &Jit) -> Self {
+        let construct_address = jit.get_symbol_address(CONSTRUCT_FUNC_NAME).unwrap() as usize;
+        assert_ne!(construct_address, 0);
+
+        let update_address = jit.get_symbol_address(UPDATE_FUNC_NAME).unwrap() as usize;
+        assert_ne!(update_address, 0);
+
+        let destruct_address = jit.get_symbol_address(DESTRUCT_FUNC_NAME).unwrap() as usize;
+        assert_ne!(destruct_address, 0);
+
+        let initialized_ptr_address =
+            jit.get_symbol_address(INITIALIZED_GLOBAL_NAME).unwrap() as usize;
+        assert_ne!(initialized_ptr_address, 0);
+
+        let scratch_ptr_address = jit.get_symbol_address(SCRATCH_GLOBAL_NAME).unwrap() as usize;
+        assert_ne!(scratch_ptr_address, 0);
+
+        let sockets_ptr_address = jit.get_symbol_address(SOCKETS_GLOBAL_NAME).unwrap() as usize;
+        assert_ne!(sockets_ptr_address, 0);
+
+        let pointers_ptr_address = jit.get_symbol_address(POINTERS_GLOBAL_NAME).unwrap() as usize;
+        assert_ne!(pointers_ptr_address, 0);
+
         RuntimePointers {
-            initialized_ptr: unsafe {
-                mem::transmute(jit.get_symbol_address(INITIALIZED_GLOBAL_NAME).unwrap() as usize)
-            },
-            scratch_ptr: unsafe {
-                mem::transmute(jit.get_symbol_address(SCRATCH_GLOBAL_NAME).unwrap() as usize)
-            },
-            sockets_ptr: unsafe {
-                mem::transmute(jit.get_symbol_address(SOCKETS_GLOBAL_NAME).unwrap() as usize)
-            },
-            pointers_ptr: unsafe {
-                mem::transmute(jit.get_symbol_address(POINTERS_GLOBAL_NAME).unwrap() as usize)
-            },
-            construct: unsafe {
-                mem::transmute(jit.get_symbol_address(CONSTRUCT_FUNC_NAME).unwrap() as usize)
-            },
-            update: unsafe {
-                mem::transmute(jit.get_symbol_address(UPDATE_FUNC_NAME).unwrap() as usize)
-            },
-            destruct: unsafe {
-                mem::transmute(jit.get_symbol_address(DESTRUCT_FUNC_NAME).unwrap() as usize)
-            },
+            initialized_ptr: unsafe { mem::transmute(initialized_ptr_address) },
+            scratch_ptr: unsafe { mem::transmute(scratch_ptr_address) },
+            sockets_ptr: unsafe { mem::transmute(sockets_ptr_address) },
+            pointers_ptr: unsafe { mem::transmute(pointers_ptr_address) },
+            construct: unsafe { mem::transmute(construct_address) },
+            update: unsafe { mem::transmute(update_address) },
+            destruct: unsafe { mem::transmute(destruct_address) },
         }
     }
 }
 
 #[derive(Debug)]
-pub struct Runtime {
+pub struct Runtime<'a> {
     next_id: u64,
     context: Context,
     target: TargetProperties,
@@ -83,12 +91,12 @@ pub struct Runtime {
     surfaces: HashMap<SurfaceRef, (Surface, data_analyzer::SurfaceLayout, RuntimeModule)>,
     blocks: HashMap<BlockRef, (Block, data_analyzer::BlockLayout, RuntimeModule)>,
     graph: DependencyGraph,
-    jit: Option<Jit>,
+    jit: Option<&'a Jit>,
     pointers: Option<RuntimePointers>,
 }
 
-impl Runtime {
-    pub fn new(target: TargetProperties, jit: Option<Jit>) -> Self {
+impl<'a> Runtime<'a> {
+    pub fn new(target: TargetProperties, jit: Option<&'a Jit>) -> Self {
         let optimizer = Optimizer::new(&target);
         Runtime {
             next_id: 1,
@@ -107,7 +115,7 @@ impl Runtime {
         }
     }
 
-    fn optimize_blocks<'a>(&self, blocks: impl IntoIterator<Item = &'a mut Block>) {
+    fn optimize_blocks<'b>(&self, blocks: impl IntoIterator<Item = &'b mut Block>) {
         for block in blocks.into_iter() {
             pass::remove_dead_code(block);
         }
@@ -210,9 +218,9 @@ impl Runtime {
 
             let b_deps = graph.get_surface_deps(b.id.id).unwrap();
             if b_deps.depended_by.contains(&a.id.id) {
-                Ordering::Less
-            } else if b_deps.depends_on_surfaces.contains(&a.id.id) {
                 Ordering::Greater
+            } else if b_deps.depends_on_surfaces.contains(&a.id.id) {
+                Ordering::Less
             } else {
                 Ordering::Equal
             }
@@ -265,6 +273,7 @@ impl Runtime {
 
     fn deploy_module(jit: &Jit, module: &mut RuntimeModule) {
         let key = jit.deploy(&module.module);
+        println!("Key = {}", key);
         module.key = Some(key);
     }
 
@@ -274,22 +283,7 @@ impl Runtime {
         }
     }
 
-    pub fn commit(&mut self, transaction: Transaction) {
-        // if the transaction is empty, early exit
-        if transaction.surfaces.is_empty()
-            && transaction.blocks.is_empty()
-            && transaction.root.is_none()
-        {
-            return;
-        }
-
-        // run destructors on the old data before beginning
-        if let Some(ref pointers) = self.pointers {
-            unsafe {
-                (pointers.destruct)();
-            }
-        }
-
+    fn patch_transaction(&mut self, transaction: Transaction) -> (Vec<BlockRef>, Vec<SurfaceRef>) {
         let mut surfaces =
             self.optimize_surfaces(transaction.surfaces.into_iter().map(|(_, surface)| surface));
         let mut blocks: Vec<_> = transaction
@@ -313,15 +307,32 @@ impl Runtime {
         let new_surface_ids: Vec<_> = surfaces.iter().map(|surface| surface.id.id).collect();
 
         self.patch_in_blocks(blocks);
-        self.codegen_blocks(&new_block_ids);
         self.patch_in_surfaces(surfaces);
-        self.codegen_surfaces(&new_surface_ids);
-
-        // build the new root module
         if let Some(new_root) = transaction.root {
             self.root.0 = new_root;
         }
-        let mut new_module = RuntimeModule::new(self.codegen_root(&self.root.0), None);
+
+        // remove orphaned objects
+        self.garbage_collect();
+
+        (new_block_ids, new_surface_ids)
+    }
+
+    fn codegen_transaction(
+        &mut self,
+        new_block_ids: Vec<BlockRef>,
+        new_surface_ids: Vec<SurfaceRef>,
+    ) {
+        self.codegen_blocks(&new_block_ids);
+        self.codegen_surfaces(&new_surface_ids);
+        let new_module = RuntimeModule::new(self.codegen_root(&self.root.0), None);
+
+        if let Some(ref jit) = self.jit {
+            Runtime::remove_module(jit, &self.root.1);
+        }
+        self.root.1 = new_module;
+
+        self.print_modules();
 
         // deploy all modules and their parents
         if let Some(ref jit) = self.jit {
@@ -334,8 +345,7 @@ impl Runtime {
                 Runtime::deploy_module(jit, &mut self.surfaces.get_mut(&surface).unwrap().2);
             }
 
-            Runtime::remove_module(jit, &self.root.1);
-            Runtime::deploy_module(jit, &mut new_module);
+            Runtime::deploy_module(jit, &mut self.root.1);
 
             // find the new pointers and run the constructors on the new data
             let pointers = RuntimePointers::new(jit);
@@ -344,10 +354,27 @@ impl Runtime {
             }
             self.pointers = Some(pointers);
         }
-        self.root.1 = new_module;
+    }
 
-        // remove orphaned objects
-        self.garbage_collect();
+    pub fn commit(&mut self, transaction: Transaction) {
+        // if the transaction is empty, early exit
+        if transaction.surfaces.is_empty()
+            && transaction.blocks.is_empty()
+            && transaction.root.is_none()
+        {
+            return;
+        }
+
+        // run destructors on the old data before beginning
+        if let Some(ref pointers) = self.pointers {
+            unsafe {
+                (pointers.destruct)();
+            }
+        }
+
+        let (new_block_ids, new_surface_ids) = self.patch_transaction(transaction);
+        self.print_mir();
+        self.codegen_transaction(new_block_ids, new_surface_ids);
     }
 
     /// Remove any objects that aren't referenced by others (and aren't the root).
@@ -386,6 +413,20 @@ impl Runtime {
         }
     }
 
+    pub fn print_mir(&self) {
+        println!(">> Begin MIR");
+        println!("Blocks >>");
+        for (_, &(ref block, _, _)) in &self.blocks {
+            println!("{:#?}", block);
+        }
+        println!("Surfaces >>");
+        for (_, &(ref surface, _, _)) in &self.surfaces {
+            println!("{:#?}", surface);
+        }
+        println!("Root: {:#?}", self.root.0);
+        println!("<< End MIR");
+    }
+
     pub fn print_modules(&self) {
         for (_, &(ref block, _, ref module)) in &self.blocks {
             println!("Block {:?}", block.id);
@@ -395,10 +436,13 @@ impl Runtime {
             println!("Surface {:?}", surface.id);
             module.module.print_to_stderr();
         }
+
+        println!("Root");
+        self.root.1.module.print_to_stderr();
     }
 }
 
-impl ObjectCache for Runtime {
+impl<'a> ObjectCache for Runtime<'a> {
     fn context(&self) -> &Context {
         &self.context
     }
@@ -436,7 +480,7 @@ impl ObjectCache for Runtime {
     }
 }
 
-impl IdAllocator for Runtime {
+impl<'a> IdAllocator for Runtime<'a> {
     fn alloc_id(&mut self) -> u64 {
         let take_id = self.next_id;
         self.next_id += 1;
