@@ -213,7 +213,7 @@ fn build_node_call(
                     active_bitmap
                 } else {
                     ctx.b
-                        .build_not(&ctx.context.i8_type().const_int(0, false), "")
+                        .build_not(&ctx.context.i32_type().const_int(0, false), "")
                 };
 
                 for dest_socket_index in 0..dest_sockets.len() {
