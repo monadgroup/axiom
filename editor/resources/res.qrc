@@ -17,6 +17,8 @@
         <file>icons/collapse_12.png</file>
         <file>icons/collapse_active_12.png</file>
         <file>icons/input-midi-portal.png</file>
+        <file>icons/input-num-portal.png</file>
+        <file>icons/output-midi-portal.png</file>
         <file>icons/output-num-portal.png</file>
         <file>icons/automation-portal.png</file>
 

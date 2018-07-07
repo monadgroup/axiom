@@ -4,7 +4,6 @@ namespace MaximCompiler {
 
     class OwnedObject {
     public:
-
         explicit OwnedObject(void *handle, void (*destroy)(void *));
 
         virtual ~OwnedObject();
@@ -17,7 +16,7 @@ namespace MaximCompiler {
 
         OwnedObject &operator=(const OwnedObject &) = delete;
 
-        void *get() const { return handle; }
+        void *get() const;
 
         void *release();
 
@@ -26,5 +25,4 @@ namespace MaximCompiler {
 
         void (*destroy)(void *);
     };
-
 }

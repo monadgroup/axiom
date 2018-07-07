@@ -19,7 +19,7 @@ namespace AxiomModel {
 
     class Node : public GridItem, public ModelObject {
     public:
-        enum class NodeType { CUSTOM_NODE, GROUP_NODE, PORTAL_NODE, AUTOMATION_NODE };
+        enum class NodeType { CUSTOM_NODE, GROUP_NODE, PORTAL_NODE };
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> extractedChanged;

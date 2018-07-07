@@ -1,13 +1,14 @@
 #pragma once
 
-#include <memory>
-#include <set>
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QMenu>
+#include <memory>
+#include <set>
 
 #include "common/Hookable.h"
 #include "editor/model/ConnectionWire.h"
 #include "editor/model/objects/Node.h"
+#include "editor/model/objects/PortalControl.h"
 
 namespace AxiomModel {
     class NodeSurface;
@@ -26,7 +27,7 @@ namespace AxiomGui {
     class NodeSurfacePanel;
 
     class NodeSurfaceCanvas : public QGraphicsScene, public AxiomCommon::Hookable {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
         static QSize nodeGridSize;
@@ -79,7 +80,9 @@ namespace AxiomGui {
 
         void addNode(AxiomModel::Node *node);
 
-        void newNode(QPointF scenePos, QString name, AxiomModel::Node::NodeType type);
+        void newNode(QPointF scenePos, QString name, AxiomModel::Node::NodeType type,
+                     AxiomModel::ConnectionWire::WireType portalWireType,
+                     AxiomModel::PortalControl::PortalType portalType);
 
         void addWire(AxiomModel::ConnectionWire *wire);
 
@@ -93,16 +96,15 @@ namespace AxiomGui {
         std::optional<AxiomModel::ConnectionWire> connectionWire;
         AxiomModel::Control *sourceControl;
 
-        //bool isConnecting = false;
-        //AxiomModel::ConnectionWire connectionWire;
-        //AxiomModel::Control *sourceControl;
+        // bool isConnecting = false;
+        // AxiomModel::ConnectionWire connectionWire;
+        // AxiomModel::Control *sourceControl;
 
         void leftMousePressEvent(QGraphicsSceneMouseEvent *event);
 
         void leftMouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
-        static void
-        drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color, qreal pointSize);
+        static void drawGrid(QPainter *painter, const QRectF &rect, const QSize &size, const QColor &color,
+                             qreal pointSize);
     };
-
 }

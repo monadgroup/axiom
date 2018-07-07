@@ -1,5 +1,7 @@
 #include "OwnedObject.h"
 
+#include <cassert>
+
 using namespace MaximCompiler;
 
 OwnedObject::OwnedObject(void *handle, void (*destroy)(void *)) : handle(handle), destroy(destroy) {}
@@ -19,7 +21,13 @@ OwnedObject &OwnedObject::operator=(OwnedObject &&other) noexcept {
     return *this;
 }
 
+void *OwnedObject::get() const {
+    assert(handle && "Using OwnedObject without ownership");
+    return handle;
+}
+
 void *OwnedObject::release() {
+    assert(handle && "Releasing OwnedObject without ownership");
     auto result = handle;
     handle = nullptr;
     return result;

@@ -33,7 +33,6 @@ namespace AxiomModel {
             SET_SHOW_NAME,
             EXPOSE_CONTROL,
             PASTE_BUFFER,
-            CREATE_AUTOMATION_NODE
         };
 
         Action(ActionType actionType, ModelRoot *root);

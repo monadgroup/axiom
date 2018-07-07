@@ -7,6 +7,7 @@
 #include "../model/objects/GroupNode.h"
 #include "../model/objects/GroupSurface.h"
 #include "../model/objects/NumControl.h"
+#include "../model/objects/RootSurface.h"
 
 using namespace MaximCompiler;
 
@@ -27,6 +28,18 @@ bool areAnyExposed(const std::vector<AxiomModel::Control *> &controls) {
     return false;
 }
 
+AxiomModel::PortalControl *findPortal(const std::vector<AxiomModel::Control *> &controls) {
+    for (const auto &control : controls) {
+        if (control->controlType() == AxiomModel::Control::ControlType::NUM_PORTAL ||
+            control->controlType() == AxiomModel::Control::ControlType::MIDI_PORTAL) {
+            auto portalControl = dynamic_cast<AxiomModel::PortalControl *>(control);
+            assert(portalControl);
+            return portalControl;
+        }
+    }
+    return nullptr;
+}
+
 AxiomModel::Control::ControlType getGroupType(const std::vector<AxiomModel::Control *> &controls) {
     assert(!controls.empty());
     for (const auto &control : controls) {
@@ -37,6 +50,11 @@ AxiomModel::Control::ControlType getGroupType(const std::vector<AxiomModel::Cont
     }
     return controls[0]->controlType();
 }
+
+struct PortalTemp {
+    AxiomModel::PortalControl *control;
+    VarType vartype;
+};
 
 void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomModel::NodeSurface *surface) {
     auto mir = transaction->buildSurface(surface->getRuntimeId(), surface->name());
@@ -124,8 +142,10 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         }
     }
 
+    auto rootSurface = dynamic_cast<AxiomModel::RootSurface *>(surface);
+    std::vector<PortalTemp> rootPortals;
+
     // build a map of value groups to indices while building the MIR
-    // todo: treat PortalControls and AutomationControls as exposers here
     std::vector<ValueGroup *> valueGroups;
     std::unordered_map<ValueGroup *, size_t> valueGroupIndices;
     std::vector<size_t> sockets;
@@ -137,12 +157,20 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         auto controlPointers =
             AxiomModel::collect(AxiomModel::findMap(pair.first->controls, surface->root()->controls()));
 
-        auto isExposed = areAnyExposed(controlPointers);
         auto groupType = getGroupType(controlPointers);
-
         auto vartype = VarType::ofControl(fromModelType(groupType));
 
-        if (isExposed) {
+        if (rootSurface) {
+            if (auto portal = findPortal(controlPointers)) {
+                auto socketIndex = sockets.size();
+                rootPortals.push_back({portal, vartype.clone()});
+                sockets.push_back(currentIndex);
+                mir.addValueGroup(std::move(vartype), ValueGroupSource::socket(socketIndex));
+                continue;
+            }
+        }
+
+        if (areAnyExposed(controlPointers)) {
             auto socketIndex = sockets.size();
             sockets.push_back(currentIndex);
             mir.addValueGroup(std::move(vartype), ValueGroupSource::socket(socketIndex));
@@ -214,36 +242,51 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         }
     }
 
-    // build metadata to set on the surface (unnecessary if it's not a GroupSurface though)
-    auto groupSurface = dynamic_cast<AxiomModel::GroupSurface *>(surface);
-    if (!groupSurface) return;
+    // build root metadata and the updated transaction root
+    if (rootSurface) {
+        auto mirRoot = transaction->buildRoot();
+        std::vector<AxiomModel::RootSurfacePortal> portals;
 
-    std::vector<AxiomModel::GroupSurfacePortal> portals;
-    for (const auto &socketGroup : sockets) {
-        std::vector<QUuid> externalControls;
-        auto valueWritten = false;
-        auto valueRead = false;
-        auto isExtractor = false;
-
-        auto valueGroup = valueGroups[socketGroup];
-        auto controlPointers =
-            AxiomModel::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls()));
-        for (const auto &control : controlPointers) {
-            if (!control->exposerUuid().isNull()) {
-                // todo: set compile meta on exposed control
-                externalControls.push_back(control->exposerUuid());
-            }
-
-            if (control->compileMeta()->writtenTo) valueWritten = true;
-            if (control->compileMeta()->readFrom) valueRead = true;
-            if (control->controlType() == AxiomModel::Control::ControlType::NUM_EXTRACT ||
-                control->controlType() == AxiomModel::Control::ControlType::MIDI_EXTRACT) {
-                isExtractor = true;
-            }
+        for (auto &portal : rootPortals) {
+            mirRoot.addSocket(std::move(portal.vartype));
+            portals.emplace_back(portal.control->portalType(), portal.control->wireType(), portal.control->name());
         }
 
-        portals.emplace_back(std::move(externalControls), valueWritten, valueRead, isExtractor);
+        rootSurface->setCompileMeta(AxiomModel::RootSurfaceCompileMeta(std::move(portals)));
+
+        return;
     }
 
-    groupSurface->setCompileMeta(AxiomModel::GroupSurfaceCompileMeta(std::move(portals)));
+    // build group metadata
+    auto groupSurface = dynamic_cast<AxiomModel::GroupSurface *>(surface);
+    if (groupSurface) {
+        std::vector<AxiomModel::GroupSurfacePortal> portals;
+        for (const auto &socketGroup : sockets) {
+            std::vector<QUuid> externalControls;
+            auto valueWritten = false;
+            auto valueRead = false;
+            auto isExtractor = false;
+
+            auto valueGroup = valueGroups[socketGroup];
+            auto controlPointers =
+                AxiomModel::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls()));
+            for (const auto &control : controlPointers) {
+                if (!control->exposerUuid().isNull()) {
+                    // todo: set compile meta on exposed control
+                    externalControls.push_back(control->exposerUuid());
+                }
+
+                if (control->compileMeta()->writtenTo) valueWritten = true;
+                if (control->compileMeta()->readFrom) valueRead = true;
+                if (control->controlType() == AxiomModel::Control::ControlType::NUM_EXTRACT ||
+                    control->controlType() == AxiomModel::Control::ControlType::MIDI_EXTRACT) {
+                    isExtractor = true;
+                }
+            }
+
+            portals.emplace_back(std::move(externalControls), valueWritten, valueRead, isExtractor);
+        }
+
+        groupSurface->setCompileMeta(AxiomModel::GroupSurfaceCompileMeta(std::move(portals)));
+    }
 }
