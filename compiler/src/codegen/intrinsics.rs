@@ -5,7 +5,7 @@ use inkwell::values::FunctionValue;
 use inkwell::{AddressSpace, IntPredicate};
 
 pub fn memcpy(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.memcpy.p0i8.p0i8.i32", false, &|| {
+    util::get_or_create_func(module, "llvm.memcpy.p0i8.p0i8.i64", false, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -13,7 +13,7 @@ pub fn memcpy(module: &Module) -> FunctionValue {
                 &[
                     &context.i8_type().ptr_type(AddressSpace::Generic),
                     &context.i8_type().ptr_type(AddressSpace::Generic),
-                    &context.i32_type(),
+                    &context.i64_type(),
                     &context.i32_type(),
                     &context.bool_type(),
                 ],
@@ -186,6 +186,7 @@ fn build_eucrem_v2i32(module: &Module) {
     let context = module.get_context();
     let entry_block = context.append_basic_block(&func, "entry");
     let builder = context.create_builder();
+    builder.set_fast_math_all();
     builder.position_at_end(&entry_block);
 
     let x_val = func.get_nth_param(0).unwrap().into_vector_value();

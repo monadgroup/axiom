@@ -1,7 +1,10 @@
 use super::dependency_graph::DependencyGraph;
 use super::jit::{Jit, JitKey};
 use super::Transaction;
-use codegen::{block, data_analyzer, root, surface, ObjectCache, Optimizer, TargetProperties};
+use codegen::{
+    block, controls, converters, data_analyzer, functions, intrinsics, root, surface, ObjectCache,
+    Optimizer, TargetProperties,
+};
 use inkwell::context::Context;
 use inkwell::module::Module;
 use mir::{Block, BlockRef, IdAllocator, Root, Surface, SurfaceRef};
@@ -47,27 +50,20 @@ struct RuntimePointers {
 
 impl RuntimePointers {
     pub fn new(jit: &Jit) -> Self {
-        let construct_address = jit.get_symbol_address(CONSTRUCT_FUNC_NAME).unwrap() as usize;
+        let construct_address = jit.get_symbol_address(CONSTRUCT_FUNC_NAME) as usize;
         assert_ne!(construct_address, 0);
 
-        let update_address = jit.get_symbol_address(UPDATE_FUNC_NAME).unwrap() as usize;
+        let update_address = jit.get_symbol_address(UPDATE_FUNC_NAME) as usize;
         assert_ne!(update_address, 0);
 
-        let destruct_address = jit.get_symbol_address(DESTRUCT_FUNC_NAME).unwrap() as usize;
+        let destruct_address = jit.get_symbol_address(DESTRUCT_FUNC_NAME) as usize;
         assert_ne!(destruct_address, 0);
 
-        let initialized_ptr_address =
-            jit.get_symbol_address(INITIALIZED_GLOBAL_NAME).unwrap() as usize;
-        assert_ne!(initialized_ptr_address, 0);
-
-        let scratch_ptr_address = jit.get_symbol_address(SCRATCH_GLOBAL_NAME).unwrap() as usize;
-        assert_ne!(scratch_ptr_address, 0);
-
-        let sockets_ptr_address = jit.get_symbol_address(SOCKETS_GLOBAL_NAME).unwrap() as usize;
-        assert_ne!(sockets_ptr_address, 0);
-
-        let pointers_ptr_address = jit.get_symbol_address(POINTERS_GLOBAL_NAME).unwrap() as usize;
-        assert_ne!(pointers_ptr_address, 0);
+        // pointers can be null when they're pointing to empty data
+        let initialized_ptr_address = jit.get_symbol_address(INITIALIZED_GLOBAL_NAME) as usize;
+        let scratch_ptr_address = jit.get_symbol_address(SCRATCH_GLOBAL_NAME) as usize;
+        let sockets_ptr_address = jit.get_symbol_address(SOCKETS_GLOBAL_NAME) as usize;
+        let pointers_ptr_address = jit.get_symbol_address(POINTERS_GLOBAL_NAME) as usize;
 
         RuntimePointers {
             initialized_ptr: unsafe { mem::transmute(initialized_ptr_address) },
@@ -98,21 +94,44 @@ pub struct Runtime<'a> {
 impl<'a> Runtime<'a> {
     pub fn new(target: TargetProperties, jit: Option<&'a Jit>) -> Self {
         let optimizer = Optimizer::new(&target);
+        let context = Context::create();
+        let root_module = Runtime::create_module(&context, &target, "root");
+
+        // deploy the library to the JIT
+        if let Some(ref jit) = jit {
+            let library_module = Runtime::codegen_lib(&context, &target);
+            optimizer.optimize_module(&library_module);
+            jit.deploy(&library_module);
+        }
+
         Runtime {
             next_id: 1,
-            context: Context::create(),
+            context,
             target,
             optimizer,
-            root: (
-                Root::new(Vec::new()),
-                RuntimeModule::new(Module::create("root"), None),
-            ),
+            root: (Root::new(Vec::new()), RuntimeModule::new(root_module, None)),
             surfaces: HashMap::new(),
             blocks: HashMap::new(),
             graph: DependencyGraph::new(),
             jit,
             pointers: None,
         }
+    }
+
+    fn create_module(context: &Context, target: &TargetProperties, name: &str) -> Module {
+        let module = context.create_module(name);
+        module.set_target(&target.machine.get_triple().to_string_lossy());
+        module.set_data_layout(&target.machine.get_data().get_data_layout());
+        module
+    }
+
+    fn codegen_lib(context: &Context, target: &TargetProperties) -> Module {
+        let module = Runtime::create_module(context, target, "lib");
+        controls::build_funcs(&module, target);
+        converters::build_funcs(&module);
+        functions::build_funcs(&module, &target);
+        intrinsics::build_intrinsics(&module);
+        module
     }
 
     fn optimize_blocks<'b>(&self, blocks: impl IntoIterator<Item = &'b mut Block>) {
@@ -135,8 +154,11 @@ impl<'a> Runtime<'a> {
     fn patch_in_blocks(&mut self, blocks: Vec<Block>) {
         for block in blocks {
             let layout = data_analyzer::build_block_layout(&self.context, &block, &self.target);
-            let module = self.context
-                .create_module(&format!("block.{}.{}", block.id.id, block.id.debug_name));
+            let module = Runtime::create_module(
+                &self.context,
+                &self.target,
+                &format!("block.{}.{}", block.id.id, block.id.debug_name),
+            );
             if let Some(old_block) = self.blocks.insert(
                 block.id.id,
                 (block, layout, RuntimeModule::new(module, None)),
@@ -151,10 +173,11 @@ impl<'a> Runtime<'a> {
     fn patch_in_surfaces(&mut self, surfaces: Vec<Surface>) {
         for surface in surfaces {
             let layout = data_analyzer::build_surface_layout(self, &surface);
-            let module = self.context.create_module(&format!(
-                "surface.{}.{}",
-                surface.id.id, surface.id.debug_name
-            ));
+            let module = Runtime::create_module(
+                &self.context,
+                &self.target,
+                &format!("surface.{}.{}", surface.id.id, surface.id.debug_name),
+            );
             if let Some(old_block) = self.surfaces.insert(
                 surface.id.id,
                 (surface, layout, RuntimeModule::new(module, None)),
@@ -183,7 +206,7 @@ impl<'a> Runtime<'a> {
     }
 
     fn codegen_root(&self, root: &Root) -> Module {
-        let module = Module::create("root");
+        let module = Runtime::create_module(&self.context, &self.target, "root");
         let initialized_global =
             root::build_initialized_global(&module, self, 0, INITIALIZED_GLOBAL_NAME);
         let scratch_global = root::build_scratch_global(&module, self, 0, SCRATCH_GLOBAL_NAME);
@@ -207,6 +230,7 @@ impl<'a> Runtime<'a> {
             scratch_global.as_pointer_value(),
             pointers_global.as_pointer_value(),
         );
+        self.optimizer.optimize_module(&module);
         module
     }
 

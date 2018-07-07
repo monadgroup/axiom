@@ -32,6 +32,7 @@ impl Iterator for ModuleFunctionIterator {
 
 #[derive(Debug)]
 pub struct Optimizer {
+    module_pass: PassManager,
     builder: PassManagerBuilder,
 }
 
@@ -53,12 +54,23 @@ impl Optimizer {
             builder.set_inliner_with_threshold(250);
         }
 
-        Optimizer { builder }
+        let module_pass = PassManager::create_for_module();
+        builder.populate_module_pass_manager(&module_pass);
+        target.machine.add_analysis_passes(&module_pass);
+
+        Optimizer {
+            module_pass,
+            builder,
+        }
     }
 
     pub fn optimize_module(&self, module: &Module) {
-        let module_pass = PassManager::create_for_module();
-        self.builder.populate_module_pass_manager(&module_pass);
+        if let Err(err) = module.verify() {
+            module.print_to_stderr();
+            panic!(err.to_string());
+        }
+
+        self.builder.populate_module_pass_manager(&self.module_pass);
 
         let func_pass = PassManager::create_for_function(module);
         self.builder.populate_function_pass_manager(&func_pass);
@@ -68,6 +80,6 @@ impl Optimizer {
         for func in func_iterator {
             func_pass.run_on_function(&func);
         }
-        module_pass.run_on_module(module);
+        self.module_pass.run_on_module(module);
     }
 }

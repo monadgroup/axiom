@@ -5,6 +5,7 @@ mod vector_intrinsic_function;
 mod vector_shuffle_function;
 
 use codegen::{build_context_function, util, values, BuilderContext, TargetProperties};
+use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -212,6 +213,9 @@ fn build_update_func(
 ) {
     let func = get_update_func(module, function);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
+        ctx.func
+            .add_param_attribute(1, ctx.context.get_enum_attr(AttrKind::StructRet, 1));
+
         let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let return_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let has_vararg = function.var_arg().is_some();

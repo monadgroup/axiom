@@ -4,7 +4,7 @@ use ast::{ControlField, ControlType, MidiField};
 pub struct MidiControl;
 impl Control for MidiControl {
     fn control_type() -> ControlType {
-        ControlType::Audio
+        ControlType::Midi
     }
 
     fn gen_fields(generator: &ControlFieldGenerator) {

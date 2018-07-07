@@ -15,6 +15,6 @@ pub fn gen_num_convert_statement(
         node.ctx.b,
         node.ctx.module,
         &base_num,
-        target_form,
+        *target_form,
     ).val
 }

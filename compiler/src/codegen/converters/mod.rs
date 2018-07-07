@@ -40,6 +40,7 @@ impl<'a> ConvertGenerator for PrivateGenerator<'a> {
         let new_block = self.context
             .append_basic_block(self.func, &format!("to.{}", form));
         let mut builder = self.context.create_builder();
+        builder.set_fast_math_all();
         builder.position_at_end(&new_block);
 
         let result_vec = cb(self.context, self.module, &mut builder, *self.input_vec);
@@ -51,7 +52,7 @@ impl<'a> ConvertGenerator for PrivateGenerator<'a> {
     }
 }
 
-pub fn get_convert_func(module: &Module, target_form: &FormType) -> FunctionValue {
+pub fn get_convert_func(module: &Module, target_form: FormType) -> FunctionValue {
     let func_name = format!("maxim.converter.{}", target_form);
     util::get_or_create_func(module, &func_name, true, &|| {
         let num_type = NumValue::get_type(&module.get_context());
@@ -62,27 +63,16 @@ pub fn get_convert_func(module: &Module, target_form: &FormType) -> FunctionValu
     })
 }
 
-fn run_converter(target_form: &FormType, generator: &mut ConvertGenerator) {
-    match target_form {
-        FormType::None => (),
-        FormType::Amplitude => amplitude_converter::amplitude(generator),
-        FormType::Beats => beats_converter::beats(generator),
-        FormType::Control => control_converter::control(generator),
-        FormType::Db => db_converter::db(generator),
-        FormType::Frequency => frequency_converter::frequency(generator),
-        FormType::Note => note_converter::note(generator),
-        FormType::Oscillator => oscillator_converter::oscillator(generator),
-        FormType::Q => q_converter::q(generator),
-        FormType::Samples => samples_converter::samples(generator),
-        FormType::Seconds => seconds_converter::seconds(generator),
-    }
-}
-
-pub fn build_convert_func(module: &Module, target_form: &FormType) {
+pub fn build_convert_func(
+    module: &Module,
+    target_form: FormType,
+    build_func: &Fn(&mut ConvertGenerator),
+) {
     let context = &module.get_context();
     let func = get_convert_func(module, target_form);
     let block = context.append_basic_block(&func, "main");
     let mut builder = context.create_builder();
+    builder.set_fast_math_all();
     builder.position_at_end(&block);
 
     let input_num = NumValue::new(func.get_nth_param(0).unwrap().into_pointer_value());
@@ -92,7 +82,7 @@ pub fn build_convert_func(module: &Module, target_form: &FormType) {
 
     result_num.set_form(
         &mut builder,
-        &context.i8_type().const_int(*target_form as u64, false),
+        &context.i8_type().const_int(target_form as u64, false),
     );
 
     // build up each switch block
@@ -112,7 +102,7 @@ pub fn build_convert_func(module: &Module, target_form: &FormType) {
         module,
         branches: Vec::new(),
     };
-    run_converter(target_form, &mut converter);
+    build_func(&mut converter);
 
     let switch_cases: Vec<_> = converter
         .branches
@@ -127,12 +117,30 @@ pub fn build_convert_func(module: &Module, target_form: &FormType) {
     builder.build_return(Some(&return_val));
 }
 
+pub fn build_funcs(module: &Module) {
+    build_convert_func(module, FormType::None, &|_: &mut ConvertGenerator| {});
+    build_convert_func(module, FormType::Amplitude, &amplitude_converter::amplitude);
+    build_convert_func(module, FormType::Beats, &beats_converter::beats);
+    build_convert_func(module, FormType::Control, &control_converter::control);
+    build_convert_func(module, FormType::Db, &db_converter::db);
+    build_convert_func(module, FormType::Frequency, &frequency_converter::frequency);
+    build_convert_func(module, FormType::Note, &note_converter::note);
+    build_convert_func(
+        module,
+        FormType::Oscillator,
+        &oscillator_converter::oscillator,
+    );
+    build_convert_func(module, FormType::Q, &q_converter::q);
+    build_convert_func(module, FormType::Samples, &samples_converter::samples);
+    build_convert_func(module, FormType::Seconds, &seconds_converter::seconds);
+}
+
 pub fn build_convert(
     alloca_builder: &mut Builder,
     builder: &mut Builder,
     module: &Module,
     source: &NumValue,
-    target_form: &FormType,
+    target_form: FormType,
 ) -> NumValue {
     let context = module.get_context();
     let convert_func = get_convert_func(module, target_form);

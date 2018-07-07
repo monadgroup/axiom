@@ -51,10 +51,12 @@ pub fn build_context_function(
 
     let alloca_block = context.append_basic_block(&function, "alloca");
     let mut alloca_builder = context.create_builder();
+    alloca_builder.set_fast_math_all();
     alloca_builder.position_at_end(&alloca_block);
 
     let main_block = context.append_basic_block(&function, "main");
     let mut builder = context.create_builder();
+    builder.set_fast_math_all();
     builder.position_at_end(&main_block);
 
     cb(BuilderContext {

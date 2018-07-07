@@ -102,6 +102,7 @@ impl MidiValue {
         let end_block = func.append_basic_block("end");
 
         let mut builder = context.create_builder();
+        builder.set_fast_math_all();
         builder.position_at_end(&entry_block);
 
         let current_midi = MidiValue::new(func.get_nth_param(0).unwrap().into_pointer_value());

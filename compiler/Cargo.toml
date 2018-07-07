@@ -15,3 +15,4 @@ ordered-float = "0.5"
 time = "0.1"
 inkwell = { git = "https://github.com/cpdt/inkwell", branch = "llvm6-0" }
 divrem = "0.1"
+libc = "0.2"

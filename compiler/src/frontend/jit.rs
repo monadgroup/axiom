@@ -1,5 +1,5 @@
 use inkwell::module::Module;
-use inkwell::orc::{Orc, OrcError, OrcModuleKey};
+use inkwell::orc::{Orc, OrcModuleKey};
 use inkwell::targets::TargetMachine;
 
 pub type JitKey = OrcModuleKey;
@@ -27,17 +27,14 @@ impl Jit {
     }
 
     pub fn deploy(&self, module: &Module) -> JitKey {
-        self.orc.add_module(module, true).unwrap()
+        self.orc.add_module(module)
     }
 
     pub fn remove(&self, key: JitKey) {
-        self.orc.remove_module(key).unwrap();
+        self.orc.remove_module(key);
     }
 
-    pub fn get_symbol_address(&self, symbol: &str) -> Result<u64, OrcError> {
-        let mangled_name = self.orc.mangle_symbol(symbol);
-        println!("{} mangled is {}", symbol, mangled_name);
-        self.orc
-            .get_symbol_address(mangled_name.to_string_lossy().as_ref())
+    pub fn get_symbol_address(&self, symbol: &str) -> u64 {
+        self.orc.get_symbol_address(symbol)
     }
 }

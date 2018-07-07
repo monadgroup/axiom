@@ -20,6 +20,7 @@ use ast::{ControlField, ControlType};
 use codegen::{
     build_context_function, util, values, BuilderContext, LifecycleFunc, TargetProperties,
 };
+use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -56,12 +57,14 @@ impl<'a> ControlFieldGenerator for PrivateGenerator<'a> {
             get_field_getter_func(self.module, field),
             self.target,
             get_cb,
+            true,
         );
         build_field_func(
             self.module,
             get_field_setter_func(self.module, field),
             self.target,
             set_cb,
+            false,
         );
     }
 }
@@ -159,9 +162,9 @@ fn get_field_getter_setter_func(
             Linkage::ExternalLinkage,
             context.void_type().fn_type(
                 &[
+                    &get_field_type(&context, field).ptr_type(AddressSpace::Generic),
                     &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
-                    &get_field_type(&context, field).ptr_type(AddressSpace::Generic),
                 ],
                 false,
             ),
@@ -188,7 +191,7 @@ pub fn build_field_get(
     let func = get_field_getter_func(module, field);
     builder.build_call(
         &func,
-        &[&group_ptr, &data_ptr, &out_val],
+        &[&out_val, &group_ptr, &data_ptr],
         "field.get",
         false,
     );
@@ -203,7 +206,7 @@ pub fn build_field_set(
     in_val: PointerValue,
 ) {
     let func = get_field_setter_func(module, field);
-    builder.build_call(&func, &[&group_ptr, &data_ptr, &in_val], "", false);
+    builder.build_call(&func, &[&in_val, &group_ptr, &data_ptr], "", false);
 }
 
 pub fn build_lifecycle_call(
@@ -282,11 +285,17 @@ fn build_field_func(
     func: FunctionValue,
     target: &TargetProperties,
     builder: &ControlFieldGeneratorCb,
+    is_get: bool,
 ) {
     build_context_function(module, func, target, &|ctx: BuilderContext| {
-        let val_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let data_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
-        let field_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
+        if is_get {
+            ctx.func
+                .add_param_attribute(0, ctx.context.get_enum_attr(AttrKind::StructRet, 1));
+        }
+
+        let field_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
+        let val_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let data_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
         let mut control_context = ControlContext {
             ctx,
             val_ptr,

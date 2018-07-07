@@ -32,7 +32,8 @@ pub unsafe extern "C" fn maxim_create_runtime<'a>(
     min_size: bool,
     jit: *const Jit,
 ) -> *mut Runtime<'a> {
-    let target = codegen::TargetProperties::new(include_ui, min_size);
+    let target =
+        codegen::TargetProperties::new(include_ui, min_size, targets::TargetMachine::select());
     Box::into_raw(Box::new(Runtime::new(
         target,
         if jit.is_null() {
