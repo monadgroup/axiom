@@ -49,7 +49,7 @@ namespace AxiomModel {
 
         virtual bool canExposeControl() const = 0;
 
-        virtual bool canHaveAutomation() const = 0;
+        virtual bool canHavePortals() const = 0;
 
         QPointF pan() const { return _pan; }
 

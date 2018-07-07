@@ -28,33 +28,39 @@ AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search
     auto newGroupAction = addAction(tr("New Group"));
     connect(newGroupAction, &QAction::triggered, this, &AddNodeMenu::newGroupAdded);
 
-    addSeparator();
+    if (surface->canHavePortals()) {
+        addSeparator();
 
-    auto newAutomationAction = addAction(tr("New Automation"));
-    connect(newAutomationAction, &QAction::triggered, this, [this]() {
-        emit newPortalAdded(AxiomModel::PortalControl::PortalType::AUTOMATION,
-                            AxiomModel::ConnectionWire::WireType::NUM);
-    });
+        auto newAutomationAction = addAction(tr("New Automation"));
+        connect(newAutomationAction, &QAction::triggered, this, [this]() {
+            emit newPortalAdded(AxiomModel::PortalControl::PortalType::AUTOMATION,
+                                AxiomModel::ConnectionWire::WireType::NUM);
+        });
 
-    auto newInputMenu = addMenu("New Input");
-    auto newNumInputAction = newInputMenu->addAction(tr("Audio"));
-    connect(newNumInputAction, &QAction::triggered, this, [this]() {
-        emit newPortalAdded(AxiomModel::PortalControl::PortalType::INPUT, AxiomModel::ConnectionWire::WireType::NUM);
-    });
-    auto newMidiInputAction = newInputMenu->addAction(tr("Midi"));
-    connect(newMidiInputAction, &QAction::triggered, this, [this]() {
-        emit newPortalAdded(AxiomModel::PortalControl::PortalType::INPUT, AxiomModel::ConnectionWire::WireType::MIDI);
-    });
+        auto newInputMenu = addMenu("New Input");
+        auto newNumInputAction = newInputMenu->addAction(tr("Audio"));
+        connect(newNumInputAction, &QAction::triggered, this, [this]() {
+            emit newPortalAdded(AxiomModel::PortalControl::PortalType::INPUT,
+                                AxiomModel::ConnectionWire::WireType::NUM);
+        });
+        auto newMidiInputAction = newInputMenu->addAction(tr("Midi"));
+        connect(newMidiInputAction, &QAction::triggered, this, [this]() {
+            emit newPortalAdded(AxiomModel::PortalControl::PortalType::INPUT,
+                                AxiomModel::ConnectionWire::WireType::MIDI);
+        });
 
-    auto newOutputMenu = addMenu("New Output");
-    auto newNumOutputAction = newOutputMenu->addAction(tr("Audio"));
-    connect(newNumOutputAction, &QAction::triggered, this, [this]() {
-        emit newPortalAdded(AxiomModel::PortalControl::PortalType::OUTPUT, AxiomModel::ConnectionWire::WireType::NUM);
-    });
-    auto newMidiOutputAction = newOutputMenu->addAction(tr("Midi"));
-    connect(newMidiOutputAction, &QAction::triggered, this, [this]() {
-        emit newPortalAdded(AxiomModel::PortalControl::PortalType::OUTPUT, AxiomModel::ConnectionWire::WireType::MIDI);
-    });
+        auto newOutputMenu = addMenu("New Output");
+        auto newNumOutputAction = newOutputMenu->addAction(tr("Audio"));
+        connect(newNumOutputAction, &QAction::triggered, this, [this]() {
+            emit newPortalAdded(AxiomModel::PortalControl::PortalType::OUTPUT,
+                                AxiomModel::ConnectionWire::WireType::NUM);
+        });
+        auto newMidiOutputAction = newOutputMenu->addAction(tr("Midi"));
+        connect(newMidiOutputAction, &QAction::triggered, this, [this]() {
+            emit newPortalAdded(AxiomModel::PortalControl::PortalType::OUTPUT,
+                                AxiomModel::ConnectionWire::WireType::MIDI);
+        });
+    }
 
     /*addSeparator();
 

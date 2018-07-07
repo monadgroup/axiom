@@ -31,7 +31,7 @@ namespace AxiomModel {
 
         bool canExposeControl() const override { return false; }
 
-        bool canHaveAutomation() const override { return true; }
+        bool canHavePortals() const override { return true; }
 
         uint64_t getRuntimeId() override { return 0; }
 

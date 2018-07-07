@@ -34,7 +34,7 @@ namespace AxiomModel {
 
         bool canExposeControl() const override { return true; }
 
-        bool canHaveAutomation() const override { return false; }
+        bool canHavePortals() const override { return false; }
 
         GroupNode *node() const { return _node; }
 
