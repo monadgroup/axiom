@@ -23,7 +23,7 @@ fn seconds_from_beats(
         val,
         builder.build_float_div(
             builder
-                .build_load(&globals::get_bpm(module), "bpm")
+                .build_load(&globals::get_bpm(module).as_pointer_value(), "bpm")
                 .into_vector_value(),
             util::get_vec_spread(context, 60.),
             "",
@@ -67,7 +67,10 @@ fn seconds_from_samples(
     builder.build_float_div(
         val,
         builder
-            .build_load(&globals::get_sample_rate(module), "samplerate")
+            .build_load(
+                &globals::get_sample_rate(module).as_pointer_value(),
+                "samplerate",
+            )
             .into_vector_value(),
         "",
     )

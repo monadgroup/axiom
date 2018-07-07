@@ -2,8 +2,8 @@ use super::dependency_graph::DependencyGraph;
 use super::jit::{Jit, JitKey};
 use super::Transaction;
 use codegen::{
-    block, controls, converters, data_analyzer, functions, intrinsics, root, surface, ObjectCache,
-    Optimizer, TargetProperties,
+    block, controls, converters, data_analyzer, functions, globals, intrinsics, root, surface,
+    ObjectCache, Optimizer, TargetProperties,
 };
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -43,6 +43,8 @@ struct RuntimePointers {
     scratch_ptr: *mut c_void,
     sockets_ptr: *mut c_void,
     pointers_ptr: *mut c_void,
+    samplerate_ptr: *mut c_void,
+    bpm_ptr: *mut c_void,
     construct: unsafe extern "C" fn(),
     update: unsafe extern "C" fn(),
     destruct: unsafe extern "C" fn(),
@@ -59,6 +61,13 @@ impl RuntimePointers {
         let destruct_address = jit.get_symbol_address(DESTRUCT_FUNC_NAME) as usize;
         assert_ne!(destruct_address, 0);
 
+        let samplerate_ptr_address =
+            jit.get_symbol_address(globals::SAMPLERATE_GLOBAL_NAME) as usize;
+        assert_ne!(samplerate_ptr_address, 0);
+
+        let bpm_ptr_address = jit.get_symbol_address(globals::BPM_GLOBAL_NAME) as usize;
+        assert_ne!(bpm_ptr_address, 0);
+
         // pointers can be null when they're pointing to empty data
         let initialized_ptr_address = jit.get_symbol_address(INITIALIZED_GLOBAL_NAME) as usize;
         let scratch_ptr_address = jit.get_symbol_address(SCRATCH_GLOBAL_NAME) as usize;
@@ -66,10 +75,12 @@ impl RuntimePointers {
         let pointers_ptr_address = jit.get_symbol_address(POINTERS_GLOBAL_NAME) as usize;
 
         RuntimePointers {
-            initialized_ptr: unsafe { mem::transmute(initialized_ptr_address) },
-            scratch_ptr: unsafe { mem::transmute(scratch_ptr_address) },
-            sockets_ptr: unsafe { mem::transmute(sockets_ptr_address) },
-            pointers_ptr: unsafe { mem::transmute(pointers_ptr_address) },
+            initialized_ptr: initialized_ptr_address as *mut c_void,
+            scratch_ptr: scratch_ptr_address as *mut c_void,
+            sockets_ptr: sockets_ptr_address as *mut c_void,
+            pointers_ptr: pointers_ptr_address as *mut c_void,
+            samplerate_ptr: samplerate_ptr_address as *mut c_void,
+            bpm_ptr: bpm_ptr_address as *mut c_void,
             construct: unsafe { mem::transmute(construct_address) },
             update: unsafe { mem::transmute(update_address) },
             destruct: unsafe { mem::transmute(destruct_address) },
@@ -131,6 +142,7 @@ impl<'a> Runtime<'a> {
         converters::build_funcs(&module);
         functions::build_funcs(&module, &target);
         intrinsics::build_intrinsics(&module);
+        globals::build_globals(&module);
         module
     }
 
@@ -297,7 +309,6 @@ impl<'a> Runtime<'a> {
 
     fn deploy_module(jit: &Jit, module: &mut RuntimeModule) {
         let key = jit.deploy(&module.module);
-        println!("Key = {}", key);
         module.key = Some(key);
     }
 
@@ -356,8 +367,6 @@ impl<'a> Runtime<'a> {
         }
         self.root.1 = new_module;
 
-        self.print_modules();
-
         // deploy all modules and their parents
         if let Some(ref jit) = self.jit {
             for block in &new_block_ids {
@@ -371,12 +380,7 @@ impl<'a> Runtime<'a> {
 
             Runtime::deploy_module(jit, &mut self.root.1);
 
-            // find the new pointers and run the constructors on the new data
-            let pointers = RuntimePointers::new(jit);
-            unsafe {
-                (pointers.construct)();
-            }
-            self.pointers = Some(pointers);
+            self.pointers = Some(RuntimePointers::new(jit));
         }
     }
 
@@ -397,8 +401,14 @@ impl<'a> Runtime<'a> {
         }
 
         let (new_block_ids, new_surface_ids) = self.patch_transaction(transaction);
-        self.print_mir();
         self.codegen_transaction(new_block_ids, new_surface_ids);
+
+        // run the new constructors
+        if let Some(ref pointers) = self.pointers {
+            unsafe {
+                (pointers.construct)();
+            }
+        }
     }
 
     /// Remove any objects that aren't referenced by others (and aren't the root).
@@ -509,5 +519,15 @@ impl<'a> IdAllocator for Runtime<'a> {
         let take_id = self.next_id;
         self.next_id += 1;
         take_id
+    }
+}
+
+impl<'a> Drop for Runtime<'a> {
+    fn drop(&mut self) {
+        if let Some(ref pointers) = self.pointers {
+            unsafe {
+                (pointers.destruct)();
+            }
+        }
     }
 }

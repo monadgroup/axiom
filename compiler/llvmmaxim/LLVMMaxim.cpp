@@ -37,7 +37,31 @@ void LLVMAxiomSetAllFastMathFlags(LLVMBuilderRef builder) {
 
 // JIT functions
 OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
-    return new OrcJit(*unwrap(targetMachine));
+    auto jit = new OrcJit(*unwrap(targetMachine));
+
+    jit->addBuiltin("memcpy", (uint64_t) & ::memcpy);
+    jit->addBuiltin("powf", (uint64_t) & ::powf);
+    jit->addBuiltin("logf", (uint64_t) & ::logf);
+    jit->addBuiltin("log10f", (uint64_t) & ::log10f);
+    jit->addBuiltin("log2f", (uint64_t) & ::log2f);
+    jit->addBuiltin("cosf", (uint64_t) & ::cosf);
+    jit->addBuiltin("sinf", (uint64_t) & ::sinf);
+    jit->addBuiltin("sqrtf", (uint64_t) & ::sqrtf);
+    jit->addBuiltin("ceilf", (uint64_t) & ::ceilf);
+    jit->addBuiltin("floorf", (uint64_t) & ::floorf);
+    jit->addBuiltin("fabsf", (uint64_t) & ::fabsf);
+    jit->addBuiltin("fminf", (uint64_t) & ::fminf);
+    jit->addBuiltin("fmaxf", (uint64_t) & ::fmaxf);
+    jit->addBuiltin("exp2f", (uint64_t) & ::exp2f);
+    jit->addBuiltin("tanf", (uint64_t) & ::tanf);
+    jit->addBuiltin("acosf", (uint64_t) & ::acosf);
+    jit->addBuiltin("asinf", (uint64_t) & ::asinf);
+    jit->addBuiltin("atanf", (uint64_t) & ::atanf);
+    jit->addBuiltin("atan2f", (uint64_t) & ::atan2f);
+    jit->addBuiltin("hypot", (uint64_t) & ::hypot);
+    jit->addBuiltin("sincosf", (uint64_t) & ::sincosf);
+
+    return jit;
 }
 
 void LLVMAxiomOrcAddBuiltin(OrcJit *jit, const char *name, LLVMOrcTargetAddress address) {

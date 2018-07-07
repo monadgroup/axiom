@@ -12,22 +12,13 @@ pub struct Jit {
 impl Jit {
     pub fn new() -> Self {
         let machine = TargetMachine::select();
-        println!(
-            "{:?} {:?} {:?} {:?} {:?}",
-            machine.get_triple(),
-            machine.get_cpu(),
-            machine.get_feature_string(),
-            machine.get_target().get_name(),
-            machine.get_target().get_description()
-        );
+        let orc = Orc::new(machine);
 
-        Jit {
-            orc: Orc::new(machine),
-        }
+        Jit { orc }
     }
 
     pub fn deploy(&self, module: &Module) -> JitKey {
-        self.orc.add_module(module)
+        self.orc.add_module(&module.clone())
     }
 
     pub fn remove(&self, key: JitKey) {

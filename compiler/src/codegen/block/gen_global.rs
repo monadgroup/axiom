@@ -7,8 +7,8 @@ use mir::block::Global;
 pub fn gen_global_statement(global: &Global, node: &mut BlockContext) -> PointerValue {
     let num_val = NumValue::new_undef(node.ctx.context, node.ctx.allocb);
     let vec_ptr = match global {
-        Global::SampleRate => globals::get_sample_rate(node.ctx.module),
-        Global::BPM => globals::get_bpm(node.ctx.module),
+        Global::SampleRate => globals::get_sample_rate(node.ctx.module).as_pointer_value(),
+        Global::BPM => globals::get_bpm(node.ctx.module).as_pointer_value(),
     };
     let vec_val = node.ctx
         .b

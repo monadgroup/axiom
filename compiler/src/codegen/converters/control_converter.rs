@@ -122,7 +122,10 @@ fn control_from_samples(
             builder.build_float_mul(
                 util::get_vec_spread(context, 0.1),
                 builder
-                    .build_load(&globals::get_sample_rate(module), "samplerate")
+                    .build_load(
+                        &globals::get_sample_rate(module).as_pointer_value(),
+                        "samplerate",
+                    )
                     .into_vector_value(),
                 "",
             ),
