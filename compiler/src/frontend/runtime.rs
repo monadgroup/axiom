@@ -100,6 +100,8 @@ pub struct Runtime<'a> {
     graph: DependencyGraph,
     jit: Option<&'a Jit>,
     pointers: Option<RuntimePointers>,
+    bpm: f32,
+    sample_rate: f32,
 }
 
 impl<'a> Runtime<'a> {
@@ -126,6 +128,8 @@ impl<'a> Runtime<'a> {
             graph: DependencyGraph::new(),
             jit,
             pointers: None,
+            bpm: 60.,
+            sample_rate: 44100.,
         }
     }
 
@@ -403,8 +407,12 @@ impl<'a> Runtime<'a> {
         let (new_block_ids, new_surface_ids) = self.patch_transaction(transaction);
         self.codegen_transaction(new_block_ids, new_surface_ids);
 
-        // run the new constructors
         if let Some(ref pointers) = self.pointers {
+            // re-set the BPM and sample rate
+            Runtime::set_vector(pointers.bpm_ptr, self.bpm);
+            Runtime::set_vector(pointers.samplerate_ptr, self.sample_rate);
+
+            // run the new constructors
             unsafe {
                 (pointers.construct)();
             }
@@ -444,6 +452,28 @@ impl<'a> Runtime<'a> {
     pub unsafe fn run_update(&self) {
         if let Some(ref pointers) = self.pointers {
             (pointers.update)();
+        }
+    }
+
+    fn set_vector(ptr: *mut c_void, value: f32) {
+        let vec_ptr = ptr as *mut (f32, f32);
+        unsafe {
+            (*vec_ptr).0 = value;
+            (*vec_ptr).1 = value;
+        }
+    }
+
+    pub fn set_bpm(&mut self, bpm: f32) {
+        self.bpm = bpm;
+        if let Some(ref pointers) = self.pointers {
+            Runtime::set_vector(pointers.bpm_ptr, bpm);
+        }
+    }
+
+    pub fn set_sample_rate(&mut self, sample_rate: f32) {
+        self.sample_rate = sample_rate;
+        if let Some(ref pointers) = self.pointers {
+            Runtime::set_vector(pointers.samplerate_ptr, sample_rate);
         }
     }
 

@@ -1,9 +1,12 @@
 #pragma once
 
 #include <QtCore/QByteArray>
+#include <deque>
 
 #include "../model/Value.h"
 #include "AudioConfiguration.h"
+
+class AxiomEditor;
 
 namespace AxiomBackend {
     using NumValue = AxiomModel::NumValue;
@@ -39,16 +42,19 @@ namespace AxiomBackend {
         void deserialize(QByteArray *data);
 
         // Queues a MIDI event to be input in a certain number of samples time. Should be called from the audio thread.
-        void queueMidiEvent(size_t inSamples, size_t portalId, MidiEvent event);
+        // You should call clearMidi after the first generated sample (at least) to clear the MIDI portals that had
+        // data queued.
+        void queueMidiEvent(uint64_t deltaFrames, size_t portalId, MidiEvent event);
+        void clearMidi(size_t portalId);
 
         // Clears all pressed MIDI keys. Should be called from the audio thread.
-        void clearMidi(size_t portalId);
+        void clearNotes(size_t portalId);
 
         // Signals that you're about to start a batch of `generate` calls. The value returned signals the max number of
         // samples (i.e `generate` calls) until you should call `beginGenerate` again. This is used, for example, for
         // the internal queuing of MIDI events. Should be called from the audio thread.
         // Note: the return value of this function will _always_ be greater than 0.
-        size_t beginGenerate();
+        uint64_t beginGenerate();
 
         // Simulates the internal graph once. Inputs will be read as per their state before this call, and outputs will
         // be written to. Should be called from the audio thread. This call may block if the runtime is being rebuilt.
@@ -64,5 +70,22 @@ namespace AxiomBackend {
         // first time. The default implementation of this provides a configuration with one MIDI input and one audio
         // output.
         virtual AudioConfiguration createDefaultConfiguration();
+
+        // Called internally. This is not a stable API.
+        void setEditor(AxiomEditor *editor) { _editor = editor; }
+
+    private:
+        struct QueuedEvent {
+            uint64_t deltaFrames;
+            size_t portalId;
+            MidiEvent event;
+        };
+
+        AxiomEditor *_editor;
+        std::vector<void *> portalValues;
+
+        // todo: use a circular buffer instead of a deque here
+        std::deque<QueuedEvent> queuedEvents;
+        size_t generatedSamples = 0;
     };
 }

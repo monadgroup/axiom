@@ -51,6 +51,8 @@ namespace MaximFrontend {
 
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
     void maxim_run_update(MaximRuntimeRef *runtime);
+    void maxim_set_bpm(MaximRuntimeRef *runtime, float bpm);
+    void maxim_set_sample_rate(MaximRuntimeRef *runtime, float sample_rate);
 
     void maxim_destroy_string(const char *);
 

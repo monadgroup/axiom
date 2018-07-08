@@ -40,20 +40,28 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
         backend.setBpm((float) timeInfo->tempo);
     }
 
-    size_t processPos = 0;
-    while (processPos < (size_t) sampleFrames) {
+    auto sampleFrames64 = (uint64_t) sampleFrames;
+    uint64_t processPos = 0;
+    while (processPos < sampleFrames64) {
         auto sampleAmount = backend.beginGenerate();
-        for (size_t i = 0; i < sampleAmount; i++) {
+        auto endProcessPos = processPos + sampleAmount;
+        if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;
+
+        for (auto i = processPos; i < endProcessPos; i++) {
             backend.generate();
 
-            auto outputNum = **backend.outputPortal;
-            outputs[0][i] = outputNum.left;
-            outputs[1][i] = outputNum.right;
+            if (backend.outputPortal) {
+                auto outputNum = **backend.outputPortal;
+                outputs[0][i] = outputNum.left;
+                outputs[1][i] = outputNum.right;
+            }
+
+            if (backend.midiInputPortal != -1 && i == processPos) {
+                backend.clearMidi((size_t) backend.midiInputPortal);
+            }
         }
 
-        outputs[0] += sampleAmount;
-        outputs[1] += sampleAmount;
-        processPos += sampleAmount;
+        processPos = endProcessPos;
     }
 }
 
@@ -95,7 +103,7 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
         case 0xB0: // control mode change
             // all notes off
             if (midiData1 == 0x7B) {
-                backend.clearMidi(0);
+                backend.clearNotes(0);
             }
             break;
         case 0xD0: // channel aftertouch

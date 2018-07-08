@@ -40,13 +40,17 @@ public:
     static int paCallback(const void *, void *outputBuffer, unsigned long framesPerBuffer,
                           const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags, void *userData) {
         auto backend = (StandaloneAudioBackend *) userData;
-        size_t processPos = 0;
+        uint64_t processPos = 0;
 
         auto outputNums = (float *) outputBuffer;
 
-        while (processPos < framesPerBuffer) {
+        auto sampleFrames64 = (uint64_t) framesPerBuffer;
+        while (processPos < sampleFrames64) {
             auto sampleAmount = backend->beginGenerate();
-            for (size_t i = 0; i < sampleAmount; i++) {
+            auto endProcessPos = processPos + sampleAmount;
+            if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;
+
+            for (auto i = processPos; i < endProcessPos; i++) {
                 backend->generate();
 
                 if (backend->outputPortal) {
@@ -55,7 +59,8 @@ public:
                     *outputNums++ = outputNum.right;
                 }
             }
-            processPos += sampleAmount;
+
+            processPos = endProcessPos;
         }
 
         return 0;

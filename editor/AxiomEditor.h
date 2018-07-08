@@ -26,7 +26,11 @@ public:
     // Runs the editor window's event loop.
     void idle();
 
+    // Used internally. Not stable APIs.
+    MaximCompiler::Runtime *runtime() { return &_runtime; }
+    AxiomGui::MainWindow *window() { return &_window; }
+
 private:
-    MaximCompiler::Runtime runtime;
-    AxiomGui::MainWindow window;
+    MaximCompiler::Runtime _runtime;
+    AxiomGui::MainWindow _window;
 };

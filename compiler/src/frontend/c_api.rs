@@ -62,6 +62,16 @@ pub unsafe extern "C" fn maxim_run_update(runtime: *const Runtime) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_set_bpm(runtime: *mut Runtime, bpm: f32) {
+    (*runtime).set_bpm(bpm);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_set_sample_rate(runtime: *mut Runtime, sample_rate: f32) {
+    (*runtime).set_sample_rate(sample_rate);
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_destroy_string(string: *mut std::os::raw::c_char) {
     std::ffi::CString::from_raw(string);
     // string will be dropped here

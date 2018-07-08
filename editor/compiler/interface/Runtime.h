@@ -15,6 +15,10 @@ namespace MaximCompiler {
 
         void runUpdate();
 
+        void setBpm(float bpm);
+
+        void setSampleRate(float sampleRate);
+
         void commit(Transaction transaction);
     };
 }

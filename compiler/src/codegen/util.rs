@@ -62,7 +62,7 @@ pub fn get_constant_array(t: &BasicTypeEnum, items: &[BasicValueEnum]) -> ArrayV
 pub fn get_or_create_func(
     module: &Module,
     name: &str,
-    is_internal: bool,
+    _is_internal: bool,
     cb: &Fn() -> (Linkage, FunctionType),
 ) -> FunctionValue {
     if let Some(func) = module.get_function(name) {
