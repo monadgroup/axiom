@@ -4,7 +4,21 @@
 
 namespace AxiomModel {
 
-    enum class FormType { NONE, CONTROL, OSCILLATOR, NOTE, FREQUENCY, BEATS, SECONDS, SAMPLES, DB, AMPLITUDE, Q };
+    // NOTE: all structs here must match those defined in the compiler.
+
+    enum class FormType : uint8_t {
+        NONE,
+        CONTROL,
+        OSCILLATOR,
+        NOTE,
+        FREQUENCY,
+        BEATS,
+        SECONDS,
+        SAMPLES,
+        DB,
+        AMPLITUDE,
+        Q
+    };
 
     struct NumValue {
         float left = 0;
@@ -26,7 +40,7 @@ namespace AxiomModel {
         NumValue withForm(FormType form) const { return {left, right, form}; }
     };
 
-    enum class MidiEventType { NOTE_ON, NOTE_OFF, POLYPHONIC_AFTERTOUCH, CHANNEL_AFTERTOUCH, PITCH_WHEEL };
+    enum class MidiEventType : uint8_t { NOTE_ON, NOTE_OFF, POLYPHONIC_AFTERTOUCH, CHANNEL_AFTERTOUCH, PITCH_WHEEL };
 
     struct MidiEventValue {
         MidiEventType event = MidiEventType::NOTE_OFF;
