@@ -5,6 +5,10 @@
 #include "Library.h"
 #include "ModelRoot.h"
 
+namespace AxiomBackend {
+    class AudioConfiguration;
+}
+
 namespace AxiomModel {
 
     class RootSurface;
@@ -16,7 +20,7 @@ namespace AxiomModel {
         static constexpr uint64_t librarySchemaMagic = 0x4D4F4E414441584C;
         static constexpr uint32_t minSchemaVersion = 2;
 
-        Project();
+        explicit Project(const AxiomBackend::AudioConfiguration &defaultConfiguration);
 
         ~Project();
 

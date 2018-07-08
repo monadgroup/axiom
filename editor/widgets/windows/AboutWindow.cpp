@@ -1,18 +1,18 @@
 #include "AboutWindow.h"
 
+#include <QtGui/QIcon>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
-#include <QtGui/QIcon>
 
-#include "editor/util.h"
 #include "editor/resources/resource.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
-AboutWindow::AboutWindow() : QDialog(nullptr,
-                                     Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
+AboutWindow::AboutWindow()
+    : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("About " VER_PRODUCTNAME_STR));
-    setStyleSheet(AxiomUtil::loadStylesheet(":/AboutWindow.qss"));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/AboutWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));
 
     setFixedSize(400, 400);

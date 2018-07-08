@@ -1,18 +1,18 @@
 #include "ModuleBrowserPanel.h"
 
 #include <QtWidgets/QGridLayout>
-#include <QtWidgets/QTabBar>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QTabBar>
 
-#include "editor/util.h"
 #include "ModulePreviewList.h"
 #include "editor/model/Library.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
 ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *library, QWidget *parent)
     : DockPanel("Modules", parent), library(library) {
-    setStyleSheet(AxiomUtil::loadStylesheet(":/ModuleBrowserPanel.qss"));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/ModuleBrowserPanel.qss"));
 
     auto mainLayout = new QGridLayout(this);
     auto mainWidget = new QWidget(this);
@@ -35,8 +35,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
     searchBox->setPlaceholderText("Search modules...");
     mainLayout->addWidget(searchBox, 0, 1);
 
-    connect(searchBox, &QLineEdit::textChanged,
-            this, &ModuleBrowserPanel::changeSearch);
+    connect(searchBox, &QLineEdit::textChanged, this, &ModuleBrowserPanel::changeSearch);
 
     auto previewList = new ModulePreviewList(window, library, this);
     mainLayout->addWidget(previewList, 1, 0, 1, 2);
@@ -51,8 +50,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
 
     library->tagAdded.connect(this, &ModuleBrowserPanel::addTag);
     library->tagRemoved.connect(this, &ModuleBrowserPanel::removeTag);
-    connect(filterTabs, &QTabBar::currentChanged,
-            this, &ModuleBrowserPanel::changeTag);
+    connect(filterTabs, &QTabBar::currentChanged, this, &ModuleBrowserPanel::changeTag);
 }
 
 void ModuleBrowserPanel::addTag(const QString &tag) {
@@ -68,7 +66,8 @@ void ModuleBrowserPanel::removeTag(const QString &tag) {
 }
 
 void ModuleBrowserPanel::changeTag(int tag) {
-    if (tag == 0) library->setActiveTag("");
+    if (tag == 0)
+        library->setActiveTag("");
     else {
         assert(tag <= (int) tabValues.size());
         library->setActiveTag(tabValues[tag - 1]);

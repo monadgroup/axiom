@@ -2,6 +2,7 @@
 
 #include <QtCore/QtCore>
 
+#include "compiler/interface/Frontend.h"
 #include "util.h"
 #include "widgets/GlobalActions.h"
 
@@ -26,7 +27,11 @@ int argc = 1;
 char **argv = new char *[1];
 
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
+    MaximFrontend::maxim_initialize();
+    _jit = MaximCompiler::Jit();
+
     AxiomGui::GlobalActions::setupActions();
 
-    setStyleSheet(AxiomUtil::loadStylesheet(":/MainStyles.qss"));
+    Q_INIT_RESOURCE(res);
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
 }

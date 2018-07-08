@@ -18,6 +18,7 @@
 #include "../node/NodeItem.h"
 #include "AddNodeMenu.h"
 #include "editor/AxiomApplication.h"
+#include "editor/model/ModelRoot.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/CreateConnectionAction.h"

@@ -49,6 +49,10 @@ std::vector<ModelObject *> ModelRoot::deserializeChunk(QDataStream &stream, cons
     return std::move(usedObjects);
 }
 
+void ModelRoot::attachBackend(AxiomBackend::AudioBackend *backend) {
+    _backend = backend;
+}
+
 void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
     _runtime = runtime;
 
@@ -63,6 +67,8 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     if (_runtime) {
         _runtime->commit(std::move(transaction));
     }
+
+    // todo: update backend
 }
 
 void ModelRoot::destroy() {

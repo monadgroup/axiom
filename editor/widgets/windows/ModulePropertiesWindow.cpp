@@ -1,24 +1,23 @@
 #include "ModulePropertiesWindow.h"
 
-#include <QtWidgets/QGridLayout>
-#include <QtWidgets/QLabel>
 #include <QtGui/QIcon>
 #include <QtWidgets/QCompleter>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QDialogButtonBox>
 
-#include "editor/util.h"
-#include "editor/model/Library.h"
 #include "../SpaceCompleter.h"
+#include "editor/model/Library.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
-ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library) : QDialog(nullptr, Qt::WindowTitleHint |
-                                                                                                Qt::WindowSystemMenuHint |
-                                                                                                Qt::WindowCloseButtonHint) {
+ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library)
+    : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("Add Module"));
-    setStyleSheet(AxiomUtil::loadStylesheet(":/SaveModuleWindow.qss"));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/SaveModuleWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));
 
     setFixedSize(400, 400);
@@ -59,10 +58,8 @@ ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library) : Q
 
     setLayout(mainLayout);
 
-    connect(okButton, &QPushButton::clicked,
-            this, &ModulePropertiesWindow::accept);
-    connect(cancelButton, &QPushButton::clicked,
-            this, &ModulePropertiesWindow::reject);
+    connect(okButton, &QPushButton::clicked, this, &ModulePropertiesWindow::accept);
+    connect(cancelButton, &QPushButton::clicked, this, &ModulePropertiesWindow::reject);
 }
 
 QString ModulePropertiesWindow::enteredName() const {
@@ -71,8 +68,10 @@ QString ModulePropertiesWindow::enteredName() const {
 
 QStringList ModulePropertiesWindow::enteredTags() const {
     auto trimmedInput = tagsInput->text().trimmed();
-    if (trimmedInput.isEmpty()) return {};
-    else return trimmedInput.split(QRegExp("(\\s?,\\s?)|(\\s+)"));
+    if (trimmedInput.isEmpty())
+        return {};
+    else
+        return trimmedInput.split(QRegExp("(\\s?,\\s?)|(\\s+)"));
 }
 
 void ModulePropertiesWindow::setEnteredName(const QString &name) {

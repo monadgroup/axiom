@@ -12,6 +12,10 @@ namespace MaximCompiler {
     class Runtime;
 }
 
+namespace AxiomBackend {
+    class AudioBackend;
+}
+
 namespace AxiomModel {
 
     class Project;
@@ -87,6 +91,8 @@ namespace AxiomModel {
 
         std::vector<ModelObject *> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
 
+        void attachBackend(AxiomBackend::AudioBackend *backend);
+
         void attachRuntime(MaximCompiler::Runtime *runtime);
 
         void applyTransaction(MaximCompiler::Transaction transaction);
@@ -103,6 +109,7 @@ namespace AxiomModel {
         ControlCollection _controls;
         ConnectionCollection _connections;
 
+        AxiomBackend::AudioBackend *_backend = nullptr;
         MaximCompiler::Runtime *_runtime = nullptr;
     };
 }

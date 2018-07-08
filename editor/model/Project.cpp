@@ -1,5 +1,6 @@
 #include "Project.h"
 
+#include "../backend/AudioConfiguration.h"
 #include "PoolOperators.h"
 #include "actions/CreatePortalNodeAction.h"
 #include "objects/PortalNode.h"
@@ -7,7 +8,7 @@
 
 using namespace AxiomModel;
 
-Project::Project() : _mainRoot(this) {
+Project::Project(const AxiomBackend::AudioConfiguration &defaultConfiguration) : _mainRoot(this) {
     // setup default project
     //  1. create default surface
     auto rootSurface = std::make_unique<RootSurface>(QUuid(), QPointF(0, 0), 0, &mainRoot());
@@ -15,12 +16,60 @@ Project::Project() : _mainRoot(this) {
     mainRoot().pool().registerObj(std::move(rootSurface));
 
     //  2. add default inputs and outputs
-    CreatePortalNodeAction::create(QUuid(), QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
-                                   PortalControl::PortalType::INPUT, &mainRoot())
-        ->forward(true, nullptr);
-    CreatePortalNodeAction::create(QUuid(), QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
-                                   PortalControl::PortalType::OUTPUT, &mainRoot())
-        ->forward(true, nullptr);
+    int portalSpacing = 6;
+
+    int inputCount = 0;
+    int outputCount = 0;
+    int automationCount = 0;
+    for (const auto &portal : defaultConfiguration.portals) {
+        switch (portal.type) {
+        case AxiomBackend::PortalType::INPUT:
+            inputCount++;
+            break;
+        case AxiomBackend::PortalType::OUTPUT:
+            outputCount++;
+            break;
+        case AxiomBackend::PortalType::AUTOMATION:
+            automationCount++;
+            break;
+        }
+    }
+
+    auto inputOffset = -(inputCount - 1) * portalSpacing / 2;
+    auto outputOffset = -(outputCount - 1) * portalSpacing / 2;
+    auto automationOffset = -(automationCount - 1) * portalSpacing / 2;
+    for (const auto &portal : defaultConfiguration.portals) {
+        ConnectionWire::WireType wireType;
+        switch (portal.value) {
+        case AxiomBackend::PortalValue::AUDIO:
+            wireType = ConnectionWire::WireType::NUM;
+            break;
+        case AxiomBackend::PortalValue::MIDI:
+            wireType = ConnectionWire::WireType::MIDI;
+            break;
+        }
+
+        switch (portal.type) {
+        case AxiomBackend::PortalType::INPUT:
+            CreatePortalNodeAction::create(QUuid(), QPoint(-3, inputOffset), QString::fromStdString(portal.name),
+                                           wireType, PortalControl::PortalType::INPUT, &mainRoot())
+                ->forward(true, nullptr);
+            inputOffset += portalSpacing;
+            break;
+        case AxiomBackend::PortalType::OUTPUT:
+            CreatePortalNodeAction::create(QUuid(), QPoint(3, outputOffset), QString::fromStdString(portal.name),
+                                           wireType, PortalControl::PortalType::OUTPUT, &mainRoot())
+                ->forward(true, nullptr);
+            outputOffset += portalSpacing;
+            break;
+        case AxiomBackend::PortalType::AUTOMATION:
+            CreatePortalNodeAction::create(QUuid(), QPoint(0, automationOffset), QString::fromStdString(portal.name),
+                                           wireType, PortalControl::PortalType::AUTOMATION, &mainRoot())
+                ->forward(true, nullptr);
+            automationOffset += portalSpacing;
+            break;
+        }
+    }
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(this, stream), _library(this, stream) {
