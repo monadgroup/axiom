@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtCore/QByteArray>
+
 #include "../model/Value.h"
 #include "AudioConfiguration.h"
 
@@ -10,6 +12,14 @@ namespace AxiomBackend {
     using MidiEvent = AxiomModel::MidiEventValue;
     using MidiEventType = AxiomModel::MidiEventType;
 
+    extern const char *PRODUCT_VERSION;
+    extern const char *COMPANY_NAME;
+    extern const char *FILE_DESCRIPTION;
+    extern const char *INTERNAL_NAME;
+    extern const char *LEGAL_COPYRIGHT;
+    extern const char *LEGAL_TRADEMARKS;
+    extern const char *PRODUCT_NAME;
+
     class AudioBackend {
     public:
         // Accessors for audio inputs and outputs
@@ -18,8 +28,21 @@ namespace AxiomBackend {
         NumValue **getAudioPortal(size_t portalId) const;
         MidiValue **getMidiPortal(size_t portalId) const;
 
+        // Sets the BPM or sample rate on the runtime. Should be called from the audio thread.
+        void setBpm(float bpm);
+        void setSampleRate(float sampleRate);
+
+        const char *formatNumForm(NumForm form) const;
+        std::string formatNum(NumValue value, bool includeLabel) const;
+
+        QByteArray serialize();
+        void deserialize(QByteArray *data);
+
         // Queues a MIDI event to be input in a certain number of samples time. Should be called from the audio thread.
         void queueMidiEvent(size_t inSamples, size_t portalId, MidiEvent event);
+
+        // Clears all pressed MIDI keys. Should be called from the audio thread.
+        void clearMidi(size_t portalId);
 
         // Signals that you're about to start a batch of `generate` calls. The value returned signals the max number of
         // samples (i.e `generate` calls) until you should call `beginGenerate` again. This is used, for example, for

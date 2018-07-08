@@ -1,17 +1,14 @@
 #pragma once
 
-#include "widgets/windows/MainWindow.h"
 #include <public.sdk/source/vst2.x/aeffeditor.h>
 
-class AxiomVstPlugin;
+#include "../../AxiomEditor.h"
+
+class AxiomEditor;
 
 class AxiomVstEditor : public AEffEditor {
 public:
-    explicit AxiomVstEditor(std::unique_ptr<AxiomModel::Project> project);
-
-    AxiomModel::Project *project() const;
-
-    void setProject(std::unique_ptr<AxiomModel::Project> project);
+    explicit AxiomVstEditor(AxiomBackend::AudioBackend *backend);
 
     bool open(void *ptr) override;
 
@@ -20,5 +17,5 @@ public:
     void idle() override;
 
 private:
-    AxiomGui::MainWindow window;
+    AxiomEditor editor;
 };

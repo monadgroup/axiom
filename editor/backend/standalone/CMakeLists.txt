@@ -19,5 +19,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(AXIOM_STANDALONE_PROPERTIES ${AXIOM_STANDALONE_PROPERTIES} WIN32)
 endif ()
 
+include_directories(${PORTAUDIO_INCLUDE_DIRS})
 add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} main.cpp)
 target_link_libraries(axiom_standalone axiom_editor ${PORTAUDIO_LIBRARIES})
+set_target_properties(axiom_standalone PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "Axiom Standalone")

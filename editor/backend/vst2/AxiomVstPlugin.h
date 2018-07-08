@@ -1,19 +1,16 @@
 #pragma once
 
-#include "AxiomApplication.h"
-#include "AxiomVstEditor.h"
-#include "model/Project.h"
+#include <QtCore/QByteArray>
 #include <public.sdk/source/vst2.x/audioeffectx.h>
 
-class AxiomVstEditor;
+#include "AxiomVstEditor.h"
+#include "VstAudioBackend.h"
 
-class AxiomVstPlugin : public AudioEffectX, public AxiomCommon::Hookable {
+class AxiomVstPlugin : public AudioEffectX {
 public:
     explicit AxiomVstPlugin(audioMasterCallback audioMaster);
 
     ~AxiomVstPlugin() override;
-
-    void open() override;
 
     void suspend() override;
 
@@ -21,11 +18,7 @@ public:
 
     void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) override;
 
-    VstInt32 processEvents(VstEvents *ev) override;
-
-    void setProgramName(char *name) override;
-
-    void getProgramName(char *name) override;
+    VstInt32 processEvents(VstEvents *events) override;
 
     void setSampleRate(float sampleRate) override;
 
@@ -60,8 +53,7 @@ public:
     bool canParameterBeAutomated(VstInt32 index) override;
 
 private:
-    AxiomVstEditor _editor;
-    std::unique_ptr<QByteArray> saveBuffer;
-
-    void fiddleParam(VstInt32 param);
+    VstAudioBackend backend;
+    AxiomVstEditor editor;
+    QByteArray saveBuffer;
 };

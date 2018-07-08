@@ -6,8 +6,17 @@ else ()
             "${VST2_SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp")
 endif ()
 
-add_library(axiom_vst2 SHARED ${VST2_SOURCES} ${RES_FILES} "${RES_DIR}/AxiomVst.def")
+include_directories(${VST2_SDK_ROOT})
+add_library(axiom_vst2 SHARED
+        ${VST2_SOURCES}
+        AxiomVstPlugin.h AxiomVstPlugin.cpp
+        AxiomVstEditor.h AxiomVstEditor.cpp
+        VstAudioBackend.h VstAudioBackend.cpp
+        AxiomVst.def)
 target_link_libraries(axiom_vst2 axiom_editor)
+set_target_properties(axiom_vst2 PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "Axiom VST2")
 
 # todo: does this work?
 set_target_properties(axiom_vst2 PROPERTIES

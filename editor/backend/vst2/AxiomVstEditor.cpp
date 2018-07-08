@@ -1,30 +1,18 @@
 #include "AxiomVstEditor.h"
 
-#include "AxiomVstPlugin.h"
-#include "widgets/surface/NodeSurfacePanel.h"
-
-AxiomVstEditor::AxiomVstEditor(std::unique_ptr<AxiomModel::Project> project) : window(std::move(project)) {}
-
-AxiomModel::Project *AxiomVstEditor::project() const {
-    return window.project();
-}
-
-void AxiomVstEditor::setProject(std::unique_ptr<AxiomModel::Project> project) {
-    window.setProject(std::move(project));
-}
+AxiomVstEditor::AxiomVstEditor(AxiomBackend::AudioBackend *backend) : editor(backend) {}
 
 bool AxiomVstEditor::open(void *ptr) {
     AEffEditor::open(ptr);
-    window.show();
+    editor.show();
     return true;
 }
 
 void AxiomVstEditor::close() {
-    window.hide();
+    editor.hide();
     AEffEditor::close();
 }
 
 void AxiomVstEditor::idle() {
-    AxiomApplication::main.processEvents();
-    AxiomApplication::main.sendPostedEvents(&window);
+    editor.idle();
 }

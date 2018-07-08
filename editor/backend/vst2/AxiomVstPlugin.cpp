@@ -1,18 +1,16 @@
 #include "AxiomVstPlugin.h"
 
-#include <QtCore/QBuffer>
-#include <QtWidgets/QMessageBox>
+using namespace AxiomBackend;
 
-#include "editor/model/Value.h"
-#include "resources/resource.h"
-#include "widgets/surface/NodeSurfacePanel.h"
-
-AudioEffect *createEffectInstance(audioMasterCallback audioMaster) {
-    return new AxiomVstPlugin(audioMaster);
+extern "C" {
+AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
+    if (!audioMaster(nullptr, audioMasterVersion, 0, 0, nullptr, 0)) return nullptr;
+    auto effect = new AxiomVstPlugin(audioMaster);
+    return effect->getAeffect();
+}
 }
 
-AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 255), _editor(std::make_unique<AxiomModel::Project>()) {
+AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 1, 255), editor(&backend) {
     isSynth();
     setNumInputs(0);
     setNumOutputs(2);
@@ -20,7 +18,7 @@ AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
     programsAreChunks();
     canProcessReplacing();
 
-    setEditor(&_editor);
+    setEditor(&editor);
 }
 
 AxiomVstPlugin::~AxiomVstPlugin() {
@@ -28,177 +26,153 @@ AxiomVstPlugin::~AxiomVstPlugin() {
     setEditor(nullptr);
 }
 
-void AxiomVstPlugin::open() {}
-
 void AxiomVstPlugin::suspend() {
-    saveBuffer.reset();
+    saveBuffer.clear();
 }
 
 void AxiomVstPlugin::resume() {
-    saveBuffer.reset();
+    saveBuffer.clear();
 }
 
 void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) {
-    /*auto timeInfo = getTimeInfo(kVstTempoValid);
+    auto timeInfo = getTimeInfo(kVstTempoValid);
     if (timeInfo->flags & kVstTempoValid) {
-        runtime.setBpm(timeInfo->tempo);
+        backend.setBpm((float) timeInfo->tempo);
     }
 
-    runtime.fillBuffer(outputs, (size_t) sampleFrames);*/
+    size_t processPos = 0;
+    while (processPos < (size_t) sampleFrames) {
+        auto sampleAmount = backend.beginGenerate();
+        for (size_t i = 0; i < sampleAmount; i++) {
+            backend.generate();
+
+            auto outputNum = **backend.outputPortal;
+            outputs[0][i] = outputNum.left;
+            outputs[1][i] = outputNum.right;
+        }
+
+        outputs[0] += sampleAmount;
+        outputs[1] += sampleAmount;
+        processPos += sampleAmount;
+    }
 }
 
-VstInt32 AxiomVstPlugin::processEvents(VstEvents *ev) {
-    /*for (auto i = 0; i < ev->numEvents; i++) {
-        auto evt = ev->events[i];
-        if (evt->type != kVstMidiType) continue;
+VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
+    if (backend.midiInputPortal == -1) {
+        return 0;
+    }
 
-        auto midiEvent = (VstMidiEvent *) evt;
+    for (auto i = 0; i < events->numEvents; i++) {
+        auto event = events->events[i];
+        if (event->type != kVstMidiType) continue;
+
+        auto midiEvent = (VstMidiEvent *) event;
         auto midiStatus = midiEvent->midiData[0];
         auto midiData1 = midiEvent->midiData[1];
         auto midiData2 = midiEvent->midiData[2];
 
-        auto eventType = (uint8_t) (midiStatus & 0xF0);
-        auto eventChannel = (uint8_t) (midiStatus & 0x0F);
+        auto eventType = (uint8_t)(midiStatus & 0xF0);
+        auto eventChannel = (uint8_t)(midiStatus & 0x0F);
 
-        AxiomModel::MidiEventValue event{};
-        event.channel = eventChannel;
-        event.note = (uint8_t) midiData1;
-        event.param = (uint8_t) midiData2;
+        MidiEvent remappedEvent;
+        remappedEvent.channel = eventChannel;
+        remappedEvent.note = (uint8_t) midiData1;
+        remappedEvent.param = (uint8_t) midiData2;
 
         switch (eventType) {
-            case 0x80: // note off
-                event.event = AxiomModel::MidiEventType::NOTE_OFF;
-                runtime.queueEvent({evt->deltaFrames, event});
-                break;
-            case 0x90: // note on
-                event.event = MaximCommon::MidiEventType::NOTE_ON;
-                runtime.queueEvent({evt->deltaFrames, event});
-                break;
-            case 0xA0: // polyphonic aftertouch
-                event.event = MaximCommon::MidiEventType::POLYPHONIC_AFTERTOUCH;
-                runtime.queueEvent({evt->deltaFrames, event});
-                break;
-            case 0xB0: // control mode change
-
-                // all notes off
-                if (midiData1 == 0x7B) {
-                    runtime.clearEvents();
-                }
-
-                break;
-            case 0xD0: // channel aftertouch
-                event.event = MaximCommon::MidiEventType::CHANNEL_AFTERTOUCH;
-                event.param = (uint8_t) midiData1;
-                runtime.queueEvent({evt->deltaFrames, event});
-                break;
-            case 0xE0: // pitch wheel
-                event.event = MaximCommon::MidiEventType::PITCH_WHEEL;
-                runtime.queueEvent({evt->deltaFrames, event});
-                break;
-            default:;
+        case 0x80: // note off
+            remappedEvent.event = MidiEventType::NOTE_OFF;
+            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
+            break;
+        case 0x90: // note on
+            remappedEvent.event = MidiEventType::NOTE_ON;
+            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
+            break;
+        case 0xA0: // polyphonic aftertouch
+            remappedEvent.event = MidiEventType::POLYPHONIC_AFTERTOUCH;
+            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
+            break;
+        case 0xB0: // control mode change
+            // all notes off
+            if (midiData1 == 0x7B) {
+                backend.clearMidi(0);
+            }
+            break;
+        case 0xD0: // channel aftertouch
+            remappedEvent.event = MidiEventType::CHANNEL_AFTERTOUCH;
+            remappedEvent.param = (uint8_t) midiData1;
+            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
+            break;
+        case 0xE0: // pitch wheel
+            remappedEvent.event = MidiEventType::PITCH_WHEEL;
+            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
+            break;
+        default:;
         }
-    }*/
-
+    }
     return 0;
-}
-
-void AxiomVstPlugin::setProgramName(char *name) {
-    // todo
-}
-
-void AxiomVstPlugin::getProgramName(char *name) {
-    // todo
 }
 
 void AxiomVstPlugin::setSampleRate(float sampleRate) {
-    // todo
+    backend.setSampleRate(sampleRate);
 }
 
 void AxiomVstPlugin::setParameter(VstInt32 index, float value) {
-    /*auto node = runtime.mainSurface()->getAutomationNode(index);
-    if (node == nullptr || node->control()->group() == nullptr) return;
-    node->control()->group()->setNumValue({ true, value, value, MaximCommon::FormType::CONTROL });*/
+    if ((size_t) index >= backend.parameters.size()) return;
+    auto val = *backend.parameters[index].value;
+    val->left = value;
+    val->right = value;
+    val->form = NumForm::CONTROL;
 }
 
 float AxiomVstPlugin::getParameter(VstInt32 index) {
-    /*auto node = runtime.mainSurface()->getAutomationNode(index);
-    if (node == nullptr || node->control()->group() == nullptr) return 0;
-    return node->control()->group()->getNumValue().left;*/
-    return 0;
+    if ((size_t) index >= backend.parameters.size()) return 0;
+    return (*backend.parameters[index].value)->left;
 }
 
 void AxiomVstPlugin::getParameterLabel(VstInt32 index, char *label) {
-    vst_strncpy(label, "", kVstMaxParamStrLen);
+    if ((size_t) index >= backend.parameters.size()) return;
+    auto val = *backend.parameters[index].value;
+    vst_strncpy(label, backend.formatNumForm(val->form), kVstMaxParamStrLen);
 }
 
 void AxiomVstPlugin::getParameterDisplay(VstInt32 index, char *text) {
-    float2string(getParameter(index), text, kVstMaxParamStrLen);
+    if ((size_t) index >= backend.parameters.size()) return;
+    auto val = *backend.parameters[index].value;
+    vst_strncpy(text, backend.formatNum(*val, false).c_str(), kVstMaxParamStrLen);
 }
 
 void AxiomVstPlugin::getParameterName(VstInt32 index, char *text) {
-    /*auto node = runtime.mainSurface()->getAutomationNode(index);
-    if (node == nullptr) vst_strncpy(text, "", kVstMaxParamStrLen);
-    else vst_strncpy(text, node->name().c_str(), kVstMaxParamStrLen);*/
+    if ((size_t) index >= backend.parameters.size()) return;
+    vst_strncpy(text, backend.parameters[index].name.c_str(), kVstMaxParamStrLen);
 }
 
-VstInt32 AxiomVstPlugin::getChunk(void **data, bool isPreset) {
-    saveBuffer = std::make_unique<QByteArray>();
-    QBuffer buffer(saveBuffer.get());
-    buffer.open(QIODevice::WriteOnly);
-    QDataStream stream(&buffer);
-
-    std::cout << "Serializing chunk" << std::endl;
-    _editor.project()->serialize(stream);
-    std::cout << "Finished serializing, with " << saveBuffer->size() << " bytes" << std::endl;
-
-    buffer.close();
-
-    *data = saveBuffer->data();
-    return saveBuffer->size();
+VstInt32 AxiomVstPlugin::getChunk(void **data, bool) {
+    // the VST specification requires that the returned buffer is valid until the next suspend/resume call,
+    // so we store the QByteArray and clear it above.
+    saveBuffer = backend.serialize();
+    *data = saveBuffer.data();
+    return saveBuffer.size();
 }
 
-VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) {
-    QByteArray byteArray = QByteArray::fromRawData((char *) data, byteSize);
-    QDataStream stream(&byteArray, QIODevice::ReadOnly);
-    uint32_t readVersion = 0;
-    auto newProject = AxiomModel::Project::deserialize(stream, &readVersion);
-
-    if (!newProject) {
-        if (readVersion) {
-            QMessageBox(QMessageBox::Critical, "Failed to load project",
-                        "This project was created with an incompatible version of Axiom.\n\n"
-                        "Expected version: between " +
-                            QString::number(AxiomModel::Project::minSchemaVersion) + " and " +
-                            QString::number(AxiomModel::Project::schemaVersion) +
-                            ", actual version: " + QString::number(readVersion) + ".",
-                        QMessageBox::Ok)
-                .exec();
-        } else {
-            QMessageBox(QMessageBox::Critical, "Failed to load project",
-                        "This project is an invalid project file (bad magic header).\n"
-                        "Maybe it's corrupt?",
-                        QMessageBox::Ok)
-                .exec();
-        }
-    } else {
-        _editor.setProject(std::move(newProject));
-    }
-
+VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool) {
+    auto byteArray = QByteArray::fromRawData((char *) data, byteSize);
+    backend.deserialize(&byteArray);
     return 0;
 }
 
 bool AxiomVstPlugin::getEffectName(char *name) {
-    vst_strncpy(name, VER_INTERNALNAME_STR, kVstMaxEffectNameLen);
+    vst_strncpy(name, PRODUCT_NAME, kVstMaxEffectNameLen);
     return true;
 }
 
 bool AxiomVstPlugin::getVendorString(char *text) {
-    vst_strncpy(text, "MONAD Demogroup", kVstMaxVendorStrLen);
+    vst_strncpy(text, COMPANY_NAME, kVstMaxVendorStrLen);
     return true;
 }
 
 bool AxiomVstPlugin::getProductString(char *text) {
-    vst_strncpy(text, VER_FILEDESCRIPTION_STR, kVstMaxProductStrLen);
+    vst_strncpy(text, FILE_DESCRIPTION, kVstMaxProductStrLen);
     return true;
 }
 
@@ -210,9 +184,8 @@ VstPlugCategory AxiomVstPlugin::getPlugCategory() {
     return kPlugCategSynth;
 }
 
-VstInt32 AxiomVstPlugin::canDo(char *text) {
-    return text == "sendVstEvents" || text == "sendVstMidiEvent" || text == "receiveVstEvents" ||
-           text == "receiveVstMidiEvent";
+VstInt32 AxiomVstPlugin::canDo(char *) {
+    return true;
 }
 
 VstInt32 AxiomVstPlugin::getNumMidiInputChannels() {
@@ -220,13 +193,5 @@ VstInt32 AxiomVstPlugin::getNumMidiInputChannels() {
 }
 
 bool AxiomVstPlugin::canParameterBeAutomated(VstInt32 index) {
-    // auto node = runtime.mainSurface()->getAutomationNode(index);
-    // return node != nullptr;
-    return false;
-}
-
-void AxiomVstPlugin::fiddleParam(VstInt32 param) {
-    beginEdit(param);
-    setParameterAutomated(param, getParameter(param));
-    endEdit(param);
+    return (size_t) index < backend.parameters.size();
 }
