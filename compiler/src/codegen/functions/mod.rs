@@ -119,7 +119,8 @@ map_functions! {
     Sequence => SequenceFunction,
     Min => MinFunction,
     Max => MaxFunction,
-    Next => NextFunction
+    Next => NextFunction,
+    Noise => NoiseFunction
 }
 
 fn get_lifecycle_func(

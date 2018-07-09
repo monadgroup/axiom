@@ -2,6 +2,7 @@
 
 #include <QtCore/QByteArray>
 #include <deque>
+#include <mutex>
 
 #include "../model/Value.h"
 #include "AudioConfiguration.h"
@@ -49,6 +50,9 @@ namespace AxiomBackend {
 
         // Clears all pressed MIDI keys. Should be called from the audio thread.
         void clearNotes(size_t portalId);
+
+        // Locks the runtime. The runtime should always be locked when `generate` is called.
+        std::lock_guard<std::mutex> lockRuntime();
 
         // Signals that you're about to start a batch of `generate` calls. The value returned signals the max number of
         // samples (i.e `generate` calls) until you should call `beginGenerate` again. This is used, for example, for

@@ -46,6 +46,7 @@ public:
 
         auto sampleFrames64 = (uint64_t) framesPerBuffer;
         while (processPos < sampleFrames64) {
+            auto lock = backend->lockRuntime();
             auto sampleAmount = backend->beginGenerate();
             auto endProcessPos = processPos + sampleAmount;
             if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;

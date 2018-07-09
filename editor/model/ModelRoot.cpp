@@ -62,7 +62,13 @@ void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
     applyTransaction(std::move(buildTransaction));
 }
 
+std::lock_guard<std::mutex> ModelRoot::lockRuntime() {
+    return std::lock_guard(_runtimeLock);
+}
+
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
+    auto lock = lockRuntime();
+
     transaction.printToStdout();
     if (_runtime) {
         _runtime->commit(std::move(transaction));

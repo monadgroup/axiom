@@ -43,6 +43,7 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
     auto sampleFrames64 = (uint64_t) sampleFrames;
     uint64_t processPos = 0;
     while (processPos < sampleFrames64) {
+        auto lock = backend.lockRuntime();
         auto sampleAmount = backend.beginGenerate();
         auto endProcessPos = processPos + sampleAmount;
         if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;

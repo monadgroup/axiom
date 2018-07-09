@@ -2,6 +2,7 @@
 
 #include <QDataStream>
 #include <memory>
+#include <mutex>
 
 #include "HistoryList.h"
 #include "Pool.h"
@@ -95,6 +96,8 @@ namespace AxiomModel {
 
         void attachRuntime(MaximCompiler::Runtime *runtime);
 
+        std::lock_guard<std::mutex> lockRuntime();
+
         void applyTransaction(MaximCompiler::Transaction transaction);
 
         void destroy();
@@ -109,6 +112,7 @@ namespace AxiomModel {
         ControlCollection _controls;
         ConnectionCollection _connections;
 
+        std::mutex _runtimeLock;
         AxiomBackend::AudioBackend *_backend = nullptr;
         MaximCompiler::Runtime *_runtime = nullptr;
     };

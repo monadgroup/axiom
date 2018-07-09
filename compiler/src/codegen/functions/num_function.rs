@@ -1,7 +1,9 @@
 use super::{Function, FunctionContext, VarArgs};
+use ast::FormType;
 use codegen::values::NumValue;
 use codegen::{intrinsics, util};
 use inkwell::context::Context;
+use inkwell::module::Linkage;
 use inkwell::types::{StructType, VectorType};
 use inkwell::values::PointerValue;
 use mir::block;
@@ -432,5 +434,87 @@ impl Function for NextFunction {
 
         last_num.copy_to(func.ctx.b, func.ctx.module, &result_num);
         new_num.copy_to(func.ctx.b, func.ctx.module, &last_num);
+    }
+}
+
+pub struct NoiseFunction {}
+impl Function for NoiseFunction {
+    fn function_type() -> block::Function {
+        block::Function::Noise
+    }
+
+    fn gen_call(
+        func: &mut FunctionContext,
+        args: &[PointerValue],
+        _varargs: Option<VarArgs>,
+        result: PointerValue,
+    ) {
+        let result_num = NumValue::new(result);
+        let noise_func = util::get_or_create_func(func.ctx.module, "rand", false, &|| {
+            (
+                Linkage::ExternalLinkage,
+                func.ctx.context.i32_type().fn_type(&[], false),
+            )
+        });
+
+        let left_rand = func.ctx
+            .b
+            .build_call(&noise_func, &[], "rand.left", false)
+            .left()
+            .unwrap()
+            .into_int_value();
+        let right_rand = func.ctx
+            .b
+            .build_call(&noise_func, &[], "rand.right", false)
+            .left()
+            .unwrap()
+            .into_int_value();
+        let rand_vec = func.ctx
+            .b
+            .build_insert_element(
+                &func.ctx.context.i32_type().vec_type(2).get_undef(),
+                &left_rand,
+                &func.ctx.context.i32_type().const_int(0, false),
+                "rand",
+            )
+            .into_vector_value();
+        let rand_vec = func.ctx
+            .b
+            .build_insert_element(
+                &rand_vec,
+                &right_rand,
+                &func.ctx.context.i32_type().const_int(1, false),
+                "rand",
+            )
+            .into_vector_value();
+        let rand_vec_float = func.ctx.b.build_signed_int_to_float(
+            rand_vec,
+            func.ctx.context.f32_type().vec_type(2),
+            "rand.float",
+        );
+
+        // todo: figure out a compiler-independent way to do this - this is the constant from GNU C headers
+        let double_rand_max_float = util::get_vec_spread(func.ctx.context, 32767. * 2.);
+
+        // get the random number between 0 and 2
+        let rand_normalized =
+            func.ctx
+                .b
+                .build_float_div(rand_vec_float, double_rand_max_float, "rand.normalized");
+
+        // now convert it to be between -1 and 1
+        let rand_val = func.ctx.b.build_float_sub(
+            rand_normalized,
+            util::get_vec_spread(func.ctx.context, 1.),
+            "rand.result",
+        );
+        result_num.set_vec(func.ctx.b, &rand_val);
+        result_num.set_form(
+            func.ctx.b,
+            &func.ctx
+                .context
+                .i8_type()
+                .const_int(FormType::Oscillator as u64, false),
+        );
     }
 }

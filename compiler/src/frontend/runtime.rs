@@ -114,6 +114,7 @@ impl<'a> Runtime<'a> {
         if let Some(ref jit) = jit {
             let library_module = Runtime::codegen_lib(&context, &target);
             optimizer.optimize_module(&library_module);
+            library_module.print_to_stderr();
             jit.deploy(&library_module);
         }
 
@@ -312,6 +313,7 @@ impl<'a> Runtime<'a> {
     }
 
     fn deploy_module(jit: &Jit, module: &mut RuntimeModule) {
+        module.module.print_to_stderr();
         let key = jit.deploy(&module.module);
         module.key = Some(key);
     }

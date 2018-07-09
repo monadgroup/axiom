@@ -106,6 +106,10 @@ void AudioBackend::clearMidi(size_t portalId) {
 
 void AudioBackend::clearNotes(size_t portalId) {}
 
+std::lock_guard<std::mutex> AudioBackend::lockRuntime() {
+    return _editor->window()->project()->mainRoot().lockRuntime();
+}
+
 uint64_t AudioBackend::beginGenerate() {
     // decrement all deltaFrames from last time
     for (auto &event : queuedEvents) {
