@@ -445,7 +445,7 @@ impl Function for NoiseFunction {
 
     fn gen_call(
         func: &mut FunctionContext,
-        args: &[PointerValue],
+        _args: &[PointerValue],
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
