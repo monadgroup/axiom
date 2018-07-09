@@ -169,6 +169,10 @@ impl<'a> Runtime<'a> {
                 pass::remove_dead_groups(&mut surface);
                 new_surfaces.into_iter().chain(iter::once(surface))
             })
+            .map(|mut surface| {
+                pass::order_nodes(&mut surface);
+                surface
+            })
             .collect()
     }
 
@@ -411,6 +415,9 @@ impl<'a> Runtime<'a> {
         }
 
         let (new_block_ids, new_surface_ids) = self.patch_transaction(transaction);
+
+        self.print_mir();
+
         self.codegen_transaction(new_block_ids, new_surface_ids);
 
         if let Some(ref pointers) = self.pointers {
