@@ -2,6 +2,7 @@ pub mod c_api;
 mod dependency_graph;
 mod jit;
 mod runtime;
+pub mod value_reader;
 
 pub use self::dependency_graph::DependencyGraph;
 pub use self::jit::Jit;

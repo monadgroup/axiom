@@ -407,6 +407,8 @@ impl<'a> Runtime<'a> {
             return;
         }
 
+        println!("Transaction: {:#?}", transaction);
+
         // run destructors on the old data before beginning
         if let Some(ref pointers) = self.pointers {
             unsafe {

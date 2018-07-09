@@ -83,6 +83,12 @@ pub fn build_node_layout(
     let context = cache.context();
 
     match node.data {
+        NodeData::Dummy => NodeLayout {
+            initialized_const: context.const_struct(&[], false),
+            scratch_struct: context.struct_type(&[], false).into(),
+            pointer_struct: context.struct_type(&[], false),
+            pointer_sources: Vec::new(),
+        },
         NodeData::Custom(block_id) => {
             let block_layout = cache.block_layout(block_id).unwrap();
 

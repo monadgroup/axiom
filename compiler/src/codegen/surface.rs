@@ -39,6 +39,7 @@ fn build_node_call(
     pointers_ptr: PointerValue,
 ) {
     match &node.data {
+        NodeData::Dummy => {}
         NodeData::Custom(block_id) => {
             let data_ptr = unsafe { ctx.b.build_struct_gep(&scratch_ptr, 0, "") };
             let ui_ptr = if cache.target().include_ui {

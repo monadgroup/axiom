@@ -1,5 +1,6 @@
 use mir;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::mem;
 
 // groups extracted nodes into subsurfaces
 pub fn group_extracted(
@@ -63,10 +64,11 @@ impl<'a> GroupExtractor<'a> {
     }
 
     /// Here we move the extracted nodes into a new ExtractGroup node.
-    /// We attempt to keep the surface structure as intact as possible: it's inevitable that
-    /// we have to move nodes, but we don't remove value groups that should only exist in the
-    /// group here, instead leaving orphaned ones on the surface. The "remove_dead_groups" pass
-    /// will remove any groups that aren't necessary.
+    /// We attempt to keep the surface structure as intact as possible:
+    ///   - Instead of removing nodes that are moved into subsurfaces, we replace them with "dummy"
+    ///     nodes.
+    ///   - Instead of moving value groups into subsurfaces, we just clone them.
+    ///     The "remove_dead_groups" pass will remove any groups that aren't necessary.
     fn extract_group(
         &mut self,
         allocator: &mut mir::IdAllocator,
@@ -88,9 +90,10 @@ impl<'a> GroupExtractor<'a> {
         // We also need to know whether value groups are written to/read from later on, so this
         // info is recorded here.
         let mut new_nodes = Vec::new();
-        for (removed_count, &node_index) in extract_group.nodes.iter().enumerate() {
-            let real_node_index = node_index - removed_count;
-            let mut new_node = self.surface.nodes.remove(real_node_index);
+        for &node_index in extract_group.nodes.iter() {
+            // swap the node for a dummy one
+            let mut new_node = mir::Node::new(Vec::new(), mir::NodeData::Dummy);
+            mem::swap(&mut new_node, &mut self.surface.nodes[node_index]);
 
             // update socket indices to the indices in the new surface
             for socket in new_node.sockets.iter_mut() {
@@ -105,6 +108,12 @@ impl<'a> GroupExtractor<'a> {
                     value_group_read_write[remapped_id].1 = true;
                 }
             }
+
+            // mark that the node has been moved to the source map
+            let surface_ref =
+                mir::InternalNodeRef::Surface(self.surface.nodes.len(), new_nodes.len());
+            println!("Moving {} into {:?}", node_index, surface_ref);
+            self.surface.source_map.move_into(node_index, surface_ref);
 
             new_nodes.push(new_node)
         }

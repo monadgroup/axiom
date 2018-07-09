@@ -2,6 +2,7 @@ use mir::{BlockRef, SurfaceRef, ValueSocket};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum NodeData {
+    Dummy,
     Custom(BlockRef),
     Group(SurfaceRef),
     ExtractGroup {
