@@ -17,6 +17,10 @@ void Runtime::runUpdate() {
     MaximFrontend::maxim_run_update(get());
 }
 
+void *Runtime::getPortalPtr(size_t portal) {
+    return MaximFrontend::maxim_get_portal_ptr(get(), portal);
+}
+
 void Runtime::setBpm(float bpm) {
     MaximFrontend::maxim_set_bpm(get(), bpm);
 }

@@ -5,6 +5,7 @@ use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::BasicType;
 use inkwell::values::{BasicValue, BasicValueEnum, GlobalValue, IntValue, PointerValue};
+use inkwell::AddressSpace;
 use mir::{Root, SurfaceRef};
 use std::iter;
 
@@ -87,18 +88,51 @@ pub fn build_scratch_global(
     global
 }
 
-pub fn build_sockets_global(module: &Module, root: &Root, name: &str) -> GlobalValue {
+pub struct SocketsGlobal {
+    pub sockets: GlobalValue,
+    pub socket_ptrs: GlobalValue,
+}
+
+pub fn build_sockets_global(
+    module: &Module,
+    root: &Root,
+    sockets_name: &str,
+    pointers_name: &str,
+) -> SocketsGlobal {
     let context = module.get_context();
     let struct_types: Vec<_> = root.sockets
         .iter()
         .map(|vartype| remap_type(&context, vartype))
         .collect();
-    let type_refs: Vec<_> = struct_types.iter().map(|ty| ty as &BasicType).collect();
-    let struct_type = context.struct_type(&type_refs, false);
-    let global = util::get_or_create_global(module, name, &struct_type);
-    global.set_initializer(&struct_type.const_null());
-    global.set_section("maxim.sockets");
-    global
+    let sockets_type_refs: Vec<_> = struct_types.iter().map(|ty| ty as &BasicType).collect();
+    let sockets_struct_type = context.struct_type(&sockets_type_refs, false);
+    let sockets_global = util::get_or_create_global(module, sockets_name, &sockets_struct_type);
+    sockets_global.set_initializer(&sockets_struct_type.const_null());
+    sockets_global.set_section("maxim.sockets");
+
+    let void_ptr_ty = context.i8_type().ptr_type(AddressSpace::Generic);
+    let array_itms: Vec<_> = (0..struct_types.len())
+        .map(|index| unsafe {
+            sockets_global
+                .as_pointer_value()
+                .const_in_bounds_gep(&[
+                    context.i64_type().const_int(0, false),
+                    context.i32_type().const_int(index as u64, false),
+                ])
+                .const_cast(&void_ptr_ty)
+        })
+        .collect();
+    let pointers_arr = void_ptr_ty.const_array(&array_itms);
+    let pointers_global =
+        util::get_or_create_global(module, pointers_name, &pointers_arr.get_type());
+    pointers_global.set_constant(true);
+    pointers_global.set_initializer(&pointers_arr);
+    pointers_global.set_section("maxim.portals");
+
+    SocketsGlobal {
+        sockets: sockets_global,
+        socket_ptrs: pointers_global,
+    }
 }
 
 pub fn build_pointers_global(
@@ -122,6 +156,7 @@ pub fn build_pointers_global(
         scratch,
         sockets,
     );
+    global.set_constant(true);
     global.set_initializer(&const_val);
     global.set_section("maxim.pointers_data");
     global

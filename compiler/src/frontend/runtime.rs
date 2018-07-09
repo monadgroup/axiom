@@ -15,6 +15,7 @@ use std::iter;
 use std::iter::FromIterator;
 use std::mem;
 use std::os::raw::c_void;
+use std::ptr;
 
 #[derive(Debug)]
 struct RuntimeModule {
@@ -31,17 +32,19 @@ impl RuntimeModule {
 const INITIALIZED_GLOBAL_NAME: &str = "maxim.runtime.initialized";
 const SCRATCH_GLOBAL_NAME: &str = "maxim.runtime.scratch";
 const SOCKETS_GLOBAL_NAME: &str = "maxim.runtime.sockets";
+const PORTALS_GLOBAL_NAME: &str = "maxim.runtime.portals";
 const POINTERS_GLOBAL_NAME: &str = "maxim.runtime.pointers";
 
 const CONSTRUCT_FUNC_NAME: &str = "maxim.runtime.construct";
-const UPDATE_FUNC_NAME: &str = "maxim.update.construct";
-const DESTRUCT_FUNC_NAME: &str = "maxim.destruct.construct";
+const UPDATE_FUNC_NAME: &str = "maxim.runtime.update";
+const DESTRUCT_FUNC_NAME: &str = "maxim.runtime.destruct";
 
 #[derive(Debug)]
 struct RuntimePointers {
     initialized_ptr: *mut c_void,
     scratch_ptr: *mut c_void,
     sockets_ptr: *mut c_void,
+    portals_ptr: *mut c_void,
     pointers_ptr: *mut c_void,
     samplerate_ptr: *mut c_void,
     bpm_ptr: *mut c_void,
@@ -72,12 +75,14 @@ impl RuntimePointers {
         let initialized_ptr_address = jit.get_symbol_address(INITIALIZED_GLOBAL_NAME) as usize;
         let scratch_ptr_address = jit.get_symbol_address(SCRATCH_GLOBAL_NAME) as usize;
         let sockets_ptr_address = jit.get_symbol_address(SOCKETS_GLOBAL_NAME) as usize;
+        let portals_ptr_address = jit.get_symbol_address(PORTALS_GLOBAL_NAME) as usize;
         let pointers_ptr_address = jit.get_symbol_address(POINTERS_GLOBAL_NAME) as usize;
 
         RuntimePointers {
             initialized_ptr: initialized_ptr_address as *mut c_void,
             scratch_ptr: scratch_ptr_address as *mut c_void,
             sockets_ptr: sockets_ptr_address as *mut c_void,
+            portals_ptr: portals_ptr_address as *mut c_void,
             pointers_ptr: pointers_ptr_address as *mut c_void,
             samplerate_ptr: samplerate_ptr_address as *mut c_void,
             bpm_ptr: bpm_ptr_address as *mut c_void,
@@ -114,7 +119,6 @@ impl<'a> Runtime<'a> {
         if let Some(ref jit) = jit {
             let library_module = Runtime::codegen_lib(&context, &target);
             optimizer.optimize_module(&library_module);
-            library_module.print_to_stderr();
             jit.deploy(&library_module);
         }
 
@@ -227,7 +231,8 @@ impl<'a> Runtime<'a> {
         let initialized_global =
             root::build_initialized_global(&module, self, 0, INITIALIZED_GLOBAL_NAME);
         let scratch_global = root::build_scratch_global(&module, self, 0, SCRATCH_GLOBAL_NAME);
-        let sockets_global = root::build_sockets_global(&module, root, SOCKETS_GLOBAL_NAME);
+        let sockets_global =
+            root::build_sockets_global(&module, root, SOCKETS_GLOBAL_NAME, PORTALS_GLOBAL_NAME);
         let pointers_global = root::build_pointers_global(
             &module,
             self,
@@ -235,7 +240,7 @@ impl<'a> Runtime<'a> {
             POINTERS_GLOBAL_NAME,
             initialized_global.as_pointer_value(),
             scratch_global.as_pointer_value(),
-            sockets_global.as_pointer_value(),
+            sockets_global.sockets.as_pointer_value(),
         );
         root::build_funcs(
             &module,
@@ -313,7 +318,6 @@ impl<'a> Runtime<'a> {
     }
 
     fn deploy_module(jit: &Jit, module: &mut RuntimeModule) {
-        module.module.print_to_stderr();
         let key = jit.deploy(&module.module);
         module.key = Some(key);
     }
@@ -454,6 +458,15 @@ impl<'a> Runtime<'a> {
     pub unsafe fn run_update(&self) {
         if let Some(ref pointers) = self.pointers {
             (pointers.update)();
+        }
+    }
+
+    pub unsafe fn get_portal_ptr(&self, portal_index: usize) -> *mut c_void {
+        if let Some(ref pointers) = self.pointers {
+            let portals_array = pointers.portals_ptr as *mut *mut c_void;
+            *portals_array.offset(portal_index as isize)
+        } else {
+            ptr::null_mut()
         }
     }
 

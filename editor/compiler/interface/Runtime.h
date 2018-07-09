@@ -15,6 +15,8 @@ namespace MaximCompiler {
 
         void runUpdate();
 
+        void *getPortalPtr(size_t portal);
+
         void setBpm(float bpm);
 
         void setSampleRate(float sampleRate);

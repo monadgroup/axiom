@@ -51,6 +51,7 @@ namespace MaximFrontend {
 
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
     void maxim_run_update(MaximRuntimeRef *runtime);
+    void *maxim_get_portal_ptr(MaximRuntimeRef *runtime, size_t portal);
     void maxim_set_bpm(MaximRuntimeRef *runtime, float bpm);
     void maxim_set_sample_rate(MaximRuntimeRef *runtime, float sample_rate);
 

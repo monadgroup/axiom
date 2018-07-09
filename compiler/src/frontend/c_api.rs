@@ -7,6 +7,7 @@ use parser;
 use pass;
 use std;
 use std::mem;
+use std::os::raw::c_void;
 use CompileError;
 
 #[no_mangle]
@@ -59,6 +60,14 @@ pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
 #[no_mangle]
 pub unsafe extern "C" fn maxim_run_update(runtime: *const Runtime) {
     (*runtime).run_update();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_portal_ptr(
+    runtime: *const Runtime,
+    portal: usize,
+) -> *mut c_void {
+    (*runtime).get_portal_ptr(portal)
 }
 
 #[no_mangle]

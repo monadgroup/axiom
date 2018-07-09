@@ -16,6 +16,8 @@ namespace AxiomBackend {
         std::string name;
 
         ConfigurationPortal(PortalType type, PortalValue value, std::string name);
+
+        bool operator==(const ConfigurationPortal &other) const;
     };
 
     class AudioConfiguration {

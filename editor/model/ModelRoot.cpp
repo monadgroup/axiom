@@ -1,5 +1,6 @@
 #include "ModelRoot.h"
 
+#include "../backend/AudioBackend.h"
 #include "IdentityReferenceMapper.h"
 #include "ModelObject.h"
 #include "PoolOperators.h"
@@ -69,12 +70,13 @@ std::lock_guard<std::mutex> ModelRoot::lockRuntime() {
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     auto lock = lockRuntime();
 
-    transaction.printToStdout();
     if (_runtime) {
         _runtime->commit(std::move(transaction));
     }
 
-    // todo: update backend
+    if (_backend) {
+        _backend->internalUpdateConfiguration();
+    }
 }
 
 void ModelRoot::destroy() {

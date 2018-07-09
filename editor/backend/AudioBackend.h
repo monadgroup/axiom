@@ -75,8 +75,9 @@ namespace AxiomBackend {
         // output.
         virtual AudioConfiguration createDefaultConfiguration();
 
-        // Called internally. This is not a stable API.
+        // Called internally. Not stable APIs.
         void setEditor(AxiomEditor *editor) { _editor = editor; }
+        void internalUpdateConfiguration();
 
     private:
         struct QueuedEvent {
@@ -84,6 +85,9 @@ namespace AxiomBackend {
             size_t portalId;
             MidiEvent event;
         };
+
+        bool hasCurrent = false;
+        std::vector<ConfigurationPortal> currentPortals;
 
         AxiomEditor *_editor;
         std::vector<void *> portalValues;

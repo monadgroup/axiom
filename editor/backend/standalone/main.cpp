@@ -12,6 +12,8 @@ public:
     NumValue **outputPortal = nullptr;
 
     void handleConfigurationChange(const AudioConfiguration &configuration) override {
+        std::cout << "Got configuration change!" << std::endl;
+
         // we only care about the first number output portal
         outputPortal = nullptr;
         for (size_t i = 0; i < configuration.portals.size(); i++) {
@@ -50,6 +52,16 @@ public:
             auto sampleAmount = backend->beginGenerate();
             auto endProcessPos = processPos + sampleAmount;
             if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;
+            /*std::cout << "Processing " << (endProcessPos - processPos) << " samples" << std::endl;
+            if (backend->outputPortal) {
+                auto outputNum = **backend->outputPortal;
+                std::cout << "Output = " << outputNum.left << " " << outputNum.right << " (" << (uint8_t) outputNum.form
+            << ")" << std::endl;
+
+                if (outputNum.left != 0) {
+                    qt_noop();
+                }
+            }*/
 
             for (auto i = processPos; i < endProcessPos; i++) {
                 backend->generate();
