@@ -15,12 +15,22 @@ namespace MaximCompiler {
 
         void runUpdate();
 
-        void *getPortalPtr(size_t portal);
-
         void setBpm(float bpm);
 
         void setSampleRate(float sampleRate);
 
         void commit(Transaction transaction);
+
+        void *getPortalPtr(size_t portal);
+
+        void *getRootPtr();
+
+        void *getNodePtr(uint64_t surface, void *surfacePtr, size_t node);
+
+        void *getSurfacePtr(void *nodePtr);
+
+        void *getBlockPtr(void *nodePtr);
+
+        MaximFrontend::ControlPointers getControlPtrs(uint64_t block, void *blockPtr, size_t control);
     };
 }

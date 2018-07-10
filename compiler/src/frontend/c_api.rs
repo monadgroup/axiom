@@ -1,4 +1,4 @@
-use super::{Jit, Runtime, Transaction};
+use super::{value_reader, Jit, Runtime, Transaction};
 use ast;
 use codegen;
 use inkwell::{orc, targets};
@@ -14,6 +14,12 @@ use CompileError;
 pub extern "C" fn maxim_initialize() {
     targets::Target::initialize_native(&targets::InitializationConfig::default()).unwrap();
     orc::Orc::link_in_jit();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_string(string: *mut std::os::raw::c_char) {
+    std::ffi::CString::from_raw(string);
+    // string will be dropped here
 }
 
 #[no_mangle]
@@ -63,14 +69,6 @@ pub unsafe extern "C" fn maxim_run_update(runtime: *const Runtime) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_get_portal_ptr(
-    runtime: *const Runtime,
-    portal: usize,
-) -> *mut c_void {
-    (*runtime).get_portal_ptr(portal)
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn maxim_set_bpm(runtime: *mut Runtime, bpm: f32) {
     (*runtime).set_bpm(bpm);
 }
@@ -81,15 +79,52 @@ pub unsafe extern "C" fn maxim_set_sample_rate(runtime: *mut Runtime, sample_rat
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_destroy_string(string: *mut std::os::raw::c_char) {
-    std::ffi::CString::from_raw(string);
-    // string will be dropped here
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn maxim_commit(runtime: *mut Runtime, transaction: *mut Transaction) {
     let owned_transaction = Box::from_raw(transaction);
     (*runtime).commit(*owned_transaction)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_portal_ptr(
+    runtime: *const Runtime,
+    portal: usize,
+) -> *mut c_void {
+    (*runtime).get_portal_ptr(portal)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_root_ptr(runtime: *const Runtime) -> *mut c_void {
+    (*runtime).get_root_ptr()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_node_ptr(
+    runtime: *const Runtime,
+    surface: u64,
+    surface_ptr: *mut c_void,
+    node: usize,
+) -> *mut c_void {
+    value_reader::get_node_ptr(&*runtime, surface, surface_ptr, node)
+}
+
+#[no_mangle]
+pub extern "C" fn maxim_get_surface_ptr(node_ptr: *mut c_void) -> *mut c_void {
+    value_reader::get_surface_ptr(node_ptr)
+}
+
+#[no_mangle]
+pub extern "C" fn maxim_get_block_ptr(node_ptr: *mut c_void) -> *mut c_void {
+    value_reader::get_block_ptr(node_ptr)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_control_ptrs(
+    runtime: *const Runtime,
+    block: u64,
+    block_ptr: *mut c_void,
+    control: usize,
+) -> value_reader::ControlPointers {
+    value_reader::get_control_ptrs(&*runtime, block, block_ptr, control)
 }
 
 #[no_mangle]

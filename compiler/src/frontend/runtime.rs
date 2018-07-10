@@ -469,6 +469,14 @@ impl<'a> Runtime<'a> {
         }
     }
 
+    pub fn get_root_ptr(&self) -> *mut c_void {
+        if let Some(ref pointers) = self.pointers {
+            pointers.pointers_ptr
+        } else {
+            ptr::null_mut()
+        }
+    }
+
     pub unsafe fn get_portal_ptr(&self, portal_index: usize) -> *mut c_void {
         if let Some(ref pointers) = self.pointers {
             let portals_array = pointers.portals_ptr as *mut *mut c_void;

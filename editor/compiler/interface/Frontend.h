@@ -40,6 +40,12 @@ namespace MaximFrontend {
         SourcePos back;
     };
 
+    struct ControlPointers {
+        void *value;
+        void *data;
+        void *ui;
+    };
+
     extern "C" {
     void maxim_initialize();
 
@@ -51,9 +57,15 @@ namespace MaximFrontend {
 
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
     void maxim_run_update(MaximRuntimeRef *runtime);
-    void *maxim_get_portal_ptr(MaximRuntimeRef *runtime, size_t portal);
     void maxim_set_bpm(MaximRuntimeRef *runtime, float bpm);
     void maxim_set_sample_rate(MaximRuntimeRef *runtime, float sample_rate);
+
+    void *maxim_get_portal_ptr(MaximRuntimeRef *runtime, size_t portal);
+    void *maxim_get_root_ptr(MaximRuntimeRef *runtime);
+    void *maxim_get_node_ptr(MaximRuntimeRef *runtime, uint64_t surface, void *surface_ptr, size_t node);
+    void *maxim_get_surface_ptr(void *node_ptr);
+    void *maxim_get_block_ptr(void *block_ptr);
+    ControlPointers maxim_get_control_ptrs(MaximRuntimeRef *runtime, uint64_t block, void *block_ptr, size_t control);
 
     void maxim_destroy_string(const char *);
 
