@@ -10,6 +10,7 @@ use inkwell::module::Module;
 use mir::{Block, BlockRef, IdAllocator, InternalNodeRef, Root, Surface, SurfaceRef};
 use pass;
 use std::cmp::Ordering;
+use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::iter;
 use std::iter::FromIterator;
@@ -101,8 +102,12 @@ pub struct Runtime<'a> {
     target: TargetProperties,
     pub optimizer: Optimizer,
     root: (Root, RuntimeModule),
-    surfaces: HashMap<SurfaceRef, (Surface, data_analyzer::SurfaceLayout, RuntimeModule)>,
-    blocks: HashMap<BlockRef, (Block, data_analyzer::BlockLayout, RuntimeModule)>,
+    surface_mirs: HashMap<SurfaceRef, Surface>,
+    surface_layouts: HashMap<SurfaceRef, data_analyzer::SurfaceLayout>,
+    surface_modules: HashMap<SurfaceRef, RuntimeModule>,
+    block_mirs: HashMap<BlockRef, Block>,
+    block_layouts: HashMap<BlockRef, data_analyzer::BlockLayout>,
+    block_modules: HashMap<BlockRef, RuntimeModule>,
     graph: DependencyGraph,
     jit: Option<&'a Jit>,
     pointers: Option<RuntimePointers>,
@@ -129,8 +134,12 @@ impl<'a> Runtime<'a> {
             target,
             optimizer,
             root: (Root::new(Vec::new()), RuntimeModule::new(root_module, None)),
-            surfaces: HashMap::new(),
-            blocks: HashMap::new(),
+            surface_mirs: HashMap::new(),
+            surface_layouts: HashMap::new(),
+            surface_modules: HashMap::new(),
+            block_mirs: HashMap::new(),
+            block_layouts: HashMap::new(),
+            block_modules: HashMap::new(),
             graph: DependencyGraph::new(),
             jit,
             pointers: None,
@@ -156,120 +165,16 @@ impl<'a> Runtime<'a> {
         module
     }
 
-    fn optimize_blocks<'b>(&self, blocks: impl IntoIterator<Item = &'b mut Block>) {
-        for block in blocks.into_iter() {
-            pass::remove_dead_code(block);
-        }
-    }
-
-    fn optimize_surfaces(&mut self, surfaces: impl IntoIterator<Item = Surface>) -> Vec<Surface> {
-        surfaces
-            .into_iter()
-            .flat_map(|mut surface| {
-                let new_surfaces = pass::group_extracted(&mut surface, self);
-                pass::remove_dead_groups(&mut surface);
-                new_surfaces.into_iter().chain(iter::once(surface))
-            })
-            .map(|mut surface| {
-                pass::order_nodes(&mut surface);
-                surface
-            })
-            .collect()
-    }
-
-    fn patch_in_blocks(&mut self, blocks: Vec<Block>) {
-        for block in blocks {
-            let layout = data_analyzer::build_block_layout(&self.context, &block, &self.target);
-            let module = Runtime::create_module(
-                &self.context,
-                &self.target,
-                &format!("block.{}.{}", block.id.id, block.id.debug_name),
-            );
-            if let Some(old_block) = self.blocks.insert(
-                block.id.id,
-                (block, layout, RuntimeModule::new(module, None)),
-            ) {
-                if let Some(ref jit) = self.jit {
-                    Runtime::remove_module(jit, &old_block.2);
-                }
-            }
-        }
-    }
-
-    fn patch_in_surfaces(&mut self, surfaces: Vec<Surface>) {
-        for surface in surfaces {
-            let layout = data_analyzer::build_surface_layout(self, &surface);
-            let module = Runtime::create_module(
-                &self.context,
-                &self.target,
-                &format!("surface.{}.{}", surface.id.id, surface.id.debug_name),
-            );
-            if let Some(old_block) = self.surfaces.insert(
-                surface.id.id,
-                (surface, layout, RuntimeModule::new(module, None)),
-            ) {
-                if let Some(ref jit) = self.jit {
-                    Runtime::remove_module(jit, &old_block.2);
-                }
-            }
-        }
-    }
-
-    fn codegen_blocks(&self, block_ids: &[BlockRef]) {
-        for block_id in block_ids {
-            let (ref block, _, ref module) = self.blocks[block_id];
-            block::build_funcs(&module.module, self, block);
-            self.optimizer.optimize_module(&module.module);
-        }
-    }
-
-    fn codegen_surfaces(&self, surface_ids: &[SurfaceRef]) {
-        for surface_id in surface_ids {
-            let (ref surface, _, ref module) = self.surfaces[surface_id];
-            surface::build_funcs(&module.module, self, surface);
-            self.optimizer.optimize_module(&module.module);
-        }
-    }
-
-    fn codegen_root(&self, root: &Root) -> Module {
-        let module = Runtime::create_module(&self.context, &self.target, "root");
-        let initialized_global =
-            root::build_initialized_global(&module, self, 0, INITIALIZED_GLOBAL_NAME);
-        let scratch_global = root::build_scratch_global(&module, self, 0, SCRATCH_GLOBAL_NAME);
-        let sockets_global =
-            root::build_sockets_global(&module, root, SOCKETS_GLOBAL_NAME, PORTALS_GLOBAL_NAME);
-        let pointers_global = root::build_pointers_global(
-            &module,
-            self,
-            0,
-            POINTERS_GLOBAL_NAME,
-            initialized_global.as_pointer_value(),
-            scratch_global.as_pointer_value(),
-            sockets_global.sockets.as_pointer_value(),
-        );
-        root::build_funcs(
-            &module,
-            self,
-            0,
-            CONSTRUCT_FUNC_NAME,
-            UPDATE_FUNC_NAME,
-            DESTRUCT_FUNC_NAME,
-            pointers_global.as_pointer_value(),
-        );
-        self.optimizer.optimize_module(&module);
-        module
-    }
-
-    fn sort_surfaces(surfaces: &mut [Surface], graph: &DependencyGraph) {
-        surfaces.sort_unstable_by(|a, b| {
+    fn sort_surfaces(surfaces: &mut [SurfaceRef], graph: &DependencyGraph) {
+        surfaces.sort_unstable_by(|&a, &b| {
             // if A is in B's depended_by list, A goes before
             // if A is in B's depends_on list, A goes after
             // otherwise, we don't know, so return equal
 
-            let b_deps = graph.get_surface_deps(b.id.id).unwrap();
-            if b_deps.depended_by.contains(&a.id.id) {
+            let b_deps = graph.get_surface_deps(b).unwrap();
+            if b_deps.depended_by.contains(&a) {
                 Ordering::Greater
-            } else if b_deps.depends_on_surfaces.contains(&a.id.id) {
+            } else if b_deps.depends_on_surfaces.contains(&a) {
                 Ordering::Less
             } else {
                 Ordering::Equal
@@ -277,7 +182,7 @@ impl<'a> Runtime<'a> {
         });
     }
 
-    fn get_deployable_surfaces(
+    fn get_affected_surfaces(
         graph: &DependencyGraph,
         blocks: &[BlockRef],
         surfaces: &[SurfaceRef],
@@ -321,18 +226,76 @@ impl<'a> Runtime<'a> {
     }
 
     fn deploy_module(jit: &Jit, module: &mut RuntimeModule) {
+        // if the module already has a key, remove it
+        if let Some(key) = module.key {
+            println!(
+                "Removing then deploying module {}",
+                module.module.get_name()
+            );
+            jit.remove(key);
+        } else {
+            println!("Deploying module {}", module.module.get_name());
+        }
         let key = jit.deploy(&module.module);
         module.key = Some(key);
     }
 
-    fn remove_module(jit: &Jit, module: &RuntimeModule) {
+    fn remove_module(jit: &Jit, module: &mut RuntimeModule) {
         if let Some(key) = module.key {
+            println!("Removing module {}", module.module.get_name());
             jit.remove(key);
+            module.key = None;
+        }
+    }
+
+    fn optimize_blocks<'b>(&self, blocks: impl IntoIterator<Item = &'b mut Block>) {
+        for block in blocks.into_iter() {
+            pass::remove_dead_code(block);
+        }
+    }
+
+    fn optimize_surfaces(&mut self, surfaces: impl IntoIterator<Item = Surface>) -> Vec<Surface> {
+        surfaces
+            .into_iter()
+            .flat_map(|mut surface| {
+                let new_surfaces = pass::group_extracted(&mut surface, self);
+                pass::remove_dead_groups(&mut surface);
+                new_surfaces.into_iter().chain(iter::once(surface))
+            })
+            .map(|mut surface| {
+                pass::order_nodes(&mut surface);
+                surface
+            })
+            .collect()
+    }
+
+    fn patch_in_blocks(&mut self, blocks: Vec<Block>) {
+        for block in blocks {
+            let id = block.id.id;
+            self.block_layouts.insert(
+                id,
+                data_analyzer::build_block_layout(&self.context, &block, &self.target),
+            );
+            self.block_mirs.insert(id, block);
+        }
+    }
+
+    fn patch_in_surfaces(&mut self, surfaces: Vec<Surface>, build_layout_surfaces: &[u64]) {
+        for surface in surfaces {
+            let id = surface.id.id;
+            self.surface_mirs.insert(id, surface);
+        }
+
+        // rebuild layouts for the flagged surfaces
+        for build_layout_surface in build_layout_surfaces {
+            let surface = &self.surface_mirs[build_layout_surface];
+            let layout = data_analyzer::build_surface_layout(self, surface);
+            self.surface_layouts.insert(*build_layout_surface, layout);
         }
     }
 
     fn patch_transaction(&mut self, transaction: Transaction) -> (Vec<BlockRef>, Vec<SurfaceRef>) {
-        let mut surfaces =
+        let surfaces =
             self.optimize_surfaces(transaction.surfaces.into_iter().map(|(_, surface)| surface));
         let mut blocks: Vec<_> = transaction
             .blocks
@@ -346,16 +309,18 @@ impl<'a> Runtime<'a> {
             self.graph.generate_surface(surface);
         }
 
-        // sort the surfaces in dependency order - this is important for when we generate types,
-        // and must be done after generating the graph (since it depends on the graph!)
-        Runtime::sort_surfaces(&mut surfaces, &self.graph);
-
-        // keep track of IDs of the new surfaces and blocks, for after we move them into the runtime
         let new_block_ids: Vec<_> = blocks.iter().map(|block| block.id.id).collect();
         let new_surface_ids: Vec<_> = surfaces.iter().map(|surface| surface.id.id).collect();
 
+        // Build a list of affected surfaces (i.e surfaces whose layouts may have changed) to
+        // recalculate layouts. This list must be sorted in dependency order, since layout
+        // calculation depends on layouts of surfaces inside.
+        let mut affected_surfaces =
+            Runtime::get_affected_surfaces(&self.graph, &new_block_ids, &new_surface_ids);
+        Runtime::sort_surfaces(&mut affected_surfaces, &self.graph);
+
         self.patch_in_blocks(blocks);
-        self.patch_in_surfaces(surfaces);
+        self.patch_in_surfaces(surfaces, &affected_surfaces);
         if let Some(new_root) = transaction.root {
             self.root.0 = new_root;
         }
@@ -363,37 +328,114 @@ impl<'a> Runtime<'a> {
         // remove orphaned objects
         self.garbage_collect();
 
-        (new_block_ids, new_surface_ids)
+        (new_block_ids, affected_surfaces)
+    }
+
+    fn codegen_blocks(&mut self, block_ids: &[BlockRef]) {
+        for &block_id in block_ids {
+            let block = &self.block_mirs[&block_id];
+
+            let module_id = if let Entry::Occupied(old_module) = self.block_modules.entry(block_id)
+            {
+                old_module.get().key
+            } else {
+                None
+            };
+
+            let module = RuntimeModule::new(
+                Runtime::create_module(
+                    &self.context,
+                    &self.target,
+                    &format!("block.{}.{}", block.id.id, block.id.debug_name),
+                ),
+                module_id,
+            );
+            block::build_funcs(&module.module, self, block);
+            self.optimizer.optimize_module(&module.module);
+            self.block_modules.insert(block_id, module);
+        }
+    }
+
+    fn codegen_surfaces(&mut self, surface_ids: &[SurfaceRef]) {
+        for &surface_id in surface_ids {
+            let surface = &self.surface_mirs[&surface_id];
+
+            let module_id =
+                if let Entry::Occupied(old_module) = self.surface_modules.entry(surface_id) {
+                    old_module.get().key
+                } else {
+                    None
+                };
+
+            let module = RuntimeModule::new(
+                Runtime::create_module(
+                    &self.context,
+                    &self.target,
+                    &format!("surface.{}.{}", surface.id.id, surface.id.debug_name),
+                ),
+                module_id,
+            );
+            surface::build_funcs(&module.module, self, surface);
+            self.optimizer.optimize_module(&module.module);
+            self.surface_modules.insert(surface_id, module);
+        }
+    }
+
+    fn codegen_root(&self, root: &Root) -> Module {
+        let module = Runtime::create_module(&self.context, &self.target, "root");
+        let initialized_global =
+            root::build_initialized_global(&module, self, 0, INITIALIZED_GLOBAL_NAME);
+        let scratch_global = root::build_scratch_global(&module, self, 0, SCRATCH_GLOBAL_NAME);
+        let sockets_global =
+            root::build_sockets_global(&module, root, SOCKETS_GLOBAL_NAME, PORTALS_GLOBAL_NAME);
+        let pointers_global = root::build_pointers_global(
+            &module,
+            self,
+            0,
+            POINTERS_GLOBAL_NAME,
+            initialized_global.as_pointer_value(),
+            scratch_global.as_pointer_value(),
+            sockets_global.sockets.as_pointer_value(),
+        );
+        root::build_funcs(
+            &module,
+            self,
+            0,
+            CONSTRUCT_FUNC_NAME,
+            UPDATE_FUNC_NAME,
+            DESTRUCT_FUNC_NAME,
+            pointers_global.as_pointer_value(),
+        );
+        self.optimizer.optimize_module(&module);
+        module
     }
 
     fn codegen_transaction(
         &mut self,
-        new_block_ids: Vec<BlockRef>,
-        new_surface_ids: Vec<SurfaceRef>,
+        new_block_ids: &[BlockRef],
+        affected_surfaces: &[SurfaceRef],
     ) {
-        self.codegen_blocks(&new_block_ids);
-        self.codegen_surfaces(&new_surface_ids);
-        let new_module = RuntimeModule::new(self.codegen_root(&self.root.0), None);
+        self.codegen_blocks(new_block_ids);
+        self.codegen_surfaces(affected_surfaces);
 
+        let new_root_module = RuntimeModule::new(self.codegen_root(&self.root.0), None);
         if let Some(ref jit) = self.jit {
-            Runtime::remove_module(jit, &self.root.1);
+            Runtime::remove_module(jit, &mut self.root.1);
         }
-        self.root.1 = new_module;
+        self.root.1 = new_root_module;
 
-        // deploy all modules and their parents
+        // deploy all modules
         if let Some(ref jit) = self.jit {
-            for block in &new_block_ids {
-                Runtime::deploy_module(jit, &mut self.blocks.get_mut(block).unwrap().2);
+            for block in new_block_ids {
+                Runtime::deploy_module(jit, self.block_modules.get_mut(block).unwrap());
             }
-            for surface in
-                Runtime::get_deployable_surfaces(&self.graph, &new_block_ids, &new_surface_ids)
-            {
-                Runtime::deploy_module(jit, &mut self.surfaces.get_mut(&surface).unwrap().2);
+            for surface in affected_surfaces {
+                Runtime::deploy_module(jit, self.surface_modules.get_mut(surface).unwrap());
             }
 
             Runtime::deploy_module(jit, &mut self.root.1);
-
             self.pointers = Some(RuntimePointers::new(jit));
+            println!("{:#?}", self.pointers);
         }
     }
 
@@ -406,7 +448,7 @@ impl<'a> Runtime<'a> {
             return;
         }
 
-        // run destructors on the old data before beginning
+        // run destructors on old data before beginning
         if let Some(ref pointers) = self.pointers {
             unsafe {
                 (pointers.destruct)();
@@ -414,19 +456,19 @@ impl<'a> Runtime<'a> {
         }
 
         let patch_start = time::precise_time_s();
-        let (new_block_ids, new_surface_ids) = self.patch_transaction(transaction);
+        let (new_block_ids, affected_surfaces) = self.patch_transaction(transaction);
         println!("Patch took {}s", time::precise_time_s() - patch_start);
 
         let codegen_start = time::precise_time_s();
-        self.codegen_transaction(new_block_ids, new_surface_ids);
+        self.codegen_transaction(&new_block_ids, &affected_surfaces);
         println!("Codegen took {}s", time::precise_time_s() - codegen_start);
 
         if let Some(ref pointers) = self.pointers {
-            // re-set the BPM and sample rate
+            // reset the BPM and sample rate
             Runtime::set_vector(pointers.bpm_ptr, self.bpm);
             Runtime::set_vector(pointers.samplerate_ptr, self.sample_rate);
 
-            // run the new constructors
+            // run the new constructor
             unsafe {
                 (pointers.construct)();
             }
@@ -438,23 +480,31 @@ impl<'a> Runtime<'a> {
         self.graph.garbage_collect();
 
         let graph = &self.graph;
+        let surface_mirs = &mut self.surface_mirs;
+        let surface_layouts = &mut self.surface_layouts;
+        let block_mirs = &mut self.block_mirs;
+        let block_layouts = &mut self.block_layouts;
         let jit = &self.jit;
 
         // we can now remove any objects that don't exist in the graph
-        self.surfaces.retain(|&key, &mut (_, _, ref module)| {
+        self.surface_modules.retain(|&key, module| {
             if graph.get_surface_deps(key).is_some() {
                 true
             } else {
+                surface_mirs.remove(&key);
+                surface_layouts.remove(&key);
                 if let &Some(ref jit) = jit {
                     Runtime::remove_module(jit, module);
                 }
                 false
             }
         });
-        self.blocks.retain(|&key, &mut (_, _, ref module)| {
+        self.block_modules.retain(|&key, module| {
             if graph.get_block_deps(key).is_some() {
                 true
             } else {
+                block_mirs.remove(&key);
+                block_layouts.remove(&key);
                 if let &Some(ref jit) = jit {
                     Runtime::remove_module(jit, module);
                 }
@@ -522,11 +572,11 @@ impl<'a> Runtime<'a> {
     pub fn print_mir(&self) {
         println!(">> Begin MIR");
         println!("Blocks >>");
-        for (_, &(ref block, _, _)) in &self.blocks {
+        for block in self.block_mirs.values() {
             println!("{:#?}", block);
         }
         println!("Surfaces >>");
-        for (_, &(ref surface, _, _)) in &self.surfaces {
+        for surface in self.surface_mirs.values() {
             println!("{:#?}", surface);
         }
         println!("Root: {:#?}", self.root.0);
@@ -534,16 +584,12 @@ impl<'a> Runtime<'a> {
     }
 
     pub fn print_modules(&self) {
-        for (_, &(ref block, _, ref module)) in &self.blocks {
-            println!("Block {:?}", block.id);
+        for module in self.block_modules.values() {
             module.module.print_to_stderr();
         }
-        for (_, &(ref surface, _, ref module)) in &self.surfaces {
-            println!("Surface {:?}", surface.id);
+        for module in self.surface_modules.values() {
             module.module.print_to_stderr();
         }
-
-        println!("Root");
         self.root.1.module.print_to_stderr();
     }
 }
@@ -558,31 +604,19 @@ impl<'a> ObjectCache for Runtime<'a> {
     }
 
     fn surface_mir(&self, id: SurfaceRef) -> Option<&Surface> {
-        match self.surfaces.get(&id) {
-            Some(surface) => Some(&surface.0),
-            None => None,
-        }
+        self.surface_mirs.get(&id)
     }
 
     fn surface_layout(&self, id: SurfaceRef) -> Option<&data_analyzer::SurfaceLayout> {
-        match self.surfaces.get(&id) {
-            Some(surface) => Some(&surface.1),
-            None => None,
-        }
+        self.surface_layouts.get(&id)
     }
 
     fn block_mir(&self, id: BlockRef) -> Option<&Block> {
-        match self.blocks.get(&id) {
-            Some(block) => Some(&block.0),
-            None => None,
-        }
+        self.block_mirs.get(&id)
     }
 
     fn block_layout(&self, id: BlockRef) -> Option<&data_analyzer::BlockLayout> {
-        match self.blocks.get(&id) {
-            Some(block) => Some(&block.1),
-            None => None,
-        }
+        self.block_layouts.get(&id)
     }
 }
 
