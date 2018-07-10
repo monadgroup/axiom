@@ -61,7 +61,7 @@ namespace AxiomModel {
 
         std::optional<MaximCompiler::Block> compiledBlock() const;
 
-        void build(MaximCompiler::Transaction *transaction);
+        void build(MaximCompiler::Transaction *transaction) override;
 
     private:
         QString _code;

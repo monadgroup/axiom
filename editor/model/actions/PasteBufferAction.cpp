@@ -52,7 +52,7 @@ void PasteBufferAction::serialize(QDataStream &stream) const {
     stream << center;
 }
 
-void PasteBufferAction::forward(bool, MaximCompiler::Transaction *) {
+void PasteBufferAction::forward(bool, MaximCompiler::Transaction *transaction) {
     assert(!buffer.isEmpty());
     assert(usedUuids.isEmpty());
 
@@ -84,10 +84,21 @@ void PasteBufferAction::forward(bool, MaximCompiler::Transaction *) {
         usedUuids.push_back(obj->uuid());
     }
 
-    // todo: handle transaction
+    // build the transaction with each item and parent
+    QSet<QUuid> transactionItems;
+    for (const auto &obj : used) {
+        if (!transactionItems.contains(obj->uuid())) {
+            obj->build(transaction);
+            transactionItems.insert(obj->uuid());
+        }
+        if (!transactionItems.contains(obj->parentUuid())) {
+            find<ModelObject *>(root()->pool().sequence(), obj->parentUuid())->build(transaction);
+            transactionItems.insert(obj->parentUuid());
+        }
+    }
 }
 
-void PasteBufferAction::backward(MaximCompiler::Transaction *) {
+void PasteBufferAction::backward(MaximCompiler::Transaction *transaction) {
     assert(buffer.isEmpty());
     assert(!usedUuids.isEmpty());
 
@@ -100,6 +111,12 @@ void PasteBufferAction::backward(MaximCompiler::Transaction *) {
     auto objs = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), usedSet);
     auto collected = collect(objs);
 
+    QSet<QUuid> parentIds;
+    for (const auto &itm : collected) {
+        parentIds.remove(itm->uuid());
+        parentIds.insert(itm->parentUuid());
+    }
+
     stream << QPoint(0, 0);
     ModelRoot::serializeChunk(stream, surfaceUuid, collected);
 
@@ -109,5 +126,9 @@ void PasteBufferAction::backward(MaximCompiler::Transaction *) {
         (*objs.begin())->remove();
     }
 
-    // todo: handle transaction
+    // build the transaction with the object parents
+    auto parentItems = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(parentIds));
+    for (const auto &parent : parentItems) {
+        parent->build(transaction);
+    }
 }

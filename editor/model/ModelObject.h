@@ -7,6 +7,10 @@
 #include "Sequence.h"
 #include "common/Event.h"
 
+namespace MaximCompiler {
+    class Transaction;
+}
+
 namespace AxiomModel {
 
     class ModelRoot;
@@ -36,6 +40,8 @@ namespace AxiomModel {
         ModelRoot *root() const { return _root; }
 
         virtual Sequence<ModelObject *> links();
+
+        virtual void build(MaximCompiler::Transaction *transaction) {}
 
         void remove() override;
 

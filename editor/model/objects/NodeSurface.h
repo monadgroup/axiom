@@ -67,7 +67,7 @@ namespace AxiomModel {
 
         void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr);
 
-        void build(MaximCompiler::Transaction *transaction);
+        void build(MaximCompiler::Transaction *transaction) override;
 
         void doRuntimeUpdate();
 

@@ -34,10 +34,8 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
     stream << buffer;
 }
 
-void DeleteObjectAction::forward(bool, MaximCompiler::Transaction *) {
-    auto removeItems = getRemoveItems();
-
-    auto sortedItems = heapSort(removeItems);
+void DeleteObjectAction::forward(bool, MaximCompiler::Transaction *transaction) {
+    auto sortedItems = collect(heapSort(getRemoveItems()));
 
     QDataStream stream(&buffer, QIODevice::WriteOnly);
     ModelRoot::serializeChunk(stream, QUuid(), sortedItems);
@@ -46,9 +44,13 @@ void DeleteObjectAction::forward(bool, MaximCompiler::Transaction *) {
     // as objects also delete their children.
     // Instead, we build a list of UUIDs to delete, create a Sequence of them, and iterate
     // until that's empty.
+    // We'll also need a list of parent UUIDs to build transactions later, so we can do that here.
     QSet<QUuid> usedIds;
+    QSet<QUuid> parentIds;
     for (const auto &itm : sortedItems) {
         usedIds.insert(itm->uuid());
+        parentIds.remove(itm->uuid());
+        parentIds.insert(itm->parentUuid());
     }
     auto itemsToDelete = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(usedIds));
 
@@ -57,16 +59,31 @@ void DeleteObjectAction::forward(bool, MaximCompiler::Transaction *) {
         (*itemsToDelete.begin())->remove();
     }
 
-    // todo: handle transaction
+    // build transaction for all parent items
+    auto parentItems = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(parentIds));
+    for (const auto &parent : parentItems) {
+        parent->build(transaction);
+    }
 }
 
-void DeleteObjectAction::backward(MaximCompiler::Transaction *) {
+void DeleteObjectAction::backward(MaximCompiler::Transaction *transaction) {
     QDataStream stream(&buffer, QIODevice::ReadOnly);
     IdentityReferenceMapper ref;
-    root()->deserializeChunk(stream, QUuid(), &ref);
+    auto addedObjects = root()->deserializeChunk(stream, QUuid(), &ref);
     buffer.clear();
 
-    // todo: handle transaction
+    // build the transaction for each object and parent
+    QSet<QUuid> transactionItems;
+    for (const auto &obj : addedObjects) {
+        if (!transactionItems.contains(obj->uuid())) {
+            obj->build(transaction);
+            transactionItems.insert(obj->uuid());
+        }
+        if (!transactionItems.contains(obj->parentUuid())) {
+            find<ModelObject *>(root()->pool().sequence(), obj->parentUuid())->build(transaction);
+            transactionItems.insert(obj->parentUuid());
+        }
+    }
 }
 
 Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {

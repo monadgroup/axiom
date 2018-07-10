@@ -70,6 +70,7 @@ std::lock_guard<std::mutex> ModelRoot::lockRuntime() {
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     auto lock = lockRuntime();
 
+    transaction.printToStdout();
     if (_runtime) {
         _runtime->commit(std::move(transaction));
     }
