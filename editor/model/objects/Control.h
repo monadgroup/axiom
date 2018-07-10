@@ -97,9 +97,9 @@ namespace AxiomModel {
 
         Sequence<ModelObject *> links() override;
 
-        const std::optional<ControlCompileMeta> &compileMeta() const { return _compileMeta; }
+        const std::optional<ControlCompileMeta> &compileMeta() const;
 
-        const std::optional<MaximFrontend::ControlPointers> &runtimePointers() const { return _runtimePointers; }
+        const std::optional<MaximFrontend::ControlPointers> &runtimePointers() const;
 
         void setCompileMeta(std::optional<ControlCompileMeta> compileMeta) { _compileMeta = std::move(compileMeta); }
 

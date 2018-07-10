@@ -228,13 +228,7 @@ impl<'a> Runtime<'a> {
     fn deploy_module(jit: &Jit, module: &mut RuntimeModule) {
         // if the module already has a key, remove it
         if let Some(key) = module.key {
-            println!(
-                "Removing then deploying module {}",
-                module.module.get_name()
-            );
             jit.remove(key);
-        } else {
-            println!("Deploying module {}", module.module.get_name());
         }
         let key = jit.deploy(&module.module);
         module.key = Some(key);
@@ -242,7 +236,6 @@ impl<'a> Runtime<'a> {
 
     fn remove_module(jit: &Jit, module: &mut RuntimeModule) {
         if let Some(key) = module.key {
-            println!("Removing module {}", module.module.get_name());
             jit.remove(key);
             module.key = None;
         }
@@ -435,7 +428,6 @@ impl<'a> Runtime<'a> {
 
             Runtime::deploy_module(jit, &mut self.root.1);
             self.pointers = Some(RuntimePointers::new(jit));
-            println!("{:#?}", self.pointers);
         }
     }
 

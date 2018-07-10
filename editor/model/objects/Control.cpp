@@ -173,6 +173,22 @@ Sequence<ModelObject *> Control::links() {
         staticCast<ModelObject *>(_connections.sequence()).sequence()});
 }
 
+const std::optional<ControlCompileMeta> &Control::compileMeta() const {
+    if (exposingUuid().isNull()) {
+        return _compileMeta;
+    } else {
+        return find(root()->controls(), exposingUuid())->compileMeta();
+    }
+}
+
+const std::optional<MaximFrontend::ControlPointers> &Control::runtimePointers() const {
+    if (exposingUuid().isNull()) {
+        return _runtimePointers;
+    } else {
+        return find(root()->controls(), exposingUuid())->runtimePointers();
+    }
+}
+
 void Control::updateRuntimePointers(MaximCompiler::Runtime *runtime, uint64_t blockId, void *blockPtr) {
     _runtimePointers = runtime->getControlPtrs(blockId, blockPtr, _compileMeta->index);
 }
