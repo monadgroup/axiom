@@ -12,7 +12,7 @@ static std::unique_ptr<AxiomModel::Project> createProject(MaximCompiler::Runtime
 }
 
 AxiomEditor::AxiomEditor(AxiomBackend::AudioBackend *backend)
-    : _runtime(true, false, AxiomApplication::main.jit()), _window(createProject(&_runtime, backend)) {
+    : _runtime(true, true, AxiomApplication::main.jit()), _window(createProject(&_runtime, backend)) {
     backend->setEditor(this);
     _window.project()->mainRoot().attachBackend(backend);
     backend->internalUpdateConfiguration();
