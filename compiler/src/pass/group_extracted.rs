@@ -112,7 +112,6 @@ impl<'a> GroupExtractor<'a> {
             // mark that the node has been moved to the source map
             let surface_ref =
                 mir::InternalNodeRef::Surface(self.surface.nodes.len(), new_nodes.len());
-            println!("Moving {} into {:?}", node_index, surface_ref);
             self.surface.source_map.move_into(node_index, surface_ref);
 
             new_nodes.push(new_node)

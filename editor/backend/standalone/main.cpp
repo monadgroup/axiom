@@ -12,8 +12,6 @@ public:
     NumValue **outputPortal = nullptr;
 
     void handleConfigurationChange(const AudioConfiguration &configuration) override {
-        std::cout << "Got configuration change!" << std::endl;
-
         // we only care about the first number output portal
         outputPortal = nullptr;
         for (size_t i = 0; i < configuration.portals.size(); i++) {

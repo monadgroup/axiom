@@ -16,6 +16,7 @@ use std::iter::FromIterator;
 use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
+use time;
 
 #[derive(Debug)]
 struct RuntimeModule {
@@ -119,7 +120,6 @@ impl<'a> Runtime<'a> {
         if let Some(ref jit) = jit {
             let library_module = Runtime::codegen_lib(&context, &target);
             optimizer.optimize_module(&library_module);
-            library_module.print_to_stderr();
             jit.deploy(&library_module);
         }
 
@@ -407,8 +407,6 @@ impl<'a> Runtime<'a> {
             return;
         }
 
-        println!("Transaction: {:#?}", transaction);
-
         // run destructors on the old data before beginning
         if let Some(ref pointers) = self.pointers {
             unsafe {
@@ -416,10 +414,13 @@ impl<'a> Runtime<'a> {
             }
         }
 
+        let patch_start = time::precise_time_s();
         let (new_block_ids, new_surface_ids) = self.patch_transaction(transaction);
+        println!("Patch took {}s", time::precise_time_s() - patch_start);
 
+        let codegen_start = time::precise_time_s();
         self.codegen_transaction(new_block_ids, new_surface_ids);
-        self.print_modules();
+        println!("Codegen took {}s", time::precise_time_s() - codegen_start);
 
         if let Some(ref pointers) = self.pointers {
             // re-set the BPM and sample rate

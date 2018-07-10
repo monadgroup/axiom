@@ -175,9 +175,6 @@ Sequence<ModelObject *> Control::links() {
 
 void Control::updateRuntimePointers(MaximCompiler::Runtime *runtime, uint64_t blockId, void *blockPtr) {
     _runtimePointers = runtime->getControlPtrs(blockId, blockPtr, _compileMeta->index);
-
-    std::cout << "Control value = " << _runtimePointers->value << ", data = " << _runtimePointers->data
-              << ", ui = " << _runtimePointers->ui << std::endl;
 }
 
 void Control::remove() {
