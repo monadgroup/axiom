@@ -8,9 +8,7 @@ pub fn gen_load_control_statement(
     field: &ControlField,
     node: &mut BlockContext,
 ) -> PointerValue {
-    let layout_index = node.layout.control_index(control);
-    let control_data = node.get_data_entry(layout_index);
-    let control_group = node.get_group_entry(layout_index);
+    let ptrs = node.get_control_ptrs(control, false);
 
     // allocate data for the field output
     let field_type = controls::get_field_type(node.ctx.context, *field);
@@ -20,8 +18,8 @@ pub fn gen_load_control_statement(
         node.ctx.module,
         node.ctx.b,
         *field,
-        control_group,
-        control_data,
+        ptrs.value,
+        ptrs.data,
         result_ptr,
     );
     result_ptr

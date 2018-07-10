@@ -20,10 +20,7 @@ fn get_lifecycle_func(
         (
             Linkage::ExternalLinkage,
             context.void_type().fn_type(
-                &[
-                    &layout.scratch_struct.ptr_type(AddressSpace::Generic),
-                    &layout.pointer_struct.ptr_type(AddressSpace::Generic),
-                ],
+                &[&layout.pointer_struct.ptr_type(AddressSpace::Generic)],
                 false,
             ),
         )
@@ -35,28 +32,18 @@ fn build_node_call(
     cache: &ObjectCache,
     node: &Node,
     lifecycle: LifecycleFunc,
-    scratch_ptr: PointerValue,
     pointers_ptr: PointerValue,
 ) {
     match &node.data {
         NodeData::Dummy => {}
         NodeData::Custom(block_id) => {
-            let data_ptr = unsafe { ctx.b.build_struct_gep(&scratch_ptr, 0, "") };
-            let ui_ptr = if cache.target().include_ui {
-                Some(unsafe { ctx.b.build_struct_gep(&scratch_ptr, 1, "") })
-            } else {
-                None
-            };
-
             block::build_lifecycle_call(
                 ctx.module,
                 cache,
                 ctx.b,
                 *block_id,
                 lifecycle,
-                data_ptr,
                 pointers_ptr,
-                ui_ptr,
             );
         }
         NodeData::Group(surface_id) => {
@@ -66,7 +53,6 @@ fn build_node_call(
                 ctx.b,
                 *surface_id,
                 lifecycle,
-                scratch_ptr,
                 pointers_ptr,
             );
         }
@@ -183,10 +169,6 @@ fn build_node_call(
             ctx.b.position_at_end(&run_block);
 
             let const_zero = ctx.context.i32_type().const_int(0, false);
-            let voice_scratch_ptr = unsafe {
-                ctx.b
-                    .build_in_bounds_gep(&scratch_ptr, &[const_zero, index_32], "scratchptr")
-            };
             let voice_pointers_ptr = unsafe {
                 ctx.b.build_in_bounds_gep(
                     &voice_socket_pointers,
@@ -201,7 +183,6 @@ fn build_node_call(
                 ctx.b,
                 *surface_id,
                 lifecycle,
-                voice_scratch_ptr,
                 voice_pointers_ptr,
             );
 
@@ -248,31 +229,16 @@ pub fn build_lifecycle_func(
     let func = get_lifecycle_func(module, cache, surface.id.id, lifecycle);
     build_context_function(module, func, cache.target(), &|mut ctx: BuilderContext| {
         let layout = cache.surface_layout(surface.id.id).unwrap();
-        let scratch_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let pointers_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let pointers_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
 
         for (node_index, node) in surface.nodes.iter().enumerate() {
             let layout_ptr_index = layout.node_ptr_index(node_index);
-            let node_scratch_ptr = unsafe {
-                ctx.b.build_struct_gep(
-                    &scratch_ptr,
-                    layout.node_scratch_index(node_index) as u32,
-                    "",
-                )
-            };
             let node_pointers_ptr = unsafe {
                 ctx.b
                     .build_struct_gep(&pointers_ptr, layout_ptr_index as u32, "")
             };
 
-            build_node_call(
-                &mut ctx,
-                cache,
-                node,
-                lifecycle,
-                node_scratch_ptr,
-                node_pointers_ptr,
-            );
+            build_node_call(&mut ctx, cache, node, lifecycle, node_pointers_ptr);
         }
 
         ctx.b.build_return(None);
@@ -291,9 +257,8 @@ pub fn build_lifecycle_call(
     builder: &mut Builder,
     surface: SurfaceRef,
     lifecycle: LifecycleFunc,
-    scratch_ptr: PointerValue,
     pointer_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, cache, surface, lifecycle);
-    builder.build_call(&func, &[&scratch_ptr, &pointer_ptr], "", false);
+    builder.build_call(&func, &[&pointer_ptr], "", false);
 }

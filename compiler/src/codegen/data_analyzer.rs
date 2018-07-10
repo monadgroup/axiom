@@ -47,9 +47,8 @@ pub struct NodeLayout {
 #[derive(Debug, Clone)]
 pub struct BlockLayout {
     pub scratch_struct: StructType,
-    pub groups_struct: StructType,
-    pub group_sources: Vec<usize>,
-    pub ui_struct: Option<StructType>,
+    pub pointer_struct: StructType,
+    pub pointer_sources: Vec<PointerSource>,
     pub functions: Vec<Function>,
     control_count: usize,
     func_indexes: HashMap<usize, usize>,
@@ -95,25 +94,11 @@ pub fn build_node_layout(
             // a block never has an initialized struct
             let initialized_const = context.const_struct(&[], false);
 
-            // the output scratch type is the block's scratch type + it's UI data, if it exists
-            let scratch_struct = if let Some(ui_struct) = block_layout.ui_struct {
-                context.struct_type(&[&block_layout.scratch_struct, &ui_struct], false)
-            } else {
-                context.struct_type(&[&block_layout.scratch_struct], false)
-            };
-
-            let pointer_struct = block_layout.groups_struct;
-            let pointer_sources: Vec<_> = block_layout
-                .group_sources
-                .iter()
-                .map(|&socket_index| PointerSource::Socket(socket_index, vec![]))
-                .collect();
-
             NodeLayout {
                 initialized_const,
-                scratch_struct: scratch_struct.into(),
-                pointer_struct,
-                pointer_sources,
+                scratch_struct: block_layout.scratch_struct.into(),
+                pointer_struct: block_layout.pointer_struct,
+                pointer_sources: block_layout.pointer_sources.clone(),
             }
         }
         NodeData::Group(surface_id) => {
@@ -269,62 +254,96 @@ fn map_extract_pointer_source(
 }
 
 /// Builds up the structure types used for retaining state of a block.
-/// Blocks are made up of two or three structs, depending on if we're in the editor or not:
-///
-///  - `scratch` is a struct that is initialized to zero. It contains runtime data used by controls
-///    and functions for persistance between samples.
-///  - `groups` is a struct with an entry per control pointing to the group values.
-///  - `ui` is a zero-initialized struct similar to `scratch` which contains UI data for controls
-///    that use it.
+/// Pointers is:
+///  - Controls
+///     - Value ptr (points to socket)
+///     - Data ptr  (points to scratch)
+///     - UI ptr    (points to scratch)
+///  - Functions
+///     - Data (points to scratch)
 pub fn build_block_layout(
     context: &Context,
     block: &Block,
     target: &TargetProperties,
 ) -> BlockLayout {
     let mut scratch_types = Vec::new();
-    let mut group_types = Vec::new();
-    let mut group_sources = Vec::new();
-    let mut ui_types = if target.include_ui {
-        Some(Vec::new())
-    } else {
-        None
-    };
+    let mut pointer_types: Vec<BasicTypeEnum> = Vec::new();
+    let mut pointer_sources = Vec::new();
     let mut functions = Vec::new();
     let mut func_indexes = HashMap::new();
 
     for (control_index, control) in block.controls.iter().enumerate() {
-        scratch_types.push(controls::get_data_type(context, control.control_type));
-        group_types.push(
-            controls::get_group_type(context, control.control_type).ptr_type(AddressSpace::Generic),
-        );
-        group_sources.push(control_index);
+        let data_index = scratch_types.len();
+        let data_type = controls::get_data_type(context, control.control_type);
+        scratch_types.push(data_type);
 
-        if let Some(ref mut ui_types) = ui_types {
-            ui_types.push(controls::get_ui_type(context, control.control_type));
+        if target.include_ui {
+            let ui_type = controls::get_ui_type(context, control.control_type);
+            scratch_types.push(ui_type);
+
+            pointer_sources.push(PointerSource::Aggregate(
+                PointerSourceAggregateType::Struct,
+                vec![
+                    PointerSource::Socket(control_index, Vec::new()),
+                    PointerSource::Scratch(vec![data_index]),
+                    PointerSource::Scratch(vec![data_index + 1]),
+                ],
+            ));
+            pointer_types.push(
+                context
+                    .struct_type(
+                        &[
+                            &controls::get_group_type(context, control.control_type)
+                                .ptr_type(AddressSpace::Generic),
+                            &data_type.ptr_type(AddressSpace::Generic),
+                            &ui_type.ptr_type(AddressSpace::Generic),
+                        ],
+                        false,
+                    )
+                    .into(),
+            );
+        } else {
+            pointer_sources.push(PointerSource::Aggregate(
+                PointerSourceAggregateType::Struct,
+                vec![
+                    PointerSource::Socket(control_index, Vec::new()),
+                    PointerSource::Scratch(vec![data_index]),
+                ],
+            ));
+            pointer_types.push(
+                context
+                    .struct_type(
+                        &[
+                            &controls::get_group_type(context, control.control_type)
+                                .ptr_type(AddressSpace::Generic),
+                            &data_type.ptr_type(AddressSpace::Generic),
+                        ],
+                        false,
+                    )
+                    .into(),
+            );
         }
     }
 
     for (index, statement) in block.statements.iter().enumerate() {
         if let Statement::CallFunc { function, .. } = statement {
             functions.push(*function);
-            func_indexes.insert(index, scratch_types.len());
-            scratch_types.push(functions::get_data_type(context, *function));
+            func_indexes.insert(index, pointer_sources.len());
+            let func_type = functions::get_data_type(context, *function);
+            let scratch_index = scratch_types.len();
+            scratch_types.push(func_type);
+            pointer_sources.push(PointerSource::Scratch(vec![scratch_index]));
+            pointer_types.push(func_type.ptr_type(AddressSpace::Generic).into());
         }
     }
 
     let scratch_type_refs: Vec<_> = scratch_types.iter().map(|x| x as &BasicType).collect();
-    let group_type_refs: Vec<_> = group_types.iter().map(|x| x as &BasicType).collect();
+    let pointer_type_refs: Vec<_> = pointer_types.iter().map(|x| x as &BasicType).collect();
 
     BlockLayout {
         scratch_struct: context.struct_type(&scratch_type_refs, false),
-        groups_struct: context.struct_type(&group_type_refs, false),
-        group_sources,
-        ui_struct: if let Some(ui_types) = ui_types {
-            let ui_type_refs: Vec<_> = ui_types.iter().map(|x| x as &BasicType).collect();
-            Some(context.struct_type(&ui_type_refs, false))
-        } else {
-            None
-        },
+        pointer_struct: context.struct_type(&pointer_type_refs, false),
+        pointer_sources,
         functions,
         control_count: block.controls.len(),
         func_indexes,

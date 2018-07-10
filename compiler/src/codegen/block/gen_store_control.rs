@@ -10,17 +10,15 @@ pub fn gen_store_control_statement(
     value: usize,
     node: &mut BlockContext,
 ) -> PointerValue {
-    let layout_index = node.layout.control_index(control);
-    let control_data = node.get_data_entry(layout_index);
-    let control_group = node.get_group_entry(layout_index);
+    let ptrs = node.get_control_ptrs(control, false);
 
     let store_val = node.get_statement(value);
     controls::build_field_set(
         node.ctx.module,
         node.ctx.b,
         *field,
-        control_group,
-        control_data,
+        ptrs.value,
+        ptrs.data,
         store_val,
     );
 

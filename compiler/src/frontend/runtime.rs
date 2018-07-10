@@ -119,6 +119,7 @@ impl<'a> Runtime<'a> {
         if let Some(ref jit) = jit {
             let library_module = Runtime::codegen_lib(&context, &target);
             optimizer.optimize_module(&library_module);
+            library_module.print_to_stderr();
             jit.deploy(&library_module);
         }
 
@@ -253,7 +254,6 @@ impl<'a> Runtime<'a> {
             CONSTRUCT_FUNC_NAME,
             UPDATE_FUNC_NAME,
             DESTRUCT_FUNC_NAME,
-            scratch_global.as_pointer_value(),
             pointers_global.as_pointer_value(),
         );
         self.optimizer.optimize_module(&module);
@@ -418,9 +418,8 @@ impl<'a> Runtime<'a> {
 
         let (new_block_ids, new_surface_ids) = self.patch_transaction(transaction);
 
-        self.print_mir();
-
         self.codegen_transaction(new_block_ids, new_surface_ids);
+        self.print_modules();
 
         if let Some(ref pointers) = self.pointers {
             // re-set the BPM and sample rate

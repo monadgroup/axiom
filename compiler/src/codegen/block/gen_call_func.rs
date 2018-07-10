@@ -11,7 +11,7 @@ pub fn gen_call_func_statement(
     node: &mut BlockContext,
 ) -> PointerValue {
     let layout_index = node.layout.statement_index(index).unwrap();
-    let func_data = node.get_data_entry(layout_index);
+    let func_data = node.get_function_ptr(layout_index);
 
     // allocate data for the function result
     let return_type = functions::get_return_type(node.ctx.context, *function);

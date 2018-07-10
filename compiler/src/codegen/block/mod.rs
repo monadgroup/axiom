@@ -75,26 +75,13 @@ fn get_lifecycle_func(
         let context = module.get_context();
         let layout = cache.block_layout(block).unwrap();
 
-        let func_type = if let Some(ui_struct) = layout.ui_struct {
+        (
+            Linkage::ExternalLinkage,
             context.void_type().fn_type(
-                &[
-                    &layout.scratch_struct.ptr_type(AddressSpace::Generic),
-                    &layout.groups_struct.ptr_type(AddressSpace::Generic),
-                    &ui_struct.ptr_type(AddressSpace::Generic),
-                ],
+                &[&layout.pointer_struct.ptr_type(AddressSpace::Generic)],
                 false,
-            )
-        } else {
-            context.void_type().fn_type(
-                &[
-                    &layout.scratch_struct.ptr_type(AddressSpace::Generic),
-                    &layout.groups_struct.ptr_type(AddressSpace::Generic),
-                ],
-                false,
-            )
-        };
-
-        (Linkage::ExternalLinkage, func_type)
+            ),
+        )
     })
 }
 
@@ -115,14 +102,8 @@ fn build_lifecycle_func(
     let func = get_lifecycle_func(module, cache, block, lifecycle);
     build_context_function(module, func, cache.target(), &|ctx: BuilderContext| {
         let layout = cache.block_layout(block).unwrap();
-        let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let group_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
-        let ui_ptr = if let Some(param) = ctx.func.get_nth_param(2) {
-            Some(param.into_pointer_value())
-        } else {
-            None
-        };
-        let mut ctx = BlockContext::new(ctx, layout, data_ptr, group_ptr, ui_ptr);
+        let pointers_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
+        let mut ctx = BlockContext::new(ctx, layout, pointers_ptr);
         cb(&mut ctx);
         ctx.ctx.b.build_return(None);
     });
@@ -136,26 +117,24 @@ pub fn build_construct_func(module: &Module, cache: &ObjectCache, block: &Block)
         LifecycleFunc::Construct,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
-                let layout_index = block_ctx.layout.control_index(control_index);
-                let data_ptr = block_ctx.get_data_entry(layout_index);
-                let group_ptr = block_ctx.get_group_entry(layout_index);
+                let ptrs = block_ctx.get_control_ptrs(control_index, cache.target().include_ui);
                 controls::build_lifecycle_call(
                     module,
                     &mut block_ctx.ctx.b,
                     control.control_type,
                     LifecycleFunc::Construct,
-                    group_ptr,
-                    data_ptr,
+                    ptrs.value,
+                    ptrs.data,
                 );
 
-                if let Some(ui_ptr) = block_ctx.get_ui_entry(layout_index) {
+                if let Some(ui_ptr) = ptrs.ui {
                     controls::build_ui_lifecycle_call(
                         module,
                         &mut block_ctx.ctx.b,
                         control.control_type,
                         LifecycleFunc::Construct,
-                        group_ptr,
-                        data_ptr,
+                        ptrs.value,
+                        ptrs.data,
                         ui_ptr,
                     );
                 }
@@ -163,7 +142,7 @@ pub fn build_construct_func(module: &Module, cache: &ObjectCache, block: &Block)
 
             for (func_index, function) in block_ctx.layout.functions.iter().enumerate() {
                 let layout_index = block_ctx.layout.function_index(func_index);
-                let data_ptr = block_ctx.get_data_entry(layout_index);
+                let data_ptr = block_ctx.get_function_ptr(layout_index);
                 functions::build_lifecycle_call(
                     module,
                     &mut block_ctx.ctx.b,
@@ -184,26 +163,24 @@ pub fn build_update_func(module: &Module, cache: &ObjectCache, block: &Block) {
         LifecycleFunc::Update,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
-                let layout_index = block_ctx.layout.control_index(control_index);
-                let data_ptr = block_ctx.get_data_entry(layout_index);
-                let group_ptr = block_ctx.get_group_entry(layout_index);
+                let ptrs = block_ctx.get_control_ptrs(control_index, cache.target().include_ui);
                 controls::build_lifecycle_call(
                     module,
                     &mut block_ctx.ctx.b,
                     control.control_type,
                     LifecycleFunc::Update,
-                    group_ptr,
-                    data_ptr,
+                    ptrs.value,
+                    ptrs.data,
                 );
 
-                if let Some(ui_ptr) = block_ctx.get_ui_entry(layout_index) {
+                if let Some(ui_ptr) = ptrs.ui {
                     controls::build_ui_lifecycle_call(
                         module,
                         &mut block_ctx.ctx.b,
                         control.control_type,
                         LifecycleFunc::Update,
-                        group_ptr,
-                        data_ptr,
+                        ptrs.value,
+                        ptrs.data,
                         ui_ptr,
                     );
                 }
@@ -225,17 +202,16 @@ pub fn build_destruct_func(module: &Module, cache: &ObjectCache, block: &Block) 
         LifecycleFunc::Destruct,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
-                let layout_index = block_ctx.layout.control_index(control_index);
-                let data_ptr = block_ctx.get_data_entry(layout_index);
-                let group_ptr = block_ctx.get_group_entry(layout_index);
-                if let Some(ui_ptr) = block_ctx.get_ui_entry(layout_index) {
+                let ptrs = block_ctx.get_control_ptrs(control_index, cache.target().include_ui);
+
+                if let Some(ui_ptr) = ptrs.ui {
                     controls::build_ui_lifecycle_call(
                         module,
                         &mut block_ctx.ctx.b,
                         control.control_type,
                         LifecycleFunc::Destruct,
-                        group_ptr,
-                        data_ptr,
+                        ptrs.value,
+                        ptrs.data,
                         ui_ptr,
                     );
                 }
@@ -245,14 +221,14 @@ pub fn build_destruct_func(module: &Module, cache: &ObjectCache, block: &Block) 
                     &mut block_ctx.ctx.b,
                     control.control_type,
                     LifecycleFunc::Destruct,
-                    group_ptr,
-                    data_ptr,
+                    ptrs.value,
+                    ptrs.data,
                 );
             }
 
             for (func_index, function) in block_ctx.layout.functions.iter().enumerate() {
                 let layout_index = block_ctx.layout.function_index(func_index);
-                let data_ptr = block_ctx.get_data_entry(layout_index);
+                let data_ptr = block_ctx.get_function_ptr(layout_index);
                 functions::build_lifecycle_call(
                     module,
                     &mut block_ctx.ctx.b,
@@ -277,14 +253,8 @@ pub fn build_lifecycle_call(
     builder: &mut Builder,
     block: BlockRef,
     lifecycle: LifecycleFunc,
-    scratch_ptr: PointerValue,
-    groups_ptr: PointerValue,
-    ui_ptr: Option<PointerValue>,
+    pointers_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, cache, block, lifecycle);
-    if let Some(ui_ptr) = ui_ptr {
-        builder.build_call(&func, &[&scratch_ptr, &groups_ptr, &ui_ptr], "", false);
-    } else {
-        builder.build_call(&func, &[&scratch_ptr, &groups_ptr], "", false);
-    }
+    builder.build_call(&func, &[&pointers_ptr], "", false);
 }

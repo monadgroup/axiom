@@ -6,26 +6,26 @@ pub struct BlockContext<'a> {
     pub ctx: BuilderContext<'a>,
     pub layout: &'a BlockLayout,
     statement_ptrs: Vec<PointerValue>,
-    data_ptr: PointerValue,
-    group_ptr: PointerValue,
-    ui_ptr: Option<PointerValue>,
+    pointers_ptr: PointerValue,
+}
+
+pub struct ControlPointers {
+    pub value: PointerValue,
+    pub data: PointerValue,
+    pub ui: Option<PointerValue>,
 }
 
 impl<'a> BlockContext<'a> {
     pub fn new(
         ctx: BuilderContext<'a>,
         layout: &'a BlockLayout,
-        data_ptr: PointerValue,
-        group_ptr: PointerValue,
-        ui_ptr: Option<PointerValue>,
+        pointers_ptr: PointerValue,
     ) -> Self {
         BlockContext {
             ctx,
             layout,
             statement_ptrs: Vec::new(),
-            data_ptr,
-            group_ptr,
-            ui_ptr,
+            pointers_ptr,
         }
     }
 
@@ -37,40 +37,69 @@ impl<'a> BlockContext<'a> {
         self.statement_ptrs[index]
     }
 
-    pub fn get_data_entry(&self, index: usize) -> PointerValue {
-        unsafe {
+    pub fn get_control_ptrs(&self, index: usize, include_ui: bool) -> ControlPointers {
+        let layout_index = self.layout.control_index(index);
+        let base_ptr = unsafe {
             self.ctx
                 .b
-                .build_struct_gep(&self.data_ptr, index as u32, "ctx.dataentry")
-        }
-    }
-
-    pub fn get_group_entry(&self, index: usize) -> PointerValue {
-        unsafe {
-            self.ctx
+                .build_struct_gep(&self.pointers_ptr, layout_index as u32, "ctx.control")
+        };
+        ControlPointers {
+            value: self.ctx
                 .b
                 .build_load(
-                    &self.ctx.b.build_struct_gep(
-                        &self.group_ptr,
-                        index as u32,
-                        "ctx.groupentry.ptr",
-                    ),
-                    "ctx.groupentry",
+                    &unsafe {
+                        self.ctx
+                            .b
+                            .build_struct_gep(&base_ptr, 0, "ctx.control.value.ptr")
+                    },
+                    "ctx.control.value",
                 )
-                .into_pointer_value()
-        }
-    }
-
-    pub fn get_ui_entry(&self, index: usize) -> Option<PointerValue> {
-        match self.ui_ptr {
-            Some(val) => unsafe {
+                .into_pointer_value(),
+            data: self.ctx
+                .b
+                .build_load(
+                    &unsafe {
+                        self.ctx
+                            .b
+                            .build_struct_gep(&base_ptr, 1, "ctx.control.data.ptr")
+                    },
+                    "ctx.control.data",
+                )
+                .into_pointer_value(),
+            ui: if include_ui {
                 Some(
                     self.ctx
                         .b
-                        .build_struct_gep(&val, index as u32, "ctx.uientry"),
+                        .build_load(
+                            &unsafe {
+                                self.ctx
+                                    .b
+                                    .build_struct_gep(&base_ptr, 2, "ctx.control.ui.ptr")
+                            },
+                            "ctx.control.ui",
+                        )
+                        .into_pointer_value(),
                 )
+            } else {
+                None
             },
-            None => None,
         }
+    }
+
+    pub fn get_function_ptr(&self, layout_index: usize) -> PointerValue {
+        self.ctx
+            .b
+            .build_load(
+                &unsafe {
+                    self.ctx.b.build_struct_gep(
+                        &self.pointers_ptr,
+                        layout_index as u32,
+                        "ctx.function.ptr",
+                    )
+                },
+                "ctx.function",
+            )
+            .into_pointer_value()
     }
 }

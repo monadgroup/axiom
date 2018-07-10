@@ -168,7 +168,6 @@ pub fn build_lifecycle_func(
     surface: SurfaceRef,
     name: &str,
     lifecycle: LifecycleFunc,
-    scratch: PointerValue,
     pointers: PointerValue,
 ) {
     let func = util::get_or_create_func(module, name, true, &|| {
@@ -178,7 +177,7 @@ pub fn build_lifecycle_func(
         )
     });
     build_context_function(module, func, cache.target(), &|ctx: BuilderContext| {
-        surface::build_lifecycle_call(module, cache, ctx.b, surface, lifecycle, scratch, pointers);
+        surface::build_lifecycle_call(module, cache, ctx.b, surface, lifecycle, pointers);
         ctx.b.build_return(None);
     });
 }
@@ -190,7 +189,6 @@ pub fn build_funcs(
     construct_name: &str,
     update_name: &str,
     destruct_name: &str,
-    scratch: PointerValue,
     pointers: PointerValue,
 ) {
     build_lifecycle_func(
@@ -199,7 +197,6 @@ pub fn build_funcs(
         surface,
         construct_name,
         LifecycleFunc::Construct,
-        scratch,
         pointers,
     );
     build_lifecycle_func(
@@ -208,7 +205,6 @@ pub fn build_funcs(
         surface,
         update_name,
         LifecycleFunc::Update,
-        scratch,
         pointers,
     );
     build_lifecycle_func(
@@ -217,7 +213,6 @@ pub fn build_funcs(
         surface,
         destruct_name,
         LifecycleFunc::Destruct,
-        scratch,
         pointers,
     );
 }
