@@ -29,6 +29,10 @@ void Runtime::commit(MaximCompiler::Transaction transaction) {
     MaximFrontend::maxim_commit(get(), transaction.release());
 }
 
+bool Runtime::isNodeExtracted(uint64_t surface, size_t node) {
+    return MaximFrontend::maxim_is_node_extracted(get(), surface, node);
+}
+
 void *Runtime::getPortalPtr(size_t portal) {
     return MaximFrontend::maxim_get_portal_ptr(get(), portal);
 }

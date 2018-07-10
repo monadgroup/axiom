@@ -103,7 +103,8 @@ void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::T
 }
 
 void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
-    assert(compileMeta());
+    Node::updateRuntimePointers(runtime, surfacePtr);
+
     auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
     auto blockPtr = runtime->getBlockPtr(nodePtr);
     auto runtimeId = getRuntimeId();

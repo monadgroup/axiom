@@ -11,6 +11,7 @@
 #include "GroupNode.h"
 #include "NodeSurface.h"
 #include "PortalNode.h"
+#include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
 
@@ -160,6 +161,12 @@ void Node::doSizeAction() {
 
     if (!actions.empty()) {
         root()->history().append(CompositeAction::create(std::move(actions), root()));
+    }
+}
+
+void Node::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *) {
+    if (compileMeta()) {
+        setExtracted(runtime->isNodeExtracted(surface()->getRuntimeId(), compileMeta()->mirIndex));
     }
 }
 

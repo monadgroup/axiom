@@ -40,6 +40,8 @@ void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Tr
 }
 
 void GroupNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    Node::updateRuntimePointers(runtime, surfacePtr);
+
     auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
     auto subsurfacePtr = runtime->getSurfacePtr(nodePtr);
     nodes().then([subsurfacePtr, runtime](GroupSurface *subsurface) {

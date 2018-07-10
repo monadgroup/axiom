@@ -21,6 +21,8 @@ namespace MaximCompiler {
 
         void commit(Transaction transaction);
 
+        bool isNodeExtracted(uint64_t surface, size_t node);
+
         void *getPortalPtr(size_t portal);
 
         void *getRootPtr();

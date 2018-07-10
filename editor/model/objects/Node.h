@@ -74,7 +74,7 @@ namespace AxiomModel {
 
         void setCompileMeta(std::optional<NodeCompileMeta> compileMeta) { _compileMeta = std::move(compileMeta); }
 
-        virtual void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) = 0;
+        virtual void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr);
 
         virtual void saveValue();
 

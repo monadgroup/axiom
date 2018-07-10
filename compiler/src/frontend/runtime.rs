@@ -7,7 +7,7 @@ use codegen::{
 };
 use inkwell::context::Context;
 use inkwell::module::Module;
-use mir::{Block, BlockRef, IdAllocator, Root, Surface, SurfaceRef};
+use mir::{Block, BlockRef, IdAllocator, InternalNodeRef, Root, Surface, SurfaceRef};
 use pass;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -506,6 +506,17 @@ impl<'a> Runtime<'a> {
         self.sample_rate = sample_rate;
         if let Some(ref pointers) = self.pointers {
             Runtime::set_vector(pointers.samplerate_ptr, sample_rate);
+        }
+    }
+
+    pub fn is_node_extracted(&self, surface: SurfaceRef, node: usize) -> bool {
+        let surface_mir = self.surface_mir(surface).unwrap();
+        let node_inner = surface_mir.source_map.map_to_internal(node);
+
+        if let InternalNodeRef::Surface(_, _) = node_inner {
+            true
+        } else {
+            false
         }
     }
 

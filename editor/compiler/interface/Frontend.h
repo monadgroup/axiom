@@ -59,6 +59,7 @@ namespace MaximFrontend {
     void maxim_run_update(MaximRuntimeRef *runtime);
     void maxim_set_bpm(MaximRuntimeRef *runtime, float bpm);
     void maxim_set_sample_rate(MaximRuntimeRef *runtime, float sample_rate);
+    bool maxim_is_node_extracted(MaximRuntimeRef *runtime, uint64_t surface, size_t node);
 
     void *maxim_get_portal_ptr(MaximRuntimeRef *runtime, size_t portal);
     void *maxim_get_root_ptr(MaximRuntimeRef *runtime);

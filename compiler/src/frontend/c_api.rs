@@ -85,6 +85,15 @@ pub unsafe extern "C" fn maxim_commit(runtime: *mut Runtime, transaction: *mut T
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_is_node_extracted(
+    runtime: *const Runtime,
+    surface: u64,
+    node: usize,
+) -> bool {
+    (*runtime).is_node_extracted(surface, node)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_get_portal_ptr(
     runtime: *const Runtime,
     portal: usize,
