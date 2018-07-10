@@ -1,6 +1,7 @@
 #include "ExtractControl.h"
 
 #include "../../util.h"
+#include "../Value.h"
 
 using namespace AxiomModel;
 
@@ -57,5 +58,7 @@ void ExtractControl::setActiveSlots(AxiomModel::ExtractControl::ActiveSlotFlags 
 }
 
 void ExtractControl::doRuntimeUpdate() {
-    // todo
+    if (!runtimePointers()) return;
+    auto arr = (ArrayValue *) runtimePointers()->value;
+    setActiveSlots(arr->flags);
 }

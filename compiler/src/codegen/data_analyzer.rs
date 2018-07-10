@@ -139,8 +139,12 @@ pub fn build_node_layout(
                 })
                 .collect();
 
-            // the extract group also needs access to the source and destination arrays
+            // The extract group also needs access to the source and destination arrays.
+            // Note: we put the underlying surface's pointers first, as this enables value
+            // read-back to read the first instance without any special behavior.
+            // This array must match the struct defined below as `pointer_struct`.
             let pointer_sources = vec![
+                PointerSource::Aggregate(PointerSourceAggregateType::Array, voice_pointer_sources),
                 PointerSource::Aggregate(
                     PointerSourceAggregateType::Struct,
                     source_sockets
@@ -155,7 +159,6 @@ pub fn build_node_layout(
                         .map(|socket| PointerSource::Socket(*socket, vec![]))
                         .collect(),
                 ),
-                PointerSource::Aggregate(PointerSourceAggregateType::Array, voice_pointer_sources),
             ];
 
             let source_socket_types: Vec<_> = source_sockets
@@ -186,12 +189,12 @@ pub fn build_node_layout(
 
             let pointer_struct = context.struct_type(
                 &vec![
-                    &context.struct_type(&source_type_refs, false) as &BasicType,
-                    &context.struct_type(&dest_type_refs, false) as &BasicType,
                     &surface_layout
                         .pointer_struct
                         .array_type(values::ARRAY_CAPACITY as u32)
                         as &BasicType,
+                    &context.struct_type(&source_type_refs, false) as &BasicType,
+                    &context.struct_type(&dest_type_refs, false) as &BasicType,
                 ],
                 false,
             );

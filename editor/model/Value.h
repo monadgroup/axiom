@@ -6,6 +6,10 @@ namespace AxiomModel {
 
     // NOTE: all structs here must match those defined in the compiler.
 
+    struct ArrayValue {
+        uint32_t flags;
+    };
+
     enum class FormType : uint8_t {
         NONE,
         CONTROL,

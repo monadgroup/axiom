@@ -7,7 +7,7 @@ namespace AxiomModel {
 
     class ExtractControl : public Control {
     public:
-        using ActiveSlotFlags = uint16_t;
+        using ActiveSlotFlags = uint32_t;
 
         AxiomCommon::Event<ActiveSlotFlags> activeSlotsChanged;
 

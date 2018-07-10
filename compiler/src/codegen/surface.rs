@@ -61,12 +61,11 @@ fn build_node_call(
             source_sockets,
             dest_sockets,
         } => {
+            let voice_pointers = unsafe { ctx.b.build_struct_gep(&pointers_ptr, 0, "voices.ptr") };
             let source_socket_pointers =
-                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 0, "sources.ptr") };
+                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 1, "sources.ptr") };
             let dest_socket_pointers =
-                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 1, "dests.ptr") };
-            let voice_socket_pointers =
-                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 2, "voices.ptr") };
+                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 2, "dests.ptr") };
 
             // if this is the update lifecycle function and there are source groups, generate a
             // bitmap of which indices are valid
@@ -170,11 +169,8 @@ fn build_node_call(
 
             let const_zero = ctx.context.i32_type().const_int(0, false);
             let voice_pointers_ptr = unsafe {
-                ctx.b.build_in_bounds_gep(
-                    &voice_socket_pointers,
-                    &[const_zero, index_32],
-                    "pointersptr",
-                )
+                ctx.b
+                    .build_in_bounds_gep(&voice_pointers, &[const_zero, index_32], "pointersptr")
             };
 
             build_lifecycle_call(
