@@ -98,6 +98,10 @@ namespace AxiomModel {
 
         std::lock_guard<std::mutex> lockRuntime();
 
+        void applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Transaction *transaction);
+
+        void applyCompile(const std::vector<QUuid> &items);
+
         void applyTransaction(MaximCompiler::Transaction transaction);
 
         void destroy();

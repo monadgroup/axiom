@@ -32,14 +32,14 @@ void CompositeAction::serialize(QDataStream &stream) const {
     }
 }
 
-void CompositeAction::forward(bool first, MaximCompiler::Transaction *transaction) {
+void CompositeAction::forward(bool first, std::vector<QUuid> &compileItems) {
     for (const auto &action : _actions) {
-        action->forward(first, transaction);
+        action->forward(first, compileItems);
     }
 }
 
-void CompositeAction::backward(MaximCompiler::Transaction *transaction) {
+void CompositeAction::backward(std::vector<QUuid> &compileItems) {
     for (auto i = _actions.end() - 1; i >= _actions.begin(); i--) {
-        (*i)->backward(transaction);
+        (*i)->backward(compileItems);
     }
 }

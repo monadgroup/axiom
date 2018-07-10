@@ -209,7 +209,6 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         if (auto customNode = dynamic_cast<AxiomModel::CustomNode *>(node)) {
             customNode->setCompileMeta(AxiomModel::NodeCompileMeta(nodeIndex));
             auto mirNode = mir.addCustomNode(customNode->getRuntimeId());
-            auto nodeBlock = customNode->compiledBlock().value();
 
             // we need a sorted list of controls
             auto sortedControls = AxiomModel::collect((*customNode->controls().value())->controls());

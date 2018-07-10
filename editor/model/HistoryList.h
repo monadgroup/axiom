@@ -22,9 +22,9 @@ namespace AxiomModel {
 
         size_t maxActions = 256;
 
-        using TransactionApplyer = std::function<void(MaximCompiler::Transaction)>;
+        using CompileApplyer = std::function<void(std::vector<QUuid>)>;
 
-        HistoryList(TransactionApplyer applyer);
+        HistoryList(CompileApplyer applyer);
 
         explicit HistoryList(QDataStream &stream, ModelRoot *root);
 
@@ -51,6 +51,6 @@ namespace AxiomModel {
     private:
         size_t _stackPos = 0;
         std::vector<std::unique_ptr<Action>> _stack;
-        TransactionApplyer applyTransaction;
+        CompileApplyer applyCompile;
     };
 }

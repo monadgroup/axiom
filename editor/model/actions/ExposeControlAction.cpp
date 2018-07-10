@@ -39,7 +39,7 @@ void ExposeControlAction::serialize(QDataStream &stream) const {
     stream << exposeUuid;
 }
 
-void ExposeControlAction::forward(bool, MaximCompiler::Transaction *transaction) {
+void ExposeControlAction::forward(bool, std::vector<QUuid> &compileItems) {
     auto controlToExpose = find(root()->controls(), controlUuid);
     controlToExpose->setExposerUuid(exposeUuid);
     auto controlSurface = dynamic_cast<GroupSurface *>(controlToExpose->surface()->node()->surface());
@@ -51,13 +51,11 @@ void ExposeControlAction::forward(bool, MaximCompiler::Transaction *transaction)
                                              controlToExpose->name(), controlUuid, root());
     root()->pool().registerObj(std::move(newControl));
 
-    if (transaction) {
-        controlSurface->build(transaction);
-        exposeNode->surface()->build(transaction);
-    }
+    compileItems.push_back(controlSurface->uuid());
+    compileItems.push_back(exposeNode->surface()->uuid());
 }
 
-void ExposeControlAction::backward(MaximCompiler::Transaction *transaction) {
+void ExposeControlAction::backward(std::vector<QUuid> &compileItems) {
     auto innerControl = find(root()->controls(), controlUuid);
     auto innerSurface = innerControl->surface()->node()->surface();
 
@@ -66,8 +64,6 @@ void ExposeControlAction::backward(MaximCompiler::Transaction *transaction) {
 
     exposedControl->remove();
 
-    if (transaction) {
-        innerSurface->build(transaction);
-        exposeSurface->build(transaction);
-    }
+    compileItems.push_back(innerSurface->uuid());
+    compileItems.push_back(exposeSurface->uuid());
 }

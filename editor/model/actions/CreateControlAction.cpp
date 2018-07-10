@@ -46,10 +46,10 @@ void CreateControlAction::serialize(QDataStream &stream) const {
     stream << name;
 }
 
-void CreateControlAction::forward(bool, MaximCompiler::Transaction *) {
+void CreateControlAction::forward(bool, std::vector<QUuid> &) {
     root()->pool().registerObj(Control::createDefault(type, uuid, parentUuid, name, QUuid(), root()));
 }
 
-void CreateControlAction::backward(MaximCompiler::Transaction *) {
+void CreateControlAction::backward(std::vector<QUuid> &) {
     find(root()->controls(), uuid)->remove();
 }

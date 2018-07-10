@@ -34,10 +34,10 @@ void GridItemMoveAction::serialize(QDataStream &stream) const {
     stream << afterPos;
 }
 
-void GridItemMoveAction::forward(bool, MaximCompiler::Transaction *) {
+void GridItemMoveAction::forward(bool, std::vector<QUuid> &) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setPos(afterPos);
 }
 
-void GridItemMoveAction::backward(MaximCompiler::Transaction *) {
+void GridItemMoveAction::backward(std::vector<QUuid> &) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setPos(beforePos);
 }

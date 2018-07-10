@@ -34,10 +34,10 @@ void SetNumValueAction::serialize(QDataStream &stream) const {
     stream << afterVal;
 }
 
-void SetNumValueAction::forward(bool, MaximCompiler::Transaction *) {
+void SetNumValueAction::forward(bool, std::vector<QUuid> &) {
     find<NumControl *>(root()->controls(), uuid)->setValue(afterVal);
 }
 
-void SetNumValueAction::backward(MaximCompiler::Transaction *) {
+void SetNumValueAction::backward(std::vector<QUuid> &) {
     find<NumControl *>(root()->controls(), uuid)->setValue(beforeVal);
 }

@@ -25,9 +25,9 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream) const override;
 
-        void forward(bool first, MaximCompiler::Transaction *transaction) override;
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
 
-        void backward(MaximCompiler::Transaction *transaction) override;
+        void backward(std::vector<QUuid> &compileItems) override;
 
     private:
         QUuid surfaceUuid;

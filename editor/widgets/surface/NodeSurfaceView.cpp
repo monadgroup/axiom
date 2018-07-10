@@ -125,8 +125,10 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
     auto data = event->mimeData()->data("application/axiom-partial-surface");
     auto action = PasteBufferAction::create(surface->uuid(), std::move(data), nodePos, surface->root());
 
+    std::vector<QUuid> compileItems;
+    action->forward(true, compileItems);
     MaximCompiler::Transaction transaction;
-    action->forward(true, &transaction);
+    surface->root()->applyItemsTo(compileItems, &transaction);
     dragAndDropTransaction = std::move(transaction);
 
     std::vector<std::unique_ptr<Action>> actions;
@@ -145,7 +147,8 @@ void NodeSurfaceView::dragMoveEvent(QDragMoveEvent *event) {
 
 void NodeSurfaceView::dragLeaveEvent(QDragLeaveEvent *event) {
     surface->grid().finishDragging();
-    dragAndDropAction->backward(nullptr);
+    std::vector<QUuid> dummy;
+    dragAndDropAction->backward(dummy);
     dragAndDropAction.reset();
 }
 

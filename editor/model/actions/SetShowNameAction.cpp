@@ -33,10 +33,10 @@ void SetShowNameAction::serialize(QDataStream &stream) const {
     stream << afterVal;
 }
 
-void SetShowNameAction::forward(bool first, MaximCompiler::Transaction *) {
+void SetShowNameAction::forward(bool first, std::vector<QUuid> &) {
     find(root()->controls(), uuid)->setShowName(afterVal);
 }
 
-void SetShowNameAction::backward(MaximCompiler::Transaction *) {
+void SetShowNameAction::backward(std::vector<QUuid> &) {
     find(root()->controls(), uuid)->setShowName(beforeVal);
 }

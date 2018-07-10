@@ -34,10 +34,10 @@ void GridItemSizeAction::serialize(QDataStream &stream) const {
     stream << afterRect;
 }
 
-void GridItemSizeAction::forward(bool, MaximCompiler::Transaction *) {
+void GridItemSizeAction::forward(bool, std::vector<QUuid> &) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setRect(afterRect);
 }
 
-void GridItemSizeAction::backward(MaximCompiler::Transaction *) {
+void GridItemSizeAction::backward(std::vector<QUuid> &) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setRect(beforeRect);
 }

@@ -19,7 +19,11 @@ CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
                        const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight,
                        AxiomModel::ModelRoot *root)
     : Node(NodeType::CUSTOM_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
-      _code(std::move(code)), _isPanelOpen(panelOpen), _panelHeight(panelHeight) {}
+      _code(std::move(code)), _isPanelOpen(panelOpen), _panelHeight(panelHeight) {
+    controls().then([this](ControlSurface *controls) {
+        controls->controls().itemAdded.connect(this, &CustomNode::surfaceControlAdded);
+    });
+}
 
 std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                bool selected, QString name, const QUuid &controlsUuid, QString code,
@@ -62,15 +66,14 @@ void CustomNode::setCode(const QString &code) {
 }
 
 void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
-    /*auto action = CompositeAction::create({}, root());
+    std::vector<QUuid> compileItems;
+    auto action = CompositeAction::create({}, root());
     auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), root());
-    setCodeAction->forward(true);
+    setCodeAction->forward(true, compileItems);
     action->actions().push_back(std::move(setCodeAction));
-    //updateControls(action.get());
-    root()->history().append(std::move(action), false);*/
-
-    auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), root());
-    root()->history().append(std::move(setCodeAction));
+    updateControls(action.get());
+    root()->history().append(std::move(action), false);
+    root()->applyCompile(compileItems);
 }
 
 void CustomNode::setPanelOpen(bool panelOpen) {
@@ -129,12 +132,21 @@ void CustomNode::build(MaximCompiler::Transaction *transaction) {
     transaction->buildBlock(_compiledBlock->clone());
 }
 
-void CustomNode::updateControls() {
+struct NewControl {
+    Control::ControlType type;
+    QString name;
+};
+
+void CustomNode::updateControls(CompositeAction *actions) {
     if (!_compiledBlock || !controls().value()) return;
+
+    auto compiledControlCount = _compiledBlock->controlCount();
+
+    std::vector<NewControl> newControls;
 
     QSet<QUuid> retainedControls;
     auto controlList = collect((*controls().value())->controls());
-    for (size_t controlIndex = 0; controlIndex < _compiledBlock->controlCount(); controlIndex++) {
+    for (size_t controlIndex = 0; controlIndex < compiledControlCount; controlIndex++) {
         auto compiledControl = _compiledBlock->getControl(controlIndex);
         auto compiledModelType = MaximCompiler::toModelType(compiledControl.getType());
         auto compiledName = compiledControl.getName();
@@ -146,7 +158,6 @@ void CustomNode::updateControls() {
         auto foundControl = false;
         for (const auto &candidateControl : controlList) {
             if (candidateControl->name() == compiledName && candidateControl->controlType() == compiledModelType) {
-                std::cout << "Found candidate control for " << compiledName.toStdString() << std::endl;
                 candidateControl->setCompileMeta(compileMeta);
                 retainedControls.insert(candidateControl->uuid());
                 foundControl = true;
@@ -154,19 +165,9 @@ void CustomNode::updateControls() {
             }
         }
 
-        // no candidate found, create a new one
+        // no candidate found, queue a new one
         if (!foundControl) {
-            std::cout << "Creating new control for " << compiledName.toStdString() << std::endl;
-            auto createAction =
-                CreateControlAction::create((*controls().value())->uuid(), compiledModelType, compiledName, root());
-            createAction->forward(true, nullptr);
-
-            auto newControl = find(root()->controls(), createAction->getUuid());
-            newControl->setCompileMeta(compileMeta);
-
-            /*if (actionGroup) {
-                actionGroup->actions().push_back(std::move(createAction));
-            }*/
+            newControls.push_back(NewControl{compiledModelType, std::move(compiledName)});
         }
     }
 
@@ -174,13 +175,40 @@ void CustomNode::updateControls() {
     for (const auto &existingControl : controlList) {
         if (retainedControls.contains(existingControl->uuid())) continue;
 
-        std::cout << "Deleting old control " << existingControl->name().toStdString() << std::endl;
         auto deleteAction = DeleteObjectAction::create(existingControl->uuid(), root());
-        deleteAction->forward(true, nullptr);
+        std::vector<QUuid> dummy;
+        deleteAction->forward(true, dummy);
+        actions->actions().push_back(std::move(deleteAction));
+    }
 
-        /*if (actionGroup) {
-            actionGroup->actions().push_back(std::move(deleteAction));
-        }*/
+    // add any new controls
+    // note: the order we do this is important: we want to add controls after removing old ones so the control grid
+    // can have the space cleared
+    for (const auto &newControl : newControls) {
+        auto createAction = CreateControlAction::create((*controls().value())->uuid(), newControl.type,
+                                                        std::move(newControl.name), root());
+        std::vector<QUuid> dummy;
+        createAction->forward(true, dummy);
+        actions->actions().push_back(std::move(createAction));
+    }
+}
+
+void CustomNode::surfaceControlAdded(AxiomModel::Control *control) {
+    if (!_compiledBlock) return;
+    assert(!control->compileMeta());
+
+    // find a matching control that we can claim
+    auto compiledControlCount = _compiledBlock->controlCount();
+    for (size_t controlIndex = 0; controlIndex < compiledControlCount; controlIndex++) {
+        auto compiledControl = _compiledBlock->getControl(controlIndex);
+        auto compiledModelType = MaximCompiler::toModelType(compiledControl.getType());
+
+        // looks like we can claim it!
+        if (control->controlType() == compiledModelType && control->name() == compiledControl.getName()) {
+            ControlCompileMeta compileMeta(controlIndex, compiledControl.getIsWritten(), compiledControl.getIsRead());
+            control->setCompileMeta(compileMeta);
+            break;
+        }
     }
 }
 

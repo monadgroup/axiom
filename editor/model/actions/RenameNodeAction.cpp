@@ -33,10 +33,10 @@ void RenameNodeAction::serialize(QDataStream &stream) const {
     stream << newName;
 }
 
-void RenameNodeAction::forward(bool, MaximCompiler::Transaction *) {
+void RenameNodeAction::forward(bool, std::vector<QUuid> &) {
     find(root()->nodes(), uuid)->setName(newName);
 }
 
-void RenameNodeAction::backward(MaximCompiler::Transaction *) {
+void RenameNodeAction::backward(std::vector<QUuid> &) {
     find(root()->nodes(), uuid)->setName(oldName);
 }

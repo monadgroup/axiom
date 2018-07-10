@@ -43,8 +43,6 @@ namespace AxiomModel {
 
         void doSetCodeAction(QString beforeCode, QString afterCode);
 
-        void updateControls();
-
         bool isPanelOpen() const { return _isPanelOpen; }
 
         void setPanelOpen(bool panelOpen);
@@ -69,6 +67,10 @@ namespace AxiomModel {
         float _panelHeight;
         uint64_t runtimeId = 0;
         std::optional<MaximCompiler::Block> _compiledBlock;
+
+        void updateControls(CompositeAction *action);
+
+        void surfaceControlAdded(Control *control);
 
         void buildCode();
     };

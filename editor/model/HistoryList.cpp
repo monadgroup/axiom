@@ -4,7 +4,7 @@
 
 using namespace AxiomModel;
 
-HistoryList::HistoryList(TransactionApplyer applyer) : applyTransaction(std::move(applyer)) {}
+HistoryList::HistoryList(CompileApplyer applyer) : applyCompile(std::move(applyer)) {}
 
 HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
     uint32_t stackPos;
@@ -36,9 +36,9 @@ void HistoryList::serialize(QDataStream &stream) {
 void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward) {
     // run the action forward
     if (forward) {
-        MaximCompiler::Transaction transaction;
-        action->forward(true, &transaction);
-        applyTransaction(std::move(transaction));
+        std::vector<QUuid> compileItems;
+        action->forward(true, compileItems);
+        applyCompile(std::move(compileItems));
     }
 
     // remove items ahead of where we are
@@ -69,9 +69,9 @@ void HistoryList::undo() {
 
     _stackPos--;
     auto undoAction = _stack[_stackPos].get();
-    MaximCompiler::Transaction transaction;
-    undoAction->backward(&transaction);
-    applyTransaction(std::move(transaction));
+    std::vector<QUuid> compileItems;
+    undoAction->backward(compileItems);
+    applyCompile(std::move(compileItems));
 
     stackChanged.trigger();
 }
@@ -89,11 +89,11 @@ void HistoryList::redo() {
     if (!canRedo()) return;
 
     auto redoAction = _stack[_stackPos].get();
-    MaximCompiler::Transaction transaction;
-    redoAction->forward(false, &transaction);
+    std::vector<QUuid> compileItems;
+    redoAction->forward(false, compileItems);
     _stackPos++;
 
-    applyTransaction(std::move(transaction));
+    applyCompile(std::move(compileItems));
 
     stackChanged.trigger();
 }

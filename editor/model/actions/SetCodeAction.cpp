@@ -34,28 +34,18 @@ void SetCodeAction::serialize(QDataStream &stream) const {
     stream << newCode;
 }
 
-void SetCodeAction::forward(bool, MaximCompiler::Transaction *transaction) {
+void SetCodeAction::forward(bool, std::vector<QUuid> &compileItems) {
     auto node = find<CustomNode *>(root()->nodes(), uuid);
     node->setCode(newCode);
-    node->updateControls();
 
-    if (transaction) {
-        node->build(transaction);
-
-        // todo: only build the surface if the controls changed
-        node->surface()->build(transaction);
-    }
+    compileItems.push_back(node->uuid());
+    compileItems.push_back(node->surface()->uuid());
 }
 
-void SetCodeAction::backward(MaximCompiler::Transaction *transaction) {
+void SetCodeAction::backward(std::vector<QUuid> &compileItems) {
     auto node = find<CustomNode *>(root()->nodes(), uuid);
     node->setCode(oldCode);
-    node->updateControls();
 
-    if (transaction) {
-        node->build(transaction);
-
-        // todo: see above
-        node->surface()->build(transaction);
-    }
+    compileItems.push_back(node->uuid());
+    compileItems.push_back(node->surface()->uuid());
 }

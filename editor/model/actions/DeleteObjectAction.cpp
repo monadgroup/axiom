@@ -34,7 +34,7 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
     stream << buffer;
 }
 
-void DeleteObjectAction::forward(bool, MaximCompiler::Transaction *transaction) {
+void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
     auto sortedItems = collect(heapSort(getRemoveItems()));
 
     QDataStream stream(&buffer, QIODevice::WriteOnly);
@@ -59,30 +59,20 @@ void DeleteObjectAction::forward(bool, MaximCompiler::Transaction *transaction) 
         (*itemsToDelete.begin())->remove();
     }
 
-    // build transaction for all parent items
-    auto parentItems = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(parentIds));
-    for (const auto &parent : parentItems) {
-        parent->build(transaction);
+    for (const auto &parent : parentIds) {
+        compileItems.push_back(parent);
     }
 }
 
-void DeleteObjectAction::backward(MaximCompiler::Transaction *transaction) {
+void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
     QDataStream stream(&buffer, QIODevice::ReadOnly);
     IdentityReferenceMapper ref;
     auto addedObjects = root()->deserializeChunk(stream, QUuid(), &ref);
     buffer.clear();
 
-    // build the transaction for each object and parent
-    QSet<QUuid> transactionItems;
     for (const auto &obj : addedObjects) {
-        if (!transactionItems.contains(obj->uuid())) {
-            obj->build(transaction);
-            transactionItems.insert(obj->uuid());
-        }
-        if (!transactionItems.contains(obj->parentUuid())) {
-            find<ModelObject *>(root()->pool().sequence(), obj->parentUuid())->build(transaction);
-            transactionItems.insert(obj->parentUuid());
-        }
+        compileItems.push_back(obj->uuid());
+        compileItems.push_back(obj->parentUuid());
     }
 }
 

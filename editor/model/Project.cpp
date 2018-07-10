@@ -49,23 +49,24 @@ Project::Project(const AxiomBackend::AudioConfiguration &defaultConfiguration) :
             break;
         }
 
+        std::vector<QUuid> dummyItems;
         switch (portal.type) {
         case AxiomBackend::PortalType::INPUT:
             CreatePortalNodeAction::create(QUuid(), QPoint(-3, inputOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::INPUT, &mainRoot())
-                ->forward(true, nullptr);
+                ->forward(true, dummyItems);
             inputOffset += portalSpacing;
             break;
         case AxiomBackend::PortalType::OUTPUT:
             CreatePortalNodeAction::create(QUuid(), QPoint(3, outputOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::OUTPUT, &mainRoot())
-                ->forward(true, nullptr);
+                ->forward(true, dummyItems);
             outputOffset += portalSpacing;
             break;
         case AxiomBackend::PortalType::AUTOMATION:
             CreatePortalNodeAction::create(QUuid(), QPoint(0, automationOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::AUTOMATION, &mainRoot())
-                ->forward(true, nullptr);
+                ->forward(true, dummyItems);
             automationOffset += portalSpacing;
             break;
         }

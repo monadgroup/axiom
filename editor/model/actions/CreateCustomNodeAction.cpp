@@ -51,21 +51,17 @@ void CreateCustomNodeAction::serialize(QDataStream &stream) const {
     stream << controlsUuid;
 }
 
-void CreateCustomNodeAction::forward(bool, MaximCompiler::Transaction *transaction) {
+void CreateCustomNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
     root()->pool().registerObj(CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "",
                                                   false, CustomNode::minPanelHeight, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
 
-    if (transaction) {
-        find<CustomNode *>(root()->nodes(), uuid)->build(transaction);
-        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
-    }
+    compileItems.push_back(uuid);
+    compileItems.push_back(parentUuid);
 }
 
-void CreateCustomNodeAction::backward(MaximCompiler::Transaction *transaction) {
+void CreateCustomNodeAction::backward(std::vector<QUuid> &compileItems) {
     find(root()->nodes(), uuid)->remove();
 
-    if (transaction) {
-        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
-    }
+    compileItems.push_back(parentUuid);
 }

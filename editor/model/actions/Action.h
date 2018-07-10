@@ -47,9 +47,9 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
-        virtual void forward(bool first, MaximCompiler::Transaction *transaction) = 0;
+        virtual void forward(bool first, std::vector<QUuid> &compileItems) = 0;
 
-        virtual void backward(MaximCompiler::Transaction *transaction) = 0;
+        virtual void backward(std::vector<QUuid> &compileItems) = 0;
 
     private:
         ActionType _actionType;

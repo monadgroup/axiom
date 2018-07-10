@@ -13,8 +13,7 @@
 using namespace AxiomModel;
 
 ModelRoot::ModelRoot(Project *project)
-    : _project(project),
-      _history([this](MaximCompiler::Transaction transaction) { applyTransaction(std::move(transaction)); }),
+    : _project(project), _history([this](std::vector<QUuid> items) { applyCompile(items); }),
       _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.sequence())),
       _nodes(dynamicCastWatch<Node *>(_pool.sequence())),
       _controlSurfaces(dynamicCastWatch<ControlSurface *>(_pool.sequence())),
@@ -65,6 +64,24 @@ void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
 
 std::lock_guard<std::mutex> ModelRoot::lockRuntime() {
     return std::lock_guard(_runtimeLock);
+}
+
+void ModelRoot::applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Transaction *transaction) {
+    QSet<QUuid> processedItems;
+    for (const auto &item : items) {
+        if (processedItems.contains(item)) continue;
+        processedItems.insert(item);
+
+        if (auto object = findMaybe<ModelObject *>(pool().sequence(), item)) {
+            (*object)->build(transaction);
+        }
+    }
+}
+
+void ModelRoot::applyCompile(const std::vector<QUuid> &items) {
+    MaximCompiler::Transaction transaction;
+    applyItemsTo(items, &transaction);
+    applyTransaction(std::move(transaction));
 }
 
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {

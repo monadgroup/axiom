@@ -46,18 +46,12 @@ void CreateConnectionAction::serialize(QDataStream &stream) const {
     stream << controlB;
 }
 
-void CreateConnectionAction::forward(bool, MaximCompiler::Transaction *transaction) {
+void CreateConnectionAction::forward(bool, std::vector<QUuid> &compileItems) {
     root()->pool().registerObj(Connection::create(uuid, parentUuid, controlA, controlB, root()));
-
-    if (transaction) {
-        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
-    }
+    compileItems.push_back(parentUuid);
 }
 
-void CreateConnectionAction::backward(MaximCompiler::Transaction *transaction) {
+void CreateConnectionAction::backward(std::vector<QUuid> &compileItems) {
     find(root()->connections(), uuid)->remove();
-
-    if (transaction) {
-        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
-    }
+    compileItems.push_back(parentUuid);
 }

@@ -56,22 +56,18 @@ void CreateGroupNodeAction::serialize(QDataStream &stream) const {
     stream << innerUuid;
 }
 
-void CreateGroupNodeAction::forward(bool, MaximCompiler::Transaction *transaction) {
+void CreateGroupNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
     root()->pool().registerObj(
         GroupNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, innerUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(GroupSurface::create(innerUuid, uuid, QPoint(0, 0), 0, root()));
 
-    if (transaction) {
-        find(root()->nodeSurfaces(), innerUuid)->build(transaction);
-        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
-    }
+    compileItems.push_back(innerUuid);
+    compileItems.push_back(parentUuid);
 }
 
-void CreateGroupNodeAction::backward(MaximCompiler::Transaction *transaction) {
+void CreateGroupNodeAction::backward(std::vector<QUuid> &compileItems) {
     find(root()->nodes(), uuid)->remove();
 
-    if (transaction) {
-        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
-    }
+    compileItems.push_back(parentUuid);
 }

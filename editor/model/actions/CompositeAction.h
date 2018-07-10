@@ -20,9 +20,9 @@ namespace AxiomModel {
 
         const std::vector<std::unique_ptr<Action>> &actions() const { return _actions; }
 
-        void forward(bool first, MaximCompiler::Transaction *transaction) override;
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
 
-        void backward(MaximCompiler::Transaction *transaction) override;
+        void backward(std::vector<QUuid> &compileItems) override;
 
     private:
         std::vector<std::unique_ptr<Action>> _actions;

@@ -35,10 +35,10 @@ void SetNumModeAction::serialize(QDataStream &stream) const {
     stream << (uint8_t) afterMode;
 }
 
-void SetNumModeAction::forward(bool, MaximCompiler::Transaction *) {
+void SetNumModeAction::forward(bool, std::vector<QUuid> &) {
     find<NumControl *>(root()->controls(), uuid)->setDisplayMode(afterMode);
 }
 
-void SetNumModeAction::backward(MaximCompiler::Transaction *transaction) {
+void SetNumModeAction::backward(std::vector<QUuid> &) {
     find<NumControl *>(root()->controls(), uuid)->setDisplayMode(beforeMode);
 }

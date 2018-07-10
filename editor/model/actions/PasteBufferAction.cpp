@@ -52,7 +52,7 @@ void PasteBufferAction::serialize(QDataStream &stream) const {
     stream << center;
 }
 
-void PasteBufferAction::forward(bool, MaximCompiler::Transaction *transaction) {
+void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
     assert(!buffer.isEmpty());
     assert(usedUuids.isEmpty());
 
@@ -84,21 +84,13 @@ void PasteBufferAction::forward(bool, MaximCompiler::Transaction *transaction) {
         usedUuids.push_back(obj->uuid());
     }
 
-    // build the transaction with each item and parent
-    QSet<QUuid> transactionItems;
     for (const auto &obj : used) {
-        if (!transactionItems.contains(obj->uuid())) {
-            obj->build(transaction);
-            transactionItems.insert(obj->uuid());
-        }
-        if (!transactionItems.contains(obj->parentUuid())) {
-            find<ModelObject *>(root()->pool().sequence(), obj->parentUuid())->build(transaction);
-            transactionItems.insert(obj->parentUuid());
-        }
+        compileItems.push_back(obj->uuid());
+        compileItems.push_back(obj->parentUuid());
     }
 }
 
-void PasteBufferAction::backward(MaximCompiler::Transaction *transaction) {
+void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
     assert(buffer.isEmpty());
     assert(!usedUuids.isEmpty());
 
@@ -126,9 +118,7 @@ void PasteBufferAction::backward(MaximCompiler::Transaction *transaction) {
         (*objs.begin())->remove();
     }
 
-    // build the transaction with the object parents
-    auto parentItems = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(parentIds));
-    for (const auto &parent : parentItems) {
-        parent->build(transaction);
+    for (const auto &id : parentIds) {
+        compileItems.push_back(id);
     }
 }

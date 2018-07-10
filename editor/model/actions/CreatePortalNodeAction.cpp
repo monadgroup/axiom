@@ -69,22 +69,18 @@ std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::deserialize(QDat
                   (PortalControl::PortalType) portalTypeInt, controlUuid, root);
 }
 
-void CreatePortalNodeAction::forward(bool, MaximCompiler::Transaction *transaction) {
+void CreatePortalNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
     root()->pool().registerObj(
         PortalNode::create(uuid, parentUuid, pos, QSize(1, 1), false, name, controlsUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "",
                                                      false, QUuid(), QUuid(), wireType, portalType, root()));
 
-    if (transaction) {
-        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
-    }
+    compileItems.push_back(parentUuid);
 }
 
-void CreatePortalNodeAction::backward(MaximCompiler::Transaction *transaction) {
+void CreatePortalNodeAction::backward(std::vector<QUuid> &compileItems) {
     find(root()->nodes(), uuid)->remove();
 
-    if (transaction) {
-        find(root()->nodeSurfaces(), parentUuid)->build(transaction);
-    }
+    compileItems.push_back(parentUuid);
 }
