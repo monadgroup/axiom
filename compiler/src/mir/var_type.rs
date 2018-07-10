@@ -36,7 +36,7 @@ impl VarType {
     pub fn of_statement(block: &Block, index: usize) -> VarType {
         match &block.statements[index] {
             Statement::Constant(ref constant) => VarType::of_constant(constant),
-            Statement::Global(_) => VarType::Num, // todo: some globals might not be num?
+            Statement::Global(_) => VarType::Num, // review: some globals might not be num?
             Statement::NumConvert { .. } => VarType::Num,
             Statement::NumCast { .. } => VarType::Num,
             Statement::NumUnaryOp { .. } => VarType::Num,

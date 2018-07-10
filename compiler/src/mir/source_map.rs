@@ -80,7 +80,7 @@ impl SourceMap {
             .filter_map(|external| {
                 let removed = self.map.remove(&external);
 
-                // todo: does this work? is there anything else we need to do here?
+                // review: does this work in all cases? is there anything else we need to do here?
                 SourceMap::insert(&mut self.map, external, internal);
                 removed
             })

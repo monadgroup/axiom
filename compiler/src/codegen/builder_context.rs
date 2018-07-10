@@ -22,7 +22,6 @@ pub fn build_context_function(
     let context = module.get_context();
 
     // assign some useful attributes to the function
-    // todo: when the LLVM C api supports it, set instruction fastmath flags
     function.add_attribute(context.get_string_attr("less-precise-fpmad", "true"));
     function.add_attribute(context.get_string_attr("no-infs-fp-math", "true"));
     function.add_attribute(context.get_string_attr("no-nans-fp-math", "true"));
@@ -44,10 +43,6 @@ pub fn build_context_function(
         function.add_attribute(context.get_enum_attr(AttrKind::MinSize, 0));
         function.add_attribute(context.get_enum_attr(AttrKind::OptimizeForSize, 0));
     }
-
-    // todo: some functions don't write to their arguments, we can add:
-    //  - readonly
-    //  - speculatable
 
     let alloca_block = context.append_basic_block(&function, "alloca");
     let mut alloca_builder = context.create_builder();

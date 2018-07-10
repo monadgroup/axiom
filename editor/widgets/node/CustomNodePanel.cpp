@@ -16,7 +16,6 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
     node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
 
-    // todo: panel events, parse/compile errors, code changed event
     node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
     node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
     node->panelOpenChanged.connect(this, &CustomNodePanel::setOpen);
