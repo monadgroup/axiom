@@ -67,12 +67,11 @@ void CustomNode::setCode(const QString &code) {
 
 void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
     std::vector<QUuid> compileItems;
-    auto action = CompositeAction::create({}, root());
-    auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), root());
+    auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode),
+                                               CompositeAction::create({}, root()), root());
     setCodeAction->forward(true, compileItems);
-    action->actions().push_back(std::move(setCodeAction));
-    updateControls(action.get());
-    root()->history().append(std::move(action), false);
+    updateControls(setCodeAction->controlActions());
+    root()->history().append(std::move(setCodeAction), false);
     root()->applyCompile(compileItems);
 }
 
