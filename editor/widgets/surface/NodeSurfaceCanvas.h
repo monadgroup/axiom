@@ -86,6 +86,8 @@ namespace AxiomGui {
 
         void addWire(AxiomModel::ConnectionWire *wire);
 
+        void doRuntimeUpdate();
+
     private:
         bool isSelecting = false;
         std::set<AxiomModel::GridItem *> lastSelectedItems;
@@ -95,10 +97,6 @@ namespace AxiomGui {
 
         std::optional<AxiomModel::ConnectionWire> connectionWire;
         AxiomModel::Control *sourceControl;
-
-        // bool isConnecting = false;
-        // AxiomModel::ConnectionWire connectionWire;
-        // AxiomModel::Control *sourceControl;
 
         void leftMousePressEvent(QGraphicsSceneMouseEvent *event);
 

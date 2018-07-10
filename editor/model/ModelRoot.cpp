@@ -8,7 +8,7 @@
 #include "objects/Connection.h"
 #include "objects/ControlSurface.h"
 #include "objects/Node.h"
-#include "objects/NodeSurface.h"
+#include "objects/RootSurface.h"
 
 using namespace AxiomModel;
 
@@ -73,6 +73,8 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     if (_runtime) {
         _runtime->commit(std::move(transaction));
     }
+    auto rootSurface = find<RootSurface *>(nodeSurfaces(), QUuid());
+    rootSurface->updateRuntimePointers(_runtime, _runtime->getRootPtr());
 
     if (_backend) {
         _backend->internalUpdateConfiguration();

@@ -4,6 +4,7 @@
 #include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
 #include "ControlSurface.h"
+#include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
 
@@ -36,6 +37,14 @@ void GroupNode::serialize(QDataStream &stream, const QUuid &parent, bool withCon
 
 void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     nodes().then([runtime, transaction](NodeSurface *const &surface) { surface->attachRuntime(runtime, transaction); });
+}
+
+void GroupNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
+    auto subsurfacePtr = runtime->getSurfacePtr(nodePtr);
+    nodes().then([subsurfacePtr, runtime](GroupSurface *subsurface) {
+        subsurface->updateRuntimePointers(runtime, subsurfacePtr);
+    });
 }
 
 void GroupNode::saveValue() {

@@ -7,12 +7,11 @@ NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
                        Channel channel, NumValue value, ModelRoot *root)
     : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, uuid, parentUuid, pos, size, selected,
               std::move(name), showName, exposerUuid, exposingUuid, root),
-      _displayMode(displayMode), _channel(channel), _value(value) {
-}
+      _displayMode(displayMode), _channel(channel), _value(value) {}
 
 std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                                               bool selected, QString name, bool showName,
-                                               const QUuid &exposerUuid, const QUuid &exposingUuid,
+                                               bool selected, QString name, bool showName, const QUuid &exposerUuid,
+                                               const QUuid &exposingUuid,
                                                AxiomModel::NumControl::DisplayMode displayMode,
                                                AxiomModel::NumControl::Channel channel, NumValue value,
                                                AxiomModel::ModelRoot *root) {
@@ -61,14 +60,18 @@ void NumControl::setValue(NumValue value) {
     restoreValue();
 }
 
+void NumControl::doRuntimeUpdate() {
+    saveValue();
+}
+
 void NumControl::saveValue() {
-    //if (!runtime() || !(*runtime())->group()) return;
-    //setInternalValue((*runtime())->group()->getNumValue());
+    if (!runtimePointers()) return;
+    setInternalValue(*(NumValue *) runtimePointers()->value);
 }
 
 void NumControl::restoreValue() {
-    //if (!runtime() || !(*runtime())->group()) return;
-    //(*runtime())->group()->setNumValue(_value);
+    if (!runtimePointers()) return;
+    *(NumValue *) runtimePointers()->value = _value;
 }
 
 void NumControl::setInternalValue(NumValue value) {

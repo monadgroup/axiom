@@ -57,6 +57,8 @@ namespace AxiomModel {
 
         void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 
+        void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) override;
+
         std::optional<MaximCompiler::Block> compiledBlock() const;
 
         void build(MaximCompiler::Transaction *transaction);

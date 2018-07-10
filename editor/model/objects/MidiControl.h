@@ -1,8 +1,8 @@
 #pragma once
 
-#include "common/Event.h"
-#include "Control.h"
 #include "../Value.h"
+#include "Control.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
@@ -14,18 +14,20 @@ namespace AxiomModel {
                     bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, ModelRoot *root);
 
         static std::unique_ptr<MidiControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                                                   bool selected, QString name, bool showName,
-                                                   const QUuid &exposerUuid, const QUuid &exposingUuid,
-                                                   ModelRoot *root);
+                                                   bool selected, QString name, bool showName, const QUuid &exposerUuid,
+                                                   const QUuid &exposingUuid, ModelRoot *root);
 
-        static std::unique_ptr<MidiControl>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                    ReferenceMapper *ref, ModelRoot *root);
+        static std::unique_ptr<MidiControl> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                        QPoint pos, QSize size, bool selected, QString name,
+                                                        bool showName, const QUuid &exposerUuid,
+                                                        const QUuid &exposingUuid, ReferenceMapper *ref,
+                                                        ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
         const MidiValue &value() const { return _value; }
+
+        void doRuntimeUpdate() override {}
 
         void setValue(const MidiValue &value);
 
@@ -38,5 +40,4 @@ namespace AxiomModel {
 
         void setInternalValue(MidiValue value);
     };
-
 }

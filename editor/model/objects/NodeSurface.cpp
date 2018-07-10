@@ -3,10 +3,12 @@
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "Connection.h"
+#include "ControlSurface.h"
 #include "GroupSurface.h"
 #include "Node.h"
 #include "RootSurface.h"
 #include "editor/compiler/SurfaceMirBuilder.h"
+#include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
 
@@ -90,8 +92,23 @@ void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::
     }
 }
 
+void NodeSurface::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    for (const auto &node : nodes()) {
+        node->updateRuntimePointers(runtime, surfacePtr);
+    }
+}
+
 void NodeSurface::build(MaximCompiler::Transaction *transaction) {
     MaximCompiler::SurfaceMirBuilder::build(transaction, this);
+}
+
+void NodeSurface::doRuntimeUpdate() {
+    // todo: make this more efficient?
+    for (const auto &control : root()->controls()) {
+        if (control->surface()->node()->surface() == this) {
+            control->doRuntimeUpdate();
+        }
+    }
 }
 
 void NodeSurface::saveValue() {

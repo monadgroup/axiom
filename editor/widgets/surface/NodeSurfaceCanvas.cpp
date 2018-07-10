@@ -68,6 +68,11 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
                                                  connection->wire().then(
                                                      [this](ConnectionWire &wire) { addWire(&wire); });
                                              }));
+
+    // start update timer
+    auto timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &NodeSurfaceCanvas::doRuntimeUpdate);
+    timer->start(16);
 }
 
 QPoint NodeSurfaceCanvas::nodeRealPos(const QPoint &p) {
@@ -183,6 +188,10 @@ void NodeSurfaceCanvas::addWire(AxiomModel::ConnectionWire *wire) {
     auto item = new WireItem(this, wire);
     item->setZValue(wireZVal);
     addItem(item);
+}
+
+void NodeSurfaceCanvas::doRuntimeUpdate() {
+    surface->doRuntimeUpdate();
 }
 
 void NodeSurfaceCanvas::drawBackground(QPainter *painter, const QRectF &rect) {

@@ -17,6 +17,12 @@ namespace AxiomModel {
 
     class ControlSurface;
 
+    struct NodeCompileMeta {
+        size_t mirIndex;
+
+        explicit NodeCompileMeta(size_t mirIndex) : mirIndex(mirIndex) {}
+    };
+
     class Node : public GridItem, public ModelObject {
     public:
         enum class NodeType { CUSTOM_NODE, GROUP_NODE, PORTAL_NODE };
@@ -64,6 +70,12 @@ namespace AxiomModel {
 
         virtual void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) = 0;
 
+        const std::optional<NodeCompileMeta> &compileMeta() const { return _compileMeta; }
+
+        void setCompileMeta(std::optional<NodeCompileMeta> compileMeta) { _compileMeta = std::move(compileMeta); }
+
+        virtual void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) = 0;
+
         virtual void saveValue();
 
         virtual void restoreValue();
@@ -77,5 +89,6 @@ namespace AxiomModel {
         bool _isExtracted = false;
         AxiomCommon::Promise<ControlSurface *> _controls;
         QRect sizeStartRect;
+        std::optional<NodeCompileMeta> _compileMeta;
     };
 }

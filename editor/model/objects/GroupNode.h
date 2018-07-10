@@ -29,6 +29,8 @@ namespace AxiomModel {
 
         void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 
+        void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) override;
+
         void saveValue() override;
 
         void restoreValue() override;

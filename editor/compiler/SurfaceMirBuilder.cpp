@@ -204,8 +204,10 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
     }
 
     // build nodes
+    size_t nodeIndex = 0;
     for (const auto &node : surface->nodes()) {
         if (auto customNode = dynamic_cast<AxiomModel::CustomNode *>(node)) {
+            customNode->setCompileMeta(AxiomModel::NodeCompileMeta(nodeIndex));
             auto mirNode = mir.addCustomNode(customNode->getRuntimeId());
             auto nodeBlock = customNode->compiledBlock().value();
 
@@ -226,7 +228,10 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
                                        control->controlType() == AxiomModel::Control::ControlType::NUM_EXTRACT ||
                                            control->controlType() == AxiomModel::Control::ControlType::MIDI_EXTRACT);
             }
+
+            nodeIndex++;
         } else if (auto groupNode = dynamic_cast<AxiomModel::GroupNode *>(node)) {
+            groupNode->setCompileMeta(AxiomModel::NodeCompileMeta(nodeIndex));
             auto groupSurface = *groupNode->nodes().value();
             auto mirNode = mir.addGroupNode(groupSurface->getRuntimeId());
             auto &portalControlGroups = groupSurface->compileMeta()->portals;
@@ -239,6 +244,8 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
 
                 mirNode.addValueSocket(groupIndex->second, group.valueWritten, group.valueRead, group.isExtractor);
             }
+
+            nodeIndex++;
         }
     }
 

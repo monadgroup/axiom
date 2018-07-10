@@ -9,6 +9,7 @@
 #include "ControlSurface.h"
 #include "ExtractControl.h"
 #include "MidiControl.h"
+#include "NodeSurface.h"
 #include "NumControl.h"
 #include "editor/compiler/interface/Runtime.h"
 
@@ -99,6 +100,19 @@ void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::T
     if (transaction) {
         build(transaction);
     }
+}
+
+void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    assert(compileMeta());
+    auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
+    auto blockPtr = runtime->getBlockPtr(nodePtr);
+    auto runtimeId = getRuntimeId();
+
+    controls().then([blockPtr, runtime, runtimeId](ControlSurface *controlSurface) {
+        for (const auto &control : controlSurface->controls()) {
+            control->updateRuntimePointers(runtime, runtimeId, blockPtr);
+        }
+    });
 }
 
 std::optional<MaximCompiler::Block> CustomNode::compiledBlock() const {

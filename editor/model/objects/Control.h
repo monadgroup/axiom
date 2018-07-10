@@ -10,6 +10,11 @@
 #include "../grid/GridItem.h"
 #include "common/Event.h"
 #include "common/Promise.h"
+#include "editor/compiler/interface/Frontend.h"
+
+namespace MaximCompiler {
+    class Runtime;
+}
 
 namespace AxiomModel {
 
@@ -48,93 +53,63 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        ControlSurface *surface() const {
-            return _surface;
-        }
+        ControlSurface *surface() const { return _surface; }
 
-        ControlType controlType() const {
-            return _controlType;
-        }
+        ControlType controlType() const { return _controlType; }
 
-        ConnectionWire::WireType wireType() const {
-            return _wireType;
-        }
+        ConnectionWire::WireType wireType() const { return _wireType; }
 
-        bool isMovable() const override {
-            return true;
-        }
+        bool isMovable() const override { return true; }
 
-        bool isResizable() const override {
-            return true;
-        }
+        bool isResizable() const override { return true; }
 
-        bool isCopyable() const override {
-            return false;
-        }
+        bool isCopyable() const override { return false; }
 
-        bool isDeletable() const override {
-            return false;
-        }
+        bool isDeletable() const override { return false; }
 
-        const QString &name() const {
-            return _name;
-        }
+        const QString &name() const { return _name; }
 
         void setName(const QString &name);
 
-        bool showName() const {
-            return _showName;
-        }
+        bool showName() const { return _showName; }
 
         void setShowName(bool showName);
 
-        QUuid exposerUuid() const {
-            return _exposerUuid;
-        }
+        QUuid exposerUuid() const { return _exposerUuid; }
 
         void setExposerUuid(QUuid exposerUuid);
 
-        QUuid exposingUuid() const {
-            return _exposingUuid;
-        }
+        QUuid exposingUuid() const { return _exposingUuid; }
 
-        bool isActive() const {
-            return _isActive;
-        }
+        bool isActive() const { return _isActive; }
 
         void setIsActive(bool isActive);
 
-        WatchSequence<Connection *> &connections() {
-            return _connections;
-        }
+        WatchSequence<Connection *> &connections() { return _connections; }
 
-        const WatchSequence<Connection *> &connections() const {
-            return _connections;
-        }
+        const WatchSequence<Connection *> &connections() const { return _connections; }
 
-        WatchSequence<QUuid> &connectedControls() {
-            return _connectedControls;
-        }
+        WatchSequence<QUuid> &connectedControls() { return _connectedControls; }
 
-        const WatchSequence<QUuid> &connectedControls() const {
-            return _connectedControls;
-        }
+        const WatchSequence<QUuid> &connectedControls() const { return _connectedControls; }
 
         QPointF worldPos() const;
 
-        const std::optional<ControlCompileMeta> &compileMeta() const {
-            return _compileMeta;
-        }
+        Sequence<ModelObject *> links() override;
 
-        void setCompileMeta(std::optional<ControlCompileMeta> compileMeta) {
-            _compileMeta = std::move(compileMeta);
-        }
+        const std::optional<ControlCompileMeta> &compileMeta() const { return _compileMeta; }
+
+        const std::optional<MaximFrontend::ControlPointers> &runtimePointers() const { return _runtimePointers; }
+
+        void setCompileMeta(std::optional<ControlCompileMeta> compileMeta) { _compileMeta = std::move(compileMeta); }
+
+        void updateRuntimePointers(MaximCompiler::Runtime *runtime, uint64_t blockId, void *blockPtr);
+
+        virtual void doRuntimeUpdate() = 0;
 
         virtual void saveValue() = 0;
 
         virtual void restoreValue() = 0;
-
-        Sequence<ModelObject *> links() override;
 
         void remove() override;
 
@@ -148,6 +123,7 @@ namespace AxiomModel {
         QUuid _exposingUuid;
         bool _isActive = false;
         std::optional<ControlCompileMeta> _compileMeta;
+        std::optional<MaximFrontend::ControlPointers> _runtimePointers;
 
         WatchSequence<Connection *> _connections;
         WatchSequence<QUuid> _connectedControls;

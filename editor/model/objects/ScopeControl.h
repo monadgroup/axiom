@@ -22,9 +22,10 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
+        void doRuntimeUpdate() override {}
+
         void saveValue() override;
 
         void restoreValue() override;
     };
-
 }

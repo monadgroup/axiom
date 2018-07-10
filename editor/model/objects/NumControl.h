@@ -1,26 +1,16 @@
 #pragma once
 
-#include "common/Event.h"
-#include "Control.h"
 #include "../Value.h"
+#include "Control.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
     class NumControl : public Control {
     public:
-        enum class DisplayMode {
-            PLUG,
-            KNOB,
-            SLIDER_H,
-            SLIDER_V,
-            TOGGLE
-        };
+        enum class DisplayMode { PLUG, KNOB, SLIDER_H, SLIDER_V, TOGGLE };
 
-        enum class Channel {
-            LEFT = 1 << 0,
-            RIGHT = 1 << 1,
-            BOTH = LEFT | RIGHT
-        };
+        enum class Channel { LEFT = 1 << 0, RIGHT = 1 << 1, BOTH = LEFT | RIGHT };
 
         AxiomCommon::Event<DisplayMode> displayModeChanged;
         AxiomCommon::Event<Channel> channelChanged;
@@ -31,15 +21,15 @@ namespace AxiomModel {
                    Channel channel, NumValue value, ModelRoot *root);
 
         static std::unique_ptr<NumControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                                                  bool selected, QString name, bool showName,
-                                                  const QUuid &exposerUuid, const QUuid &exposingUuid,
-                                                  DisplayMode displayMode, Channel channel,
+                                                  bool selected, QString name, bool showName, const QUuid &exposerUuid,
+                                                  const QUuid &exposingUuid, DisplayMode displayMode, Channel channel,
                                                   NumValue value, ModelRoot *root);
 
-        static std::unique_ptr<NumControl>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                    ReferenceMapper *ref, ModelRoot *root);
+        static std::unique_ptr<NumControl> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                       QPoint pos, QSize size, bool selected, QString name,
+                                                       bool showName, const QUuid &exposerUuid,
+                                                       const QUuid &exposingUuid, ReferenceMapper *ref,
+                                                       ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -52,6 +42,8 @@ namespace AxiomModel {
         void setChannel(Channel channel);
 
         const NumValue &value() const { return _value; }
+
+        void doRuntimeUpdate() override;
 
         void setValue(NumValue value);
 
@@ -66,5 +58,4 @@ namespace AxiomModel {
 
         void setInternalValue(NumValue value);
     };
-
 }
