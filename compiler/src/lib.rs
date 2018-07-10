@@ -2,7 +2,6 @@ extern crate divrem;
 extern crate inkwell;
 extern crate ordered_float;
 extern crate regex;
-extern crate time;
 
 #[macro_use]
 extern crate lazy_static;

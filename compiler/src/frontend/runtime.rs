@@ -17,7 +17,7 @@ use std::iter::FromIterator;
 use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
-use time;
+use std::time::Instant;
 
 #[derive(Debug)]
 struct RuntimeModule {
@@ -447,13 +447,21 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        let patch_start = time::precise_time_s();
+        let patch_start = Instant::now();
         let (new_block_ids, affected_surfaces) = self.patch_transaction(transaction);
-        println!("Patch took {}s", time::precise_time_s() - patch_start);
+        let elapsed = patch_start.elapsed();
+        println!(
+            "Patch took {}s",
+            elapsed.as_secs() as f32 + elapsed.subsec_nanos() as f32 / 1_000_000_000.
+        );
 
-        let codegen_start = time::precise_time_s();
+        let codegen_start = Instant::now();
         self.codegen_transaction(&new_block_ids, &affected_surfaces);
-        println!("Codegen took {}s", time::precise_time_s() - codegen_start);
+        let elapsed = codegen_start.elapsed();
+        println!(
+            "Codegen took {}s",
+            elapsed.as_secs() as f32 + elapsed.subsec_nanos() as f32 / 1_000_000_000.
+        );
 
         if let Some(ref pointers) = self.pointers {
             // reset the BPM and sample rate
