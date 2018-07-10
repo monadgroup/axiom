@@ -494,7 +494,7 @@ impl Function for NoiseFunction {
         );
 
         // todo: figure out a compiler-independent way to do this - this is the constant from GNU C headers
-        let double_rand_max_float = util::get_vec_spread(func.ctx.context, 32767. * 2.);
+        let double_rand_max_float = util::get_vec_spread(func.ctx.context, 32767. / 2.);
 
         // get the random number between 0 and 2
         let rand_normalized =
