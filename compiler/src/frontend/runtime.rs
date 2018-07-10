@@ -317,7 +317,6 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        // todo: do we need to sort surfaces in dependency order for the JIT linking?
         Vec::from_iter(required_surfaces.into_iter())
     }
 
