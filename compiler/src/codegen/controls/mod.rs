@@ -57,14 +57,12 @@ impl<'a> ControlFieldGenerator for PrivateGenerator<'a> {
             get_field_getter_func(self.module, field),
             self.target,
             get_cb,
-            true,
         );
         build_field_func(
             self.module,
             get_field_setter_func(self.module, field),
             self.target,
             set_cb,
-            false,
         );
     }
 }
@@ -154,8 +152,9 @@ fn get_field_getter_setter_func(
     module: &Module,
     field: ControlField,
     func_name: &str,
+    is_get: bool,
 ) -> FunctionValue {
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let control_type = ControlType::from(field);
         let context = module.get_context();
         (
@@ -169,15 +168,32 @@ fn get_field_getter_setter_func(
                 false,
             ),
         )
-    })
+    });
+    if is_get {
+        func.add_param_attribute(
+            0,
+            module.get_context().get_enum_attr(AttrKind::StructRet, 1),
+        );
+    }
+    func
 }
 
 pub fn get_field_getter_func(module: &Module, field: ControlField) -> FunctionValue {
-    get_field_getter_setter_func(module, field, &format!("maxim.control.{}.getter", field))
+    get_field_getter_setter_func(
+        module,
+        field,
+        &format!("maxim.control.{}.getter", field),
+        true,
+    )
 }
 
 pub fn get_field_setter_func(module: &Module, field: ControlField) -> FunctionValue {
-    get_field_getter_setter_func(module, field, &format!("maxim.control.{}.setter", field))
+    get_field_getter_setter_func(
+        module,
+        field,
+        &format!("maxim.control.{}.setter", field),
+        false,
+    )
 }
 
 pub fn build_field_get(
@@ -285,14 +301,8 @@ fn build_field_func(
     func: FunctionValue,
     target: &TargetProperties,
     builder: &ControlFieldGeneratorCb,
-    is_get: bool,
 ) {
     build_context_function(module, func, target, &|ctx: BuilderContext| {
-        if is_get {
-            ctx.func
-                .add_param_attribute(0, ctx.context.get_enum_attr(AttrKind::StructRet, 1));
-        }
-
         let field_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let val_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let data_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();

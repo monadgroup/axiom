@@ -463,6 +463,8 @@ impl Runtime {
             precise_duration_seconds(&codegen_start.elapsed())
         );
 
+        self.print_modules();
+
         let deploy_start = Instant::now();
         self.deploy_transaction(&new_block_ids, &affected_surfaces);
         println!(

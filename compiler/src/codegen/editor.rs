@@ -32,11 +32,12 @@ pub fn build_convert_num_func(module: &Module, target: &TargetProperties, name: 
             ),
         )
     });
+    func.add_param_attribute(
+        0,
+        module.get_context().get_enum_attr(AttrKind::StructRet, 1),
+    );
 
     build_context_function(module, func, target, &|ctx: BuilderContext| {
-        ctx.func
-            .add_param_attribute(0, ctx.context.get_enum_attr(AttrKind::StructRet, 1));
-
         let output_num =
             values::NumValue::new(ctx.func.get_nth_param(0).unwrap().into_pointer_value());
         let target_form = ctx.func.get_nth_param(1).unwrap().into_int_value();
