@@ -1,4 +1,3 @@
-#include "compiler/interface/Runtime.h"
 #include "widgets/windows/MainWindow.h"
 
 namespace AxiomBackend {
@@ -27,10 +26,8 @@ public:
     void idle();
 
     // Used internally. Not stable APIs.
-    MaximCompiler::Runtime *runtime() { return &_runtime; }
     AxiomGui::MainWindow *window() { return &_window; }
 
 private:
-    MaximCompiler::Runtime _runtime;
     AxiomGui::MainWindow _window;
 };

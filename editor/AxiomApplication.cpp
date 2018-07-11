@@ -28,8 +28,6 @@ char **argv = new char *[1];
 
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     MaximFrontend::maxim_initialize();
-    _jit = MaximCompiler::Jit();
-
     AxiomGui::GlobalActions::setupActions();
 
     Q_INIT_RESOURCE(res);

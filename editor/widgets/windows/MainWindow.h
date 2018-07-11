@@ -1,9 +1,10 @@
 #pragma once
 
 #include <QtWidgets/QMainWindow>
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
 
+#include "editor/compiler/interface/Runtime.h"
 #include "editor/model/Project.h"
 
 namespace AxiomModel {
@@ -21,16 +22,20 @@ namespace AxiomGui {
     class ModuleBrowserPanel;
 
     class MainWindow : public QMainWindow {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
-        MainWindow(std::unique_ptr<AxiomModel::Project> project);
+        MainWindow();
 
         ~MainWindow() override;
+
+        MaximCompiler::Runtime *runtime() { return &_runtime; }
 
         AxiomModel::Project *project() const { return _project.get(); }
 
         void setProject(std::unique_ptr<AxiomModel::Project> project);
+
+        void importLibraryFrom(const QString &path);
 
     public slots:
 
@@ -53,13 +58,10 @@ namespace AxiomGui {
         void exportLibrary();
 
     private:
-
+        MaximCompiler::Runtime _runtime;
         std::unique_ptr<AxiomModel::Project> _project;
         std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
         std::unique_ptr<HistoryPanel> _historyPanel;
         std::unique_ptr<ModuleBrowserPanel> _modulePanel;
-
-        void importLibraryFrom(const QString &path);
     };
-
 }

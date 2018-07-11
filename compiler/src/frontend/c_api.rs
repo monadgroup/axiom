@@ -1,4 +1,4 @@
-use super::{value_reader, Jit, Runtime, Transaction};
+use super::{value_reader, Runtime, Transaction};
 use ast;
 use codegen;
 use inkwell::{orc, targets};
@@ -6,7 +6,6 @@ use mir;
 use parser;
 use pass;
 use std;
-use std::mem;
 use std::os::raw::c_void;
 use CompileError;
 
@@ -23,32 +22,10 @@ pub unsafe extern "C" fn maxim_destroy_string(string: *mut std::os::raw::c_char)
 }
 
 #[no_mangle]
-pub extern "C" fn maxim_create_jit() -> *mut Jit {
-    Box::into_raw(Box::new(Jit::new()))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn maxim_destroy_jit(jit: *mut Jit) {
-    Box::from_raw(jit);
-    // box will be dropped here
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn maxim_create_runtime<'a>(
-    include_ui: bool,
-    min_size: bool,
-    jit: *const Jit,
-) -> *mut Runtime<'a> {
+pub unsafe extern "C" fn maxim_create_runtime(include_ui: bool, min_size: bool) -> *mut Runtime {
     let target =
         codegen::TargetProperties::new(include_ui, min_size, targets::TargetMachine::select());
-    Box::into_raw(Box::new(Runtime::new(
-        target,
-        if jit.is_null() {
-            None
-        } else {
-            Some(mem::transmute(jit))
-        },
-    )))
+    Box::into_raw(Box::new(Runtime::new(target)))
 }
 
 #[no_mangle]

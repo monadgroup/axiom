@@ -1,26 +1,26 @@
 #include "MainWindow.h"
 
-#include <QtWidgets/QPlainTextEdit>
-#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QFileDialog>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QPushButton>
 #include <QtCore/QTimer>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QPlainTextEdit>
+#include <QtWidgets/QPushButton>
 
-#include "editor/resources/resource.h"
-#include "../surface/NodeSurfacePanel.h"
-#include "../modulebrowser/ModuleBrowserPanel.h"
+#include "../GlobalActions.h"
 #include "../history/HistoryPanel.h"
+#include "../modulebrowser/ModuleBrowserPanel.h"
+#include "../surface/NodeSurfacePanel.h"
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
-#include "editor/model/objects/RootSurface.h"
-#include "editor/model/PoolOperators.h"
 #include "editor/model/LibraryEntry.h"
-#include "../GlobalActions.h"
+#include "editor/model/PoolOperators.h"
+#include "editor/model/objects/RootSurface.h"
+#include "editor/resources/resource.h"
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) {
+MainWindow::MainWindow() : _runtime(true, true) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -62,28 +62,20 @@ MainWindow::MainWindow(std::unique_ptr<AxiomModel::Project> project) {
 
     editMenu->addAction(GlobalActions::editPreferences);
 
-    connect(GlobalActions::helpAbout, &QAction::triggered,
-            this, &MainWindow::showAbout);
+    connect(GlobalActions::helpAbout, &QAction::triggered, this, &MainWindow::showAbout);
 
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(GlobalActions::helpAbout);
 
     // connect menu things
-    connect(GlobalActions::fileOpen, &QAction::triggered,
-            this, &MainWindow::openProject);
-    connect(GlobalActions::fileSave, &QAction::triggered,
-            this, &MainWindow::saveProject);
-    connect(GlobalActions::fileExport, &QAction::triggered,
-            this, &MainWindow::exportProject);
-    connect(GlobalActions::fileQuit, &QAction::triggered,
-            QApplication::quit);
-    connect(GlobalActions::fileImportLibrary, &QAction::triggered,
-            this, &MainWindow::importLibrary);
-    connect(GlobalActions::fileExportLibrary, &QAction::triggered,
-            this, &MainWindow::exportLibrary);
+    connect(GlobalActions::fileOpen, &QAction::triggered, this, &MainWindow::openProject);
+    connect(GlobalActions::fileSave, &QAction::triggered, this, &MainWindow::saveProject);
+    connect(GlobalActions::fileExport, &QAction::triggered, this, &MainWindow::exportProject);
+    connect(GlobalActions::fileQuit, &QAction::triggered, QApplication::quit);
+    connect(GlobalActions::fileImportLibrary, &QAction::triggered, this, &MainWindow::importLibrary);
+    connect(GlobalActions::fileExportLibrary, &QAction::triggered, this, &MainWindow::exportLibrary);
 
-    setProject(std::move(project));
-    importLibraryFrom(":/default.axl");
+    // importLibraryFrom(":/default.axl");
 }
 
 MainWindow::~MainWindow() = default;
@@ -113,8 +105,7 @@ void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurfac
         });
     }
 
-    connect(newDockPtr, &NodeSurfacePanel::closed,
-            this, [this, surface]() { removeSurface(surface); });
+    connect(newDockPtr, &NodeSurfacePanel::closed, this, [this, surface]() { removeSurface(surface); });
     _openPanels.emplace(surface, std::move(newDock));
 }
 
@@ -133,9 +124,12 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
 
     _project = std::move(project);
 
+    // attach our runtime
+    _project->mainRoot().attachRuntime(runtime());
+
     // find root surface and show it
-    auto defaultSurface = AxiomModel::getFirst(
-        AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
+    auto defaultSurface =
+        AxiomModel::getFirst(AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
     assert(defaultSurface.value());
     showSurface(nullptr, *defaultSurface.value(), false);
 
@@ -158,7 +152,8 @@ void MainWindow::saveProject() {
     QFile file(selectedFile);
     if (!file.open(QIODevice::WriteOnly)) {
         QMessageBox(QMessageBox::Critical, "Failed to save project", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok).exec();
+                    QMessageBox::Ok)
+            .exec();
         return;
     }
 
@@ -175,7 +170,8 @@ void MainWindow::openProject() {
     QFile file(selectedFile);
     if (!file.open(QIODevice::ReadOnly)) {
         QMessageBox(QMessageBox::Critical, "Failed to open project", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok).exec();
+                    QMessageBox::Ok)
+            .exec();
         return;
     }
 
@@ -188,13 +184,18 @@ void MainWindow::openProject() {
         if (readVersion) {
             QMessageBox(QMessageBox::Critical, "Failed to load project",
                         "The file you selected was created with an incompatible version of Axiom.\n\n"
-                        "Expected version: between " + QString::number(AxiomModel::Project::minSchemaVersion) +
-                        " and " + QString::number(AxiomModel::Project::schemaVersion) + ", actual version: " +
-                        QString::number(readVersion) + ".", QMessageBox::Ok).exec();
+                        "Expected version: between " +
+                            QString::number(AxiomModel::Project::minSchemaVersion) + " and " +
+                            QString::number(AxiomModel::Project::schemaVersion) +
+                            ", actual version: " + QString::number(readVersion) + ".",
+                        QMessageBox::Ok)
+                .exec();
         } else {
             QMessageBox(QMessageBox::Critical, "Failed to load project",
                         "The file you selected is an invalid project file (bad magic header).\n"
-                        "Maybe it's corrupt?", QMessageBox::Ok).exec();
+                        "Maybe it's corrupt?",
+                        QMessageBox::Ok)
+                .exec();
         }
     } else {
         setProject(std::move(newProject));
@@ -226,7 +227,8 @@ void MainWindow::exportLibrary() {
     QFile file(selectedFile);
     if (!file.open(QIODevice::WriteOnly)) {
         QMessageBox(QMessageBox::Critical, "Failed to export library", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok).exec();
+                    QMessageBox::Ok)
+            .exec();
         return;
     }
 
@@ -240,7 +242,8 @@ void MainWindow::importLibraryFrom(const QString &path) {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         QMessageBox(QMessageBox::Critical, "Failed to import library", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok).exec();
+                    QMessageBox::Ok)
+            .exec();
         return;
     }
 
@@ -250,48 +253,61 @@ void MainWindow::importLibraryFrom(const QString &path) {
         if (readVersion) {
             QMessageBox(QMessageBox::Critical, "Failed to load library",
                         "The file you selected was created with an incompatible version of Axiom.\n\n"
-                        "Expected version: between " + QString::number(AxiomModel::Project::minSchemaVersion) +
-                        " and " + QString::number(AxiomModel::Project::schemaVersion) + ", actual version: " +
-                        QString::number(readVersion) + ".", QMessageBox::Ok).exec();
+                        "Expected version: between " +
+                            QString::number(AxiomModel::Project::minSchemaVersion) + " and " +
+                            QString::number(AxiomModel::Project::schemaVersion) +
+                            ", actual version: " + QString::number(readVersion) + ".",
+                        QMessageBox::Ok)
+                .exec();
         } else {
             QMessageBox(QMessageBox::Critical, "Failed to load library",
                         "The file you selected is an invalid library file (bad magic header).\n"
-                        "Maybe it's corrupt?", QMessageBox::Ok).exec();
+                        "Maybe it's corrupt?",
+                        QMessageBox::Ok)
+                .exec();
         }
         return;
     }
 
     AxiomModel::Library mergeLibrary(_project.get(), stream);
     file.close();
-    _project->library().import(&mergeLibrary,
-                               [](AxiomModel::LibraryEntry *oldEntry, AxiomModel::LibraryEntry *newEntry) {
-                                   auto currentNewer =
-                                       oldEntry->modificationDateTime() > newEntry->modificationDateTime();
+    _project->library().import(
+        &mergeLibrary, [](AxiomModel::LibraryEntry *oldEntry, AxiomModel::LibraryEntry *newEntry) {
+            auto currentNewer = oldEntry->modificationDateTime() > newEntry->modificationDateTime();
 
-                                   QMessageBox msgBox(QMessageBox::Warning, "Module import conflict",
-                                                      tr("Heads up! One of the modules in the imported library is conflicting with one you already had.\n\n"
-                                                         "Current module (") + (currentNewer ? "newer" : "older") +
-                                                      ")\n"
-                                                      "Name: " + oldEntry->name() + "\n"
-                                                                                    "Last edit: " +
-                                                      oldEntry->modificationDateTime().toLocalTime().toString() + "\n\n"
-                                                                                                                  "New module (" +
-                                                      (currentNewer ? "older" : "newer") + ")\n"
-                                                                                           "Name: " + newEntry->name() +
-                                                      "\n"
-                                                      "Last edit: " +
-                                                      newEntry->modificationDateTime().toLocalTime().toString() + "\n\n"
-                                                                                                                  "Would you like to keep the current module, imported one, or both?");
-                                   auto currentBtn = msgBox.addButton("Current", QMessageBox::ActionRole);
-                                   auto importedBtn = msgBox.addButton("Imported", QMessageBox::ActionRole);
-                                   msgBox.addButton("Both", QMessageBox::ActionRole);
-                                   msgBox.setDefaultButton(importedBtn);
-                                   msgBox.exec();
+            QMessageBox msgBox(
+                QMessageBox::Warning, "Module import conflict",
+                tr("Heads up! One of the modules in the imported library is conflicting with one you already had.\n\n"
+                   "Current module (") +
+                    (currentNewer ? "newer" : "older") +
+                    ")\n"
+                    "Name: " +
+                    oldEntry->name() +
+                    "\n"
+                    "Last edit: " +
+                    oldEntry->modificationDateTime().toLocalTime().toString() +
+                    "\n\n"
+                    "New module (" +
+                    (currentNewer ? "older" : "newer") +
+                    ")\n"
+                    "Name: " +
+                    newEntry->name() +
+                    "\n"
+                    "Last edit: " +
+                    newEntry->modificationDateTime().toLocalTime().toString() +
+                    "\n\n"
+                    "Would you like to keep the current module, imported one, or both?");
+            auto currentBtn = msgBox.addButton("Current", QMessageBox::ActionRole);
+            auto importedBtn = msgBox.addButton("Imported", QMessageBox::ActionRole);
+            msgBox.addButton("Both", QMessageBox::ActionRole);
+            msgBox.setDefaultButton(importedBtn);
+            msgBox.exec();
 
-                                   if (msgBox.clickedButton() == currentBtn)
-                                       return AxiomModel::Library::ConflictResolution::KEEP_OLD;
-                                   else if (msgBox.clickedButton() == importedBtn)
-                                       return AxiomModel::Library::ConflictResolution::KEEP_NEW;
-                                   else return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
-                               });
+            if (msgBox.clickedButton() == currentBtn)
+                return AxiomModel::Library::ConflictResolution::KEEP_OLD;
+            else if (msgBox.clickedButton() == importedBtn)
+                return AxiomModel::Library::ConflictResolution::KEEP_NEW;
+            else
+                return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
+        });
 }

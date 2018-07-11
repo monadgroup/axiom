@@ -17,7 +17,7 @@ use std::iter::FromIterator;
 use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 #[derive(Debug)]
 struct RuntimeModule {
@@ -96,7 +96,7 @@ impl RuntimePointers {
 }
 
 #[derive(Debug)]
-pub struct Runtime<'a> {
+pub struct Runtime {
     next_id: u64,
     context: Context,
     target: TargetProperties,
@@ -109,24 +109,23 @@ pub struct Runtime<'a> {
     block_layouts: HashMap<BlockRef, data_analyzer::BlockLayout>,
     block_modules: HashMap<BlockRef, RuntimeModule>,
     graph: DependencyGraph,
-    jit: Option<&'a Jit>,
+    jit: Jit,
     pointers: Option<RuntimePointers>,
     bpm: f32,
     sample_rate: f32,
 }
 
-impl<'a> Runtime<'a> {
-    pub fn new(target: TargetProperties, jit: Option<&'a Jit>) -> Self {
+impl Runtime {
+    pub fn new(target: TargetProperties) -> Self {
         let optimizer = Optimizer::new(&target);
         let context = Context::create();
         let root_module = Runtime::create_module(&context, &target, "root");
+        let jit = Jit::new();
 
         // deploy the library to the JIT
-        if let Some(ref jit) = jit {
-            let library_module = Runtime::codegen_lib(&context, &target);
-            optimizer.optimize_module(&library_module);
-            jit.deploy(&library_module);
-        }
+        let library_module = Runtime::codegen_lib(&context, &target);
+        optimizer.optimize_module(&library_module);
+        jit.deploy(&library_module);
 
         Runtime {
             next_id: 1,
@@ -411,24 +410,19 @@ impl<'a> Runtime<'a> {
         self.codegen_blocks(new_block_ids);
         self.codegen_surfaces(affected_surfaces);
 
-        let new_root_module = RuntimeModule::new(self.codegen_root(&self.root.0), None);
-        if let Some(ref jit) = self.jit {
-            Runtime::remove_module(jit, &mut self.root.1);
-        }
-        self.root.1 = new_root_module;
+        self.root.1.module = self.codegen_root(&self.root.0);
+    }
 
-        // deploy all modules
-        if let Some(ref jit) = self.jit {
-            for block in new_block_ids {
-                Runtime::deploy_module(jit, self.block_modules.get_mut(block).unwrap());
-            }
-            for surface in affected_surfaces {
-                Runtime::deploy_module(jit, self.surface_modules.get_mut(surface).unwrap());
-            }
-
-            Runtime::deploy_module(jit, &mut self.root.1);
-            self.pointers = Some(RuntimePointers::new(jit));
+    fn deploy_transaction(&mut self, block_ids: &[BlockRef], affected_surfaces: &[SurfaceRef]) {
+        for block in block_ids {
+            Runtime::deploy_module(&self.jit, self.block_modules.get_mut(block).unwrap());
         }
+        for surface in affected_surfaces {
+            Runtime::deploy_module(&self.jit, self.surface_modules.get_mut(surface).unwrap());
+        }
+
+        Runtime::deploy_module(&self.jit, &mut self.root.1);
+        self.pointers = Some(RuntimePointers::new(&self.jit));
     }
 
     pub fn commit(&mut self, transaction: Transaction) {
@@ -449,18 +443,23 @@ impl<'a> Runtime<'a> {
 
         let patch_start = Instant::now();
         let (new_block_ids, affected_surfaces) = self.patch_transaction(transaction);
-        let elapsed = patch_start.elapsed();
         println!(
             "Patch took {}s",
-            elapsed.as_secs() as f32 + elapsed.subsec_nanos() as f32 / 1_000_000_000.
+            precise_duration_seconds(&patch_start.elapsed())
         );
 
         let codegen_start = Instant::now();
         self.codegen_transaction(&new_block_ids, &affected_surfaces);
-        let elapsed = codegen_start.elapsed();
         println!(
             "Codegen took {}s",
-            elapsed.as_secs() as f32 + elapsed.subsec_nanos() as f32 / 1_000_000_000.
+            precise_duration_seconds(&codegen_start.elapsed())
+        );
+
+        let deploy_start = Instant::now();
+        self.deploy_transaction(&new_block_ids, &affected_surfaces);
+        println!(
+            "Deploy took {}s",
+            precise_duration_seconds(&deploy_start.elapsed())
         );
 
         if let Some(ref pointers) = self.pointers {
@@ -493,9 +492,7 @@ impl<'a> Runtime<'a> {
             } else {
                 surface_mirs.remove(&key);
                 surface_layouts.remove(&key);
-                if let &Some(ref jit) = jit {
-                    Runtime::remove_module(jit, module);
-                }
+                Runtime::remove_module(jit, module);
                 false
             }
         });
@@ -505,9 +502,7 @@ impl<'a> Runtime<'a> {
             } else {
                 block_mirs.remove(&key);
                 block_layouts.remove(&key);
-                if let &Some(ref jit) = jit {
-                    Runtime::remove_module(jit, module);
-                }
+                Runtime::remove_module(jit, module);
                 false
             }
         });
@@ -594,7 +589,7 @@ impl<'a> Runtime<'a> {
     }
 }
 
-impl<'a> ObjectCache for Runtime<'a> {
+impl ObjectCache for Runtime {
     fn context(&self) -> &Context {
         &self.context
     }
@@ -620,7 +615,7 @@ impl<'a> ObjectCache for Runtime<'a> {
     }
 }
 
-impl<'a> IdAllocator for Runtime<'a> {
+impl IdAllocator for Runtime {
     fn alloc_id(&mut self) -> u64 {
         let take_id = self.next_id;
         self.next_id += 1;
@@ -628,7 +623,7 @@ impl<'a> IdAllocator for Runtime<'a> {
     }
 }
 
-impl<'a> Drop for Runtime<'a> {
+impl Drop for Runtime {
     fn drop(&mut self) {
         if let Some(ref pointers) = self.pointers {
             unsafe {
@@ -636,4 +631,8 @@ impl<'a> Drop for Runtime<'a> {
             }
         }
     }
+}
+
+fn precise_duration_seconds(duration: &Duration) -> f64 {
+    duration.as_secs() as f64 + duration.subsec_nanos() as f64 / 1_000_000_000.
 }

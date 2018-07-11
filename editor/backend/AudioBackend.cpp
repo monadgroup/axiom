@@ -90,11 +90,11 @@ void AudioBackend::deserialize(QByteArray *data) {
 }
 
 void AudioBackend::setBpm(float bpm) {
-    _editor->runtime()->setBpm(bpm);
+    _editor->window()->runtime()->setBpm(bpm);
 }
 
 void AudioBackend::setSampleRate(float sampleRate) {
-    _editor->runtime()->setSampleRate(sampleRate);
+    _editor->window()->runtime()->setSampleRate(sampleRate);
 }
 
 void AudioBackend::queueMidiEvent(uint64_t deltaFrames, size_t portalId, AxiomBackend::MidiEvent event) {
@@ -135,7 +135,7 @@ uint64_t AudioBackend::beginGenerate() {
 
 void AudioBackend::generate() {
     generatedSamples++;
-    _editor->runtime()->runUpdate();
+    _editor->window()->runtime()->runUpdate();
 }
 
 AudioConfiguration AudioBackend::createDefaultConfiguration() {
@@ -179,7 +179,7 @@ void AudioBackend::internalUpdateConfiguration() {
     portalValues.clear();
     portalValues.reserve(newPortals.size());
     for (size_t i = 0; i < newPortals.size(); i++) {
-        portalValues.push_back(_editor->runtime()->getPortalPtr(i));
+        portalValues.push_back(_editor->window()->runtime()->getPortalPtr(i));
     }
 
     // no point continuing if the portals are the same

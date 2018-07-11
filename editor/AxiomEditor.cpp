@@ -4,16 +4,10 @@
 #include "backend/AudioBackend.h"
 #include "model/Project.h"
 
-static std::unique_ptr<AxiomModel::Project> createProject(MaximCompiler::Runtime *runtime,
-                                                          AxiomBackend::AudioBackend *backend) {
-    auto project = std::make_unique<AxiomModel::Project>(backend->createDefaultConfiguration());
-    project->mainRoot().attachRuntime(runtime);
-    return std::move(project);
-}
-
-AxiomEditor::AxiomEditor(AxiomBackend::AudioBackend *backend)
-    : _runtime(true, true, AxiomApplication::main.jit()), _window(createProject(&_runtime, backend)) {
+AxiomEditor::AxiomEditor(AxiomBackend::AudioBackend *backend) {
     backend->setEditor(this);
+    _window.setProject(std::make_unique<AxiomModel::Project>(backend->createDefaultConfiguration()));
+    _window.importLibraryFrom(":/default.axl");
     _window.project()->mainRoot().attachBackend(backend);
     backend->internalUpdateConfiguration();
 }

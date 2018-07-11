@@ -3,8 +3,6 @@
 #include <QApplication>
 #include <optional>
 
-#include "compiler/interface/Jit.h"
-
 namespace AxiomModel {
     class Project;
 }
@@ -14,9 +12,4 @@ public:
     static AxiomApplication main;
 
     AxiomApplication();
-
-    MaximCompiler::Jit *jit() { return &*_jit; }
-
-private:
-    std::optional<MaximCompiler::Jit> _jit;
 };
