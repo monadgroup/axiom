@@ -127,6 +127,7 @@ map_functions! {
     Delay => DelayFunction,
     Amplitude => AmplitudeFunction,
     Hold => HoldFunction,
+    Accum => AccumFunction,
     Noise => NoiseFunction
 }
 

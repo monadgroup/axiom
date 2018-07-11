@@ -206,7 +206,62 @@ impl Function for HoldFunction {
     }
 }
 
-/*pub struct AccumFunction {}
+pub struct AccumFunction {}
 impl Function for AccumFunction {
+    fn function_type() -> block::Function {
+        block::Function::Accum
+    }
 
-}*/
+    fn data_type(context: &Context) -> StructType {
+        context.struct_type(&[&context.f32_type().vec_type(2)], false)
+    }
+
+    fn gen_real_args(ctx: &mut BuilderContext, mut args: Vec<PointerValue>) -> Vec<PointerValue> {
+        if args.len() < 3 {
+            let mut base_constant = NumValue::new_undef(ctx.context, ctx.allocb);
+            base_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0., 0., 0));
+            args.push(base_constant.val);
+        }
+        args
+    }
+
+    fn gen_call(
+        func: &mut FunctionContext,
+        args: &[PointerValue],
+        _varargs: Option<VarArgs>,
+        result: PointerValue,
+    ) {
+        let accum_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "accum.ptr") };
+
+        let x_num = NumValue::new(args[0]);
+        let gate_num = NumValue::new(args[1]);
+        let base_num = NumValue::new(args[2]);
+        let result_num = NumValue::new(result);
+
+        let accum_vec = func.ctx
+            .b
+            .build_load(&accum_ptr, "accum")
+            .into_vector_value();
+        let x_vec = x_num.get_vec(func.ctx.b);
+        let incremented_vec = func.ctx.b.build_float_add(accum_vec, x_vec, "accum.incr");
+
+        let gate_vec = gate_num.get_vec(func.ctx.b);
+        let gate_bool = func.ctx.b.build_float_compare(
+            FloatPredicate::ONE,
+            gate_vec,
+            util::get_vec_spread(func.ctx.context, 0.),
+            "gatebool",
+        );
+
+        let base_vec = base_num.get_vec(func.ctx.b);
+        let new_accum = func.ctx
+            .b
+            .build_select(gate_bool, incremented_vec, base_vec, "newaccum")
+            .into_vector_value();
+        func.ctx.b.build_store(&accum_ptr, &new_accum);
+
+        let x_form = x_num.get_form(func.ctx.b);
+        result_num.set_form(func.ctx.b, &x_form);
+        result_num.set_vec(func.ctx.b, &new_accum);
+    }
+}
