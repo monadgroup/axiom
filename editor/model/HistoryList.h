@@ -24,9 +24,9 @@ namespace AxiomModel {
 
         using CompileApplyer = std::function<void(std::vector<QUuid>)>;
 
-        HistoryList(CompileApplyer applyer);
+        explicit HistoryList(CompileApplyer applyer);
 
-        explicit HistoryList(QDataStream &stream, ModelRoot *root);
+        explicit HistoryList(QDataStream &stream, ModelRoot *root, CompileApplyer applyer);
 
         void serialize(QDataStream &stream);
 

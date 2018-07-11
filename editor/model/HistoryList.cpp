@@ -6,7 +6,8 @@ using namespace AxiomModel;
 
 HistoryList::HistoryList(CompileApplyer applyer) : applyCompile(std::move(applyer)) {}
 
-HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
+HistoryList::HistoryList(QDataStream &stream, ModelRoot *root, CompileApplyer applyer)
+    : applyCompile(std::move(applyer)) {
     uint32_t stackPos;
     stream >> stackPos;
     uint32_t stackSize;

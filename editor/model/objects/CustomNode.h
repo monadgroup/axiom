@@ -10,7 +10,7 @@ namespace AxiomModel {
 
     class Control;
 
-    class CompositeAction;
+    class SetCodeAction;
 
     class CustomNode : public Node {
     public:
@@ -68,7 +68,7 @@ namespace AxiomModel {
         uint64_t runtimeId = 0;
         std::optional<MaximCompiler::Block> _compiledBlock;
 
-        void updateControls(CompositeAction *action);
+        void updateControls(SetCodeAction *action);
 
         void surfaceControlAdded(Control *control);
 

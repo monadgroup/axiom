@@ -67,10 +67,9 @@ void CustomNode::setCode(const QString &code) {
 
 void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
     std::vector<QUuid> compileItems;
-    auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode),
-                                               CompositeAction::create({}, root()), root());
+    auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), {}, root());
     setCodeAction->forward(true, compileItems);
-    updateControls(setCodeAction->controlActions());
+    updateControls(setCodeAction.get());
     root()->history().append(std::move(setCodeAction), false);
     root()->applyCompile(compileItems);
 }
@@ -101,6 +100,7 @@ void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::T
 
     if (transaction) {
         build(transaction);
+        updateControls(nullptr);
     }
 }
 
@@ -136,7 +136,7 @@ struct NewControl {
     QString name;
 };
 
-void CustomNode::updateControls(CompositeAction *actions) {
+void CustomNode::updateControls(SetCodeAction *action) {
     if (!_compiledBlock || !controls().value()) return;
 
     auto compiledControlCount = _compiledBlock->controlCount();
@@ -177,7 +177,9 @@ void CustomNode::updateControls(CompositeAction *actions) {
         auto deleteAction = DeleteObjectAction::create(existingControl->uuid(), root());
         std::vector<QUuid> dummy;
         deleteAction->forward(true, dummy);
-        actions->actions().push_back(std::move(deleteAction));
+
+        assert(action);
+        action->controlActions().push_back(std::move(deleteAction));
     }
 
     // add any new controls
@@ -188,7 +190,9 @@ void CustomNode::updateControls(CompositeAction *actions) {
                                                         std::move(newControl.name), root());
         std::vector<QUuid> dummy;
         createAction->forward(true, dummy);
-        actions->actions().push_back(std::move(createAction));
+
+        assert(action);
+        action->controlActions().push_back(std::move(createAction));
     }
 }
 

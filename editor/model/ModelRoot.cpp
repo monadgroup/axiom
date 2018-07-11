@@ -23,7 +23,7 @@ ModelRoot::ModelRoot(Project *project)
 ModelRoot::ModelRoot(Project *project, QDataStream &stream) : ModelRoot(project) {
     IdentityReferenceMapper ref;
     deserializeChunk(stream, QUuid(), &ref);
-    _history = HistoryList(stream, this);
+    _history = HistoryList(stream, this, [this](std::vector<QUuid> items) { applyCompile(items); });
 }
 
 void ModelRoot::serialize(QDataStream &stream) {
