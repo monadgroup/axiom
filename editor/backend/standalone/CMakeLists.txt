@@ -20,7 +20,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 
 include_directories(${PORTAUDIO_INCLUDE_DIRS})
-add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} main.cpp ../../util.cpp)
+add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} main.cpp)
 target_link_libraries(axiom_standalone axiom_editor ${PORTAUDIO_LIBRARIES})
 set_target_properties(axiom_standalone PROPERTIES
         PREFIX ""

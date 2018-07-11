@@ -4,7 +4,7 @@
 #include "backend/AudioBackend.h"
 #include "model/Project.h"
 
-AxiomEditor::AxiomEditor(AxiomBackend::AudioBackend *backend) {
+AxiomEditor::AxiomEditor(AxiomApplication *, AxiomBackend::AudioBackend *backend) {
     backend->setEditor(this);
     _window.setProject(std::make_unique<AxiomModel::Project>(backend->createDefaultConfiguration()));
     _window.importLibraryFrom(":/default.axl");
@@ -14,7 +14,7 @@ AxiomEditor::AxiomEditor(AxiomBackend::AudioBackend *backend) {
 
 int AxiomEditor::run() {
     _window.show();
-    return AxiomApplication::main.exec();
+    return QApplication::exec();
 }
 
 void AxiomEditor::show() {
@@ -26,6 +26,6 @@ void AxiomEditor::hide() {
 }
 
 void AxiomEditor::idle() {
-    AxiomApplication::main.processEvents();
-    AxiomApplication::main.sendPostedEvents(&_window);
+    QApplication::processEvents();
+    QApplication::sendPostedEvents(&_window);
 }

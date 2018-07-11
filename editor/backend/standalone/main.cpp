@@ -1,3 +1,4 @@
+#include "../../AxiomApplication.h"
 #include "../../AxiomEditor.h"
 #include "../AudioBackend.h"
 
@@ -91,10 +92,18 @@ public:
 };
 
 int main(int argc, char *argv[]) {
+    std::cout << "Starting application" << std::endl;
+    AxiomApplication application;
+    std::cout << "Starting backend" << std::endl;
     StandaloneAudioBackend backend;
-    AxiomEditor editor(&backend);
+    std::cout << "Starting editor" << std::endl;
+    AxiomEditor editor(&application, &backend);
+    std::cout << "Starting audio" << std::endl;
     backend.startupAudio();
+    std::cout << "Opening editor" << std::endl;
     auto returnVal = editor.run();
+    std::cout << "Shutting down audio" << std::endl;
     backend.shutdownAudio();
+    std::cout << "Goodbye." << std::endl;
     return returnVal;
 }

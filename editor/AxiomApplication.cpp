@@ -21,9 +21,7 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
-AxiomApplication AxiomApplication::main;
-
-int argc = 1;
+int argc = 0;
 char **argv = new char *[1];
 
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {

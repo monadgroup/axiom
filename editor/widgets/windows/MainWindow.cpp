@@ -74,8 +74,6 @@ MainWindow::MainWindow() : _runtime(true, true) {
     connect(GlobalActions::fileQuit, &QAction::triggered, QApplication::quit);
     connect(GlobalActions::fileImportLibrary, &QAction::triggered, this, &MainWindow::importLibrary);
     connect(GlobalActions::fileExportLibrary, &QAction::triggered, this, &MainWindow::exportLibrary);
-
-    // importLibraryFrom(":/default.axl");
 }
 
 MainWindow::~MainWindow() = default;

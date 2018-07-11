@@ -9,7 +9,5 @@ namespace AxiomModel {
 
 class AxiomApplication : public QApplication {
 public:
-    static AxiomApplication main;
-
     AxiomApplication();
 };

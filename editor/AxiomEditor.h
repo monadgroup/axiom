@@ -1,3 +1,4 @@
+#include "AxiomApplication.h"
 #include "widgets/windows/MainWindow.h"
 
 namespace AxiomBackend {
@@ -6,7 +7,7 @@ namespace AxiomBackend {
 
 class AxiomEditor {
 public:
-    AxiomEditor(AxiomBackend::AudioBackend *backend);
+    AxiomEditor(AxiomApplication *application, AxiomBackend::AudioBackend *backend);
 
     // There are two ways to run the editor GUI:
     //  1. Call `run` on the UI thread, which will show the editor and start an event loop on the thread. The
