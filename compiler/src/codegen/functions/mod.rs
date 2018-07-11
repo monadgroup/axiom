@@ -125,6 +125,7 @@ map_functions! {
     Max => MaxFunction,
     Next => NextFunction,
     Delay => DelayFunction,
+    Amplitude => AmplitudeFunction,
     Noise => NoiseFunction
 }
 

@@ -83,7 +83,7 @@ define_functions! {
     Max = "max" func![(Num, Num) -> Num],
     Next = "next" func![(Num) -> Num],
     Delay = "delay" func![(Num, Num, ?Num) -> Num],
-    Amplitude = "amplitude" func![(Num, ?Num) -> Num],
+    Amplitude = "amplitude" func![(Num) -> Num],
     Hold = "hold" func![(Num, Num, ?Num) -> Num],
     Accum = "accum" func![(Num, Num, ?Num) -> Num],
     Mixdown = "mixdown" func![(VarType::new_array(Num)) -> Num],

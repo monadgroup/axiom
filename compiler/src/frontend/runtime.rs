@@ -132,6 +132,7 @@ impl Runtime {
         // deploy the library to the JIT
         let library_module = Runtime::codegen_lib(&context, &target);
         optimizer.optimize_module(&library_module);
+        library_module.print_to_stderr();
         jit.deploy(&library_module);
 
         Runtime {
@@ -462,8 +463,6 @@ impl Runtime {
             "Codegen took {}s",
             precise_duration_seconds(&codegen_start.elapsed())
         );
-
-        self.print_modules();
 
         let deploy_start = Instant::now();
         self.deploy_transaction(&new_block_ids, &affected_surfaces);
