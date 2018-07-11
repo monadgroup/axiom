@@ -1,3 +1,5 @@
+mod defer_function;
+mod delay_function;
 mod function_context;
 mod num_function;
 mod scalar_intrinsic_function;
@@ -20,6 +22,8 @@ use std::fmt;
 
 use self::function_context::FunctionContext;
 
+pub use self::defer_function::*;
+pub use self::delay_function::*;
 pub use self::num_function::*;
 pub use self::scalar_intrinsic_function::*;
 pub use self::vector_intrinsic_function::*;
@@ -120,6 +124,7 @@ map_functions! {
     Min => MinFunction,
     Max => MaxFunction,
     Next => NextFunction,
+    Delay => DelayFunction,
     Noise => NoiseFunction
 }
 
@@ -143,7 +148,7 @@ fn get_lifecycle_func(
 
 fn get_update_func(module: &Module, function: block::Function) -> FunctionValue {
     let func_name = format!("maxim.function.{}.update", function);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         let mut arg_types: Vec<BasicTypeEnum> = vec![
             get_data_type(&context, function)
@@ -186,7 +191,12 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
             Linkage::ExternalLinkage,
             context.void_type().fn_type(&arg_refs, false),
         )
-    })
+    });
+    func.add_param_attribute(
+        1,
+        module.get_context().get_enum_attr(AttrKind::StructRet, 1),
+    );
+    func
 }
 
 fn build_lifecycle_func(
@@ -214,9 +224,6 @@ fn build_update_func(
 ) {
     let func = get_update_func(module, function);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
-        ctx.func
-            .add_param_attribute(1, ctx.context.get_enum_attr(AttrKind::StructRet, 1));
-
         let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let return_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let has_vararg = function.var_arg().is_some();

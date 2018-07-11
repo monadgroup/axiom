@@ -10,6 +10,8 @@ DEFINE_SIMPLE_CONVERSION_FUNCTIONS(std::shared_ptr<llvm::Module>, LLVMSharedModu
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TargetMachine, LLVMTargetMachineRef)
 
 extern "C" {
+int __umoddi3(int a, int b);
+
 LLVMTargetMachineRef LLVMAxiomSelectTarget() {
     return wrap(llvm::EngineBuilder().selectTarget());
 }
@@ -61,6 +63,9 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("hypot", (uint64_t) & ::hypot);
     jit->addBuiltin("sincosf", (uint64_t) & ::sincosf);
     jit->addBuiltin("rand", (uint64_t) & ::rand);
+    jit->addBuiltin("realloc", (uint64_t) & ::realloc);
+    jit->addBuiltin("free", (uint64_t) & ::free);
+    jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
 
     return jit;
 }

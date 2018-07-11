@@ -1,5 +1,6 @@
 use codegen::util;
 use inkwell::module::{Linkage, Module};
+use inkwell::targets::TargetData;
 use inkwell::types::{BasicType, VectorType};
 use inkwell::values::FunctionValue;
 use inkwell::{AddressSpace, IntPredicate};
@@ -16,6 +17,25 @@ pub fn memcpy(module: &Module) -> FunctionValue {
                     &context.i64_type(),
                     &context.i32_type(),
                     &context.bool_type(),
+                ],
+                false,
+            ),
+        )
+    })
+}
+
+pub fn realloc(module: &Module, target: &TargetData) -> FunctionValue {
+    util::get_or_create_func(module, "realloc", false, &|| {
+        let ptr_type = module
+            .get_context()
+            .i8_type()
+            .ptr_type(AddressSpace::Generic);
+        (
+            Linkage::ExternalLinkage,
+            ptr_type.fn_type(
+                &[
+                    &ptr_type,
+                    &target.int_ptr_type_in_context(&module.get_context()),
                 ],
                 false,
             ),
@@ -163,6 +183,16 @@ pub fn maxnum_v2f32(module: &Module) -> FunctionValue {
         (
             Linkage::ExternalLinkage,
             v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+        )
+    })
+}
+
+pub fn ctlz_i64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.ctlz.i64", false, &|| {
+        let i64_type = module.get_context().i64_type();
+        (
+            Linkage::ExternalLinkage,
+            i64_type.fn_type(&[&i64_type, &module.get_context().bool_type()], false),
         )
     })
 }

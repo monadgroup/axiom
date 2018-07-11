@@ -11,6 +11,7 @@ pub struct BuilderContext<'a> {
     pub func: FunctionValue,
     pub allocb: &'a mut Builder,
     pub b: &'a mut Builder,
+    pub target: &'a TargetProperties,
 }
 
 pub fn build_context_function(
@@ -55,6 +56,7 @@ pub fn build_context_function(
         func: function,
         allocb: &mut alloca_builder,
         b: &mut builder,
+        target,
     });
 
     // ensure the alloca block jumps to the main block
