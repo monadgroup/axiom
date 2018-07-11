@@ -30,14 +30,9 @@ pub fn build_context_function(
     function.add_attribute(context.get_string_attr("unsafe-fp-math", "true"));
     function.add_attribute(context.get_string_attr("denorms-are-zero", "true"));
     function.add_attribute(context.get_string_attr("denormal-fp-math", "positive-zero"));
-    function.add_attribute(context.get_string_attr(
-        "target-features",
-        "+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87",
-    ));
 
     function.add_attribute(context.get_enum_attr(AttrKind::NoRecurse, 0));
     function.add_attribute(context.get_enum_attr(AttrKind::NoUnwind, 0));
-    function.add_attribute(context.get_enum_attr(AttrKind::ArgMemOnly, 0));
 
     if target.min_size {
         function.add_attribute(context.get_enum_attr(AttrKind::MinSize, 0));

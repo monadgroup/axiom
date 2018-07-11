@@ -2,6 +2,7 @@
 
 #include "OwnedObject.h"
 #include "Transaction.h"
+#include "editor/model/Value.h"
 
 namespace MaximCompiler {
 
@@ -20,6 +21,8 @@ namespace MaximCompiler {
         void commit(Transaction transaction);
 
         bool isNodeExtracted(uint64_t surface, size_t node);
+
+        AxiomModel::NumValue convertNum(AxiomModel::FormType targetForm, const AxiomModel::NumValue &value);
 
         void *getPortalPtr(size_t portal);
 

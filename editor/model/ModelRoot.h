@@ -96,6 +96,8 @@ namespace AxiomModel {
 
         void attachRuntime(MaximCompiler::Runtime *runtime);
 
+        MaximCompiler::Runtime *runtime() const { return _runtime; }
+
         std::lock_guard<std::mutex> lockRuntime();
 
         void applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Transaction *transaction);

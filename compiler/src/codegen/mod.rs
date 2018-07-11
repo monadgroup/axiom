@@ -3,6 +3,7 @@ mod builder_context;
 pub mod controls;
 pub mod converters;
 pub mod data_analyzer;
+pub mod editor;
 pub mod functions;
 pub mod globals;
 pub mod intrinsics;

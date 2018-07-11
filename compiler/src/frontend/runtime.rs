@@ -2,8 +2,8 @@ use super::dependency_graph::DependencyGraph;
 use super::jit::{Jit, JitKey};
 use super::Transaction;
 use codegen::{
-    block, controls, converters, data_analyzer, functions, globals, intrinsics, root, surface,
-    ObjectCache, Optimizer, TargetProperties,
+    block, controls, converters, data_analyzer, editor, functions, globals, intrinsics, root,
+    surface, ObjectCache, Optimizer, TargetProperties,
 };
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -41,6 +41,8 @@ const CONSTRUCT_FUNC_NAME: &str = "maxim.runtime.construct";
 const UPDATE_FUNC_NAME: &str = "maxim.runtime.update";
 const DESTRUCT_FUNC_NAME: &str = "maxim.runtime.destruct";
 
+const CONVERT_NUM_FUNC_NAME: &str = "maxim.editor.convert_num";
+
 #[derive(Debug)]
 struct RuntimePointers {
     initialized_ptr: *mut c_void,
@@ -53,6 +55,7 @@ struct RuntimePointers {
     construct: unsafe extern "C" fn(),
     update: unsafe extern "C" fn(),
     destruct: unsafe extern "C" fn(),
+    convert_num: unsafe extern "C" fn(*mut c_void, i8, *const c_void),
 }
 
 impl RuntimePointers {
@@ -65,6 +68,9 @@ impl RuntimePointers {
 
         let destruct_address = jit.get_symbol_address(DESTRUCT_FUNC_NAME) as usize;
         assert_ne!(destruct_address, 0);
+
+        let convert_num_address = jit.get_symbol_address(CONVERT_NUM_FUNC_NAME) as usize;
+        assert_ne!(convert_num_address, 0);
 
         let samplerate_ptr_address =
             jit.get_symbol_address(globals::SAMPLERATE_GLOBAL_NAME) as usize;
@@ -91,6 +97,7 @@ impl RuntimePointers {
             construct: unsafe { mem::transmute(construct_address) },
             update: unsafe { mem::transmute(update_address) },
             destruct: unsafe { mem::transmute(destruct_address) },
+            convert_num: unsafe { mem::transmute(convert_num_address) },
         }
     }
 }
@@ -125,6 +132,7 @@ impl Runtime {
         // deploy the library to the JIT
         let library_module = Runtime::codegen_lib(&context, &target);
         optimizer.optimize_module(&library_module);
+        library_module.print_to_stderr();
         jit.deploy(&library_module);
 
         Runtime {
@@ -161,6 +169,7 @@ impl Runtime {
         functions::build_funcs(&module, &target);
         intrinsics::build_intrinsics(&module);
         globals::build_globals(&module);
+        editor::build_convert_num_func(&module, &target, CONVERT_NUM_FUNC_NAME);
         module
     }
 
@@ -561,6 +570,12 @@ impl Runtime {
             true
         } else {
             false
+        }
+    }
+
+    pub fn convert_num(&self, result: *mut c_void, target_form: i8, num: *const c_void) {
+        if let Some(ref pointers) = self.pointers {
+            unsafe { (pointers.convert_num)(result, target_form, num) }
         }
     }
 

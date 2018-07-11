@@ -12,6 +12,7 @@ pub type ControlValuePtr = *mut c_void;
 pub type ControlDataPtr = *mut c_void;
 pub type ControlUiPtr = *mut c_void;
 
+#[repr(C)]
 pub struct ControlPointers {
     pub value: ControlValuePtr,
     pub data: ControlDataPtr,

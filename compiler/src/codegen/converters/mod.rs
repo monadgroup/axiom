@@ -16,7 +16,7 @@ use inkwell::basic_block::BasicBlock;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
-use inkwell::values::{FunctionValue, IntValue, VectorValue};
+use inkwell::values::{FunctionValue, IntValue, StructValue, VectorValue};
 use inkwell::AddressSpace;
 
 pub type ConvertGeneratorCb = Fn(&Context, &Module, &mut Builder, VectorValue) -> VectorValue;
@@ -135,6 +135,20 @@ pub fn build_funcs(module: &Module) {
     build_convert_func(module, FormType::Seconds, &seconds_converter::seconds);
 }
 
+pub fn build_convert_direct(
+    builder: &mut Builder,
+    module: &Module,
+    source: &NumValue,
+    target_form: FormType,
+) -> StructValue {
+    let convert_func = get_convert_func(module, target_form);
+    builder
+        .build_call(&convert_func, &[&source.val], "num.converted", false)
+        .left()
+        .unwrap()
+        .into_struct_value()
+}
+
 pub fn build_convert(
     alloca_builder: &mut Builder,
     builder: &mut Builder,
@@ -143,12 +157,8 @@ pub fn build_convert(
     target_form: FormType,
 ) -> NumValue {
     let context = module.get_context();
-    let convert_func = get_convert_func(module, target_form);
     let result_num = NumValue::new_undef(&context, alloca_builder);
-    let converted_num = builder
-        .build_call(&convert_func, &[&source.val], "num.converted", false)
-        .left()
-        .unwrap();
+    let converted_num = build_convert_direct(builder, module, source, target_form);
     builder.build_store(&result_num.val, &converted_num);
     result_num
 }

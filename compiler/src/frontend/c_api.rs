@@ -71,6 +71,16 @@ pub unsafe extern "C" fn maxim_is_node_extracted(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_convert_num(
+    runtime: *const Runtime,
+    result: *mut c_void,
+    target_form: i8,
+    num: *const c_void,
+) {
+    (*runtime).convert_num(result, target_form, num)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_get_portal_ptr(
     runtime: *const Runtime,
     portal: usize,

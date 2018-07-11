@@ -1,32 +1,31 @@
 #include "NumControlItem.h"
 
+#include <QtCore/QStringBuilder>
+#include <QtGui/QClipboard>
+#include <QtGui/QGuiApplication>
 #include <QtWidgets/QGraphicsScene>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtGui/QGuiApplication>
-#include <QtGui/QClipboard>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMenu>
-#include <QtCore/QStringBuilder>
 
-#include "editor/model/Project.h"
-#include "editor/model/objects/NumControl.h"
-#include "editor/model/actions/SetNumModeAction.h"
-#include "editor/model/actions/SetNumValueAction.h"
-#include "../node/NodeItem.h"
+#include "../../util.h"
 #include "../CommonColors.h"
 #include "../FloatingValueEditor.h"
-#include "../../util.h"
+#include "../node/NodeItem.h"
+#include "editor/compiler/interface/Runtime.h"
+#include "editor/model/Project.h"
+#include "editor/model/actions/SetNumModeAction.h"
+#include "editor/model/actions/SetNumValueAction.h"
+#include "editor/model/objects/NumControl.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
 static std::vector<std::pair<QString, NumControl::DisplayMode>> modes = {
-    std::make_pair("&Plug", NumControl::DisplayMode::PLUG),
-    std::make_pair("&Knob", NumControl::DisplayMode::KNOB),
+    std::make_pair("&Plug", NumControl::DisplayMode::PLUG), std::make_pair("&Knob", NumControl::DisplayMode::KNOB),
     std::make_pair("&Horizontal Slider", NumControl::DisplayMode::SLIDER_H),
     std::make_pair("&Vertical Slider", NumControl::DisplayMode::SLIDER_V),
-    std::make_pair("&Toggle Button", NumControl::DisplayMode::TOGGLE)
-};
+    std::make_pair("&Toggle Button", NumControl::DisplayMode::TOGGLE)};
 
 NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
@@ -50,51 +49,51 @@ static QString getNoteName(float noteVal) {
 
 QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
     switch (form) {
-        case AxiomModel::FormType::NONE:
-        case AxiomModel::FormType::CONTROL:
-        case AxiomModel::FormType::OSCILLATOR:
-        case AxiomModel::FormType::AMPLITUDE:
-            return QString::number(val, 'f', 2);
-        case AxiomModel::FormType::Q:
-            return QString::number(val, 'f', 1);
-        case AxiomModel::FormType::NOTE:
-            return getNoteName(val);
-        case AxiomModel::FormType::FREQUENCY:
-            return val < 1000 ? static_cast<QString>(QString::number(val, 'f', 2) % " Hz") : static_cast<QString>(
-                QString::number(val / 1000, 'f', 2) % "KHz");
-        case AxiomModel::FormType::BEATS:
-            return QString::number(val, 'f', 1) % " beats";
-        case AxiomModel::FormType::SECONDS:
-            return val < 0.1 ? static_cast<QString>(QString::number(val * 1000, 'f', 2) % " ms") : static_cast<QString>(
-                QString::number(val, 'f', 2) % " s");
-        case AxiomModel::FormType::SAMPLES:
-            return QString::number((int) val);
-        case AxiomModel::FormType::DB:
-            return QString::number(val, 'f', 1) % " dB";
+    case AxiomModel::FormType::NONE:
+    case AxiomModel::FormType::CONTROL:
+    case AxiomModel::FormType::OSCILLATOR:
+    case AxiomModel::FormType::AMPLITUDE:
+        return QString::number(val, 'f', 2);
+    case AxiomModel::FormType::Q:
+        return QString::number(val, 'f', 1);
+    case AxiomModel::FormType::NOTE:
+        return getNoteName(val);
+    case AxiomModel::FormType::FREQUENCY:
+        return val < 1000 ? static_cast<QString>(QString::number(val, 'f', 2) % " Hz")
+                          : static_cast<QString>(QString::number(val / 1000, 'f', 2) % "KHz");
+    case AxiomModel::FormType::BEATS:
+        return QString::number(val, 'f', 1) % " beats";
+    case AxiomModel::FormType::SECONDS:
+        return val < 0.1 ? static_cast<QString>(QString::number(val * 1000, 'f', 2) % " ms")
+                         : static_cast<QString>(QString::number(val, 'f', 2) % " s");
+    case AxiomModel::FormType::SAMPLES:
+        return QString::number((int) val);
+    case AxiomModel::FormType::DB:
+        return QString::number(val, 'f', 1) % " dB";
     }
     unreachable;
 }
 
 void NumControlItem::paintControl(QPainter *painter) {
     switch (control->displayMode()) {
-        case NumControl::DisplayMode::PLUG:
-            plugPainter.paint(painter, aspectBoundingRect(), hoverState(), getCVal(), CommonColors::numNormal);
-            break;
-        case NumControl::DisplayMode::KNOB:
-            knobPainter.paint(painter, aspectBoundingRect(), hoverState(), getCVal(), CommonColors::numNormal,
-                              CommonColors::numActive);
-            break;
-        case NumControl::DisplayMode::SLIDER_H:
-            sliderPainter.paint(painter, drawBoundingRect(), hoverState(), getCVal(), false, CommonColors::numNormal,
-                                CommonColors::numActive);
-            break;
-        case NumControl::DisplayMode::SLIDER_V:
-            sliderPainter.paint(painter, drawBoundingRect(), hoverState(), getCVal(), true, CommonColors::numNormal,
-                                CommonColors::numActive);
-            break;
-        case NumControl::DisplayMode::TOGGLE:
-            togglePainter.paint(painter, drawBoundingRect(), hoverState(), getCVal());
-            break;
+    case NumControl::DisplayMode::PLUG:
+        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), getCVal(), CommonColors::numNormal);
+        break;
+    case NumControl::DisplayMode::KNOB:
+        knobPainter.paint(painter, aspectBoundingRect(), hoverState(), getCVal(), CommonColors::numNormal,
+                          CommonColors::numActive);
+        break;
+    case NumControl::DisplayMode::SLIDER_H:
+        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), getCVal(), false, CommonColors::numNormal,
+                            CommonColors::numActive);
+        break;
+    case NumControl::DisplayMode::SLIDER_V:
+        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), getCVal(), true, CommonColors::numNormal,
+                            CommonColors::numActive);
+        break;
+    case NumControl::DisplayMode::TOGGLE:
+        togglePainter.paint(painter, drawBoundingRect(), hoverState(), getCVal());
+        break;
     }
 }
 
@@ -105,29 +104,29 @@ QPainterPath NumControlItem::shape() const {
 
 bool NumControlItem::showLabelInCenter() const {
     switch (control->displayMode()) {
-        case NumControl::DisplayMode::PLUG:
-        case NumControl::DisplayMode::KNOB:
-        case NumControl::DisplayMode::TOGGLE:
-            return true;
-        case NumControl::DisplayMode::SLIDER_H:
-        case NumControl::DisplayMode::SLIDER_V:
-            return false;
+    case NumControl::DisplayMode::PLUG:
+    case NumControl::DisplayMode::KNOB:
+    case NumControl::DisplayMode::TOGGLE:
+        return true;
+    case NumControl::DisplayMode::SLIDER_H:
+    case NumControl::DisplayMode::SLIDER_V:
+        return false;
     }
     unreachable;
 }
 
 QRectF NumControlItem::useBoundingRect() const {
     switch (control->displayMode()) {
-        case NumControl::DisplayMode::PLUG:
-            return plugPainter.getBounds(aspectBoundingRect());
-        case NumControl::DisplayMode::KNOB:
-            return knobPainter.getBounds(aspectBoundingRect());
-        case NumControl::DisplayMode::SLIDER_H:
-            return sliderPainter.getBounds(drawBoundingRect(), false);
-        case NumControl::DisplayMode::SLIDER_V:
-            return sliderPainter.getBounds(drawBoundingRect(), true);
-        case NumControl::DisplayMode::TOGGLE:
-            return togglePainter.getBounds(drawBoundingRect());
+    case NumControl::DisplayMode::PLUG:
+        return plugPainter.getBounds(aspectBoundingRect());
+    case NumControl::DisplayMode::KNOB:
+        return knobPainter.getBounds(aspectBoundingRect());
+    case NumControl::DisplayMode::SLIDER_H:
+        return sliderPainter.getBounds(drawBoundingRect(), false);
+    case NumControl::DisplayMode::SLIDER_V:
+        return sliderPainter.getBounds(drawBoundingRect(), true);
+    case NumControl::DisplayMode::TOGGLE:
+        return togglePainter.getBounds(drawBoundingRect());
     }
     unreachable;
 }
@@ -135,29 +134,28 @@ QRectF NumControlItem::useBoundingRect() const {
 QPainterPath NumControlItem::controlPath() const {
     QPainterPath path;
     switch (control->displayMode()) {
-        case NumControl::DisplayMode::PLUG:
-            plugPainter.shape(path, aspectBoundingRect());
-            break;
-        case NumControl::DisplayMode::KNOB:
-            knobPainter.shape(path, aspectBoundingRect());
-            break;
-        case NumControl::DisplayMode::SLIDER_H:
-            sliderPainter.shape(path, drawBoundingRect(), false);
-            break;
-        case NumControl::DisplayMode::SLIDER_V:
-            sliderPainter.shape(path, drawBoundingRect(), true);
-            break;
-        case NumControl::DisplayMode::TOGGLE:
-            togglePainter.shape(path, drawBoundingRect());
-            break;
+    case NumControl::DisplayMode::PLUG:
+        plugPainter.shape(path, aspectBoundingRect());
+        break;
+    case NumControl::DisplayMode::KNOB:
+        knobPainter.shape(path, aspectBoundingRect());
+        break;
+    case NumControl::DisplayMode::SLIDER_H:
+        sliderPainter.shape(path, drawBoundingRect(), false);
+        break;
+    case NumControl::DisplayMode::SLIDER_V:
+        sliderPainter.shape(path, drawBoundingRect(), true);
+        break;
+    case NumControl::DisplayMode::TOGGLE:
+        togglePainter.shape(path, drawBoundingRect());
+        break;
     }
     return path;
 }
 
 void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     ControlItem::mousePressEvent(event);
-    if (!isEditable() || event->button() != Qt::LeftButton ||
-        control->displayMode() == NumControl::DisplayMode::PLUG) {
+    if (!isEditable() || event->button() != Qt::LeftButton || control->displayMode() == NumControl::DisplayMode::PLUG) {
         return;
     }
     event->accept();
@@ -196,10 +194,7 @@ void NumControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
     auto delta = (float) (motionDelta / accuracy);
-    setCVal(beforeDragVal.withLR(
-        beforeDragVal.left - delta,
-        beforeDragVal.right - delta
-    ));
+    setCVal(beforeDragVal.withLR(beforeDragVal.left - delta, beforeDragVal.right - delta));
 }
 
 void NumControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
@@ -225,10 +220,7 @@ void NumControlItem::wheelEvent(QGraphicsSceneWheelEvent *event) {
 
     auto delta = event->delta() / 1200.f;
     auto cVal = getCVal();
-    setCVal(cVal.withLR(
-        cVal.left + delta,
-        cVal.right + delta
-    ));
+    setCVal(cVal.withLR(cVal.left + delta, cVal.right + delta));
 }
 
 void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
@@ -245,12 +237,10 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         action->setCheckable(true);
         action->setChecked(control->displayMode() == modePair.second);
 
-        connect(action, &QAction::triggered,
-                [this, modePair]() {
-                    control->root()->history().append(
-                        SetNumModeAction::create(control->uuid(), control->displayMode(), modePair.second,
-                                                 control->root()));
-                });
+        connect(action, &QAction::triggered, [this, modePair]() {
+            control->root()->history().append(
+                SetNumModeAction::create(control->uuid(), control->displayMode(), modePair.second, control->root()));
+        });
     }
 
     menu.addSeparator();
@@ -268,8 +258,7 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     if (selectedAction == setValAction) {
         auto editor = new FloatingValueEditor(valueAsString(getCVal()), event->scenePos());
         scene()->addItem(editor);
-        connect(editor, &FloatingValueEditor::valueSubmitted,
-                this, &NumControlItem::setStringValue);
+        connect(editor, &FloatingValueEditor::valueSubmitted, this, &NumControlItem::setStringValue);
     } else if (selectedAction == copyValAction) {
         clipboard->setText(valueAsString(getCVal()));
     } else if (selectedAction == pasteValAction) {
@@ -306,14 +295,16 @@ void NumControlItem::setValue(NumValue value) {
 
 QString NumControlItem::valueAsString(NumValue num) {
     switch (control->channel()) {
-        case NumControl::Channel::LEFT:
+    case NumControl::Channel::LEFT:
+        return QString::number(num.left);
+    case NumControl::Channel::RIGHT:
+        return QString::number(num.right);
+    case NumControl::Channel::BOTH: {
+        if (num.left == num.right)
             return QString::number(num.left);
-        case NumControl::Channel::RIGHT:
-            return QString::number(num.right);
-        case NumControl::Channel::BOTH: {
-            if (num.left == num.right) return QString::number(num.left);
-            else return QString::number(num.left) + ", " + QString::number(num.right);
-        }
+        else
+            return QString::number(num.left) + ", " + QString::number(num.right);
+    }
     }
     unreachable;
 }
@@ -328,34 +319,35 @@ NumValue NumControlItem::stringAsValue(const QString &str, NumValue oldNum) {
     if (!AxiomUtil::strToFloat(str, rightNum)) rightNum = oldNum.right;
 
     switch (control->channel()) {
-        case NumControl::Channel::LEFT:
-            return oldNum.withL(leftNum);
-        case NumControl::Channel::RIGHT:
-            return oldNum.withR(rightNum);
-        case NumControl::Channel::BOTH:
-            return oldNum.withLR(leftNum, rightNum);
+    case NumControl::Channel::LEFT:
+        return oldNum.withL(leftNum);
+    case NumControl::Channel::RIGHT:
+        return oldNum.withR(rightNum);
+    case NumControl::Channel::BOTH:
+        return oldNum.withLR(leftNum, rightNum);
     }
     unreachable;
 }
 
 NumValue NumControlItem::clampVal(const NumValue &val) {
-    return val.withLR(
-        val.left < 0 ? 0 : val.left > 1 ? 1 : val.left,
-        val.right < 0 ? 0 : val.right > 1 ? 1 : val.right
-    );
+    return val.withLR(val.left < 0 ? 0 : val.left > 1 ? 1 : val.left,
+                      val.right < 0 ? 0 : val.right > 1 ? 1 : val.right);
 }
 
 NumValue NumControlItem::getCVal() const {
     auto v = control->value();
+    if (control->root()->runtime()) {
+        v = control->root()->runtime()->convertNum(FormType::CONTROL, v);
+    }
     v = clampVal(v);
 
     switch (control->channel()) {
-        case NumControl::Channel::LEFT:
-            return v.withLR(v.left, v.left);
-        case NumControl::Channel::RIGHT:
-            return v.withLR(v.right, v.right);
-        case NumControl::Channel::BOTH:
-            return v;
+    case NumControl::Channel::LEFT:
+        return v.withLR(v.left, v.left);
+    case NumControl::Channel::RIGHT:
+        return v.withLR(v.right, v.right);
+    case NumControl::Channel::BOTH:
+        return v;
     }
     unreachable;
 }
@@ -364,15 +356,15 @@ void NumControlItem::setCVal(NumValue v) const {
     NumValue setVal;
 
     switch (control->channel()) {
-        case NumControl::Channel::LEFT:
-            setVal = control->value().withL(v.left);
-            break;
-        case NumControl::Channel::RIGHT:
-            setVal = control->value().withR(v.right);
-            break;
-        case NumControl::Channel::BOTH:
-            setVal = control->value().withLR(v.left, v.right);
-            break;
+    case NumControl::Channel::LEFT:
+        setVal = control->value().withL(v.left);
+        break;
+    case NumControl::Channel::RIGHT:
+        setVal = control->value().withR(v.right);
+        break;
+    case NumControl::Channel::BOTH:
+        setVal = control->value().withLR(v.left, v.right);
+        break;
     }
 
     setVal = clampVal(setVal).withForm(FormType::CONTROL);

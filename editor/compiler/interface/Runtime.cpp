@@ -31,6 +31,12 @@ bool Runtime::isNodeExtracted(uint64_t surface, size_t node) {
     return MaximFrontend::maxim_is_node_extracted(get(), surface, node);
 }
 
+AxiomModel::NumValue Runtime::convertNum(AxiomModel::FormType targetForm, const AxiomModel::NumValue &value) {
+    AxiomModel::NumValue result;
+    MaximFrontend::maxim_convert_num(get(), &result, (uint8_t) targetForm, &value);
+    return result;
+}
+
 void *Runtime::getPortalPtr(size_t portal) {
     return MaximFrontend::maxim_get_portal_ptr(get(), portal);
 }
