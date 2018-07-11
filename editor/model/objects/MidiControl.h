@@ -25,19 +25,6 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        const MidiValue &value() const { return _value; }
-
         void doRuntimeUpdate() override {}
-
-        void setValue(const MidiValue &value);
-
-        void saveValue() override;
-
-        void restoreValue() override;
-
-    private:
-        MidiValue _value;
-
-        void setInternalValue(MidiValue value);
     };
 }

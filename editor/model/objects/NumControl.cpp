@@ -57,21 +57,11 @@ void NumControl::setChannel(AxiomModel::NumControl::Channel channel) {
 
 void NumControl::setValue(NumValue value) {
     setInternalValue(value);
-    restoreValue();
+    if (runtimePointers()) *(NumValue *) runtimePointers()->value = value;
 }
 
 void NumControl::doRuntimeUpdate() {
-    saveValue();
-}
-
-void NumControl::saveValue() {
-    if (!runtimePointers()) return;
-    setInternalValue(*(NumValue *) runtimePointers()->value);
-}
-
-void NumControl::restoreValue() {
-    if (!runtimePointers()) return;
-    *(NumValue *) runtimePointers()->value = _value;
+    if (runtimePointers()) setInternalValue(*(NumValue *) runtimePointers()->value);
 }
 
 void NumControl::setInternalValue(NumValue value) {

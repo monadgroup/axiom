@@ -31,10 +31,6 @@ namespace AxiomModel {
 
         void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) override;
 
-        void saveValue() override;
-
-        void restoreValue() override;
-
         void remove() override;
 
     private:

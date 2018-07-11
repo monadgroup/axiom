@@ -47,10 +47,6 @@ namespace AxiomModel {
 
         void setValue(NumValue value);
 
-        void saveValue() override;
-
-        void restoreValue() override;
-
     private:
         DisplayMode _displayMode;
         Channel _channel;

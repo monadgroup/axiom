@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../grid/GridSurface.h"
 #include "../ModelObject.h"
+#include "../grid/GridSurface.h"
 
 namespace AxiomModel {
 
@@ -15,28 +15,22 @@ namespace AxiomModel {
 
         ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<ControlSurface>
-        create(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<ControlSurface> create(const QUuid &uuid, const QUuid &parentUuid,
+                                                      AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<ControlSurface>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
-                    AxiomModel::ModelRoot *root);
+        static std::unique_ptr<ControlSurface> deserialize(QDataStream &stream, const QUuid &uuid,
+                                                           const QUuid &parentUuid, ReferenceMapper *ref,
+                                                           AxiomModel::ModelRoot *root);
 
         static QPoint nodeToControl(QPoint p) { return p * 2; }
 
         static QSize nodeToControl(QSize s) { return s * 2; }
 
-        static QPoint controlToNodeFloor(QPoint p) {
-            return {(int) floorf(p.x() / 2.f), (int) floorf(p.y() / 2.f)};
-        }
+        static QPoint controlToNodeFloor(QPoint p) { return {(int) floorf(p.x() / 2.f), (int) floorf(p.y() / 2.f)}; }
 
-        static QPoint controlToNodeCeil(QPoint p) {
-            return {(int) ceilf(p.x() / 2.f), (int) ceilf(p.y() / 2.f)};
-        }
+        static QPoint controlToNodeCeil(QPoint p) { return {(int) ceilf(p.x() / 2.f), (int) ceilf(p.y() / 2.f)}; }
 
-        static QPointF controlToNode(QPointF p) {
-            return {p.x() / 2., p.y() / 2.};
-        }
+        static QPointF controlToNode(QPointF p) { return {p.x() / 2., p.y() / 2.}; }
 
         static QSize controlToNodeFloor(QSize s) {
             return {(int) floorf(s.width() / 2.f), (int) floorf(s.height() / 2.f)};
@@ -46,9 +40,7 @@ namespace AxiomModel {
             return {(int) ceilf(s.width() / 2.f), (int) ceilf(s.height() / 2.f)};
         }
 
-        static QSizeF controlToNode(QSizeF p) {
-            return {p.width() / 2., p.height() / 2.};
-        }
+        static QSizeF controlToNode(QSizeF p) { return {p.width() / 2., p.height() / 2.}; }
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -62,10 +54,6 @@ namespace AxiomModel {
 
         const GridSurface &grid() const { return _grid; }
 
-        void saveValue();
-
-        void restoreValue();
-
         void remove() override;
 
     private:
@@ -75,5 +63,4 @@ namespace AxiomModel {
 
         void setSize(QSize size);
     };
-
 }

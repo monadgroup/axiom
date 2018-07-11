@@ -31,10 +31,6 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override {}
 
-        void saveValue() override {}
-
-        void restoreValue() override {}
-
     private:
         PortalType _portalType;
     };

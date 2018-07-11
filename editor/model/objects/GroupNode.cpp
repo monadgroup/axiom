@@ -49,16 +49,6 @@ void GroupNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *sur
     });
 }
 
-void GroupNode::saveValue() {
-    if (_nodes.value()) (*_nodes.value())->saveValue();
-    Node::saveValue();
-}
-
-void GroupNode::restoreValue() {
-    if (_nodes.value()) (*_nodes.value())->restoreValue();
-    Node::restoreValue();
-}
-
 void GroupNode::remove() {
     if (_nodes.value()) (*_nodes.value())->remove();
     Node::remove();

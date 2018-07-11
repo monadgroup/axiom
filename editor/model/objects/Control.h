@@ -107,10 +107,6 @@ namespace AxiomModel {
 
         virtual void doRuntimeUpdate() = 0;
 
-        virtual void saveValue() = 0;
-
-        virtual void restoreValue() = 0;
-
         void remove() override;
 
     private:

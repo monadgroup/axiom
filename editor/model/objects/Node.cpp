@@ -170,14 +170,6 @@ void Node::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *) {
     }
 }
 
-void Node::saveValue() {
-    if (_controls.value()) (*_controls.value())->saveValue();
-}
-
-void Node::restoreValue() {
-    if (_controls.value()) (*_controls.value())->restoreValue();
-}
-
 void Node::remove() {
     if (_controls.value()) (*_controls.value())->remove();
     ModelObject::remove();

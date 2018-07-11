@@ -1,9 +1,9 @@
 #include "ControlSurface.h"
 
-#include "Control.h"
-#include "Node.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "Control.h"
+#include "Node.h"
 
 using namespace AxiomModel;
 
@@ -14,8 +14,8 @@ ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, Axiom
     _node->sizeChanged.connect(this, &ControlSurface::setSize);
     _node->deselected.connect(&_grid, &GridSurface::deselectAll);
     _grid.hasSelectionChanged.connect(this, std::function([this](bool hasSelection) {
-        if (hasSelection) _node->select(true);
-    }));
+                                          if (hasSelection) _node->select(true);
+                                      }));
     setSize(_node->size());
 }
 
@@ -43,16 +43,4 @@ void ControlSurface::remove() {
 
 void ControlSurface::setSize(QSize size) {
     _grid.grid().maxRect = nodeToControl(QPoint(size.width(), size.height()));
-}
-
-void ControlSurface::saveValue() {
-    for (const auto &control : controls()) {
-        control->saveValue();
-    }
-}
-
-void ControlSurface::restoreValue() {
-    for (const auto &control : controls()) {
-        control->restoreValue();
-    }
 }
