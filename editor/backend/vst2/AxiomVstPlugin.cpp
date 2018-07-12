@@ -92,6 +92,7 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
         switch (eventType) {
         case 0x80: // note off
             remappedEvent.event = MidiEventType::NOTE_OFF;
+            remappedEvent.note = (uint8_t) midiData1;
             backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
             break;
         case 0x90: // note on
