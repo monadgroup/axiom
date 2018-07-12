@@ -4,7 +4,8 @@ use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::{ArrayType, BasicType, BasicTypeEnum, FunctionType, VectorType};
 use inkwell::values::{
-    ArrayValue, BasicValueEnum, FunctionValue, GlobalValue, IntValue, PointerValue, VectorValue,
+    ArrayValue, BasicValueEnum, FloatValue, FunctionValue, GlobalValue, IntValue, PointerValue,
+    VectorValue,
 };
 use inkwell::AddressSpace;
 use inkwell::IntPredicate;
@@ -98,6 +99,25 @@ pub fn get_const_vec(context: &Context, left: f32, right: f32) -> VectorValue {
 
 pub fn get_vec_spread(context: &Context, val: f32) -> VectorValue {
     get_const_vec(context, val, val)
+}
+
+pub fn splat_vector(builder: &Builder, val: FloatValue, name: &str) -> VectorValue {
+    let context = val.get_type().get_context();
+    builder
+        .build_insert_element(
+            &builder
+                .build_insert_element(
+                    &context.f32_type().vec_type(2).get_undef(),
+                    &val,
+                    &context.i32_type().const_int(0, false),
+                    name,
+                )
+                .into_vector_value(),
+            &val,
+            &context.i32_type().const_int(1, false),
+            name,
+        )
+        .into_vector_value()
 }
 
 pub fn copy_ptr(builder: &mut Builder, module: &Module, src: PointerValue, dest: PointerValue) {

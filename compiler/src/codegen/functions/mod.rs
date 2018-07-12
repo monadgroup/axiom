@@ -2,6 +2,7 @@ mod biquad_filter_function;
 mod defer_function;
 mod delay_function;
 mod function_context;
+mod midi_function;
 mod num_function;
 mod oscillator_function;
 mod scalar_intrinsic_function;
@@ -28,6 +29,7 @@ use self::function_context::FunctionContext;
 pub use self::biquad_filter_function::*;
 pub use self::defer_function::*;
 pub use self::delay_function::*;
+pub use self::midi_function::*;
 pub use self::num_function::*;
 pub use self::oscillator_function::*;
 pub use self::scalar_intrinsic_function::*;
@@ -146,7 +148,8 @@ map_functions! {
     RmpOsc => RmpOscFunction,
     LowBqFilter => LowBqFilterFunction,
     HighBqFilter => HighBqFilterFunction,
-    PeakBqFilter => PeakBqFilterFunction
+    PeakBqFilter => PeakBqFilterFunction,
+    Note => NoteFunction
 }
 
 fn get_lifecycle_func(

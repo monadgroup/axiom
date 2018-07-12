@@ -85,8 +85,6 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
 
         MidiEvent remappedEvent;
         remappedEvent.channel = eventChannel;
-        remappedEvent.note = (uint8_t) midiData1;
-        remappedEvent.param = (uint8_t) midiData2;
 
         switch (eventType) {
         case 0x80: // note off
@@ -95,10 +93,14 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
             break;
         case 0x90: // note on
             remappedEvent.event = MidiEventType::NOTE_ON;
+            remappedEvent.note = (uint8_t) midiData1;
+            remappedEvent.param = (uint8_t)(midiData2 * 2); // MIDI velocity is 0-127, we need 0-255
             backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
             break;
         case 0xA0: // polyphonic aftertouch
             remappedEvent.event = MidiEventType::POLYPHONIC_AFTERTOUCH;
+            remappedEvent.note = (uint8_t) midiData1;
+            remappedEvent.param = (uint8_t)(midiData2 * 2); // MIDI aftertouch pressure is 0-127, we need 0-255
             backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
             break;
         case 0xB0: // control mode change
@@ -109,11 +111,15 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
             break;
         case 0xD0: // channel aftertouch
             remappedEvent.event = MidiEventType::CHANNEL_AFTERTOUCH;
-            remappedEvent.param = (uint8_t) midiData1;
+            remappedEvent.param = (uint8_t)(midiData1 * 2); // MIDI aftertouch pressure is 0-127, we need 0-255
             backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
             break;
         case 0xE0: // pitch wheel
             remappedEvent.event = MidiEventType::PITCH_WHEEL;
+
+            // pitch wheel LSB is stored in 4 bytes of note, MSB is stored in 4 bytes of param
+            remappedEvent.param = (remappedEvent.param << 4) + remappedEvent.note;
+
             backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
             break;
         default:;
