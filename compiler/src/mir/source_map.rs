@@ -6,6 +6,12 @@ pub enum InternalNodeRef {
     Surface(usize, usize),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum ExternalNodeRef {
+    Direct(usize),
+    Deleted(usize),
+}
+
 impl InternalNodeRef {
     pub fn node(&self) -> usize {
         match self {
@@ -24,18 +30,20 @@ impl InternalNodeRef {
 
 #[derive(Debug, Clone, Default)]
 pub struct SourceMap {
-    map: HashMap<usize, InternalNodeRef>,
+    map: HashMap<ExternalNodeRef, InternalNodeRef>,
+    deleted_index: usize,
 }
 
 impl SourceMap {
     pub fn new() -> Self {
         SourceMap {
             map: HashMap::new(),
+            deleted_index: 0,
         }
     }
 
     pub fn map_to_internal(&self, external: usize) -> InternalNodeRef {
-        if let Some(internal) = self.map.get(&external) {
+        if let Some(internal) = self.map.get(&ExternalNodeRef::Direct(external)) {
             *internal
         } else {
             InternalNodeRef::Direct(external)
@@ -49,9 +57,15 @@ impl SourceMap {
             .map(|(&external, _)| external)
             .collect();
         if mapped_items.is_empty() {
-            mapped_items.push(internal);
+            mapped_items.push(ExternalNodeRef::Direct(internal));
         }
         mapped_items
+            .into_iter()
+            .filter_map(|val| match val {
+                ExternalNodeRef::Direct(v) => Some(v),
+                ExternalNodeRef::Deleted(_) => None,
+            })
+            .collect()
     }
 
     pub fn move_to(&mut self, movements: impl IntoIterator<Item = (usize, usize)>) {
@@ -62,7 +76,11 @@ impl SourceMap {
             for external in externals.into_iter() {
                 let old_internal = self.map_to_internal(external);
                 let new_internal = old_internal.with_node(after_internal);
-                SourceMap::insert(&mut new_map, external, new_internal);
+                SourceMap::insert(
+                    &mut new_map,
+                    ExternalNodeRef::Direct(external),
+                    new_internal,
+                );
             }
         }
 
@@ -75,26 +93,35 @@ impl SourceMap {
         internal: InternalNodeRef,
     ) -> Vec<InternalNodeRef> {
         let externals = self.map_to_external(before_internal);
-        externals
+        let moved_vals = externals
             .into_iter()
             .filter_map(|external| {
-                let removed = self.map.remove(&external);
+                let removed = self.map.remove(&ExternalNodeRef::Direct(external));
 
                 // review: does this work in all cases? is there anything else we need to do here?
-                SourceMap::insert(&mut self.map, external, internal);
+                SourceMap::insert(&mut self.map, ExternalNodeRef::Direct(external), internal);
                 removed
             })
-            .collect()
+            .collect();
+
+        let next_deleted_index = self.deleted_index;
+        self.deleted_index += 1;
+        SourceMap::insert(
+            &mut self.map,
+            ExternalNodeRef::Deleted(next_deleted_index),
+            InternalNodeRef::Direct(before_internal),
+        );
+        moved_vals
     }
 
     fn insert(
-        map: &mut HashMap<usize, InternalNodeRef>,
-        external: usize,
+        map: &mut HashMap<ExternalNodeRef, InternalNodeRef>,
+        external: ExternalNodeRef,
         internal: InternalNodeRef,
     ) {
         // if the map is a noop, remove it instead
         match internal {
-            InternalNodeRef::Direct(node) if node == external => {
+            InternalNodeRef::Direct(node) if ExternalNodeRef::Direct(node) == external => {
                 map.remove(&external);
             }
             _ => {
