@@ -144,7 +144,9 @@ map_functions! {
     SawOsc => SawOscFunction,
     TriOsc => TriOscFunction,
     RmpOsc => RmpOscFunction,
-    LowBqFilter => LowBqFilterFunction
+    LowBqFilter => LowBqFilterFunction,
+    HighBqFilter => HighBqFilterFunction,
+    PeakBqFilter => PeakBqFilterFunction
 }
 
 fn get_lifecycle_func(

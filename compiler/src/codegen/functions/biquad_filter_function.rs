@@ -430,3 +430,377 @@ fn low_filter_generate_coefficients(
     func.ctx.b.build_store(&b2_ptr, &b2);
 }
 define_biquad_func!(LowBqFilterFunction: block::Function::LowBqFilter => false, low_filter_generate_coefficients);
+
+fn high_filter_generate_coefficients(
+    func: &mut FunctionContext,
+    q_vec: VectorValue,
+    k_value: VectorValue,
+    k_squared: VectorValue,
+    _gain_vec: Option<VectorValue>,
+    a0_ptr: PointerValue,
+    a1_ptr: PointerValue,
+    a2_ptr: PointerValue,
+    b1_ptr: PointerValue,
+    b2_ptr: PointerValue,
+) {
+    // norm = 1 / (1 + K / q + K * K)
+    let norm = func.ctx.b.build_float_div(
+        util::get_vec_spread(func.ctx.context, 1.),
+        func.ctx.b.build_float_add(
+            func.ctx.b.build_float_add(
+                util::get_vec_spread(func.ctx.context, 1.),
+                func.ctx.b.build_float_div(k_value, q_vec, ""),
+                "",
+            ),
+            k_squared,
+            "",
+        ),
+        "",
+    );
+
+    // a0 = norm
+    let a0 = norm;
+    func.ctx.b.build_store(&a0_ptr, &a0);
+
+    // a1 = -2 * a0
+    let a1 = func.ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), a0, "");
+    func.ctx.b.build_store(&a1_ptr, &a1);
+
+    // a2 = a0
+    let a2 = a0;
+    func.ctx.b.build_store(&a2_ptr, &a2);
+
+    // b1 = 2 * (K * K - 1) * norm
+    let b1 = func.ctx.b.build_float_mul(
+        func.ctx.b.build_float_mul(
+            util::get_vec_spread(func.ctx.context, 2.),
+            func.ctx
+                .b
+                .build_float_sub(k_squared, util::get_vec_spread(func.ctx.context, 1.), ""),
+            "",
+        ),
+        norm,
+        "",
+    );
+    func.ctx.b.build_store(&b1_ptr, &b1);
+
+    // b2 = (1 - K / q + K * K) * norm
+    let b2 = func.ctx.b.build_float_mul(
+        func.ctx.b.build_float_add(
+            func.ctx.b.build_float_sub(
+                util::get_vec_spread(func.ctx.context, 1.),
+                func.ctx.b.build_float_div(k_value, q_vec, ""),
+                "",
+            ),
+            k_squared,
+            "",
+        ),
+        norm,
+        "",
+    );
+    func.ctx.b.build_store(&b2_ptr, &b2);
+}
+define_biquad_func!(HighBqFilterFunction: block::Function::HighBqFilter => false, high_filter_generate_coefficients);
+
+fn peak_filter_generate_coefficients(
+    func: &mut FunctionContext,
+    q_vec: VectorValue,
+    k_value: VectorValue,
+    k_squared: VectorValue,
+    gain_vec: Option<VectorValue>,
+    a0_ptr: PointerValue,
+    a1_ptr: PointerValue,
+    a2_ptr: PointerValue,
+    b1_ptr: PointerValue,
+    b2_ptr: PointerValue,
+) {
+    let pow_intrinsic = intrinsics::pow_v2f32(func.ctx.module);
+    let abs_intrinsic = intrinsics::fabs_v2f32(func.ctx.module);
+
+    let gain_vec = gain_vec.unwrap();
+    let v = func.ctx
+        .b
+        .build_call(
+            &pow_intrinsic,
+            &[
+                &util::get_vec_spread(func.ctx.context, 10.),
+                &func.ctx.b.build_float_div(
+                    func.ctx
+                        .b
+                        .build_call(&abs_intrinsic, &[&gain_vec], "", false)
+                        .left()
+                        .unwrap()
+                        .into_vector_value(),
+                    util::get_vec_spread(func.ctx.context, 20.),
+                    "",
+                ),
+            ],
+            "",
+            false,
+        )
+        .left()
+        .unwrap()
+        .into_vector_value();
+
+    let is_gain_positive_vec = func.ctx.b.build_float_compare(
+        FloatPredicate::OGE,
+        gain_vec,
+        util::get_vec_spread(func.ctx.context, 0.),
+        "isgainpositive.vec",
+    );
+    let left_element = func.ctx.context.i32_type().const_int(0, false);
+    let right_element = func.ctx.context.i32_type().const_int(1, false);
+    let is_gain_positive = func.ctx.b.build_or(
+        func.ctx
+            .b
+            .build_extract_element(&is_gain_positive_vec, &left_element, "")
+            .into_int_value(),
+        func.ctx
+            .b
+            .build_extract_element(&is_gain_positive_vec, &right_element, "")
+            .into_int_value(),
+        "",
+    );
+
+    let positive_gain_block = func.ctx
+        .context
+        .append_basic_block(&func.ctx.func, "positivegain");
+    let negative_gain_block = func.ctx
+        .context
+        .append_basic_block(&func.ctx.func, "negativegain");
+    let continue_block = func.ctx
+        .context
+        .append_basic_block(&func.ctx.func, "continue");
+    func.ctx.b.build_conditional_branch(
+        &is_gain_positive,
+        &positive_gain_block,
+        &negative_gain_block,
+    );
+
+    func.ctx.b.position_at_end(&positive_gain_block);
+    {
+        // norm = 1 / (1 + 1 / q * K + K * K)
+        let norm = func.ctx.b.build_float_div(
+            util::get_vec_spread(func.ctx.context, 1.),
+            func.ctx.b.build_float_add(
+                func.ctx.b.build_float_add(
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    func.ctx.b.build_float_mul(
+                        func.ctx.b.build_float_div(
+                            util::get_vec_spread(func.ctx.context, 1.),
+                            q_vec,
+                            "",
+                        ),
+                        k_value,
+                        "",
+                    ),
+                    "",
+                ),
+                k_squared,
+                "",
+            ),
+            "",
+        );
+
+        // a0 = (1 + V / q * K + K * K) * norm
+        let a0 = func.ctx.b.build_float_mul(
+            func.ctx.b.build_float_add(
+                func.ctx.b.build_float_add(
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    func.ctx.b.build_float_mul(
+                        func.ctx.b.build_float_div(v, q_vec, ""),
+                        k_value,
+                        "",
+                    ),
+                    "",
+                ),
+                k_squared,
+                "",
+            ),
+            norm,
+            "",
+        );
+        func.ctx.b.build_store(&a0_ptr, &a0);
+
+        // a1 = 2 * (K * K - 1) * norm
+        let a1 = func.ctx.b.build_float_mul(
+            func.ctx.b.build_float_mul(
+                util::get_vec_spread(func.ctx.context, 2.),
+                func.ctx.b.build_float_sub(
+                    k_squared,
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    "",
+                ),
+                "",
+            ),
+            norm,
+            "",
+        );
+        func.ctx.b.build_store(&a1_ptr, &a1);
+
+        // a2 = (1 - V / q * K + K * K) * norm
+        let a2 = func.ctx.b.build_float_mul(
+            func.ctx.b.build_float_add(
+                func.ctx.b.build_float_sub(
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    func.ctx.b.build_float_mul(
+                        func.ctx.b.build_float_div(v, q_vec, ""),
+                        k_value,
+                        "",
+                    ),
+                    "",
+                ),
+                k_squared,
+                "",
+            ),
+            norm,
+            "",
+        );
+        func.ctx.b.build_store(&a2_ptr, &a2);
+
+        // b1 = a1
+        let b1 = a1;
+        func.ctx.b.build_store(&b1_ptr, &b1);
+
+        // b2 = (1 - 1 / q * K + K * K) * norm
+        let b2 = func.ctx.b.build_float_mul(
+            func.ctx.b.build_float_add(
+                func.ctx.b.build_float_sub(
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    func.ctx.b.build_float_mul(
+                        func.ctx.b.build_float_div(
+                            util::get_vec_spread(func.ctx.context, 1.),
+                            q_vec,
+                            "",
+                        ),
+                        k_value,
+                        "",
+                    ),
+                    "",
+                ),
+                k_squared,
+                "",
+            ),
+            norm,
+            "",
+        );
+        func.ctx.b.build_store(&b2_ptr, &b2);
+        func.ctx.b.build_unconditional_branch(&continue_block);
+    }
+
+    func.ctx.b.position_at_end(&negative_gain_block);
+    {
+        // norm = 1 / (1 + V / q * K + K * K)
+        let norm = func.ctx.b.build_float_div(
+            util::get_vec_spread(func.ctx.context, 1.),
+            func.ctx.b.build_float_add(
+                func.ctx.b.build_float_add(
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    func.ctx.b.build_float_mul(
+                        func.ctx.b.build_float_div(v, q_vec, ""),
+                        k_value,
+                        "",
+                    ),
+                    "",
+                ),
+                k_squared,
+                "",
+            ),
+            "",
+        );
+
+        // a0 = (1 + 1 / q * K + K * K) * norm
+        let a0 = func.ctx.b.build_float_mul(
+            func.ctx.b.build_float_add(
+                func.ctx.b.build_float_add(
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    func.ctx.b.build_float_mul(
+                        func.ctx.b.build_float_div(
+                            util::get_vec_spread(func.ctx.context, 1.),
+                            q_vec,
+                            "",
+                        ),
+                        k_value,
+                        "",
+                    ),
+                    "",
+                ),
+                k_squared,
+                "",
+            ),
+            norm,
+            "",
+        );
+        func.ctx.b.build_store(&a0_ptr, &a0);
+
+        // a1 = 2 * (K * K - 1) * norm
+        let a1 = func.ctx.b.build_float_mul(
+            func.ctx.b.build_float_mul(
+                util::get_vec_spread(func.ctx.context, 2.),
+                func.ctx.b.build_float_sub(
+                    k_squared,
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    "",
+                ),
+                "",
+            ),
+            norm,
+            "",
+        );
+        func.ctx.b.build_store(&a1_ptr, &a1);
+
+        // a2 = (1 - 1 / q * K + K * K) * norm
+        let a2 = func.ctx.b.build_float_mul(
+            func.ctx.b.build_float_add(
+                func.ctx.b.build_float_sub(
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    func.ctx.b.build_float_mul(
+                        func.ctx.b.build_float_div(
+                            util::get_vec_spread(func.ctx.context, 1.),
+                            q_vec,
+                            "",
+                        ),
+                        k_value,
+                        "",
+                    ),
+                    "",
+                ),
+                k_squared,
+                "",
+            ),
+            norm,
+            "",
+        );
+        func.ctx.b.build_store(&a2_ptr, &a2);
+
+        // b1 = a1
+        let b1 = a1;
+        func.ctx.b.build_store(&b1_ptr, &b1);
+
+        // b2 = (1 - V / q * K + K * K) * norm
+        let b2 = func.ctx.b.build_float_mul(
+            func.ctx.b.build_float_add(
+                func.ctx.b.build_float_sub(
+                    util::get_vec_spread(func.ctx.context, 1.),
+                    func.ctx.b.build_float_mul(
+                        func.ctx.b.build_float_div(v, q_vec, ""),
+                        k_value,
+                        "",
+                    ),
+                    "",
+                ),
+                k_squared,
+                "",
+            ),
+            norm,
+            "",
+        );
+        func.ctx.b.build_store(&b2_ptr, &b2);
+        func.ctx.b.build_unconditional_branch(&continue_block);
+    }
+
+    func.ctx.b.position_at_end(&continue_block);
+}
+define_biquad_func!(PeakBqFilterFunction: block::Function::PeakBqFilter => true, peak_filter_generate_coefficients);
