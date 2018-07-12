@@ -87,7 +87,7 @@ define_functions! {
     Hold = "hold" func![(Num, Num, ?Num) -> Num],
     Accum = "accum" func![(Num, Num, ?Num) -> Num],
     Mixdown = "mixdown" func![(VarType::new_array(Num)) -> Num],
-    SvFilter = "svFilter" func![(Num, Num) -> Tuple(vec![Num, Num, Num, Num])],
+    SvFilter = "svFilter" func![(Num, Num, Num) -> Tuple(vec![Num, Num, Num, Num])],
     LowBqFilter = "lowBqFilter" func![(Num, Num, Num) -> Num],
     HighBqFilter = "highBqFilter" func![(Num, Num, Num) -> Num],
     PeakBqFilter = "peakBqFilter" func![(Num, Num, Num, Num) -> Num],

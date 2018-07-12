@@ -4,6 +4,7 @@ mod function_context;
 mod num_function;
 mod oscillator_function;
 mod scalar_intrinsic_function;
+mod sv_filter_function;
 mod vector_intrinsic_function;
 mod vector_shuffle_function;
 
@@ -28,6 +29,7 @@ pub use self::delay_function::*;
 pub use self::num_function::*;
 pub use self::oscillator_function::*;
 pub use self::scalar_intrinsic_function::*;
+pub use self::sv_filter_function::*;
 pub use self::vector_intrinsic_function::*;
 pub use self::vector_shuffle_function::*;
 
@@ -131,6 +133,7 @@ map_functions! {
     Hold => HoldFunction,
     Accum => AccumFunction,
     Mixdown => MixdownFunction,
+    SvFilter => SvFilterFunction,
     Noise => NoiseFunction,
     SinOsc => SinOscFunction,
     SqrOsc => SqrOscFunction,
