@@ -2,6 +2,7 @@ mod defer_function;
 mod delay_function;
 mod function_context;
 mod num_function;
+mod oscillator_function;
 mod scalar_intrinsic_function;
 mod vector_intrinsic_function;
 mod vector_shuffle_function;
@@ -25,6 +26,7 @@ use self::function_context::FunctionContext;
 pub use self::defer_function::*;
 pub use self::delay_function::*;
 pub use self::num_function::*;
+pub use self::oscillator_function::*;
 pub use self::scalar_intrinsic_function::*;
 pub use self::vector_intrinsic_function::*;
 pub use self::vector_shuffle_function::*;
@@ -129,7 +131,12 @@ map_functions! {
     Hold => HoldFunction,
     Accum => AccumFunction,
     Mixdown => MixdownFunction,
-    Noise => NoiseFunction
+    Noise => NoiseFunction,
+    SinOsc => SinOscFunction,
+    SqrOsc => SqrOscFunction,
+    SawOsc => SawOscFunction,
+    TriOsc => TriOscFunction,
+    RmpOsc => RmpOscFunction
 }
 
 fn get_lifecycle_func(

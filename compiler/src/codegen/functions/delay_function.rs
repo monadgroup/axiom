@@ -16,7 +16,7 @@ impl DelayFunction {
         util::get_or_create_func(module, "maxim.util.delay.channelUpdate", true, &|| {
             let context = &module.get_context();
             (
-                Linkage::ExternalLinkage,
+                Linkage::PrivateLinkage,
                 context.f32_type().fn_type(
                     &[
                         &context.i64_type().ptr_type(AddressSpace::Generic), // current position pointer
