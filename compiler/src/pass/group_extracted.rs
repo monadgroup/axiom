@@ -120,6 +120,7 @@ impl<'a> GroupExtractor<'a> {
         // Build the new value groups and sockets where necessary
         let mut new_value_groups = Vec::new();
         let mut new_sockets = Vec::new();
+        let mut group_socket_indexes = HashMap::new();
         for (internal_index, &parent_group_index) in extract_group.value_groups.iter().enumerate() {
             // There are a few cases where we want to expose an internal value group as a socket:
             //  - If the group is one of the source or destination groups (in this case, we also
@@ -155,6 +156,7 @@ impl<'a> GroupExtractor<'a> {
                     value_group_type.clone(),
                     mir::ValueGroupSource::Socket(socket_index),
                 ));
+                group_socket_indexes.insert(parent_group_index, new_sockets.len());
                 new_sockets.push(mir::ValueSocket::new(
                     parent_group_index,
                     group_written,
@@ -181,12 +183,12 @@ impl<'a> GroupExtractor<'a> {
                 source_sockets: extract_group
                     .sources
                     .into_iter()
-                    .map(|group| new_value_group_indexes[&group])
+                    .map(|group| group_socket_indexes[&group])
                     .collect(),
                 dest_sockets: extract_group
                     .destinations
                     .into_iter()
-                    .map(|group| new_value_group_indexes[&group])
+                    .map(|group| group_socket_indexes[&group])
                     .collect(),
             },
         );
@@ -201,6 +203,7 @@ impl<'a> GroupExtractor<'a> {
         let mut extract_groups = Vec::new();
         let mut value_groups = vec![ValueGroupData::new(); self.surface.groups.len()];
         let mut trace_queue = VecDeque::new();
+        let mut base_extracted_groups = HashSet::new();
         let mut value_group_extracts = HashMap::new();
         let mut node_extracts = HashMap::new();
 
@@ -227,6 +230,7 @@ impl<'a> GroupExtractor<'a> {
                             group_index
                         };
                     trace_queue.push_back(socket.group_id);
+                    base_extracted_groups.insert(socket.group_id);
 
                     if socket.value_written {
                         extract_groups[extract_group_index]
@@ -254,6 +258,9 @@ impl<'a> GroupExtractor<'a> {
                 .value_groups
                 .push(value_group_index);
 
+            let directly_connected_to_extractor =
+                base_extracted_groups.contains(&value_group_index);
+
             // look at each of the sockets connected to this value group
             for &(connected_node_index, connected_socket_index) in
                 &value_groups[value_group_index].sockets
@@ -261,8 +268,13 @@ impl<'a> GroupExtractor<'a> {
                 let connected_node = &self.surface.nodes[connected_node_index];
                 let connected_socket = &connected_node.sockets[connected_socket_index];
 
-                // if the node already has an extractor group, merge it with ours and stop there
-                // otherwise, it becomes part of our group and we propagate to all of its value groups
+                // If the node already has an extractor group, merge it with ours and stop there
+                // otherwise, it becomes part of our group and we propagate to all of its value
+                // groups. Note that propagation only occurs if the connected socket reads from the
+                // group unless it's connected directly to an extractor - if a socket just writes,
+                // there's no need for it to be extracted (since there's no array-item-specific
+                // information flowing into the node), unless it's directly connected in which case
+                // we don't have a choice.
                 if let Some(connected_extract_group_index) =
                     node_extracts.get(&connected_node_index).cloned()
                 {
@@ -273,14 +285,26 @@ impl<'a> GroupExtractor<'a> {
                         &mut value_group_extracts,
                         &mut node_extracts,
                     )
-                } else if !connected_socket.is_extractor && connected_socket.value_read {
+                } else if (directly_connected_to_extractor || connected_socket.value_read)
+                    && !connected_socket.is_extractor
+                {
                     extract_groups[extract_group_index]
                         .nodes
                         .push(connected_node_index);
                     node_extracts.insert(connected_node_index, extract_group_index);
 
                     for socket in &connected_node.sockets {
-                        if value_group_extracts.get(&socket.group_id).is_none() {
+                        if let Some(&side_value_group_extract) =
+                            value_group_extracts.get(&socket.group_id)
+                        {
+                            GroupExtractor::merge_extract_groups(
+                                extract_group_index,
+                                side_value_group_extract,
+                                &mut extract_groups,
+                                &mut value_group_extracts,
+                                &mut node_extracts,
+                            )
+                        } else {
                             value_group_extracts.insert(socket.group_id, extract_group_index);
                             trace_queue.push_back(socket.group_id);
                         }
