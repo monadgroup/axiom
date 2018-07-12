@@ -1,4 +1,5 @@
 mod biquad_filter_function;
+mod channel_function;
 mod defer_function;
 mod delay_function;
 mod function_context;
@@ -28,6 +29,7 @@ use std::fmt;
 use self::function_context::FunctionContext;
 
 pub use self::biquad_filter_function::*;
+pub use self::channel_function::*;
 pub use self::defer_function::*;
 pub use self::delay_function::*;
 pub use self::note_function::*;
@@ -153,7 +155,8 @@ map_functions! {
     HighBqFilter => HighBqFilterFunction,
     PeakBqFilter => PeakBqFilterFunction,
     Note => NoteFunction,
-    Voices => VoicesFunction
+    Voices => VoicesFunction,
+    Channel => ChannelFunction
 }
 
 fn get_lifecycle_func(

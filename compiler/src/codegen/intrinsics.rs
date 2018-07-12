@@ -187,12 +187,32 @@ pub fn minnum_v2f32(module: &Module) -> FunctionValue {
     })
 }
 
+pub fn minnum_f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.minnum.f32", false, &|| {
+        let f32_type = module.get_context().f32_type();
+        (
+            Linkage::ExternalLinkage,
+            f32_type.fn_type(&[&f32_type, &f32_type], false),
+        )
+    })
+}
+
 pub fn maxnum_v2f32(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "llvm.maxnum.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
             v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+        )
+    })
+}
+
+pub fn maxnum_f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.maxnum.f32", false, &|| {
+        let f32_type = module.get_context().f32_type();
+        (
+            Linkage::ExternalLinkage,
+            f32_type.fn_type(&[&f32_type, &f32_type], false),
         )
     })
 }
