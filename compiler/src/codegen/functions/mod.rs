@@ -2,13 +2,14 @@ mod biquad_filter_function;
 mod defer_function;
 mod delay_function;
 mod function_context;
-mod midi_function;
+mod note_function;
 mod num_function;
 mod oscillator_function;
 mod scalar_intrinsic_function;
 mod sv_filter_function;
 mod vector_intrinsic_function;
 mod vector_shuffle_function;
+mod voices_function;
 
 use codegen::{build_context_function, util, values, BuilderContext, TargetProperties};
 use inkwell::attribute::AttrKind;
@@ -29,13 +30,15 @@ use self::function_context::FunctionContext;
 pub use self::biquad_filter_function::*;
 pub use self::defer_function::*;
 pub use self::delay_function::*;
-pub use self::midi_function::*;
+pub use self::note_function::*;
 pub use self::num_function::*;
 pub use self::oscillator_function::*;
 pub use self::scalar_intrinsic_function::*;
 pub use self::sv_filter_function::*;
 pub use self::vector_intrinsic_function::*;
 pub use self::vector_shuffle_function::*;
+pub use self::voices_function::*;
+pub use self::voices_function::*;
 
 pub enum FunctionLifecycleFunc {
     Construct,
@@ -149,7 +152,8 @@ map_functions! {
     LowBqFilter => LowBqFilterFunction,
     HighBqFilter => HighBqFilterFunction,
     PeakBqFilter => PeakBqFilterFunction,
-    Note => NoteFunction
+    Note => NoteFunction,
+    Voices => VoicesFunction
 }
 
 fn get_lifecycle_func(

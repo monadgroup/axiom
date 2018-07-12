@@ -148,7 +148,11 @@ pub fn copy_ptr(builder: &mut Builder, module: &Module, src: PointerValue, dest:
 }
 
 pub fn get_bit(builder: &mut Builder, bitmap: IntValue, bit: IntValue) -> IntValue {
-    let bitmask = builder.build_left_shift(bitmap.get_type().const_int(1, false), bit, "bitmask");
+    let bitmask = builder.build_left_shift(
+        bitmap.get_type().const_int(1, false),
+        builder.build_int_z_extend(bit, bitmap.get_type(), "bit"),
+        "bitmask",
+    );
     let active_bits = builder.build_and(bitmap, bitmask, "activebits");
     builder.build_int_compare(
         IntPredicate::NE,
@@ -156,4 +160,25 @@ pub fn get_bit(builder: &mut Builder, bitmap: IntValue, bit: IntValue) -> IntVal
         bitmap.get_type().const_int(0, false),
         "activebit",
     )
+}
+
+pub fn set_bit(builder: &mut Builder, bitmap: IntValue, bit: IntValue) -> IntValue {
+    let bitmask = builder.build_left_shift(
+        bitmap.get_type().const_int(1, false),
+        builder.build_int_z_extend(bit, bitmap.get_type(), "bit"),
+        "bitmask",
+    );
+    builder.build_or(bitmap, bitmask, "setbit")
+}
+
+pub fn clear_bit(builder: &mut Builder, bitmap: IntValue, bit: IntValue) -> IntValue {
+    let bitmask = builder.build_not(
+        &builder.build_left_shift(
+            bitmap.get_type().const_int(1, false),
+            builder.build_int_z_extend(bit, bitmap.get_type(), "bit"),
+            "",
+        ),
+        "bitmask",
+    );
+    builder.build_and(bitmap, bitmask, "clearbit")
 }

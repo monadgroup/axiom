@@ -59,6 +59,11 @@ impl MidiEventValue {
         builder.build_load(&ptr, "event.name").into_int_value()
     }
 
+    pub fn set_name(&self, builder: &mut Builder, val: IntValue) {
+        let ptr = self.get_name_ptr(builder);
+        builder.build_store(&ptr, &val);
+    }
+
     pub fn get_channel_ptr(&self, builder: &mut Builder) -> PointerValue {
         unsafe { builder.build_struct_gep(&self.val, 1, "event.channel.ptr") }
     }
@@ -66,6 +71,11 @@ impl MidiEventValue {
     pub fn get_channel(&self, builder: &mut Builder) -> IntValue {
         let ptr = self.get_channel_ptr(builder);
         builder.build_load(&ptr, "event.channel").into_int_value()
+    }
+
+    pub fn set_channel(&self, builder: &mut Builder, val: IntValue) {
+        let ptr = self.get_channel_ptr(builder);
+        builder.build_store(&ptr, &val);
     }
 
     pub fn get_note_ptr(&self, builder: &mut Builder) -> PointerValue {
@@ -77,6 +87,11 @@ impl MidiEventValue {
         builder.build_load(&ptr, "event.note").into_int_value()
     }
 
+    pub fn set_note(&self, builder: &mut Builder, val: IntValue) {
+        let ptr = self.get_note_ptr(builder);
+        builder.build_store(&ptr, &val);
+    }
+
     pub fn get_param_ptr(&self, builder: &mut Builder) -> PointerValue {
         unsafe { builder.build_struct_gep(&self.val, 3, "event.param.ptr") }
     }
@@ -84,5 +99,10 @@ impl MidiEventValue {
     pub fn get_param(&self, builder: &mut Builder) -> IntValue {
         let ptr = self.get_param_ptr(builder);
         builder.build_load(&ptr, "event.param").into_int_value()
+    }
+
+    pub fn set_param(&self, builder: &mut Builder, val: IntValue) {
+        let ptr = self.get_param_ptr(builder);
+        builder.build_store(&ptr, &val);
     }
 }

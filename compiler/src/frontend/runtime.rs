@@ -3,7 +3,7 @@ use super::jit::{Jit, JitKey};
 use super::Transaction;
 use codegen::{
     block, controls, converters, data_analyzer, editor, functions, globals, intrinsics, root,
-    surface, ObjectCache, Optimizer, TargetProperties,
+    surface, values, ObjectCache, Optimizer, TargetProperties,
 };
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -169,6 +169,7 @@ impl Runtime {
         functions::build_funcs(&module, &target);
         intrinsics::build_intrinsics(&module);
         globals::build_globals(&module);
+        values::MidiValue::initialize(&module, context);
         editor::build_convert_num_func(&module, &target, CONVERT_NUM_FUNC_NAME);
         module
     }
