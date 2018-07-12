@@ -128,6 +128,7 @@ map_functions! {
     Amplitude => AmplitudeFunction,
     Hold => HoldFunction,
     Accum => AccumFunction,
+    Mixdown => MixdownFunction,
     Noise => NoiseFunction
 }
 

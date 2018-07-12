@@ -7,6 +7,7 @@ use inkwell::values::{
     ArrayValue, BasicValueEnum, FunctionValue, GlobalValue, IntValue, PointerValue, VectorValue,
 };
 use inkwell::AddressSpace;
+use inkwell::IntPredicate;
 
 pub fn get_size_of(t: &BasicTypeEnum) -> Option<IntValue> {
     match t {
@@ -124,4 +125,15 @@ pub fn copy_ptr(builder: &mut Builder, module: &Module, src: PointerValue, dest:
         "",
         false,
     );
+}
+
+pub fn get_bit(builder: &mut Builder, bitmap: IntValue, bit: IntValue) -> IntValue {
+    let bitmask = builder.build_left_shift(bitmap.get_type().const_int(1, false), bit, "bitmask");
+    let active_bits = builder.build_and(bitmap, bitmask, "activebits");
+    builder.build_int_compare(
+        IntPredicate::NE,
+        active_bits,
+        bitmap.get_type().const_int(0, false),
+        "activebit",
+    )
 }

@@ -146,19 +146,7 @@ fn build_node_call(
                 .build_int_z_extend(current_index, ctx.context.i32_type(), "");
             if let Some(active_bitmap) = valid_bitmap {
                 // check if this iteration is active according to the bitmap
-                let bitmask = ctx.b.build_left_shift(
-                    ctx.context.i32_type().const_int(1, false),
-                    index_32,
-                    "bitmask",
-                );
-                let active_bits = ctx.b.build_and(active_bitmap, bitmask, "activebits");
-                let active_bit = ctx.b.build_int_cast(
-                    ctx.b
-                        .build_right_shift(active_bits, index_32, false, "activebit"),
-                    ctx.context.bool_type(),
-                    "",
-                );
-
+                let active_bit = util::get_bit(ctx.b, active_bitmap, index_32);
                 ctx.b
                     .build_conditional_branch(&active_bit, &run_block, &check_block);
             } else {

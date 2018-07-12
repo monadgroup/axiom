@@ -1,10 +1,11 @@
 use super::{Function, FunctionContext, VarArgs};
 use ast::FormType;
-use codegen::values::NumValue;
+use codegen::values::{ArrayValue, NumValue, ARRAY_CAPACITY};
 use codegen::{intrinsics, util};
 use inkwell::module::Linkage;
 use inkwell::types::VectorType;
 use inkwell::values::PointerValue;
+use inkwell::IntPredicate;
 use mir::block;
 use std::f32::consts;
 
@@ -407,6 +408,112 @@ impl Function for SequenceFunction {
         let result_vec = func.ctx
             .b
             .build_shuffle_vector(&left_vec, &right_vec, &shuffle_vec, "");
+        result_num.set_vec(func.ctx.b, &result_vec);
+    }
+}
+
+pub struct MixdownFunction {}
+impl Function for MixdownFunction {
+    fn function_type() -> block::Function {
+        block::Function::Mixdown
+    }
+
+    fn gen_call(
+        func: &mut FunctionContext,
+        args: &[PointerValue],
+        _varargs: Option<VarArgs>,
+        result: PointerValue,
+    ) {
+        let in_array = ArrayValue::new(args[0]);
+        let result_num = NumValue::new(result);
+
+        let in_bitmap = in_array.get_bitmap(func.ctx.b);
+
+        // put the first num's form into the result
+        let first_num = NumValue::new(
+            in_array.get_item_ptr(func.ctx.b, func.ctx.context.i32_type().const_int(0, false)),
+        );
+        let first_num_form = first_num.get_form(func.ctx.b);
+        result_num.set_form(func.ctx.b, &first_num_form);
+
+        let loop_check_block = func.ctx
+            .context
+            .append_basic_block(&func.ctx.func, "loopcheck");
+        let loop_run_block = func.ctx
+            .context
+            .append_basic_block(&func.ctx.func, "looprun");
+        let item_active_true_block = func.ctx
+            .context
+            .append_basic_block(&func.ctx.func, "itemactive.true");
+        let loop_continue_block = func.ctx
+            .context
+            .append_basic_block(&func.ctx.func, "loopcontinue");
+
+        let result_vec = func.ctx
+            .allocb
+            .build_alloca(&func.ctx.context.f32_type().vec_type(2), "resultvec.ptr");
+        func.ctx
+            .b
+            .build_store(&result_vec, &util::get_vec_spread(func.ctx.context, 0.));
+
+        let index_ptr = func.ctx
+            .allocb
+            .build_alloca(&func.ctx.context.i32_type(), "index.ptr");
+        func.ctx
+            .b
+            .build_store(&index_ptr, &func.ctx.context.i32_type().const_int(0, false));
+        func.ctx.b.build_unconditional_branch(&loop_check_block);
+
+        func.ctx.b.position_at_end(&loop_check_block);
+        let current_index = func.ctx.b.build_load(&index_ptr, "index").into_int_value();
+        let index_cond = func.ctx.b.build_int_compare(
+            IntPredicate::ULT,
+            current_index,
+            func.ctx
+                .context
+                .i32_type()
+                .const_int(ARRAY_CAPACITY as u64, false),
+            "indexcond",
+        );
+        func.ctx
+            .b
+            .build_conditional_branch(&index_cond, &loop_run_block, &loop_continue_block);
+
+        func.ctx.b.position_at_end(&loop_run_block);
+        let next_index = func.ctx.b.build_int_add(
+            current_index,
+            func.ctx.context.i32_type().const_int(1, false),
+            "nextindex",
+        );
+        func.ctx.b.build_store(&index_ptr, &next_index);
+        let item_active = util::get_bit(func.ctx.b, in_bitmap, current_index);
+        func.ctx.b.build_conditional_branch(
+            &item_active,
+            &item_active_true_block,
+            &loop_check_block,
+        );
+
+        func.ctx.b.position_at_end(&item_active_true_block);
+        let item_num = NumValue::new(in_array.get_item_ptr(func.ctx.b, current_index));
+        let item_vec = item_num.get_vec(func.ctx.b);
+        func.ctx.b.build_store(
+            &result_vec,
+            &func.ctx.b.build_float_add(
+                item_vec,
+                func.ctx
+                    .b
+                    .build_load(&result_vec, "resultvec")
+                    .into_vector_value(),
+                "addedvec",
+            ),
+        );
+        func.ctx.b.build_unconditional_branch(&loop_check_block);
+
+        func.ctx.b.position_at_end(&loop_continue_block);
+        let result_vec = func.ctx
+            .b
+            .build_load(&result_vec, "resultvec")
+            .into_vector_value();
         result_num.set_vec(func.ctx.b, &result_vec);
     }
 }
