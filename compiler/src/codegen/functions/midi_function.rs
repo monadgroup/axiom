@@ -167,7 +167,7 @@ impl Function for NoteFunction {
         func.ctx.b.build_unconditional_branch(&loop_check_block);
 
         // Pitch wheel event:
-        //  - set last_pitch_wheel to normalized pitch wheel (stored in param)
+        //  - set last_pitch_wheel to normalized pitch wheel
         let pitch_wheel_block = func.ctx
             .context
             .append_basic_block(&func.ctx.func, "pitchwheel");
@@ -309,7 +309,7 @@ impl Function for NoteFunction {
             &func.ctx
                 .context
                 .i8_type()
-                .const_int(FormType::None as u64, false),
+                .const_int(FormType::Amplitude as u64, false),
         );
 
         let result_aftertouch_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 3));

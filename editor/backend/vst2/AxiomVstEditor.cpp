@@ -1,6 +1,7 @@
 #include "AxiomVstEditor.h"
 
-AxiomVstEditor::AxiomVstEditor(AxiomBackend::AudioBackend *backend) : editor(backend) {}
+AxiomVstEditor::AxiomVstEditor(AxiomApplication *application, AxiomBackend::AudioBackend *backend)
+    : editor(application, backend) {}
 
 bool AxiomVstEditor::open(void *ptr) {
     AEffEditor::open(ptr);

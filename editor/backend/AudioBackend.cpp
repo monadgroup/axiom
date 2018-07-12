@@ -114,7 +114,11 @@ std::lock_guard<std::mutex> AudioBackend::lockRuntime() {
 uint64_t AudioBackend::beginGenerate() {
     // decrement all deltaFrames from last time
     for (auto &event : queuedEvents) {
-        event.deltaFrames -= generatedSamples;
+        if (event.deltaFrames > generatedSamples) {
+            event.deltaFrames -= generatedSamples;
+        } else {
+            event.deltaFrames = 0;
+        }
 
         if (event.deltaFrames == 0) {
             (*getMidiPortal(event.portalId))->pushEvent(event.event);

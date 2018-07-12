@@ -8,7 +8,7 @@ class AxiomEditor;
 
 class AxiomVstEditor : public AEffEditor {
 public:
-    explicit AxiomVstEditor(AxiomBackend::AudioBackend *backend);
+    explicit AxiomVstEditor(AxiomApplication *application, AxiomBackend::AudioBackend *backend);
 
     bool open(void *ptr) override;
 

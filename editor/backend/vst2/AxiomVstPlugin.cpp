@@ -2,6 +2,8 @@
 
 using namespace AxiomBackend;
 
+AxiomApplication application;
+
 extern "C" {
 AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
     if (!audioMaster(nullptr, audioMasterVersion, 0, 0, nullptr, 0)) return nullptr;
@@ -10,7 +12,8 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 }
 }
 
-AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 1, 255), editor(&backend) {
+AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
+    : AudioEffectX(audioMaster, 1, 255), editor(&application, &backend) {
     isSynth();
     setNumInputs(0);
     setNumOutputs(2);
@@ -115,13 +118,15 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
             backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
             break;
         case 0xE0: // pitch wheel
+        {
             remappedEvent.event = MidiEventType::PITCH_WHEEL;
 
-            // pitch wheel LSB is stored in 4 bytes of note, MSB is stored in 4 bytes of param
-            remappedEvent.param = (remappedEvent.param << 4) + remappedEvent.note;
-
+            // Pitch is 0-0x3FFF stored across the two bytes, we need 0-255
+            auto pitch = ((uint16_t) midiData2 << 7) | (uint16_t) midiData1;
+            remappedEvent.param = (uint8_t)(pitch / 16383.f * 255.f);
             backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
             break;
+        }
         default:;
         }
     }
