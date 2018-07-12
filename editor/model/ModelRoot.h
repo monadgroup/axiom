@@ -2,10 +2,20 @@
 
 #include <QDataStream>
 #include <memory>
+#include <mutex>
 
-#include "Pool.h"
 #include "HistoryList.h"
+#include "Pool.h"
 #include "WatchSequence.h"
+#include "editor/compiler/interface/Transaction.h"
+
+namespace MaximCompiler {
+    class Runtime;
+}
+
+namespace AxiomBackend {
+    class AudioBackend;
+}
 
 namespace AxiomModel {
 
@@ -33,7 +43,7 @@ namespace AxiomModel {
         using ControlCollection = WatchSequence<Control *>;
         using ConnectionCollection = WatchSequence<Connection *>;
 
-        ModelRoot(Project *project);
+        explicit ModelRoot(Project *project);
 
         ModelRoot(Project *project, QDataStream &stream);
 
@@ -80,7 +90,21 @@ namespace AxiomModel {
 
         const ConnectionCollection &connections() const { return _connections; }
 
-        std::vector<ModelObject*> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
+        std::vector<ModelObject *> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
+
+        void attachBackend(AxiomBackend::AudioBackend *backend);
+
+        void attachRuntime(MaximCompiler::Runtime *runtime);
+
+        MaximCompiler::Runtime *runtime() const { return _runtime; }
+
+        std::lock_guard<std::mutex> lockRuntime();
+
+        void applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Transaction *transaction);
+
+        void applyCompile(const std::vector<QUuid> &items);
+
+        void applyTransaction(MaximCompiler::Transaction transaction);
 
         void destroy();
 
@@ -93,6 +117,9 @@ namespace AxiomModel {
         ControlSurfaceCollection _controlSurfaces;
         ControlCollection _controls;
         ConnectionCollection _connections;
-    };
 
+        std::mutex _runtimeLock;
+        AxiomBackend::AudioBackend *_backend = nullptr;
+        MaximCompiler::Runtime *_runtime = nullptr;
+    };
 }

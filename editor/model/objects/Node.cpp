@@ -1,28 +1,26 @@
 #include "Node.h"
 
-#include "NodeSurface.h"
-#include "ControlSurface.h"
-#include "Control.h"
-#include "CustomNode.h"
-#include "GroupNode.h"
-#include "PortalNode.h"
-#include "AutomationNode.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
 #include "../actions/CompositeAction.h"
-#include "../actions/GridItemSizeAction.h"
 #include "../actions/GridItemMoveAction.h"
+#include "../actions/GridItemSizeAction.h"
+#include "ControlSurface.h"
+#include "CustomNode.h"
+#include "GroupNode.h"
+#include "NodeSurface.h"
+#include "PortalNode.h"
+#include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
 
 Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
            QString name, const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
     : GridItem(&find(root->nodeSurfaces(), parentUuid)->grid(), pos, size, selected),
-      ModelObject(ModelType::NODE, uuid, parentUuid, root),
-      _surface(find(root->nodeSurfaces(), parentUuid)), _nodeType(nodeType), _name(std::move(name)),
-      _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {
-}
+      ModelObject(ModelType::NODE, uuid, parentUuid, root), _surface(find(root->nodeSurfaces(), parentUuid)),
+      _nodeType(nodeType), _name(std::move(name)),
+      _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {}
 
 std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                         ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
@@ -42,14 +40,12 @@ std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, 
     controlsUuid = ref->mapUuid(controlsUuid);
 
     switch ((NodeType) nodeTypeInt) {
-        case NodeType::CUSTOM_NODE:
-            return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
-        case NodeType::GROUP_NODE:
-            return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
-        case NodeType::PORTAL_NODE:
-            return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
-        case NodeType::AUTOMATION_NODE:
-            return AutomationNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
+    case NodeType::CUSTOM_NODE:
+        return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
+    case NodeType::GROUP_NODE:
+        return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
+    case NodeType::PORTAL_NODE:
+        return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
     }
 
     unreachable;
@@ -102,7 +98,7 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     for (auto &item : controlSurface->controls()) {
         auto itemTopLeft = pos() + ControlSurface::controlToNodeFloor(item->pos());
         auto itemBottomRight = pos() + ControlSurface::controlToNodeCeil(
-            item->pos() + QPoint(item->size().width(), item->size().height()));
+                                           item->pos() + QPoint(item->size().width(), item->size().height()));
 
         controlsTopLeft.setX(qMin(controlsTopLeft.x(), itemTopLeft.x()));
         controlsTopLeft.setY(qMin(controlsTopLeft.y(), itemTopLeft.y()));
@@ -128,10 +124,9 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
 
     // move controls to remain in same schematic-space position,
     // except when topLeft > controlsTopLeft or bottomRight < controlsBottomRight
-    auto controlsShift = QPoint(
-        qMax(0, topLeft.x() - controlsTopLeft.x()) + qMin(0, bottomRight.x() - controlsBottomRight.x()),
-        qMax(0, topLeft.y() - controlsTopLeft.y()) + qMin(0, bottomRight.y() - controlsBottomRight.y())
-    );
+    auto controlsShift =
+        QPoint(qMax(0, topLeft.x() - controlsTopLeft.x()) + qMin(0, bottomRight.x() - controlsBottomRight.x()),
+               qMax(0, topLeft.y() - controlsTopLeft.y()) + qMin(0, bottomRight.y() - controlsBottomRight.y()));
     auto delta = ControlSurface::nodeToControl(initialPos - pos() + controlsShift);
     for (auto &item : controlSurface->controls()) {
         controlSurface->grid().grid().setRect(item->pos(), item->size(), nullptr);
@@ -154,7 +149,8 @@ void Node::doSizeAction() {
             auto endSurfacePos = pos() * 2 + control->pos();
 
             if (startSurfacePos != endSurfacePos) {
-                actions.push_back(GridItemMoveAction::create(control->uuid(), control->dragStartPos(), control->pos(), root()));
+                actions.push_back(
+                    GridItemMoveAction::create(control->uuid(), control->dragStartPos(), control->pos(), root()));
             }
         }
     }
@@ -168,16 +164,10 @@ void Node::doSizeAction() {
     }
 }
 
-void Node::doRuntimeUpdate() {
-    if (_controls.value()) (*_controls.value())->doRuntimeUpdate();
-}
-
-void Node::saveValue() {
-    if (_controls.value()) (*_controls.value())->saveValue();
-}
-
-void Node::restoreValue() {
-    if (_controls.value()) (*_controls.value())->restoreValue();
+void Node::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *) {
+    if (compileMeta()) {
+        setExtracted(runtime->isNodeExtracted(surface()->getRuntimeId(), compileMeta()->mirIndex));
+    }
 }
 
 void Node::remove() {

@@ -3,8 +3,8 @@
 #include <QtCore/QSet>
 #include <QtCore/QUuid>
 
-#include "WatchSequenceOperators.h"
 #include "../util.h"
+#include "WatchSequenceOperators.h"
 
 namespace AxiomModel {
 
@@ -25,7 +25,8 @@ namespace AxiomModel {
     };
 
     template<class InputCollection>
-    std::optional<typename InputCollection::value_type> findMaybe(const InputCollection &collection, const QUuid &uuid) {
+    std::optional<typename InputCollection::value_type> findMaybe(const InputCollection &collection,
+                                                                  const QUuid &uuid) {
         return findMaybe<typename InputCollection::value_type>(collection, uuid);
     }
 
@@ -45,6 +46,13 @@ namespace AxiomModel {
     typename InputCollection::value_type find(const InputCollection &collection, const QUuid &uuid) {
         return find<typename InputCollection::value_type>(collection, uuid);
     };
+
+    template<class UuidCollection, class FindCollection>
+    SequenceMapFilter<typename FindCollection::value_type, typename UuidCollection::value_type>
+        findMap(UuidCollection uuids, const FindCollection &src) {
+        return map(uuids, std::function([src](const typename UuidCollection::value_type &base) ->
+                                        typename FindCollection::value_type { return find(src, base); }));
+    }
 
     template<class InputCollection>
     std::vector<typename InputCollection::value_type> heapSort(const InputCollection &input) {
@@ -79,30 +87,31 @@ namespace AxiomModel {
     }
 
     template<class InputCollection, class IdCollection>
-    SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type> findAll(InputCollection collection, IdCollection uuids) {
+    SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type>
+        findAll(InputCollection collection, IdCollection uuids) {
         return filter(collection, std::function([uuids](const typename InputCollection::value_type &base) -> bool {
-            return uuids.find(base->uuid()) != uuids.end();
-        }));
+                          return uuids.find(base->uuid()) != uuids.end();
+                      }));
     };
 
     template<class OutputItem, class InputItem>
     AxiomCommon::Promise<OutputItem> findLater(WatchSequence<InputItem> input, QUuid uuid) {
         return getFirst(
             mapFilterWatch(std::move(input), std::function([uuid](const InputItem &base) -> std::optional<OutputItem> {
-                if (base->uuid() == uuid) {
-                    auto cast = dynamic_cast<OutputItem>(base);
-                    return cast ? cast : std::optional<OutputItem>();
-                }
-                return std::optional<OutputItem>();
-            })));
+                               if (base->uuid() == uuid) {
+                                   auto cast = dynamic_cast<OutputItem>(base);
+                                   return cast ? cast : std::optional<OutputItem>();
+                               }
+                               return std::optional<OutputItem>();
+                           })));
     };
 
     template<class InputCollection>
     SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type>
-    findChildren(InputCollection collection, QUuid parentUuid) {
+        findChildren(InputCollection collection, QUuid parentUuid) {
         return filter(collection, std::function([parentUuid](const typename InputCollection::value_type &base) -> bool {
-            return base->parentUuid() == parentUuid;
-        }));
+                          return base->parentUuid() == parentUuid;
+                      }));
     };
 
     template<class Item>
@@ -111,7 +120,8 @@ namespace AxiomModel {
     }
 
     template<class InputCollection>
-    Sequence<typename InputCollection::value_type> findDependents(InputCollection input, QUuid uuid, bool includeSelf = true) {
+    Sequence<typename InputCollection::value_type> findDependents(InputCollection input, QUuid uuid,
+                                                                  bool includeSelf = true) {
         // Objects in a pool are always in heap-sorted order - this means that a child is _always_ after a parent
         // in the array. We can take advantage of that here by doing a simple iteration over all items in the input
         // pool, and checking to see if we've seen the items parent before, by keeping a set of all seen UUIDs.
@@ -122,7 +132,8 @@ namespace AxiomModel {
             std::optional<typename InputCollection::const_iterator> begin;
             std::optional<typename InputCollection::const_iterator> end;
             QSet<QUuid> visitedIds;
-            return [uuid, input, begin, end, visitedIds, includeSelf]() mutable -> std::optional<typename InputCollection::value_type> {
+            return [uuid, input, begin, end, visitedIds,
+                    includeSelf]() mutable -> std::optional<typename InputCollection::value_type> {
                 if (!begin || !end) {
                     begin = input.begin();
                     end = input.end();
@@ -161,5 +172,4 @@ namespace AxiomModel {
             };
         });
     }
-
 }

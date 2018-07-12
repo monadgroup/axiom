@@ -1,9 +1,8 @@
 #include "AxiomApplication.h"
 
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/Support/TargetSelect.h>
 #include <QtCore/QtCore>
 
+#include "compiler/interface/Frontend.h"
 #include "util.h"
 #include "widgets/GlobalActions.h"
 
@@ -22,18 +21,13 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
-AxiomApplication AxiomApplication::main;
-
-int argc = 1;
+int argc = 0;
 char **argv = new char *[1];
 
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
-    // initialize LLVM
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetAsmParser();
-
+    MaximFrontend::maxim_initialize();
     AxiomGui::GlobalActions::setupActions();
 
-    setStyleSheet(AxiomUtil::loadStylesheet(":/MainStyles.qss"));
+    Q_INIT_RESOURCE(res);
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
 }

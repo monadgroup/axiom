@@ -2,13 +2,9 @@
 
 #include <optional>
 
-#include "common/Promise.h"
+#include "GroupSurface.h"
 #include "Node.h"
-#include "NodeSurface.h"
-
-namespace MaximRuntime {
-    class GroupNode;
-}
+#include "common/Promise.h"
 
 namespace AxiomModel {
 
@@ -17,38 +13,27 @@ namespace AxiomModel {
         GroupNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                   const QUuid &controlsUuid, const QUuid &innerUuid, ModelRoot *root);
 
-        static std::unique_ptr<GroupNode>
-        create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-               const QUuid &controlsUuid, const QUuid &innerUuid, ModelRoot *root);
+        static std::unique_ptr<GroupNode> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                                                 bool selected, QString name, const QUuid &controlsUuid,
+                                                 const QUuid &innerUuid, ModelRoot *root);
 
-        static std::unique_ptr<GroupNode>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, const QUuid &controlsUuid, ReferenceMapper *ref, ModelRoot *root);
+        static std::unique_ptr<GroupNode> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                      QPoint pos, QSize size, bool selected, QString name,
+                                                      const QUuid &controlsUuid, ReferenceMapper *ref, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
-        AxiomCommon::Promise<NodeSurface *> &nodes() { return _nodes; }
+        AxiomCommon::Promise<GroupSurface *> &nodes() { return _nodes; }
 
-        const AxiomCommon::Promise<NodeSurface *> &nodes() const { return _nodes; }
+        const AxiomCommon::Promise<GroupSurface *> &nodes() const { return _nodes; }
 
-        std::optional<MaximRuntime::GroupNode *> runtime() const { return _runtime; }
+        void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 
-        void createAndAttachRuntime(MaximRuntime::Surface *parent) override;
-
-        void attachRuntime(MaximRuntime::GroupNode *runtime);
-
-        void detachRuntime();
-
-        void saveValue() override;
-
-        void restoreValue() override;
+        void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) override;
 
         void remove() override;
 
     private:
-        AxiomCommon::Promise<NodeSurface *> _nodes;
-
-        std::optional<MaximRuntime::GroupNode *> _runtime;
+        AxiomCommon::Promise<GroupSurface *> _nodes;
     };
-
 }

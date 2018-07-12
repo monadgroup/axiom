@@ -1,36 +1,82 @@
 #include "Project.h"
 
+#include "../backend/AudioConfiguration.h"
 #include "PoolOperators.h"
-#include "objects/RootSurface.h"
-#include "objects/PortalNode.h"
 #include "actions/CreatePortalNodeAction.h"
-#include "compiler/runtime/Runtime.h"
+#include "objects/PortalNode.h"
+#include "objects/RootSurface.h"
 
 using namespace AxiomModel;
 
-Project::Project() : _mainRoot(this) {
-    init();
-
+Project::Project(const AxiomBackend::AudioConfiguration &defaultConfiguration) : _mainRoot(this) {
     // setup default project
     //  1. create default surface
-    auto surfaceId = QUuid::createUuid();
-    auto rootSurface = std::make_unique<RootSurface>(surfaceId, QPointF(0, 0), 0, &mainRoot());
+    auto rootSurface = std::make_unique<RootSurface>(QUuid(), QPointF(0, 0), 0, &mainRoot());
     _rootSurface = rootSurface.get();
     mainRoot().pool().registerObj(std::move(rootSurface));
 
     //  2. add default inputs and outputs
-    CreatePortalNodeAction::create(surfaceId, QPoint(-3, 0), "Keyboard", ConnectionWire::WireType::MIDI,
-                                   PortalControl::PortalType::INPUT, &mainRoot())->forward(true);
-    CreatePortalNodeAction::create(surfaceId, QPoint(3, 0), "Speakers", ConnectionWire::WireType::NUM,
-                                   PortalControl::PortalType::OUTPUT, &mainRoot())->forward(true);
+    int portalSpacing = 6;
+
+    int inputCount = 0;
+    int outputCount = 0;
+    int automationCount = 0;
+    for (const auto &portal : defaultConfiguration.portals) {
+        switch (portal.type) {
+        case AxiomBackend::PortalType::INPUT:
+            inputCount++;
+            break;
+        case AxiomBackend::PortalType::OUTPUT:
+            outputCount++;
+            break;
+        case AxiomBackend::PortalType::AUTOMATION:
+            automationCount++;
+            break;
+        }
+    }
+
+    auto inputOffset = -(inputCount - 1) * portalSpacing / 2;
+    auto outputOffset = -(outputCount - 1) * portalSpacing / 2;
+    auto automationOffset = -(automationCount - 1) * portalSpacing / 2;
+    for (const auto &portal : defaultConfiguration.portals) {
+        ConnectionWire::WireType wireType;
+        switch (portal.value) {
+        case AxiomBackend::PortalValue::AUDIO:
+            wireType = ConnectionWire::WireType::NUM;
+            break;
+        case AxiomBackend::PortalValue::MIDI:
+            wireType = ConnectionWire::WireType::MIDI;
+            break;
+        }
+
+        std::vector<QUuid> dummyItems;
+        switch (portal.type) {
+        case AxiomBackend::PortalType::INPUT:
+            CreatePortalNodeAction::create(QUuid(), QPoint(-3, inputOffset), QString::fromStdString(portal.name),
+                                           wireType, PortalControl::PortalType::INPUT, &mainRoot())
+                ->forward(true, dummyItems);
+            inputOffset += portalSpacing;
+            break;
+        case AxiomBackend::PortalType::OUTPUT:
+            CreatePortalNodeAction::create(QUuid(), QPoint(3, outputOffset), QString::fromStdString(portal.name),
+                                           wireType, PortalControl::PortalType::OUTPUT, &mainRoot())
+                ->forward(true, dummyItems);
+            outputOffset += portalSpacing;
+            break;
+        case AxiomBackend::PortalType::AUTOMATION:
+            CreatePortalNodeAction::create(QUuid(), QPoint(0, automationOffset), QString::fromStdString(portal.name),
+                                           wireType, PortalControl::PortalType::AUTOMATION, &mainRoot())
+                ->forward(true, dummyItems);
+            automationOffset += portalSpacing;
+            break;
+        }
+    }
 }
 
 Project::Project(QDataStream &stream) : _mainRoot(this, stream), _library(this, stream) {
-    init();
-
     auto rootSurfaces = findChildren(mainRoot().nodeSurfaces(), QUuid());
     assert(rootSurfaces.size() == 1);
-    _rootSurface = dynamic_cast<RootSurface*>(takeAt(rootSurfaces, 0));
+    _rootSurface = dynamic_cast<RootSurface *>(takeAt(rootSurfaces, 0));
     assert(_rootSurface);
 }
 
@@ -58,7 +104,6 @@ bool Project::readHeader(QDataStream &stream, uint64_t expectedMagic, uint32_t *
     stream >> version;
     if (versionOut) *versionOut = version;
     return version >= minSchemaVersion && version <= schemaVersion;
-
 }
 
 void Project::serialize(QDataStream &stream) {
@@ -67,34 +112,6 @@ void Project::serialize(QDataStream &stream) {
     _library.serialize(stream);
 }
 
-void Project::attachRuntime(MaximRuntime::Runtime *runtime) {
-    assert(!_runtime);
-    _runtime = runtime;
-    _rootSurface->attachRuntime(runtime->mainSurface());
-
-    // todo: make this not hardcoded!
-    auto t = takeAt(_rootSurface->nodes(), 0);
-    auto inputNode = dynamic_cast<PortalNode*>(t);
-    assert(inputNode);
-    inputNode->attachRuntime(runtime->mainSurface()->input);
-
-    auto outputNode = dynamic_cast<PortalNode*>(takeAt(_rootSurface->nodes(), 1));
-    assert(outputNode);
-    outputNode->attachRuntime(runtime->mainSurface()->output);
-
-    rebuild();
-}
-
-void Project::rebuild() const {
-    _rootSurface->saveValue();
-    if (_runtime) (*_runtime)->compile();
-    _rootSurface->restoreValue();
-}
-
 void Project::destroy() {
     _mainRoot.destroy();
-}
-
-void Project::init() {
-    _mainRoot.history().rebuildRequested.connect([this]() { rebuild(); });
 }

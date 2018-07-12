@@ -1,11 +1,12 @@
 #pragma once
 
-#include "common/Event.h"
-#include "../grid/GridSurface.h"
 #include "../ModelObject.h"
+#include "../grid/GridSurface.h"
+#include "common/Event.h"
 
-namespace MaximRuntime {
-    class Surface;
+namespace MaximCompiler {
+    class Runtime;
+    class Transaction;
 }
 
 namespace AxiomModel {
@@ -27,8 +28,8 @@ namespace AxiomModel {
 
         NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<NodeSurface>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref, AxiomModel::ModelRoot *root);
+        static std::unique_ptr<NodeSurface> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                        ReferenceMapper *ref, AxiomModel::ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -48,7 +49,7 @@ namespace AxiomModel {
 
         virtual bool canExposeControl() const = 0;
 
-        virtual bool canHaveAutomation() const = 0;
+        virtual bool canHavePortals() const = 0;
 
         QPointF pan() const { return _pan; }
 
@@ -60,13 +61,15 @@ namespace AxiomModel {
 
         Sequence<ModelObject *> getCopyItems() const;
 
-        void attachRuntime(MaximRuntime::Surface *runtime);
+        virtual uint64_t getRuntimeId() = 0;
+
+        virtual void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction);
+
+        void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr);
+
+        void build(MaximCompiler::Transaction *transaction) override;
 
         void doRuntimeUpdate();
-
-        void saveValue();
-
-        void restoreValue();
 
         void remove() override;
 
@@ -77,9 +80,8 @@ namespace AxiomModel {
         QPointF _pan;
         float _zoom;
 
-        std::optional<MaximRuntime::Surface *> _runtime;
+        MaximCompiler::Runtime *_runtime = nullptr;
 
         void nodeAdded(Node *node) const;
     };
-
 }

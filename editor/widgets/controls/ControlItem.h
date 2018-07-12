@@ -17,7 +17,7 @@ namespace AxiomGui {
     Q_OBJECT
         Q_PROPERTY(float hoverState
                        READ
-                       hoverState
+                           hoverState
                        WRITE
                        setHoverState)
 

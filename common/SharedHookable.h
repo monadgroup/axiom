@@ -17,5 +17,4 @@ namespace AxiomCommon {
     private:
         std::shared_ptr<HookContext> impl;
     };
-
 }

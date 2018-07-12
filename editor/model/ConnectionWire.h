@@ -3,8 +3,8 @@
 #include <QtCore/QPointF>
 #include <deque>
 
-#include "common/Hookable.h"
 #include "common/Event.h"
+#include "common/Hookable.h"
 
 namespace AxiomModel {
 
@@ -18,10 +18,7 @@ namespace AxiomModel {
         AxiomCommon::Event<bool> activeChanged;
         AxiomCommon::Event<> removed;
 
-        enum class WireType {
-            NUM,
-            MIDI
-        };
+        enum class WireType { NUM, MIDI };
 
         ConnectionWire(GridSurface *grid, WireType wireType, const QPointF &startPos, const QPointF &endPos);
 
@@ -52,11 +49,7 @@ namespace AxiomModel {
         void remove();
 
     private:
-        enum class ActiveState {
-            NONE,
-            START,
-            END
-        };
+        enum class ActiveState { NONE, START, END };
 
         GridSurface *_grid;
         WireType _wireType;
@@ -72,5 +65,4 @@ namespace AxiomModel {
 
         void updateActive();
     };
-
 }

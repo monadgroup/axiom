@@ -27,5 +27,4 @@ namespace AxiomModel {
 
         Pool *_pool;
     };
-
 }

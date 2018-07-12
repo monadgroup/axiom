@@ -1,21 +1,17 @@
 #include "CustomNode.h"
 
-#include <iostream>
-
-#include "ControlSurface.h"
-#include "NumControl.h"
-#include "MidiControl.h"
-#include "ExtractControl.h"
-#include "compiler/runtime/Surface.h"
-#include "compiler/runtime/CustomNode.h"
-#include "compiler/codegen/Control.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../actions/CompositeAction.h"
-#include "../actions/SetCodeAction.h"
 #include "../actions/CreateControlAction.h"
 #include "../actions/DeleteObjectAction.h"
-#include "../../util.h"
+#include "../actions/SetCodeAction.h"
+#include "ControlSurface.h"
+#include "ExtractControl.h"
+#include "MidiControl.h"
+#include "NodeSurface.h"
+#include "NumControl.h"
+#include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
 
@@ -24,6 +20,9 @@ CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
                        AxiomModel::ModelRoot *root)
     : Node(NodeType::CUSTOM_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
       _code(std::move(code)), _isPanelOpen(panelOpen), _panelHeight(panelHeight) {
+    controls().then([this](ControlSurface *controls) {
+        controls->controls().itemAdded.connect(this, &CustomNode::surfaceControlAdded);
+    });
 }
 
 std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
@@ -60,17 +59,19 @@ void CustomNode::setCode(const QString &code) {
         _code = code;
         codeChanged.trigger(code);
 
-        if (_runtime) (*_runtime)->setCode(code.toStdString());
+        if (runtimeId) {
+            buildCode();
+        }
     }
 }
 
 void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
-    std::vector<std::unique_ptr<Action>> actions;
-    actions.push_back(SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), root()));
-    auto action = CompositeAction::create(std::move(actions), root());
-    changeCodeAction = action.get();
-    root()->history().append(std::move(action));
-    changeCodeAction = nullptr;
+    std::vector<QUuid> compileItems;
+    auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), {}, root());
+    setCodeAction->forward(true, compileItems);
+    updateControls(setCodeAction.get());
+    root()->history().append(std::move(setCodeAction), false);
+    root()->applyCompile(compileItems);
 }
 
 void CustomNode::setPanelOpen(bool panelOpen) {
@@ -89,87 +90,143 @@ void CustomNode::setPanelHeight(float panelHeight) {
     }
 }
 
-void CustomNode::createAndAttachRuntime(MaximRuntime::Surface *parent) {
-    auto runtime = std::make_unique<MaximRuntime::CustomNode>(parent);
-    attachRuntime(runtime.get());
-    parent->addNode(std::move(runtime));
-}
+void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
+    if (runtime) {
+        runtimeId = runtime->nextId();
+        buildCode();
+    } else {
+        runtimeId = 0;
+    }
 
-void CustomNode::attachRuntime(MaximRuntime::CustomNode *runtime) {
-    assert(!_runtime);
-    _runtime = runtime;
-
-    runtime->controlAdded.connect(this, &CustomNode::runtimeAddedControl);
-    runtime->extractedChanged.connect(this, &CustomNode::setExtracted);
-    runtime->finishedCodegen.connect(this, &CustomNode::runtimeFinishedCodegen);
-
-    controls().then([this](ControlSurface *const &controls) { controls->controls().itemAdded.connect(this, &CustomNode::surfaceControlAdded); });
-
-    removed.connect(this, &CustomNode::detachRuntime);
-
-    runtime->setCode(_code.toStdString());
-
-    // add any controls that might already exist in the runtime
-    auto controls = runtime->controls();
-    for (const auto &control : controls) {
-        runtimeAddedControl(control);
+    if (transaction) {
+        build(transaction);
+        updateControls(nullptr);
     }
 }
 
-void CustomNode::detachRuntime() {
-    if (_runtime) (*_runtime)->remove();
-    _runtime.reset();
+void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    Node::updateRuntimePointers(runtime, surfacePtr);
+
+    auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
+    auto blockPtr = runtime->getBlockPtr(nodePtr);
+    auto runtimeId = getRuntimeId();
+
+    controls().then([blockPtr, runtime, runtimeId](ControlSurface *controlSurface) {
+        for (const auto &control : controlSurface->controls()) {
+            control->updateRuntimePointers(runtime, runtimeId, blockPtr);
+        }
+    });
 }
 
-void CustomNode::runtimeAddedControl(MaximRuntime::Control *control) {
-    // note: CustomNodes rely on the runtime to create and destroy controls, as controls are based on
-    // the compiled code. This is different to GroupNodes, whose controls are never created or destroyed
-    // by the runtime but rather attached and detached to it when necessary.
+std::optional<MaximCompiler::Block> CustomNode::compiledBlock() const {
+    if (_compiledBlock) {
+        return std::optional(_compiledBlock->clone());
+    } else {
+        return std::nullopt;
+    }
+}
 
-    // find a control that we can attach to
-    if (controls().value()) {
-        auto controlList = (*controls().value())->controls();
-        for (const auto &existingControl : controlList) {
-            if (!existingControl->canAttachRuntime(control)) continue;
+void CustomNode::build(MaximCompiler::Transaction *transaction) {
+    if (!_compiledBlock) return;
+    transaction->buildBlock(_compiledBlock->clone());
+}
 
-            std::cout << "Runtime added control, linking to " << existingControl << std::endl;
-            existingControl->attachRuntime(control);
-            control->removed.connect(existingControl, std::function([this, existingControl]() { runtimeRemovedControl(existingControl); }));
-            return;
+struct NewControl {
+    Control::ControlType type;
+    QString name;
+};
+
+void CustomNode::updateControls(SetCodeAction *action) {
+    if (!_compiledBlock || !controls().value()) return;
+
+    auto compiledControlCount = _compiledBlock->controlCount();
+
+    std::vector<NewControl> newControls;
+
+    QSet<QUuid> retainedControls;
+    auto controlList = collect((*controls().value())->controls());
+    for (size_t controlIndex = 0; controlIndex < compiledControlCount; controlIndex++) {
+        auto compiledControl = _compiledBlock->getControl(controlIndex);
+        auto compiledModelType = MaximCompiler::toModelType(compiledControl.getType());
+        auto compiledName = compiledControl.getName();
+        ControlCompileMeta compileMeta(controlIndex, compiledControl.getIsWritten(), compiledControl.getIsRead());
+
+        // find a control that matches name and type
+        // todo: after all name matches have been claimed, assign to an unnamed one
+        // (allows renaming in code to rename the actual control)
+        auto foundControl = false;
+        for (const auto &candidateControl : controlList) {
+            if (candidateControl->name() == compiledName && candidateControl->controlType() == compiledModelType) {
+                candidateControl->setCompileMeta(compileMeta);
+                retainedControls.insert(candidateControl->uuid());
+                foundControl = true;
+                break;
+            }
+        }
+
+        // no candidate found, queue a new one
+        if (!foundControl) {
+            newControls.push_back(NewControl{compiledModelType, std::move(compiledName)});
         }
     }
 
-    // no control found, we need to create a new one
-    // note: this will trigger `surfaceControlAdded`, which will attach a runtime to the control
-    assert(changeCodeAction);
-    auto action = CreateControlAction::create((*controls().value())->uuid(), Control::fromRuntimeType(control->type()->type()), QString::fromStdString(control->name()), root());
-    action->forward(true);
-    changeCodeAction->actions().push_back(std::move(action));
-}
+    // remove any controls that weren't retained
+    for (const auto &existingControl : controlList) {
+        if (retainedControls.contains(existingControl->uuid())) continue;
 
-void CustomNode::runtimeRemovedControl(AxiomModel::Control *control) {
-    assert(changeCodeAction);
-    auto action = DeleteObjectAction::create(control->uuid(), control->root());
-    action->forward(true);
-    changeCodeAction->actions().push_back(std::move(action));
-}
+        auto deleteAction = DeleteObjectAction::create(existingControl->uuid(), root());
+        std::vector<QUuid> dummy;
+        deleteAction->forward(true, dummy);
 
-void CustomNode::runtimeFinishedCodegen() {
-    // todo
+        assert(action);
+        action->controlActions().push_back(std::move(deleteAction));
+    }
+
+    // add any new controls
+    // note: the order we do this is important: we want to add controls after removing old ones so the control grid
+    // can have the space cleared
+    for (const auto &newControl : newControls) {
+        auto createAction = CreateControlAction::create((*controls().value())->uuid(), newControl.type,
+                                                        std::move(newControl.name), root());
+        std::vector<QUuid> dummy;
+        createAction->forward(true, dummy);
+
+        assert(action);
+        action->controlActions().push_back(std::move(createAction));
+    }
 }
 
 void CustomNode::surfaceControlAdded(AxiomModel::Control *control) {
-    if (!_runtime) return;
+    if (!_compiledBlock) return;
+    assert(!control->compileMeta());
 
-    std::cout << "Control added to surface, linking to runtime" << std::endl;
+    // find a matching control that we can claim
+    auto compiledControlCount = _compiledBlock->controlCount();
+    for (size_t controlIndex = 0; controlIndex < compiledControlCount; controlIndex++) {
+        auto compiledControl = _compiledBlock->getControl(controlIndex);
+        auto compiledModelType = MaximCompiler::toModelType(compiledControl.getType());
 
-    // find a runtime control to attach
-    auto controls = (*_runtime)->controls();
-    for (const auto &runtimeControl : controls) {
-        if (!control->canAttachRuntime(runtimeControl)) continue;
+        // looks like we can claim it!
+        if (control->controlType() == compiledModelType && control->name() == compiledControl.getName()) {
+            ControlCompileMeta compileMeta(controlIndex, compiledControl.getIsWritten(), compiledControl.getIsRead());
+            control->setCompileMeta(compileMeta);
+            break;
+        }
+    }
+}
 
-        control->attachRuntime(runtimeControl);
-        runtimeControl->removed.connect(control, std::function([this, control]() { runtimeRemovedControl(control); }));
-        return;
+void CustomNode::buildCode() {
+    auto compileResult = MaximCompiler::Block::compile(getRuntimeId(), name(), code());
+
+    if (MaximCompiler::Error *err = std::get_if<MaximCompiler::Error>(&compileResult)) {
+        auto errorDescription = err->getDescription();
+        auto errorRange = err->getRange();
+        std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> "
+                  << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString()
+                  << std::endl;
+        codeCompileError.trigger(errorDescription, errorRange);
+    } else {
+        _compiledBlock = std::optional<MaximCompiler::Block>(std::move(std::get<MaximCompiler::Block>(compileResult)));
+        codeCompileSuccess.trigger();
     }
 }

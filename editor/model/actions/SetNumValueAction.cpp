@@ -1,27 +1,27 @@
 #include "SetNumValueAction.h"
 
-#include "../ValueWriters.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../objects/NumControl.h"
 
 using namespace AxiomModel;
 
-SetNumValueAction::SetNumValueAction(const QUuid &uuid, MaximRuntime::NumValue beforeVal,
-                                     MaximRuntime::NumValue afterVal, AxiomModel::ModelRoot *root)
-    : Action(ActionType::SET_NUM_VALUE, root), uuid(uuid), beforeVal(beforeVal), afterVal(afterVal) {
-}
+SetNumValueAction::SetNumValueAction(const QUuid &uuid, NumValue beforeVal, NumValue afterVal,
+                                     AxiomModel::ModelRoot *root)
+    : Action(ActionType::SET_NUM_VALUE, root), uuid(uuid), beforeVal(beforeVal), afterVal(afterVal) {}
 
-std::unique_ptr<SetNumValueAction> SetNumValueAction::create(const QUuid &uuid, MaximRuntime::NumValue beforeVal,
-                                                             MaximRuntime::NumValue afterVal,
+std::unique_ptr<SetNumValueAction> SetNumValueAction::create(const QUuid &uuid, NumValue beforeVal, NumValue afterVal,
                                                              AxiomModel::ModelRoot *root) {
     return std::make_unique<SetNumValueAction>(uuid, beforeVal, afterVal, root);
 }
 
 std::unique_ptr<SetNumValueAction> SetNumValueAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    MaximRuntime::NumValue beforeVal; stream >> beforeVal;
-    MaximRuntime::NumValue afterVal; stream >> afterVal;
+    QUuid uuid;
+    stream >> uuid;
+    NumValue beforeVal;
+    stream >> beforeVal;
+    NumValue afterVal;
+    stream >> afterVal;
 
     return create(uuid, beforeVal, afterVal, root);
 }
@@ -34,12 +34,10 @@ void SetNumValueAction::serialize(QDataStream &stream) const {
     stream << afterVal;
 }
 
-bool SetNumValueAction::forward(bool first) {
-    find<NumControl*>(root()->controls(), uuid)->setValue(afterVal);
-    return false;
+void SetNumValueAction::forward(bool, std::vector<QUuid> &) {
+    find<NumControl *>(root()->controls(), uuid)->setValue(afterVal);
 }
 
-bool SetNumValueAction::backward() {
-    find<NumControl*>(root()->controls(), uuid)->setValue(beforeVal);
-    return false;
+void SetNumValueAction::backward(std::vector<QUuid> &) {
+    find<NumControl *>(root()->controls(), uuid)->setValue(beforeVal);
 }

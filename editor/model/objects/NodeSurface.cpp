@@ -1,21 +1,22 @@
 #include "NodeSurface.h"
 
-#include "RootSurface.h"
-#include "GroupSurface.h"
-#include "Node.h"
-#include "Control.h"
-#include "Connection.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "compiler/runtime/Surface.h"
+#include "Connection.h"
+#include "ControlSurface.h"
+#include "GroupSurface.h"
+#include "Node.h"
+#include "RootSurface.h"
+#include "editor/compiler/SurfaceMirBuilder.h"
+#include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
 
 NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                          AxiomModel::ModelRoot *root)
-    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
-      _nodes(findChildrenWatch(root->nodes(), uuid)), _connections(findChildrenWatch(root->connections(), uuid)),
-      _grid(staticCastWatch<GridItem *>(_nodes)), _pan(pan), _zoom(zoom) {
+    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root), _nodes(findChildrenWatch(root->nodes(), uuid)),
+      _connections(findChildrenWatch(root->connections(), uuid)), _grid(staticCastWatch<GridItem *>(_nodes)), _pan(pan),
+      _zoom(zoom) {
     _nodes.itemAdded.connect(this, &NodeSurface::nodeAdded);
 }
 
@@ -60,14 +61,13 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
     // all nodes and their children (but NOT nodes that aren't copyable!)
     // all connections that connect to controls in nodes that are selected
 
-    auto copyNodes = filter(_nodes, [](Node *const &node) {
-        return node->isSelected() && node->isCopyable();
-    });
-    auto poolSequence = dynamicCast<ModelObject*>(pool()->sequence().sequence());
-    auto copyChildren = flatten(map<Sequence<ModelObject*>, Sequence<Node*>>(copyNodes.sequence(), [poolSequence](Node *const &node) -> Sequence<ModelObject*> {
-        return findDependents(poolSequence, node->uuid());
-    }));
-    auto copyControls = dynamicCast<Control*>(copyChildren);
+    auto copyNodes = filter(_nodes, [](Node *const &node) { return node->isSelected() && node->isCopyable(); });
+    auto poolSequence = dynamicCast<ModelObject *>(pool()->sequence().sequence());
+    auto copyChildren = flatten(map<Sequence<ModelObject *>, Sequence<Node *>>(
+        copyNodes.sequence(), [poolSequence](Node *const &node) -> Sequence<ModelObject *> {
+            return findDependents(poolSequence, node->uuid());
+        }));
+    auto copyControls = dynamicCast<Control *>(copyChildren);
     QSet<QUuid> controlUuids;
     for (const auto &control : copyControls) {
         controlUuids.insert(control->uuid());
@@ -77,36 +77,37 @@ Sequence<ModelObject *> NodeSurface::getCopyItems() const {
         return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
     });
 
-    return flatten(std::array<Sequence<ModelObject*>, 2> {
-        copyChildren,
-        staticCast<ModelObject*>(copyConnections).sequence()
-    });
+    return flatten(
+        std::array<Sequence<ModelObject *>, 2>{copyChildren, staticCast<ModelObject *>(copyConnections).sequence()});
 }
 
-void NodeSurface::attachRuntime(MaximRuntime::Surface *runtime) {
-    assert(!_runtime);
+void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     _runtime = runtime;
-
-    for (const auto &node : _nodes) {
-        node->createAndAttachRuntime(runtime);
+    for (const auto &node : nodes()) {
+        node->attachRuntime(runtime, transaction);
     }
+
+    if (transaction) {
+        build(transaction);
+    }
+}
+
+void NodeSurface::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    for (const auto &node : nodes()) {
+        node->updateRuntimePointers(runtime, surfacePtr);
+    }
+}
+
+void NodeSurface::build(MaximCompiler::Transaction *transaction) {
+    MaximCompiler::SurfaceMirBuilder::build(transaction, this);
 }
 
 void NodeSurface::doRuntimeUpdate() {
-    for (const auto &node : nodes()) {
-        node->doRuntimeUpdate();
-    }
-}
-
-void NodeSurface::saveValue() {
-    for (const auto &node : nodes()) {
-        node->saveValue();
-    }
-}
-
-void NodeSurface::restoreValue() {
-    for (const auto &node : nodes()) {
-        node->restoreValue();
+    // todo: make this more efficient?
+    for (const auto &control : root()->controls()) {
+        if (control->surface()->node()->surface() == this) {
+            control->doRuntimeUpdate();
+        }
     }
 }
 
@@ -122,6 +123,6 @@ void NodeSurface::remove() {
 
 void NodeSurface::nodeAdded(AxiomModel::Node *node) const {
     if (_runtime) {
-        node->createAndAttachRuntime(*_runtime);
+        node->attachRuntime(_runtime, nullptr);
     }
 }

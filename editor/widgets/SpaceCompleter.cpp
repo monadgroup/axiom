@@ -6,9 +6,8 @@ using namespace AxiomGui;
 
 QRegExp spaceRegex("\\s");
 
-SpaceCompleter::SpaceCompleter(const QStringList &tags, QLineEdit *editor, QObject *parent) : QCompleter(tags, parent),
-                                                                                              editor(editor) {
-}
+SpaceCompleter::SpaceCompleter(const QStringList &tags, QLineEdit *editor, QObject *parent)
+    : QCompleter(tags, parent), editor(editor) {}
 
 QStringList SpaceCompleter::splitPath(const QString &path) const {
     auto currentWordStart = qMax(0, path.lastIndexOf(spaceRegex, editor->cursorPosition()) + 1);

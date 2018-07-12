@@ -17,7 +17,7 @@ MidiControlItem::MidiControlItem(AxiomModel::MidiControl *control, NodeSurfaceCa
 }
 
 void MidiControlItem::paintControl(QPainter *painter) {
-    plugPainter.paint(painter, aspectBoundingRect(), hoverState(), std::optional<MaximRuntime::NumValue>(), Qt::black);
+    plugPainter.paint(painter, aspectBoundingRect(), hoverState(), std::optional<AxiomModel::NumValue>(), Qt::black);
 }
 
 QPainterPath MidiControlItem::shape() const {

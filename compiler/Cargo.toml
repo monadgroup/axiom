@@ -1,0 +1,16 @@
+[package]
+name = "compiler"
+version = "0.1.0"
+authors = ["cpdt <copodt@gmail.com>"]
+license = "MIT"
+
+[lib]
+name = "compiler"
+crate-type = ["staticlib"]
+
+[dependencies]
+regex = "1.0"
+lazy_static = "1.0"
+ordered-float = "0.5"
+inkwell = { git = "https://github.com/cpdt/inkwell", branch = "llvm6-0" }
+divrem = "0.1"

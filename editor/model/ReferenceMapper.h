@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QtCore/QUuid>
 #include <QtCore/QPoint>
+#include <QtCore/QUuid>
 
 namespace AxiomModel {
 
@@ -13,5 +13,4 @@ namespace AxiomModel {
 
         virtual QPoint mapPos(const QUuid &parent, const QPoint &input) = 0;
     };
-
 }

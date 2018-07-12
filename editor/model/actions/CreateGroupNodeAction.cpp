@@ -1,8 +1,8 @@
 #include "CreateGroupNodeAction.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../objects/GroupNode.h"
 #include "../objects/ControlSurface.h"
+#include "../objects/GroupNode.h"
 #include "../objects/GroupSurface.h"
 
 using namespace AxiomModel;
@@ -11,8 +11,7 @@ CreateGroupNodeAction::CreateGroupNodeAction(const QUuid &uuid, const QUuid &par
                                              const QUuid &controlsUuid, const QUuid &innerUuid,
                                              AxiomModel::ModelRoot *root)
     : Action(ActionType::CREATE_GROUP_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos), name(std::move(name)),
-      controlsUuid(controlsUuid), innerUuid(innerUuid) {
-}
+      controlsUuid(controlsUuid), innerUuid(innerUuid) {}
 
 std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::create(const QUuid &uuid, const QUuid &parentUuid,
                                                                      QPoint pos, QString name,
@@ -57,15 +56,18 @@ void CreateGroupNodeAction::serialize(QDataStream &stream) const {
     stream << innerUuid;
 }
 
-bool CreateGroupNodeAction::forward(bool) {
+void CreateGroupNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
     root()->pool().registerObj(
         GroupNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, innerUuid, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
     root()->pool().registerObj(GroupSurface::create(innerUuid, uuid, QPoint(0, 0), 0, root()));
-    return false;
+
+    compileItems.push_back(innerUuid);
+    compileItems.push_back(parentUuid);
 }
 
-bool CreateGroupNodeAction::backward() {
+void CreateGroupNodeAction::backward(std::vector<QUuid> &compileItems) {
     find(root()->nodes(), uuid)->remove();
-    return false;
+
+    compileItems.push_back(parentUuid);
 }

@@ -2,7 +2,8 @@
 
 #include <QtGui/QPainter>
 #include <QtWidgets/QStyleOptionGraphicsItem>
-#include "compiler/runtime/ValueOperator.h"
+
+#include "editor/model/Value.h"
 
 namespace AxiomGui {
 
@@ -10,7 +11,7 @@ namespace AxiomGui {
     public:
 
         void
-        paint(QPainter *painter, const QRectF &boundingRect, float hoverState, MaximRuntime::NumValue cv, bool vertical,
+        paint(QPainter *painter, const QRectF &boundingRect, float hoverState, AxiomModel::NumValue cv, bool vertical,
               const QColor &baseColor, const QColor &activeColor);
 
         void shape(QPainterPath &path, const QRectF &boundingRect, bool vertical) const;

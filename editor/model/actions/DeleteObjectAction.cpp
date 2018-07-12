@@ -1,15 +1,14 @@
 #include "DeleteObjectAction.h"
 
+#include "../IdentityReferenceMapper.h"
 #include "../ModelObject.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../IdentityReferenceMapper.h"
 
 using namespace AxiomModel;
 
 DeleteObjectAction::DeleteObjectAction(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root)
-    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), buffer(std::move(buffer)) {
-}
+    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), buffer(std::move(buffer)) {}
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, QByteArray buffer,
                                                                AxiomModel::ModelRoot *root) {
@@ -35,11 +34,8 @@ void DeleteObjectAction::serialize(QDataStream &stream) const {
     stream << buffer;
 }
 
-bool DeleteObjectAction::forward(bool) {
-    auto removeItems = getRemoveItems();
-    auto needsRebuild = anyNeedRebuild(removeItems);
-
-    auto sortedItems = heapSort(removeItems);
+void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
+    auto sortedItems = collect(heapSort(getRemoveItems()));
 
     QDataStream stream(&buffer, QIODevice::WriteOnly);
     ModelRoot::serializeChunk(stream, QUuid(), sortedItems);
@@ -48,46 +44,47 @@ bool DeleteObjectAction::forward(bool) {
     // as objects also delete their children.
     // Instead, we build a list of UUIDs to delete, create a Sequence of them, and iterate
     // until that's empty.
+    // We'll also need a list of parent UUIDs to build transactions later, so we can do that here.
     QSet<QUuid> usedIds;
+    QSet<QUuid> parentIds;
     for (const auto &itm : sortedItems) {
         usedIds.insert(itm->uuid());
+        parentIds.remove(itm->uuid());
+        parentIds.insert(itm->parentUuid());
     }
-    auto itemsToDelete = findAll(dynamicCast<ModelObject*>(root()->pool().sequence()), std::move(usedIds));
+    auto itemsToDelete = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(usedIds));
 
     // remove all items
     while (!itemsToDelete.empty()) {
         (*itemsToDelete.begin())->remove();
     }
-    return needsRebuild;
+
+    for (const auto &parent : parentIds) {
+        compileItems.push_back(parent);
+    }
 }
 
-bool DeleteObjectAction::backward() {
+void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
     QDataStream stream(&buffer, QIODevice::ReadOnly);
     IdentityReferenceMapper ref;
-    root()->deserializeChunk(stream, QUuid(), &ref);
+    auto addedObjects = root()->deserializeChunk(stream, QUuid(), &ref);
     buffer.clear();
 
-    return anyNeedRebuild(getRemoveItems());
+    for (const auto &obj : addedObjects) {
+        compileItems.push_back(obj->uuid());
+        compileItems.push_back(obj->parentUuid());
+    }
 }
 
-Sequence<ModelObject*> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
+Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
     auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
     auto links = flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })));
-    auto linkDependents = flatten(map(links, std::function([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
+    auto linkDependents =
+        flatten(map(links, std::function([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
 
-    return distinctByUuid(flatten(std::array<Sequence<ModelObject*>, 2> {
-        dependents,
-        linkDependents
-    }));
+    return distinctByUuid(flatten(std::array<Sequence<ModelObject *>, 2>{dependents, linkDependents}));
 }
 
-Sequence<ModelObject*> DeleteObjectAction::getRemoveItems() const {
+Sequence<ModelObject *> DeleteObjectAction::getRemoveItems() const {
     return getLinkedItems(uuid);
-}
-
-bool DeleteObjectAction::anyNeedRebuild(const Sequence<AxiomModel::ModelObject *> &sequence) const {
-    for (const auto &itm : sequence) {
-        if (itm->buildOnRemove()) return true;
-    }
-    return false;
 }

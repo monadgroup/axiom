@@ -1,24 +1,22 @@
 #include "NodeSurfaceView.h"
 
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QGraphicsItem>
-#include <QtGui/QResizeEvent>
-#include <QtWidgets/QGraphicsSceneWheelEvent>
 #include <QtCore/QMimeData>
 #include <QtGui/QClipboard>
+#include <QtGui/QResizeEvent>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QGraphicsItem>
+#include <QtWidgets/QGraphicsSceneWheelEvent>
 #include <QtWidgets/QOpenGLWidget>
 
-#include "editor/model/objects/NodeSurface.h"
-#include "editor/model/objects/Node.h"
-#include "editor/model/Project.h"
-#include "editor/model/actions/PasteBufferAction.h"
-#include "editor/model/actions/DeleteObjectAction.h"
-#include "editor/model/actions/CompositeAction.h"
-#include "editor/model/actions/PasteBufferAction.h"
-#include "editor/model/actions/GridItemMoveAction.h"
-#include "editor/model/PoolOperators.h"
-#include "NodeSurfaceCanvas.h"
 #include "../GlobalActions.h"
+#include "NodeSurfaceCanvas.h"
+#include "editor/model/PoolOperators.h"
+#include "editor/model/Project.h"
+#include "editor/model/actions/DeleteObjectAction.h"
+#include "editor/model/actions/GridItemMoveAction.h"
+#include "editor/model/actions/PasteBufferAction.h"
+#include "editor/model/objects/Node.h"
+#include "editor/model/objects/NodeSurface.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -26,7 +24,7 @@ using namespace AxiomModel;
 NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
     : QGraphicsView(new NodeSurfaceCanvas(panel, surface)), surface(surface) {
     scene()->setParent(this);
-    //setViewport(new QOpenGLWidget());
+    // setViewport(new QOpenGLWidget());
     setAcceptDrops(true);
 
     surface->panChanged.connect(this, &NodeSurfaceView::pan);
@@ -44,20 +42,13 @@ NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // connect to global actions
-    connect(GlobalActions::editUndo, &QAction::triggered,
-            this, &NodeSurfaceView::doUndo);
-    connect(GlobalActions::editRedo, &QAction::triggered,
-            this, &NodeSurfaceView::doRedo);
-    connect(GlobalActions::editDelete, &QAction::triggered,
-            this, &NodeSurfaceView::deleteSelected);
-    connect(GlobalActions::editSelectAll, &QAction::triggered,
-            this, &NodeSurfaceView::selectAll);
-    connect(GlobalActions::editCut, &QAction::triggered,
-            this, &NodeSurfaceView::cutSelected);
-    connect(GlobalActions::editCopy, &QAction::triggered,
-            this, &NodeSurfaceView::copySelected);
-    connect(GlobalActions::editPaste, &QAction::triggered,
-            this, &NodeSurfaceView::pasteBuffer);
+    connect(GlobalActions::editUndo, &QAction::triggered, this, &NodeSurfaceView::doUndo);
+    connect(GlobalActions::editRedo, &QAction::triggered, this, &NodeSurfaceView::doRedo);
+    connect(GlobalActions::editDelete, &QAction::triggered, this, &NodeSurfaceView::deleteSelected);
+    connect(GlobalActions::editSelectAll, &QAction::triggered, this, &NodeSurfaceView::selectAll);
+    connect(GlobalActions::editCut, &QAction::triggered, this, &NodeSurfaceView::cutSelected);
+    connect(GlobalActions::editCopy, &QAction::triggered, this, &NodeSurfaceView::copySelected);
+    connect(GlobalActions::editPaste, &QAction::triggered, this, &NodeSurfaceView::pasteBuffer);
 
     // connect to update history
     surface->root()->history().stackChanged.connect(this, &NodeSurfaceView::updateHistoryState);
@@ -128,14 +119,17 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
 
     // add the nodes to the surface, select them, and make them follow the mouse
     auto scenePos = mapToScene(event->pos());
-    auto nodePos = QPoint(
-        (int) (scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-        (int) (scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
-    );
+    auto nodePos = QPoint((int) (scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                          (int) (scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height()));
 
     auto data = event->mimeData()->data("application/axiom-partial-surface");
     auto action = PasteBufferAction::create(surface->uuid(), std::move(data), nodePos, surface->root());
-    dragAndDropRebuild = action->forward(true);
+
+    std::vector<QUuid> compileItems;
+    action->forward(true, compileItems);
+    MaximCompiler::Transaction transaction;
+    surface->root()->applyItemsTo(compileItems, &transaction);
+    dragAndDropTransaction = std::move(transaction);
 
     std::vector<std::unique_ptr<Action>> actions;
     actions.push_back(std::move(action));
@@ -147,15 +141,14 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
 
 void NodeSurfaceView::dragMoveEvent(QDragMoveEvent *event) {
     auto mouseDelta = mapToScene(event->pos()) - startMousePos;
-    surface->grid().dragTo(QPoint(
-        mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width(),
-        mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height()
-    ));
+    surface->grid().dragTo(QPoint(mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width(),
+                                  mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height()));
 }
 
 void NodeSurfaceView::dragLeaveEvent(QDragLeaveEvent *event) {
     surface->grid().finishDragging();
-    dragAndDropAction->backward();
+    std::vector<QUuid> dummy;
+    dragAndDropAction->backward(dummy);
     dragAndDropAction.reset();
 }
 
@@ -168,11 +161,14 @@ void NodeSurfaceView::dropEvent(QDropEvent *event) {
         auto afterPos = selectedNode->pos();
 
         if (beforePos != afterPos) {
-            dragAndDropAction->actions().push_back(GridItemMoveAction::create(selectedNode->uuid(), beforePos, afterPos, surface->root()));
+            dragAndDropAction->actions().push_back(
+                GridItemMoveAction::create(selectedNode->uuid(), beforePos, afterPos, surface->root()));
         }
     }
 
-    surface->root()->history().append(std::move(dragAndDropAction), false, dragAndDropRebuild);
+    surface->root()->history().append(std::move(dragAndDropAction), false);
+    surface->root()->applyTransaction(std::move(*dragAndDropTransaction));
+    dragAndDropTransaction = std::nullopt;
 }
 
 void NodeSurfaceView::focusInEvent(QFocusEvent *event) {
@@ -243,11 +239,10 @@ void NodeSurfaceView::pasteBuffer() {
 
     auto buffer = mimeData->data("application/axiom-partial-surface");
     auto scenePos = mapToScene(mapFromGlobal(QCursor::pos()));
-    auto targetPos = QPoint(
-        qRound((float) scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-        qRound((float) scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
-    );
-    surface->root()->history().append(PasteBufferAction::create(surface->uuid(), std::move(buffer), targetPos, surface->root()));
+    auto targetPos = QPoint(qRound((float) scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                            qRound((float) scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height()));
+    surface->root()->history().append(
+        PasteBufferAction::create(surface->uuid(), std::move(buffer), targetPos, surface->root()));
 }
 
 void NodeSurfaceView::doUndo() {
@@ -268,8 +263,10 @@ float NodeSurfaceView::zoomToScale(float zoom) {
 
 void NodeSurfaceView::updateHistoryState() {
     if (!hasFocus()) return;
-    GlobalActions::editUndo->setText("&Undo " + AxiomModel::Action::typeToString(surface->root()->history().undoType()));
-    GlobalActions::editRedo->setText("&Redo " + AxiomModel::Action::typeToString(surface->root()->history().redoType()));
+    GlobalActions::editUndo->setText("&Undo " +
+                                     AxiomModel::Action::typeToString(surface->root()->history().undoType()));
+    GlobalActions::editRedo->setText("&Redo " +
+                                     AxiomModel::Action::typeToString(surface->root()->history().redoType()));
     GlobalActions::editUndo->setEnabled(surface->root()->history().canUndo());
     GlobalActions::editRedo->setEnabled(surface->root()->history().canRedo());
 }

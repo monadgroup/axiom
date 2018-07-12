@@ -8,8 +8,7 @@ using namespace AxiomModel;
 
 GridItemSizeAction::GridItemSizeAction(const QUuid &uuid, QRect beforeRect, QRect afterRect,
                                        AxiomModel::ModelRoot *root)
-    : Action(ActionType::SIZE_GRID_ITEM, root), uuid(uuid), beforeRect(beforeRect), afterRect(afterRect) {
-}
+    : Action(ActionType::SIZE_GRID_ITEM, root), uuid(uuid), beforeRect(beforeRect), afterRect(afterRect) {}
 
 std::unique_ptr<GridItemSizeAction> GridItemSizeAction::create(const QUuid &uuid, QRect beforeRect, QRect afterRect,
                                                                AxiomModel::ModelRoot *root) {
@@ -35,12 +34,10 @@ void GridItemSizeAction::serialize(QDataStream &stream) const {
     stream << afterRect;
 }
 
-bool GridItemSizeAction::forward(bool) {
+void GridItemSizeAction::forward(bool, std::vector<QUuid> &) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setRect(afterRect);
-    return false;
 }
 
-bool GridItemSizeAction::backward() {
+void GridItemSizeAction::backward(std::vector<QUuid> &) {
     find<GridItem *>(root()->pool().sequence(), uuid)->setRect(beforeRect);
-    return false;
 }

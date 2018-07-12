@@ -10,5 +10,4 @@ namespace AxiomGui {
     public:
         virtual AxiomModel::Control *sink() = 0;
     };
-
 }

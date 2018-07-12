@@ -20,7 +20,8 @@ namespace AxiomModel {
                ModelRoot *root);
 
         static std::unique_ptr<Connection>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref, ModelRoot *root);
+        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
+                    ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -33,10 +34,6 @@ namespace AxiomModel {
         const QUuid &controlBUuid() const { return _controlBUuid; }
 
         AxiomCommon::Promise<ConnectionWire> wire() const { return _wire; }
-
-        void attachRuntime();
-
-        void detachRuntime();
 
         void remove() override;
 

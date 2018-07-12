@@ -1,17 +1,16 @@
 #include "ExtractControl.h"
 
 #include "../../util.h"
-#include "compiler/runtime/Control.h"
-#include "compiler/runtime/ControlGroup.h"
+#include "../Value.h"
 
 using namespace AxiomModel;
 
 static Control::ControlType typeFromWireType(ConnectionWire::WireType wireType) {
     switch (wireType) {
-        case ConnectionWire::WireType::NUM:
-            return Control::ControlType::NUM_EXTRACT;
-        case ConnectionWire::WireType::MIDI:
-            return Control::ControlType::MIDI_EXTRACT;
+    case ConnectionWire::WireType::NUM:
+        return Control::ControlType::NUM_EXTRACT;
+    case ConnectionWire::WireType::MIDI:
+        return Control::ControlType::MIDI_EXTRACT;
     }
 
     unreachable;
@@ -19,12 +18,10 @@ static Control::ControlType typeFromWireType(ConnectionWire::WireType wireType) 
 
 ExtractControl::ExtractControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
                                QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                               ConnectionWire::WireType wireType,
-                               ActiveSlotFlags activeSlots, ModelRoot *root)
+                               ConnectionWire::WireType wireType, ActiveSlotFlags activeSlots, ModelRoot *root)
     : Control(typeFromWireType(wireType), wireType, uuid, parentUuid, pos, size, selected, std::move(name), showName,
               exposerUuid, exposingUuid, root),
-      _activeSlots(activeSlots) {
-}
+      _activeSlots(activeSlots) {}
 
 std::unique_ptr<ExtractControl> ExtractControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos,
                                                        QSize size, bool selected, QString name, bool showName,
@@ -41,8 +38,7 @@ std::unique_ptr<ExtractControl> ExtractControl::deserialize(QDataStream &stream,
                                                             bool selected, QString name, bool showName,
                                                             const QUuid &exposerUuid, const QUuid &exposingUuid,
                                                             AxiomModel::ConnectionWire::WireType wireType,
-                                                            ReferenceMapper *ref,
-                                                            AxiomModel::ModelRoot *root) {
+                                                            ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     ActiveSlotFlags activeSlots;
     stream >> activeSlots;
     return create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid, exposingUuid, wireType,
@@ -62,6 +58,7 @@ void ExtractControl::setActiveSlots(AxiomModel::ExtractControl::ActiveSlotFlags 
 }
 
 void ExtractControl::doRuntimeUpdate() {
-    if (!runtime() || !(*runtime())->group()) return;
-    setActiveSlots((*runtime())->group()->getActiveFlags());
+    if (!runtimePointers()) return;
+    auto arr = (ArrayValue *) runtimePointers()->value;
+    setActiveSlots(arr->flags);
 }

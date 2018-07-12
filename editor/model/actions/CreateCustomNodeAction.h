@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QtCore/QUuid>
 #include <QtCore/QPoint>
 #include <QtCore/QSize>
+#include <QtCore/QUuid>
 
 #include "Action.h"
 
@@ -13,20 +13,19 @@ namespace AxiomModel {
         CreateCustomNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name,
                                const QUuid &controlsUuid, ModelRoot *root);
 
-        static std::unique_ptr<CreateCustomNodeAction>
-        create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name, const QUuid &controlsUuid,
-               ModelRoot *root);
+        static std::unique_ptr<CreateCustomNodeAction> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos,
+                                                              QString name, const QUuid &controlsUuid, ModelRoot *root);
 
-        static std::unique_ptr<CreateCustomNodeAction>
-        create(const QUuid &parentUuid, QPoint pos, QString name, ModelRoot *root);
+        static std::unique_ptr<CreateCustomNodeAction> create(const QUuid &parentUuid, QPoint pos, QString name,
+                                                              ModelRoot *root);
 
         static std::unique_ptr<CreateCustomNodeAction> deserialize(QDataStream &stream, ModelRoot *root);
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
 
-        bool backward() override;
+        void backward(std::vector<QUuid> &compileItems) override;
 
     private:
         QUuid uuid;
@@ -35,5 +34,4 @@ namespace AxiomModel {
         QString name;
         QUuid controlsUuid;
     };
-
 }

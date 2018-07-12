@@ -1,21 +1,21 @@
-cmake_minimum_required(VERSION 3.4.3)
-project(axiom)
+include(ExternalProject)
 
-set(CMAKE_CXX_STANDARD 17)
-
-if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(COMPILER_CARGO_COMMAND cargo build)
+else ()
+    set(COMPILER_CARGO_COMMAND cargo build --release)
 endif ()
 
-set(SOURCE_FILES util.cpp
-        common/FormType.cpp common/OperatorType.cpp common/ControlType.cpp
-        parser/TokenStream.cpp parser/Token.cpp parser/Parser.cpp
-        ast/Expression.cpp)
+set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/compiler)
+ExternalProject_Add(
+    compiler
+    DOWNLOAD_COMMAND ""
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ${COMPILER_CARGO_COMMAND}
+    BINARY_DIR "${CMAKE_SOURCE_DIR}/compiler"
+    INSTALL_COMMAND ""
+    BUILD_ALWAYS ON
+    USE_TERMINAL_BUILD ON
+)
 
-include_directories(${LLVM_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
-
-add_library(maxim_common ${SOURCE_FILES})
-
-add_subdirectory(codegen)
-add_subdirectory(runtime)
+add_subdirectory(llvmmaxim)

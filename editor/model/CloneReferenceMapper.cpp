@@ -17,8 +17,10 @@ QUuid CloneReferenceMapper::mapUuid(const QUuid &input) {
 
 QPoint CloneReferenceMapper::mapPos(const QUuid &parent, const QPoint &input) {
     auto iter = _pos.find(parent);
-    if (iter == _pos.end()) return input;
-    else return *iter + input;
+    if (iter == _pos.end())
+        return input;
+    else
+        return *iter + input;
 }
 
 void CloneReferenceMapper::setUuid(const QUuid &key, const QUuid &value) {

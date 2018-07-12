@@ -1,20 +1,17 @@
 #include "GroupNode.h"
 
-#include "Control.h"
-#include "ControlSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
-#include "compiler/runtime/Surface.h"
-#include "compiler/runtime/GroupNode.h"
+#include "ControlSurface.h"
+#include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
 
 GroupNode::GroupNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                      const QUuid &controlsUuid, const QUuid &innerUuid, AxiomModel::ModelRoot *root)
     : Node(NodeType::GROUP_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
-      _nodes(findLater<NodeSurface *>(root->nodeSurfaces(), innerUuid)) {
-}
+      _nodes(findLater<GroupSurface *>(root->nodeSurfaces(), innerUuid)) {}
 
 std::unique_ptr<GroupNode> GroupNode::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                              bool selected, QString name, const QUuid &controlsUuid,
@@ -24,8 +21,8 @@ std::unique_ptr<GroupNode> GroupNode::create(const QUuid &uuid, const QUuid &par
 
 std::unique_ptr<GroupNode> GroupNode::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
                                                   QPoint pos, QSize size, bool selected, QString name,
-                                                  const QUuid &controlsUuid,
-                                                  ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
+                                                  const QUuid &controlsUuid, ReferenceMapper *ref,
+                                                  AxiomModel::ModelRoot *root) {
     QUuid innerUuid;
     stream >> innerUuid;
     innerUuid = ref->mapUuid(innerUuid);
@@ -38,38 +35,18 @@ void GroupNode::serialize(QDataStream &stream, const QUuid &parent, bool withCon
     stream << (*_nodes.value())->uuid();
 }
 
-void GroupNode::createAndAttachRuntime(MaximRuntime::Surface *parent) {
-    auto runtime = std::make_unique<MaximRuntime::GroupNode>(parent);
-    attachRuntime(runtime.get());
-    parent->addNode(std::move(runtime));
+void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
+    nodes().then([runtime, transaction](NodeSurface *const &surface) { surface->attachRuntime(runtime, transaction); });
 }
 
-void GroupNode::attachRuntime(MaximRuntime::GroupNode *runtime) {
-    assert(!_runtime);
-    _runtime = runtime;
+void GroupNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    Node::updateRuntimePointers(runtime, surfacePtr);
 
-    runtime->extractedChanged.connect(this, &GroupNode::setExtracted);
-
-    removed.connect(this, &GroupNode::detachRuntime);
-
-    _nodes.then([runtime](NodeSurface *const &nodes) {
-        nodes->attachRuntime(runtime->subsurface());
+    auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
+    auto subsurfacePtr = runtime->getSurfacePtr(nodePtr);
+    nodes().then([subsurfacePtr, runtime](GroupSurface *subsurface) {
+        subsurface->updateRuntimePointers(runtime, subsurfacePtr);
     });
-}
-
-void GroupNode::detachRuntime() {
-    if (_runtime) (*_runtime)->remove();
-    _runtime.reset();
-}
-
-void GroupNode::saveValue() {
-    if (_nodes.value()) (*_nodes.value())->saveValue();
-    Node::saveValue();
-}
-
-void GroupNode::restoreValue() {
-    if (_nodes.value()) (*_nodes.value())->restoreValue();
-    Node::restoreValue();
 }
 
 void GroupNode::remove() {

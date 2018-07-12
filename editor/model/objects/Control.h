@@ -1,17 +1,19 @@
+#include <utility>
+
 #pragma once
 
 #include <optional>
 
+#include "../ConnectionWire.h"
+#include "../ModelObject.h"
+#include "../WatchSequence.h"
+#include "../grid/GridItem.h"
 #include "common/Event.h"
 #include "common/Promise.h"
-#include "../ModelObject.h"
-#include "../grid/GridItem.h"
-#include "../WatchSequence.h"
-#include "../ConnectionWire.h"
-#include "compiler/common/ControlType.h"
+#include "editor/compiler/interface/Frontend.h"
 
-namespace MaximRuntime {
-    class Control;
+namespace MaximCompiler {
+    class Runtime;
 }
 
 namespace AxiomModel {
@@ -20,36 +22,34 @@ namespace AxiomModel {
 
     class Connection;
 
+    struct ControlCompileMeta {
+        size_t index;
+        bool writtenTo;
+        bool readFrom;
+
+        ControlCompileMeta(size_t index, bool writtenTo, bool readFrom)
+            : index(index), writtenTo(writtenTo), readFrom(readFrom) {}
+    };
+
     class Control : public GridItem, public ModelObject {
     public:
-        enum class ControlType {
-            NUM_SCALAR,
-            MIDI_SCALAR,
-            NUM_EXTRACT,
-            MIDI_EXTRACT,
-            NUM_PORTAL,
-            MIDI_PORTAL,
-            SCOPE
-        };
+        enum class ControlType { NUM_SCALAR, MIDI_SCALAR, NUM_EXTRACT, MIDI_EXTRACT, NUM_PORTAL, MIDI_PORTAL, SCOPE };
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> showNameChanged;
         AxiomCommon::Event<QPointF> worldPosChanged;
         AxiomCommon::Event<bool> isActiveChanged;
         AxiomCommon::Event<QUuid> exposerUuidChanged;
-        AxiomCommon::Event<MaximRuntime::Control*> runtimeAttached;
-        AxiomCommon::Event<> runtimeAboutToDetach;
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid,
                 QPoint pos, QSize size, bool selected, QString name, bool showName, const QUuid &exposerUuid,
                 const QUuid &exposingUuid, ModelRoot *root);
 
-        static ControlType fromRuntimeType(MaximCommon::ControlType type);
+        static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid,
+                                                      const QString &name, const QUuid &exposingUuid, ModelRoot *root);
 
-        static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid, const QString &name, const QUuid &exposingUuid, ModelRoot *root);
-
-        static std::unique_ptr<Control>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref, ModelRoot *root);
+        static std::unique_ptr<Control> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                    ReferenceMapper *ref, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -95,21 +95,17 @@ namespace AxiomModel {
 
         QPointF worldPos() const;
 
-        std::optional<MaximRuntime::Control *> runtime() const { return _runtime; }
+        Sequence<ModelObject *> links() override;
 
-        bool canAttachRuntime(MaximRuntime::Control *runtime);
+        const std::optional<ControlCompileMeta> &compileMeta() const;
 
-        void attachRuntime(MaximRuntime::Control *runtime);
+        const std::optional<MaximFrontend::ControlPointers> &runtimePointers() const;
 
-        void detachRuntime();
+        void setCompileMeta(std::optional<ControlCompileMeta> compileMeta) { _compileMeta = std::move(compileMeta); }
+
+        void updateRuntimePointers(MaximCompiler::Runtime *runtime, uint64_t blockId, void *blockPtr);
 
         virtual void doRuntimeUpdate() = 0;
-
-        virtual void saveValue() = 0;
-
-        virtual void restoreValue() = 0;
-
-        Sequence<ModelObject*> links() override;
 
         void remove() override;
 
@@ -122,8 +118,8 @@ namespace AxiomModel {
         QUuid _exposerUuid;
         QUuid _exposingUuid;
         bool _isActive = false;
-
-        std::optional<MaximRuntime::Control *> _runtime;
+        std::optional<ControlCompileMeta> _compileMeta;
+        std::optional<MaximFrontend::ControlPointers> _runtimePointers;
 
         WatchSequence<Connection *> _connections;
         WatchSequence<QUuid> _connectedControls;
@@ -131,8 +127,5 @@ namespace AxiomModel {
         void updateSinkPos();
 
         void updateExposerRemoved();
-
-        void updateExposerRuntime();
     };
-
 }

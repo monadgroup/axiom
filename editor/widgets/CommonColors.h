@@ -23,7 +23,5 @@ namespace AxiomGui {
         static const QColor midiActive;
 
         static const QColor exposedBorder;
-
     };
-
 }

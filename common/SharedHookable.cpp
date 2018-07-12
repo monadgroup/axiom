@@ -4,6 +4,4 @@
 
 using namespace AxiomCommon;
 
-SharedHookable::SharedHookable() : impl(std::make_shared<HookContext>()) {
-
-}
+SharedHookable::SharedHookable() : impl(std::make_shared<HookContext>()) {}

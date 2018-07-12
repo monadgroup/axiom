@@ -4,7 +4,8 @@
 
 using namespace AxiomGui;
 
-void PlugPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, std::optional<MaximRuntime::NumValue> val, const QColor &valBaseColor) {
+void PlugPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState,
+                        std::optional<AxiomModel::NumValue> val, const QColor &valBaseColor) {
     auto scaledBorder = 0.06f * aspectBoundingRect.width();
     auto externBr = getBounds(aspectBoundingRect);
 
@@ -33,7 +34,8 @@ void PlugPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, flo
 
     // draw max ring
     painter->setPen(QPen(valBaseColor.darker(), scaledBorder));
-    painter->drawArc(ellipseBounds, startAngle + completeAngle * minVal, completeAngle * maxVal - completeAngle * minVal);
+    painter->drawArc(ellipseBounds, startAngle + completeAngle * minVal,
+                     completeAngle * maxVal - completeAngle * minVal);
 
     // draw min ring
     painter->setPen(QPen(valBaseColor, scaledBorder));

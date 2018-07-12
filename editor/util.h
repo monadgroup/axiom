@@ -1,11 +1,13 @@
 #pragma once
 
-#include <QtCore/QString>
 #include <QtCore/QPoint>
+#include <QtCore/QString>
 #include <QtGui/QColor>
 #include <cassert>
 
-#define unreachable assert(false); abort();
+#define unreachable \
+    assert(false); \
+    abort();
 
 namespace AxiomUtil {
 
@@ -25,5 +27,4 @@ namespace AxiomUtil {
         }
         return last;
     };
-
 }

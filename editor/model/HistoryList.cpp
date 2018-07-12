@@ -1,10 +1,13 @@
 #include "HistoryList.h"
 
+#include "editor/compiler/interface/Transaction.h"
+
 using namespace AxiomModel;
 
-HistoryList::HistoryList() = default;
+HistoryList::HistoryList(CompileApplyer applyer) : applyCompile(std::move(applyer)) {}
 
-HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
+HistoryList::HistoryList(QDataStream &stream, ModelRoot *root, CompileApplyer applyer)
+    : applyCompile(std::move(applyer)) {
     uint32_t stackPos;
     stream >> stackPos;
     uint32_t stackSize;
@@ -13,7 +16,8 @@ HistoryList::HistoryList(QDataStream &stream, ModelRoot *root) {
     _stackPos = stackPos;
     _stack.reserve(stackSize);
     for (uint32_t i = 0; i < stackSize; i++) {
-        QByteArray actionBuffer; stream >> actionBuffer;
+        QByteArray actionBuffer;
+        stream >> actionBuffer;
         QDataStream actionStream(&actionBuffer, QIODevice::ReadOnly);
         _stack.push_back(Action::deserialize(actionStream, root));
     }
@@ -30,10 +34,13 @@ void HistoryList::serialize(QDataStream &stream) {
     }
 }
 
-void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward, bool forceForwards) {
+void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward) {
     // run the action forward
-    auto needsForward = forward && action->forward(true);
-    if (needsForward || forceForwards) rebuildRequested.trigger();
+    if (forward) {
+        std::vector<QUuid> compileItems;
+        action->forward(true, compileItems);
+        applyCompile(std::move(compileItems));
+    }
 
     // remove items ahead of where we are
     _stack.erase(_stack.begin() + _stackPos, _stack.end());
@@ -41,7 +48,8 @@ void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forwar
     // if the stack is going to be longer than max size, remove the first item
     if (_stack.size() == maxActions) {
         _stack.erase(_stack.begin());
-    } else _stackPos++;
+    } else
+        _stackPos++;
 
     _stack.push_back(std::move(action));
 
@@ -62,9 +70,9 @@ void HistoryList::undo() {
 
     _stackPos--;
     auto undoAction = _stack[_stackPos].get();
-    auto needsRebuild = undoAction->backward();
-
-    if (needsRebuild) rebuildRequested.trigger();
+    std::vector<QUuid> compileItems;
+    undoAction->backward(compileItems);
+    applyCompile(std::move(compileItems));
 
     stackChanged.trigger();
 }
@@ -82,10 +90,11 @@ void HistoryList::redo() {
     if (!canRedo()) return;
 
     auto redoAction = _stack[_stackPos].get();
-    auto needsRebuild = redoAction->forward(false);
+    std::vector<QUuid> compileItems;
+    redoAction->forward(false, compileItems);
     _stackPos++;
 
-    if (needsRebuild) rebuildRequested.trigger();
+    applyCompile(std::move(compileItems));
 
     stackChanged.trigger();
 }

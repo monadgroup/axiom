@@ -10,7 +10,8 @@ namespace AxiomModel {
     public:
         ExposeControlAction(const QUuid &controlUuid, const QUuid &exposeUuid, ModelRoot *root);
 
-        static std::unique_ptr<ExposeControlAction> create(const QUuid &controlUuid, const QUuid &exposeUuid, ModelRoot *root);
+        static std::unique_ptr<ExposeControlAction> create(const QUuid &controlUuid, const QUuid &exposeUuid,
+                                                           ModelRoot *root);
 
         static std::unique_ptr<ExposeControlAction> create(const QUuid &controlUuid, ModelRoot *root);
 
@@ -18,14 +19,12 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
 
-        bool backward() override;
+        void backward(std::vector<QUuid> &compileItems) override;
 
     private:
-
         QUuid controlUuid;
         QUuid exposeUuid;
     };
-
 }

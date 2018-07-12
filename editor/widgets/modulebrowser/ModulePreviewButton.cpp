@@ -45,6 +45,7 @@ void ModulePreviewButton::setName(QString name) {
 
 void ModulePreviewButton::updateIsVisible() {
     auto hasTag = library->activeTag() == "" || entry->tags().find(library->activeTag()) != entry->tags().end();
-    auto hasSearch = library->activeSearch() == "" || entry->name().contains(library->activeSearch(), Qt::CaseInsensitive);
+    auto hasSearch =
+        library->activeSearch() == "" || entry->name().contains(library->activeSearch(), Qt::CaseInsensitive);
     setVisible(hasTag && hasSearch);
 }

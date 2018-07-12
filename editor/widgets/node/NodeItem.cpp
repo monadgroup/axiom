@@ -1,41 +1,39 @@
 #include "NodeItem.h"
 
-#include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtWidgets/QGraphicsProxyWidget>
 #include <QtCore/QTimer>
+#include <QtWidgets/QGraphicsProxyWidget>
+#include <QtWidgets/QGraphicsSceneMouseEvent>
 
-#include "editor/model/PoolOperators.h"
-#include "editor/model/LibraryEntry.h"
+#include "../FloatingValueEditor.h"
+#include "../ItemResizer.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "../surface/NodeSurfacePanel.h"
+#include "../windows/MainWindow.h"
+#include "../windows/ModulePropertiesWindow.h"
+#include "CustomNodePanel.h"
 #include "editor/model/CloneReferenceMapper.h"
-#include "editor/model/objects/Node.h"
-#include "editor/model/objects/GroupNode.h"
-#include "editor/model/objects/CustomNode.h"
-#include "editor/model/objects/AutomationNode.h"
-#include "editor/model/objects/ControlSurface.h"
-#include "editor/model/objects/NumControl.h"
-#include "editor/model/objects/MidiControl.h"
-#include "editor/model/objects/ExtractControl.h"
-#include "editor/model/objects/PortalControl.h"
-#include "editor/model/objects/ScopeControl.h"
-#include "editor/model/objects/RootSurface.h"
+#include "editor/model/LibraryEntry.h"
+#include "editor/model/PoolOperators.h"
 #include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/GridItemMoveAction.h"
 #include "editor/model/actions/GridItemSizeAction.h"
 #include "editor/model/actions/RenameNodeAction.h"
-#include "../surface/NodeSurfaceCanvas.h"
-#include "../surface/NodeSurfacePanel.h"
-#include "editor/widgets/controls/NumControlItem.h"
-#include "editor/widgets/controls/MidiControlItem.h"
+#include "editor/model/objects/ControlSurface.h"
+#include "editor/model/objects/CustomNode.h"
+#include "editor/model/objects/ExtractControl.h"
+#include "editor/model/objects/GroupNode.h"
+#include "editor/model/objects/MidiControl.h"
+#include "editor/model/objects/Node.h"
+#include "editor/model/objects/NumControl.h"
+#include "editor/model/objects/PortalControl.h"
+#include "editor/model/objects/RootSurface.h"
+#include "editor/model/objects/ScopeControl.h"
 #include "editor/widgets/controls/ExtractControlItem.h"
+#include "editor/widgets/controls/MidiControlItem.h"
+#include "editor/widgets/controls/NumControlItem.h"
 #include "editor/widgets/controls/PortalControlItem.h"
 #include "editor/widgets/controls/ScopeControlItem.h"
-#include "compiler/runtime/IONode.h"
-#include "../windows/MainWindow.h"
-#include "../windows/ModulePropertiesWindow.h"
-#include "../FloatingValueEditor.h"
-#include "../ItemResizer.h"
-#include "CustomNodePanel.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -57,32 +55,25 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
     // create resize items
     if (node->isResizable()) {
         ItemResizer::Direction directions[] = {
-            ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
-            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
-        };
+            ItemResizer::TOP,       ItemResizer::RIGHT,    ItemResizer::BOTTOM,       ItemResizer::LEFT,
+            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT};
         for (auto i = 0; i < 8; i++) {
             auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::nodeGridSize);
 
             // ensure corners are on top of edges
             resizer->setZValue(i > 3 ? 2 : 1);
 
-            connect(this, &NodeItem::resizerPosChanged,
-                    resizer, &ItemResizer::setPos);
-            connect(this, &NodeItem::resizerSizeChanged,
-                    resizer, &ItemResizer::setSize);
+            connect(this, &NodeItem::resizerPosChanged, resizer, &ItemResizer::setPos);
+            connect(this, &NodeItem::resizerSizeChanged, resizer, &ItemResizer::setSize);
 
-            connect(resizer, &ItemResizer::startDrag,
-                    this, &NodeItem::resizerStartDrag);
-            connect(resizer, &ItemResizer::changed,
-                    this, &NodeItem::resizerChanged);
-            connect(resizer, &ItemResizer::endDrag,
-                    this, &NodeItem::resizerEndDrag);
+            connect(resizer, &ItemResizer::startDrag, this, &NodeItem::resizerStartDrag);
+            connect(resizer, &ItemResizer::changed, this, &NodeItem::resizerChanged);
+            connect(resizer, &ItemResizer::endDrag, this, &NodeItem::resizerEndDrag);
 
             node->controls().then([resizer](ControlSurface *surface) {
                 resizer->setVisible(!surface->grid().hasSelection());
-                surface->grid().hasSelectionChanged.connect([resizer](bool hasSelection) {
-                    resizer->setVisible(!hasSelection);
-                });
+                surface->grid().hasSelectionChanged.connect(
+                    [resizer](bool hasSelection) { resizer->setVisible(!hasSelection); });
             });
 
             resizer->setParentItem(this);
@@ -113,17 +104,11 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
 
 QRectF NodeItem::boundingRect() const {
     auto drawBr = drawBoundingRect();
-    return {
-        drawBr.topLeft() - QPointF(0, textOffset),
-        drawBr.size() + QSizeF(0, textOffset)
-    };
+    return {drawBr.topLeft() - QPointF(0, textOffset), drawBr.size() + QSizeF(0, textOffset)};
 }
 
 QRectF NodeItem::drawBoundingRect() const {
-    return {
-        QPointF(0, 0),
-        NodeSurfaceCanvas::nodeRealSize(node->size())
-    };
+    return {QPointF(0, 0), NodeSurfaceCanvas::nodeRealSize(node->size())};
 }
 
 void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
@@ -131,18 +116,17 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     QColor darkColor, lightColor, outlineColor;
     switch (node->nodeType()) {
-        case Node::NodeType::PORTAL_NODE:
-        case Node::NodeType::CUSTOM_NODE:
-        case Node::NodeType::AUTOMATION_NODE:
-            darkColor = CommonColors::customNodeNormal;
-            lightColor = CommonColors::customNodeActive;
-            outlineColor = CommonColors::customNodeBorder;
-            break;
-        case Node::NodeType::GROUP_NODE:
-            darkColor = CommonColors::groupNodeNormal;
-            lightColor = CommonColors::groupNodeActive;
-            outlineColor = CommonColors::groupNodeBorder;
-            break;
+    case Node::NodeType::PORTAL_NODE:
+    case Node::NodeType::CUSTOM_NODE:
+        darkColor = CommonColors::customNodeNormal;
+        lightColor = CommonColors::customNodeActive;
+        outlineColor = CommonColors::customNodeBorder;
+        break;
+    case Node::NodeType::GROUP_NODE:
+        darkColor = CommonColors::groupNodeNormal;
+        lightColor = CommonColors::groupNodeActive;
+        outlineColor = CommonColors::groupNodeBorder;
+        break;
     }
 
     painter->setPen(QPen(outlineColor, node->isExtracted() ? 3 : 1));
@@ -167,10 +151,7 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     painter->setPen(QPen(QColor(100, 100, 100)));
     auto br = boundingRect();
-    auto textBound = QRectF(
-        br.topLeft(),
-        QSizeF(br.width(), textOffset)
-    );
+    auto textBound = QRectF(br.topLeft(), QSizeF(br.width(), textOffset));
     painter->drawText(textBound, Qt::AlignLeft | Qt::AlignTop, node->name());
 }
 
@@ -199,10 +180,8 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
-    node->draggedTo.trigger(QPoint(
-        qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-        qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())
-    ));
+    node->draggedTo.trigger(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                                   qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())));
 
     event->accept();
 }
@@ -231,7 +210,6 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-
     if (auto groupNode = dynamic_cast<GroupNode *>(node); groupNode && groupNode->nodes().value()) {
         event->accept();
         canvas->panel->window->showSurface(canvas->panel, *groupNode->nodes().value(), false);
@@ -246,9 +224,9 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
     event->accept();
 
-    auto copyableItems = AxiomModel::filter(
-        AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()),
-        [](Node *const &node) { return node->isCopyable(); });
+    auto copyableItems =
+        AxiomModel::filter(AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()),
+                           [](Node *const &node) { return node->isCopyable(); });
 
     QMenu menu;
 
@@ -261,13 +239,6 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     saveModuleAction->setEnabled(!copyableItems.empty());
     menu.addSeparator();
 
-    QAction *fiddleAction = nullptr;
-    auto automationNode = dynamic_cast<AutomationNode *>(node);
-    if (automationNode) {
-        fiddleAction = menu.addAction(tr("&Fiddle"));
-        menu.addSeparator();
-    }
-
     auto deleteAction = menu.addAction(tr("&Delete"));
     deleteAction->setEnabled(node->isDeletable());
     auto selectedAction = menu.exec(event->screenPos());
@@ -276,18 +247,18 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         auto editor = new FloatingValueEditor(node->name(), event->scenePos());
         scene()->addItem(editor);
 
-        connect(editor, &FloatingValueEditor::valueSubmitted,
-                this, [this](QString name) {
-                node->root()->history().append(
-                    RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
-            });
+        connect(editor, &FloatingValueEditor::valueSubmitted, this, [this](QString name) {
+            node->root()->history().append(RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
+        });
     } else if (selectedAction == saveModuleAction) {
         ModulePropertiesWindow saveWindow(&node->root()->project()->library());
         if (saveWindow.exec() == QDialog::Accepted) {
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();
 
-            auto newEntry = LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()), node->root()->project());
+            auto newEntry =
+                LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()),
+                                     node->root()->project());
             auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems());
             QByteArray serializeArray;
             QDataStream serializeStream(&serializeArray, QIODevice::WriteOnly);
@@ -303,10 +274,6 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         }
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
-    } else if (selectedAction == fiddleAction && automationNode) {
-        if (automationNode->runtime()) {
-            (*automationNode->runtime())->fiddle();
-        }
     }
 }
 
@@ -349,13 +316,10 @@ void NodeItem::remove() {
 }
 
 void NodeItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
-    node->setCorners(QPoint(
-        qRound(topLeft.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-        qRound(topLeft.y() / NodeSurfaceCanvas::nodeGridSize.height())
-    ), QPoint(
-        qRound(bottomRight.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-        qRound(bottomRight.y() / NodeSurfaceCanvas::nodeGridSize.height())
-    ));
+    node->setCorners(QPoint(qRound(topLeft.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                            qRound(topLeft.y() / NodeSurfaceCanvas::nodeGridSize.height())),
+                     QPoint(qRound(bottomRight.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                            qRound(bottomRight.y() / NodeSurfaceCanvas::nodeGridSize.height())));
 }
 
 void NodeItem::resizerStartDrag() {

@@ -1,13 +1,13 @@
 #pragma once
 
-#include <vector>
-#include <optional>
-#include <functional>
-#include <set>
-#include <utility>
 #include <cassert>
-#include <tuple>
+#include <functional>
 #include <memory>
+#include <optional>
+#include <set>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include "SharedHookable.h"
 
@@ -32,9 +32,7 @@ namespace AxiomCommon {
 
             SharedEvent() {}
 
-            ~SharedEvent() {
-                removeHooks();
-            }
+            ~SharedEvent() { removeHooks(); }
 
             explicit SharedEvent(func_type callback) : callback(callback) {}
 
@@ -103,9 +101,7 @@ namespace AxiomCommon {
 
         bool operator!=(const Event &other) const { return impl != other.impl; }
 
-        void trigger(const Args &... params) const {
-            impl->trigger(params...);
-        }
+        void trigger(const Args &... params) const { impl->trigger(params...); }
 
         Event connect(Event listener) {
             impl->children.push_back(listener.impl);
@@ -114,16 +110,13 @@ namespace AxiomCommon {
         }
 
         Event connect(Event *other) {
-            auto evt = connect(Event(std::function([other](Args &&... params) {
-                other->trigger(std::forward<Args>(params)...);
-            })));
+            auto evt = connect(
+                Event(std::function([other](Args &&... params) { other->trigger(std::forward<Args>(params)...); })));
             evt.follow(other);
             return evt;
         }
 
-        Event connect(func_type listener) {
-            return connect(Event(listener));
-        }
+        Event connect(func_type listener) { return connect(Event(listener)); }
 
         Event connect(AbstractHookable *follow, Event *listener) {
             auto link = connect(listener);
@@ -137,31 +130,29 @@ namespace AxiomCommon {
             return link;
         }
 
-        Event connect(AbstractHookable *follow, func_type listener) {
-            return connect(follow, Event(listener));
-        }
+        Event connect(AbstractHookable *follow, func_type listener) { return connect(follow, Event(listener)); }
 
         template<class TR, class... TA>
         Event connect(AbstractHookable *follow, std::function<TR(TA...)> listener) {
             return connect(follow, Event(std::function([listener](Args &&... params) {
-                applyFunc<sizeof...(TA)>(listener, std::forward<Args>(params)...);
-            })));
+                               applyFunc<sizeof...(TA)>(listener, std::forward<Args>(params)...);
+                           })));
         }
 
         template<class TB, class TFB, class TR, class... TA>
         Event connect(TB *follow, TR (TFB::*listener)(TA...)) {
             auto wrapper = std::mem_fn(listener);
             return connect(follow, Event(std::function([follow, wrapper](Args &&... params) {
-                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-            })));
+                               applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+                           })));
         }
 
         template<class TB, class TFB, class TR, class... TA>
         Event connect(TB *follow, TR (TFB::*listener)(TA...) const) {
             auto wrapper = std::mem_fn(listener);
             return connect(follow, Event(std::function([follow, wrapper](Args &&... params) {
-                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-            })));
+                               applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+                           })));
         };
 
         template<class TB, class TFB, class TR, class... TA>
@@ -172,29 +163,17 @@ namespace AxiomCommon {
             })));
         }
 
-        void disconnect(Event other) {
-            impl->disconnect(other.impl.get());
-        }
+        void disconnect(Event other) { impl->disconnect(other.impl.get()); }
 
-        void follow(AbstractHookable *hookable) {
-            impl->follow(hookable->getContext());
-        }
+        void follow(AbstractHookable *hookable) { impl->follow(hookable->getContext()); }
 
-        void unfollow(AbstractHookable *hookable) {
-            impl->unfollow(hookable->getContext());
-        }
+        void unfollow(AbstractHookable *hookable) { impl->unfollow(hookable->getContext()); }
 
-        void detach() {
-            impl->detach();
-        }
+        void detach() { impl->detach(); }
 
-        bool empty() const {
-            return impl->children.empty();
-        }
+        bool empty() const { return impl->children.empty(); }
 
-        size_t size() const {
-            return impl->children.size();
-        }
+        size_t size() const { return impl->children.size(); }
 
     private:
         shared_event impl;

@@ -1,8 +1,9 @@
 #include "GroupSurface.h"
 
-#include "GroupNode.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "GroupNode.h"
+#include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
 
@@ -19,4 +20,13 @@ std::unique_ptr<GroupSurface> GroupSurface::create(const QUuid &uuid, const QUui
 
 QString GroupSurface::name() {
     return _node->name();
+}
+
+void GroupSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
+    if (runtime) {
+        runtimeId = runtime->nextId();
+    } else {
+        runtimeId = 0;
+    }
+    NodeSurface::attachRuntime(runtime, transaction);
 }

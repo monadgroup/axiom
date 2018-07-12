@@ -1,13 +1,13 @@
 #pragma once
 
-#include "common/Event.h"
 #include "Control.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
     class ExtractControl : public Control {
     public:
-        using ActiveSlotFlags = uint16_t;
+        using ActiveSlotFlags = uint32_t;
 
         AxiomCommon::Event<ActiveSlotFlags> activeSlotsChanged;
 
@@ -22,9 +22,9 @@ namespace AxiomModel {
                                                       ModelRoot *root);
 
         static std::unique_ptr<ExtractControl>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                    ConnectionWire::WireType wireType, ReferenceMapper *ref, ModelRoot *root);
+            deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
+                        bool selected, QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
+                        ConnectionWire::WireType wireType, ReferenceMapper *ref, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -34,13 +34,7 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override;
 
-        // todo: implement these?
-        void saveValue() override { }
-
-        void restoreValue() override { }
-
     private:
         ActiveSlotFlags _activeSlots;
     };
-
 }

@@ -1,22 +1,24 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
-    <qresource>
+    <qresource prefix="/">
         <file>application.ico</file>
         <file>logo.png</file>
 
-        <file>MainStyles.qss</file>
-        <file>ModuleBrowserPanel.qss</file>
-        <file>ModulePreviewList.qss</file>
-        <file>SchematicPanel.qss</file>
-        <file>AboutWindow.qss</file>
-        <file>NodePanel.qss</file>
-        <file>SaveModuleWindow.qss</file>
+        <file>styles/MainStyles.qss</file>
+        <file>styles/ModuleBrowserPanel.qss</file>
+        <file>styles/ModulePreviewList.qss</file>
+        <file>styles/SchematicPanel.qss</file>
+        <file>styles/AboutWindow.qss</file>
+        <file>styles/NodePanel.qss</file>
+        <file>styles/SaveModuleWindow.qss</file>
 
         <file>icons/expand_12.png</file>
         <file>icons/expand_active_12.png</file>
         <file>icons/collapse_12.png</file>
         <file>icons/collapse_active_12.png</file>
         <file>icons/input-midi-portal.png</file>
+        <file>icons/input-num-portal.png</file>
+        <file>icons/output-midi-portal.png</file>
         <file>icons/output-num-portal.png</file>
         <file>icons/automation-portal.png</file>
 

@@ -1,13 +1,4 @@
-cmake_minimum_required(VERSION 3.4.3)
-project(axiom)
-
-set(CMAKE_CXX_STANDARD 17)
-if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
-endif ()
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 
 set(SOURCE_FILES
         CommonColors.cpp
@@ -16,8 +7,7 @@ set(SOURCE_FILES
         ItemResizer.cpp
         SpaceCompleter.cpp)
 
-include_directories(../../ ${LLVM_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
-add_definitions(${LLVM_DEFINITIONS})
+include_directories(../../ ${Qt5Widgets_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
 
 add_library(axiom_widgets ${SOURCE_FILES})
 

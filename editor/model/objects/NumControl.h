@@ -1,45 +1,35 @@
 #pragma once
 
-#include "common/Event.h"
+#include "../Value.h"
 #include "Control.h"
-#include "compiler/runtime/ValueOperator.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
     class NumControl : public Control {
     public:
-        enum class DisplayMode {
-            PLUG,
-            KNOB,
-            SLIDER_H,
-            SLIDER_V,
-            TOGGLE
-        };
+        enum class DisplayMode { PLUG, KNOB, SLIDER_H, SLIDER_V, TOGGLE };
 
-        enum class Channel {
-            LEFT = 1 << 0,
-            RIGHT = 1 << 1,
-            BOTH = LEFT | RIGHT
-        };
+        enum class Channel { LEFT = 1 << 0, RIGHT = 1 << 1, BOTH = LEFT | RIGHT };
 
         AxiomCommon::Event<DisplayMode> displayModeChanged;
         AxiomCommon::Event<Channel> channelChanged;
-        AxiomCommon::Event<const MaximRuntime::NumValue &> valueChanged;
+        AxiomCommon::Event<const NumValue &> valueChanged;
 
         NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                    bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, DisplayMode displayMode,
-                   Channel channel, MaximRuntime::NumValue value, ModelRoot *root);
+                   Channel channel, NumValue value, ModelRoot *root);
 
         static std::unique_ptr<NumControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                                                  bool selected, QString name, bool showName,
-                                                  const QUuid &exposerUuid, const QUuid &exposingUuid,
-                                                  DisplayMode displayMode, Channel channel,
-                                                  MaximRuntime::NumValue value, ModelRoot *root);
+                                                  bool selected, QString name, bool showName, const QUuid &exposerUuid,
+                                                  const QUuid &exposingUuid, DisplayMode displayMode, Channel channel,
+                                                  NumValue value, ModelRoot *root);
 
-        static std::unique_ptr<NumControl>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
-                    bool selected, QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                    ReferenceMapper *ref, ModelRoot *root);
+        static std::unique_ptr<NumControl> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                       QPoint pos, QSize size, bool selected, QString name,
+                                                       bool showName, const QUuid &exposerUuid,
+                                                       const QUuid &exposingUuid, ReferenceMapper *ref,
+                                                       ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -51,22 +41,17 @@ namespace AxiomModel {
 
         void setChannel(Channel channel);
 
-        const MaximRuntime::NumValue &value() const { return _value; }
-
-        void setValue(MaximRuntime::NumValue value);
+        const NumValue &value() const { return _value; }
 
         void doRuntimeUpdate() override;
 
-        void saveValue() override;
-
-        void restoreValue() override;
+        void setValue(NumValue value);
 
     private:
         DisplayMode _displayMode;
         Channel _channel;
-        MaximRuntime::NumValue _value;
+        NumValue _value;
 
-        void setInternalValue(MaximRuntime::NumValue value);
+        void setInternalValue(NumValue value);
     };
-
 }

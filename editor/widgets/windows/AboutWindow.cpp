@@ -1,18 +1,18 @@
 #include "AboutWindow.h"
 
+#include <QtGui/QIcon>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
-#include <QtGui/QIcon>
 
-#include "editor/util.h"
 #include "editor/resources/resource.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
-AboutWindow::AboutWindow() : QDialog(nullptr,
-                                     Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
+AboutWindow::AboutWindow()
+    : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("About " VER_PRODUCTNAME_STR));
-    setStyleSheet(AxiomUtil::loadStylesheet(":/AboutWindow.qss"));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/AboutWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));
 
     setFixedSize(400, 400);
@@ -28,7 +28,8 @@ AboutWindow::AboutWindow() : QDialog(nullptr,
     logoLabel->setPixmap(logoImg);
     mainLayout->addWidget(logoLabel, 0, 0, 1, 2);
 
-    auto descriptLabel = new QLabel(tr(VER_FILEDESCRIPTION_STR " - " VER_LEGALCOPYRIGHT_STR "\nVST Plug-In Technology by Steinberg"), this);
+    auto descriptLabel = new QLabel(
+        tr(VER_FILEDESCRIPTION_STR " - " VER_LEGALCOPYRIGHT_STR "\nVST Plug-In Technology by Steinberg"), this);
     descriptLabel->setObjectName("about-descript");
     mainLayout->addWidget(descriptLabel, 1, 0, 1, 2);
 

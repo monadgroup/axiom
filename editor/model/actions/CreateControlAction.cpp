@@ -2,17 +2,15 @@
 
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../objects/NumControl.h"
-#include "../objects/MidiControl.h"
 #include "../objects/ExtractControl.h"
-#include "../../util.h"
+#include "../objects/MidiControl.h"
+#include "../objects/NumControl.h"
 
 using namespace AxiomModel;
 
 CreateControlAction::CreateControlAction(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type,
                                          QString name, AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_CONTROL, root), uuid(uuid), parentUuid(parentUuid), type(type), name(std::move(name)) {
-}
+    : Action(ActionType::CREATE_CONTROL, root), uuid(uuid), parentUuid(parentUuid), type(type), name(std::move(name)) {}
 
 std::unique_ptr<CreateControlAction> CreateControlAction::create(const QUuid &uuid, const QUuid &parentUuid,
                                                                  Control::ControlType type, QString name,
@@ -26,11 +24,15 @@ std::unique_ptr<CreateControlAction> CreateControlAction::create(const QUuid &pa
 }
 
 std::unique_ptr<CreateControlAction> CreateControlAction::deserialize(QDataStream &stream,
-                                                                            AxiomModel::ModelRoot *root) {
-    QUuid uuid; stream >> uuid;
-    QUuid parentUuid; stream >> parentUuid;
-    uint8_t typeInt; stream >> typeInt;
-    QString name; stream >> name;
+                                                                      AxiomModel::ModelRoot *root) {
+    QUuid uuid;
+    stream >> uuid;
+    QUuid parentUuid;
+    stream >> parentUuid;
+    uint8_t typeInt;
+    stream >> typeInt;
+    QString name;
+    stream >> name;
 
     return create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), root);
 }
@@ -44,12 +46,10 @@ void CreateControlAction::serialize(QDataStream &stream) const {
     stream << name;
 }
 
-bool CreateControlAction::forward(bool) {
+void CreateControlAction::forward(bool, std::vector<QUuid> &) {
     root()->pool().registerObj(Control::createDefault(type, uuid, parentUuid, name, QUuid(), root()));
-    return false;
 }
 
-bool CreateControlAction::backward() {
+void CreateControlAction::backward(std::vector<QUuid> &) {
     find(root()->controls(), uuid)->remove();
-    return false;
 }

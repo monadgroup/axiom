@@ -1,12 +1,14 @@
 #pragma once
 
-#include "common/Event.h"
-#include "common/Promise.h"
 #include "../ModelObject.h"
 #include "../grid/GridItem.h"
+#include "common/Event.h"
+#include "common/Promise.h"
+#include "editor/compiler/interface/Transaction.h"
 
-namespace MaximRuntime {
-    class Surface;
+namespace MaximCompiler {
+    class Runtime;
+    class Transaction;
 }
 
 namespace AxiomModel {
@@ -15,14 +17,15 @@ namespace AxiomModel {
 
     class ControlSurface;
 
+    struct NodeCompileMeta {
+        size_t mirIndex;
+
+        explicit NodeCompileMeta(size_t mirIndex) : mirIndex(mirIndex) {}
+    };
+
     class Node : public GridItem, public ModelObject {
     public:
-        enum class NodeType {
-            CUSTOM_NODE,
-            GROUP_NODE,
-            PORTAL_NODE,
-            AUTOMATION_NODE
-        };
+        enum class NodeType { CUSTOM_NODE, GROUP_NODE, PORTAL_NODE };
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> extractedChanged;
@@ -30,9 +33,8 @@ namespace AxiomModel {
         Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
              QString name, const QUuid &controlsUuid, ModelRoot *root);
 
-        static std::unique_ptr<Node>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
-            ModelRoot *root);
+        static std::unique_ptr<Node> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
+                                                 ReferenceMapper *ref, ModelRoot *root);
 
         void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
 
@@ -66,13 +68,13 @@ namespace AxiomModel {
 
         void doSizeAction();
 
-        virtual void createAndAttachRuntime(MaximRuntime::Surface *parent) = 0;
+        virtual void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) = 0;
 
-        void doRuntimeUpdate();
+        const std::optional<NodeCompileMeta> &compileMeta() const { return _compileMeta; }
 
-        virtual void saveValue();
+        void setCompileMeta(std::optional<NodeCompileMeta> compileMeta) { _compileMeta = std::move(compileMeta); }
 
-        virtual void restoreValue();
+        virtual void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr);
 
         void remove() override;
 
@@ -83,6 +85,6 @@ namespace AxiomModel {
         bool _isExtracted = false;
         AxiomCommon::Promise<ControlSurface *> _controls;
         QRect sizeStartRect;
+        std::optional<NodeCompileMeta> _compileMeta;
     };
-
 }

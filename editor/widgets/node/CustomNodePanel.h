@@ -3,7 +3,6 @@
 #include <QtWidgets/QGraphicsObject>
 #include <QtWidgets/QPlainTextEdit>
 
-#include "compiler/runtime/ErrorLog.h"
 #include "common/Hookable.h"
 
 class QGraphicsProxyWidget;
@@ -35,8 +34,6 @@ namespace AxiomGui {
 
         void setOpen(bool open);
 
-        void setError(const MaximRuntime::ErrorLog &log);
-
         void clearError();
 
         void codeChanged(const QString &newCode);
@@ -64,8 +61,6 @@ namespace AxiomGui {
         bool eventFilter(QObject *object, QEvent *event) override;
 
         void controlTextChanged();
-
-        static void moveCursor(QTextCursor &cursor, SourcePos pos, QTextCursor::MoveMode mode);
 
     };
 

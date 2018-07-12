@@ -99,7 +99,7 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
 QRectF ControlItem::boundingRect() const {
     auto br = drawBoundingRect();
     //if (!showLabelInCenter()) {
-        br.setHeight(br.height() + 20);
+    br.setHeight(br.height() + 20);
     //}
     return br;
 }
@@ -166,9 +166,9 @@ void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     /*if (showLabelInCenter()) {
         painter->drawText(pathBr, Qt::AlignCenter, getLabelText());
     } else {*/
-        auto br = boundingRect();
-        auto nameBr = QRectF(br.left(), pathBr.bottom() + 5, br.width(), 20);
-        painter->drawText(nameBr, Qt::AlignHCenter | Qt::AlignTop, getLabelText());
+    auto br = boundingRect();
+    auto nameBr = QRectF(br.left(), pathBr.bottom() + 5, br.width(), 20);
+    painter->drawText(nameBr, Qt::AlignHCenter | Qt::AlignTop, getLabelText());
     //}
 }
 
@@ -257,7 +257,8 @@ void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         control->finishedDragging.trigger();
 
         if (control->dragStartPos() != control->pos()) {
-            control->root()->history().append(GridItemMoveAction::create(control->uuid(), control->dragStartPos(), control->pos(), control->root()));
+            control->root()->history().append(
+                GridItemMoveAction::create(control->uuid(), control->dragStartPos(), control->pos(), control->root()));
         }
     } else {
         event->ignore();
@@ -327,7 +328,8 @@ void ControlItem::resizerStartDrag() {
 void ControlItem::resizerEndDrag() {
     auto endDragRect = control->rect();
     if (startDragRect != endDragRect) {
-        control->root()->history().append(GridItemSizeAction::create(control->uuid(), startDragRect, endDragRect, control->root()));
+        control->root()->history().append(
+            GridItemSizeAction::create(control->uuid(), startDragRect, endDragRect, control->root()));
     }
 }
 
@@ -345,12 +347,12 @@ void ControlItem::buildMenuStart(QMenu &menu) {
 
     connect(clearAction, &QAction::triggered,
             this, [this]() {
-                std::vector<std::unique_ptr<Action>> clearActions;
-                for (const auto &connection : control->connections()) {
-                    clearActions.push_back(DeleteObjectAction::create(connection->uuid(), connection->root()));
-                }
-                control->root()->history().append(CompositeAction::create(std::move(clearActions), control->root()));
-            });
+            std::vector<std::unique_ptr<Action>> clearActions;
+            for (const auto &connection : control->connections()) {
+                clearActions.push_back(DeleteObjectAction::create(connection->uuid(), connection->root()));
+            }
+            control->root()->history().append(CompositeAction::create(std::move(clearActions), control->root()));
+        });
 }
 
 void ControlItem::buildMenuEnd(QMenu &menu) {
@@ -363,8 +365,10 @@ void ControlItem::buildMenuEnd(QMenu &menu) {
     nameShownAction->setChecked(control->showName());
     connect(nameShownAction, &QAction::triggered,
             this, [this, nameShownAction]() {
-                control->root()->history().append(SetShowNameAction::create(control->uuid(), control->showName(), nameShownAction->isChecked(), control->root()));
-            });
+            control->root()->history().append(
+                SetShowNameAction::create(control->uuid(), control->showName(), nameShownAction->isChecked(),
+                                          control->root()));
+        });
 
     auto exposedAction = menu.addAction("&Expose");
     exposedAction->setEnabled(control->surface()->node()->surface()->canExposeControl());
@@ -372,13 +376,13 @@ void ControlItem::buildMenuEnd(QMenu &menu) {
     exposedAction->setChecked(!control->exposerUuid().isNull());
     connect(exposedAction, &QAction::triggered,
             this, [this, exposedAction]() {
-                assert(exposedAction->isChecked() == control->exposerUuid().isNull());
-                if (exposedAction->isChecked()) {
-                    control->root()->history().append(ExposeControlAction::create(control->uuid(), control->root()));
-                } else {
-                    control->root()->history().append(DeleteObjectAction::create(control->exposerUuid(), control->root()));
-                }
-            });
+            assert(exposedAction->isChecked() == control->exposerUuid().isNull());
+            if (exposedAction->isChecked()) {
+                control->root()->history().append(ExposeControlAction::create(control->uuid(), control->root()));
+            } else {
+                control->root()->history().append(DeleteObjectAction::create(control->exposerUuid(), control->root()));
+            }
+        });
 }
 
 QString ControlItem::getLabelText() const {

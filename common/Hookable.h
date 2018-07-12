@@ -49,5 +49,4 @@ namespace AxiomCommon {
     private:
         HookContext context;
     };
-
 }

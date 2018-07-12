@@ -1,11 +1,13 @@
 #include "TogglePainter.h"
 
+#include <cmath>
+
 #include "../../CommonColors.h"
 #include "editor/util.h"
 
 using namespace AxiomGui;
 
-void TogglePainter::paint(QPainter *painter, const QRectF &boundingRect, float hoverState, MaximRuntime::NumValue cv) {
+void TogglePainter::paint(QPainter *painter, const QRectF &boundingRect, float hoverState, AxiomModel::NumValue cv) {
     auto br = getBounds(boundingRect);
 
     auto scaleFactor = std::hypot(br.right() - br.left(), br.bottom() - br.top());

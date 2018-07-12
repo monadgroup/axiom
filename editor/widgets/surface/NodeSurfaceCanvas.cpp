@@ -2,35 +2,33 @@
 
 #define _USE_MATH_DEFINES
 
-#include <cmath>
+#include <QtCore/QMimeData>
+#include <QtCore/QTimer>
+#include <QtGui/QClipboard>
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QGraphicsPathItem>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtCore/QTimer>
-#include <QtCore/QMimeData>
-#include <QtGui/QClipboard>
+#include <QtWidgets/QLineEdit>
+#include <cmath>
 
-#include "AddNodeMenu.h"
-#include "compiler/runtime/Runtime.h"
-#include "editor/AxiomApplication.h"
-#include "editor/model/PoolOperators.h"
-#include "editor/model/grid/GridItem.h"
-#include "editor/model/objects/NodeSurface.h"
-#include "editor/model/objects/Control.h"
-#include "editor/model/objects/Connection.h"
-#include "editor/model/actions/CompositeAction.h"
-#include "editor/model/actions/CreateCustomNodeAction.h"
-#include "editor/model/actions/CreateGroupNodeAction.h"
-#include "editor/model/actions/CreateAutomationNodeAction.h"
-#include "editor/model/actions/CreateConnectionAction.h"
-#include "editor/model/actions/DeleteObjectAction.h"
-#include "editor/model/actions/PasteBufferAction.h"
-#include "../node/NodeItem.h"
-#include "../connection/WireItem.h"
-#include "../IConnectable.h"
 #include "../FloatingValueEditor.h"
 #include "../GlobalActions.h"
+#include "../IConnectable.h"
+#include "../connection/WireItem.h"
+#include "../node/NodeItem.h"
+#include "AddNodeMenu.h"
+#include "editor/AxiomApplication.h"
+#include "editor/model/ModelRoot.h"
+#include "editor/model/PoolOperators.h"
+#include "editor/model/actions/CompositeAction.h"
+#include "editor/model/actions/CreateConnectionAction.h"
+#include "editor/model/actions/CreateCustomNodeAction.h"
+#include "editor/model/actions/CreateGroupNodeAction.h"
+#include "editor/model/actions/CreatePortalNodeAction.h"
+#include "editor/model/actions/DeleteObjectAction.h"
+#include "editor/model/actions/PasteBufferAction.h"
+#include "editor/model/objects/Connection.h"
+#include "editor/model/objects/NodeSurface.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -67,56 +65,39 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     // connect to model
     surface->nodes().itemAdded.connect(this, &NodeSurfaceCanvas::addNode);
     surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
-        connection->wire().then([this](ConnectionWire &wire) { addWire(&wire); });
-    }));
+                                                 connection->wire().then(
+                                                     [this](ConnectionWire &wire) { addWire(&wire); });
+                                             }));
 
+    // start update timer
     auto timer = new QTimer(this);
-    connect(timer, &QTimer::timeout,
-            this, &NodeSurfaceCanvas::doRuntimeUpdate);
+    connect(timer, &QTimer::timeout, this, &NodeSurfaceCanvas::doRuntimeUpdate);
     timer->start(16);
-
 }
 
 QPoint NodeSurfaceCanvas::nodeRealPos(const QPoint &p) {
-    return {
-        p.x() * NodeSurfaceCanvas::nodeGridSize.width(),
-        p.y() * NodeSurfaceCanvas::nodeGridSize.height()
-    };
+    return {p.x() * NodeSurfaceCanvas::nodeGridSize.width(), p.y() * NodeSurfaceCanvas::nodeGridSize.height()};
 }
 
 QPointF NodeSurfaceCanvas::nodeRealPos(const QPointF &p) {
-    return {
-        p.x() * NodeSurfaceCanvas::nodeGridSize.width(),
-        p.y() * NodeSurfaceCanvas::nodeGridSize.height()
-    };
+    return {p.x() * NodeSurfaceCanvas::nodeGridSize.width(), p.y() * NodeSurfaceCanvas::nodeGridSize.height()};
 }
 
 QSize NodeSurfaceCanvas::nodeRealSize(const QSize &s) {
-    return {
-        s.width() * NodeSurfaceCanvas::nodeGridSize.width(),
-        s.height() * NodeSurfaceCanvas::nodeGridSize.height()
-    };
+    return {s.width() * NodeSurfaceCanvas::nodeGridSize.width(), s.height() * NodeSurfaceCanvas::nodeGridSize.height()};
 }
 
 QPoint NodeSurfaceCanvas::controlRealPos(const QPoint &p) {
-    return {
-        p.x() * NodeSurfaceCanvas::controlGridSize.width(),
-        p.y() * NodeSurfaceCanvas::controlGridSize.height()
-    };
+    return {p.x() * NodeSurfaceCanvas::controlGridSize.width(), p.y() * NodeSurfaceCanvas::controlGridSize.height()};
 }
 
 QPointF NodeSurfaceCanvas::controlRealPos(const QPointF &p) {
-    return {
-        p.x() * NodeSurfaceCanvas::controlGridSize.width(),
-        p.y() * NodeSurfaceCanvas::controlGridSize.height()
-    };
+    return {p.x() * NodeSurfaceCanvas::controlGridSize.width(), p.y() * NodeSurfaceCanvas::controlGridSize.height()};
 }
 
 QSize NodeSurfaceCanvas::controlRealSize(const QSize &s) {
-    return {
-        s.width() * NodeSurfaceCanvas::controlGridSize.width(),
-        s.height() * NodeSurfaceCanvas::controlGridSize.height()
-    };
+    return {s.width() * NodeSurfaceCanvas::controlGridSize.width(),
+            s.height() * NodeSurfaceCanvas::controlGridSize.height()};
 }
 
 void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
@@ -137,17 +118,13 @@ void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     auto currentItem = itemAt(mousePos, QTransform());
 
     // snap to the connectable if it's not the one we started with, and it has the same type
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() ==
-                                                                                     connectionWire->wireType() &&
-                                                                      connectable->sink() != sourceControl) {
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem);
+        connectable && connectable->sink()->wireType() == connectionWire->wireType() &&
+        connectable->sink() != sourceControl) {
         connectionWire->setEndPos(connectable->sink()->worldPos());
     } else {
-        connectionWire->setEndPos(
-            QPointF(
-                mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width() - 0.5,
-                mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height() - 0.5
-            )
-        );
+        connectionWire->setEndPos(QPointF(mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width() - 0.5,
+                                          mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height() - 0.5));
     }
 }
 
@@ -156,7 +133,8 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
 
     auto currentItem = itemAt(mousePos, QTransform());
 
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem); connectable && connectable->sink()->wireType() == sourceControl->wireType()) {
+    if (auto connectable = dynamic_cast<IConnectable *>(currentItem);
+        connectable && connectable->sink()->wireType() == sourceControl->wireType()) {
         // if the sinks are already connected, remove the connection
         auto otherUuid = connectable->sink()->uuid();
         auto connectors = filter(sourceControl->connections(), [otherUuid](Connection *const &connection) {
@@ -165,13 +143,11 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
         auto firstConnector = connectors.begin();
         if (firstConnector == connectors.end()) {
             // there isn't currently a connection, create a new one
-            surface->root()->history().append(
-                CreateConnectionAction::create(surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(),
-                                               surface->root()));
+            surface->root()->history().append(CreateConnectionAction::create(
+                surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(), surface->root()));
         } else {
             // there is a connection, remove it
-            surface->root()->history().append(
-                DeleteObjectAction::create((*firstConnector)->uuid(), surface->root()));
+            surface->root()->history().append(DeleteObjectAction::create((*firstConnector)->uuid(), surface->root()));
         }
     } else {
         // todo: do something?
@@ -186,26 +162,25 @@ void NodeSurfaceCanvas::addNode(AxiomModel::Node *node) {
     addItem(item);
 }
 
-void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, AxiomModel::Node::NodeType type) {
-    auto targetPos = QPoint(
-        qRound((float) scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-        qRound((float) scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height())
-    );
+void NodeSurfaceCanvas::newNode(QPointF scenePos, QString name, AxiomModel::Node::NodeType type,
+                                AxiomModel::ConnectionWire::WireType portalWireType,
+                                AxiomModel::PortalControl::PortalType portalType) {
+    auto targetPos = QPoint(qRound((float) scenePos.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                            qRound((float) scenePos.y() / NodeSurfaceCanvas::nodeGridSize.height()));
 
     switch (type) {
-        case Node::NodeType::CUSTOM_NODE:
-            surface->root()->history().append(
-                CreateCustomNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
-            break;
-        case Node::NodeType::GROUP_NODE:
-            surface->root()->history().append(
-                CreateGroupNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
-            break;
-        case Node::NodeType::AUTOMATION_NODE:
-            surface->root()->history().append(
-                CreateAutomationNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
-            break;
-        default: break;
+    case Node::NodeType::CUSTOM_NODE:
+        surface->root()->history().append(
+            CreateCustomNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
+        break;
+    case Node::NodeType::GROUP_NODE:
+        surface->root()->history().append(
+            CreateGroupNodeAction::create(surface->uuid(), targetPos, name, surface->root()));
+        break;
+    case Node::NodeType::PORTAL_NODE:
+        surface->root()->history().append(CreatePortalNodeAction::create(surface->uuid(), targetPos, name,
+                                                                         portalWireType, portalType, surface->root()));
+        break;
     }
 }
 
@@ -228,11 +203,11 @@ void NodeSurfaceCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
 
     switch (event->button()) {
-        case Qt::LeftButton:
-            leftMousePressEvent(event);
-            break;
-        default:
-            break;
+    case Qt::LeftButton:
+        leftMousePressEvent(event);
+        break;
+    default:
+        break;
     }
 }
 
@@ -241,11 +216,11 @@ void NodeSurfaceCanvas::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (event->isAccepted() && itemAt(event->scenePos(), QTransform()) != selectionPath) return;
 
     switch (event->button()) {
-        case Qt::LeftButton:
-            leftMouseReleaseEvent(event);
-            break;
-        default:
-            break;
+    case Qt::LeftButton:
+        leftMouseReleaseEvent(event);
+        break;
+    default:
+        break;
     }
 }
 
@@ -278,8 +253,8 @@ void NodeSurfaceCanvas::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         }
 
         std::vector<AxiomModel::GridItem *> edgeItems;
-        std::set_symmetric_difference(lastSelectedItems.begin(), lastSelectedItems.end(),
-                                      newSelectedItems.begin(), newSelectedItems.end(), std::back_inserter(edgeItems));
+        std::set_symmetric_difference(lastSelectedItems.begin(), lastSelectedItems.end(), newSelectedItems.begin(),
+                                      newSelectedItems.end(), std::back_inserter(edgeItems));
 
         for (auto &item : edgeItems) {
             if (item->isSelected()) {
@@ -302,32 +277,43 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
     auto scenePos = event->scenePos();
     AddNodeMenu menu(surface, "");
 
-    connect(&menu, &AddNodeMenu::newNodeAdded,
-            [this, scenePos]() {
-                auto editor = new FloatingValueEditor("New Node", scenePos);
+    connect(&menu, &AddNodeMenu::newNodeAdded, [this, scenePos]() {
+        auto editor = new FloatingValueEditor("New Node", scenePos);
+        addItem(editor);
+        connect(editor, &FloatingValueEditor::valueSubmitted, this, [this, scenePos](QString value) {
+            newNode(scenePos, value, Node::NodeType::CUSTOM_NODE, ConnectionWire::WireType::NUM,
+                    PortalControl::PortalType::AUTOMATION);
+        });
+    });
+    connect(&menu, &AddNodeMenu::newGroupAdded, [this, scenePos]() {
+        auto editor = new FloatingValueEditor("New Group", scenePos);
+        addItem(editor);
+        connect(editor, &FloatingValueEditor::valueSubmitted, this, [this, scenePos](QString value) {
+            newNode(scenePos, value, Node::NodeType::GROUP_NODE, ConnectionWire::WireType::NUM,
+                    PortalControl::PortalType::AUTOMATION);
+        });
+    });
+    connect(&menu, &AddNodeMenu::newPortalAdded,
+            [this, scenePos](PortalControl::PortalType portalType, ConnectionWire::WireType wireType) {
+                auto defaultText = "";
+                switch (portalType) {
+                case AxiomModel::PortalControl::PortalType::INPUT:
+                    defaultText = "New Input";
+                    break;
+                case AxiomModel::PortalControl::PortalType::OUTPUT:
+                    defaultText = "New Output";
+                    break;
+                case AxiomModel::PortalControl::PortalType::AUTOMATION:
+                    defaultText = "New Automation";
+                    break;
+                }
+
+                auto editor = new FloatingValueEditor(defaultText, scenePos);
                 addItem(editor);
-                connect(editor, &FloatingValueEditor::valueSubmitted,
-                        this, [this, scenePos](QString value) {
-                        newNode(scenePos, value, Node::NodeType::CUSTOM_NODE);
-                    });
-            });
-    connect(&menu, &AddNodeMenu::newGroupAdded,
-            [this, scenePos]() {
-                auto editor = new FloatingValueEditor("New Group", scenePos);
-                addItem(editor);
-                connect(editor, &FloatingValueEditor::valueSubmitted,
-                        this, [this, scenePos](QString value) {
-                        newNode(scenePos, value, Node::NodeType::GROUP_NODE);
-                    });
-            });
-    connect(&menu, &AddNodeMenu::newAutomationAdded,
-            [this, scenePos]() {
-                auto editor = new FloatingValueEditor("New Automation", scenePos);
-                addItem(editor);
-                connect(editor, &FloatingValueEditor::valueSubmitted,
-                        this, [this, scenePos](QString value) {
-                        newNode(scenePos, value, Node::NodeType::AUTOMATION_NODE);
-                    });
+                connect(editor, &FloatingValueEditor::valueSubmitted, this,
+                        [this, scenePos, wireType, portalType](QString value) {
+                            newNode(scenePos, value, Node::NodeType::PORTAL_NODE, wireType, portalType);
+                        });
             });
 
     menu.exec(event->screenPos());

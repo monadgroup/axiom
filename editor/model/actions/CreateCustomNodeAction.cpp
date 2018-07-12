@@ -2,16 +2,16 @@
 
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
-#include "../objects/CustomNode.h"
 #include "../objects/ControlSurface.h"
+#include "../objects/CustomNode.h"
+#include "../objects/NodeSurface.h"
 
 using namespace AxiomModel;
 
 CreateCustomNodeAction::CreateCustomNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name,
                                                const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
     : Action(ActionType::CREATE_CUSTOM_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos), name(std::move(name)),
-      controlsUuid(controlsUuid) {
-}
+      controlsUuid(controlsUuid) {}
 
 std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUuid &uuid, const QUuid &parentUuid,
                                                                        QPoint pos, QString name,
@@ -51,15 +51,17 @@ void CreateCustomNodeAction::serialize(QDataStream &stream) const {
     stream << controlsUuid;
 }
 
-bool CreateCustomNodeAction::forward(bool) {
-    root()->pool().registerObj(
-        CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "", false,
-                           CustomNode::minPanelHeight, root()));
+void CreateCustomNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
+    root()->pool().registerObj(CustomNode::create(uuid, parentUuid, pos, QSize(3, 2), false, name, controlsUuid, "",
+                                                  false, CustomNode::minPanelHeight, root()));
     root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
-    return false;
+
+    compileItems.push_back(uuid);
+    compileItems.push_back(parentUuid);
 }
 
-bool CreateCustomNodeAction::backward() {
+void CreateCustomNodeAction::backward(std::vector<QUuid> &compileItems) {
     find(root()->nodes(), uuid)->remove();
-    return true;
+
+    compileItems.push_back(parentUuid);
 }

@@ -5,7 +5,7 @@
 namespace AxiomGui {
 
     class ItemResizer : public QGraphicsObject {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
         enum Direction {
@@ -68,5 +68,4 @@ namespace AxiomGui {
         QPointF m_pos;
         QSizeF m_size;
     };
-
 }

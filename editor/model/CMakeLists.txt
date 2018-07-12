@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.4.3)
-project(axiom)
-
-set(CMAKE_CXX_STANDARD 17)
-if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror")
-endif ()
-
 set(SOURCE_FILES
         CloneReferenceMapper.cpp
         ConnectionWire.cpp
@@ -17,10 +9,9 @@ set(SOURCE_FILES
         Pool.cpp
         PoolObject.cpp
         Project.cpp
-        ValueWriters.cpp)
+        Value.cpp)
 
-include_directories(${LLVM_INCLUDE_DIRS} ${QT5_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
+include_directories(${QT5_INCLUDE_DIRS})
 
 add_library(axiom_model ${SOURCE_FILES})
 

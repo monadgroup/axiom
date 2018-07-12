@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QtCore/QUuid>
 #include <QtCore/QRect>
+#include <QtCore/QUuid>
 
 #include "Action.h"
 
@@ -11,22 +11,20 @@ namespace AxiomModel {
     public:
         GridItemSizeAction(const QUuid &uuid, QRect beforeRect, QRect afterRect, ModelRoot *root);
 
-        static std::unique_ptr<GridItemSizeAction>
-        create(const QUuid &uuid, QRect beforeRect, QRect afterRect, ModelRoot *root);
+        static std::unique_ptr<GridItemSizeAction> create(const QUuid &uuid, QRect beforeRect, QRect afterRect,
+                                                          ModelRoot *root);
 
         static std::unique_ptr<GridItemSizeAction> deserialize(QDataStream &stream, ModelRoot *root);
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
 
-        bool backward() override;
+        void backward(std::vector<QUuid> &compileItems) override;
 
     private:
-
         QUuid uuid;
         QRect beforeRect;
         QRect afterRect;
     };
-
 }

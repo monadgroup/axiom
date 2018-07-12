@@ -1,16 +1,16 @@
 #include "ModulePreviewList.h"
 
 #include "../layouts/FlowLayout.h"
-#include "editor/util.h"
+#include "ModulePreviewButton.h"
 #include "editor/model/Library.h"
 #include "editor/model/LibraryEntry.h"
-#include "ModulePreviewButton.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
-ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *library, QWidget *parent) : QScrollArea(
-    parent), window(window), library(library) {
-    setStyleSheet(AxiomUtil::loadStylesheet(":/ModulePreviewList.qss"));
+ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *library, QWidget *parent)
+    : QScrollArea(parent), window(window), library(library) {
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/ModulePreviewList.qss"));
 
     auto widget = new QWidget(this);
     layout = new FlowLayout(this, 0, 0, 0);

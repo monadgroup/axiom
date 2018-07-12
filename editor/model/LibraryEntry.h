@@ -1,10 +1,10 @@
 #pragma once
 
-#include <QtCore/QString>
 #include <QtCore/QDateTime>
+#include <QtCore/QString>
 
-#include "common/Event.h"
 #include "ModelRoot.h"
+#include "common/Event.h"
 
 namespace AxiomModel {
 
@@ -20,9 +20,12 @@ namespace AxiomModel {
         AxiomCommon::Event<> removed;
         AxiomCommon::Event<> cleanup;
 
-        LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &modificationUuid, const QDateTime &modificationDateTime, std::set<QString> tags, std::unique_ptr<ModelRoot> root);
+        LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,
+                     const QDateTime &modificationDateTime, std::set<QString> tags, std::unique_ptr<ModelRoot> root);
 
-        static std::unique_ptr<LibraryEntry> create(QString name, const QUuid &baseUuid, const QUuid &modificationUuid, const QDateTime &modificationDateTime, std::set<QString> tags, std::unique_ptr<ModelRoot> root);
+        static std::unique_ptr<LibraryEntry> create(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,
+                                                    const QDateTime &modificationDateTime, std::set<QString> tags,
+                                                    std::unique_ptr<ModelRoot> root);
 
         static std::unique_ptr<LibraryEntry> create(QString name, std::set<QString> tags, Project *project);
 
@@ -63,5 +66,4 @@ namespace AxiomModel {
         std::unique_ptr<ModelRoot> _root;
         RootSurface *_rootSurface;
     };
-
 }

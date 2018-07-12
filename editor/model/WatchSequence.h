@@ -1,8 +1,8 @@
 #pragma once
 
-#include <iostream>
 #include "SequenceMapFilter.h"
 #include "common/Event.h"
+#include <iostream>
 
 namespace AxiomModel {
 
@@ -26,7 +26,8 @@ namespace AxiomModel {
         template<class InputItem>
         WatchSequence(const SequenceMapFilter<Item, InputItem> &mapFilter,
                       AxiomCommon::Event<const InputItem &> &parentAdded,
-                      AxiomCommon::Event<const InputItem &> &parentRemoved) : _sequence(mapFilter.sequence()) {
+                      AxiomCommon::Event<const InputItem &> &parentRemoved)
+            : _sequence(mapFilter.sequence()) {
             auto mapFilterNext = mapFilter.next();
             auto itemAddedEvent = itemAdded;
             auto itemRemovedEvent = itemRemoved;
@@ -49,24 +50,15 @@ namespace AxiomModel {
 
         const sequence_type &sequence() const { return _sequence; }
 
-        const_iterator begin() const {
-            return _sequence.begin();
-        }
+        const_iterator begin() const { return _sequence.begin(); }
 
-        const_iterator end() const {
-            return _sequence.end();
-        }
+        const_iterator end() const { return _sequence.end(); }
 
-        bool empty() const {
-            return _sequence.empty();
-        }
+        bool empty() const { return _sequence.empty(); }
 
-        size_t size() const {
-            return _sequence.size();
-        }
+        size_t size() const { return _sequence.size(); }
 
     private:
         sequence_type _sequence;
     };
-
 }

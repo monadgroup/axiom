@@ -20,22 +20,22 @@ namespace AxiomModel {
         template<class InputCollection>
         SequenceMapFilter(InputCollection input, next_functor next)
             : _next(next), _sequence([next, input]() {
-            std::optional<typename InputCollection::const_iterator> begin;
-            std::optional<typename InputCollection::const_iterator> end;
-            return [input, next, begin, end]() mutable -> std::optional<OutputItem> {
-                if (!begin || !end) {
-                    begin = input.begin();
-                    end = input.end();
-                }
+                  std::optional<typename InputCollection::const_iterator> begin;
+                  std::optional<typename InputCollection::const_iterator> end;
+                  return [input, next, begin, end]() mutable -> std::optional<OutputItem> {
+                      if (!begin || !end) {
+                          begin = input.begin();
+                          end = input.end();
+                      }
 
-                while (*begin != *end) {
-                    auto newVal = next(**begin);
-                    (*begin)++;
-                    if (newVal) return *newVal;
-                }
-                return std::optional<OutputItem>();
-            };
-        }) {}
+                      while (*begin != *end) {
+                          auto newVal = next(**begin);
+                          (*begin)++;
+                          if (newVal) return *newVal;
+                      }
+                      return std::optional<OutputItem>();
+                  };
+              }) {}
 
         const next_functor &next() const { return _next; }
 
@@ -43,25 +43,16 @@ namespace AxiomModel {
 
         const sequence_type &sequence() const { return _sequence; }
 
-        const_iterator begin() const {
-            return _sequence.begin();
-        }
+        const_iterator begin() const { return _sequence.begin(); }
 
-        const_iterator end() const {
-            return _sequence.end();
-        }
+        const_iterator end() const { return _sequence.end(); }
 
-        bool empty() const {
-            return _sequence.empty();
-        }
+        bool empty() const { return _sequence.empty(); }
 
-        size_t size() const {
-            return _sequence.size();
-        }
+        size_t size() const { return _sequence.size(); }
 
     private:
         next_functor _next;
         sequence_type _sequence;
     };
-
 }

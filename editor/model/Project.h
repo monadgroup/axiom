@@ -2,11 +2,11 @@
 
 #include <optional>
 
-#include "ModelRoot.h"
 #include "Library.h"
+#include "ModelRoot.h"
 
-namespace MaximRuntime {
-    class Runtime;
+namespace AxiomBackend {
+    class AudioConfiguration;
 }
 
 namespace AxiomModel {
@@ -20,7 +20,7 @@ namespace AxiomModel {
         static constexpr uint64_t librarySchemaMagic = 0x4D4F4E414441584C;
         static constexpr uint32_t minSchemaVersion = 2;
 
-        Project();
+        explicit Project(const AxiomBackend::AudioConfiguration &defaultConfiguration);
 
         ~Project();
 
@@ -44,19 +44,11 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream);
 
-        void attachRuntime(MaximRuntime::Runtime *runtime);
-
-        void rebuild() const;
-
         void destroy();
 
     private:
         ModelRoot _mainRoot;
         Library _library;
         RootSurface *_rootSurface;
-        std::optional<MaximRuntime::Runtime *> _runtime;
-
-        void init();
     };
-
 }

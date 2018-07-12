@@ -2,9 +2,9 @@
 
 #include <QtCore/QString>
 #include <QtCore/QUuid>
+#include <functional>
 #include <map>
 #include <vector>
-#include <functional>
 
 #include "common/Event.h"
 
@@ -16,11 +16,7 @@ namespace AxiomModel {
 
     class Library : public AxiomCommon::Hookable {
     public:
-        enum class ConflictResolution {
-            KEEP_OLD,
-            KEEP_NEW,
-            KEEP_BOTH
-        };
+        enum class ConflictResolution { KEEP_OLD, KEEP_NEW, KEEP_BOTH };
 
         AxiomCommon::Event<LibraryEntry *> entryAdded;
         AxiomCommon::Event<const QString &> activeTagChanged;
@@ -36,7 +32,8 @@ namespace AxiomModel {
 
         void serialize(QDataStream &stream);
 
-        void import(Library *library, const std::function<ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict);
+        void import(Library *library,
+                    const std::function<ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict);
 
         const QString &activeTag() const { return _activeTag; }
 
@@ -55,7 +52,6 @@ namespace AxiomModel {
         LibraryEntry *findById(const QUuid &id);
 
     private:
-
         std::vector<std::unique_ptr<LibraryEntry>> _entries;
         std::map<QString, size_t> _tags;
         QString _activeTag;
@@ -67,5 +63,4 @@ namespace AxiomModel {
 
         void removeEntry(LibraryEntry *entry);
     };
-
 }

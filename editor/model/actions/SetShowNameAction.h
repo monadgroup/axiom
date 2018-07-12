@@ -10,21 +10,20 @@ namespace AxiomModel {
     public:
         SetShowNameAction(const QUuid &uuid, bool beforeVal, bool afterVal, ModelRoot *root);
 
-        static std::unique_ptr<SetShowNameAction> create(const QUuid &uuid, bool beforeVal, bool afterVal, ModelRoot *root);
+        static std::unique_ptr<SetShowNameAction> create(const QUuid &uuid, bool beforeVal, bool afterVal,
+                                                         ModelRoot *root);
 
         static std::unique_ptr<SetShowNameAction> deserialize(QDataStream &stream, ModelRoot *root);
 
         void serialize(QDataStream &stream) const override;
 
-        bool forward(bool first) override;
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
 
-        bool backward() override;
+        void backward(std::vector<QUuid> &compileItems) override;
 
     private:
-
         QUuid uuid;
         bool beforeVal;
         bool afterVal;
     };
-
 }
