@@ -1,3 +1,4 @@
+mod biquad_filter_function;
 mod defer_function;
 mod delay_function;
 mod function_context;
@@ -24,6 +25,7 @@ use std::fmt;
 
 use self::function_context::FunctionContext;
 
+pub use self::biquad_filter_function::*;
 pub use self::defer_function::*;
 pub use self::delay_function::*;
 pub use self::num_function::*;
@@ -87,6 +89,8 @@ macro_rules! map_functions {
         }
 
         pub fn build_funcs(module: &Module, target: &TargetProperties) {
+            build_internal_biquad_func(module, target);
+
             $( $class_name::build_lifecycle_funcs(module, target); )*
         }
 
@@ -139,7 +143,8 @@ map_functions! {
     SqrOsc => SqrOscFunction,
     SawOsc => SawOscFunction,
     TriOsc => TriOscFunction,
-    RmpOsc => RmpOscFunction
+    RmpOsc => RmpOscFunction,
+    LowBqFilter => LowBqFilterFunction
 }
 
 fn get_lifecycle_func(
