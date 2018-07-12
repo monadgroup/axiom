@@ -1,9 +1,6 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
-use codegen::values::{MidiValue, NumValue, TupleValue};
-use codegen::{intrinsics, util};
-use inkwell::context::Context;
-use inkwell::types::StructType;
+use codegen::intrinsics;
+use codegen::values::{MidiValue, NumValue};
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
 use mir::block;

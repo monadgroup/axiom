@@ -91,7 +91,6 @@ macro_rules! map_functions {
         pub fn get_data_type(context: &Context, function_type: block::Function) -> StructType {
             match function_type {
                 $( block::Function::$enum_name => $class_name::data_type(context), )*
-                _ => unimplemented!()
             }
         }
 
@@ -104,7 +103,6 @@ macro_rules! map_functions {
         fn map_real_args(function_type: block::Function, ctx: &mut BuilderContext, args: Vec<PointerValue>) -> Vec<PointerValue> {
             match function_type {
                 $( block::Function::$enum_name => $class_name::gen_real_args(ctx, args), )*
-                _ => unimplemented!()
             }
         }
     )
