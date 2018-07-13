@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#ifndef _MSC_VER
+#include <unistd.h> /* ssize_t */
+#endif
 
 namespace MaximFrontend {
     using MaximError = void;
