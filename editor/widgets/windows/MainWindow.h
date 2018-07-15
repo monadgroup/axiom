@@ -35,13 +35,13 @@ namespace AxiomGui {
 
         void setProject(std::unique_ptr<AxiomModel::Project> project);
 
-        void importLibraryFrom(const QString &path);
-
     public slots:
 
         void showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split);
 
         void showAbout();
+
+        void newProject();
 
     private slots:
 
@@ -56,6 +56,8 @@ namespace AxiomGui {
         void importLibrary();
 
         void exportLibrary();
+
+        void importLibraryFrom(const QString &path);
 
     private:
         AxiomBackend::AudioBackend *_backend;

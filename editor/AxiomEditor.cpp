@@ -6,8 +6,7 @@
 
 AxiomEditor::AxiomEditor(AxiomApplication *, AxiomBackend::AudioBackend *backend) : _window(backend) {
     backend->setEditor(this);
-    _window.setProject(std::make_unique<AxiomModel::Project>(backend->createDefaultConfiguration()));
-    _window.importLibraryFrom(":/default.axl");
+    _window.newProject();
 }
 
 int AxiomEditor::run() {

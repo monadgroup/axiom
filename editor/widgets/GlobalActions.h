@@ -5,6 +5,7 @@ class QAction;
 namespace AxiomGui {
 
     namespace GlobalActions {
+        extern QAction *fileNew;
         extern QAction *fileImportLibrary;
         extern QAction *fileExportLibrary;
         extern QAction *fileOpen;

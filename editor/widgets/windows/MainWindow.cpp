@@ -13,6 +13,7 @@
 #include "../surface/NodeSurfacePanel.h"
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
+#include "editor/backend/AudioBackend.h"
 #include "editor/model/LibraryEntry.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/objects/RootSurface.h"
@@ -33,6 +34,9 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
 
     // build
     auto fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(GlobalActions::fileNew);
+    fileMenu->addSeparator();
+
     fileMenu->addAction(GlobalActions::fileImportLibrary);
     fileMenu->addAction(GlobalActions::fileExportLibrary);
     fileMenu->addSeparator();
@@ -68,6 +72,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
     helpMenu->addAction(GlobalActions::helpAbout);
 
     // connect menu things
+    connect(GlobalActions::fileNew, &QAction::triggered, this, &MainWindow::newProject);
     connect(GlobalActions::fileOpen, &QAction::triggered, this, &MainWindow::openProject);
     connect(GlobalActions::fileSave, &QAction::triggered, this, &MainWindow::saveProject);
     connect(GlobalActions::fileExport, &QAction::triggered, this, &MainWindow::exportProject);
@@ -109,6 +114,11 @@ void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurfac
 
 void MainWindow::showAbout() {
     AboutWindow().exec();
+}
+
+void MainWindow::newProject() {
+    setProject(std::make_unique<AxiomModel::Project>(_backend->createDefaultConfiguration()));
+    importLibraryFrom(":/default.axl");
 }
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {

@@ -14,6 +14,7 @@ QAction *makeAction(const QString &text) {
 
 using namespace AxiomGui;
 
+QAction *GlobalActions::fileNew;
 QAction *GlobalActions::fileImportLibrary;
 QAction *GlobalActions::fileExportLibrary;
 QAction *GlobalActions::fileOpen;
@@ -31,6 +32,7 @@ QAction *GlobalActions::editPreferences;
 QAction *GlobalActions::helpAbout;
 
 void GlobalActions::setupActions() {
+    fileNew = makeAction("&New");
     fileImportLibrary = makeAction("&Import Library...");
     fileExportLibrary = makeAction("E&xport Library...");
     fileOpen = makeAction("&Open...", QKeySequence::Open);
