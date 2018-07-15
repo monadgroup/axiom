@@ -103,7 +103,9 @@ namespace AxiomModel {
 
         void setCompileMeta(std::optional<ControlCompileMeta> compileMeta) { _compileMeta = std::move(compileMeta); }
 
-        void updateRuntimePointers(MaximCompiler::Runtime *runtime, uint64_t blockId, void *blockPtr);
+        void setRuntimePointers(std::optional<MaximFrontend::ControlPointers> runtimePointers) {
+            _runtimePointers = std::move(runtimePointers);
+        }
 
         virtual void doRuntimeUpdate() = 0;
 

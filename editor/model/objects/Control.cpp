@@ -189,10 +189,6 @@ const std::optional<MaximFrontend::ControlPointers> &Control::runtimePointers() 
     }
 }
 
-void Control::updateRuntimePointers(MaximCompiler::Runtime *runtime, uint64_t blockId, void *blockPtr) {
-    _runtimePointers = runtime->getControlPtrs(blockId, blockPtr, _compileMeta->index);
-}
-
 void Control::remove() {
     ModelObject::remove();
 }

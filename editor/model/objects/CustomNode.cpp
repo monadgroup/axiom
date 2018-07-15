@@ -113,7 +113,7 @@ void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *su
 
     controls().then([blockPtr, runtime, runtimeId](ControlSurface *controlSurface) {
         for (const auto &control : controlSurface->controls()) {
-            control->updateRuntimePointers(runtime, runtimeId, blockPtr);
+            control->setRuntimePointers(runtime->getControlPtrs(runtimeId, blockPtr, control->compileMeta()->index));
         }
     });
 }

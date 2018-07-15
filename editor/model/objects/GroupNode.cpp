@@ -47,6 +47,11 @@ void GroupNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *sur
     nodes().then([subsurfacePtr, runtime](GroupSurface *subsurface) {
         subsurface->updateRuntimePointers(runtime, subsurfacePtr);
     });
+    controls().then([this](ControlSurface *controlSurface) {
+        for (const auto &control : controlSurface->controls()) {
+            control->setRuntimePointers(find(root()->controls(), control->exposingUuid())->runtimePointers());
+        }
+    });
 }
 
 void GroupNode::remove() {
