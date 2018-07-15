@@ -37,12 +37,25 @@ fn frequency_from_control(
     val: VectorValue,
 ) -> VectorValue {
     let pow_intrinsic = intrinsics::pow_v2f32(module);
+    let min_intrinsic = intrinsics::minnum_v2f32(module);
 
     builder.build_float_sub(
         builder
             .build_call(
                 &pow_intrinsic,
-                &[&util::get_vec_spread(context, 20000.), &val],
+                &[
+                    &util::get_vec_spread(context, 20000.),
+                    &builder
+                        .build_call(
+                            &min_intrinsic,
+                            &[&val, &util::get_vec_spread(context, 8.)],
+                            "",
+                            false,
+                        )
+                        .left()
+                        .unwrap()
+                        .into_vector_value(),
+                ],
                 "",
                 false,
             )
