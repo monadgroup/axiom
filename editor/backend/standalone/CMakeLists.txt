@@ -21,7 +21,7 @@ endif ()
 
 include_directories(${PORTAUDIO_INCLUDE_DIRS})
 add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} main.cpp)
-target_link_libraries(axiom_standalone axiom_editor ${PORTAUDIO_LIBRARIES})
+target_link_libraries(axiom_standalone ${AXIOM_LINK_FLAGS} axiom_editor ${PORTAUDIO_LIBRARIES})
 set_target_properties(axiom_standalone PROPERTIES
         PREFIX ""
         OUTPUT_NAME "Axiom Standalone")

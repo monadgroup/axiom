@@ -13,7 +13,7 @@ add_library(axiom_vst2 SHARED
         AxiomVstEditor.h AxiomVstEditor.cpp
         VstAudioBackend.h VstAudioBackend.cpp
         AxiomVst.def)
-target_link_libraries(axiom_vst2 axiom_editor)
+target_link_libraries(axiom_vst2 ${AXIOM_LINK_FLAGS} axiom_editor)
 set_target_properties(axiom_vst2 PROPERTIES
         PREFIX ""
         OUTPUT_NAME "Axiom VST2")
