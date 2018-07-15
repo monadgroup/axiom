@@ -38,16 +38,20 @@ fn frequency_from_control(
 ) -> VectorValue {
     let pow_intrinsic = intrinsics::pow_v2f32(module);
 
-    builder
-        .build_call(
-            &pow_intrinsic,
-            &[&util::get_vec_spread(context, 20000.), &val],
-            "",
-            false,
-        )
-        .left()
-        .unwrap()
-        .into_vector_value()
+    builder.build_float_sub(
+        builder
+            .build_call(
+                &pow_intrinsic,
+                &[&util::get_vec_spread(context, 20000.), &val],
+                "",
+                false,
+            )
+            .left()
+            .unwrap()
+            .into_vector_value(),
+        util::get_vec_spread(context, 1.),
+        "",
+    )
 }
 
 fn frequency_from_note(

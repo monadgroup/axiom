@@ -65,7 +65,12 @@ fn control_from_frequency(
 
     builder.build_float_div(
         builder
-            .build_call(&log_intrinsic, &[&val], "", false)
+            .build_call(
+                &log_intrinsic,
+                &[&builder.build_float_add(val, util::get_vec_spread(context, 1.), "")],
+                "",
+                false,
+            )
             .left()
             .unwrap()
             .into_vector_value(),
