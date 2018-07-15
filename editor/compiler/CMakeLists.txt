@@ -9,25 +9,18 @@ endif ()
 set(SOURCE_FILES
         SurfaceMirBuilder.h SurfaceMirBuilder.cpp)
 
-if (WIN32)
-    set(COMPILERLIBNAME "compiler.lib")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(COMPILER_TARGET_DIRECTORY "${CMAKE_SOURCE_DIR}/compiler/target/debug")
 else ()
-    # not sure what clang uses on OS X. assuming gcc anyway :P
-    set(COMPILERLIBNAME "libcompiler.a")
+    set(COMPILER_TARGET_DIRECTORY "${CMAKE_SOURCE_DIR}/compiler/target/release")
 endif ()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(COMPILER_LINK_LIBS "${CMAKE_SOURCE_DIR}/compiler/target/debug/${COMPILERLIBNAME}")
+if (WIN32)
+    set(COMPILER_LINK_LIBS "${COMPILER_TARGET_DIRECTORY}/compiler.lib" ws2_32 userenv advapi32 psapi)
 else ()
-    set(COMPILER_LINK_LIBS "${CMAKE_SOURCE_DIR}/compiler/target/release/${COMPILERLIBNAME}")
+    set(COMPILER_LINK_LIBS "${COMPILER_TARGET_DIRECTORY}/libcompiler.a" pthread dl curses)
 endif ()
 set(COMPILER_LINK_LIBS ${COMPILER_LINK_LIBS} z ffi)
-
-if (WIN32)
-    set(COMPILER_LINK_LIBS ${COMPILER_LINK_LIBS} ws2_32 userenv advapi32 psapi)
-else ()
-    set(COMPILER_LINK_LIBS ${COMPILER_LINK_LIBS} pthread dl curses)
-endif ()
 
 add_library(maxim_compiler ${SOURCE_FILES})
 add_dependencies(maxim_compiler compiler)
