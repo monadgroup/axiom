@@ -4,12 +4,10 @@
 #include "backend/AudioBackend.h"
 #include "model/Project.h"
 
-AxiomEditor::AxiomEditor(AxiomApplication *, AxiomBackend::AudioBackend *backend) {
+AxiomEditor::AxiomEditor(AxiomApplication *, AxiomBackend::AudioBackend *backend) : _window(backend) {
     backend->setEditor(this);
     _window.setProject(std::make_unique<AxiomModel::Project>(backend->createDefaultConfiguration()));
     _window.importLibraryFrom(":/default.axl");
-    _window.project()->mainRoot().attachBackend(backend);
-    backend->internalUpdateConfiguration();
 }
 
 int AxiomEditor::run() {

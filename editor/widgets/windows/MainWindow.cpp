@@ -20,7 +20,7 @@
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow() : _runtime(true, true) {
+MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend), _runtime(true, true) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -122,7 +122,8 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
 
     _project = std::move(project);
 
-    // attach our runtime
+    // attach the backend and our runtime
+    _project->mainRoot().attachBackend(_backend);
     _project->mainRoot().attachRuntime(runtime());
 
     // find root surface and show it

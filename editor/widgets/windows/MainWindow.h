@@ -25,7 +25,7 @@ namespace AxiomGui {
         Q_OBJECT
 
     public:
-        MainWindow();
+        MainWindow(AxiomBackend::AudioBackend *backend);
 
         ~MainWindow() override;
 
@@ -58,6 +58,7 @@ namespace AxiomGui {
         void exportLibrary();
 
     private:
+        AxiomBackend::AudioBackend *_backend;
         MaximCompiler::Runtime _runtime;
         std::unique_ptr<AxiomModel::Project> _project;
         std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
