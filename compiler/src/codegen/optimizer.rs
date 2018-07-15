@@ -70,8 +70,6 @@ impl Optimizer {
             panic!(err.to_string());
         }
 
-        self.builder.populate_module_pass_manager(&self.module_pass);
-
         let func_pass = PassManager::create_for_function(module);
         self.builder.populate_function_pass_manager(&func_pass);
 
