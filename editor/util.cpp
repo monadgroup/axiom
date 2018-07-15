@@ -7,7 +7,8 @@ using namespace AxiomUtil;
 
 QString AxiomUtil::loadStylesheet(const char *path) {
     auto file = new QFile(path);
-    assert(file->open(QIODevice::ReadOnly | QIODevice::Text));
+    auto couldOpen = file->open(QIODevice::ReadOnly | QIODevice::Text);
+    assert(couldOpen);
     return QLatin1String(file->readAll());
 }
 
