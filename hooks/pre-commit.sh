@@ -2,7 +2,7 @@
 
 for FILE in `git diff --cached --name-only --diff-filter=d`; do
     if [[ $FILE == *.rs ]] ; then
-        rustfmt --skip-children $FILE
+        rustfmt $FILE
         git add $FILE
     fi
 
