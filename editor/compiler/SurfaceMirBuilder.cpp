@@ -1,5 +1,7 @@
 #include "SurfaceMirBuilder.h"
 
+#include <cmath>
+
 #include "../model/ModelRoot.h"
 #include "../model/PoolOperators.h"
 #include "../model/objects/ControlSurface.h"
@@ -192,7 +194,8 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
                 assert(numControl);
 
                 auto numVal = numControl->value();
-                if (numVal.left != 0 || numVal.right != 0 || (int) numVal.form != 0) {
+                if ((numVal.left != 0 || numVal.right != 0 || (int) numVal.form != 0) && !std::isnan(numVal.left) &&
+                    !std::isnan(numVal.right)) {
                     auto constVal = ConstantValue::num(numVal);
                     mir.addValueGroup(std::move(vartype), ValueGroupSource::default_val(std::move(constVal)));
                     continue;
