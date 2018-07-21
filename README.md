@@ -23,6 +23,10 @@ Axiom currently supports the following audio backends:
  - VST2 - runs in a VST host as an instrument, currently with one MIDI input and one audio output.
  - _Other backends such as VST3 are planned_
 
+## Usage Guide
+
+*Coming soon! For now, see the [Readme](https://github.com/monadgroup/axiom/wiki/0.3.0-Readme) or check out the [example projects](https://github.com/monadgroup/axiom/tree/master/examples).*
+
 ## Building
 
 Axiom is built with CMake. The build process depends on Cargo, Qt 5.10, LLVM 5.0.1, and the VST 2 SDK (for the VST2 backend), so make sure those are installed and setup correctly.
@@ -52,10 +56,6 @@ To build the standalone version as an executable, use the following command. In 
 ```
 cmake --build ./ --target axiom_standalone
 ```
-
-## Usage Guide
-
-*Coming soon!*
 
 ## Development
 
