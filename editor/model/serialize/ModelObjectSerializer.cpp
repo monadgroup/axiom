@@ -31,7 +31,6 @@ std::vector<ModelObject *> ModelObjectSerializer::deserializeChunk(QDataStream &
     stream >> objectCount;
     usedObjects.reserve(objectCount);
     for (uint32_t i = 0; i < objectCount; i++) {
-        std::cout << "Deserializing model object at " << stream.device()->pos() << std::endl;
         QByteArray objectBuffer;
         stream >> objectBuffer;
         QDataStream objectStream(&objectBuffer, QIODevice::ReadOnly);
@@ -78,8 +77,6 @@ std::unique_ptr<ModelObject> ModelObjectSerializer::deserialize(QDataStream &str
     uint8_t typeInt;
     stream >> typeInt;
 
-    std::cout << "Deserializing " << (uint64_t) typeInt << " UUID = " << uuid.toString().toStdString()
-              << " (parent = " << parentUuid.toString().toStdString() << ")" << std::endl;
     return deserializeInner(stream, version, root, (ModelObject::ModelType) typeInt, uuid, parentUuid, ref);
 }
 

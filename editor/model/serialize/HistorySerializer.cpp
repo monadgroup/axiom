@@ -44,7 +44,6 @@ HistoryList HistorySerializer::deserialize(QDataStream &stream, uint32_t version
     std::vector<std::unique_ptr<Action>> stack;
     stack.reserve(stackSize);
     for (uint32_t i = 0; i < stackSize; i++) {
-        std::cout << "Deserializing history item at " << stream.device()->pos() << std::endl;
         QByteArray actionBuffer;
         stream >> actionBuffer;
         QDataStream actionStream(&actionBuffer, QIODevice::ReadOnly);
@@ -97,9 +96,6 @@ std::unique_ptr<Action> HistorySerializer::deserializeAction(QDataStream &stream
                                                              AxiomModel::ModelRoot *root) {
     uint8_t actionTypeInt;
     stream >> actionTypeInt;
-
-    std::cout << "Deserializing " << Action::typeToString((Action::ActionType) actionTypeInt).toStdString()
-              << std::endl;
 
     switch ((Action::ActionType) actionTypeInt) {
     case Action::ActionType::COMPOSITE:
