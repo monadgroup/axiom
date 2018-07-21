@@ -27,6 +27,7 @@ bool ProjectSerializer::readHeader(QDataStream &stream, uint64_t expectedMagic, 
 void ProjectSerializer::serialize(AxiomModel::Project *project, QDataStream &stream) {
     writeHeader(stream, projectSchemaMagic);
     ModelObjectSerializer::serializeRoot(&project->mainRoot(), stream);
+    LibrarySerializer::serialize(&project->library(), stream);
 }
 
 std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uint32_t *versionOut) {

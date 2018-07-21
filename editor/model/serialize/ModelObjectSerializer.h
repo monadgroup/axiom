@@ -35,7 +35,7 @@ namespace AxiomModel {
             for (const auto &obj : objects) {
                 QByteArray objectBuffer;
                 QDataStream objectStream(&objectBuffer, QIODevice::WriteOnly);
-                serialize(obj, stream, parent);
+                serialize(obj, objectStream, parent);
                 stream << objectBuffer;
             }
         }

@@ -15,7 +15,14 @@ Library::~Library() = default;
 
 Library::Library(QString activeTag, QString activeSearch,
                  std::vector<std::unique_ptr<AxiomModel::LibraryEntry>> entries)
-    : _entries(std::move(entries)), _activeTag(std::move(activeTag)), _activeSearch(std::move(activeSearch)) {}
+    : _entries(std::move(entries)), _activeTag(std::move(activeTag)), _activeSearch(std::move(activeSearch)) {
+    // add tags of all entries
+    for (const auto &entry : _entries) {
+        for (const auto &tag : entry->tags()) {
+            addTag(tag);
+        }
+    }
+}
 
 void Library::import(
     AxiomModel::Library *library,

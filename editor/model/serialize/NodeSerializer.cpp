@@ -36,6 +36,7 @@ std::unique_ptr<Node> NodeSerializer::deserialize(QDataStream &stream, uint32_t 
 
     QPoint pos;
     stream >> pos;
+    pos = ref->mapPos(parentUuid, pos);
 
     QSize size;
     stream >> size;
