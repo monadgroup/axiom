@@ -33,11 +33,6 @@ namespace AxiomModel {
         Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
              QString name, const QUuid &controlsUuid, ModelRoot *root);
 
-        static std::unique_ptr<Node> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                 ReferenceMapper *ref, ModelRoot *root);
-
-        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
-
         NodeSurface *surface() const { return _surface; }
 
         AxiomCommon::Promise<ControlSurface *> &controls() { return _controls; }

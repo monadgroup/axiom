@@ -14,9 +14,12 @@
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
 #include "editor/backend/AudioBackend.h"
+#include "editor/model/Library.h"
 #include "editor/model/LibraryEntry.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/objects/RootSurface.h"
+#include "editor/model/serialize/LibrarySerializer.h"
+#include "editor/model/serialize/ProjectSerializer.h"
 #include "editor/resources/resource.h"
 
 using namespace AxiomGui;
@@ -167,7 +170,7 @@ void MainWindow::saveProject() {
     }
 
     QDataStream stream(&file);
-    _project->serialize(stream);
+    AxiomModel::ProjectSerializer::serialize(_project.get(), stream);
     file.close();
 }
 
@@ -186,7 +189,7 @@ void MainWindow::openProject() {
 
     QDataStream stream(&file);
     uint32_t readVersion = 0;
-    auto newProject = AxiomModel::Project::deserialize(stream, &readVersion);
+    auto newProject = AxiomModel::ProjectSerializer::deserialize(stream, &readVersion);
     file.close();
 
     if (!newProject) {
@@ -194,8 +197,8 @@ void MainWindow::openProject() {
             QMessageBox(QMessageBox::Critical, "Failed to load project",
                         "The file you selected was created with an incompatible version of Axiom.\n\n"
                         "Expected version: between " +
-                            QString::number(AxiomModel::Project::minSchemaVersion) + " and " +
-                            QString::number(AxiomModel::Project::schemaVersion) +
+                            QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
+                            QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
                             ", actual version: " + QString::number(readVersion) + ".",
                         QMessageBox::Ok)
                 .exec();
@@ -242,8 +245,8 @@ void MainWindow::exportLibrary() {
     }
 
     QDataStream stream(&file);
-    AxiomModel::Project::writeHeader(stream, AxiomModel::Project::librarySchemaMagic);
-    _project->library().serialize(stream);
+    AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
+    AxiomModel::LibrarySerializer::serialize(&_project->library(), stream);
     file.close();
 }
 
@@ -258,13 +261,14 @@ void MainWindow::importLibraryFrom(const QString &path) {
 
     QDataStream stream(&file);
     uint32_t readVersion = 0;
-    if (!AxiomModel::Project::readHeader(stream, AxiomModel::Project::librarySchemaMagic, &readVersion)) {
+    if (!AxiomModel::ProjectSerializer::readHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic,
+                                                   &readVersion)) {
         if (readVersion) {
             QMessageBox(QMessageBox::Critical, "Failed to load library",
                         "The file you selected was created with an incompatible version of Axiom.\n\n"
                         "Expected version: between " +
-                            QString::number(AxiomModel::Project::minSchemaVersion) + " and " +
-                            QString::number(AxiomModel::Project::schemaVersion) +
+                            QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
+                            QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
                             ", actual version: " + QString::number(readVersion) + ".",
                         QMessageBox::Ok)
                 .exec();
@@ -278,10 +282,10 @@ void MainWindow::importLibraryFrom(const QString &path) {
         return;
     }
 
-    AxiomModel::Library mergeLibrary(_project.get(), stream);
+    auto mergeLibrary = AxiomModel::LibrarySerializer::deserialize(stream, readVersion, _project.get());
     file.close();
     _project->library().import(
-        &mergeLibrary, [](AxiomModel::LibraryEntry *oldEntry, AxiomModel::LibraryEntry *newEntry) {
+        mergeLibrary.get(), [](AxiomModel::LibraryEntry *oldEntry, AxiomModel::LibraryEntry *newEntry) {
             auto currentNewer = oldEntry->modificationDateTime() > newEntry->modificationDateTime();
 
             QMessageBox msgBox(

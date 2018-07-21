@@ -4,11 +4,13 @@
 #include "../ModelObject.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../serialize/ModelObjectSerializer.h"
+#include "../serialize/ProjectSerializer.h"
 
 using namespace AxiomModel;
 
 DeleteObjectAction::DeleteObjectAction(const QUuid &uuid, QByteArray buffer, AxiomModel::ModelRoot *root)
-    : Action(ActionType::DELETE_OBJECT, root), uuid(uuid), buffer(std::move(buffer)) {}
+    : Action(ActionType::DELETE_OBJECT, root), _uuid(uuid), _buffer(std::move(buffer)) {}
 
 std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid, QByteArray buffer,
                                                                AxiomModel::ModelRoot *root) {
@@ -19,26 +21,11 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
     return create(uuid, QByteArray(), root);
 }
 
-std::unique_ptr<DeleteObjectAction> DeleteObjectAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid;
-    stream >> uuid;
-    QByteArray buffer;
-    stream >> buffer;
-
-    return create(uuid, std::move(buffer), root);
-}
-
-void DeleteObjectAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-    stream << uuid;
-    stream << buffer;
-}
-
 void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
     auto sortedItems = collect(heapSort(getRemoveItems()));
 
-    QDataStream stream(&buffer, QIODevice::WriteOnly);
-    ModelRoot::serializeChunk(stream, QUuid(), sortedItems);
+    QDataStream stream(&_buffer, QIODevice::WriteOnly);
+    ModelObjectSerializer::serializeChunk(stream, QUuid(), sortedItems);
 
     // We can't just iterate over a collection of ModelObjects and call remove() on them,
     // as objects also delete their children.
@@ -65,10 +52,11 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
 }
 
 void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
-    QDataStream stream(&buffer, QIODevice::ReadOnly);
+    QDataStream stream(&_buffer, QIODevice::ReadOnly);
     IdentityReferenceMapper ref;
-    auto addedObjects = root()->deserializeChunk(stream, QUuid(), &ref);
-    buffer.clear();
+    auto addedObjects =
+        ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), QUuid(), &ref);
+    _buffer.clear();
 
     for (const auto &obj : addedObjects) {
         compileItems.push_back(obj->uuid());
@@ -86,5 +74,5 @@ Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) co
 }
 
 Sequence<ModelObject *> DeleteObjectAction::getRemoveItems() const {
-    return getLinkedItems(uuid);
+    return getLinkedItems(_uuid);
 }

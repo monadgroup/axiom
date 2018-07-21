@@ -1,21 +1,19 @@
 #include "Connection.h"
 
-#include "Control.h"
-#include "NodeSurface.h"
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
+#include "Control.h"
+#include "NodeSurface.h"
 
 using namespace AxiomModel;
 
 Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlAUuid, const QUuid &controlBUuid,
                        AxiomModel::ModelRoot *root)
-    : ModelObject(ModelType::CONNECTION, uuid, parentUuid, root),
-      _surface(find(root->nodeSurfaces(), parentUuid)), _controlAUuid(controlAUuid),
-      _controlBUuid(controlBUuid) {
-    all(findLater<Control *>(root->controls(), controlAUuid),
-        findLater<Control *>(root->controls(), controlBUuid)).then(
-        [this](const std::tuple<Control *, Control *> &controls) {
+    : ModelObject(ModelType::CONNECTION, uuid, parentUuid, root), _surface(find(root->nodeSurfaces(), parentUuid)),
+      _controlAUuid(controlAUuid), _controlBUuid(controlBUuid) {
+    all(findLater<Control *>(root->controls(), controlAUuid), findLater<Control *>(root->controls(), controlBUuid))
+        .then([this](const std::tuple<Control *, Control *> &controls) {
             auto controlA = std::get<0>(controls);
             auto controlB = std::get<1>(controls);
             assert(controlA->wireType() == controlB->wireType());
@@ -36,24 +34,6 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
 std::unique_ptr<Connection> Connection::create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA,
                                                const QUuid &controlB, AxiomModel::ModelRoot *root) {
     return std::make_unique<Connection>(uuid, parentUuid, controlA, controlB, root);
-}
-
-std::unique_ptr<Connection> Connection::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                    ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
-    QUuid controlA;
-    stream >> controlA;
-    controlA = ref->mapUuid(controlA);
-    QUuid controlB;
-    stream >> controlB;
-    controlB = ref->mapUuid(controlB);
-
-    return create(uuid, parentUuid, controlA, controlB, root);
-}
-
-void Connection::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    ModelObject::serialize(stream, parent, withContext);
-    stream << _controlAUuid;
-    stream << _controlBUuid;
 }
 
 void Connection::remove() {

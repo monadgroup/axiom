@@ -39,10 +39,6 @@ namespace AxiomModel {
 
         static QString typeToString(ActionType type);
 
-        static std::unique_ptr<Action> deserialize(QDataStream &stream, ModelRoot *root);
-
-        virtual void serialize(QDataStream &stream) const;
-
         ActionType actionType() const { return _actionType; }
 
         ModelRoot *root() const { return _root; }

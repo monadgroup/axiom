@@ -9,7 +9,7 @@ using namespace AxiomModel;
 
 SetCodeAction::SetCodeAction(const QUuid &uuid, QString oldCode, QString newCode,
                              std::vector<std::unique_ptr<Action>> controlActions, AxiomModel::ModelRoot *root)
-    : Action(ActionType::SET_CODE, root), uuid(uuid), oldCode(std::move(oldCode)), newCode(std::move(newCode)),
+    : Action(ActionType::SET_CODE, root), _uuid(uuid), _oldCode(std::move(oldCode)), _newCode(std::move(newCode)),
       _controlActions(std::move(controlActions)) {}
 
 std::unique_ptr<SetCodeAction> SetCodeAction::create(const QUuid &uuid, QString oldCode, QString newCode,
@@ -19,41 +19,9 @@ std::unique_ptr<SetCodeAction> SetCodeAction::create(const QUuid &uuid, QString 
                                            root);
 }
 
-std::unique_ptr<SetCodeAction> SetCodeAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid;
-    stream >> uuid;
-    QString oldCode;
-    stream >> oldCode;
-    QString newCode;
-    stream >> newCode;
-
-    uint32_t controlActionCount;
-    stream >> controlActionCount;
-
-    std::vector<std::unique_ptr<Action>> controlActions;
-    controlActions.reserve(controlActionCount);
-    for (uint32_t i = 0; i < controlActionCount; i++) {
-        controlActions.push_back(Action::deserialize(stream, root));
-    }
-
-    return create(uuid, std::move(oldCode), std::move(newCode), std::move(controlActions), root);
-}
-
-void SetCodeAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-
-    stream << uuid;
-    stream << oldCode;
-    stream << newCode;
-    stream << (uint32_t) _controlActions.size();
-    for (const auto &action : _controlActions) {
-        action->serialize(stream);
-    }
-}
-
 void SetCodeAction::forward(bool first, std::vector<QUuid> &compileItems) {
-    auto node = find<CustomNode *>(root()->nodes(), uuid);
-    node->setCode(newCode);
+    auto node = find<CustomNode *>(root()->nodes(), _uuid);
+    node->setCode(_newCode);
 
     compileItems.push_back(node->uuid());
     compileItems.push_back(node->surface()->uuid());
@@ -63,12 +31,14 @@ void SetCodeAction::forward(bool first, std::vector<QUuid> &compileItems) {
 }
 
 void SetCodeAction::backward(std::vector<QUuid> &compileItems) {
-    auto node = find<CustomNode *>(root()->nodes(), uuid);
-    node->setCode(oldCode);
+    auto node = find<CustomNode *>(root()->nodes(), _uuid);
+    node->setCode(_oldCode);
 
     compileItems.push_back(node->uuid());
     compileItems.push_back(node->surface()->uuid());
-    for (auto i = _controlActions.end() - 1; i >= _controlActions.begin(); i--) {
-        (*i)->backward(compileItems);
+    if (!_controlActions.empty()) {
+        for (auto i = _controlActions.end() - 1; i >= _controlActions.begin(); i--) {
+            (*i)->backward(compileItems);
+        }
     }
 }

@@ -20,27 +20,6 @@ NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan
     _nodes.itemAdded.connect(this, &NodeSurface::nodeAdded);
 }
 
-std::unique_ptr<NodeSurface> NodeSurface::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                      ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
-    QPointF pan;
-    stream >> pan;
-    float zoom;
-    stream >> zoom;
-
-    if (parentUuid.isNull()) {
-        return std::make_unique<RootSurface>(uuid, pan, zoom, root);
-    } else {
-        return std::make_unique<GroupSurface>(uuid, parentUuid, pan, zoom, root);
-    }
-}
-
-void NodeSurface::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    ModelObject::serialize(stream, parent, withContext);
-
-    stream << pan();
-    stream << zoom();
-}
-
 void NodeSurface::setPan(QPointF pan) {
     if (pan != _pan) {
         _pan = pan;

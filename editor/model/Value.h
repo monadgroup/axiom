@@ -82,16 +82,4 @@ namespace AxiomModel {
             count++;
         }
     };
-
-    QDataStream &operator<<(QDataStream &stream, const NumValue &val);
-
-    QDataStream &operator>>(QDataStream &stream, NumValue &val);
-
-    QDataStream &operator<<(QDataStream &stream, const MidiEventValue &val);
-
-    QDataStream &operator>>(QDataStream &stream, MidiEventValue &val);
-
-    QDataStream &operator<<(QDataStream &stream, const MidiValue &val);
-
-    QDataStream &operator>>(QDataStream &stream, MidiValue &val);
 }

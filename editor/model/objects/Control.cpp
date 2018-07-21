@@ -68,68 +68,6 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
     }
 }
 
-std::unique_ptr<Control> Control::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                              ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
-    uint8_t controlTypeInt;
-    stream >> controlTypeInt;
-
-    QPoint pos;
-    QSize size;
-    bool selected;
-    GridItem::deserialize(stream, pos, size, selected);
-
-    QString name;
-    stream >> name;
-
-    bool showName;
-    stream >> showName;
-
-    QUuid exposerUuid;
-    stream >> exposerUuid;
-    exposerUuid = ref->mapUuid(exposerUuid);
-
-    QUuid exposingUuid;
-    stream >> exposingUuid;
-    exposingUuid = ref->mapUuid(exposingUuid);
-
-    switch ((ControlType) controlTypeInt) {
-    case ControlType::NUM_SCALAR:
-        return NumControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                       exposerUuid, exposingUuid, ref, root);
-    case ControlType::MIDI_SCALAR:
-        return MidiControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                        exposerUuid, exposingUuid, ref, root);
-    case ControlType::NUM_EXTRACT:
-        return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                           exposerUuid, exposingUuid, ConnectionWire::WireType::NUM, ref, root);
-    case ControlType::MIDI_EXTRACT:
-        return ExtractControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                           exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, ref, root);
-    case ControlType::NUM_PORTAL:
-        return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                          exposerUuid, exposingUuid, ConnectionWire::WireType::NUM, ref, root);
-    case ControlType::MIDI_PORTAL:
-        return PortalControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                          exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, ref, root);
-    case ControlType::SCOPE:
-        return ScopeControl::deserialize(stream, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                         exposerUuid, exposingUuid, ref, root);
-    }
-
-    unreachable;
-}
-
-void Control::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    ModelObject::serialize(stream, parent, withContext);
-
-    stream << (uint8_t) _controlType;
-    GridItem::serialize(stream);
-    stream << _name;
-    stream << _showName;
-    stream << _exposerUuid;
-    stream << _exposingUuid;
-}
-
 void Control::setName(const QString &name) {
     if (name != _name) {
         _name = name;

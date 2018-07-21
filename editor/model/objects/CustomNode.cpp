@@ -32,28 +32,6 @@ std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &p
                                         panelOpen, panelHeight, root);
 }
 
-std::unique_ptr<CustomNode> CustomNode::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                    QPoint pos, QSize size, bool selected, QString name,
-                                                    const QUuid &controlsUuid, ReferenceMapper *ref,
-                                                    AxiomModel::ModelRoot *root) {
-    QString code;
-    stream >> code;
-    bool isPanelOpen;
-    stream >> isPanelOpen;
-    float panelHeight;
-    stream >> panelHeight;
-
-    return create(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, code, isPanelOpen, panelHeight,
-                  root);
-}
-
-void CustomNode::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    Node::serialize(stream, parent, withContext);
-    stream << _code;
-    stream << _isPanelOpen;
-    stream << _panelHeight;
-}
-
 void CustomNode::setCode(const QString &code) {
     if (_code != code) {
         _code = code;

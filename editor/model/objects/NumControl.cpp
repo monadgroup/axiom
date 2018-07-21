@@ -19,28 +19,6 @@ std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &p
                                         exposingUuid, displayMode, channel, value, root);
 }
 
-std::unique_ptr<NumControl> NumControl::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                    QPoint pos, QSize size, bool selected, QString name, bool showName,
-                                                    const QUuid &exposerUuid, const QUuid &exposingUuid,
-                                                    ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
-    uint8_t displayModeInt;
-    stream >> displayModeInt;
-    uint8_t channelInt;
-    stream >> channelInt;
-    NumValue value;
-    stream >> value;
-
-    return create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid, exposingUuid,
-                  (DisplayMode) displayModeInt, (Channel) channelInt, value, root);
-}
-
-void NumControl::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    Control::serialize(stream, parent, withContext);
-    stream << (uint8_t) _displayMode;
-    stream << (uint8_t) _channel;
-    stream << _value;
-}
-
 void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode) {
     if (displayMode != _displayMode) {
         _displayMode = displayMode;

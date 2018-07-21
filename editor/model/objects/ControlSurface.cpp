@@ -24,16 +24,6 @@ std::unique_ptr<ControlSurface> ControlSurface::create(const QUuid &uuid, const 
     return std::make_unique<ControlSurface>(uuid, parentUuid, root);
 }
 
-std::unique_ptr<ControlSurface> ControlSurface::deserialize(QDataStream &stream, const QUuid &uuid,
-                                                            const QUuid &parentUuid, ReferenceMapper *ref,
-                                                            AxiomModel::ModelRoot *root) {
-    return create(uuid, parentUuid, root);
-}
-
-void ControlSurface::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    ModelObject::serialize(stream, parent, withContext);
-}
-
 void ControlSurface::remove() {
     while (!_controls.empty()) {
         (*_controls.begin())->remove();

@@ -14,17 +14,19 @@ namespace AxiomModel {
         static std::unique_ptr<GridItemMoveAction> create(const QUuid &uuid, QPoint beforePos, QPoint afterPos,
                                                           AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<GridItemMoveAction> deserialize(QDataStream &stream, AxiomModel::ModelRoot *root);
-
-        void serialize(QDataStream &stream) const override;
-
         void forward(bool first, std::vector<QUuid> &compileItems) override;
 
         void backward(std::vector<QUuid> &compileItems) override;
 
+        const QUuid &uuid() const { return _uuid; }
+
+        const QPoint &beforePos() const { return _beforePos; }
+
+        const QPoint &afterPos() const { return _afterPos; }
+
     private:
-        QUuid uuid;
-        QPoint beforePos;
-        QPoint afterPos;
+        QUuid _uuid;
+        QPoint _beforePos;
+        QPoint _afterPos;
     };
 }

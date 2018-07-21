@@ -10,7 +10,8 @@ using namespace AxiomModel;
 
 CreateControlAction::CreateControlAction(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type,
                                          QString name, AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_CONTROL, root), uuid(uuid), parentUuid(parentUuid), type(type), name(std::move(name)) {}
+    : Action(ActionType::CREATE_CONTROL, root), _uuid(uuid), _parentUuid(parentUuid), _type(type),
+      _name(std::move(name)) {}
 
 std::unique_ptr<CreateControlAction> CreateControlAction::create(const QUuid &uuid, const QUuid &parentUuid,
                                                                  Control::ControlType type, QString name,
@@ -23,33 +24,10 @@ std::unique_ptr<CreateControlAction> CreateControlAction::create(const QUuid &pa
     return create(QUuid::createUuid(), parentUuid, type, std::move(name), root);
 }
 
-std::unique_ptr<CreateControlAction> CreateControlAction::deserialize(QDataStream &stream,
-                                                                      AxiomModel::ModelRoot *root) {
-    QUuid uuid;
-    stream >> uuid;
-    QUuid parentUuid;
-    stream >> parentUuid;
-    uint8_t typeInt;
-    stream >> typeInt;
-    QString name;
-    stream >> name;
-
-    return create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), root);
-}
-
-void CreateControlAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-
-    stream << uuid;
-    stream << parentUuid;
-    stream << (uint8_t) type;
-    stream << name;
-}
-
 void CreateControlAction::forward(bool, std::vector<QUuid> &) {
-    root()->pool().registerObj(Control::createDefault(type, uuid, parentUuid, name, QUuid(), root()));
+    root()->pool().registerObj(Control::createDefault(_type, _uuid, _parentUuid, _name, QUuid(), root()));
 }
 
 void CreateControlAction::backward(std::vector<QUuid> &) {
-    find(root()->controls(), uuid)->remove();
+    find(root()->controls(), _uuid)->remove();
 }

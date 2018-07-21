@@ -1,28 +1,29 @@
 #include "ControlItem.h"
 
-#include <QtWidgets/QGraphicsSceneMouseEvent>
-#include <QtGui/QGuiApplication>
-#include <QtGui/QClipboard>
-#include <QtCore/QStateMachine>
-#include <QtCore/QSignalTransition>
 #include <QtCore/QPropertyAnimation>
+#include <QtCore/QSignalTransition>
+#include <QtCore/QStateMachine>
+#include <QtGui/QClipboard>
+#include <QtGui/QGuiApplication>
+#include <QtWidgets/QGraphicsSceneMouseEvent>
 
+#include "../CommonColors.h"
+#include "../ItemResizer.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "editor/model/ModelRoot.h"
 #include "editor/model/Project.h"
-#include "editor/model/objects/Control.h"
-#include "editor/model/objects/ControlSurface.h"
-#include "editor/model/objects/Connection.h"
-#include "editor/model/objects/Node.h"
-#include "editor/model/objects/NodeSurface.h"
 #include "editor/model/actions/CompositeAction.h"
+#include "editor/model/actions/DeleteObjectAction.h"
+#include "editor/model/actions/ExposeControlAction.h"
 #include "editor/model/actions/GridItemMoveAction.h"
 #include "editor/model/actions/GridItemSizeAction.h"
-#include "editor/model/actions/DeleteObjectAction.h"
 #include "editor/model/actions/SetShowNameAction.h"
-#include "editor/model/actions/ExposeControlAction.h"
+#include "editor/model/objects/Connection.h"
+#include "editor/model/objects/Control.h"
+#include "editor/model/objects/ControlSurface.h"
+#include "editor/model/objects/Node.h"
+#include "editor/model/objects/NodeSurface.h"
 #include "editor/util.h"
-#include "../ItemResizer.h"
-#include "../CommonColors.h"
-#include "../surface/NodeSurfaceCanvas.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -42,9 +43,8 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
     // create resize items
     if (control->isResizable()) {
         ItemResizer::Direction directions[] = {
-            ItemResizer::TOP, ItemResizer::RIGHT, ItemResizer::BOTTOM, ItemResizer::LEFT,
-            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT
-        };
+            ItemResizer::TOP,       ItemResizer::RIGHT,    ItemResizer::BOTTOM,       ItemResizer::LEFT,
+            ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT};
         for (auto i = 0; i < 8; i++) {
             auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::controlGridSize);
             resizer->enablePainting();
@@ -53,17 +53,12 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
             // ensure corners are on top of edges
             resizer->setZValue(i > 3 ? 3 : 2);
 
-            connect(this, &ControlItem::resizerPosChanged,
-                    resizer, &ItemResizer::setPos);
-            connect(this, &ControlItem::resizerSizeChanged,
-                    resizer, &ItemResizer::setSize);
+            connect(this, &ControlItem::resizerPosChanged, resizer, &ItemResizer::setPos);
+            connect(this, &ControlItem::resizerSizeChanged, resizer, &ItemResizer::setSize);
 
-            connect(resizer, &ItemResizer::startDrag,
-                    this, &ControlItem::resizerStartDrag);
-            connect(resizer, &ItemResizer::changed,
-                    this, &ControlItem::resizerChanged);
-            connect(resizer, &ItemResizer::endDrag,
-                    this, &ControlItem::resizerEndDrag);
+            connect(resizer, &ItemResizer::startDrag, this, &ControlItem::resizerStartDrag);
+            connect(resizer, &ItemResizer::changed, this, &ControlItem::resizerChanged);
+            connect(resizer, &ItemResizer::endDrag, this, &ControlItem::resizerEndDrag);
 
             control->selected.connect(this, std::function([resizer]() { resizer->setVisible(true); }));
             control->deselected.connect(this, std::function([resizer]() { resizer->setVisible(false); }));
@@ -98,7 +93,7 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
 
 QRectF ControlItem::boundingRect() const {
     auto br = drawBoundingRect();
-    //if (!showLabelInCenter()) {
+    // if (!showLabelInCenter()) {
     br.setHeight(br.height() + 20);
     //}
     return br;
@@ -108,26 +103,12 @@ QRectF ControlItem::aspectBoundingRect() const {
     auto bound = drawBoundingRect();
     if (bound.size().width() > bound.size().height()) {
         return {
-            QPointF(
-                bound.topLeft().x() + bound.size().width() / 2 - bound.size().height() / 2,
-                bound.topLeft().y()
-            ),
-            QSizeF(
-                bound.size().height(),
-                bound.size().height()
-            )
-        };
+            QPointF(bound.topLeft().x() + bound.size().width() / 2 - bound.size().height() / 2, bound.topLeft().y()),
+            QSizeF(bound.size().height(), bound.size().height())};
     } else {
         return {
-            QPointF(
-                bound.topLeft().x(),
-                bound.topLeft().y() + bound.size().height() / 2 - bound.size().width() / 2
-            ),
-            QSizeF(
-                bound.size().width(),
-                bound.size().width()
-            )
-        };
+            QPointF(bound.topLeft().x(), bound.topLeft().y() + bound.size().height() / 2 - bound.size().width() / 2),
+            QSizeF(bound.size().width(), bound.size().width())};
     }
 }
 
@@ -184,28 +165,25 @@ void ControlItem::setHoverState(float hoverState) {
 }
 
 QRectF ControlItem::drawBoundingRect() const {
-    return {
-        QPoint(0, 0),
-        NodeSurfaceCanvas::controlRealSize(control->size())
-    };
+    return {QPoint(0, 0), NodeSurfaceCanvas::controlRealSize(control->size())};
 }
 
 QColor ControlItem::outlineNormalColor() const {
     switch (control->wireType()) {
-        case ConnectionWire::WireType::NUM:
-            return CommonColors::numNormal;
-        case ConnectionWire::WireType::MIDI:
-            return CommonColors::midiNormal;
+    case ConnectionWire::WireType::NUM:
+        return CommonColors::numNormal;
+    case ConnectionWire::WireType::MIDI:
+        return CommonColors::midiNormal;
     }
     unreachable;
 }
 
 QColor ControlItem::outlineActiveColor() const {
     switch (control->wireType()) {
-        case ConnectionWire::WireType::NUM:
-            return CommonColors::numActive;
-        case ConnectionWire::WireType::MIDI:
-            return CommonColors::midiActive;
+    case ConnectionWire::WireType::NUM:
+        return CommonColors::numActive;
+    case ConnectionWire::WireType::MIDI:
+        return CommonColors::midiActive;
     }
     unreachable;
 }
@@ -235,10 +213,9 @@ void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         auto mouseDelta = event->screenPos() - mouseStartPoint;
-        control->draggedTo.trigger(QPoint(
-            qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
-            qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())
-        ));
+        control->draggedTo.trigger(
+            QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
+                   qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())));
     } else {
         event->ignore();
     }
@@ -311,13 +288,10 @@ void ControlItem::remove() {
 }
 
 void ControlItem::resizerChanged(QPointF topLeft, QPointF bottomRight) {
-    control->setCorners(QPoint(
-        qRound(topLeft.x() / NodeSurfaceCanvas::controlGridSize.width()),
-        qRound(topLeft.y() / NodeSurfaceCanvas::controlGridSize.height())
-    ), QPoint(
-        qRound(bottomRight.x() / NodeSurfaceCanvas::controlGridSize.width()),
-        qRound(bottomRight.y() / NodeSurfaceCanvas::controlGridSize.height())
-    ));
+    control->setCorners(QPoint(qRound(topLeft.x() / NodeSurfaceCanvas::controlGridSize.width()),
+                               qRound(topLeft.y() / NodeSurfaceCanvas::controlGridSize.height())),
+                        QPoint(qRound(bottomRight.x() / NodeSurfaceCanvas::controlGridSize.width()),
+                               qRound(bottomRight.y() / NodeSurfaceCanvas::controlGridSize.height())));
 }
 
 void ControlItem::resizerStartDrag() {
@@ -345,44 +319,39 @@ void ControlItem::buildMenuStart(QMenu &menu) {
     auto clearAction = menu.addAction("&Clear Connections");
     clearAction->setEnabled(!control->connections().empty());
 
-    connect(clearAction, &QAction::triggered,
-            this, [this]() {
-            std::vector<std::unique_ptr<Action>> clearActions;
-            for (const auto &connection : control->connections()) {
-                clearActions.push_back(DeleteObjectAction::create(connection->uuid(), connection->root()));
-            }
-            control->root()->history().append(CompositeAction::create(std::move(clearActions), control->root()));
-        });
+    connect(clearAction, &QAction::triggered, this, [this]() {
+        std::vector<std::unique_ptr<Action>> clearActions;
+        for (const auto &connection : control->connections()) {
+            clearActions.push_back(DeleteObjectAction::create(connection->uuid(), connection->root()));
+        }
+        control->root()->history().append(CompositeAction::create(std::move(clearActions), control->root()));
+    });
 }
 
 void ControlItem::buildMenuEnd(QMenu &menu) {
     auto moveAction = menu.addAction("&Move");
-    connect(moveAction, &QAction::triggered,
-            this, [this]() { control->select(true); });
+    connect(moveAction, &QAction::triggered, this, [this]() { control->select(true); });
 
     auto nameShownAction = menu.addAction("Show &Name");
     nameShownAction->setCheckable(true);
     nameShownAction->setChecked(control->showName());
-    connect(nameShownAction, &QAction::triggered,
-            this, [this, nameShownAction]() {
-            control->root()->history().append(
-                SetShowNameAction::create(control->uuid(), control->showName(), nameShownAction->isChecked(),
-                                          control->root()));
-        });
+    connect(nameShownAction, &QAction::triggered, this, [this, nameShownAction]() {
+        control->root()->history().append(SetShowNameAction::create(control->uuid(), control->showName(),
+                                                                    nameShownAction->isChecked(), control->root()));
+    });
 
     auto exposedAction = menu.addAction("&Expose");
     exposedAction->setEnabled(control->surface()->node()->surface()->canExposeControl());
     exposedAction->setCheckable(true);
     exposedAction->setChecked(!control->exposerUuid().isNull());
-    connect(exposedAction, &QAction::triggered,
-            this, [this, exposedAction]() {
-            assert(exposedAction->isChecked() == control->exposerUuid().isNull());
-            if (exposedAction->isChecked()) {
-                control->root()->history().append(ExposeControlAction::create(control->uuid(), control->root()));
-            } else {
-                control->root()->history().append(DeleteObjectAction::create(control->exposerUuid(), control->root()));
-            }
-        });
+    connect(exposedAction, &QAction::triggered, this, [this, exposedAction]() {
+        assert(exposedAction->isChecked() == control->exposerUuid().isNull());
+        if (exposedAction->isChecked()) {
+            control->root()->history().append(ExposeControlAction::create(control->uuid(), control->root()));
+        } else {
+            control->root()->history().append(DeleteObjectAction::create(control->exposerUuid(), control->root()));
+        }
+    });
 }
 
 QString ControlItem::getLabelText() const {

@@ -22,44 +22,6 @@ Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint
       _nodeType(nodeType), _name(std::move(name)),
       _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {}
 
-std::unique_ptr<Node> Node::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                        ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
-    uint8_t nodeTypeInt;
-    stream >> nodeTypeInt;
-
-    QPoint pos;
-    QSize size;
-    bool selected;
-    GridItem::deserialize(stream, pos, size, selected);
-    pos = ref->mapPos(parentUuid, pos);
-
-    QString name;
-    stream >> name;
-    QUuid controlsUuid;
-    stream >> controlsUuid;
-    controlsUuid = ref->mapUuid(controlsUuid);
-
-    switch ((NodeType) nodeTypeInt) {
-    case NodeType::CUSTOM_NODE:
-        return CustomNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
-    case NodeType::GROUP_NODE:
-        return GroupNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
-    case NodeType::PORTAL_NODE:
-        return PortalNode::deserialize(stream, uuid, parentUuid, pos, size, selected, name, controlsUuid, ref, root);
-    }
-
-    unreachable;
-}
-
-void Node::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    ModelObject::serialize(stream, parent, withContext);
-
-    stream << (uint8_t) _nodeType;
-    GridItem::serialize(stream);
-    stream << _name;
-    stream << (*_controls.value())->uuid();
-}
-
 void Node::setName(const QString &name) {
     if (name != _name) {
         _name = name;

@@ -6,33 +6,9 @@ using namespace AxiomModel;
 
 HistoryList::HistoryList(CompileApplyer applyer) : applyCompile(std::move(applyer)) {}
 
-HistoryList::HistoryList(QDataStream &stream, ModelRoot *root, CompileApplyer applyer)
-    : applyCompile(std::move(applyer)) {
-    uint32_t stackPos;
-    stream >> stackPos;
-    uint32_t stackSize;
-    stream >> stackSize;
-
-    _stackPos = stackPos;
-    _stack.reserve(stackSize);
-    for (uint32_t i = 0; i < stackSize; i++) {
-        QByteArray actionBuffer;
-        stream >> actionBuffer;
-        QDataStream actionStream(&actionBuffer, QIODevice::ReadOnly);
-        _stack.push_back(Action::deserialize(actionStream, root));
-    }
-}
-
-void HistoryList::serialize(QDataStream &stream) {
-    stream << (uint32_t) _stackPos;
-    stream << (uint32_t) _stack.size();
-    for (const auto &action : _stack) {
-        QByteArray actionBuffer;
-        QDataStream actionStream(&actionBuffer, QIODevice::WriteOnly);
-        action->serialize(actionStream);
-        stream << actionBuffer;
-    }
-}
+HistoryList::HistoryList(size_t stackPos, std::vector<std::unique_ptr<AxiomModel::Action>> stack,
+                         AxiomModel::HistoryList::CompileApplyer applyer)
+    : _stackPos(stackPos), _stack(std::move(stack)), applyCompile(std::move(applyer)) {}
 
 void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward) {
     // run the action forward

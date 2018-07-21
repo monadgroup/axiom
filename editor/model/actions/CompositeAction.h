@@ -12,17 +12,13 @@ namespace AxiomModel {
 
         static std::unique_ptr<CompositeAction> create(std::vector<std::unique_ptr<Action>> actions, ModelRoot *root);
 
-        static std::unique_ptr<CompositeAction> deserialize(QDataStream &stream, ModelRoot *root);
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
 
-        void serialize(QDataStream &stream) const override;
+        void backward(std::vector<QUuid> &compileItems) override;
 
         std::vector<std::unique_ptr<Action>> &actions() { return _actions; }
 
         const std::vector<std::unique_ptr<Action>> &actions() const { return _actions; }
-
-        void forward(bool first, std::vector<QUuid> &compileItems) override;
-
-        void backward(std::vector<QUuid> &compileItems) override;
 
     private:
         std::vector<std::unique_ptr<Action>> _actions;

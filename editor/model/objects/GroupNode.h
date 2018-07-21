@@ -17,12 +17,6 @@ namespace AxiomModel {
                                                  bool selected, QString name, const QUuid &controlsUuid,
                                                  const QUuid &innerUuid, ModelRoot *root);
 
-        static std::unique_ptr<GroupNode> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                      QPoint pos, QSize size, bool selected, QString name,
-                                                      const QUuid &controlsUuid, ReferenceMapper *ref, ModelRoot *root);
-
-        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
-
         AxiomCommon::Promise<GroupSurface *> &nodes() { return _nodes; }
 
         const AxiomCommon::Promise<GroupSurface *> &nodes() const { return _nodes; }

@@ -16,20 +16,24 @@ namespace AxiomModel {
                                                      std::vector<std::unique_ptr<Action>> controlActions,
                                                      ModelRoot *root);
 
-        static std::unique_ptr<SetCodeAction> deserialize(QDataStream &stream, ModelRoot *root);
-
-        void serialize(QDataStream &stream) const override;
-
         void forward(bool first, std::vector<QUuid> &compileItems) override;
 
         void backward(std::vector<QUuid> &compileItems) override;
 
+        const QUuid &uuid() const { return _uuid; }
+
+        const QString &oldCode() const { return _oldCode; }
+
+        const QString &newCode() const { return _newCode; }
+
+        const std::vector<std::unique_ptr<Action>> &controlActions() const { return _controlActions; }
+
         std::vector<std::unique_ptr<Action>> &controlActions() { return _controlActions; }
 
     private:
-        QUuid uuid;
-        QString oldCode;
-        QString newCode;
+        QUuid _uuid;
+        QString _oldCode;
+        QString _newCode;
         std::vector<std::unique_ptr<Action>> _controlActions;
     };
 }

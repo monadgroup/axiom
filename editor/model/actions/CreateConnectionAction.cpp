@@ -9,8 +9,8 @@ using namespace AxiomModel;
 
 CreateConnectionAction::CreateConnectionAction(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA,
                                                const QUuid &controlB, AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_CONNECTION, root), uuid(uuid), parentUuid(parentUuid), controlA(controlA),
-      controlB(controlB) {}
+    : Action(ActionType::CREATE_CONNECTION, root), _uuid(uuid), _parentUuid(parentUuid), _controlA(controlA),
+      _controlB(controlB) {}
 
 std::unique_ptr<CreateConnectionAction> CreateConnectionAction::create(const QUuid &uuid, const QUuid &parentUuid,
                                                                        const QUuid &controlA, const QUuid &controlB,
@@ -24,34 +24,12 @@ std::unique_ptr<CreateConnectionAction> CreateConnectionAction::create(const QUu
     return create(QUuid::createUuid(), parentUuid, controlA, controlB, root);
 }
 
-std::unique_ptr<CreateConnectionAction> CreateConnectionAction::deserialize(QDataStream &stream,
-                                                                            AxiomModel::ModelRoot *root) {
-    QUuid uuid;
-    stream >> uuid;
-    QUuid parentUuid;
-    stream >> parentUuid;
-    QUuid controlA;
-    stream >> controlA;
-    QUuid controlB;
-    stream >> controlB;
-
-    return std::make_unique<CreateConnectionAction>(uuid, parentUuid, controlA, controlB, root);
-}
-
-void CreateConnectionAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-    stream << uuid;
-    stream << parentUuid;
-    stream << controlA;
-    stream << controlB;
-}
-
 void CreateConnectionAction::forward(bool, std::vector<QUuid> &compileItems) {
-    root()->pool().registerObj(Connection::create(uuid, parentUuid, controlA, controlB, root()));
-    compileItems.push_back(parentUuid);
+    root()->pool().registerObj(Connection::create(_uuid, _parentUuid, _controlA, _controlB, root()));
+    compileItems.push_back(_parentUuid);
 }
 
 void CreateConnectionAction::backward(std::vector<QUuid> &compileItems) {
-    find(root()->connections(), uuid)->remove();
-    compileItems.push_back(parentUuid);
+    find(root()->connections(), _uuid)->remove();
+    compileItems.push_back(_parentUuid);
 }

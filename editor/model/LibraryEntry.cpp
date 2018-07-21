@@ -32,44 +32,6 @@ std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, std::set<QStrin
                   std::move(tags), std::move(newRoot));
 }
 
-std::unique_ptr<LibraryEntry> LibraryEntry::deserialize(QDataStream &stream, Project *project) {
-    QString name;
-    stream >> name;
-    QUuid baseUuid;
-    stream >> baseUuid;
-    QUuid modificationUuid;
-    stream >> modificationUuid;
-    QDateTime modificationDateTime;
-    stream >> modificationDateTime;
-
-    quint32 tagSize;
-    stream >> tagSize;
-    std::set<QString> tags;
-    for (quint32 i = 0; i < tagSize; i++) {
-        QString tag;
-        stream >> tag;
-        tags.emplace(tag);
-    }
-
-    auto root = std::make_unique<ModelRoot>(project, stream);
-
-    return create(std::move(name), baseUuid, modificationUuid, modificationDateTime, std::move(tags), std::move(root));
-}
-
-void LibraryEntry::serialize(QDataStream &stream) {
-    stream << _name;
-    stream << _baseUuid;
-    stream << _modificationUuid;
-    stream << _modificationDateTime;
-
-    stream << (quint32) _tags.size();
-    for (const auto &tag : _tags) {
-        stream << tag;
-    }
-
-    _root->serialize(stream);
-}
-
 void LibraryEntry::setName(const QString &newName) {
     if (newName != _name) {
         _name = newName;

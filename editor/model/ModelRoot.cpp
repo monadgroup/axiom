@@ -20,33 +20,12 @@ ModelRoot::ModelRoot(Project *project)
       _controls(dynamicCastWatch<Control *>(_pool.sequence())),
       _connections(dynamicCastWatch<Connection *>(_pool.sequence())) {}
 
-ModelRoot::ModelRoot(Project *project, QDataStream &stream) : ModelRoot(project) {
-    IdentityReferenceMapper ref;
-    deserializeChunk(stream, QUuid(), &ref);
-    _history = HistoryList(stream, this, [this](std::vector<QUuid> items) { applyCompile(items); });
-}
-
-void ModelRoot::serialize(QDataStream &stream) {
-    serializeChunk(stream, QUuid(), dynamicCast<ModelObject *>(_pool.sequence()));
-    _history.serialize(stream);
-}
-
-std::vector<ModelObject *> ModelRoot::deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref) {
-    std::vector<ModelObject *> usedObjects;
-
-    uint32_t objectCount;
-    stream >> objectCount;
-    usedObjects.reserve(objectCount);
-    for (uint32_t i = 0; i < objectCount; i++) {
-        QByteArray objectBuffer;
-        stream >> objectBuffer;
-        QDataStream objectStream(&objectBuffer, QIODevice::ReadOnly);
-        auto newObject = ModelObject::deserialize(objectStream, parent, ref, this);
-        usedObjects.push_back(newObject.get());
-        _pool.registerObj(std::move(newObject));
-    }
-
-    return std::move(usedObjects);
+RootSurface *ModelRoot::rootSurface() const {
+    auto rootSurfaces = findChildren(nodeSurfaces(), QUuid());
+    assert(rootSurfaces.size() == 1);
+    auto rootSurface = dynamic_cast<RootSurface *>(takeAt(rootSurfaces, 0));
+    assert(rootSurface);
+    return rootSurface;
 }
 
 void ModelRoot::attachBackend(AxiomBackend::AudioBackend *backend) {
@@ -56,9 +35,8 @@ void ModelRoot::attachBackend(AxiomBackend::AudioBackend *backend) {
 void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
     _runtime = runtime;
 
-    auto rootSurface = find(nodeSurfaces(), QUuid());
     MaximCompiler::Transaction buildTransaction;
-    rootSurface->attachRuntime(_runtime, &buildTransaction);
+    rootSurface()->attachRuntime(_runtime, &buildTransaction);
     applyTransaction(std::move(buildTransaction));
 }
 
@@ -90,9 +68,7 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     if (_runtime) {
         _runtime->commit(std::move(transaction));
     }
-    auto rootSurface = find<RootSurface *>(nodeSurfaces(), QUuid());
-    rootSurface->updateRuntimePointers(_runtime, _runtime->getRootPtr());
-
+    rootSurface()->updateRuntimePointers(_runtime, _runtime->getRootPtr());
     if (_backend) {
         _backend->internalUpdateConfiguration();
     }

@@ -12,6 +12,7 @@
 #include "../windows/ModulePropertiesWindow.h"
 #include "CustomNodePanel.h"
 #include "editor/model/CloneReferenceMapper.h"
+#include "editor/model/Library.h"
 #include "editor/model/LibraryEntry.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/actions/CompositeAction.h"
@@ -29,6 +30,8 @@
 #include "editor/model/objects/PortalControl.h"
 #include "editor/model/objects/RootSurface.h"
 #include "editor/model/objects/ScopeControl.h"
+#include "editor/model/serialize/ModelObjectSerializer.h"
+#include "editor/model/serialize/ProjectSerializer.h"
 #include "editor/widgets/controls/ExtractControlItem.h"
 #include "editor/widgets/controls/MidiControlItem.h"
 #include "editor/widgets/controls/NumControlItem.h"
@@ -262,13 +265,15 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems());
             QByteArray serializeArray;
             QDataStream serializeStream(&serializeArray, QIODevice::WriteOnly);
-            ModelRoot::serializeChunk(serializeStream, node->surface()->uuid(), node->surface()->getCopyItems());
+            ModelObjectSerializer::serializeChunk(serializeStream, node->surface()->uuid(),
+                                                  node->surface()->getCopyItems());
 
             QDataStream deserializeStream(&serializeArray, QIODevice::ReadOnly);
             AxiomModel::CloneReferenceMapper ref;
             ref.setUuid(newEntry->rootSurface()->uuid(), newEntry->rootSurface()->uuid());
             ref.setPos(newEntry->rootSurface()->uuid(), -centerPos);
-            newEntry->root()->deserializeChunk(deserializeStream, newEntry->rootSurface()->uuid(), &ref);
+            ModelObjectSerializer::deserializeChunk(deserializeStream, ProjectSerializer::schemaVersion,
+                                                    newEntry->root(), newEntry->rootSurface()->uuid(), &ref);
 
             node->root()->project()->library().addEntry(std::move(newEntry));
         }

@@ -30,13 +30,6 @@ namespace AxiomModel {
                                                   bool selected, QString name, const QUuid &controlsUuid, QString code,
                                                   bool panelOpen, float panelHeight, ModelRoot *root);
 
-        static std::unique_ptr<CustomNode> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                       QPoint pos, QSize size, bool selected, QString name,
-                                                       const QUuid &controlsUuid, ReferenceMapper *ref,
-                                                       ModelRoot *root);
-
-        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
-
         const QString &code() const { return _code; }
 
         void setCode(const QString &code);

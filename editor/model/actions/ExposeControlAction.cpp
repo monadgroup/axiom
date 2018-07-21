@@ -10,7 +10,7 @@
 using namespace AxiomModel;
 
 ExposeControlAction::ExposeControlAction(const QUuid &controlUuid, const QUuid &exposeUuid, AxiomModel::ModelRoot *root)
-    : Action(ActionType::EXPOSE_CONTROL, root), controlUuid(controlUuid), exposeUuid(exposeUuid) {}
+    : Action(ActionType::EXPOSE_CONTROL, root), _controlUuid(controlUuid), _exposeUuid(exposeUuid) {}
 
 std::unique_ptr<ExposeControlAction> ExposeControlAction::create(const QUuid &controlUuid, const QUuid &exposeUuid,
                                                                  AxiomModel::ModelRoot *root) {
@@ -22,33 +22,16 @@ std::unique_ptr<ExposeControlAction> ExposeControlAction::create(const QUuid &co
     return create(controlUuid, QUuid::createUuid(), root);
 }
 
-std::unique_ptr<ExposeControlAction> ExposeControlAction::deserialize(QDataStream &stream,
-                                                                      AxiomModel::ModelRoot *root) {
-    QUuid controlUuid;
-    stream >> controlUuid;
-    QUuid exposeUuid;
-    stream >> exposeUuid;
-
-    return create(controlUuid, exposeUuid, root);
-}
-
-void ExposeControlAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-
-    stream << controlUuid;
-    stream << exposeUuid;
-}
-
 void ExposeControlAction::forward(bool, std::vector<QUuid> &compileItems) {
-    auto controlToExpose = find(root()->controls(), controlUuid);
-    controlToExpose->setExposerUuid(exposeUuid);
+    auto controlToExpose = find(root()->controls(), _controlUuid);
+    controlToExpose->setExposerUuid(_exposeUuid);
     auto controlSurface = dynamic_cast<GroupSurface *>(controlToExpose->surface()->node()->surface());
     assert(controlSurface);
     auto exposeNode = controlSurface->node();
     auto exposeSurface = *exposeNode->controls().value();
 
-    auto newControl = Control::createDefault(controlToExpose->controlType(), exposeUuid, exposeSurface->uuid(),
-                                             controlToExpose->name(), controlUuid, root());
+    auto newControl = Control::createDefault(controlToExpose->controlType(), _exposeUuid, exposeSurface->uuid(),
+                                             controlToExpose->name(), _controlUuid, root());
     root()->pool().registerObj(std::move(newControl));
 
     compileItems.push_back(controlSurface->uuid());
@@ -56,10 +39,10 @@ void ExposeControlAction::forward(bool, std::vector<QUuid> &compileItems) {
 }
 
 void ExposeControlAction::backward(std::vector<QUuid> &compileItems) {
-    auto innerControl = find(root()->controls(), controlUuid);
+    auto innerControl = find(root()->controls(), _controlUuid);
     auto innerSurface = innerControl->surface()->node()->surface();
 
-    auto exposedControl = find(root()->controls(), exposeUuid);
+    auto exposedControl = find(root()->controls(), _exposeUuid);
     auto exposeSurface = exposedControl->surface()->node()->surface();
 
     exposedControl->remove();

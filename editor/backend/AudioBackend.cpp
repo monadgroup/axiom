@@ -3,8 +3,10 @@
 #include <QtWidgets/QMessageBox>
 
 #include "../AxiomEditor.h"
+#include "../model/ModelRoot.h"
 #include "../model/Project.h"
 #include "../model/objects/RootSurface.h"
+#include "../model/serialize/ProjectSerializer.h"
 #include "../resources/resource.h"
 #include "../widgets/windows/MainWindow.h"
 
@@ -58,22 +60,22 @@ std::string AudioBackend::formatNum(AxiomBackend::NumValue value, bool includeLa
 QByteArray AudioBackend::serialize() {
     QByteArray buffer;
     QDataStream stream(&buffer, QIODevice::WriteOnly);
-    _editor->window()->project()->serialize(stream);
+    AxiomModel::ProjectSerializer::serialize(_editor->window()->project(), stream);
     return std::move(buffer);
 }
 
 void AudioBackend::deserialize(QByteArray *data) {
     QDataStream stream(data, QIODevice::ReadOnly);
     uint32_t readVersion = 0;
-    auto newProject = AxiomModel::Project::deserialize(stream, &readVersion);
+    auto newProject = AxiomModel::ProjectSerializer::deserialize(stream, &readVersion);
 
     if (!newProject) {
         if (readVersion) {
             QMessageBox(QMessageBox::Critical, "Failed to load project",
                         "This project was created with an incompatible version of Axiom.\n\n"
                         "Expected version: between " +
-                            QString::number(AxiomModel::Project::minSchemaVersion) + " and " +
-                            QString::number(AxiomModel::Project::schemaVersion) +
+                            QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
+                            QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
                             ", actual version: " + QString::number(readVersion) + ".",
                         QMessageBox::Ok)
                 .exec();

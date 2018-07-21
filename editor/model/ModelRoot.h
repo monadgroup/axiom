@@ -35,6 +35,8 @@ namespace AxiomModel {
 
     class ReferenceMapper;
 
+    class RootSurface;
+
     class ModelRoot {
     public:
         using NodeSurfaceCollection = WatchSequence<NodeSurface *>;
@@ -45,22 +47,9 @@ namespace AxiomModel {
 
         explicit ModelRoot(Project *project);
 
-        ModelRoot(Project *project, QDataStream &stream);
-
-        template<class T>
-        static void serializeChunk(QDataStream &stream, const QUuid &parent, const T &objects) {
-            stream << (uint32_t) objects.size();
-            for (const auto &obj : objects) {
-                QByteArray objectBuffer;
-                QDataStream objectStream(&objectBuffer, QIODevice::WriteOnly);
-                obj->serialize(objectStream, parent, true);
-                stream << objectBuffer;
-            }
-        }
-
-        void serialize(QDataStream &stream);
-
         Project *project() const { return _project; }
+
+        RootSurface *rootSurface() const;
 
         Pool &pool() { return _pool; }
 
@@ -89,8 +78,6 @@ namespace AxiomModel {
         ConnectionCollection &connections() { return _connections; }
 
         const ConnectionCollection &connections() const { return _connections; }
-
-        std::vector<ModelObject *> deserializeChunk(QDataStream &stream, const QUuid &parent, ReferenceMapper *ref);
 
         void attachBackend(AxiomBackend::AudioBackend *backend);
 

@@ -14,17 +14,19 @@ namespace AxiomModel {
         static std::unique_ptr<SetNumValueAction> create(const QUuid &uuid, NumValue beforeVal, NumValue afterVal,
                                                          ModelRoot *root);
 
-        static std::unique_ptr<SetNumValueAction> deserialize(QDataStream &stream, ModelRoot *root);
-
-        void serialize(QDataStream &stream) const override;
-
         void forward(bool first, std::vector<QUuid> &compileItems) override;
 
         void backward(std::vector<QUuid> &compileItems) override;
 
+        const QUuid &uuid() const { return _uuid; }
+
+        const NumValue &beforeVal() const { return _beforeVal; }
+
+        const NumValue &afterVal() const { return _afterVal; }
+
     private:
-        QUuid uuid;
-        NumValue beforeVal;
-        NumValue afterVal;
+        QUuid _uuid;
+        NumValue _beforeVal;
+        NumValue _afterVal;
     };
 }

@@ -14,15 +14,3 @@ std::unique_ptr<MidiControl> MidiControl::create(const QUuid &uuid, const QUuid 
     return std::make_unique<MidiControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
                                          exposingUuid, root);
 }
-
-std::unique_ptr<MidiControl> MidiControl::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                      QPoint pos, QSize size, bool selected, QString name,
-                                                      bool showName, const QUuid &exposerUuid,
-                                                      const QUuid &exposingUuid, ReferenceMapper *ref,
-                                                      AxiomModel::ModelRoot *root) {
-    return create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid, exposingUuid, root);
-}
-
-void MidiControl::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    Control::serialize(stream, parent, withContext);
-}

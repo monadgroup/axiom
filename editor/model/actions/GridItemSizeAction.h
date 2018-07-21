@@ -14,17 +14,19 @@ namespace AxiomModel {
         static std::unique_ptr<GridItemSizeAction> create(const QUuid &uuid, QRect beforeRect, QRect afterRect,
                                                           ModelRoot *root);
 
-        static std::unique_ptr<GridItemSizeAction> deserialize(QDataStream &stream, ModelRoot *root);
-
-        void serialize(QDataStream &stream) const override;
-
         void forward(bool first, std::vector<QUuid> &compileItems) override;
 
         void backward(std::vector<QUuid> &compileItems) override;
 
+        const QUuid &uuid() const { return _uuid; }
+
+        const QRect &beforeRect() const { return _beforeRect; }
+
+        const QRect &afterRect() const { return _afterRect; }
+
     private:
-        QUuid uuid;
-        QRect beforeRect;
-        QRect afterRect;
+        QUuid _uuid;
+        QRect _beforeRect;
+        QRect _afterRect;
     };
 }

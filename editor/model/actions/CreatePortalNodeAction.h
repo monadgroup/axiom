@@ -22,22 +22,34 @@ namespace AxiomModel {
                                                               ConnectionWire::WireType wireType,
                                                               PortalControl::PortalType portalType, ModelRoot *root);
 
-        static std::unique_ptr<CreatePortalNodeAction> deserialize(QDataStream &stream, ModelRoot *root);
-
-        void serialize(QDataStream &stream) const override;
-
         void forward(bool first, std::vector<QUuid> &compileItems) override;
 
         void backward(std::vector<QUuid> &compileItems) override;
 
+        const QUuid &uuid() const { return _uuid; }
+
+        const QUuid &parentUuid() const { return _parentUuid; }
+
+        const QPoint &pos() const { return _pos; }
+
+        const QString &name() const { return _name; }
+
+        const QUuid &controlsUuid() const { return _controlsUuid; }
+
+        const ConnectionWire::WireType &wireType() const { return _wireType; }
+
+        const PortalControl::PortalType &portalType() const { return _portalType; }
+
+        const QUuid &controlUuid() const { return _controlUuid; }
+
     private:
-        QUuid uuid;
-        QUuid parentUuid;
-        QPoint pos;
-        QString name;
-        QUuid controlsUuid;
-        ConnectionWire::WireType wireType;
-        PortalControl::PortalType portalType;
-        QUuid controlUuid;
+        QUuid _uuid;
+        QUuid _parentUuid;
+        QPoint _pos;
+        QString _name;
+        QUuid _controlsUuid;
+        ConnectionWire::WireType _wireType;
+        PortalControl::PortalType _portalType;
+        QUuid _controlUuid;
     };
 }

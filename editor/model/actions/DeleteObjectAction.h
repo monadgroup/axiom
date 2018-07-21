@@ -18,17 +18,17 @@ namespace AxiomModel {
 
         static std::unique_ptr<DeleteObjectAction> create(const QUuid &uuid, AxiomModel::ModelRoot *root);
 
-        static std::unique_ptr<DeleteObjectAction> deserialize(QDataStream &stream, AxiomModel::ModelRoot *root);
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
 
-        void serialize(QDataStream &stream) const override;
+        void backward(std::vector<QUuid> &compileItems) override;
 
-        void forward(bool first, std::vector<QUuid> &compileItems);
+        const QUuid &uuid() const { return _uuid; }
 
-        void backward(std::vector<QUuid> &compileItems);
+        const QByteArray &buffer() const { return _buffer; }
 
     private:
-        QUuid uuid;
-        QByteArray buffer;
+        QUuid _uuid;
+        QByteArray _buffer;
 
         Sequence<ModelObject *> getLinkedItems(const QUuid &seed) const;
 

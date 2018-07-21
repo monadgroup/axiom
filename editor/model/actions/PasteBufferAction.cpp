@@ -7,13 +7,15 @@
 #include "../PoolOperators.h"
 #include "../objects/Node.h"
 #include "../objects/NodeSurface.h"
+#include "../serialize/ModelObjectSerializer.h"
+#include "../serialize/ProjectSerializer.h"
 
 using namespace AxiomModel;
 
 PasteBufferAction::PasteBufferAction(const QUuid &surfaceUuid, bool isBufferFormatted, QByteArray buffer,
                                      QVector<QUuid> usedUuids, QPoint center, AxiomModel::ModelRoot *root)
-    : Action(ActionType::PASTE_BUFFER, root), surfaceUuid(surfaceUuid), isBufferFormatted(isBufferFormatted),
-      buffer(std::move(buffer)), usedUuids(std::move(usedUuids)), center(center) {}
+    : Action(ActionType::PASTE_BUFFER, root), _surfaceUuid(surfaceUuid), _isBufferFormatted(isBufferFormatted),
+      _buffer(std::move(buffer)), _usedUuids(std::move(usedUuids)), _center(center) {}
 
 std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfaceUuid, bool isBufferFormatted,
                                                              QByteArray buffer, QVector<QUuid> usedUuids, QPoint center,
@@ -27,61 +29,38 @@ std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfac
     return create(surfaceUuid, false, std::move(buffer), QVector<QUuid>(), center, root);
 }
 
-std::unique_ptr<PasteBufferAction> PasteBufferAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid surfaceUuid;
-    stream >> surfaceUuid;
-    bool isBufferFormatted;
-    stream >> isBufferFormatted;
-    QByteArray buffer;
-    stream >> buffer;
-    QVector<QUuid> usedUuids;
-    stream >> usedUuids;
-    QPoint center;
-    stream >> center;
-
-    return create(surfaceUuid, isBufferFormatted, std::move(buffer), std::move(usedUuids), center, root);
-}
-
-void PasteBufferAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-
-    stream << surfaceUuid;
-    stream << isBufferFormatted;
-    stream << buffer;
-    stream << usedUuids;
-    stream << center;
-}
-
 void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
-    assert(!buffer.isEmpty());
-    assert(usedUuids.isEmpty());
+    assert(!_buffer.isEmpty());
+    assert(_usedUuids.isEmpty());
 
-    QDataStream stream(&buffer, QIODevice::ReadOnly);
+    QDataStream stream(&_buffer, QIODevice::ReadOnly);
     QPoint objectCenter;
     stream >> objectCenter;
 
     // deselect all nodes so we can just select the new ones
-    find(root()->nodeSurfaces(), surfaceUuid)->grid().deselectAll();
+    find(root()->nodeSurfaces(), _surfaceUuid)->grid().deselectAll();
 
     std::vector<ModelObject *> used;
-    if (isBufferFormatted) {
+    if (_isBufferFormatted) {
         IdentityReferenceMapper ref;
-        used = root()->deserializeChunk(stream, surfaceUuid, &ref);
+        used = ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), _surfaceUuid,
+                                                       &ref);
     } else {
         CloneReferenceMapper ref;
-        ref.setUuid(surfaceUuid, surfaceUuid);
-        ref.setPos(surfaceUuid, center - objectCenter);
-        used = root()->deserializeChunk(stream, surfaceUuid, &ref);
+        ref.setUuid(_surfaceUuid, _surfaceUuid);
+        ref.setPos(_surfaceUuid, _center - objectCenter);
+        used = ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), _surfaceUuid,
+                                                       &ref);
     }
 
-    isBufferFormatted = true;
-    buffer.clear();
+    _isBufferFormatted = true;
+    _buffer.clear();
 
     for (const auto &obj : used) {
-        if (auto node = dynamic_cast<Node *>(obj); node && obj->parentUuid() == surfaceUuid) {
+        if (auto node = dynamic_cast<Node *>(obj); node && obj->parentUuid() == _surfaceUuid) {
             node->select(false);
         }
-        usedUuids.push_back(obj->uuid());
+        _usedUuids.push_back(obj->uuid());
     }
 
     for (const auto &obj : used) {
@@ -91,12 +70,12 @@ void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
 }
 
 void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
-    assert(buffer.isEmpty());
-    assert(!usedUuids.isEmpty());
+    assert(_buffer.isEmpty());
+    assert(!_usedUuids.isEmpty());
 
-    QDataStream stream(&buffer, QIODevice::WriteOnly);
+    QDataStream stream(&_buffer, QIODevice::WriteOnly);
     QSet<QUuid> usedSet;
-    for (const auto &uuid : usedUuids) {
+    for (const auto &uuid : _usedUuids) {
         usedSet.insert(uuid);
     }
 
@@ -110,9 +89,9 @@ void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
     }
 
     stream << QPoint(0, 0);
-    ModelRoot::serializeChunk(stream, surfaceUuid, collected);
+    ModelObjectSerializer::serializeChunk(stream, _surfaceUuid, collected);
 
-    usedUuids.clear();
+    _usedUuids.clear();
 
     while (!objs.empty()) {
         (*objs.begin())->remove();

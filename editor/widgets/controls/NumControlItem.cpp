@@ -13,6 +13,7 @@
 #include "../FloatingValueEditor.h"
 #include "../node/NodeItem.h"
 #include "editor/compiler/interface/Runtime.h"
+#include "editor/model/ModelRoot.h"
 #include "editor/model/Project.h"
 #include "editor/model/actions/SetNumModeAction.h"
 #include "editor/model/actions/SetNumValueAction.h"

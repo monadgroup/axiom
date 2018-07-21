@@ -13,25 +13,9 @@ Library::Library() = default;
 
 Library::~Library() = default;
 
-Library::Library(Project *project, QDataStream &stream) {
-    stream >> _activeTag;
-    stream >> _activeSearch;
-
-    quint32 entryCount;
-    stream >> entryCount;
-    for (quint32 i = 0; i < entryCount; i++) {
-        addEntry(LibraryEntry::deserialize(stream, project));
-    }
-}
-
-void Library::serialize(QDataStream &stream) {
-    stream << _activeTag;
-    stream << _activeSearch;
-    stream << (quint32) _entries.size();
-    for (const auto &entry : _entries) {
-        entry->serialize(stream);
-    }
-}
+Library::Library(QString activeTag, QString activeSearch,
+                 std::vector<std::unique_ptr<AxiomModel::LibraryEntry>> entries)
+    : _entries(std::move(entries)), _activeTag(std::move(activeTag)), _activeSearch(std::move(activeSearch)) {}
 
 void Library::import(
     AxiomModel::Library *library,

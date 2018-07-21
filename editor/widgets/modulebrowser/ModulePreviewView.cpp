@@ -1,20 +1,21 @@
 #include "ModulePreviewView.h"
 
+#include <QtCore/QMimeData>
+#include <QtGui/QDrag>
+#include <QtGui/QMouseEvent>
 #include <QtWidgets/QGraphicsItem>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMessageBox>
-#include <QtGui/QMouseEvent>
-#include <QtGui/QDrag>
-#include <QtCore/QMimeData>
 
-#include "ModulePreviewCanvas.h"
 #include "../node/NodeItem.h"
 #include "../windows/MainWindow.h"
 #include "../windows/ModulePropertiesWindow.h"
-#include "editor/model/PoolOperators.h"
+#include "ModulePreviewCanvas.h"
 #include "editor/model/LibraryEntry.h"
+#include "editor/model/PoolOperators.h"
 #include "editor/model/grid/GridItem.h"
 #include "editor/model/objects/RootSurface.h"
+#include "editor/model/serialize/ModelObjectSerializer.h"
 
 using namespace AxiomGui;
 
@@ -32,8 +33,7 @@ ModulePreviewView::ModulePreviewView(MainWindow *window, AxiomModel::Library *li
 
     setFixedSize(100, 100);
     updateScaling();
-    connect(moduleScene, &ModulePreviewCanvas::contentChanged,
-            this, &ModulePreviewView::updateScaling);
+    connect(moduleScene, &ModulePreviewCanvas::contentChanged, this, &ModulePreviewView::updateScaling);
 }
 
 void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
@@ -48,9 +48,11 @@ void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
         QByteArray serializeArray;
         QDataStream stream(&serializeArray, QIODevice::WriteOnly);
         stream << centerPos;
-        AxiomModel::ModelRoot::serializeChunk(stream, entry->rootSurface()->uuid(), AxiomModel::findDependents(
-            AxiomModel::dynamicCast<AxiomModel::ModelObject *>(entry->root()->pool().sequence()),
-            entry->rootSurface()->uuid(), false));
+        AxiomModel::ModelObjectSerializer::serializeChunk(
+            stream, entry->rootSurface()->uuid(),
+            AxiomModel::findDependents(
+                AxiomModel::dynamicCast<AxiomModel::ModelObject *>(entry->root()->pool().sequence()),
+                entry->rootSurface()->uuid(), false));
 
         auto mimeData = new QMimeData();
         mimeData->setData("application/axiom-partial-surface", serializeArray);
@@ -132,8 +134,8 @@ void ModulePreviewView::updateScaling() {
     // figure out correct scaling with some padding
     auto selfWidth = width() - 30;
     auto selfHeight = height() - 30;
-    auto scaleFactor = boundingRect.width() > boundingRect.height() ? selfWidth / boundingRect.width() : selfHeight /
-                                                                                                         boundingRect.height();
+    auto scaleFactor = boundingRect.width() > boundingRect.height() ? selfWidth / boundingRect.width()
+                                                                    : selfHeight / boundingRect.height();
 
     scale(1 / currentScale, 1 / currentScale);
     centerOn(boundingRect.center());

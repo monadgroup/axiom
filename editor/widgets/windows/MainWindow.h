@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "editor/backend/AudioBackend.h"
 #include "editor/compiler/interface/Runtime.h"
 #include "editor/model/Project.h"
 

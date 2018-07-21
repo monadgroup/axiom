@@ -10,6 +10,7 @@
 
 #include "../GlobalActions.h"
 #include "NodeSurfaceCanvas.h"
+#include "editor/model/ModelRoot.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/Project.h"
 #include "editor/model/actions/DeleteObjectAction.h"
@@ -17,6 +18,7 @@
 #include "editor/model/actions/PasteBufferAction.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/NodeSurface.h"
+#include "editor/model/serialize/ModelObjectSerializer.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -223,7 +225,7 @@ void NodeSurfaceView::copySelected() {
     QByteArray serializeArray;
     QDataStream stream(&serializeArray, QIODevice::WriteOnly);
     stream << centerPos;
-    ModelRoot::serializeChunk(stream, surface->uuid(), surface->getCopyItems());
+    ModelObjectSerializer::serializeChunk(stream, surface->uuid(), surface->getCopyItems());
 
     auto mimeData = new QMimeData();
     mimeData->setData("application/axiom-partial-surface", serializeArray);

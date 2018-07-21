@@ -10,28 +10,6 @@ std::unique_ptr<CompositeAction> CompositeAction::create(std::vector<std::unique
     return std::make_unique<CompositeAction>(std::move(actions), root);
 }
 
-std::unique_ptr<CompositeAction> CompositeAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    uint32_t actionCount;
-    stream >> actionCount;
-
-    std::vector<std::unique_ptr<Action>> actions;
-    actions.reserve(actionCount);
-
-    for (uint32_t i = 0; i < actionCount; i++) {
-        actions.push_back(Action::deserialize(stream, root));
-    }
-
-    return create(std::move(actions), root);
-}
-
-void CompositeAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-    stream << (uint32_t) _actions.size();
-    for (const auto &action : _actions) {
-        action->serialize(stream);
-    }
-}
-
 void CompositeAction::forward(bool first, std::vector<QUuid> &compileItems) {
     for (const auto &action : _actions) {
         action->forward(first, compileItems);

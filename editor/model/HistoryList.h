@@ -26,9 +26,7 @@ namespace AxiomModel {
 
         explicit HistoryList(CompileApplyer applyer);
 
-        explicit HistoryList(QDataStream &stream, ModelRoot *root, CompileApplyer applyer);
-
-        void serialize(QDataStream &stream);
+        HistoryList(size_t stackPos, std::vector<std::unique_ptr<Action>> stack, CompileApplyer applyer);
 
         const std::vector<std::unique_ptr<Action>> &stack() const { return _stack; }
 
@@ -47,6 +45,8 @@ namespace AxiomModel {
         Action::ActionType redoType() const;
 
         void redo();
+
+        CompileApplyer &applyer() { return applyCompile; }
 
     private:
         size_t _stackPos = 0;

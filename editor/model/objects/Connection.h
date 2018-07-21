@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../ModelObject.h"
 #include "../ConnectionWire.h"
+#include "../ModelObject.h"
 #include "common/Promise.h"
 
 namespace AxiomModel {
@@ -15,15 +15,8 @@ namespace AxiomModel {
         Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlAUuid, const QUuid &controlBUuid,
                    ModelRoot *root);
 
-        static std::unique_ptr<Connection>
-        create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA, const QUuid &controlB,
-               ModelRoot *root);
-
-        static std::unique_ptr<Connection>
-        deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid, ReferenceMapper *ref,
-                    ModelRoot *root);
-
-        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
+        static std::unique_ptr<Connection> create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA,
+                                                  const QUuid &controlB, ModelRoot *root);
 
         bool buildOnRemove() const override { return true; }
 
@@ -43,5 +36,4 @@ namespace AxiomModel {
         QUuid _controlBUuid;
         AxiomCommon::Promise<ConnectionWire> _wire;
     };
-
 }

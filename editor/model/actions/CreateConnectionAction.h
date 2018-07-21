@@ -18,18 +18,22 @@ namespace AxiomModel {
         static std::unique_ptr<CreateConnectionAction> create(const QUuid &parentUuid, const QUuid &controlA,
                                                               const QUuid &controlB, ModelRoot *root);
 
-        static std::unique_ptr<CreateConnectionAction> deserialize(QDataStream &stream, ModelRoot *root);
-
-        void serialize(QDataStream &stream) const override;
-
         void forward(bool first, std::vector<QUuid> &compileItems) override;
 
         void backward(std::vector<QUuid> &compileItems) override;
 
+        const QUuid &uuid() const { return _uuid; }
+
+        const QUuid &parentUuid() const { return _parentUuid; }
+
+        const QUuid &controlA() const { return _controlA; }
+
+        const QUuid &controlB() const { return _controlB; }
+
     private:
-        QUuid uuid;
-        QUuid parentUuid;
-        QUuid controlA;
-        QUuid controlB;
+        QUuid _uuid;
+        QUuid _parentUuid;
+        QUuid _controlA;
+        QUuid _controlB;
     };
 }

@@ -6,8 +6,10 @@
 #include <cassert>
 
 #define unreachable \
-    assert(false); \
-    abort();
+    { \
+        assert(false); \
+        abort(); \
+    }
 
 namespace AxiomUtil {
 

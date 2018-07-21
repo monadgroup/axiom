@@ -19,22 +19,6 @@ std::unique_ptr<GroupNode> GroupNode::create(const QUuid &uuid, const QUuid &par
     return std::make_unique<GroupNode>(uuid, parentUuid, pos, size, selected, name, controlsUuid, innerUuid, root);
 }
 
-std::unique_ptr<GroupNode> GroupNode::deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                  QPoint pos, QSize size, bool selected, QString name,
-                                                  const QUuid &controlsUuid, ReferenceMapper *ref,
-                                                  AxiomModel::ModelRoot *root) {
-    QUuid innerUuid;
-    stream >> innerUuid;
-    innerUuid = ref->mapUuid(innerUuid);
-
-    return create(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, innerUuid, root);
-}
-
-void GroupNode::serialize(QDataStream &stream, const QUuid &parent, bool withContext) const {
-    Node::serialize(stream, parent, withContext);
-    stream << (*_nodes.value())->uuid();
-}
-
 void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     nodes().then([runtime, transaction](NodeSurface *const &surface) { surface->attachRuntime(runtime, transaction); });
 }

@@ -26,11 +26,9 @@ namespace AxiomModel {
 
         Library();
 
-        Library(Project *project, QDataStream &stream);
+        Library(QString activeTag, QString activeSearch, std::vector<std::unique_ptr<LibraryEntry>> entries);
 
         ~Library() override;
-
-        void serialize(QDataStream &stream);
 
         void import(Library *library,
                     const std::function<ConflictResolution(LibraryEntry *, LibraryEntry *)> &resolveConflict);

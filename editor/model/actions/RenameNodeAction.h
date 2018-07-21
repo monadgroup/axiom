@@ -14,17 +14,19 @@ namespace AxiomModel {
         static std::unique_ptr<RenameNodeAction> create(const QUuid &uuid, QString oldName, QString newName,
                                                         ModelRoot *root);
 
-        static std::unique_ptr<RenameNodeAction> deserialize(QDataStream &stream, ModelRoot *root);
-
-        void serialize(QDataStream &stream) const override;
-
         void forward(bool first, std::vector<QUuid> &compileItems) override;
 
         void backward(std::vector<QUuid> &compileItems) override;
 
+        const QUuid &uuid() const { return _uuid; }
+
+        const QString &oldName() const { return _oldName; }
+
+        const QString &newName() const { return _newName; }
+
     private:
-        QUuid uuid;
-        QString oldName;
-        QString newName;
+        QUuid _uuid;
+        QString _oldName;
+        QString _newName;
     };
 }

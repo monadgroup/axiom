@@ -7,36 +7,17 @@
 using namespace AxiomModel;
 
 RenameNodeAction::RenameNodeAction(const QUuid &uuid, QString oldName, QString newName, AxiomModel::ModelRoot *root)
-    : Action(ActionType::RENAME_NODE, root), uuid(uuid), oldName(std::move(oldName)), newName(std::move(newName)) {}
+    : Action(ActionType::RENAME_NODE, root), _uuid(uuid), _oldName(std::move(oldName)), _newName(std::move(newName)) {}
 
 std::unique_ptr<RenameNodeAction> RenameNodeAction::create(const QUuid &uuid, QString oldName, QString newName,
                                                            AxiomModel::ModelRoot *root) {
     return std::make_unique<RenameNodeAction>(uuid, std::move(oldName), std::move(newName), root);
 }
 
-std::unique_ptr<RenameNodeAction> RenameNodeAction::deserialize(QDataStream &stream, AxiomModel::ModelRoot *root) {
-    QUuid uuid;
-    stream >> uuid;
-    QString oldName;
-    stream >> oldName;
-    QString newName;
-    stream >> newName;
-
-    return create(uuid, std::move(oldName), std::move(newName), root);
-}
-
-void RenameNodeAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-
-    stream << uuid;
-    stream << oldName;
-    stream << newName;
-}
-
 void RenameNodeAction::forward(bool, std::vector<QUuid> &) {
-    find(root()->nodes(), uuid)->setName(newName);
+    find(root()->nodes(), _uuid)->setName(_newName);
 }
 
 void RenameNodeAction::backward(std::vector<QUuid> &) {
-    find(root()->nodes(), uuid)->setName(oldName);
+    find(root()->nodes(), _uuid)->setName(_oldName);
 }

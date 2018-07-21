@@ -12,8 +12,9 @@ CreatePortalNodeAction::CreatePortalNodeAction(const QUuid &uuid, const QUuid &p
                                                const QUuid &controlsUuid, AxiomModel::ConnectionWire::WireType wireType,
                                                AxiomModel::PortalControl::PortalType portalType,
                                                const QUuid &controlUuid, AxiomModel::ModelRoot *root)
-    : Action(ActionType::CREATE_PORTAL_NODE, root), uuid(uuid), parentUuid(parentUuid), pos(pos), name(std::move(name)),
-      controlsUuid(controlsUuid), wireType(wireType), portalType(portalType), controlUuid(controlUuid) {}
+    : Action(ActionType::CREATE_PORTAL_NODE, root), _uuid(uuid), _parentUuid(parentUuid), _pos(pos),
+      _name(std::move(name)), _controlsUuid(controlsUuid), _wireType(wireType), _portalType(portalType),
+      _controlUuid(controlUuid) {}
 
 std::unique_ptr<CreatePortalNodeAction>
     CreatePortalNodeAction::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name,
@@ -33,54 +34,18 @@ std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::create(const QUu
                   QUuid::createUuid(), root);
 }
 
-void CreatePortalNodeAction::serialize(QDataStream &stream) const {
-    Action::serialize(stream);
-
-    stream << uuid;
-    stream << parentUuid;
-    stream << pos;
-    stream << name;
-    stream << controlsUuid;
-    stream << (uint8_t) wireType;
-    stream << (uint8_t) portalType;
-    stream << controlUuid;
-}
-
-std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::deserialize(QDataStream &stream,
-                                                                            AxiomModel::ModelRoot *root) {
-    QUuid uuid;
-    stream >> uuid;
-    QUuid parentUuid;
-    stream >> parentUuid;
-    QPoint pos;
-    stream >> pos;
-    QString name;
-    stream >> name;
-    QUuid controlsUuid;
-    stream >> controlsUuid;
-    uint8_t wireTypeInt;
-    stream >> wireTypeInt;
-    uint8_t portalTypeInt;
-    stream >> portalTypeInt;
-    QUuid controlUuid;
-    stream >> controlUuid;
-
-    return create(uuid, parentUuid, pos, std::move(name), controlsUuid, (ConnectionWire::WireType) wireTypeInt,
-                  (PortalControl::PortalType) portalTypeInt, controlUuid, root);
-}
-
 void CreatePortalNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
     root()->pool().registerObj(
-        PortalNode::create(uuid, parentUuid, pos, QSize(1, 1), false, name, controlsUuid, root()));
-    root()->pool().registerObj(ControlSurface::create(controlsUuid, uuid, root()));
-    root()->pool().registerObj(PortalControl::create(controlUuid, controlsUuid, QPoint(0, 0), QSize(2, 2), false, "",
-                                                     false, QUuid(), QUuid(), wireType, portalType, root()));
+        PortalNode::create(_uuid, _parentUuid, _pos, QSize(1, 1), false, _name, _controlsUuid, root()));
+    root()->pool().registerObj(ControlSurface::create(_controlsUuid, _uuid, root()));
+    root()->pool().registerObj(PortalControl::create(_controlUuid, _controlsUuid, QPoint(0, 0), QSize(2, 2), false, "",
+                                                     false, QUuid(), QUuid(), _wireType, _portalType, root()));
 
-    compileItems.push_back(parentUuid);
+    compileItems.push_back(_parentUuid);
 }
 
 void CreatePortalNodeAction::backward(std::vector<QUuid> &compileItems) {
-    find(root()->nodes(), uuid)->remove();
+    find(root()->nodes(), _uuid)->remove();
 
-    compileItems.push_back(parentUuid);
+    compileItems.push_back(_parentUuid);
 }

@@ -48,11 +48,6 @@ namespace AxiomModel {
         static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid,
                                                       const QString &name, const QUuid &exposingUuid, ModelRoot *root);
 
-        static std::unique_ptr<Control> deserialize(QDataStream &stream, const QUuid &uuid, const QUuid &parentUuid,
-                                                    ReferenceMapper *ref, ModelRoot *root);
-
-        void serialize(QDataStream &stream, const QUuid &parent, bool withContext) const override;
-
         ControlSurface *surface() const { return _surface; }
 
         ControlType controlType() const { return _controlType; }
