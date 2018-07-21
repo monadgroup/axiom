@@ -13,7 +13,7 @@ Features:
  - Export to replayer with no dependencies (not even the standard library)
  - Use any DAW with VSTi support for note editing and automation
 
-**No prepackaged versions are available _yet_,** but you should be able to build Axiom in any sane development environment.
+There are currently pre-packaged versions available for Windows on [the Releases page](https://github.com/monadgroup/axiom/releases). Stay tuned for macOS and Linux builds!
 
 ## Backends
 
