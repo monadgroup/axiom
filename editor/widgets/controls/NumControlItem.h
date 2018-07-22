@@ -44,6 +44,10 @@ namespace AxiomGui {
 
         void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
+        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
         void paintControl(QPainter *painter) override;
 
         QString getLabelText() const override;
@@ -61,6 +65,7 @@ namespace AxiomGui {
     private:
         bool isDragging = false;
         bool isShowingValue = false;
+        bool displayNameOverride = false;
         QTimer showValueTimer;
         AxiomModel::NumValue beforeDragVal;
         QPointF mouseStartPoint;
@@ -80,5 +85,4 @@ namespace AxiomGui {
 
         void setCVal(AxiomModel::NumValue v) const;
     };
-
 }

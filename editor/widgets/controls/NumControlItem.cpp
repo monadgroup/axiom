@@ -271,13 +271,28 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     }
 }
 
+void NumControlItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    if (isShowingValue && !control->name().isEmpty()) {
+        displayNameOverride = true;
+    }
+
+    ControlItem::hoverEnterEvent(event);
+}
+
+void NumControlItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    displayNameOverride = false;
+    ControlItem::hoverLeaveEvent(event);
+}
+
 void NumControlItem::setStringValue(QString value) {
     setValue(stringAsValue(value, getCVal()));
 }
 
 void NumControlItem::controlValueChanged() {
-    isShowingValue = true;
-    showValueTimer.start(1000);
+    if (!displayNameOverride) {
+        isShowingValue = true;
+        showValueTimer.start(1000);
+    }
     update();
 }
 
@@ -373,7 +388,7 @@ void NumControlItem::setCVal(NumValue v) const {
 }
 
 QString NumControlItem::getLabelText() const {
-    if (hoverState() || isShowingValue) {
+    if ((hoverState() || isShowingValue) && !displayNameOverride) {
         auto controlVal = control->value();
         if (controlVal.left == controlVal.right) {
             return formatNumber(controlVal.left, controlVal.form);
