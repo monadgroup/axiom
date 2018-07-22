@@ -30,7 +30,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
 
     filterTabs->addTab(tr("All"));
 
-    auto searchBox = new QLineEdit(this);
+    searchBox = new QLineEdit(this);
     searchBox->setObjectName("searchBox");
     searchBox->setPlaceholderText("Search modules...");
     mainLayout->addWidget(searchBox, 0, 1);
@@ -70,6 +70,8 @@ void ModuleBrowserPanel::removeTag(const QString &tag) {
 }
 
 void ModuleBrowserPanel::changeTag(int tag) {
+    searchBox->setText("");
+    searchBox->clearFocus();
     if (tag == 0)
         library->setActiveTag("");
     else {
