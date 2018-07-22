@@ -62,7 +62,11 @@ void ModuleBrowserPanel::removeTag(const QString &tag) {
     auto index = std::find(tabValues.begin(), tabValues.end(), tag);
     assert(index != tabValues.end());
     tabValues.erase(index);
-    filterTabs->removeTab((int) (index - tabValues.begin()) + 1);
+    auto tabIndex = index - tabValues.begin() + 1;
+    if (filterTabs->currentIndex() == tabIndex) {
+        filterTabs->setCurrentIndex(0);
+    }
+    filterTabs->removeTab(tabIndex);
 }
 
 void ModuleBrowserPanel::changeTag(int tag) {

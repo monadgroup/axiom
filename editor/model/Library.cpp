@@ -135,12 +135,15 @@ void Library::removeTag(const QString &tag) {
     index->second--;
     if (!index->second) {
         _tags.erase(index);
-        if (_activeTag == tag) setActiveTag("");
         tagRemoved.trigger(tag);
     }
 }
 
 void Library::removeEntry(AxiomModel::LibraryEntry *entry) {
+    for (const auto &tag : entry->tags()) {
+        removeTag(tag);
+    }
+
     for (auto i = _entries.begin(); i != _entries.end(); i++) {
         if (i->get() == entry) {
             _entries.erase(i);
