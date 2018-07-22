@@ -33,7 +33,7 @@ namespace AxiomModel {
 
     class Control : public GridItem, public ModelObject {
     public:
-        enum class ControlType { NUM_SCALAR, MIDI_SCALAR, NUM_EXTRACT, MIDI_EXTRACT, NUM_PORTAL, MIDI_PORTAL, SCOPE };
+        enum class ControlType { NUM_SCALAR, MIDI_SCALAR, NUM_EXTRACT, MIDI_EXTRACT, NUM_PORTAL, MIDI_PORTAL, GRAPH };
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> showNameChanged;

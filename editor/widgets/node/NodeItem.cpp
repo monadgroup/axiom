@@ -23,20 +23,20 @@
 #include "editor/model/objects/ControlSurface.h"
 #include "editor/model/objects/CustomNode.h"
 #include "editor/model/objects/ExtractControl.h"
+#include "editor/model/objects/GraphControl.h"
 #include "editor/model/objects/GroupNode.h"
 #include "editor/model/objects/MidiControl.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/NumControl.h"
 #include "editor/model/objects/PortalControl.h"
 #include "editor/model/objects/RootSurface.h"
-#include "editor/model/objects/ScopeControl.h"
 #include "editor/model/serialize/ModelObjectSerializer.h"
 #include "editor/model/serialize/ProjectSerializer.h"
 #include "editor/widgets/controls/ExtractControlItem.h"
+#include "editor/widgets/controls/GraphControlItem.h"
 #include "editor/widgets/controls/MidiControlItem.h"
 #include "editor/widgets/controls/NumControlItem.h"
 #include "editor/widgets/controls/PortalControlItem.h"
-#include "editor/widgets/controls/ScopeControlItem.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -303,8 +303,8 @@ void NodeItem::addControl(Control *control) {
         item = new ExtractControlItem(extractControl, canvas);
     } else if (auto outputControl = dynamic_cast<PortalControl *>(control)) {
         item = new PortalControlItem(outputControl, canvas);
-    } else if (auto scopeControl = dynamic_cast<ScopeControl *>(control)) {
-        item = new ScopeControlItem(scopeControl, canvas);
+    } else if (auto graphControl = dynamic_cast<GraphControl *>(control)) {
+        item = new GraphControlItem(graphControl, canvas);
     }
 
     assert(item);

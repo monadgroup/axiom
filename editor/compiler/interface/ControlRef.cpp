@@ -28,18 +28,18 @@ bool ControlRef::getIsRead() const {
 
 ControlType MaximCompiler::fromModelType(AxiomModel::Control::ControlType modelType) {
     switch (modelType) {
-        case AxiomModel::Control::ControlType::NUM_PORTAL:
-        case AxiomModel::Control::ControlType::NUM_SCALAR:
-            return ControlType::Audio;
-        case AxiomModel::Control::ControlType::MIDI_PORTAL:
-        case AxiomModel::Control::ControlType::MIDI_SCALAR:
-            return ControlType::Midi;
-        case AxiomModel::Control::ControlType::NUM_EXTRACT:
-            return ControlType::AudioExtract;
-        case AxiomModel::Control::ControlType::MIDI_EXTRACT:
-            return ControlType::MidiExtract;
-        case AxiomModel::Control::ControlType::SCOPE:
-            return ControlType::Scope;
+    case AxiomModel::Control::ControlType::NUM_PORTAL:
+    case AxiomModel::Control::ControlType::NUM_SCALAR:
+        return ControlType::Audio;
+    case AxiomModel::Control::ControlType::MIDI_PORTAL:
+    case AxiomModel::Control::ControlType::MIDI_SCALAR:
+        return ControlType::Midi;
+    case AxiomModel::Control::ControlType::NUM_EXTRACT:
+        return ControlType::AudioExtract;
+    case AxiomModel::Control::ControlType::MIDI_EXTRACT:
+        return ControlType::MidiExtract;
+    case AxiomModel::Control::ControlType::GRAPH:
+        return ControlType::Graph;
     }
 
     unreachable;
@@ -47,18 +47,18 @@ ControlType MaximCompiler::fromModelType(AxiomModel::Control::ControlType modelT
 
 AxiomModel::Control::ControlType MaximCompiler::toModelType(MaximCompiler::ControlType type) {
     switch (type) {
-        case ControlType::Audio:
-            return AxiomModel::Control::ControlType::NUM_SCALAR;
-        case ControlType::Midi:
-            return AxiomModel::Control::ControlType::MIDI_SCALAR;
-        case ControlType::Scope:
-            return AxiomModel::Control::ControlType::SCOPE;
-        case ControlType::AudioExtract:
-            return AxiomModel::Control::ControlType::NUM_EXTRACT;
-        case ControlType::MidiExtract:
-            return AxiomModel::Control::ControlType::MIDI_EXTRACT;
-        default:
-            assert(false);
+    case ControlType::Audio:
+        return AxiomModel::Control::ControlType::NUM_SCALAR;
+    case ControlType::Midi:
+        return AxiomModel::Control::ControlType::MIDI_SCALAR;
+    case ControlType::Graph:
+        return AxiomModel::Control::ControlType::GRAPH;
+    case ControlType::AudioExtract:
+        return AxiomModel::Control::ControlType::NUM_EXTRACT;
+    case ControlType::MidiExtract:
+        return AxiomModel::Control::ControlType::MIDI_EXTRACT;
+    default:
+        assert(false);
     }
 
     unreachable;

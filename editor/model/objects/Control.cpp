@@ -6,12 +6,12 @@
 #include "Connection.h"
 #include "ControlSurface.h"
 #include "ExtractControl.h"
+#include "GraphControl.h"
 #include "GroupNode.h"
 #include "GroupSurface.h"
 #include "MidiControl.h"
 #include "NumControl.h"
 #include "PortalControl.h"
-#include "ScopeControl.h"
 #include "editor/compiler/interface/Runtime.h"
 
 using namespace AxiomModel;
@@ -60,8 +60,8 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
     case Control::ControlType::MIDI_EXTRACT:
         return ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(),
                                       exposingUuid, ConnectionWire::WireType::MIDI, 0, root);
-    case Control::ControlType::SCOPE:
-        return ScopeControl::create(uuid, parentUuid, QPoint(0, 0), QSize(6, 6), false, name, true, QUuid(),
+    case Control::ControlType::GRAPH:
+        return GraphControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(),
                                     exposingUuid, root);
     default:
         unreachable;
