@@ -87,14 +87,16 @@ impl DependencyGraph {
 
         // update the depended_by field on each surface/block
         for depended_surface in &depends_on_surfaces {
-            let surface_deps = self.surfaces
+            let surface_deps = self
+                .surfaces
                 .entry(*depended_surface)
                 .or_insert_with(|| SurfaceDeps::default());
             surface_deps.depended_by.push(surface.id.id);
             self.gc_surface_candidates.remove(depended_surface);
         }
         for depended_block in &depends_on_blocks {
-            let block_deps = self.blocks
+            let block_deps = self
+                .blocks
                 .entry(*depended_block)
                 .or_insert_with(|| BlockDeps::default());
             block_deps.depended_by.push(surface.id.id);
@@ -139,9 +141,17 @@ impl DependencyGraph {
 
                 for depend_block in surface_deps.depends_on_blocks {
                     // if the block only has one depended_by (which is us), mark it for removal
-                    // later
-                    if self.blocks[&depend_block].depended_by.len() <= 1 {
+                    // later, otherwise remove us from the list
+                    let depend_block_deps =
+                        &mut self.blocks.get_mut(&depend_block).unwrap().depended_by;
+                    if depend_block_deps.len() <= 1 {
                         self.gc_block_candidates.insert(depend_block);
+                    } else {
+                        let index = depend_block_deps
+                            .iter()
+                            .position(|&i| i == surface)
+                            .unwrap();
+                        depend_block_deps.remove(index);
                     }
                 }
             }

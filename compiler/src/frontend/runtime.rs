@@ -305,10 +305,11 @@ impl Runtime {
             .collect();
         self.optimize_blocks(blocks.iter_mut());
 
-        // add the new surfaces to the dependency graph
+        // add the new surfaces to the dependency graph and remove old ones
         for surface in &surfaces {
             self.graph.generate_surface(surface);
         }
+        self.graph.garbage_collect();
 
         let new_block_ids: Vec<_> = blocks.iter().map(|block| block.id.id).collect();
         let new_surface_ids: Vec<_> = surfaces.iter().map(|surface| surface.id.id).collect();
@@ -485,8 +486,6 @@ impl Runtime {
 
     /// Remove any objects that aren't referenced by others (and aren't the root).
     pub fn garbage_collect(&mut self) {
-        self.graph.garbage_collect();
-
         let graph = &self.graph;
         let surface_mirs = &mut self.surface_mirs;
         let surface_layouts = &mut self.surface_layouts;
