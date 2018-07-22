@@ -67,8 +67,8 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
 
     if (_runtime) {
         _runtime->commit(std::move(transaction));
+        rootSurface()->updateRuntimePointers(_runtime, _runtime->getRootPtr());
     }
-    rootSurface()->updateRuntimePointers(_runtime, _runtime->getRootPtr());
     if (_backend) {
         _backend->internalUpdateConfiguration();
     }
