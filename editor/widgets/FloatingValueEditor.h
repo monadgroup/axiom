@@ -12,6 +12,9 @@ namespace AxiomGui {
     public:
         explicit FloatingValueEditor(QString initialValue, QPointF scenePos);
 
+    protected:
+        bool eventFilter(QObject *object, QEvent *event) override;
+
     signals:
 
         void valueSubmitted(QString value);

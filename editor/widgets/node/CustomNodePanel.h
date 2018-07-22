@@ -10,16 +10,14 @@ class QGraphicsProxyWidget;
 namespace AxiomModel {
 
     class CustomNode;
-
 }
 
 namespace AxiomGui {
 
     class CustomNodePanel : public QGraphicsObject, public AxiomCommon::Hookable {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
-
         AxiomModel::CustomNode *node;
 
         explicit CustomNodePanel(AxiomModel::CustomNode *node);
@@ -27,6 +25,9 @@ namespace AxiomGui {
         QRectF boundingRect() const override;
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+
+    protected:
+        bool eventFilter(QObject *object, QEvent *event) override;
 
     private slots:
 
@@ -51,17 +52,12 @@ namespace AxiomGui {
         void resizerSizeChanged(QSizeF newSize);
 
     private:
-
         QGraphicsProxyWidget *textProxy;
         QPlainTextEdit *textEditor;
         QString beforeCode;
-        //bool hasErrors = false;
-        //bool showingErrors = false;
-
-        bool eventFilter(QObject *object, QEvent *event) override;
+        // bool hasErrors = false;
+        // bool showingErrors = false;
 
         void controlTextChanged();
-
     };
-
 }
