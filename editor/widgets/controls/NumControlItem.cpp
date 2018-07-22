@@ -7,6 +7,7 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMenu>
+#include <cmath>
 
 #include "../../util.h"
 #include "../CommonColors.h"
@@ -390,7 +391,7 @@ void NumControlItem::setCVal(NumValue v) const {
 QString NumControlItem::getLabelText() const {
     if ((hoverState() || isShowingValue) && !displayNameOverride) {
         auto controlVal = control->value();
-        if (controlVal.left == controlVal.right) {
+        if (fabsf(controlVal.left - controlVal.right) < 0.01) {
             return formatNumber(controlVal.left, controlVal.form);
         } else {
             return QString("%1 / %2").arg(formatNumber(controlVal.left, controlVal.form),
