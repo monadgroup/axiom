@@ -30,12 +30,14 @@ impl Function for ChannelFunction {
 
         // clamp the channel to {0,16}
         // todo: use eucrem here?
-        let channel_float = func.ctx
+        let channel_float = func
+            .ctx
             .b
             .build_call(
                 &min_intrinsic,
                 &[
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_call(
                             &max_intrinsic,
@@ -68,23 +70,28 @@ impl Function for ChannelFunction {
 
         // loop over each event and determine if it's for this channel
         let event_count = input_midi.get_count(func.ctx.b);
-        let index_ptr = func.ctx
+        let index_ptr = func
+            .ctx
             .allocb
             .build_alloca(&func.ctx.context.i8_type(), "index.ptr");
         func.ctx
             .b
             .build_store(&index_ptr, &func.ctx.context.i8_type().const_int(0, false));
 
-        let loop_check_block = func.ctx
+        let loop_check_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loop.check");
-        let loop_run_block = func.ctx
+        let loop_run_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loop.run");
-        let loop_match_block = func.ctx
+        let loop_match_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loop.match");
-        let loop_end_block = func.ctx
+        let loop_end_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loop.end");
 
@@ -110,7 +117,7 @@ impl Function for ChannelFunction {
         );
         func.ctx.b.build_store(&index_ptr, &next_index);
 
-        let current_event = result_midi.get_event(func.ctx.b, current_index);
+        let current_event = input_midi.get_event(func.ctx.b, current_index);
         let event_channel = current_event.get_channel(func.ctx.b);
         let channel_cond = func.ctx.b.build_int_compare(
             IntPredicate::EQ,
