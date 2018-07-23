@@ -61,7 +61,7 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
         return ExtractControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(),
                                       exposingUuid, ConnectionWire::WireType::MIDI, 0, root);
     case Control::ControlType::GRAPH:
-        return GraphControl::create(uuid, parentUuid, QPoint(0, 0), QSize(2, 2), false, name, true, QUuid(),
+        return GraphControl::create(uuid, parentUuid, QPoint(0, 0), QSize(4, 4), false, name, true, QUuid(),
                                     exposingUuid, root);
     default:
         unreachable;

@@ -8,6 +8,30 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class GraphControlItem;
+
+    class GraphControlTicks : public QGraphicsObject, public AxiomCommon::Hookable {
+    public:
+        GraphControlItem *item;
+
+        explicit GraphControlTicks(GraphControlItem *item);
+
+        void triggerUpdate();
+
+        void triggerGeometryChange();
+
+        QRectF boundingRect() const override;
+
+        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+
+    protected:
+        void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+    };
+
     class GraphControlZoom : public QGraphicsObject, public AxiomCommon::Hookable {
     public:
         AxiomModel::GraphControl *control;
@@ -21,16 +45,21 @@ namespace AxiomGui {
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
     protected:
-        /*void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
-        void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;*/
+        void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
     private:
-        bool isHovering;
+        bool isHovering = false;
+        bool isDragging = false;
+
+        void updateZoom(qreal mouseX);
     };
 
     class GraphControlItem : public ControlItem {
@@ -39,10 +68,16 @@ namespace AxiomGui {
 
         GraphControlItem(AxiomModel::GraphControl *control, NodeSurfaceCanvas *canvas);
 
+        QRectF useBoundingRect() const override;
+
+        void showHoverCursor(qreal pos);
+
+        void moveHoverCursor(qreal pos);
+
+        void hideHoverCursor();
+
     protected:
         bool showLabelInCenter() const override { return false; }
-
-        QRectF useBoundingRect() const override;
 
         QPainterPath controlPath() const override;
 
@@ -51,8 +86,8 @@ namespace AxiomGui {
     private:
         void positionChildren();
 
-        void paintTicks(QPainter *painter, QRectF rect, float pixelsPerSecond);
-
+        GraphControlTicks _ticks;
         GraphControlZoom _zoomer;
+        QGraphicsLineItem _hoverCursor;
     };
 }

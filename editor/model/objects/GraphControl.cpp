@@ -17,6 +17,14 @@ std::unique_ptr<GraphControl> GraphControl::create(const QUuid &uuid, const QUui
 
 void GraphControl::doRuntimeUpdate() {}
 
+GraphControlState *GraphControl::state() const {
+    if (runtimePointers()) {
+        return (GraphControlState *) runtimePointers()->data;
+    } else {
+        return nullptr;
+    }
+}
+
 void GraphControl::setZoom(float zoom) {
     if (zoom != _zoom) {
         _zoom = zoom;
