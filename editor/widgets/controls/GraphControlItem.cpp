@@ -10,6 +10,13 @@
 
 using namespace AxiomGui;
 
+static constexpr float MIN_ZOOM = -2;
+static constexpr float MAX_ZOOM = 3;
+
+float getWidthSeconds(float zoom) {
+    return powf(2, zoom + 1);
+}
+
 GraphControlTicks::GraphControlTicks(GraphControlItem *item) : item(item) {
     setAcceptHoverEvents(true);
     setCursor(QCursor(Qt::IBeamCursor));
@@ -38,7 +45,7 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     painter->setBrush(Qt::NoBrush);
 
     auto clippedRect = rect.marginsRemoved(QMarginsF(10, 0, 10, 0));
-    auto widthSeconds = powf(2, item->control->zoom() + 1);
+    auto widthSeconds = getWidthSeconds(item->control->zoom());
     auto pixelsPerSecond = clippedRect.width() / widthSeconds;
     auto numSeconds = (int) ceilf(widthSeconds);
 
@@ -73,6 +80,10 @@ void GraphControlTicks::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     item->hideHoverCursor();
 }
 
+void GraphControlTicks::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    item->placePoint(event->pos().x());
+}
+
 GraphControlZoom::GraphControlZoom(AxiomModel::GraphControl *control) : control(control) {
     setAcceptHoverEvents(true);
     control->zoomChanged.connect(this, &GraphControlZoom::triggerUpdate);
@@ -95,8 +106,8 @@ void GraphControlZoom::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     painter->drawLine(QPointF(rect.left() + paddingAmount, rect.center().y()),
                       QPointF(rect.right() - paddingAmount, rect.center().y()));
 
-    // the zoom is in the range {-2,2}, we want {0, lineLength}
-    auto remappedZoom = (control->zoom() + 2) / 4 * lineLength;
+    // the zoom is in the range {MIN_ZOOM,MAX_ZOOM}, we want {0, lineLength}
+    auto remappedZoom = (control->zoom() - MIN_ZOOM) / (MAX_ZOOM - MIN_ZOOM) * lineLength;
     QColor knobColor;
     if (isDragging) {
         knobColor = QColor(120, 120, 120);
@@ -141,11 +152,11 @@ void GraphControlZoom::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 }
 
 void GraphControlZoom::updateZoom(qreal mouseX) {
-    // remap from {0, lineLength} to {-2, 2}
+    // remap from {0, lineLength} to {MIN_ZOOM, MAX_ZOOM}
     auto rect = boundingRect();
     auto lineLength = rect.width() - 20;
-    auto remappedZoom = 4 * (mouseX - 10) / lineLength - 2;
-    control->setZoom(qMax(-2., qMin(remappedZoom, 2.)));
+    auto remappedZoom = (MAX_ZOOM - MIN_ZOOM) * (mouseX - 10) / lineLength + MIN_ZOOM;
+    control->setZoom(qMax(MIN_ZOOM, qMin((float) remappedZoom, MAX_ZOOM)));
 }
 
 GraphControlItem::GraphControlItem(AxiomModel::GraphControl *control, AxiomGui::NodeSurfaceCanvas *canvas)
@@ -179,6 +190,32 @@ void GraphControlItem::moveHoverCursor(qreal pos) {
 
 void GraphControlItem::hideHoverCursor() {
     _hoverCursor.setVisible(false);
+}
+
+void GraphControlItem::placePoint(qreal pos) {
+    // can't place the point if there are too many curves already
+    auto state = control->state();
+    if (state->curveCount == AxiomModel::GRAPH_CONTROL_CURVE_COUNT) {
+        return;
+    }
+
+    auto bounds = useBoundingRect();
+    auto left = qMax(0., qMin(pos, bounds.width() - 10));
+
+    auto widthSeconds = getWidthSeconds(control->zoom());
+    auto pixelsPerSecond = bounds.width() / widthSeconds;
+
+    auto leftSeconds = left / pixelsPerSecond;
+
+    // if the time is after the last, adding is trivial
+    if (state->curveCount == 0 || leftSeconds > state->curveEndPositions[state->curveCount - 1]) {
+        state->curveStartVals[state->curveCount + 1] = 0;
+        state->curveEndPositions[state->curveCount] = (float) leftSeconds;
+        state->curveTension[state->curveCount] = 0;
+        state->curveStates[state->curveCount] = -1;
+        state->curveCount++;
+        update();
+    }
 }
 
 QPainterPath GraphControlItem::controlPath() const {
@@ -223,19 +260,56 @@ void GraphControlItem::paintControl(QPainter *painter) {
     painter->setBrush(Qt::NoBrush);
 
     auto sidePadding = 10;
-    auto sidePaddingMargin = QMarginsF(sidePadding, 0, sidePadding, 0);
+    auto sidePaddingMargin = QMarginsF(sidePadding, sidePadding, sidePadding, sidePadding);
     auto clippedBodyRect = bodyRect.marginsRemoved(sidePaddingMargin);
 
+    auto controlState = control->state();
+    auto widthSeconds = getWidthSeconds(control->zoom());
+    auto pixelsPerSecond = clippedBodyRect.width() / widthSeconds;
+
+    auto paintClipRect = bodyRect;
+    paintClipRect.setRight(clippedBodyRect.right());
+    painter->setClipRect(paintClipRect);
     painter->setPen(QPen(QColor(50, 50, 50)));
-    painter->drawLine(clippedBodyRect.topLeft() - QPointF(0.5, 0.5), clippedBodyRect.bottomLeft() - QPointF(0.5, 0.5));
-    painter->drawLine(clippedBodyRect.topRight() - QPointF(0.5, 0.5),
-                      clippedBodyRect.bottomRight() - QPointF(0.5, 0.5));
+    QPainterPath curves;
+    for (uint8_t curveIndex = 0; curveIndex < controlState->curveCount; curveIndex++) {
+        auto startSeconds = 0.f;
+        if (curveIndex > 0) {
+            startSeconds = controlState->curveEndPositions[curveIndex - 1];
+        }
+
+        // don't continue further if it's past the edge of what we're drawing
+        if (startSeconds >= widthSeconds) break;
+
+        auto endSeconds = controlState->curveEndPositions[curveIndex];
+        auto startVal = controlState->curveStartVals[curveIndex];
+        auto endVal = controlState->curveStartVals[curveIndex + 1];
+        auto tension = controlState->curveTension[0];
+
+        auto endX = clippedBodyRect.x() + endSeconds * pixelsPerSecond;
+        auto lineEndX = floor(endX) - 0.5;
+        painter->drawLine(QPointF(lineEndX, bodyRect.top()), QPointF(lineEndX, bodyRect.bottom()));
+
+        drawTensionGraph(curves,
+                         QPointF(clippedBodyRect.x() + startSeconds * pixelsPerSecond,
+                                 clippedBodyRect.bottom() - clippedBodyRect.height() * startVal),
+                         QPointF(endX, clippedBodyRect.bottom() - clippedBodyRect.height() * endVal), tension);
+    }
+
+    painter->setPen(QPen(QColor(70, 70, 70)));
+    painter->drawLine(QPointF(bodyRect.left() - 0.5, clippedBodyRect.top() - 0.5),
+                      QPointF(bodyRect.right() - 0.5, clippedBodyRect.top() - 0.5));
+    painter->drawLine(QPointF(bodyRect.left() - 0.5, clippedBodyRect.bottom() - 0.5),
+                      QPointF(bodyRect.right() - 0.5, clippedBodyRect.bottom() - 0.5));
 
     painter->setPen(QPen(CommonColors::numNormal, 2));
+    painter->drawPath(curves);
 
-    QPainterPath tensionGraph;
-    drawTensionGraph(tensionGraph, clippedBodyRect.bottomLeft(), clippedBodyRect.topRight(), hoverState() * 2 - 1);
-    painter->drawPath(tensionGraph);
+    painter->setPen(QPen(QColor(70, 70, 70)));
+    painter->drawLine(QPointF(clippedBodyRect.left() - 0.5, bodyRect.top() - 0.5),
+                      QPointF(clippedBodyRect.left() - 0.5, bodyRect.bottom() - 0.5));
+    painter->drawLine(QPointF(clippedBodyRect.right() - 0.5, bodyRect.top() - 0.5),
+                      QPointF(clippedBodyRect.right() - 0.5, bodyRect.bottom() - 0.5));
 }
 
 void GraphControlItem::positionChildren() {

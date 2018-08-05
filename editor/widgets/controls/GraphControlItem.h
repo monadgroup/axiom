@@ -30,6 +30,8 @@ namespace AxiomGui {
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     };
 
     class GraphControlZoom : public QGraphicsObject, public AxiomCommon::Hookable {
@@ -75,6 +77,8 @@ namespace AxiomGui {
         void moveHoverCursor(qreal pos);
 
         void hideHoverCursor();
+
+        void placePoint(qreal pos);
 
     protected:
         bool showLabelInCenter() const override { return false; }

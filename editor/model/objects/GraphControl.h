@@ -4,12 +4,14 @@
 
 namespace AxiomModel {
 
+    constexpr size_t GRAPH_CONTROL_CURVE_COUNT = 16;
+
     struct GraphControlState {
         uint8_t curveCount;
-        float curveStartVals[9];
-        float curveEndPositions[8];
-        float curveTension[8];
-        int8_t curveStates[8];
+        float curveStartVals[GRAPH_CONTROL_CURVE_COUNT + 1];
+        float curveEndPositions[GRAPH_CONTROL_CURVE_COUNT];
+        float curveTension[GRAPH_CONTROL_CURVE_COUNT];
+        int8_t curveStates[GRAPH_CONTROL_CURVE_COUNT];
     };
 
     class GraphControl : public Control {
