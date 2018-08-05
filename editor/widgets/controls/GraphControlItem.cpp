@@ -5,6 +5,7 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <cmath>
 
+#include "../CommonColors.h"
 #include "editor/model/objects/GraphControl.h"
 
 using namespace AxiomGui;
@@ -186,6 +187,28 @@ QPainterPath GraphControlItem::controlPath() const {
     return path;
 }
 
+static float tensionGraph(float x, float tension) {
+    const float q = 15;
+
+    if (tension >= 0) {
+        return powf(x, powf(q, tension));
+    } else {
+        return 1 - powf(1 - x, powf(q, -tension));
+    }
+}
+
+void drawTensionGraph(QPainterPath &path, QPointF startLeft, QPointF endRight, float tension) {
+    const int numLines = 10 + (int) (endRight.x() - startLeft.x()) / 10;
+
+    path.moveTo(startLeft);
+    for (int i = 1; i <= numLines; i++) {
+        auto x = i / (float) numLines;
+        auto mixAmt = tensionGraph(x, tension);
+        path.lineTo(startLeft.x() + (endRight.x() - startLeft.x()) * x,
+                    startLeft.y() + (endRight.y() - startLeft.y()) * mixAmt);
+    }
+}
+
 void GraphControlItem::paintControl(QPainter *painter) {
     auto boundingRect = useBoundingRect();
 
@@ -202,15 +225,17 @@ void GraphControlItem::paintControl(QPainter *painter) {
     auto sidePadding = 10;
     auto sidePaddingMargin = QMarginsF(sidePadding, 0, sidePadding, 0);
     auto clippedBodyRect = bodyRect.marginsRemoved(sidePaddingMargin);
-    // footerRect = footerRect.marginsRemoved(sidePaddingMargin);
-
-    // auto widthSeconds = powf(2, control->zoom() + 1);
-    // auto pixelsPerSecond = clippedBodyRect.width() / widthSeconds;
 
     painter->setPen(QPen(QColor(50, 50, 50)));
     painter->drawLine(clippedBodyRect.topLeft() - QPointF(0.5, 0.5), clippedBodyRect.bottomLeft() - QPointF(0.5, 0.5));
     painter->drawLine(clippedBodyRect.topRight() - QPointF(0.5, 0.5),
                       clippedBodyRect.bottomRight() - QPointF(0.5, 0.5));
+
+    painter->setPen(QPen(CommonColors::numNormal, 2));
+
+    QPainterPath tensionGraph;
+    drawTensionGraph(tensionGraph, clippedBodyRect.bottomLeft(), clippedBodyRect.topRight(), hoverState() * 2 - 1);
+    painter->drawPath(tensionGraph);
 }
 
 void GraphControlItem::positionChildren() {
