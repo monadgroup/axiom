@@ -8,6 +8,8 @@ namespace AxiomModel {
     public:
         QUuid mapUuid(const QUuid &input) override { return input; }
 
+        bool isValid(const QUuid &input) override { return true; }
+
         QPoint mapPos(const QUuid &parent, const QPoint &input) override { return input; }
     };
 }

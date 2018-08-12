@@ -1,10 +1,15 @@
 #include "ControlSerializer.h"
 
 #include "../../util.h"
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
 #include "../objects/Control.h"
+#include "../objects/ControlSurface.h"
 #include "../objects/ExtractControl.h"
+#include "../objects/GroupSurface.h"
 #include "../objects/MidiControl.h"
+#include "../objects/Node.h"
 #include "../objects/NumControl.h"
 #include "../objects/PortalControl.h"
 #include "ValueSerializer.h"
@@ -54,9 +59,30 @@ std::unique_ptr<Control> ControlSerializer::deserialize(QDataStream &stream, uin
     bool showName;
     stream >> showName;
 
+    QUuid maybeExposerUuid;
+    stream >> maybeExposerUuid;
+
+    // The exposer should only be set if the actual control exists in this deserialization.
+    // Since the exposer control is normally after the exposed one (but it doesn't have to be!) we can't just
+    // check if its UUID is valid in the ReferenceMapper, instead we need to see if the node it would exist on is
+    // valid. We do that here by walking up trying to find a GroupNode, and then checking to see if it's a valid
+    // reference.
     QUuid exposerUuid;
-    stream >> exposerUuid;
-    exposerUuid = ref->mapUuid(exposerUuid);
+    if (ref->isValid(maybeExposerUuid)) {
+        // hot path if the exposer control happens to already exist
+        exposerUuid = ref->mapUuid(maybeExposerUuid);
+    } else if (!maybeExposerUuid.isNull()) {
+        auto controlSurface = findMaybe(root->controlSurfaces(), parentUuid);
+        if (controlSurface) {
+            auto parentNode = findMaybe(root->nodes(), (*controlSurface)->parentUuid());
+            if (parentNode) {
+                auto groupSurface = findMaybe<GroupSurface *>(root->nodeSurfaces(), (*parentNode)->parentUuid());
+                if (groupSurface && ref->isValid((*groupSurface)->parentUuid())) {
+                    exposerUuid = ref->mapUuid(maybeExposerUuid);
+                }
+            }
+        }
+    }
 
     QUuid exposingUuid;
     stream >> exposingUuid;
