@@ -156,7 +156,8 @@ QTabBar::tab:selected {
 
 /* dock panel styling */
 QMainWindow::separator {
-    background: #111;
+    border-right: 1px solid #222;
+    border-bottom: 1px solid #222;
 }
 
 QMainWindow::separator:horizontal {
