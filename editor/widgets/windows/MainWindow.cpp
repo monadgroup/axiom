@@ -156,6 +156,7 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
 
     _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
     addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
+    _historyPanel->hide();
 
     _modulePanel = std::make_unique<ModuleBrowserPanel>(this, &_project->library(), this);
     addDockWidget(Qt::BottomDockWidgetArea, _modulePanel.get());
