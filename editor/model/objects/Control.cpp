@@ -37,8 +37,10 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
 
     if (!_exposingUuid.isNull()) {
-        findLater<Control *>(root->controls(), _exposingUuid).then([uuid](Control *exposing) {
+        findLater<Control *>(root->controls(), _exposingUuid).then([this, uuid](Control *exposing) {
             exposing->setExposerUuid(uuid);
+
+            exposing->nameChanged.connect(this, &Control::setName);
         });
     }
 }
