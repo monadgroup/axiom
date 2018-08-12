@@ -121,6 +121,48 @@ impl DependencyGraph {
         self.blocks.get(&block)
     }
 
+    pub fn is_ancestor_of_surface(&self, base: SurfaceRef, ancestor: SurfaceRef) -> bool {
+        if base == ancestor {
+            return false;
+        }
+
+        let mut check_surfaces = VecDeque::new();
+        check_surfaces.push_back(base);
+
+        while let Some(surface) = check_surfaces.pop_front() {
+            for &parent_surface in &self.get_surface_deps(surface).unwrap().depended_by {
+                if parent_surface == ancestor {
+                    return true;
+                }
+
+                check_surfaces.push_back(parent_surface);
+            }
+        }
+
+        false
+    }
+
+    pub fn is_descendent_of_surface(&self, base: SurfaceRef, descendent: SurfaceRef) -> bool {
+        if base == descendent {
+            return false;
+        }
+
+        let mut check_surfaces = VecDeque::new();
+        check_surfaces.push_back(base);
+
+        while let Some(surface) = check_surfaces.pop_front() {
+            for &child_surface in &self.get_surface_deps(surface).unwrap().depends_on_surfaces {
+                if child_surface == descendent {
+                    return true;
+                }
+
+                check_surfaces.push_back(child_surface);
+            }
+        }
+
+        false
+    }
+
     pub fn garbage_collect(&mut self) {
         // use the surface candidates as seeds
         let mut old_surfaces = HashSet::new();
