@@ -80,7 +80,7 @@ QScrollBar::handle:vertical:hover, QScrollBar::handle:vertical:pressed {
 
 /* menu styling */
 QMenuBar {
-    background: #222;
+    background: #292929;
     border-bottom: 1px solid #111;
 }
 
@@ -156,16 +156,8 @@ QTabBar::tab:selected {
 
 /* dock panel styling */
 QMainWindow::separator {
-    border-right: 1px solid #222;
-    border-bottom: 1px solid #222;
-}
-
-QMainWindow::separator:horizontal {
-    width: 2px;
-}
-
-QMainWindow::separator:vertical {
-    height: 2px;
+    border-right: 1px solid #292929;
+    border-bottom: 1px solid #292929;
 }
 
 QDockWidget {
@@ -174,11 +166,11 @@ QDockWidget {
 
 QDockWidget::title {
     padding: 8px 10px;
-    background: #222;
+    background: #292929;
 }
 
 QDockWidget::close-button, QDockWidget::float-button {
-    background: #222;
+    background: #292929;
     border: none;
 }
 
