@@ -207,12 +207,41 @@ void GraphControlItem::placePoint(qreal pos) {
 
     auto leftSeconds = left / pixelsPerSecond;
 
-    // if the time is after the last, adding is trivial
     if (state->curveCount == 0 || leftSeconds > state->curveEndPositions[state->curveCount - 1]) {
+        // if the time is after the last, adding is trivial
         state->curveStartVals[state->curveCount + 1] = 0;
         state->curveEndPositions[state->curveCount] = (float) leftSeconds;
         state->curveTension[state->curveCount] = 0;
         state->curveStates[state->curveCount] = -1;
+        state->curveCount++;
+        update();
+    } else {
+        // figure out after which curve the new point should be placed
+        ssize_t placePoint = -1;
+        for (size_t i = 0; i < state->curveCount; i++) {
+            if (leftSeconds < state->curveEndPositions[i]) {
+                placePoint = i;
+                break;
+            }
+        }
+        assert(placePoint != -1);
+
+        // move old values after the place point
+        auto moveItems = state->curveCount - placePoint;
+        memmove(&state->curveStartVals[placePoint + 2], &state->curveStartVals[placePoint + 1],
+                sizeof(state->curveStartVals[0]) * moveItems);
+        memmove(&state->curveEndPositions[placePoint + 1], &state->curveEndPositions[placePoint],
+                sizeof(state->curveEndPositions[0]) * moveItems);
+        memmove(&state->curveTension[placePoint + 1], &state->curveTension[placePoint],
+                sizeof(state->curveTension[0]) * moveItems);
+        memmove(&state->curveStates[placePoint + 1], &state->curveStates[placePoint],
+                sizeof(state->curveStates[0]) * moveItems);
+
+        state->curveStartVals[placePoint + 1] = 0;
+        state->curveEndPositions[placePoint] = (float) leftSeconds;
+        state->curveTension[placePoint] = 0;
+        state->curveStates[placePoint] = -1;
+
         state->curveCount++;
         update();
     }
@@ -284,7 +313,7 @@ void GraphControlItem::paintControl(QPainter *painter) {
         auto endSeconds = controlState->curveEndPositions[curveIndex];
         auto startVal = controlState->curveStartVals[curveIndex];
         auto endVal = controlState->curveStartVals[curveIndex + 1];
-        auto tension = controlState->curveTension[0];
+        auto tension = controlState->curveTension[curveIndex];
 
         auto endX = clippedBodyRect.x() + endSeconds * pixelsPerSecond;
         auto lineEndX = floor(endX) - 0.5;
