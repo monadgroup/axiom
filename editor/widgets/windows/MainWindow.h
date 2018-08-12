@@ -26,7 +26,7 @@ namespace AxiomGui {
         Q_OBJECT
 
     public:
-        MainWindow(AxiomBackend::AudioBackend *backend);
+        explicit MainWindow(AxiomBackend::AudioBackend *backend);
 
         ~MainWindow() override;
 
@@ -38,7 +38,8 @@ namespace AxiomGui {
 
     public slots:
 
-        void showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split);
+        NodeSurfacePanel *showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split,
+                                      bool permanent);
 
         void showAbout();
 
@@ -67,5 +68,6 @@ namespace AxiomGui {
         std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
         std::unique_ptr<HistoryPanel> _historyPanel;
         std::unique_ptr<ModuleBrowserPanel> _modulePanel;
+        QMenu *_viewMenu;
     };
 }

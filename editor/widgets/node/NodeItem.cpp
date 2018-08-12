@@ -215,7 +215,7 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     if (auto groupNode = dynamic_cast<GroupNode *>(node); groupNode && groupNode->nodes().value()) {
         event->accept();
-        canvas->panel->window->showSurface(canvas->panel, *groupNode->nodes().value(), false);
+        canvas->panel->window->showSurface(canvas->panel, *groupNode->nodes().value(), false, false);
     } else if (auto customNode = dynamic_cast<CustomNode *>(node)) {
         event->accept();
         customNode->setPanelOpen(!customNode->isPanelOpen());

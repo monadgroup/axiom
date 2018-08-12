@@ -69,7 +69,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
 
     editMenu->addAction(GlobalActions::editPreferences);
 
-    connect(GlobalActions::helpAbout, &QAction::triggered, this, &MainWindow::showAbout);
+    _viewMenu = menuBar()->addMenu(tr("&View"));
 
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(GlobalActions::helpAbout);
@@ -82,15 +82,18 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
     connect(GlobalActions::fileQuit, &QAction::triggered, QApplication::quit);
     connect(GlobalActions::fileImportLibrary, &QAction::triggered, this, &MainWindow::importLibrary);
     connect(GlobalActions::fileExportLibrary, &QAction::triggered, this, &MainWindow::exportLibrary);
+
+    connect(GlobalActions::helpAbout, &QAction::triggered, this, &MainWindow::showAbout);
 }
 
 MainWindow::~MainWindow() = default;
 
-void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *surface, bool split) {
+NodeSurfacePanel *MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *surface, bool split,
+                                          bool permanent) {
     auto openPanel = _openPanels.find(surface);
     if (openPanel != _openPanels.end()) {
         openPanel->second->raise();
-        return;
+        return openPanel->second.get();
     }
 
     auto newDock = std::make_unique<NodeSurfacePanel>(this, surface);
@@ -111,8 +114,13 @@ void MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurfac
         });
     }
 
-    connect(newDockPtr, &NodeSurfacePanel::closed, this, [this, surface]() { removeSurface(surface); });
+    if (!permanent) {
+        connect(newDockPtr, &NodeSurfacePanel::closed, this, [this, surface]() { removeSurface(surface); });
+    }
+
+    auto dockPtr = newDock.get();
     _openPanels.emplace(surface, std::move(newDock));
+    return dockPtr;
 }
 
 void MainWindow::showAbout() {
@@ -126,6 +134,7 @@ void MainWindow::newProject() {
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     // cleanup old project state
+    _openPanels.clear();
     if (_historyPanel) {
         _historyPanel->close();
     }
@@ -143,13 +152,17 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     auto defaultSurface =
         AxiomModel::getFirst(AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
     assert(defaultSurface.value());
-    showSurface(nullptr, *defaultSurface.value(), false);
+    auto surfacePanel = showSurface(nullptr, *defaultSurface.value(), false, true);
 
     _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
     addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
 
     _modulePanel = std::make_unique<ModuleBrowserPanel>(this, &_project->library(), this);
     addDockWidget(Qt::BottomDockWidgetArea, _modulePanel.get());
+
+    _viewMenu->addAction(surfacePanel->toggleViewAction());
+    _viewMenu->addAction(_modulePanel->toggleViewAction());
+    _viewMenu->addAction(_historyPanel->toggleViewAction());
 }
 
 void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {
