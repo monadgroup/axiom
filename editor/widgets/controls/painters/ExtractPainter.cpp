@@ -2,8 +2,8 @@
 
 #define _USE_MATH_DEFINES
 
-#include <math.h>
 #include <bitset>
+#include <math.h>
 
 #include "editor/util.h"
 
@@ -20,7 +20,7 @@ void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, 
 
     // draw background
     painter->setPen(QPen(QColor(0, 0, 0), scaledBorder));
-    painter->setBrush(QBrush(AxiomUtil::mixColor(QColor(30, 30, 30), QColor(45, 45, 45), hoverState)));
+    painter->setBrush(QBrush(AxiomUtil::mixColor(QColor(45, 45, 45), QColor(60, 60, 60), hoverState)));
     painter->drawEllipse(externBr.marginsRemoved(marginF));
 
     // draw markers
@@ -38,10 +38,8 @@ void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, 
         painter->setPen(activeMarkerPen);
 
         auto markerAngle = i / (float) markerCount * 2 * M_PI;
-        auto markerP = centerP + QPointF(
-            externBr.width() / 2 * std::cos(markerAngle),
-            externBr.height() / 2 * std::sin(markerAngle)
-        );
+        auto markerP = centerP + QPointF(externBr.width() / 2 * std::cos(markerAngle),
+                                         externBr.height() / 2 * std::sin(markerAngle));
         painter->drawLine((centerP + 2 * markerP) / 3, (centerP + 10 * markerP) / 11);
     }
 }

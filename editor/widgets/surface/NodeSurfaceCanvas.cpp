@@ -195,7 +195,7 @@ void NodeSurfaceCanvas::doRuntimeUpdate() {
 }
 
 void NodeSurfaceCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
-    drawGrid(painter, rect, nodeGridSize, QColor::fromRgb(34, 34, 34), 2);
+    drawGrid(painter, rect, nodeGridSize, QColor::fromRgb(60, 60, 60), 2);
 }
 
 void NodeSurfaceCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {

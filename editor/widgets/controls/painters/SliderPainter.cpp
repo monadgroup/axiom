@@ -25,9 +25,8 @@ static QRectF flip(QRectF a, bool yes) {
     return a;
 }
 
-void SliderPainter::paint(QPainter *painter, const QRectF &boundingRect, float hoverState,
-                          AxiomModel::NumValue cv, bool vertical, const QColor &baseColor,
-                          const QColor &activeColor) {
+void SliderPainter::paint(QPainter *painter, const QRectF &boundingRect, float hoverState, AxiomModel::NumValue cv,
+                          bool vertical, const QColor &baseColor, const QColor &activeColor) {
     auto br = flip(getBounds(boundingRect, vertical), vertical);
     auto scaledThickness = (0.12f + 0.08f * hoverState) * br.height();
 
@@ -39,18 +38,7 @@ void SliderPainter::paint(QPainter *painter, const QRectF &boundingRect, float h
 
     // draw background
     painter->setPen(Qt::NoPen);
-    /*if (!control->sink()->connections().empty()) {
-        auto activeBorderThickness = 0.04 * br.height();
-        painter->setBrush(QBrush(
-            AxiomUtil::mixColor(CommonColors::numWireNormal, CommonColors::numWireActive, control->sink()->active())));
-        painter->drawRect(flip(
-            br.marginsAdded(QMarginsF(activeBorderThickness, activeBorderThickness, activeBorderThickness,
-                                      activeBorderThickness)),
-            vertical
-        ));
-    }*/
-
-    painter->setBrush(QBrush(QColor(30, 30, 30)));
+    painter->setBrush(QBrush(QColor(40, 40, 40)));
     painter->drawRect(flip(br, vertical));
 
     // draw markers
@@ -72,10 +60,8 @@ void SliderPainter::paint(QPainter *painter, const QRectF &boundingRect, float h
         auto shiftAmt = 2.5;
         if (i % 2 == 0) shiftAmt = 2;
         if (i == 0 || i == markerCount || i == markerCount / 2) shiftAmt = 1.5;
-        painter->drawLine(
-            flip(QPointF(markerX, br.y() + 1), vertical),
-            flip(QPointF(markerX, br.y() + br.height() / shiftAmt), vertical)
-        );
+        painter->drawLine(flip(QPointF(markerX, br.y() + 1), vertical),
+                          flip(QPointF(markerX, br.y() + br.height() / shiftAmt), vertical));
     }
 
     auto minX = br.left() + br.width() * (vertical ? 1 - minVal : minVal);
@@ -91,26 +77,17 @@ void SliderPainter::paint(QPainter *painter, const QRectF &boundingRect, float h
     auto pen = QPen(QColor(0, 0, 0), scaledThickness);
     pen.setCapStyle(Qt::FlatCap);
     painter->setPen(pen);
-    painter->drawLine(
-        flip(maxPos, vertical),
-        flip(rightPos, vertical)
-    );
+    painter->drawLine(flip(maxPos, vertical), flip(rightPos, vertical));
 
     // draw max bar
     pen.setColor(darkerCurrent);
     painter->setPen(pen);
-    painter->drawLine(
-        flip(minPos, vertical),
-        flip(maxPos, vertical)
-    );
+    painter->drawLine(flip(minPos, vertical), flip(maxPos, vertical));
 
     // draw min bar
     pen.setColor(currentColor);
     painter->setPen(pen);
-    painter->drawLine(
-        flip(leftPos, vertical),
-        flip(minPos, vertical)
-    );
+    painter->drawLine(flip(leftPos, vertical), flip(minPos, vertical));
 }
 
 void SliderPainter::shape(QPainterPath &path, const QRectF &boundingRect, bool vertical) const {
@@ -122,8 +99,6 @@ QRectF SliderPainter::getBounds(const QRectF &boundingRect, bool vertical) const
     auto scaledMargin = 0.1f * br.height();
     auto barHeight = br.height() / 2;
     auto barY = br.center().y() - barHeight / 2;
-    return flip(QRectF(QPointF(br.x() + scaledMargin,
-                               barY),
-                       QSizeF(br.width() - scaledMargin * 2,
-                              barHeight)), vertical);
+    return flip(QRectF(QPointF(br.x() + scaledMargin, barY), QSizeF(br.width() - scaledMargin * 2, barHeight)),
+                vertical);
 }

@@ -1,6 +1,6 @@
 * {
     color: #EEEEEE;
-    background-color: #0A0A0A;
+    background-color: #111;/*#0A0A0A;*/
 }
 
 /* form control styling */
@@ -55,19 +55,19 @@ QScrollBar::add-page, QScrollBar::sub-page {
 }
 
 QScrollBar::handle {
-    background: #222;
-}
-
-QScrollBar::handle:pressed {
     background: #333;
 }
 
+QScrollBar::handle:pressed {
+    background: #444;
+}
+
 QScrollBar::handle:horizontal {
-    border-bottom: 2px solid #444;
+    border-bottom: 2px solid #555;
 }
 
 QScrollBar::handle:vertical {
-    border-right: 2px solid #444;
+    border-right: 2px solid #555;
 }
 
 QScrollBar::handle:horizontal:hover, QScrollBar::handle:horizontal:pressed {
@@ -80,7 +80,8 @@ QScrollBar::handle:vertical:hover, QScrollBar::handle:vertical:pressed {
 
 /* menu styling */
 QMenuBar {
-    background: #111;
+    background: #222;
+    border-bottom: 1px solid #111;
 }
 
 QMenu {
@@ -172,16 +173,16 @@ QDockWidget {
 
 QDockWidget::title {
     padding: 8px 10px;
-    background: #111;
+    background: #222;
 }
 
 QDockWidget::close-button, QDockWidget::float-button {
-    background: #111;
+    background: #222;
     border: none;
 }
 
 QDockWidget::close-button:hover, QDockWidget::float-button:hover {
-    background: #333;
+    background: #555;
 }
 
 QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
