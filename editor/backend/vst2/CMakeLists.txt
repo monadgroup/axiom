@@ -27,5 +27,5 @@ set_target_properties(axiom_vst2 PROPERTIES
         MACOSX_BUNDLE_BUNDLE_NAME "Axiom: node-based VSTi"
         MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.monadgroup.axiom"
         MACOSX_BUNDLE_ICON_FILE "resources/application.ico"
-        MACOSX_BUNDLE_SHORT_VERSION_STRING "0.3.1"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "0.3.2"
         MACOSX_BUNDLE_COPYRIGHT "Copyright 2018 MONAD")
