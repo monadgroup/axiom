@@ -16,6 +16,7 @@ namespace AxiomModel {
     class CreateConnectionAction;
     class GridItemMoveAction;
     class GridItemSizeAction;
+    class RenameControlAction;
     class RenameNodeAction;
     class SetCodeAction;
     class CreateControlAction;
@@ -74,6 +75,11 @@ namespace AxiomModel {
 
         std::unique_ptr<GridItemSizeAction> deserializeGridItemSizeAction(QDataStream &stream, uint32_t version,
                                                                           ModelRoot *root);
+
+        void serializeRenameControlAction(RenameControlAction *action, QDataStream &stream);
+
+        std::unique_ptr<RenameControlAction> deserializeRenameControlAction(QDataStream &stream, uint32_t version,
+                                                                            ModelRoot *root);
 
         void serializeRenameNodeAction(RenameNodeAction *action, QDataStream &stream);
 

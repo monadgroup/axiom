@@ -14,6 +14,7 @@
 #include "../actions/GridItemMoveAction.h"
 #include "../actions/GridItemSizeAction.h"
 #include "../actions/PasteBufferAction.h"
+#include "../actions/RenameControlAction.h"
 #include "../actions/RenameNodeAction.h"
 #include "../actions/SetCodeAction.h"
 #include "../actions/SetNumModeAction.h"
@@ -73,6 +74,8 @@ void HistorySerializer::serializeAction(AxiomModel::Action *action, QDataStream 
         serializeGridItemMoveAction(gridItemMove, stream);
     else if (auto gridItemSize = dynamic_cast<GridItemSizeAction *>(action))
         serializeGridItemSizeAction(gridItemSize, stream);
+    else if (auto renameControl = dynamic_cast<RenameControlAction *>(action))
+        serializeRenameControlAction(renameControl, stream);
     else if (auto renameNode = dynamic_cast<RenameNodeAction *>(action))
         serializeRenameNodeAction(renameNode, stream);
     else if (auto setCode = dynamic_cast<SetCodeAction *>(action))
@@ -117,6 +120,8 @@ std::unique_ptr<Action> HistorySerializer::deserializeAction(QDataStream &stream
         return deserializeGridItemMoveAction(stream, version, root);
     case Action::ActionType::SIZE_GRID_ITEM:
         return deserializeGridItemSizeAction(stream, version, root);
+    case Action::ActionType::RENAME_CONTROL:
+        return deserializeRenameControlAction(stream, version, root);
     case Action::ActionType::RENAME_NODE:
         return deserializeRenameNodeAction(stream, version, root);
     case Action::ActionType::SET_CODE:
@@ -342,6 +347,25 @@ std::unique_ptr<GridItemSizeAction> HistorySerializer::deserializeGridItemSizeAc
     stream >> afterRect;
 
     return GridItemSizeAction::create(uuid, beforeRect, afterRect, root);
+}
+
+void HistorySerializer::serializeRenameControlAction(AxiomModel::RenameControlAction *action, QDataStream &stream) {
+    stream << action->uuid();
+    stream << action->oldName();
+    stream << action->newName();
+}
+
+std::unique_ptr<RenameControlAction> HistorySerializer::deserializeRenameControlAction(QDataStream &stream,
+                                                                                       uint32_t version,
+                                                                                       AxiomModel::ModelRoot *root) {
+    QUuid uuid;
+    stream >> uuid;
+    QString oldName;
+    stream >> oldName;
+    QString newName;
+    stream >> newName;
+
+    return RenameControlAction::create(uuid, std::move(oldName), std::move(newName), root);
 }
 
 void HistorySerializer::serializeRenameNodeAction(AxiomModel::RenameNodeAction *action, QDataStream &stream) {
