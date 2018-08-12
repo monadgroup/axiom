@@ -17,7 +17,7 @@ namespace AxiomModel {
             bool hasEmitted = false;
             return [hasEmitted, item]() mutable -> std::optional<ItemType> {
                 if (hasEmitted) return std::optional<ItemType>();
-                hasEmitted = false;
+                hasEmitted = true;
                 return std::move(item);
             };
         }));

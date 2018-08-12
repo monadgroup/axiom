@@ -179,10 +179,9 @@ impl Runtime {
             // if A is in B's depends_on list, A goes after
             // otherwise, we don't know, so return equal
 
-            let b_deps = graph.get_surface_deps(b).unwrap();
-            if b_deps.depended_by.contains(&a) {
+            if graph.is_ancestor_of_surface(b, a) {
                 Ordering::Greater
-            } else if b_deps.depends_on_surfaces.contains(&a) {
+            } else if graph.is_descendent_of_surface(b, a) {
                 Ordering::Less
             } else {
                 Ordering::Equal

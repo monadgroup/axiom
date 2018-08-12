@@ -16,6 +16,7 @@ namespace AxiomModel {
     class CreateConnectionAction;
     class GridItemMoveAction;
     class GridItemSizeAction;
+    class RenameControlAction;
     class RenameNodeAction;
     class SetCodeAction;
     class CreateControlAction;
@@ -24,6 +25,7 @@ namespace AxiomModel {
     class SetShowNameAction;
     class ExposeControlAction;
     class PasteBufferAction;
+    class UnexposeControlAction;
 
     namespace HistorySerializer {
         void serialize(const HistoryList &history, QDataStream &stream);
@@ -74,6 +76,11 @@ namespace AxiomModel {
         std::unique_ptr<GridItemSizeAction> deserializeGridItemSizeAction(QDataStream &stream, uint32_t version,
                                                                           ModelRoot *root);
 
+        void serializeRenameControlAction(RenameControlAction *action, QDataStream &stream);
+
+        std::unique_ptr<RenameControlAction> deserializeRenameControlAction(QDataStream &stream, uint32_t version,
+                                                                            ModelRoot *root);
+
         void serializeRenameNodeAction(RenameNodeAction *action, QDataStream &stream);
 
         std::unique_ptr<RenameNodeAction> deserializeRenameNodeAction(QDataStream &stream, uint32_t version,
@@ -112,5 +119,10 @@ namespace AxiomModel {
 
         std::unique_ptr<PasteBufferAction> deserializePasteBufferAction(QDataStream &stream, uint32_t version,
                                                                         ModelRoot *root);
+
+        void serializeUnexposeControlAction(UnexposeControlAction *action, QDataStream &stream);
+
+        std::unique_ptr<UnexposeControlAction> deserializeUnexposeControlAction(QDataStream &stream, uint32_t version,
+                                                                                ModelRoot *root);
     }
 }

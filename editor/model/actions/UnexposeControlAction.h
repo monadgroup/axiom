@@ -1,0 +1,31 @@
+#pragma once
+
+#include <QtCore/QUuid>
+
+#include "DeleteObjectAction.h"
+
+namespace AxiomModel {
+
+    class UnexposeControlAction : public Action {
+    public:
+        UnexposeControlAction(const QUuid &controlUuid, std::unique_ptr<DeleteObjectAction> deleteExposerAction,
+                              ModelRoot *root);
+
+        static std::unique_ptr<UnexposeControlAction>
+            create(const QUuid &controlUuid, std::unique_ptr<DeleteObjectAction> deleteExposerAction, ModelRoot *root);
+
+        static std::unique_ptr<UnexposeControlAction> create(const QUuid &controlUuid, ModelRoot *root);
+
+        void forward(bool first, std::vector<QUuid> &compileItems) override;
+
+        void backward(std::vector<QUuid> &compileItems) override;
+
+        const QUuid &controlUuid() const { return _controlUuid; }
+
+        DeleteObjectAction *deleteExposerAction() const { return _deleteExposerAction.get(); }
+
+    private:
+        QUuid _controlUuid;
+        std::unique_ptr<DeleteObjectAction> _deleteExposerAction;
+    };
+}

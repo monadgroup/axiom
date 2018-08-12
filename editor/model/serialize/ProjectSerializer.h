@@ -8,7 +8,7 @@ namespace AxiomModel {
     class Project;
 
     namespace ProjectSerializer {
-        static constexpr uint32_t schemaVersion = 3;
+        static constexpr uint32_t schemaVersion = 4;
         static constexpr uint32_t minSchemaVersion = 2;
         static constexpr uint64_t projectSchemaMagic = 0x4D4F4E4144415850; // "MONADAXP"
         static constexpr uint64_t librarySchemaMagic = 0x4D4F4E414441584C; // "MONADAXL"

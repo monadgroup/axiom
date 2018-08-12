@@ -33,6 +33,8 @@ namespace AxiomModel {
             SET_SHOW_NAME,
             EXPOSE_CONTROL,
             PASTE_BUFFER,
+            UNEXPOSE_CONTROL,
+            RENAME_CONTROL,
         };
 
         Action(ActionType actionType, ModelRoot *root);

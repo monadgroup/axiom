@@ -53,11 +53,13 @@ QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
     switch (form) {
     case AxiomModel::FormType::NONE:
     case AxiomModel::FormType::CONTROL:
-    case AxiomModel::FormType::OSCILLATOR:
-    case AxiomModel::FormType::AMPLITUDE:
         return QString::number(val, 'f', 2);
+    case AxiomModel::FormType::OSCILLATOR:
+        return static_cast<QString>(QString::number(val, 'f', 2) % " V");
+    case AxiomModel::FormType::AMPLITUDE:
+        return static_cast<QString>(QString::number(val, 'f', 2) % " A");
     case AxiomModel::FormType::Q:
-        return QString::number(val, 'f', 1);
+        return static_cast<QString>(QString::number(val, 'f', 1) % " Q");
     case AxiomModel::FormType::NOTE:
         return getNoteName(val);
     case AxiomModel::FormType::FREQUENCY:
@@ -69,7 +71,7 @@ QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
         return val < 0.1 ? static_cast<QString>(QString::number(val * 1000, 'f', 2) % " ms")
                          : static_cast<QString>(QString::number(val, 'f', 2) % " s");
     case AxiomModel::FormType::SAMPLES:
-        return QString::number((int) val);
+        return static_cast<QString>(QString::number((int) val) % " μ");
     case AxiomModel::FormType::DB:
         return QString::number(val, 'f', 1) % " dB";
     }

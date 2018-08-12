@@ -43,6 +43,8 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
         return "Move Grid Item";
     case ActionType::SIZE_GRID_ITEM:
         return "Size Grid Item";
+    case ActionType::RENAME_CONTROL:
+        return "Rename Control";
     case ActionType::RENAME_NODE:
         return "Rename Node";
     case ActionType::SET_CODE:
@@ -59,6 +61,8 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
         return "Expose Control";
     case ActionType::PASTE_BUFFER:
         return "Paste";
+    case ActionType::UNEXPOSE_CONTROL:
+        return "Unexpose Control";
     }
 
     unreachable;

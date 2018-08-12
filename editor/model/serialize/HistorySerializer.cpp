@@ -14,11 +14,13 @@
 #include "../actions/GridItemMoveAction.h"
 #include "../actions/GridItemSizeAction.h"
 #include "../actions/PasteBufferAction.h"
+#include "../actions/RenameControlAction.h"
 #include "../actions/RenameNodeAction.h"
 #include "../actions/SetCodeAction.h"
 #include "../actions/SetNumModeAction.h"
 #include "../actions/SetNumValueAction.h"
 #include "../actions/SetShowNameAction.h"
+#include "../actions/UnexposeControlAction.h"
 #include "ValueSerializer.h"
 
 using namespace AxiomModel;
@@ -72,6 +74,8 @@ void HistorySerializer::serializeAction(AxiomModel::Action *action, QDataStream 
         serializeGridItemMoveAction(gridItemMove, stream);
     else if (auto gridItemSize = dynamic_cast<GridItemSizeAction *>(action))
         serializeGridItemSizeAction(gridItemSize, stream);
+    else if (auto renameControl = dynamic_cast<RenameControlAction *>(action))
+        serializeRenameControlAction(renameControl, stream);
     else if (auto renameNode = dynamic_cast<RenameNodeAction *>(action))
         serializeRenameNodeAction(renameNode, stream);
     else if (auto setCode = dynamic_cast<SetCodeAction *>(action))
@@ -88,6 +92,8 @@ void HistorySerializer::serializeAction(AxiomModel::Action *action, QDataStream 
         serializeExposeControlAction(exposeControl, stream);
     else if (auto pasteBuffer = dynamic_cast<PasteBufferAction *>(action))
         serializePasteBufferAction(pasteBuffer, stream);
+    else if (auto unexposeControl = dynamic_cast<UnexposeControlAction *>(action))
+        serializeUnexposeControlAction(unexposeControl, stream);
     else
         unreachable;
 }
@@ -114,6 +120,8 @@ std::unique_ptr<Action> HistorySerializer::deserializeAction(QDataStream &stream
         return deserializeGridItemMoveAction(stream, version, root);
     case Action::ActionType::SIZE_GRID_ITEM:
         return deserializeGridItemSizeAction(stream, version, root);
+    case Action::ActionType::RENAME_CONTROL:
+        return deserializeRenameControlAction(stream, version, root);
     case Action::ActionType::RENAME_NODE:
         return deserializeRenameNodeAction(stream, version, root);
     case Action::ActionType::SET_CODE:
@@ -130,6 +138,8 @@ std::unique_ptr<Action> HistorySerializer::deserializeAction(QDataStream &stream
         return deserializeExposeControlAction(stream, version, root);
     case Action::ActionType::PASTE_BUFFER:
         return deserializePasteBufferAction(stream, version, root);
+    case Action::ActionType::UNEXPOSE_CONTROL:
+        return deserializeUnexposeControlAction(stream, version, root);
     default:
         unreachable;
     }
@@ -339,6 +349,25 @@ std::unique_ptr<GridItemSizeAction> HistorySerializer::deserializeGridItemSizeAc
     return GridItemSizeAction::create(uuid, beforeRect, afterRect, root);
 }
 
+void HistorySerializer::serializeRenameControlAction(AxiomModel::RenameControlAction *action, QDataStream &stream) {
+    stream << action->uuid();
+    stream << action->oldName();
+    stream << action->newName();
+}
+
+std::unique_ptr<RenameControlAction> HistorySerializer::deserializeRenameControlAction(QDataStream &stream,
+                                                                                       uint32_t version,
+                                                                                       AxiomModel::ModelRoot *root) {
+    QUuid uuid;
+    stream >> uuid;
+    QString oldName;
+    stream >> oldName;
+    QString newName;
+    stream >> newName;
+
+    return RenameControlAction::create(uuid, std::move(oldName), std::move(newName), root);
+}
+
 void HistorySerializer::serializeRenameNodeAction(AxiomModel::RenameNodeAction *action, QDataStream &stream) {
     stream << action->uuid();
     stream << action->oldName();
@@ -510,4 +539,19 @@ std::unique_ptr<PasteBufferAction> HistorySerializer::deserializePasteBufferActi
 
     return PasteBufferAction::create(surfaceUuid, isBufferFormatted, std::move(buffer), std::move(usedUuids), center,
                                      root);
+}
+
+void HistorySerializer::serializeUnexposeControlAction(AxiomModel::UnexposeControlAction *action, QDataStream &stream) {
+    stream << action->controlUuid();
+    serializeDeleteObjectAction(action->deleteExposerAction(), stream);
+}
+
+std::unique_ptr<UnexposeControlAction>
+    HistorySerializer::deserializeUnexposeControlAction(QDataStream &stream, uint32_t version,
+                                                        AxiomModel::ModelRoot *root) {
+    QUuid controlUuid;
+    stream >> controlUuid;
+
+    auto deleteObjectAction = deserializeDeleteObjectAction(stream, version, root);
+    return UnexposeControlAction::create(controlUuid, std::move(deleteObjectAction), root);
 }

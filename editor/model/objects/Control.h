@@ -92,6 +92,8 @@ namespace AxiomModel {
 
         Sequence<ModelObject *> links() override;
 
+        Sequence<QUuid> compileLinks() override;
+
         const std::optional<ControlCompileMeta> &compileMeta() const;
 
         const std::optional<MaximFrontend::ControlPointers> &runtimePointers() const;
