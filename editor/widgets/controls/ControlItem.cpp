@@ -18,6 +18,7 @@
 #include "editor/model/actions/GridItemMoveAction.h"
 #include "editor/model/actions/GridItemSizeAction.h"
 #include "editor/model/actions/SetShowNameAction.h"
+#include "editor/model/actions/UnexposeControlAction.h"
 #include "editor/model/objects/Connection.h"
 #include "editor/model/objects/Control.h"
 #include "editor/model/objects/ControlSurface.h"
@@ -349,7 +350,7 @@ void ControlItem::buildMenuEnd(QMenu &menu) {
         if (exposedAction->isChecked()) {
             control->root()->history().append(ExposeControlAction::create(control->uuid(), control->root()));
         } else {
-            control->root()->history().append(DeleteObjectAction::create(control->exposerUuid(), control->root()));
+            control->root()->history().append(UnexposeControlAction::create(control->uuid(), control->root()));
         }
     });
 }

@@ -24,6 +24,7 @@ namespace AxiomModel {
     class SetShowNameAction;
     class ExposeControlAction;
     class PasteBufferAction;
+    class UnexposeControlAction;
 
     namespace HistorySerializer {
         void serialize(const HistoryList &history, QDataStream &stream);
@@ -112,5 +113,10 @@ namespace AxiomModel {
 
         std::unique_ptr<PasteBufferAction> deserializePasteBufferAction(QDataStream &stream, uint32_t version,
                                                                         ModelRoot *root);
+
+        void serializeUnexposeControlAction(UnexposeControlAction *action, QDataStream &stream);
+
+        std::unique_ptr<UnexposeControlAction> deserializeUnexposeControlAction(QDataStream &stream, uint32_t version,
+                                                                                ModelRoot *root);
     }
 }

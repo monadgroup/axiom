@@ -59,6 +59,8 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
         return "Expose Control";
     case ActionType::PASTE_BUFFER:
         return "Paste";
+    case ActionType::UNEXPOSE_CONTROL:
+        return "Unexpose Control";
     }
 
     unreachable;

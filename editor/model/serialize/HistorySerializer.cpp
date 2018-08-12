@@ -19,6 +19,7 @@
 #include "../actions/SetNumModeAction.h"
 #include "../actions/SetNumValueAction.h"
 #include "../actions/SetShowNameAction.h"
+#include "../actions/UnexposeControlAction.h"
 #include "ValueSerializer.h"
 
 using namespace AxiomModel;
@@ -88,6 +89,8 @@ void HistorySerializer::serializeAction(AxiomModel::Action *action, QDataStream 
         serializeExposeControlAction(exposeControl, stream);
     else if (auto pasteBuffer = dynamic_cast<PasteBufferAction *>(action))
         serializePasteBufferAction(pasteBuffer, stream);
+    else if (auto unexposeControl = dynamic_cast<UnexposeControlAction *>(action))
+        serializeUnexposeControlAction(unexposeControl, stream);
     else
         unreachable;
 }
@@ -130,6 +133,8 @@ std::unique_ptr<Action> HistorySerializer::deserializeAction(QDataStream &stream
         return deserializeExposeControlAction(stream, version, root);
     case Action::ActionType::PASTE_BUFFER:
         return deserializePasteBufferAction(stream, version, root);
+    case Action::ActionType::UNEXPOSE_CONTROL:
+        return deserializeUnexposeControlAction(stream, version, root);
     default:
         unreachable;
     }
@@ -510,4 +515,19 @@ std::unique_ptr<PasteBufferAction> HistorySerializer::deserializePasteBufferActi
 
     return PasteBufferAction::create(surfaceUuid, isBufferFormatted, std::move(buffer), std::move(usedUuids), center,
                                      root);
+}
+
+void HistorySerializer::serializeUnexposeControlAction(AxiomModel::UnexposeControlAction *action, QDataStream &stream) {
+    stream << action->controlUuid();
+    serializeDeleteObjectAction(action->deleteExposerAction(), stream);
+}
+
+std::unique_ptr<UnexposeControlAction>
+    HistorySerializer::deserializeUnexposeControlAction(QDataStream &stream, uint32_t version,
+                                                        AxiomModel::ModelRoot *root) {
+    QUuid controlUuid;
+    stream >> controlUuid;
+
+    auto deleteObjectAction = deserializeDeleteObjectAction(stream, version, root);
+    return UnexposeControlAction::create(controlUuid, std::move(deleteObjectAction), root);
 }
