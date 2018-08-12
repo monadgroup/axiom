@@ -33,11 +33,15 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
     // until that's empty.
     // We'll also need a list of parent UUIDs to build transactions later, so we can do that here.
     QSet<QUuid> usedIds;
-    QSet<QUuid> parentIds;
+    QSet<QUuid> compileIds;
     for (const auto &itm : sortedItems) {
         usedIds.insert(itm->uuid());
-        parentIds.remove(itm->uuid());
-        parentIds.insert(itm->parentUuid());
+        compileIds.remove(itm->uuid());
+
+        auto compileLinks = itm->compileLinks();
+        for (const auto &compileItem : compileLinks) {
+            compileIds.insert(compileItem);
+        }
     }
     auto itemsToDelete = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(usedIds));
 
@@ -46,7 +50,7 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
         (*itemsToDelete.begin())->remove();
     }
 
-    for (const auto &parent : parentIds) {
+    for (const auto &parent : compileIds) {
         compileItems.push_back(parent);
     }
 }
@@ -60,7 +64,11 @@ void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
 
     for (const auto &obj : addedObjects) {
         compileItems.push_back(obj->uuid());
-        compileItems.push_back(obj->parentUuid());
+
+        auto compileLinks = obj->compileLinks();
+        for (const auto &compileItem : compileLinks) {
+            compileItems.push_back(compileItem);
+        }
     }
 }
 

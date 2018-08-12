@@ -18,6 +18,10 @@ Sequence<ModelObject *> ModelObject::links() {
     return blank<ModelObject *>();
 }
 
+Sequence<QUuid> ModelObject::compileLinks() {
+    return oneShot(parentUuid());
+}
+
 void ModelObject::remove() {
     removed.trigger();
     PoolObject::remove();

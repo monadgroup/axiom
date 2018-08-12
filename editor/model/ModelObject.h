@@ -33,6 +33,8 @@ namespace AxiomModel {
 
         virtual Sequence<ModelObject *> links();
 
+        virtual Sequence<QUuid> compileLinks();
+
         virtual void build(MaximCompiler::Transaction *transaction) {}
 
         void remove() override;

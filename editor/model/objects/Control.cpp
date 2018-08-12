@@ -111,6 +111,10 @@ Sequence<ModelObject *> Control::links() {
         staticCast<ModelObject *>(_connections.sequence()).sequence()});
 }
 
+Sequence<QUuid> Control::compileLinks() {
+    return oneShot(surface()->node()->parentUuid());
+}
+
 const std::optional<ControlCompileMeta> &Control::compileMeta() const {
     if (exposingUuid().isNull()) {
         return _compileMeta;
