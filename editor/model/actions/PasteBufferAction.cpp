@@ -63,6 +63,7 @@ void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
         _usedUuids.push_back(obj->uuid());
     }
 
+    std::reverse(used.begin(), used.end());
     for (const auto &obj : used) {
         compileItems.push_back(obj->uuid());
         compileItems.push_back(obj->parentUuid());
