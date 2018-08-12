@@ -5,6 +5,7 @@
 #include "../actions/CompositeAction.h"
 #include "../actions/CreateControlAction.h"
 #include "../actions/DeleteObjectAction.h"
+#include "../actions/RenameControlAction.h"
 #include "../actions/SetCodeAction.h"
 #include "ControlSurface.h"
 #include "ExtractControl.h"
@@ -112,6 +113,7 @@ void CustomNode::build(MaximCompiler::Transaction *transaction) {
 struct NewControl {
     Control::ControlType type;
     QString name;
+    ControlCompileMeta meta;
 };
 
 void CustomNode::updateControls(SetCodeAction *action) {
@@ -144,15 +146,51 @@ void CustomNode::updateControls(SetCodeAction *action) {
 
         // no candidate found, queue a new one
         if (!foundControl) {
-            newControls.push_back(NewControl{compiledModelType, std::move(compiledName)});
+            newControls.push_back(NewControl{compiledModelType, std::move(compiledName), compileMeta});
+        }
+    }
+
+    std::vector<Control *> removeControls;
+    for (const auto &existingControl : controlList) {
+        if (!retainedControls.contains(existingControl->uuid())) {
+            removeControls.push_back(existingControl);
+        }
+    }
+
+    // look for any new controls that we can match up to ones that are going to be removed
+    std::vector<NewControl> unmatchedControls;
+    for (auto &newControl : newControls) {
+        auto foundMatch = false;
+
+        for (auto i = removeControls.begin(); i < removeControls.end(); i++) {
+            auto tryClaimControl = *i;
+            if (tryClaimControl->controlType() != newControl.type) continue;
+
+            // we've found a match! set compile meta and update name
+            foundMatch = true;
+            tryClaimControl->setCompileMeta(newControl.meta);
+
+            auto renameAction = RenameControlAction::create(tryClaimControl->uuid(), tryClaimControl->name(),
+                                                            std::move(newControl.name), tryClaimControl->root());
+            std::vector<QUuid> dummy;
+            renameAction->forward(true, dummy);
+
+            assert(action);
+            action->controlActions().push_back(std::move(renameAction));
+
+            // remove this entry from removeControls - note, after this our iterator is invalid
+            removeControls.erase(i);
+            break;
+        }
+
+        if (!foundMatch) {
+            unmatchedControls.push_back(std::move(newControl));
         }
     }
 
     // remove any controls that weren't retained
-    for (const auto &existingControl : controlList) {
-        if (retainedControls.contains(existingControl->uuid())) continue;
-
-        auto deleteAction = DeleteObjectAction::create(existingControl->uuid(), root());
+    for (const auto &removedControl : removeControls) {
+        auto deleteAction = DeleteObjectAction::create(removedControl->uuid(), root());
         std::vector<QUuid> dummy;
         deleteAction->forward(true, dummy);
 
@@ -163,7 +201,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
     // add any new controls
     // note: the order we do this is important: we want to add controls after removing old ones so the control grid
     // can have the space cleared
-    for (const auto &newControl : newControls) {
+    for (auto &newControl : unmatchedControls) {
         auto createAction = CreateControlAction::create((*controls().value())->uuid(), newControl.type,
                                                         std::move(newControl.name), root());
         std::vector<QUuid> dummy;

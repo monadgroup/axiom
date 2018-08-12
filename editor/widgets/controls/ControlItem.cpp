@@ -32,6 +32,7 @@ using namespace AxiomModel;
 ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(control), canvas(canvas) {
     setAcceptHoverEvents(true);
 
+    control->nameChanged.connect(this, &ControlItem::triggerUpdate);
     control->posChanged.connect(this, &ControlItem::setPos);
     control->beforeSizeChanged.connect(this, &ControlItem::triggerGeometryChange);
     control->sizeChanged.connect(this, &ControlItem::setSize);
