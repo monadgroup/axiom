@@ -33,6 +33,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
     searchBox = new QLineEdit(this);
     searchBox->setObjectName("searchBox");
     searchBox->setPlaceholderText("Search modules...");
+    searchBox->setText(library->activeSearch());
     mainLayout->addWidget(searchBox, 0, 1);
 
     connect(searchBox, &QLineEdit::textChanged, this, &ModuleBrowserPanel::changeSearch);
