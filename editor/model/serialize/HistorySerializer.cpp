@@ -264,7 +264,7 @@ void HistorySerializer::serializeCreatePortalNodeAction(AxiomModel::CreatePortal
     stream << (uint8_t) action->wireType();
     stream << (uint8_t) action->portalType();
     stream << action->controlUuid();
-    stream << action->portalId();
+    stream << (quint64)action->portalId();
 }
 
 std::unique_ptr<CreatePortalNodeAction>
@@ -288,7 +288,7 @@ std::unique_ptr<CreatePortalNodeAction>
     stream >> controlUuid;
 
     // unique portal IDs were added in 0.4.0, corresponding to schema version 5
-    uint64_t nextPortalId;
+    quint64 nextPortalId;
     if (version >= 5) {
         stream >> nextPortalId;
     } else {

@@ -11,7 +11,7 @@ void NodeSurfaceSerializer::serialize(AxiomModel::NodeSurface *surface, QDataStr
     stream << surface->zoom();
 
     if (auto rootSurface = dynamic_cast<RootSurface *>(surface)) {
-        stream << rootSurface->nextPortalId();
+        stream << (quint64)rootSurface->nextPortalId();
     }
 }
 
@@ -26,7 +26,7 @@ std::unique_ptr<NodeSurface> NodeSurfaceSerializer::deserialize(QDataStream &str
 
     if (parentUuid.isNull()) {
         // unique portal IDs were added in 0.4.0, corresponding to schema version 5
-        uint64_t nextPortalId = 0;
+        quint64 nextPortalId = 0;
         if (version >= 5) {
             stream >> nextPortalId;
         }

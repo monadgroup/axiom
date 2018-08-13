@@ -163,7 +163,7 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
 
 void ControlSerializer::serializePortal(AxiomModel::PortalControl *control, QDataStream &stream) {
     stream << (uint8_t) control->portalType();
-    stream << control->portalId();
+    stream << (quint64)control->portalId();
 }
 
 std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
@@ -174,7 +174,7 @@ std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
     stream >> portalTypeInt;
 
     // unique portal IDs were added in 0.4.0, corresponding to schema version 5
-    uint64_t portalId;
+    quint64 portalId;
     if (version >= 5) {
         stream >> portalId;
     } else {
