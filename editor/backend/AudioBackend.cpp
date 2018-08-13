@@ -144,9 +144,9 @@ void AudioBackend::generate() {
     _editor->window()->runtime()->runUpdate();
 }
 
-AudioConfiguration AudioBackend::createDefaultConfiguration() {
-    return AudioConfiguration({ConfigurationPortal(PortalType::INPUT, PortalValue::MIDI, "Keyboard"),
-                               ConfigurationPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
+DefaultConfiguration AudioBackend::createDefaultConfiguration() {
+    return DefaultConfiguration({DefaultPortal(PortalType::INPUT, PortalValue::MIDI, "Keyboard"),
+                                 DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
 }
 
 void AudioBackend::internalUpdateConfiguration() {
@@ -178,8 +178,9 @@ void AudioBackend::internalUpdateConfiguration() {
             break;
         }
 
-        newPortals.emplace_back(newType, newValue, surfacePortal.name.toStdString());
+        newPortals.emplace_back(surfacePortal.id, newType, newValue, surfacePortal.name.toStdString());
     }
+    std::sort(newPortals.begin(), newPortals.end());
 
     // update the value pointers
     portalValues.clear();

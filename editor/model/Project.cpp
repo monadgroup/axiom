@@ -10,12 +10,12 @@
 
 using namespace AxiomModel;
 
-Project::Project(const AxiomBackend::AudioConfiguration &defaultConfiguration)
+Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
     : _mainRoot(std::make_unique<ModelRoot>(this)), _library(std::make_unique<Library>()) {
     // setup default project
     //  1. create default surface
     auto rootId = QUuid::createUuid();
-    auto rootSurface = std::make_unique<RootSurface>(rootId, QPointF(0, 0), 0, &mainRoot());
+    auto rootSurface = std::make_unique<RootSurface>(rootId, QPointF(0, 0), 0, 0, &mainRoot());
     _rootSurface = rootSurface.get();
     mainRoot().pool().registerObj(std::move(rootSurface));
 

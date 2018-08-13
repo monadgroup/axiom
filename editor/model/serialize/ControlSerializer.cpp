@@ -12,6 +12,7 @@
 #include "../objects/Node.h"
 #include "../objects/NumControl.h"
 #include "../objects/PortalControl.h"
+#include "../objects/RootSurface.h"
 #include "ValueSerializer.h"
 
 using namespace AxiomModel;
@@ -162,6 +163,7 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
 
 void ControlSerializer::serializePortal(AxiomModel::PortalControl *control, QDataStream &stream) {
     stream << (uint8_t) control->portalType();
+    stream << control->portalId();
 }
 
 std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
@@ -170,6 +172,15 @@ std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
     AxiomModel::ConnectionWire::WireType wireType, AxiomModel::ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     uint8_t portalTypeInt;
     stream >> portalTypeInt;
+
+    // unique portal IDs were added in 0.4.0, corresponding to schema version 5
+    uint64_t portalId;
+    if (version >= 5) {
+        stream >> portalId;
+    } else {
+        portalId = takeAt(dynamicCast<RootSurface *>(findChildren(root->nodeSurfaces(), QUuid())), 0)->takePortalId();
+    }
+
     return PortalControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                                 exposingUuid, wireType, (PortalControl::PortalType) portalTypeInt, root);
+                                 exposingUuid, wireType, (PortalControl::PortalType) portalTypeInt, portalId, root);
 }

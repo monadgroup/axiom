@@ -2,6 +2,8 @@
 
 #include "../../util.h"
 #include "../HistoryList.h"
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
 #include "../actions/Action.h"
 #include "../actions/CompositeAction.h"
 #include "../actions/CreateConnectionAction.h"
@@ -21,6 +23,7 @@
 #include "../actions/SetNumValueAction.h"
 #include "../actions/SetShowNameAction.h"
 #include "../actions/UnexposeControlAction.h"
+#include "../objects/RootSurface.h"
 #include "ValueSerializer.h"
 
 using namespace AxiomModel;
@@ -261,6 +264,7 @@ void HistorySerializer::serializeCreatePortalNodeAction(AxiomModel::CreatePortal
     stream << (uint8_t) action->wireType();
     stream << (uint8_t) action->portalType();
     stream << action->controlUuid();
+    stream << action->portalId();
 }
 
 std::unique_ptr<CreatePortalNodeAction>
@@ -283,9 +287,18 @@ std::unique_ptr<CreatePortalNodeAction>
     QUuid controlUuid;
     stream >> controlUuid;
 
+    // unique portal IDs were added in 0.4.0, corresponding to schema version 5
+    uint64_t nextPortalId;
+    if (version >= 5) {
+        stream >> nextPortalId;
+    } else {
+        nextPortalId =
+            takeAt(dynamicCast<RootSurface *>(findChildren(root->nodeSurfaces(), QUuid())), 0)->takePortalId();
+    }
+
     return CreatePortalNodeAction::create(uuid, parentUuid, pos, std::move(name), controlsUuid,
                                           (ConnectionWire::WireType) wireTypeInt,
-                                          (PortalControl::PortalType) portalTypeInt, controlUuid, root);
+                                          (PortalControl::PortalType) portalTypeInt, nextPortalId, controlUuid, root);
 }
 
 void HistorySerializer::serializeCreateConnectionAction(AxiomModel::CreateConnectionAction *action,

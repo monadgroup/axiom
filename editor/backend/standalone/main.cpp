@@ -24,8 +24,8 @@ public:
         }
     }
 
-    AudioConfiguration createDefaultConfiguration() override {
-        return AudioConfiguration({ConfigurationPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
+    DefaultConfiguration createDefaultConfiguration() override {
+        return DefaultConfiguration({DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
     }
 
 #ifdef PORTAUDIO

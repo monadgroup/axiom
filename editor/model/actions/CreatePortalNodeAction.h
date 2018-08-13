@@ -10,12 +10,13 @@ namespace AxiomModel {
     public:
         CreatePortalNodeAction(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QString name,
                                const QUuid &controlsUuid, ConnectionWire::WireType wireType,
-                               PortalControl::PortalType portalType, const QUuid &controlUuid, ModelRoot *root);
+                               PortalControl::PortalType portalType, uint64_t portalId, const QUuid &controlUuid,
+                               ModelRoot *root);
 
         static std::unique_ptr<CreatePortalNodeAction> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos,
                                                               QString name, const QUuid &controlsUuid,
                                                               ConnectionWire::WireType wireType,
-                                                              PortalControl::PortalType portalType,
+                                                              PortalControl::PortalType portalType, uint64_t portalId,
                                                               const QUuid &controlUuid, ModelRoot *root);
 
         static std::unique_ptr<CreatePortalNodeAction> create(const QUuid &parentUuid, QPoint pos, QString name,
@@ -40,6 +41,8 @@ namespace AxiomModel {
 
         const PortalControl::PortalType &portalType() const { return _portalType; }
 
+        uint64_t portalId() const { return _portalId; }
+
         const QUuid &controlUuid() const { return _controlUuid; }
 
     private:
@@ -50,6 +53,7 @@ namespace AxiomModel {
         QUuid _controlsUuid;
         ConnectionWire::WireType _wireType;
         PortalControl::PortalType _portalType;
+        uint64_t _portalId;
         QUuid _controlUuid;
     };
 }

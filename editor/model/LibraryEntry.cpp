@@ -27,7 +27,7 @@ std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, const QUuid &ba
 
 std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, std::set<QString> tags, Project *project) {
     auto newRoot = std::make_unique<ModelRoot>(project);
-    newRoot->pool().registerObj(std::make_unique<RootSurface>(QUuid::createUuid(), QPointF(0, 0), 0, newRoot.get()));
+    newRoot->pool().registerObj(std::make_unique<RootSurface>(QUuid::createUuid(), QPointF(0, 0), 0, 0, newRoot.get()));
     return create(std::move(name), QUuid::createUuid(), QUuid::createUuid(), QDateTime::currentDateTimeUtc(),
                   std::move(tags), std::move(newRoot));
 }

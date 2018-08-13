@@ -4,7 +4,7 @@
 #include <optional>
 
 namespace AxiomBackend {
-    class AudioConfiguration;
+    class DefaultConfiguration;
 }
 
 namespace AxiomModel {
@@ -15,7 +15,7 @@ namespace AxiomModel {
 
     class Project {
     public:
-        explicit Project(const AxiomBackend::AudioConfiguration &defaultConfiguration);
+        explicit Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration);
 
         Project();
 
