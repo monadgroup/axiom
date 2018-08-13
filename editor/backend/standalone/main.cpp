@@ -28,6 +28,8 @@ public:
         return DefaultConfiguration({DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
     }
 
+    bool doesSaveInternally() const override { return false; }
+
 #ifdef PORTAUDIO
     PaStream *stream = nullptr;
 

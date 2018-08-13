@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore/QDataStream>
+#include <functional>
 #include <memory>
 
 namespace AxiomModel {
@@ -23,8 +24,9 @@ namespace AxiomModel {
 
         bool readHeader(QDataStream &stream, uint64_t expectedMagic, uint32_t *versionOut);
 
-        void serialize(Project *project, QDataStream &stream);
+        void serialize(Project *project, QDataStream &stream, std::function<void(QDataStream &)> writeLinkedFile);
 
-        std::unique_ptr<Project> deserialize(QDataStream &stream, uint32_t *versionOut);
+        std::unique_ptr<Project> deserialize(QDataStream &stream, uint32_t *versionOut,
+                                             std::function<QString(QDataStream &, uint32_t)> getLinkedFile);
     }
 }

@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 
+#include <QtCore/QStringBuilder>
 #include <QtCore/QTimer>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMenuBar>
@@ -46,6 +47,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
 
     fileMenu->addAction(GlobalActions::fileOpen);
     fileMenu->addAction(GlobalActions::fileSave);
+    fileMenu->addAction(GlobalActions::fileSaveAs);
     fileMenu->addSeparator();
 
     fileMenu->addAction(GlobalActions::fileExport);
@@ -78,6 +80,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
     connect(GlobalActions::fileNew, &QAction::triggered, this, &MainWindow::newProject);
     connect(GlobalActions::fileOpen, &QAction::triggered, this, &MainWindow::openProject);
     connect(GlobalActions::fileSave, &QAction::triggered, this, &MainWindow::saveProject);
+    connect(GlobalActions::fileSaveAs, &QAction::triggered, this, &MainWindow::saveAsProject);
     connect(GlobalActions::fileExport, &QAction::triggered, this, &MainWindow::exportProject);
     connect(GlobalActions::fileQuit, &QAction::triggered, QApplication::quit);
     connect(GlobalActions::fileImportLibrary, &QAction::triggered, this, &MainWindow::importLibrary);
@@ -128,8 +131,20 @@ void MainWindow::showAbout() {
 }
 
 void MainWindow::newProject() {
+    if (_project && !checkCloseProject()) {
+        return;
+    }
+
     setProject(std::make_unique<AxiomModel::Project>(_backend->createDefaultConfiguration()));
     importLibraryFrom(":/default.axl");
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    if (checkCloseProject()) {
+        event->accept();
+    } else {
+        event->ignore();
+    }
 }
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
@@ -164,6 +179,11 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     _viewMenu->addAction(surfacePanel->toggleViewAction());
     _viewMenu->addAction(_modulePanel->toggleViewAction());
     _viewMenu->addAction(_historyPanel->toggleViewAction());
+
+    updateWindowTitle(_project->linkedFile(), _project->isDirty());
+    _project->linkedFileChanged.connect(
+        [this](const QString &newName) { updateWindowTitle(newName, _project->isDirty()); });
+    _project->isDirtyChanged.connect([this](bool isDirty) { updateWindowTitle(_project->linkedFile(), isDirty); });
 }
 
 void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {
@@ -171,11 +191,22 @@ void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {
 }
 
 void MainWindow::saveProject() {
+    if (_project->linkedFile().isEmpty()) {
+        saveAsProject();
+    } else {
+        saveProjectTo(_project->linkedFile());
+    }
+}
+
+void MainWindow::saveAsProject() {
     auto selectedFile = QFileDialog::getSaveFileName(this, "Save Project", QString(),
                                                      tr("Axiom Project Files (*.axp);;All Files (*.*)"));
     if (selectedFile.isNull()) return;
+    saveProjectTo(selectedFile);
+}
 
-    QFile file(selectedFile);
+void MainWindow::saveProjectTo(const QString &path) {
+    QFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
         QMessageBox(QMessageBox::Critical, "Failed to save project", "The file you selected couldn't be opened.",
                     QMessageBox::Ok)
@@ -184,11 +215,16 @@ void MainWindow::saveProject() {
     }
 
     QDataStream stream(&file);
-    AxiomModel::ProjectSerializer::serialize(_project.get(), stream);
+    AxiomModel::ProjectSerializer::serialize(_project.get(), stream, [](QDataStream &) {});
     file.close();
+
+    _project->setIsDirty(false);
+    _project->setLinkedFile(path);
 }
 
 void MainWindow::openProject() {
+    if (!checkCloseProject()) return;
+
     auto selectedFile = QFileDialog::getOpenFileName(this, "Open Project", QString(),
                                                      tr("Axiom Project Files (*.axp);;All Files (*.*)"));
     if (selectedFile.isNull()) return;
@@ -203,7 +239,8 @@ void MainWindow::openProject() {
 
     QDataStream stream(&file);
     uint32_t readVersion = 0;
-    auto newProject = AxiomModel::ProjectSerializer::deserialize(stream, &readVersion);
+    auto newProject = AxiomModel::ProjectSerializer::deserialize(
+        stream, &readVersion, [selectedFile](QDataStream &, uint32_t) { return selectedFile; });
     file.close();
 
     if (!newProject) {
@@ -337,4 +374,39 @@ void MainWindow::importLibraryFrom(const QString &path) {
             else
                 return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
         });
+}
+
+bool MainWindow::checkCloseProject() {
+    if (!_project->isDirty()) {
+        return true;
+    }
+
+    QMessageBox msgBox(QMessageBox::Information, "Unsaved Changes",
+                       "You have unsaved changes. Would you like to save before closing your project?");
+    auto saveBtn = msgBox.addButton(QMessageBox::Save);
+    msgBox.addButton(QMessageBox::Discard);
+    auto cancelBtn = msgBox.addButton(QMessageBox::Cancel);
+    msgBox.setDefaultButton(saveBtn);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == saveBtn) {
+        saveProject();
+    }
+    return msgBox.clickedButton() != cancelBtn;
+}
+
+void MainWindow::updateWindowTitle(const QString &linkedFile, bool isDirty) {
+    if (linkedFile.isEmpty()) {
+        if (isDirty) {
+            setWindowTitle("Axiom - <unsaved> *");
+        } else {
+            setWindowTitle("Axiom");
+        }
+    } else {
+        if (isDirty) {
+            setWindowTitle("Axiom - " % linkedFile % " *");
+        } else {
+            setWindowTitle("Axiom - " % linkedFile);
+        }
+    }
 }

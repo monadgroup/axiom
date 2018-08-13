@@ -13,4 +13,6 @@ public:
     std::vector<VstParameter> parameters;
 
     void handleConfigurationChange(const AxiomBackend::AudioConfiguration &configuration) override;
+
+    bool doesSaveInternally() const override { return true; }
 };

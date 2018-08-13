@@ -1,5 +1,6 @@
 #include "AudioBackend.h"
 
+#include <QtCore/QFileInfo>
 #include <QtWidgets/QMessageBox>
 
 #include "../AxiomEditor.h"
@@ -60,14 +61,30 @@ std::string AudioBackend::formatNum(AxiomBackend::NumValue value, bool includeLa
 QByteArray AudioBackend::serialize() {
     QByteArray buffer;
     QDataStream stream(&buffer, QIODevice::WriteOnly);
-    AxiomModel::ProjectSerializer::serialize(_editor->window()->project(), stream);
+
+    auto project = _editor->window()->project();
+    AxiomModel::ProjectSerializer::serialize(project, stream,
+                                             [project](QDataStream &stream) { stream << project->linkedFile(); });
     return std::move(buffer);
 }
 
 void AudioBackend::deserialize(QByteArray *data) {
     QDataStream stream(data, QIODevice::ReadOnly);
     uint32_t readVersion = 0;
-    auto newProject = AxiomModel::ProjectSerializer::deserialize(stream, &readVersion);
+    auto newProject =
+        AxiomModel::ProjectSerializer::deserialize(stream, &readVersion, [](QDataStream &stream, uint32_t version) {
+            QString linkedFile;
+            if (version >= 5) {
+                stream >> linkedFile;
+
+                // only link to the file if it actually exists
+                QFileInfo linkedFileInfo(linkedFile);
+                if (!linkedFileInfo.exists() || !linkedFileInfo.isFile()) {
+                    linkedFile = "";
+                }
+            }
+            return linkedFile;
+        });
 
     if (!newProject) {
         if (readVersion) {

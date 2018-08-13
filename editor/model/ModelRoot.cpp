@@ -4,6 +4,7 @@
 #include "IdentityReferenceMapper.h"
 #include "ModelObject.h"
 #include "PoolOperators.h"
+#include "Project.h"
 #include "editor/compiler/interface/Runtime.h"
 #include "objects/Connection.h"
 #include "objects/ControlSurface.h"
@@ -60,6 +61,10 @@ void ModelRoot::applyCompile(const std::vector<QUuid> &items) {
     MaximCompiler::Transaction transaction;
     applyItemsTo(items, &transaction);
     applyTransaction(std::move(transaction));
+
+    if (!_project->linkedFile().isEmpty() || !_backend->doesSaveInternally()) {
+        _project->setIsDirty(true);
+    }
 }
 
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {

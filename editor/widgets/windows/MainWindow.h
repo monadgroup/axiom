@@ -45,6 +45,9 @@ namespace AxiomGui {
 
         void newProject();
 
+    protected:
+        void closeEvent(QCloseEvent *event) override;
+
     private slots:
 
         void removeSurface(AxiomModel::NodeSurface *surface);
@@ -52,6 +55,8 @@ namespace AxiomGui {
         void openProject();
 
         void saveProject();
+
+        void saveAsProject();
 
         void exportProject();
 
@@ -69,5 +74,11 @@ namespace AxiomGui {
         std::unique_ptr<HistoryPanel> _historyPanel;
         std::unique_ptr<ModuleBrowserPanel> _modulePanel;
         QMenu *_viewMenu;
+
+        void saveProjectTo(const QString &path);
+
+        bool checkCloseProject();
+
+        void updateWindowTitle(const QString &linkedFile, bool isDirty);
     };
 }

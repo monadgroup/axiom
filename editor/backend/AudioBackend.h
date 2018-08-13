@@ -79,6 +79,10 @@ namespace AxiomBackend {
         // output.
         virtual DefaultConfiguration createDefaultConfiguration();
 
+        // To be implemented by the audio backend, called from the UI thread to determine if save dialogues should be
+        // shown. This could be called at any time.
+        virtual bool doesSaveInternally() const = 0;
+
         // Called internally. Not stable APIs.
         void setEditor(AxiomEditor *editor) { _editor = editor; }
         void internalUpdateConfiguration();

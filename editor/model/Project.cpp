@@ -77,7 +77,7 @@ Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
     }
 }
 
-Project::Project() = default;
+Project::Project(QString linkedFile) : _linkedFile(std::move(linkedFile)) {}
 
 void Project::init(std::unique_ptr<AxiomModel::ModelRoot> mainRoot, std::unique_ptr<AxiomModel::Library> library) {
     _mainRoot = std::move(mainRoot);
@@ -87,4 +87,18 @@ void Project::init(std::unique_ptr<AxiomModel::ModelRoot> mainRoot, std::unique_
 
 Project::~Project() {
     _mainRoot->destroy();
+}
+
+void Project::setLinkedFile(QString linkedFile) {
+    if (linkedFile != _linkedFile) {
+        _linkedFile = std::move(linkedFile);
+        linkedFileChanged.trigger(_linkedFile);
+    }
+}
+
+void Project::setIsDirty(bool isDirty) {
+    if (isDirty != _isDirty) {
+        _isDirty = isDirty;
+        isDirtyChanged.trigger(isDirty);
+    }
 }
