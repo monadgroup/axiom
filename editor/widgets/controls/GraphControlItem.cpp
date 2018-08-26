@@ -589,8 +589,7 @@ void GraphControlItem::positionChildren() {
     auto sidePaddingMargin = QMarginsF(sidePadding, sidePadding, sidePadding, sidePadding);
     auto clippedBodyRect = bodyRect.marginsRemoved(sidePaddingMargin);
 
-    _area.updateBounds(QRectF(bodyRect.topLeft(), QPointF(clippedBodyRect.right() - 1., bodyRect.bottom())),
-                       clippedBodyRect);
+    _area.updateBounds(bodyRect, clippedBodyRect);
 }
 
 void GraphControlItem::stateChange() {
