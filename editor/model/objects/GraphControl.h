@@ -17,6 +17,7 @@ namespace AxiomModel {
     class GraphControl : public Control {
     public:
         AxiomCommon::Event<float> zoomChanged;
+        AxiomCommon::Event<> stateChanged;
 
         GraphControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                      bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, ModelRoot *root);
@@ -36,5 +37,6 @@ namespace AxiomModel {
 
     private:
         float _zoom = 0;
+        size_t _lastStateHash = 0;
     };
 }

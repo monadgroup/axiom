@@ -15,7 +15,28 @@ std::unique_ptr<GraphControl> GraphControl::create(const QUuid &uuid, const QUui
                                           exposingUuid, root);
 }
 
-void GraphControl::doRuntimeUpdate() {}
+void GraphControl::doRuntimeUpdate() {
+    // hash the current state so we can compare it
+    auto currentState = state();
+    size_t newStateHash = 0;
+    if (currentState) {
+        newStateHash = 17;
+        newStateHash = newStateHash * 31 + std::hash<uint8_t>()(currentState->curveCount);
+        newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveStartVals[0]);
+        for (uint8_t curveIndex = 0; curveIndex < currentState->curveCount; curveIndex++) {
+            newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveStartVals[curveIndex + 1]);
+            newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveEndPositions[curveIndex]);
+            newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveTension[curveIndex]);
+            newStateHash = newStateHash * 31 + std::hash<int8_t>()(currentState->curveStates[curveIndex]);
+        }
+    }
+
+    if (newStateHash != _lastStateHash) {
+        std::cout << "State changed from " << _lastStateHash << " to " << newStateHash << std::endl;
+        stateChanged.trigger();
+        _lastStateHash = newStateHash;
+    }
+}
 
 GraphControlState *GraphControl::state() const {
     if (runtimePointers()) {
