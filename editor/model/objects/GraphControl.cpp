@@ -129,3 +129,18 @@ void GraphControl::removePoint(uint8_t index) {
             sizeof(controlState->curveStates[0]) * moveItems);
     controlState->curveCount--;
 }
+
+void GraphControl::saveState() {
+    auto controlState = state();
+    if (!controlState) return;
+
+    savedState = std::make_unique<GraphControlState>();
+    memcpy(savedState.get(), controlState, sizeof(*controlState));
+}
+
+void GraphControl::restoreState() {
+    auto controlState = state();
+    if (!controlState || !savedState) return;
+
+    memcpy(controlState, savedState.get(), sizeof(*controlState));
+}

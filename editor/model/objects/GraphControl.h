@@ -44,9 +44,15 @@ namespace AxiomModel {
 
         void removePoint(uint8_t index);
 
+        void saveState() override;
+
+        void restoreState() override;
+
     private:
         float _zoom = 0;
         float _scroll = 0;
         size_t _lastStateHash = 0;
+
+        std::unique_ptr<GraphControlState> savedState;
     };
 }

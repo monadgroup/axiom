@@ -71,8 +71,17 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     auto lock = lockRuntime();
 
     if (_runtime) {
+        auto allObjects = dynamicCast<ModelObject *>(_pool.sequence());
+        for (const auto &obj : allObjects) {
+            obj->saveState();
+        }
+
         _runtime->commit(std::move(transaction));
         rootSurface()->updateRuntimePointers(_runtime, _runtime->getRootPtr());
+
+        for (const auto &obj : allObjects) {
+            obj->restoreState();
+        }
     }
     if (_backend) {
         _backend->internalUpdateConfiguration();

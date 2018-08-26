@@ -31,6 +31,10 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
+        virtual void saveState() {}
+
+        virtual void restoreState() {}
+
         virtual Sequence<ModelObject *> links();
 
         virtual Sequence<QUuid> compileLinks();
