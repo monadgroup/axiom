@@ -2,7 +2,10 @@
 
 #include <QtGui/QCursor>
 #include <QtGui/QPainter>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QGraphicsScene>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
+#include <QtWidgets/QGraphicsView>
 #include <cmath>
 
 #include "../CommonColors.h"
@@ -28,7 +31,7 @@ static float tensionGraph(float x, float tension) {
 }
 
 static void drawTensionGraph(QPainterPath &path, QPointF startLeft, QPointF endRight, float tension) {
-    const int numLines = 10 + (int) (endRight.x() - startLeft.x()) / 10;
+    const int numLines = 150 + (int) (endRight.x() - startLeft.x()) / 10;
 
     path.moveTo(startLeft);
     for (int i = 1; i <= numLines; i++) {
@@ -39,9 +42,13 @@ static void drawTensionGraph(QPainterPath &path, QPointF startLeft, QPointF endR
     }
 }
 
+static double getSnapSeconds(double widthSeconds, double boxWidth) {
+    const double snappingPoint = 2;
+    return pow(snappingPoint, ceil(log(widthSeconds / boxWidth * 20) / log(snappingPoint)));
+}
+
 GraphControlTicks::GraphControlTicks(GraphControlItem *item) : item(item) {
     setAcceptHoverEvents(true);
-    setCursor(QCursor(Qt::IBeamCursor));
     item->control->zoomChanged.connect(this, &GraphControlTicks::triggerUpdate);
     item->control->beforeSizeChanged.connect(this, &GraphControlTicks::triggerGeometryChange);
 }
@@ -88,22 +95,6 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         painter->drawLine(QPointF(centerXPos - 0.5, clippedRect.bottom() - 5.5),
                           QPointF(centerXPos - 0.5, clippedRect.bottom() - 0.5));
     }
-}
-
-void GraphControlTicks::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
-    // item->moveHoverCursor(event->pos().x());
-}
-
-void GraphControlTicks::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
-    // item->showHoverCursor(event->pos().x());
-}
-
-void GraphControlTicks::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
-    // item->hideHoverCursor();
-}
-
-void GraphControlTicks::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    // item->placePoint(event->pos().x());
 }
 
 GraphControlZoom::GraphControlZoom(AxiomModel::GraphControl *control) : control(control) {
@@ -181,7 +172,71 @@ void GraphControlZoom::updateZoom(qreal mouseX) {
     control->setZoom(qMax(MIN_ZOOM, qMin((float) remappedZoom, MAX_ZOOM)));
 }
 
-const QPointF TENSION_KNOB_SIZE = QPointF(8, 8);
+const QPointF POINT_KNOB_SIZE = QPointF(5, 5);
+const QPointF TENSION_KNOB_SIZE = QPointF(3, 3);
+
+GraphControlPointKnob::GraphControlPointKnob(GraphControlItem *item, uint8_t index) : item(item), index(index) {
+    setAcceptHoverEvents(true);
+}
+
+QRectF GraphControlPointKnob::boundingRect() const {
+    return QRectF(-POINT_KNOB_SIZE, POINT_KNOB_SIZE);
+}
+
+void GraphControlPointKnob::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    painter->setPen(QPen(CommonColors::numNormal));
+
+    auto backColor = CommonColors::numNormal;
+    if (isDragging) {
+        backColor.setAlpha(255);
+    } else if (isHovering) {
+        backColor.setAlpha(150);
+    } else {
+        backColor.setAlpha(50);
+    }
+    painter->setBrush(backColor);
+    painter->drawEllipse(boundingRect());
+}
+
+void GraphControlPointKnob::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    isDragging = true;
+    dragStartMousePos = event->scenePos();
+    dragStartYVal = item->control->state()->curveStartVals[index];
+    dragStartTime = index == 0 ? 0 : item->control->state()->curveEndPositions[index - 1];
+    item->setShowSnapMarks(true);
+    update();
+}
+
+void GraphControlPointKnob::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) return;
+
+    auto mouseDelta = event->scenePos() - dragStartMousePos;
+    auto yScale = maxY - minY;
+    item->control->state()->curveStartVals[index] =
+        std::clamp(dragStartYVal - (float) (mouseDelta.y() / yScale), 0.f, 1.f);
+
+    if (index != 0) {
+        auto timeDelta = mouseDelta.x() / scale;
+        item->control->state()->curveEndPositions[index - 1] = std::clamp(
+            (float) (round((dragStartTime + timeDelta) / snapSeconds) * snapSeconds), minSeconds, maxSeconds);
+    }
+}
+
+void GraphControlPointKnob::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    isDragging = false;
+    item->setShowSnapMarks(false);
+    update();
+}
+
+void GraphControlPointKnob::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    isHovering = true;
+    update();
+}
+
+void GraphControlPointKnob::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    isHovering = false;
+    update();
+}
 
 GraphControlTensionKnob::GraphControlTensionKnob(AxiomModel::GraphControl *control, uint8_t index)
     : control(control), index(index) {
@@ -190,36 +245,49 @@ GraphControlTensionKnob::GraphControlTensionKnob(AxiomModel::GraphControl *contr
 }
 
 QRectF GraphControlTensionKnob::boundingRect() const {
-    return QRectF(-TENSION_KNOB_SIZE / 2, TENSION_KNOB_SIZE / 2);
+    return QRectF(-TENSION_KNOB_SIZE, TENSION_KNOB_SIZE);
 }
 
 void GraphControlTensionKnob::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    painter->setPen(QPen(QColor(200, 200, 200)));
+    painter->setPen(QPen(CommonColors::numNormal));
+
+    auto backColor = CommonColors::numNormal;
     if (isDragging) {
-        painter->setBrush(QBrush(QColor(200, 200, 200, 150)));
+        backColor.setAlpha(255);
     } else if (isHovering) {
-        painter->setBrush(QBrush(QColor(200, 200, 200, 100)));
+        backColor.setAlpha(150);
     } else {
-        painter->setBrush(QBrush(QColor(200, 200, 200, 50)));
+        backColor.setAlpha(50);
     }
+    painter->setBrush(backColor);
     painter->drawEllipse(boundingRect());
 }
 
 void GraphControlTensionKnob::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = true;
+    QApplication::setOverrideCursor(Qt::BlankCursor);
     dragStartTension = control->state()->curveTension[index];
     dragStartMouseY = event->scenePos().y();
     update();
 }
 
 void GraphControlTensionKnob::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) return;
+
     auto deltaY = event->scenePos().y() - dragStartMouseY;
-    auto newTension = std::clamp(dragStartTension + deltaY / movementRange * 2, -1., 1.);
+    auto newTension = std::clamp(dragStartTension + deltaY / movementRange, -1., 1.);
     control->state()->curveTension[index] = (float) newTension;
 }
 
 void GraphControlTensionKnob::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
+
+    auto view = scene()->views().first();
+    auto scenePos = mapToScene(QPointF(0, 0));
+    auto viewPos = view->mapFromScene(scenePos);
+    QCursor::setPos(view->viewport()->mapToGlobal(viewPos));
+
+    QApplication::restoreOverrideCursor();
     update();
 }
 
@@ -233,7 +301,7 @@ void GraphControlTensionKnob::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     update();
 }
 
-GraphControlArea::GraphControlArea(AxiomModel::GraphControl *control) : control(control) {
+GraphControlArea::GraphControlArea(GraphControlItem *item) : item(item) {
     setFlag(QGraphicsPathItem::ItemClipsChildrenToShape, true);
 }
 
@@ -250,23 +318,36 @@ void GraphControlArea::updateBounds(QRectF newClipBounds, QRectF newDrawBounds) 
 }
 
 void GraphControlArea::updateCurves() {
-    auto state = control->state();
+    auto state = item->control->state();
     if (!state) return;
 
     // create/remove QGraphicsPathItems so we have the correct amount
     while (_curves.size() < state->curveCount) {
         _curves.push_back(std::make_unique<QGraphicsPathItem>());
         _curves[_curves.size() - 1]->setParentItem(this);
-
-        _tensionKnobs.push_back(std::make_unique<GraphControlTensionKnob>(control, _tensionKnobs.size()));
+    }
+    while (_tensionKnobs.size() < state->curveCount) {
+        _tensionKnobs.push_back(std::make_unique<GraphControlTensionKnob>(item->control, _tensionKnobs.size()));
         _tensionKnobs[_tensionKnobs.size() - 1]->setParentItem(this);
     }
+    while (_pointKnobs.size() < state->curveCount + 1u) {
+        _pointKnobs.push_back(std::make_unique<GraphControlPointKnob>(item, _pointKnobs.size()));
+        _pointKnobs[_pointKnobs.size() - 1]->setParentItem(this);
+    }
+
     while (_curves.size() > state->curveCount) {
         _curves.pop_back();
     }
+    while (_tensionKnobs.size() > state->curveCount) {
+        _tensionKnobs.pop_back();
+    }
+    while (_pointKnobs.size() > state->curveCount + 1u) {
+        _pointKnobs.pop_back();
+    }
 
-    auto widthSeconds = getWidthSeconds(control->zoom());
+    auto widthSeconds = getWidthSeconds(item->control->zoom());
     auto pixelsPerSecond = drawBounds.width() / widthSeconds;
+    auto snapSeconds = getSnapSeconds(widthSeconds, drawBounds.width());
     for (uint8_t curveIndex = 0; curveIndex < state->curveCount; curveIndex++) {
         auto startSeconds = 0.f;
         if (curveIndex > 0) {
@@ -294,11 +375,30 @@ void GraphControlArea::updateCurves() {
         auto tensionY = graphY1Pixels + (graphY2Pixels - graphY1Pixels) * tensionGraph(0.5f, tension);
         tensionKnob->setPos((graphLeftPixels + graphRightPixels) / 2, tensionY);
         tensionKnob->movementRange = graphY1Pixels - graphY2Pixels;
+
+        auto &pointKnob = _pointKnobs[curveIndex + 1];
+        pointKnob->setPos(graphRightPixels, graphY2Pixels);
+        pointKnob->scale = pixelsPerSecond;
+        pointKnob->snapSeconds = snapSeconds;
+        pointKnob->minY = mapToScene(0, drawBounds.top()).y();
+        pointKnob->maxY = mapToScene(0, drawBounds.bottom()).y();
+        pointKnob->minSeconds = startSeconds;
+
+        if (curveIndex < state->curveCount - 1) {
+            pointKnob->maxSeconds = state->curveEndPositions[curveIndex + 1];
+        } else {
+            pointKnob->maxSeconds = getWidthSeconds(MAX_ZOOM);
+        }
     }
+
+    auto &firstPointKnob = _pointKnobs[0];
+    firstPointKnob->minY = mapToScene(0, drawBounds.top()).y();
+    firstPointKnob->maxY = mapToScene(0, drawBounds.bottom()).y();
+    firstPointKnob->setPos(drawBounds.x(), drawBounds.bottom() - drawBounds.height() * state->curveStartVals[0]);
 }
 
 GraphControlItem::GraphControlItem(AxiomModel::GraphControl *control, AxiomGui::NodeSurfaceCanvas *canvas)
-    : ControlItem(control, canvas), control(control), _ticks(this), _zoomer(control), _area(control) {
+    : ControlItem(control, canvas), control(control), _ticks(this), _zoomer(control), _area(this) {
     _zoomer.setParentItem(this);
     _ticks.setParentItem(this);
     _area.setParentItem(this);
@@ -311,6 +411,13 @@ GraphControlItem::GraphControlItem(AxiomModel::GraphControl *control, AxiomGui::
 
 QRectF GraphControlItem::useBoundingRect() const {
     return drawBoundingRect().marginsRemoved(QMarginsF(3, 3, 3, 3));
+}
+
+void GraphControlItem::setShowSnapMarks(bool value) {
+    if (value != _showSnapMarks) {
+        _showSnapMarks = value;
+        update();
+    }
 }
 
 QPainterPath GraphControlItem::controlPath() const {
@@ -333,6 +440,19 @@ void GraphControlItem::paintControl(QPainter *painter) {
     auto sidePaddingMargin = QMarginsF(sidePadding, sidePadding, sidePadding, sidePadding);
     auto clippedBodyRect = bodyRect.marginsRemoved(sidePaddingMargin);
 
+    auto widthSeconds = getWidthSeconds(control->zoom());
+    auto pixelsPerSecond = clippedBodyRect.width() / widthSeconds;
+
+    if (_showSnapMarks) {
+        painter->setPen(QPen(QColor(40, 40, 40)));
+        auto snapDistancePixels = getSnapSeconds(widthSeconds, clippedBodyRect.width()) * pixelsPerSecond;
+        auto snapLineCount = (int) ceil(clippedBodyRect.width() / snapDistancePixels);
+        for (int i = 0; i < snapLineCount; i++) {
+            auto pos = clippedBodyRect.left() + floor(i * snapDistancePixels) - 0.5;
+            painter->drawLine(QPointF(pos, bodyRect.top() - 0.5), QPointF(pos, bodyRect.bottom() - 0.5));
+        }
+    }
+
     painter->setPen(QPen(QColor(70, 70, 70)));
     painter->drawLine(QPointF(bodyRect.left() - 0.5, clippedBodyRect.top() - 0.5),
                       QPointF(bodyRect.right() - 0.5, clippedBodyRect.top() - 0.5));
@@ -346,8 +466,6 @@ void GraphControlItem::paintControl(QPainter *painter) {
     // draw a line at the end of the last curve
     auto state = control->state();
     if (!state) return;
-    auto widthSeconds = getWidthSeconds(control->zoom());
-    auto pixelsPerSecond = clippedBodyRect.width() / widthSeconds;
     auto endPos = state->curveEndPositions[state->curveCount - 1];
     auto endPixels = floor(clippedBodyRect.left() + endPos * pixelsPerSecond);
     if (endPixels < clippedBodyRect.right()) {

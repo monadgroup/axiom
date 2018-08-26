@@ -32,7 +32,6 @@ void GraphControl::doRuntimeUpdate() {
     }
 
     if (newStateHash != _lastStateHash) {
-        std::cout << "State changed from " << _lastStateHash << " to " << newStateHash << std::endl;
         stateChanged.trigger();
         _lastStateHash = newStateHash;
     }

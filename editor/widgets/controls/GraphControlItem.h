@@ -26,15 +26,6 @@ namespace AxiomGui {
         QRectF boundingRect() const override;
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-
-    protected:
-        void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
-
-        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
-
-        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
-
-        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     };
 
     class GraphControlZoom : public QGraphicsObject, public AxiomCommon::Hookable {
@@ -69,8 +60,38 @@ namespace AxiomGui {
 
     class GraphControlPointKnob : public QGraphicsObject {
     public:
-        AxiomModel::GraphControl *control;
+        GraphControlItem *item;
         uint8_t index;
+        qreal scale;
+        qreal minY;
+        qreal maxY;
+        float minSeconds;
+        float maxSeconds;
+        double snapSeconds;
+
+        GraphControlPointKnob(GraphControlItem *item, uint8_t index);
+
+        QRectF boundingRect() const override;
+
+        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+
+    protected:
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
+    private:
+        bool isHovering = false;
+        bool isDragging = false;
+        QPointF dragStartMousePos;
+        float dragStartYVal;
+        float dragStartTime;
     };
 
     class GraphControlTensionKnob : public QGraphicsObject {
@@ -105,11 +126,11 @@ namespace AxiomGui {
 
     class GraphControlArea : public QGraphicsObject, public AxiomCommon::Hookable {
     public:
+        GraphControlItem *item;
         QRectF clipBounds;
         QRectF drawBounds;
-        AxiomModel::GraphControl *control;
 
-        explicit GraphControlArea(AxiomModel::GraphControl *control);
+        explicit GraphControlArea(GraphControlItem *item);
 
         QRectF boundingRect() const override;
 
@@ -122,6 +143,7 @@ namespace AxiomGui {
     private:
         std::vector<std::unique_ptr<QGraphicsPathItem>> _curves;
         std::vector<std::unique_ptr<GraphControlTensionKnob>> _tensionKnobs;
+        std::vector<std::unique_ptr<GraphControlPointKnob>> _pointKnobs;
     };
 
     class GraphControlItem : public ControlItem {
@@ -131,6 +153,8 @@ namespace AxiomGui {
         GraphControlItem(AxiomModel::GraphControl *control, NodeSurfaceCanvas *canvas);
 
         QRectF useBoundingRect() const override;
+
+        void setShowSnapMarks(bool value);
 
     protected:
         bool showLabelInCenter() const override { return false; }
@@ -147,5 +171,6 @@ namespace AxiomGui {
         GraphControlTicks _ticks;
         GraphControlZoom _zoomer;
         GraphControlArea _area;
+        bool _showSnapMarks = false;
     };
 }
