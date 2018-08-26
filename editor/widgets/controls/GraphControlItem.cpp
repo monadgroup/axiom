@@ -1,6 +1,5 @@
 #include "GraphControlItem.h"
 
-#include <QtGui/QCursor>
 #include <QtGui/QPainter>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QGraphicsScene>
@@ -13,8 +12,14 @@
 
 using namespace AxiomGui;
 
+static constexpr int SCROLL_MULTIPLIER = 1000;
+
 static constexpr float MIN_ZOOM = -2;
 static constexpr float MAX_ZOOM = 3;
+
+static float remapSecondsToPixels(float seconds, float secondsPerPixel, float scroll) {
+    return (seconds - scroll) * secondsPerPixel;
+}
 
 static float getWidthSeconds(float zoom) {
     return powf(2, zoom + 1);
@@ -50,6 +55,7 @@ static double getSnapSeconds(double widthSeconds, double boxWidth) {
 GraphControlTicks::GraphControlTicks(GraphControlItem *item) : item(item) {
     setAcceptHoverEvents(true);
     item->control->zoomChanged.connect(this, &GraphControlTicks::triggerUpdate);
+    item->control->scrollChanged.connect(this, &GraphControlTicks::triggerUpdate);
     item->control->beforeSizeChanged.connect(this, &GraphControlTicks::triggerGeometryChange);
 }
 
@@ -77,21 +83,24 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     auto widthSeconds = getWidthSeconds(item->control->zoom());
     auto pixelsPerSecond = clippedRect.width() / widthSeconds;
     auto numSeconds = (int) ceilf(widthSeconds);
+    auto secondsOffset = (int) item->control->scroll();
 
     painter->setClipRect(rect);
 
     // draw the seconds tick marks
-    for (auto i = 0; i < numSeconds + 1; i++) {
-        auto centerXPos = clippedRect.x() + i * pixelsPerSecond;
+    for (auto i = 0; i < numSeconds + 2; i++) {
+        auto offsetIndex = secondsOffset + i;
+        auto centerXPos = clippedRect.x() + (offsetIndex - item->control->scroll()) * pixelsPerSecond;
         painter->drawText(QRectF(centerXPos - 10, rect.y(), 20, 20), Qt::AlignHCenter | Qt::AlignTop,
-                          QString::number(i));
+                          QString::number(offsetIndex));
         painter->drawLine(QPointF(centerXPos - 0.5, clippedRect.bottom() - 10.5),
                           QPointF(centerXPos - 0.5, clippedRect.bottom() - 0.5));
     }
 
     // draw the half-second tick marks
     for (auto i = 0; i < numSeconds; i++) {
-        auto centerXPos = clippedRect.x() + (i + 0.5) * pixelsPerSecond;
+        auto offsetIndex = secondsOffset + i;
+        auto centerXPos = clippedRect.x() + (offsetIndex + 0.5 - item->control->scroll()) * pixelsPerSecond;
         painter->drawLine(QPointF(centerXPos - 0.5, clippedRect.bottom() - 5.5),
                           QPointF(centerXPos - 0.5, clippedRect.bottom() - 0.5));
     }
@@ -177,6 +186,7 @@ const QPointF TENSION_KNOB_SIZE = QPointF(3, 3);
 
 GraphControlPointKnob::GraphControlPointKnob(GraphControlItem *item, uint8_t index) : item(item), index(index) {
     setAcceptHoverEvents(true);
+    setCursor(QCursor(Qt::ArrowCursor));
 }
 
 QRectF GraphControlPointKnob::boundingRect() const {
@@ -199,16 +209,19 @@ void GraphControlPointKnob::paint(QPainter *painter, const QStyleOptionGraphicsI
 }
 
 void GraphControlPointKnob::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    event->accept();
+
     isDragging = true;
     dragStartMousePos = event->scenePos();
     dragStartYVal = item->control->state()->curveStartVals[index];
     dragStartTime = index == 0 ? 0 : item->control->state()->curveEndPositions[index - 1];
-    item->setShowSnapMarks(true);
     update();
 }
 
 void GraphControlPointKnob::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
+
+    item->setShowSnapMarks(true);
 
     auto mouseDelta = event->scenePos() - dragStartMousePos;
     auto yScale = maxY - minY;
@@ -236,6 +249,12 @@ void GraphControlPointKnob::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
 void GraphControlPointKnob::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     isHovering = false;
     update();
+}
+
+void GraphControlPointKnob::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    if (index != 0) {
+        item->control->removePoint(index);
+    }
 }
 
 GraphControlTensionKnob::GraphControlTensionKnob(AxiomModel::GraphControl *control, uint8_t index)
@@ -324,15 +343,21 @@ void GraphControlArea::updateCurves() {
     // create/remove QGraphicsPathItems so we have the correct amount
     while (_curves.size() < state->curveCount) {
         _curves.push_back(std::make_unique<QGraphicsPathItem>());
-        _curves[_curves.size() - 1]->setParentItem(this);
+        auto &curve = _curves[_curves.size() - 1];
+        curve->setParentItem(this);
+        curve->setZValue(0);
     }
     while (_tensionKnobs.size() < state->curveCount) {
         _tensionKnobs.push_back(std::make_unique<GraphControlTensionKnob>(item->control, _tensionKnobs.size()));
-        _tensionKnobs[_tensionKnobs.size() - 1]->setParentItem(this);
+        auto &tensionKnob = _tensionKnobs[_tensionKnobs.size() - 1];
+        tensionKnob->setParentItem(this);
+        tensionKnob->setZValue(1);
     }
     while (_pointKnobs.size() < state->curveCount + 1u) {
         _pointKnobs.push_back(std::make_unique<GraphControlPointKnob>(item, _pointKnobs.size()));
-        _pointKnobs[_pointKnobs.size() - 1]->setParentItem(this);
+        auto &pointKnob = _pointKnobs[_pointKnobs.size() - 1];
+        pointKnob->setParentItem(this);
+        pointKnob->setZValue(2);
     }
 
     while (_curves.size() > state->curveCount) {
@@ -348,6 +373,7 @@ void GraphControlArea::updateCurves() {
     auto widthSeconds = getWidthSeconds(item->control->zoom());
     auto pixelsPerSecond = drawBounds.width() / widthSeconds;
     auto snapSeconds = getSnapSeconds(widthSeconds, drawBounds.width());
+    auto scrollSeconds = item->control->scroll() * pixelsPerSecond;
     for (uint8_t curveIndex = 0; curveIndex < state->curveCount; curveIndex++) {
         auto startSeconds = 0.f;
         if (curveIndex > 0) {
@@ -359,8 +385,8 @@ void GraphControlArea::updateCurves() {
         auto endVal = state->curveStartVals[curveIndex + 1];
         auto tension = state->curveTension[curveIndex];
 
-        auto graphLeftPixels = drawBounds.x() + startSeconds * pixelsPerSecond;
-        auto graphRightPixels = drawBounds.x() + endSeconds * pixelsPerSecond;
+        auto graphLeftPixels = drawBounds.x() + startSeconds * pixelsPerSecond - scrollSeconds;
+        auto graphRightPixels = drawBounds.x() + endSeconds * pixelsPerSecond - scrollSeconds;
         auto graphY1Pixels = drawBounds.bottom() - drawBounds.height() * startVal;
         auto graphY2Pixels = drawBounds.bottom() - drawBounds.height() * endVal;
 
@@ -394,16 +420,80 @@ void GraphControlArea::updateCurves() {
     auto &firstPointKnob = _pointKnobs[0];
     firstPointKnob->minY = mapToScene(0, drawBounds.top()).y();
     firstPointKnob->maxY = mapToScene(0, drawBounds.bottom()).y();
-    firstPointKnob->setPos(drawBounds.x(), drawBounds.bottom() - drawBounds.height() * state->curveStartVals[0]);
+    firstPointKnob->setPos(drawBounds.x() - scrollSeconds,
+                           drawBounds.bottom() - drawBounds.height() * state->curveStartVals[0]);
+}
+
+void GraphControlArea::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    event->accept();
+}
+
+void GraphControlArea::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    // if the pos is outside draw bounds, ignore
+    if (!drawBounds.contains(event->pos())) {
+        return;
+    }
+
+    auto widthSeconds = getWidthSeconds(item->control->zoom());
+    auto pixelsPerSecond = drawBounds.width() / widthSeconds;
+    auto snapSeconds = getSnapSeconds(widthSeconds, drawBounds.width());
+
+    auto drawBounded = event->pos() - drawBounds.topLeft();
+    auto newPointVal = 1 - drawBounded.y() / drawBounds.height();
+    auto newPointTime =
+        round((drawBounded.x() / pixelsPerSecond + item->control->scroll()) / snapSeconds) * snapSeconds;
+    item->control->insertPoint((float) newPointTime, (float) newPointVal);
+}
+
+ScrollBarGraphicsItem::ScrollBarGraphicsItem(Qt::Orientation orientation) : scrollBar(orientation) {
+    setAcceptHoverEvents(true);
+
+    setWidget(&scrollBar);
+
+    connect(&scrollBar, &QScrollBar::valueChanged, this, &ScrollBarGraphicsItem::triggerUpdate);
+}
+
+void ScrollBarGraphicsItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    update();
+    QGraphicsProxyWidget::hoverEnterEvent(event);
+}
+
+void ScrollBarGraphicsItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    update();
+    QGraphicsProxyWidget::hoverLeaveEvent(event);
+}
+
+void ScrollBarGraphicsItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
+    update();
+    QGraphicsProxyWidget::hoverMoveEvent(event);
+}
+
+void ScrollBarGraphicsItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    update();
+    QGraphicsProxyWidget::mousePressEvent(event);
+}
+
+void ScrollBarGraphicsItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    update();
+    QGraphicsProxyWidget::mouseReleaseEvent(event);
+}
+
+void ScrollBarGraphicsItem::triggerUpdate() {
+    update();
 }
 
 GraphControlItem::GraphControlItem(AxiomModel::GraphControl *control, AxiomGui::NodeSurfaceCanvas *canvas)
-    : ControlItem(control, canvas), control(control), _ticks(this), _zoomer(control), _area(this) {
+    : ControlItem(control, canvas), control(control), _ticks(this), _zoomer(control), _area(this),
+      _scrollBar(Qt::Horizontal) {
     _zoomer.setParentItem(this);
     _ticks.setParentItem(this);
     _area.setParentItem(this);
 
+    _scrollBar.setParentItem(this);
+    connect(&_scrollBar.scrollBar, &QScrollBar::valueChanged, this, &GraphControlItem::scrollBarChanged);
+
     control->zoomChanged.connect(this, &GraphControlItem::stateChange);
+    control->scrollChanged.connect(this, &GraphControlItem::stateChange);
     control->stateChanged.connect(this, &GraphControlItem::stateChange);
     control->sizeChanged.connect(this, &GraphControlItem::positionChildren);
     positionChildren();
@@ -445,10 +535,12 @@ void GraphControlItem::paintControl(QPainter *painter) {
 
     if (_showSnapMarks) {
         painter->setPen(QPen(QColor(40, 40, 40)));
-        auto snapDistancePixels = getSnapSeconds(widthSeconds, clippedBodyRect.width()) * pixelsPerSecond;
+        auto snapSeconds = getSnapSeconds(widthSeconds, clippedBodyRect.width());
+        auto snapDistancePixels = snapSeconds * pixelsPerSecond;
         auto snapLineCount = (int) ceil(clippedBodyRect.width() / snapDistancePixels);
-        for (int i = 0; i < snapLineCount; i++) {
-            auto pos = clippedBodyRect.left() + floor(i * snapDistancePixels) - 0.5;
+        for (int i = 0; i < snapLineCount + 1; i++) {
+            auto pos = clippedBodyRect.left() +
+                       floor(i * snapDistancePixels - fmod(control->scroll(), snapSeconds) * pixelsPerSecond) - 0.5;
             painter->drawLine(QPointF(pos, bodyRect.top() - 0.5), QPointF(pos, bodyRect.bottom() - 0.5));
         }
     }
@@ -467,11 +559,16 @@ void GraphControlItem::paintControl(QPainter *painter) {
     auto state = control->state();
     if (!state) return;
     auto endPos = state->curveEndPositions[state->curveCount - 1];
-    auto endPixels = floor(clippedBodyRect.left() + endPos * pixelsPerSecond);
-    if (endPixels < clippedBodyRect.right()) {
+    auto endPixels =
+        floor(clippedBodyRect.left() + remapSecondsToPixels(endPos, (float) pixelsPerSecond, control->scroll()));
+    if (endPixels > clippedBodyRect.left() && endPixels < clippedBodyRect.right()) {
         painter->drawLine(QPointF(endPixels - 0.5, bodyRect.top() - 0.5),
                           QPointF(endPixels - 0.5, bodyRect.bottom() - 0.5));
     }
+}
+
+void GraphControlItem::scrollBarChanged(int newVal) {
+    control->setScroll(newVal / (float) SCROLL_MULTIPLIER);
 }
 
 void GraphControlItem::positionChildren() {
@@ -482,6 +579,9 @@ void GraphControlItem::positionChildren() {
 
     // position the zoom control at the bottom right of our bounding rect
     _zoomer.setPos(selfBounds.right() - zoomBounds.right(), selfBounds.bottom() - zoomBounds.bottom());
+
+    _scrollBar.setGeometry(QRectF(QPointF(selfBounds.left(), selfBounds.bottom() - zoomBounds.bottom()),
+                                  QSizeF(selfBounds.width() - zoomBounds.width(), zoomBounds.height())));
 
     auto bodyRect =
         selfBounds.marginsRemoved(QMarginsF(0, _ticks.boundingRect().bottom(), 0, _zoomer.boundingRect().bottom()));
@@ -494,6 +594,13 @@ void GraphControlItem::positionChildren() {
 }
 
 void GraphControlItem::stateChange() {
+    auto &scrollBar = _scrollBar.scrollBar;
+
+    auto intMultiplier = SCROLL_MULTIPLIER;
+    auto visibleSeconds = getWidthSeconds(control->zoom());
+    scrollBar.setPageStep((int) (visibleSeconds * intMultiplier));
+    scrollBar.setMaximum((int) ((getWidthSeconds(MAX_ZOOM) - visibleSeconds) * intMultiplier));
+
     _area.updateCurves();
     update();
 }

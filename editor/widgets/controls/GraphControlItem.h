@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QtWidgets/QGraphicsPathItem>
+#include <QtWidgets/QGraphicsProxyWidget>
+#include <QtWidgets/QScrollBar>
 #include <memory>
 
 #include "ControlItem.h"
@@ -86,6 +88,8 @@ namespace AxiomGui {
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
+        void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
     private:
         bool isHovering = false;
         bool isDragging = false;
@@ -124,6 +128,27 @@ namespace AxiomGui {
         qreal dragStartTension;
     };
 
+    class ScrollBarGraphicsItem : public QGraphicsProxyWidget {
+    public:
+        QScrollBar scrollBar;
+
+        explicit ScrollBarGraphicsItem(Qt::Orientation orientation);
+
+    protected:
+        void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+    private slots:
+        void triggerUpdate();
+    };
+
     class GraphControlArea : public QGraphicsObject, public AxiomCommon::Hookable {
     public:
         GraphControlItem *item;
@@ -139,6 +164,11 @@ namespace AxiomGui {
         void updateBounds(QRectF newClipBounds, QRectF newDrawBounds);
 
         void updateCurves();
+
+    protected:
+        void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+        void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
     private:
         std::vector<std::unique_ptr<QGraphicsPathItem>> _curves;
@@ -163,6 +193,9 @@ namespace AxiomGui {
 
         void paintControl(QPainter *painter) override;
 
+    private slots:
+        void scrollBarChanged(int newVal);
+
     private:
         void positionChildren();
 
@@ -171,6 +204,8 @@ namespace AxiomGui {
         GraphControlTicks _ticks;
         GraphControlZoom _zoomer;
         GraphControlArea _area;
+        ScrollBarGraphicsItem _scrollBar;
+
         bool _showSnapMarks = false;
     };
 }
