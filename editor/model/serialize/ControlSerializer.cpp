@@ -7,6 +7,7 @@
 #include "../objects/Control.h"
 #include "../objects/ControlSurface.h"
 #include "../objects/ExtractControl.h"
+#include "../objects/GraphControl.h"
 #include "../objects/GroupSurface.h"
 #include "../objects/MidiControl.h"
 #include "../objects/Node.h"
@@ -35,6 +36,8 @@ void ControlSerializer::serialize(AxiomModel::Control *control, QDataStream &str
         serializeNum(num, stream);
     else if (auto portal = dynamic_cast<PortalControl *>(control))
         serializePortal(portal, stream);
+    else if (auto graph = dynamic_cast<GraphControl *>(control))
+        serializeGraph(graph, stream);
     else
         unreachable;
 }
@@ -108,6 +111,9 @@ std::unique_ptr<Control> ControlSerializer::deserialize(QDataStream &stream, uin
     case Control::ControlType::MIDI_PORTAL:
         return deserializePortal(stream, version, uuid, parentUuid, pos, size, selected, std::move(name), showName,
                                  exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, ref, root);
+    case Control::ControlType::GRAPH:
+        return deserializeGraph(stream, version, uuid, parentUuid, pos, size, selected, std::move(name), showName,
+                                exposerUuid, exposingUuid, ref, root);
     default:
         unreachable;
     }
@@ -163,7 +169,7 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
 
 void ControlSerializer::serializePortal(AxiomModel::PortalControl *control, QDataStream &stream) {
     stream << (uint8_t) control->portalType();
-    stream << (quint64)control->portalId();
+    stream << (quint64) control->portalId();
 }
 
 std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
@@ -183,4 +189,45 @@ std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
 
     return PortalControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
                                  exposingUuid, wireType, (PortalControl::PortalType) portalTypeInt, portalId, root);
+}
+
+void ControlSerializer::serializeGraph(GraphControl *control, QDataStream &stream) {
+    auto savedState = control->state();
+    stream << (bool) savedState;
+    if (savedState) {
+        stream << savedState->curveCount;
+        stream << savedState->curveStartVals[0];
+        for (uint8_t i = 0; i < savedState->curveCount; i++) {
+            stream << savedState->curveStartVals[i + 1];
+            stream << savedState->curveEndPositions[i];
+            stream << savedState->curveTension[i];
+            stream << savedState->curveStates[i];
+        }
+    }
+}
+
+std::unique_ptr<GraphControl> ControlSerializer::deserializeGraph(QDataStream &stream, uint32_t version,
+                                                                  const QUuid &uuid, const QUuid &parentUuid,
+                                                                  QPoint pos, QSize size, bool selected, QString name,
+                                                                  bool showName, QUuid exposerUuid, QUuid exposingUuid,
+                                                                  AxiomModel::ReferenceMapper *ref,
+                                                                  AxiomModel::ModelRoot *root) {
+    std::unique_ptr<GraphControlState> savedState;
+    bool hasSavedState;
+    stream >> hasSavedState;
+
+    if (hasSavedState) {
+        savedState = std::make_unique<GraphControlState>();
+        stream >> savedState->curveCount;
+        stream >> savedState->curveStartVals[0];
+        for (uint8_t i = 0; i < savedState->curveCount; i++) {
+            stream >> savedState->curveStartVals[i + 1];
+            stream >> savedState->curveEndPositions[i];
+            stream >> savedState->curveTension[i];
+            stream >> savedState->curveStates[i];
+        }
+    }
+
+    return GraphControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
+                                exposingUuid, std::move(savedState), root);
 }

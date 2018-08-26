@@ -21,12 +21,13 @@ namespace AxiomModel {
         AxiomCommon::Event<> stateChanged;
 
         GraphControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                     bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, ModelRoot *root);
+                     bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
+                     std::unique_ptr<GraphControlState> savedState, ModelRoot *root);
 
         static std::unique_ptr<GraphControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                     bool selected, QString name, bool showName,
                                                     const QUuid &exposerUuid, const QUuid &exposingUuid,
-                                                    ModelRoot *root);
+                                                    std::unique_ptr<GraphControlState> savedState, ModelRoot *root);
 
         void doRuntimeUpdate() override;
 
@@ -39,6 +40,8 @@ namespace AxiomModel {
         float scroll() const { return _scroll; }
 
         void setScroll(float scroll);
+
+        GraphControlState *savedState() const { return _savedState.get(); }
 
         void insertPoint(float time, float val);
 
@@ -53,6 +56,6 @@ namespace AxiomModel {
         float _scroll = 0;
         size_t _lastStateHash = 0;
 
-        std::unique_ptr<GraphControlState> savedState;
+        std::unique_ptr<GraphControlState> _savedState;
     };
 }

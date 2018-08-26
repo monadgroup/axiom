@@ -4,15 +4,18 @@ using namespace AxiomModel;
 
 GraphControl::GraphControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
                            QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                           AxiomModel::ModelRoot *root)
+                           std::unique_ptr<GraphControlState> savedState, AxiomModel::ModelRoot *root)
     : Control(ControlType::GRAPH, ConnectionWire::WireType::NUM, uuid, parentUuid, pos, size, selected, std::move(name),
-              showName, exposerUuid, exposingUuid, root) {}
+              showName, exposerUuid, exposingUuid, root),
+      _savedState(std::move(savedState)) {}
 
 std::unique_ptr<GraphControl> GraphControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                    bool selected, QString name, bool showName, const QUuid &exposerUuid,
-                                                   const QUuid &exposingUuid, AxiomModel::ModelRoot *root) {
+                                                   const QUuid &exposingUuid,
+                                                   std::unique_ptr<GraphControlState> savedState,
+                                                   AxiomModel::ModelRoot *root) {
     return std::make_unique<GraphControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                                          exposingUuid, root);
+                                          exposingUuid, std::move(savedState), root);
 }
 
 void GraphControl::doRuntimeUpdate() {
@@ -134,13 +137,14 @@ void GraphControl::saveState() {
     auto controlState = state();
     if (!controlState) return;
 
-    savedState = std::make_unique<GraphControlState>();
-    memcpy(savedState.get(), controlState, sizeof(*controlState));
+    _savedState = std::make_unique<GraphControlState>();
+    memcpy(_savedState.get(), controlState, sizeof(*controlState));
 }
 
 void GraphControl::restoreState() {
     auto controlState = state();
-    if (!controlState || !savedState) return;
+    if (!controlState || !_savedState) return;
 
-    memcpy(controlState, savedState.get(), sizeof(*controlState));
+    memcpy(controlState, _savedState.get(), sizeof(*controlState));
+    _savedState.reset();
 }

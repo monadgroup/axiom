@@ -102,6 +102,8 @@ namespace AxiomModel {
 
         void setRuntimePointers(std::optional<MaximFrontend::ControlPointers> runtimePointers) {
             _runtimePointers = std::move(runtimePointers);
+
+            restoreState();
         }
 
         virtual void doRuntimeUpdate() = 0;

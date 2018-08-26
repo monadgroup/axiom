@@ -13,6 +13,7 @@ namespace AxiomModel {
     class MidiControl;
     class NumControl;
     class PortalControl;
+    class GraphControl;
     class ReferenceMapper;
 
     namespace ControlSerializer {
@@ -51,5 +52,12 @@ namespace AxiomModel {
                                                          QString name, bool showName, QUuid exposerUuid,
                                                          QUuid exposingUuid, ConnectionWire::WireType wireType,
                                                          ReferenceMapper *ref, ModelRoot *root);
+
+        void serializeGraph(GraphControl *control, QDataStream &stream);
+
+        std::unique_ptr<GraphControl> deserializeGraph(QDataStream &stream, uint32_t version, const QUuid &uuid,
+                                                       const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
+                                                       QString name, bool showName, QUuid exposerUuid,
+                                                       QUuid exposingUuid, ReferenceMapper *ref, ModelRoot *root);
     }
 }
