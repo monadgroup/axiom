@@ -90,6 +90,8 @@ namespace AxiomGui {
 
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
+        void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+
     private:
         bool isHovering = false;
         bool isDragging = false;
@@ -120,6 +122,8 @@ namespace AxiomGui {
         void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 
         void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
+        void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
     private:
         bool isHovering = false;
@@ -192,6 +196,8 @@ namespace AxiomGui {
         QPainterPath controlPath() const override;
 
         void paintControl(QPainter *painter) override;
+
+        void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
     private slots:
         void scrollBarChanged(int newVal);

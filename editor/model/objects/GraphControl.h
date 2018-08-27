@@ -11,7 +11,7 @@ namespace AxiomModel {
         float curveStartVals[GRAPH_CONTROL_CURVE_COUNT + 1];
         float curveEndPositions[GRAPH_CONTROL_CURVE_COUNT];
         float curveTension[GRAPH_CONTROL_CURVE_COUNT];
-        int8_t curveStates[GRAPH_CONTROL_CURVE_COUNT];
+        uint8_t curveStates[GRAPH_CONTROL_CURVE_COUNT + 1];
     };
 
     class GraphControl : public Control {

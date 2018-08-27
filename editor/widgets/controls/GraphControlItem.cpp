@@ -1,13 +1,17 @@
 #include "GraphControlItem.h"
 
+#include <QtCore/QStringBuilder>
+#include <QtGui/QClipboard>
 #include <QtGui/QPainter>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QGraphicsScene>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QGraphicsView>
+#include <QtWidgets/QMenu>
 #include <cmath>
 
 #include "../CommonColors.h"
+#include "../FloatingValueEditor.h"
 #include "editor/model/objects/GraphControl.h"
 
 using namespace AxiomGui;
@@ -52,8 +56,23 @@ static double getSnapSeconds(double widthSeconds, double boxWidth) {
     return pow(snappingPoint, ceil(log(widthSeconds / boxWidth * 20) / log(snappingPoint)));
 }
 
+static QPainterPath generateTagPolygon() {
+    QPainterPath path;
+    path.moveTo(0, 0);
+    path.lineTo(12, 0);
+    path.lineTo(12, 20);
+    path.lineTo(7, 15);
+    path.lineTo(0, 15);
+    path.closeSubpath();
+
+    return path;
+}
+
+QPainterPath tagPolygon = generateTagPolygon();
+
 GraphControlTicks::GraphControlTicks(GraphControlItem *item) : item(item) {
     setAcceptHoverEvents(true);
+    setFlag(QGraphicsItem::ItemClipsToShape, true);
     item->control->zoomChanged.connect(this, &GraphControlTicks::triggerUpdate);
     item->control->scrollChanged.connect(this, &GraphControlTicks::triggerUpdate);
     item->control->beforeSizeChanged.connect(this, &GraphControlTicks::triggerGeometryChange);
@@ -85,8 +104,6 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     auto numSeconds = (int) ceilf(widthSeconds);
     auto secondsOffset = (int) item->control->scroll();
 
-    painter->setClipRect(rect);
-
     // draw the seconds tick marks
     for (auto i = 0; i < numSeconds + 2; i++) {
         auto offsetIndex = secondsOffset + i;
@@ -103,6 +120,29 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         auto centerXPos = clippedRect.x() + (offsetIndex + 0.5 - item->control->scroll()) * pixelsPerSecond;
         painter->drawLine(QPointF(centerXPos - 0.5, clippedRect.bottom() - 5.5),
                           QPointF(centerXPos - 0.5, clippedRect.bottom() - 0.5));
+    }
+
+    // draw "tags" for each curve with a state
+    auto controlState = item->control->state();
+    for (uint8_t i = 0; i < controlState->curveCount + 1; i++) {
+        auto curveState = controlState->curveStates[i];
+        if (curveState == 0) continue;
+
+        auto posSeconds = 0.f;
+        if (i > 0) {
+            posSeconds = controlState->curveEndPositions[i - 1];
+        }
+
+        auto posX = clippedRect.x() + (posSeconds - item->control->scroll()) * pixelsPerSecond;
+
+        painter->setPen(QPen(QColor(20, 20, 20)));
+        painter->setBrush(QBrush(QColor(80, 80, 80)));
+        painter->drawPolygon(tagPolygon.toFillPolygon(QMatrix().translate(posX - 12, rect.bottom() - 20)));
+
+        painter->setPen(QPen(QColor(200, 200, 200)));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawText(QRectF(posX - 12, rect.bottom() - 20, 12, 15), Qt::AlignHCenter | Qt::AlignVCenter,
+                          QString::number(curveState - 1));
     }
 }
 
@@ -257,6 +297,81 @@ void GraphControlPointKnob::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *even
     }
 }
 
+void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    event->accept();
+
+    uint8_t suggestedTag = 0;
+    for (auto i = index - 1; i >= 0; i--) {
+        auto curveState = item->control->state()->curveStates[i];
+        if (curveState != 0) {
+            suggestedTag = curveState;
+            break;
+        }
+    }
+
+    auto currentTag = item->control->state()->curveStates[index];
+    if (suggestedTag + 1 == currentTag) {
+        suggestedTag++;
+    }
+
+    auto clipboard = QGuiApplication::clipboard();
+    bool validClipboardNumber;
+    auto clipboardNumber = clipboard->text().toFloat(&validClipboardNumber);
+
+    QMenu menu;
+
+    auto setValueAction = menu.addAction("&Set Value...");
+    auto copyValueAction = menu.addAction("&Copy Value");
+    auto pasteValueAction = menu.addAction("&Paste Value");
+    menu.addSeparator();
+    auto clearTagAction = menu.addAction("&Clear Tag");
+    auto tagSuggestedAction = menu.addAction("Tag &" % QString::number(suggestedTag));
+    auto setTagAction = menu.addAction("&Set Tag...");
+    menu.addSeparator();
+    auto deleteAction = menu.addAction("&Delete");
+
+    pasteValueAction->setEnabled(validClipboardNumber);
+    clearTagAction->setEnabled(currentTag != 0);
+    deleteAction->setEnabled(index != 0);
+
+    auto selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == setValueAction) {
+        auto editor =
+            new FloatingValueEditor(QString::number(item->control->state()->curveStartVals[index]), event->scenePos());
+        scene()->addItem(editor);
+        connect(editor, &FloatingValueEditor::valueSubmitted, this, [this](QString newValue) {
+            bool validInput;
+            auto inputFloat = newValue.toFloat(&validInput);
+            if (!validInput) return;
+
+            item->control->state()->curveStartVals[index] = std::clamp(inputFloat, 0.f, 1.f);
+        });
+    } else if (selectedAction == copyValueAction) {
+        clipboard->setText(QString::number(item->control->state()->curveStartVals[index], 'f', 2));
+    } else if (validClipboardNumber && selectedAction == pasteValueAction) {
+        item->control->state()->curveStartVals[index] = std::clamp(clipboardNumber, 0.f, 1.f);
+    } else if (selectedAction == clearTagAction) {
+        item->control->state()->curveStates[index] = 0;
+    } else if (selectedAction == tagSuggestedAction) {
+        item->control->state()->curveStates[index] = (uint8_t)(suggestedTag + 1u);
+    } else if (selectedAction == setTagAction) {
+        QString defaultText = "";
+        if (currentTag > 0) defaultText = QString::number(currentTag - 1);
+        auto editor = new FloatingValueEditor(defaultText, event->scenePos());
+        scene()->addItem(editor);
+        connect(editor, &FloatingValueEditor::valueSubmitted, this, [this](QString newValue) {
+            bool validInput;
+            auto inputByte = newValue.toUInt(&validInput);
+            if (!validInput || inputByte > UINT8_MAX - 1) return;
+
+            item->control->state()->curveStates[index] = (uint8_t)(inputByte + 1u);
+        });
+    } else if (index != 0 && selectedAction == deleteAction) {
+        item->control->removePoint(index);
+    }
+}
+
 GraphControlTensionKnob::GraphControlTensionKnob(AxiomModel::GraphControl *control, uint8_t index)
     : control(control), index(index) {
     setAcceptHoverEvents(true);
@@ -318,6 +433,40 @@ void GraphControlTensionKnob::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
 void GraphControlTensionKnob::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     isHovering = false;
     update();
+}
+
+void GraphControlTensionKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    event->accept();
+
+    auto clipboard = QGuiApplication::clipboard();
+    bool validClipboardNumber;
+    auto clipboardNumber = clipboard->text().toFloat(&validClipboardNumber);
+
+    QMenu menu;
+    auto setTensionAction = menu.addAction("&Set Tension...");
+    auto copyTensionAction = menu.addAction("&Copy Tension");
+    auto pasteTensionAction = menu.addAction("&Paste Tension");
+
+    pasteTensionAction->setEnabled(validClipboardNumber);
+
+    auto selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == setTensionAction) {
+        auto editor = new FloatingValueEditor(QString::number(roundf(control->state()->curveTension[index] * 100)),
+                                              event->scenePos());
+        scene()->addItem(editor);
+        connect(editor, &FloatingValueEditor::valueSubmitted, this, [this](QString newValue) {
+            bool couldConvert;
+            auto convertedVal = newValue.toFloat(&couldConvert);
+
+            if (!couldConvert) return;
+            control->state()->curveTension[index] = std::clamp(convertedVal / 100, -1.f, 1.f);
+        });
+    } else if (selectedAction == copyTensionAction) {
+        clipboard->setText(QString::number(roundf(control->state()->curveTension[index] * 100)));
+    } else if (validClipboardNumber && selectedAction == pasteTensionAction) {
+        control->state()->curveTension[index] = std::clamp(clipboardNumber / 100, -1.f, 1.f);
+    }
 }
 
 GraphControlArea::GraphControlArea(GraphControlItem *item) : item(item) {
@@ -533,6 +682,8 @@ void GraphControlItem::paintControl(QPainter *painter) {
     auto widthSeconds = getWidthSeconds(control->zoom());
     auto pixelsPerSecond = clippedBodyRect.width() / widthSeconds;
 
+    painter->setClipRect(bodyRect);
+
     if (_showSnapMarks) {
         painter->setPen(QPen(QColor(40, 40, 40)));
         auto snapSeconds = getSnapSeconds(widthSeconds, clippedBodyRect.width());
@@ -565,6 +716,32 @@ void GraphControlItem::paintControl(QPainter *painter) {
         painter->drawLine(QPointF(endPixels - 0.5, bodyRect.top() - 0.5),
                           QPointF(endPixels - 0.5, bodyRect.bottom() - 0.5));
     }
+
+    // draw lines for each tagged curve
+    for (uint8_t i = 0; i < state->curveCount + 1; i++) {
+        if (state->curveStates[i] == 0) continue;
+
+        auto tagPosition = 0.f;
+        if (state->curveCount > 0) {
+            tagPosition = state->curveEndPositions[i - 1];
+        }
+
+        auto linePixels = floor(clippedBodyRect.left() +
+                                remapSecondsToPixels(tagPosition, (float) pixelsPerSecond, control->scroll()));
+        painter->drawLine(QPointF(linePixels - 0.5, bodyRect.top() - 0.5),
+                          QPointF(linePixels - 0.5, bodyRect.bottom() - 0.5));
+    }
+}
+
+void GraphControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    event->accept();
+
+    QMenu menu;
+    buildMenuStart(menu);
+    menu.addSeparator();
+    buildMenuEnd(menu);
+
+    menu.exec(event->screenPos());
 }
 
 void GraphControlItem::scrollBarChanged(int newVal) {

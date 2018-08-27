@@ -79,7 +79,7 @@ void GraphControl::insertPoint(float time, float val) {
         controlState->curveStartVals[controlState->curveCount + 1] = val;
         controlState->curveEndPositions[controlState->curveCount] = time;
         controlState->curveTension[controlState->curveCount] = newTension;
-        controlState->curveStates[controlState->curveCount] = -1;
+        controlState->curveStates[controlState->curveCount + 1] = -1;
         controlState->curveCount++;
     } else {
         // figure out after which curve the new point should be placed
@@ -102,13 +102,13 @@ void GraphControl::insertPoint(float time, float val) {
                 sizeof(controlState->curveEndPositions[0]) * moveItems);
         memmove(&controlState->curveTension[placePoint + 1], &controlState->curveTension[placePoint],
                 sizeof(controlState->curveTension[0]) * moveItems);
-        memmove(&controlState->curveStates[placePoint + 1], &controlState->curveStates[placePoint],
+        memmove(&controlState->curveStates[placePoint + 2], &controlState->curveStates[placePoint + 1],
                 sizeof(controlState->curveStates[0]) * moveItems);
 
         controlState->curveStartVals[placePoint + 1] = val;
         controlState->curveEndPositions[placePoint] = time;
         controlState->curveTension[placePoint] = newTension;
-        controlState->curveStates[placePoint] = -1;
+        controlState->curveStates[placePoint + 1] = 0;
         controlState->curveCount++;
     }
 }
@@ -128,7 +128,7 @@ void GraphControl::removePoint(uint8_t index) {
             sizeof(controlState->curveEndPositions[0]) * moveItems);
     memmove(&controlState->curveTension[index - 1], &controlState->curveTension[index],
             sizeof(controlState->curveTension[0]) * moveItems);
-    memmove(&controlState->curveStates[index - 1], &controlState->curveStates[index],
+    memmove(&controlState->curveStates[index], &controlState->curveStates[index + 1],
             sizeof(controlState->curveStates[0]) * moveItems);
     controlState->curveCount--;
 }
