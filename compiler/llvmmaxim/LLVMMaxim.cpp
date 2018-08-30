@@ -9,7 +9,7 @@
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(std::shared_ptr<llvm::Module>, LLVMSharedModuleRef)
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TargetMachine, LLVMTargetMachineRef)
 
-#if (APPLE)
+#ifdef APPLE
 #define SINCOSF ::__sincosf
 #else
 #define SINCOSF ::sincosf
