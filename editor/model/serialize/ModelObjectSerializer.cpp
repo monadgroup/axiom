@@ -40,7 +40,7 @@ std::vector<ModelObject *> ModelObjectSerializer::deserializeChunk(QDataStream &
         root->pool().registerObj(std::move(newObject));
     }
 
-    return std::move(usedObjects);
+    return usedObjects;
 }
 
 std::unique_ptr<ModelRoot> ModelObjectSerializer::deserializeRoot(QDataStream &stream, uint32_t version,
@@ -50,7 +50,7 @@ std::unique_ptr<ModelRoot> ModelObjectSerializer::deserializeRoot(QDataStream &s
     deserializeChunk(stream, version, modelRoot.get(), QUuid(), &ref);
     modelRoot->history() =
         HistorySerializer::deserialize(stream, version, modelRoot.get(), std::move(modelRoot->history().applyer()));
-    return std::move(modelRoot);
+    return modelRoot;
 }
 
 void ModelObjectSerializer::serialize(AxiomModel::ModelObject *obj, QDataStream &stream, const QUuid &parent) {

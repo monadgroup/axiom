@@ -232,17 +232,20 @@ void CustomNode::surfaceControlAdded(AxiomModel::Control *control) {
 }
 
 void CustomNode::buildCode() {
-    auto compileResult = MaximCompiler::Block::compile(getRuntimeId(), name(), code());
+    MaximCompiler::Block block;
+    MaximCompiler::Error error;
 
-    if (MaximCompiler::Error *err = std::get_if<MaximCompiler::Error>(&compileResult)) {
-        auto errorDescription = err->getDescription();
-        auto errorRange = err->getRange();
+    auto compileSuccess = MaximCompiler::Block::compile(getRuntimeId(), name(), code(), &block, &error);
+
+    if (compileSuccess) {
+        _compiledBlock = std::move(block);
+        codeCompileSuccess.trigger();
+    } else {
+        auto errorDescription = error.getDescription();
+        auto errorRange = error.getRange();
         std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> "
                   << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString()
                   << std::endl;
         codeCompileError.trigger(errorDescription, errorRange);
-    } else {
-        _compiledBlock = std::optional<MaximCompiler::Block>(std::move(std::get<MaximCompiler::Block>(compileResult)));
-        codeCompileSuccess.trigger();
     }
 }

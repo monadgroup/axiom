@@ -19,7 +19,7 @@ namespace AxiomCommon {
         using func_type = std::function<void(Args...)>;
 
     private:
-        struct SharedEvent;
+        class SharedEvent;
 
         using shared_event = std::shared_ptr<SharedEvent>;
 

@@ -11,9 +11,9 @@ namespace AxiomModel {
     public:
         using value_type = Item;
         using reference = value_type &;
-        using const_reference = const reference;
+        using const_reference = const value_type &;
         using pointer = value_type *;
-        using const_pointer = const pointer;
+        using const_pointer = const value_type *;
 
         using next_functor = std::function<std::optional<Item>()>;
         using iter_functor = std::function<next_functor()>;
