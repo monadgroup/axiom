@@ -1,0 +1,32 @@
+os: osx
+osx_image: xcode10
+language: cpp
+
+cache:
+  directories:
+  - $HOME/Library/Caches/Homebrew
+  - $HOME/.cargo
+  - $TRAVIS_BUILD_DIR/compiler/target
+
+# dependencies required:
+#  - Rustup
+#  - VST 2 SDK
+#  - Qt 5.11
+#  - LLVM 6
+#  - PortAudio
+install:
+  - mkdir build
+  - cd build
+  - curl http://download.steinberg.net/sdk_downloads/vstsdk3610_11_06_2018_build_37.zip > vstsdk.zip
+  - unzip vstsdk.zip VST_SDK/VST2_SDK/**/*
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y
+  - source $HOME/.cargo/env
+  - rustc --version && cargo --version
+  - brew install qt llvm@6 portaudio
+
+before_script:
+  - export LLVM_SYS_60_PREFIX=/usr/local/opt/llvm
+  - cmake ../ -DAXIOM_STATIC_LINK=ON -DVST2_SDK_ROOT="$TRAVIS_BUILD_DIR/build/VST_SDK/VST2_SDK" -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm"
+
+script:
+  - cmake --build ./
