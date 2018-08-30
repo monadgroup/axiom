@@ -9,6 +9,12 @@
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(std::shared_ptr<llvm::Module>, LLVMSharedModuleRef)
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TargetMachine, LLVMTargetMachineRef)
 
+#if (APPLE)
+#define SINCOSF ::__sincosf
+#else
+#define SINCOSF ::sincosf
+#endif
+
 extern "C" {
 int __umoddi3(int a, int b);
 
@@ -61,7 +67,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("atanf", (uint64_t) & ::atanf);
     jit->addBuiltin("atan2f", (uint64_t) & ::atan2f);
     jit->addBuiltin("hypot", (uint64_t) & ::hypot);
-    jit->addBuiltin("sincosf", (uint64_t) & ::sincosf);
+    jit->addBuiltin("sincosf", (uint64_t) &SINCOSF);
     jit->addBuiltin("expf", (uint64_t) & ::expf);
     jit->addBuiltin("fmodf", (uint64_t) & ::fmodf);
     jit->addBuiltin("rand", (uint64_t) & ::rand);
