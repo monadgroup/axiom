@@ -66,7 +66,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("asinf", (uint64_t) & ::asinf);
     jit->addBuiltin("atanf", (uint64_t) & ::atanf);
     jit->addBuiltin("atan2f", (uint64_t) & ::atan2f);
-    jit->addBuiltin("hypot", (uint64_t) & ::hypot);
+    jit->addBuiltin("hypot", (uint64_t) static_cast<double (*)(double, double)>(&::hypot));
     jit->addBuiltin("sincosf", (uint64_t) &SINCOSF);
     jit->addBuiltin("expf", (uint64_t) & ::expf);
     jit->addBuiltin("fmodf", (uint64_t) & ::fmodf);
