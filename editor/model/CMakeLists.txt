@@ -9,6 +9,7 @@ set(SOURCE_FILES
         Pool.cpp
         PoolObject.cpp
         Project.cpp
+        WireGrid.cpp
         Value.h)
 
 include_directories(${QT5_INCLUDE_DIRS})
