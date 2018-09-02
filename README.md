@@ -1,4 +1,4 @@
-# Axiom
+# Axiom [![Build Status](https://travis-ci.org/monadgroup/axiom.svg?branch=master)](https://travis-ci.org/monadgroup/axiom)
 
 ![A basic sine-wave synth](axiom.png)
 
