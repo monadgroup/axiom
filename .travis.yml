@@ -22,10 +22,7 @@ install:
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   - source $HOME/.cargo/env
   - rustc --version && cargo --version
-  - brew cask uninstall oclint
-  - brew install gcc qt llvm@6 portaudio
-  - export CC=gcc-8
-  - export CXX=g++-8
+  - brew install qt llvm@6 portaudio
 
 before_script:
   - export LLVM_SYS_60_PREFIX=/usr/local/opt/llvm
