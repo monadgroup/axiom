@@ -33,11 +33,4 @@ set_target_properties(axiom_standalone PROPERTIES
 
 target_link_libraries(axiom_standalone ${AXIOM_LINK_FLAGS} axiom_editor ${PORTAUDIO_LIBRARIES})
 
-# set install path
-if (APPLE)
-    install(TARGETS axiom_standalone DESTINATION "/Applications")
-elseif (WIN32)
-    install(TARGETS axiom_standalone DESTINATION "/Program Files (x86)/Axiom")
-elseif (UNIX)
-    install(TARGETS axiom_standalone DESTINATION "/usr/share/Axiom")
-endif ()
+install(TARGETS axiom_standalone DESTINATION .)

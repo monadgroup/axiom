@@ -28,11 +28,4 @@ set_target_properties(axiom_vst2 PROPERTIES
 
 target_link_libraries(axiom_vst2 ${AXIOM_LINK_FLAGS} axiom_editor)
 
-# set install path
-if (APPLE)
-    install(TARGETS axiom_vst2 DESTINATION "$ENV{HOME}/Library/Audio/Plug-Ins/VST")
-elseif (WIN32)
-    install(TARGETS axiom_vst2 DESTINATION "/Program Files (x86)/Common Files/VST")
-elseif (UNIX)
-    install(TARGETS axiom_vst2 DESTINATION "/usr/lib/lxvst")
-endif ()
+install(TARGETS axiom_vst2 DESTINATION .)

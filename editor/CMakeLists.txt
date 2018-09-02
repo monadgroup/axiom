@@ -39,6 +39,7 @@ if (DEPLOY)
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Axiom: node-based synth")
 
     if (APPLE)
+        set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
         set(CPACK_GENERATOR DragNDrop)
     elseif (WIN32)
         set(CPACK_GENERATOR ZIP NSIS)
