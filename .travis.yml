@@ -24,9 +24,27 @@ install:
   - rustc --version && cargo --version
   - brew install qt llvm@6 portaudio
 
+# setup cmake for building
 before_script:
   - export LLVM_SYS_60_PREFIX=/usr/local/opt/llvm
-  - cmake ../ -DVST2_SDK_ROOT="$TRAVIS_BUILD_DIR/build/VST_SDK/VST2_SDK" -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm"
+  - cmake ../ -DVST2_SDK_ROOT="$TRAVIS_BUILD_DIR/build/VST_SDK/VST2_SDK" -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm" -DCMAKE_BUILD_TYPE=Release -DDEPLOY=ON
 
+# build it!
 script:
   - cmake --build ./
+
+# create installers with cpack
+before_deploy:
+  - mkdir install
+  - cd install
+  - cpack --config ../CPackConfig.cmake
+
+deploy:
+  provider: releases
+  api_key:
+    secure: ""
+  file:
+    - "$TRAVIS_BUILD_DIR/build/install/Axiom-0.3.2-Darwin.dmg"
+  skip_cleanup: true
+  on:
+    tags: true

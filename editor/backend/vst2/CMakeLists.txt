@@ -12,16 +12,27 @@ add_library(axiom_vst2 MODULE
         AxiomVstPlugin.h AxiomVstPlugin.cpp
         AxiomVstEditor.h AxiomVstEditor.cpp
         VstAudioBackend.h VstAudioBackend.cpp
-        AxiomVst.def)
-target_link_libraries(axiom_vst2 ${AXIOM_LINK_FLAGS} axiom_editor)
+        AxiomVst.def ${ICON_PATH})
+set_source_files_properties(${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
 set_target_properties(axiom_vst2 PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "AxiomVST"
+
         BUNDLE true
         BUNDLE_EXTENSION "vst"
         XCODE_ATTRIBUTE_WRAPPER_EXTENSION "vst"
         MACOSX_BUNDLE_INFO_PLIST "${RES_DIR}/Info.plist.in"
-        MACOSX_BUNDLE_BUNDLE_NAME "Axiom: node-based VSTi"
-        MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.monadgroup.axiom"
-        MACOSX_BUNDLE_ICON_FILE "Resources/icon.icns"
-        MACOSX_BUNDLE_SHORT_VERSION_STRING "0.3.2"
-        MACOSX_BUNDLE_COPYRIGHT "Copyright 2018 MONAD")
+        MACOSX_BUNDLE_INFO_STRING "Axiom VST2 0.3.2"
+        MACOSX_BUNDLE_NAME "Axiom VST2")
+
+target_link_libraries(axiom_vst2 ${AXIOM_LINK_FLAGS} axiom_editor)
+
+# set install path
+if (APPLE)
+    install(TARGETS axiom_vst2 DESTINATION "$ENV{HOME}/Library/Audio/Plug-Ins/VST")
+elseif (WIN32)
+    install(TARGETS axiom_vst2 DESTINATION "/Program Files (x86)/Common Files/VST")
+elseif (UNIX)
+    install(TARGETS axiom_vst2 DESTINATION "/usr/lib/lxvst")
+endif ()

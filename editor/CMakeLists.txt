@@ -13,6 +13,10 @@ find_package(Qt5Widgets REQUIRED)
 include_directories(../ ${Qt5Widgets_INCLUDE_DIRS})
 
 set(RES_DIR "${CMAKE_SOURCE_DIR}/editor/resources")
+
+# common settings for Mac bundles
+set(ICON_PATH "${RES_DIR}/axiom.icns")
+
 add_subdirectory(../common common)
 add_subdirectory(model)
 add_subdirectory(widgets)
@@ -27,3 +31,20 @@ add_library(axiom_editor
 target_link_libraries(axiom_editor axiom_widgets axiom_model axiom_common maxim_compiler Qt5::Widgets)
 
 add_subdirectory(backend)
+
+if (DEPLOY)
+    set(CPACK_PACKAGE_NAME Axiom)
+    set(CPACK_PACKAGE_VERSION 0.3.2)
+    set(CPACK_PACKAGE_VENDOR MONAD)
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Axiom: node-based synth")
+
+    if (APPLE)
+        set(CPACK_GENERATOR DragNDrop)
+    elseif (WIN32)
+        set(CPACK_GENERATOR ZIP NSIS)
+    elseif (UNIX)
+        set(CPACK_GENERATOR TGZ)
+    endif ()
+
+    include(CPack)
+endif ()
