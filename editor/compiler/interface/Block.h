@@ -3,17 +3,21 @@
 #include <cstddef>
 #include <variant>
 
-#include "OwnedObject.h"
 #include "ControlRef.h"
 #include "Error.h"
+#include "OwnedObject.h"
 
 namespace MaximCompiler {
 
     class Block : public OwnedObject {
     public:
+        Block();
+
         explicit Block(void *handle);
 
-        static std::variant<Block, Error> compile(uint64_t id, const QString &name, const QString &code);
+        static bool compile(uint64_t id, const QString &name, const QString &code, Block *blockOut, Error *errorOut);
+
+        // static std::variant<Block, Error> compile(uint64_t id, const QString &name, const QString &code);
 
         size_t controlCount() const;
 
@@ -21,5 +25,4 @@ namespace MaximCompiler {
 
         Block clone() const;
     };
-
 }

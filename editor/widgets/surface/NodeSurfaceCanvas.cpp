@@ -64,10 +64,10 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
 
     // connect to model
     surface->nodes().itemAdded.connect(this, &NodeSurfaceCanvas::addNode);
-    surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
+    surface->connections().itemAdded.connect(this, [this](Connection *connection) {
                                                  connection->wire().then(
                                                      [this](ConnectionWire &wire) { addWire(&wire); });
-                                             }));
+                                             });
 
     // start update timer
     auto timer = new QTimer(this);
@@ -109,7 +109,7 @@ void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
     connectionWire->setStartActive(true);
     addWire(&*connectionWire);
 
-    connectionWire->removed.connect(this, std::function([this]() { connectionWire.reset(); }));
+    connectionWire->removed.connect(this, [this]() { connectionWire.reset(); });
 }
 
 void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {

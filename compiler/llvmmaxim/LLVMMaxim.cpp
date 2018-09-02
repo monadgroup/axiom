@@ -9,6 +9,12 @@
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(std::shared_ptr<llvm::Module>, LLVMSharedModuleRef)
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TargetMachine, LLVMTargetMachineRef)
 
+#ifdef APPLE
+#define SINCOSF ::__sincosf
+#else
+#define SINCOSF ::sincosf
+#endif
+
 extern "C" {
 int __umoddi3(int a, int b);
 
@@ -60,14 +66,15 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("asinf", (uint64_t) & ::asinf);
     jit->addBuiltin("atanf", (uint64_t) & ::atanf);
     jit->addBuiltin("atan2f", (uint64_t) & ::atan2f);
-    jit->addBuiltin("hypot", (uint64_t) & ::hypot);
-    jit->addBuiltin("sincosf", (uint64_t) & ::sincosf);
+    jit->addBuiltin("hypot", (uint64_t) static_cast<double (*)(double, double)>(&::hypot));
+    jit->addBuiltin("sincosf", (uint64_t) &SINCOSF);
     jit->addBuiltin("expf", (uint64_t) & ::expf);
     jit->addBuiltin("fmodf", (uint64_t) & ::fmodf);
     jit->addBuiltin("rand", (uint64_t) & ::rand);
     jit->addBuiltin("realloc", (uint64_t) & ::realloc);
     jit->addBuiltin("free", (uint64_t) & ::free);
     jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
+    jit->addBuiltin("__sincosf_stret", (uint64_t) & ::__sincosf_stret);
 
     return jit;
 }

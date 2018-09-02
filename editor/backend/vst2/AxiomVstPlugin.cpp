@@ -13,7 +13,7 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 }
 
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 255), editor(&application, &backend) {
+    : AudioEffectX(audioMaster, 1, 0), editor(&application, &backend) {
     isSynth();
     setNumInputs(0);
     setNumOutputs(2);

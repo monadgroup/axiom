@@ -34,7 +34,7 @@ std::unique_ptr<PoolObject> Pool::removeObj(AxiomModel::PoolObject *obj) {
     if (ownedIndex != _ownedObjects.end()) {
         auto ownedObj = std::move(*ownedIndex);
         _ownedObjects.erase(ownedIndex);
-        return std::move(ownedObj);
+        return ownedObj;
     } else {
         return nullptr;
     }

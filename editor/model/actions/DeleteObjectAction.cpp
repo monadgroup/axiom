@@ -74,9 +74,9 @@ void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
 
 Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
     auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
-    auto links = flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })));
+    auto links = flatten(map(dependents, std::function<Sequence<ModelObject *>(ModelObject *const &)>([](ModelObject *const &obj) { return obj->links(); })));
     auto linkDependents =
-        flatten(map(links, std::function([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
+        flatten(map(links, std::function<Sequence<ModelObject *>(ModelObject *const &)>([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
 
     return distinctByUuid(flatten(std::array<Sequence<ModelObject *>, 2>{dependents, linkDependents}));
 }

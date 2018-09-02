@@ -13,9 +13,9 @@ ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, Axiom
       _grid(staticCastWatch<GridItem *>(_controls), QPoint(0, 0)) {
     _node->sizeChanged.connect(this, &ControlSurface::setSize);
     _node->deselected.connect(&_grid, &GridSurface::deselectAll);
-    _grid.hasSelectionChanged.connect(this, std::function([this](bool hasSelection) {
+    _grid.hasSelectionChanged.connect(this, [this](bool hasSelection) {
                                           if (hasSelection) _node->select(true);
-                                      }));
+                                      });
     setSize(_node->size());
 }
 

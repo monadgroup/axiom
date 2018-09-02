@@ -4,31 +4,141 @@
     <dict>
         <key>CFBundleDevelopmentRegion</key>
         <string>English</string>
-        <key>CFBundleExecutable</key>
-        <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
+
+        <key>CFBundleIconFile</key>
+        <string>axiom.icns</string>
+
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+
         <key>CFBundleGetInfoString</key>
         <string>${MACOSX_BUNDLE_INFO_STRING}</string>
-        <key>CFBundleIconFile</key>
-        <string>${MACOSX_BUNDLE_ICON_FILE}</string>
-        <key>CFBundleIdentifier</key>
-        <string>${MACOSX_BUNDLE_GUI_IDENTIFIER}</string>
+
+        <key>CFBundleSignature</key>
+        <string>Axiom</string>
+
+        <key>CFBundleExecutable</key>
+        <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
+
+        <key>CFBundleName</key>
+        <string>${MACOSX_BUNDLE_NAME}</string>
+
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
-        <key>CFBundleLongVersionString</key>
-        <string>${MACOSX_BUNDLE_LONG_VERSION_STRING}</string>
-        <key>CFBundleName</key>
-        <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
-        <key>CFBundlePackageType</key>
-        <string>BNDL</string>
-        <key>CFBundleShortVersionString</key>
-        <string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
-        <key>CFBundleSignature</key>
-        <string>????</string>
-        <key>CFBundleVersion</key>
-        <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
-        <key>CSResourcesFileMapped</key>
-        <true/>
-        <key>NSHumanReadableCopyright</key>
-        <string>${MACOSX_BUNDLE_COPYRIGHT}</string>
+
+        <key>CFBundleIdentifier</key>
+        <string>io.github.monadgroup.axiom</string>
+
+        <key>CFBundleDocumentTypes</key>
+        <array>
+            <dict>
+                <key>CFBundleTypeExtensions</key>
+                <array>
+                    <string>axp</string>
+                </array>
+
+                <key>CFBundleTypeIconFile</key>
+                <string>axiom.icns</string>
+
+                <key>CFBundleTypeName</key>
+                <string>Axiom Project</string>
+
+                <key>CFBundleTypeOSTypes</key>
+                <array>
+                    <string>axp</string>
+                </array>
+
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+
+                <key>CFBundleTypeMIMETypes</key>
+                <array>
+                    <string>application/x-axiom-project</string>
+                </array>
+            </dict>
+
+            <dict>
+                <key>CFBundleTypeExtensions</key>
+                <array>
+                    <string>axl</string>
+                </array>
+
+                <key>CFBundleTypeIconFile</key>
+                <string>axiom.icns</string>
+
+                <key>CFBundleTypeName</key>
+                <string>Axiom Library</string>
+
+                <key>CFBundleTypeOSTypes</key>
+                <array>
+                    <string>axl</string>
+                </array>
+
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+
+                <key>CFBundleTypeMIMETypes</key>
+                <array>
+                    <string>application/x-axiom-library</string>
+                </array>
+            </dict>
+        </array>
+
+        <key>UTExportedTypeDeclarations</key>
+        <array>
+            <dict>
+                <key>UTTypeIdentifier</key>
+                <string>io.github.monadgroup.axiom.axp</string>
+
+                <key>UTTypeReferenceURL</key>
+                <string>https://github.com/monadgroup/axiom</string>
+
+                <key>UTTypeDescription</key>
+                <string>Axiom Project</string>
+
+                <key>UTTypeIconFile</key>
+                <string>axiom.icns</string>
+
+                <key>UTTypeConformsTo</key>
+                <array>
+                    <string>public.data</string>
+                </array>
+
+                <key>UTTypeTagSpecification</key>
+                <dict>
+                    <key>public.filename-extension</key>
+                    <array>
+                        <string>axp</string>
+                    </array>
+                </dict>
+            </dict>
+
+            <dict>
+                <key>UTTypeIdentifier</key>
+                <string>io.github.monadgroup.axiom.axl</string>
+
+                <key>UTTypeReferenceURL</key>
+                <string>https://github.com/monadgroup/axiom</string>
+
+                <key>UTTypeDescription</key>
+                <string>Axiom Library</string>
+
+                <key>UTTypeIconFile</key>
+                <string>axiom.icns</string>
+
+                <key>UTTypeConformsTo</key>
+                <array>
+                    <string>public.data</string>
+                </array>
+
+                <key>UTTypeTagSpecification</key>
+                <dict>
+                    <key>public.filename-extension</key>
+                    <array>
+                        <string>axl</string>
+                    </array>
+                </dict>
+            </dict>
+        </array>
     </dict>
 </plist>

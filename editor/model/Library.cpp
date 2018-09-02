@@ -87,7 +87,7 @@ std::vector<LibraryEntry *> Library::entries() const {
     for (const auto &entry : _entries) {
         result.push_back(entry.get());
     }
-    return std::move(result);
+    return result;
 }
 
 QStringList Library::tags() const {
@@ -95,7 +95,7 @@ QStringList Library::tags() const {
     for (const auto &pair : _tags) {
         result << pair.first;
     }
-    return std::move(result);
+    return result;
 }
 
 void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {

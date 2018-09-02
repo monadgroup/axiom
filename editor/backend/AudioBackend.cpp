@@ -65,7 +65,7 @@ QByteArray AudioBackend::serialize() {
     auto project = _editor->window()->project();
     AxiomModel::ProjectSerializer::serialize(project, stream,
                                              [project](QDataStream &stream) { stream << project->linkedFile(); });
-    return std::move(buffer);
+    return buffer;
 }
 
 void AudioBackend::deserialize(QByteArray *data) {
