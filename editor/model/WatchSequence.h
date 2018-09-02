@@ -31,15 +31,15 @@ namespace AxiomModel {
             auto mapFilterNext = mapFilter.next();
             auto itemAddedEvent = itemAdded;
             auto itemRemovedEvent = itemRemoved;
-            parentAdded.connect(&itemAdded, std::function([itemAddedEvent, mapFilterNext](const InputItem &input) {
+            parentAdded.connect(&itemAdded, [itemAddedEvent, mapFilterNext](const InputItem &input) {
                 auto result = mapFilterNext(input);
                 if (result) itemAddedEvent.trigger(*result);
-            }));
+            });
             parentRemoved.connect(&itemRemoved,
-                                  std::function([itemRemovedEvent, mapFilterNext](const InputItem &input) {
+                                  [itemRemovedEvent, mapFilterNext](const InputItem &input) {
                                       auto result = mapFilterNext(input);
                                       if (result) itemRemovedEvent.trigger(*result);
-                                  }));
+                                  });
         }
 
         template<class InputItem>

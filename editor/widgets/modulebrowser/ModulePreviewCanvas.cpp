@@ -22,9 +22,9 @@ ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface) {
 
     // connect to model
     surface->nodes().itemAdded.connect(this, &ModulePreviewCanvas::addNode);
-    surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
+    surface->connections().itemAdded.connect(this, [this](Connection *connection) {
         connection->wire().then(this, [this](ConnectionWire &wire) { addWire(&wire); });
-    }));
+    });
 }
 
 void ModulePreviewCanvas::addNode(AxiomModel::Node *node) {

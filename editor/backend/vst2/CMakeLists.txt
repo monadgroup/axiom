@@ -7,25 +7,21 @@ else ()
 endif ()
 
 include_directories(${VST2_SDK_ROOT})
-add_library(axiom_vst2 SHARED
+add_library(axiom_vst2 MODULE
         ${VST2_SOURCES}
         AxiomVstPlugin.h AxiomVstPlugin.cpp
         AxiomVstEditor.h AxiomVstEditor.cpp
         VstAudioBackend.h VstAudioBackend.cpp
         AxiomVst.def)
 target_link_libraries(axiom_vst2 ${AXIOM_LINK_FLAGS} axiom_editor)
-set_target_properties(axiom_vst2 PROPERTIES
-        PREFIX ""
-        OUTPUT_NAME "Axiom VST2")
 
-# todo: does this work?
 set_target_properties(axiom_vst2 PROPERTIES
         BUNDLE true
         BUNDLE_EXTENSION "vst"
         XCODE_ATTRIBUTE_WRAPPER_EXTENSION "vst"
-        MACOSX_BUNDLE_INFO_PLIST "resources/Info.plist.in"
+        MACOSX_BUNDLE_INFO_PLIST "${RES_DIR}/Info.plist.in"
         MACOSX_BUNDLE_BUNDLE_NAME "Axiom: node-based VSTi"
         MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.monadgroup.axiom"
-        MACOSX_BUNDLE_ICON_FILE "resources/application.ico"
+        MACOSX_BUNDLE_ICON_FILE "Resources/icon.icns"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "0.3.2"
         MACOSX_BUNDLE_COPYRIGHT "Copyright 2018 MONAD")

@@ -7,7 +7,7 @@ using namespace AxiomModel;
 
 GridSurface::GridSurface(ItemCollection view, QPoint minRect, QPoint maxRect)
     : _grid(minRect, maxRect), _items(std::move(view)),
-      _selectedItems(filterWatch(_items, std::function([](GridItem *const &itm) { return itm->isSelected(); }))) {
+      _selectedItems(filterWatch(_items, std::function<bool(GridItem *const &)>([](GridItem *const &itm) { return itm->isSelected(); }))) {
     _items.itemAdded.connect(this, &GridSurface::handleItemAdded);
 }
 
@@ -79,7 +79,7 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
     item->startedDragging.connect(this, &GridSurface::startDragging);
     item->draggedTo.connect(this, &GridSurface::dragTo);
     item->finishedDragging.connect(this, &GridSurface::finishDragging);
-    item->selected.connect(this, std::function([this, item](bool exclusive) {
+    item->selected.connect(this, [this, item](bool exclusive) {
         if (exclusive) {
             // get sequence of selected items that aren't this item
             auto clearItems = filter(_selectedItems.sequence(),
@@ -91,10 +91,10 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
         if (_selectedItems.size() == 1) {
             hasSelectionChanged.trigger(true);
         }
-    }));
-    item->deselected.connect(this, std::function([this]() {
+    });
+    item->deselected.connect(this, [this]() {
         if (_selectedItems.empty()) {
             hasSelectionChanged.trigger(false);
         }
-    }));
+    });
 }

@@ -3,7 +3,7 @@
 #define _USE_MATH_DEFINES
 
 #include <bitset>
-#include <math.h>
+#include <cmath>
 
 #include "editor/util.h"
 

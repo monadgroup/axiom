@@ -33,12 +33,12 @@ namespace AxiomModel {
     template<class OutputType, class InputType>
     AxiomCommon::Promise<OutputType> chain(AxiomCommon::Promise<InputType> input,
                                            std::function<OutputType(InputType &)> callback) {
-        return chain(std::move(input), std::function([callback](InputType &v) { return from(callback(v)); }));
+        return chain(std::move(input), std::function<AxiomCommon::Promise<OutputType>(InputType &)>([callback](InputType &v) { return from(callback(v)); }));
     };
 
     template<class FirstPromise>
     AxiomCommon::Promise<std::tuple<FirstPromise>> all(AxiomCommon::Promise<FirstPromise> firstPromise) {
-        return chain(std::move(firstPromise), std::function([](FirstPromise &val) {
+        return chain(std::move(firstPromise), std::function<std::tuple<FirstPromise>(FirstPromise &)>([](FirstPromise &val) {
                          FirstPromise v = val;
                          return std::make_tuple<FirstPromise>(std::move(v));
                      }));
@@ -47,9 +47,9 @@ namespace AxiomModel {
     template<class FirstPromise, class... PromiseArgs>
     AxiomCommon::Promise<std::tuple<FirstPromise, PromiseArgs...>> all(AxiomCommon::Promise<FirstPromise> firstPromise,
                                                                        AxiomCommon::Promise<PromiseArgs>... promises) {
-        return chain(std::move(firstPromise), std::function([promises...](FirstPromise &val) {
+        return chain(std::move(firstPromise), std::function<AxiomCommon::Promise<std::tuple<FirstPromise, PromiseArgs...>>(FirstPromise &)>([promises...](FirstPromise &val) {
                          return chain(all(std::move(promises)...),
-                                      std::function([val](std::tuple<PromiseArgs...> &otherVals) mutable {
+                                      std::function<std::tuple<FirstPromise, PromiseArgs...>(std::tuple<PromiseArgs...> &)>([val](std::tuple<PromiseArgs...> &otherVals) mutable {
                                           return std::tuple_cat(std::make_tuple<FirstPromise>(std::move(val)),
                                                                 otherVals);
                                       }));

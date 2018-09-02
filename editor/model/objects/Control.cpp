@@ -23,11 +23,11 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
       ModelObject(ModelType::CONTROL, uuid, parentUuid, root), _surface(find(root->controlSurfaces(), parentUuid)),
       _controlType(controlType), _wireType(wireType), _name(std::move(name)), _showName(showName),
       _exposerUuid(exposerUuid), _exposingUuid(exposingUuid),
-      _connections(filterWatch(root->connections(), std::function([uuid](Connection *const &connection) {
+      _connections(filterWatch(root->connections(), std::function<bool(Connection *const &)>([uuid](Connection *const &connection) {
                                    return connection->controlAUuid() == uuid || connection->controlBUuid() == uuid;
                                }))),
       _connectedControls(
-          mapFilterWatch(_connections, std::function([uuid](Connection *const &connection) -> std::optional<QUuid> {
+          mapFilterWatch(_connections, std::function<std::optional<QUuid>(Connection *const &)>([uuid](Connection *const &connection) -> std::optional<QUuid> {
                              if (connection->controlAUuid() == uuid) return connection->controlBUuid();
                              if (connection->controlBUuid() == uuid) return connection->controlAUuid();
                              return std::optional<QUuid>();
@@ -106,7 +106,7 @@ QPointF Control::worldPos() const {
 Sequence<ModelObject *> Control::links() {
     auto expId = exposerUuid();
     return flatten(std::array<Sequence<ModelObject *>, 2>{
-        staticCast<ModelObject *>(filter(root()->controls(), std::function([expId](Control *const &obj) -> bool {
+        staticCast<ModelObject *>(filter(root()->controls(), std::function<bool(Control *const &)>([expId](Control *const &obj) -> bool {
                                              return obj->uuid() == expId;
                                          })))
             .sequence(),

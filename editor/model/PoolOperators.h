@@ -50,7 +50,7 @@ namespace AxiomModel {
     template<class UuidCollection, class FindCollection>
     SequenceMapFilter<typename FindCollection::value_type, typename UuidCollection::value_type>
         findMap(UuidCollection uuids, const FindCollection &src) {
-        return map(uuids, std::function([src](const typename UuidCollection::value_type &base) ->
+        return map(uuids, std::function<typename FindCollection::value_type(const typename UuidCollection::value_type &)>([src](const typename UuidCollection::value_type &base) ->
                                         typename FindCollection::value_type { return find(src, base); }));
     }
 
@@ -89,7 +89,7 @@ namespace AxiomModel {
     template<class InputCollection, class IdCollection>
     SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type>
         findAll(InputCollection collection, IdCollection uuids) {
-        return filter(collection, std::function([uuids](const typename InputCollection::value_type &base) -> bool {
+        return filter(collection, std::function<bool(const typename InputCollection::value_type &)>([uuids](const typename InputCollection::value_type &base) -> bool {
                           return uuids.find(base->uuid()) != uuids.end();
                       }));
     };
@@ -97,7 +97,7 @@ namespace AxiomModel {
     template<class OutputItem, class InputItem>
     AxiomCommon::Promise<OutputItem> findLater(WatchSequence<InputItem> input, QUuid uuid) {
         return getFirst(
-            mapFilterWatch(std::move(input), std::function([uuid](const InputItem &base) -> std::optional<OutputItem> {
+            mapFilterWatch(std::move(input), std::function<std::optional<OutputItem>(const InputItem &)>([uuid](const InputItem &base) -> std::optional<OutputItem> {
                                if (base->uuid() == uuid) {
                                    auto cast = dynamic_cast<OutputItem>(base);
                                    return cast ? cast : std::optional<OutputItem>();
@@ -109,7 +109,7 @@ namespace AxiomModel {
     template<class InputCollection>
     SequenceMapFilter<typename InputCollection::value_type, typename InputCollection::value_type>
         findChildren(InputCollection collection, QUuid parentUuid) {
-        return filter(collection, std::function([parentUuid](const typename InputCollection::value_type &base) -> bool {
+        return filter(collection, std::function<bool(const typename InputCollection::value_type &)>([parentUuid](const typename InputCollection::value_type &base) -> bool {
                           return base->parentUuid() == parentUuid;
                       }));
     };

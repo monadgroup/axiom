@@ -62,8 +62,8 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
             connect(resizer, &ItemResizer::changed, this, &ControlItem::resizerChanged);
             connect(resizer, &ItemResizer::endDrag, this, &ControlItem::resizerEndDrag);
 
-            control->selected.connect(this, std::function([resizer]() { resizer->setVisible(true); }));
-            control->deselected.connect(this, std::function([resizer]() { resizer->setVisible(false); }));
+            control->selected.connect(this, std::function<void()>([resizer]() { resizer->setVisible(true); }));
+            control->deselected.connect(this, std::function<void()>([resizer]() { resizer->setVisible(false); }));
 
             resizer->setParentItem(this);
         }

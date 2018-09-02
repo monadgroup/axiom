@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <QtGui/QPainter>
 #include <QtWidgets/QStyleOptionGraphicsItem>
 

@@ -99,7 +99,7 @@ void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *su
 
 std::optional<MaximCompiler::Block> CustomNode::compiledBlock() const {
     if (_compiledBlock) {
-        return std::optional(_compiledBlock->clone());
+        return _compiledBlock->clone();
     } else {
         return std::nullopt;
     }

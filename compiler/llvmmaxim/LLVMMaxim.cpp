@@ -74,6 +74,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("realloc", (uint64_t) & ::realloc);
     jit->addBuiltin("free", (uint64_t) & ::free);
     jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
+    jit->addBuiltin("__sincosf_stret", (uint64_t) & ::__sincosf_stret);
 
     return jit;
 }
