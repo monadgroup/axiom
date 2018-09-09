@@ -25,18 +25,25 @@ void GraphControl::doRuntimeUpdate() {
     if (currentState) {
         newStateHash = 17;
         newStateHash = newStateHash * 31 + std::hash<uint8_t>()(currentState->curveCount);
+        newStateHash = newStateHash * 31 + std::hash<uint8_t>()(currentState->currentState);
         newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveStartVals[0]);
+        newStateHash = newStateHash * 31 + std::hash<uint8_t>()(currentState->curveStates[0]);
         for (uint8_t curveIndex = 0; curveIndex < currentState->curveCount; curveIndex++) {
             newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveStartVals[curveIndex + 1]);
             newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveEndPositions[curveIndex]);
             newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveTension[curveIndex]);
-            newStateHash = newStateHash * 31 + std::hash<int8_t>()(currentState->curveStates[curveIndex]);
+            newStateHash = newStateHash * 31 + std::hash<uint8_t>()(currentState->curveStates[curveIndex + 1]);
         }
     }
 
     if (newStateHash != _lastStateHash) {
         stateChanged.trigger();
         _lastStateHash = newStateHash;
+    }
+
+    if (currentState->currentTimeSamples != _lastTime) {
+        timeChanged.trigger();
+        _lastTime = currentState->currentTimeSamples;
     }
 }
 
@@ -79,7 +86,7 @@ void GraphControl::insertPoint(float time, float val) {
         controlState->curveStartVals[controlState->curveCount + 1] = val;
         controlState->curveEndPositions[controlState->curveCount] = time;
         controlState->curveTension[controlState->curveCount] = newTension;
-        controlState->curveStates[controlState->curveCount + 1] = -1;
+        controlState->curveStates[controlState->curveCount + 1] = 0;
         controlState->curveCount++;
     } else {
         // figure out after which curve the new point should be placed

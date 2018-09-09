@@ -51,8 +51,18 @@ pub unsafe extern "C" fn maxim_set_bpm(runtime: *mut Runtime, bpm: f32) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_get_bpm(runtime: *const Runtime) -> f32 {
+    (*runtime).get_bpm()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_set_sample_rate(runtime: *mut Runtime, sample_rate: f32) {
     (*runtime).set_sample_rate(sample_rate);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_sample_rate(runtime: *const Runtime) -> f32 {
+    (*runtime).get_sample_rate()
 }
 
 #[no_mangle]

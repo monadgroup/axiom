@@ -554,11 +554,19 @@ impl Runtime {
         }
     }
 
+    pub fn get_bpm(&self) -> f32 {
+        self.bpm
+    }
+
     pub fn set_sample_rate(&mut self, sample_rate: f32) {
         self.sample_rate = sample_rate;
         if let Some(ref pointers) = self.pointers {
             Runtime::set_vector(pointers.samplerate_ptr, sample_rate);
         }
+    }
+
+    pub fn get_sample_rate(&self) -> f32 {
+        self.sample_rate
     }
 
     pub fn is_node_extracted(&self, surface: SurfaceRef, node: usize) -> bool {

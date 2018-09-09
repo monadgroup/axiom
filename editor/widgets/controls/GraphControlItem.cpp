@@ -12,6 +12,8 @@
 
 #include "../CommonColors.h"
 #include "../FloatingValueEditor.h"
+#include "editor/compiler/interface/Runtime.h"
+#include "editor/model/ModelRoot.h"
 #include "editor/model/objects/GraphControl.h"
 
 using namespace AxiomGui;
@@ -139,7 +141,11 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         painter->setBrush(QBrush(QColor(80, 80, 80)));
         painter->drawPolygon(tagPolygon.toFillPolygon(QMatrix().translate(posX - 12, rect.bottom() - 20)));
 
-        painter->setPen(QPen(QColor(200, 200, 200)));
+        if (curveState == controlState->currentState + 1) {
+            painter->setPen(QPen(QColor(253, 216, 53)));
+        } else {
+            painter->setPen(QPen(QColor(200, 200, 200)));
+        }
         painter->setBrush(Qt::NoBrush);
         painter->drawText(QRectF(posX - 12, rect.bottom() - 20, 12, 15), Qt::AlignHCenter | Qt::AlignVCenter,
                           QString::number(curveState - 1));
@@ -644,6 +650,7 @@ GraphControlItem::GraphControlItem(AxiomModel::GraphControl *control, AxiomGui::
     control->zoomChanged.connect(this, &GraphControlItem::stateChange);
     control->scrollChanged.connect(this, &GraphControlItem::stateChange);
     control->stateChanged.connect(this, &GraphControlItem::stateChange);
+    control->timeChanged.connect(this, &GraphControlItem::triggerUpdate);
     control->sizeChanged.connect(this, &GraphControlItem::positionChildren);
     positionChildren();
 }
@@ -706,9 +713,10 @@ void GraphControlItem::paintControl(QPainter *painter) {
     painter->drawLine(QPointF(clippedBodyRect.right() - 0.5, bodyRect.top() - 0.5),
                       QPointF(clippedBodyRect.right() - 0.5, bodyRect.bottom() - 0.5));
 
-    // draw a line at the end of the last curve
     auto state = control->state();
     if (!state) return;
+
+    // draw a line at the end of the last curve
     auto endPos = state->curveEndPositions[state->curveCount - 1];
     auto endPixels =
         floor(clippedBodyRect.left() + remapSecondsToPixels(endPos, (float) pixelsPerSecond, control->scroll()));
@@ -731,6 +739,16 @@ void GraphControlItem::paintControl(QPainter *painter) {
         painter->drawLine(QPointF(linePixels - 0.5, bodyRect.top() - 0.5),
                           QPointF(linePixels - 0.5, bodyRect.bottom() - 0.5));
     }
+
+    // convert the controls internal time in samples to beats to display
+    auto currentRuntime = control->root()->runtime();
+    auto timeBarPixels =
+        clippedBodyRect.left() + remapSecondsToPixels((state->currentTimeSamples * currentRuntime->getBpm()) /
+                                                          (currentRuntime->getSampleRate() * 60),
+                                                      (float) pixelsPerSecond, control->scroll());
+    painter->setPen(QPen(QColor(67, 160, 71)));
+    painter->drawLine(QPointF(timeBarPixels - 0.5, bodyRect.top() - 0.5),
+                      QPointF(timeBarPixels - 0.5, bodyRect.bottom() - 0.5));
 }
 
 void GraphControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {

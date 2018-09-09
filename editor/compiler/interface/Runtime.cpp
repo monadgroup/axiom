@@ -19,8 +19,16 @@ void Runtime::setBpm(float bpm) {
     MaximFrontend::maxim_set_bpm(get(), bpm);
 }
 
+float Runtime::getBpm() {
+    return MaximFrontend::maxim_get_bpm(get());
+}
+
 void Runtime::setSampleRate(float sampleRate) {
     MaximFrontend::maxim_set_sample_rate(get(), sampleRate);
+}
+
+float Runtime::getSampleRate() {
+    return MaximFrontend::maxim_get_sample_rate(get());
 }
 
 void Runtime::commit(MaximCompiler::Transaction transaction) {

@@ -53,7 +53,9 @@ namespace MaximFrontend {
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
     void maxim_run_update(MaximRuntimeRef *runtime);
     void maxim_set_bpm(MaximRuntimeRef *runtime, float bpm);
+    float maxim_get_bpm(MaximRuntimeRef *runtime);
     void maxim_set_sample_rate(MaximRuntimeRef *runtime, float sample_rate);
+    float maxim_get_sample_rate(MaximRuntimeRef *runtime);
     bool maxim_is_node_extracted(MaximRuntimeRef *runtime, uint64_t surface, size_t node);
     void maxim_convert_num(MaximRuntimeRef *runtime, void *result, uint8_t targetForm, const void *input);
 

@@ -12,6 +12,8 @@ namespace AxiomModel {
         float curveEndPositions[GRAPH_CONTROL_CURVE_COUNT];
         float curveTension[GRAPH_CONTROL_CURVE_COUNT];
         uint8_t curveStates[GRAPH_CONTROL_CURVE_COUNT + 1];
+        uint32_t currentTimeSamples;
+        uint8_t currentState;
     };
 
     class GraphControl : public Control {
@@ -19,6 +21,7 @@ namespace AxiomModel {
         AxiomCommon::Event<float> zoomChanged;
         AxiomCommon::Event<float> scrollChanged;
         AxiomCommon::Event<> stateChanged;
+        AxiomCommon::Event<> timeChanged;
 
         GraphControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                      bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
@@ -55,6 +58,7 @@ namespace AxiomModel {
         float _zoom = 0;
         float _scroll = 0;
         size_t _lastStateHash = 0;
+        uint32_t _lastTime = 0;
 
         std::unique_ptr<GraphControlState> _savedState;
     };
