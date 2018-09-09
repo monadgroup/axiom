@@ -3,13 +3,13 @@
 #define _USE_MATH_DEFINES
 
 #include <QtCore/QPoint>
-#include <unordered_map>
-#include <memory>
 #include <QtCore/QSize>
 #include <cmath>
-#include <set>
-#include <unordered_set>
+#include <memory>
 #include <queue>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace std {
     template<>
@@ -54,7 +54,8 @@ namespace AxiomModel {
             return true;
         }
 
-        QPoint findNearestAvailable(QPoint pos, QSize size, const T *ignore = nullptr) const {
+        QPoint findNearestAvailable(QPoint pos, QSize size, const T *ignore = nullptr,
+                                    bool *findSuccess = nullptr) const {
             // breadth-first search to find nearest free area
             std::priority_queue<NearestAvailablePos> positionQueue;
             std::unordered_set<QPoint> visitedQueue;
@@ -66,7 +67,10 @@ namespace AxiomModel {
                 auto p = positionQueue.top();
                 positionQueue.pop();
 
-                if (isRectAvailable(p.checkPos, size, ignore)) return p.checkPos;
+                if (isRectAvailable(p.checkPos, size, ignore)) {
+                    if (findSuccess) *findSuccess = true;
+                    return p.checkPos;
+                }
 
                 QPoint offsets[] = {QPoint(1, 0), QPoint(-1, 0), QPoint(0, 1), QPoint(0, -1)};
                 for (const auto &offset : offsets) {
@@ -80,11 +84,12 @@ namespace AxiomModel {
             }
 
             // no available position
+            if (findSuccess) *findSuccess = false;
             return pos;
         }
 
-        std::deque<QPoint>
-        findPath(QPoint start, QPoint end, float emptyCost, float filledCost, float dirChangeCost) const {
+        std::deque<QPoint> findPath(QPoint start, QPoint end, float emptyCost, float filledCost,
+                                    float dirChangeCost) const {
             // A* search to find shortest path
             std::priority_queue<CostPos> visitQueue;
             std::unordered_map<QPoint, VisitedCell> visited;
@@ -122,8 +127,7 @@ namespace AxiomModel {
                 for (const auto &dir : dirs) {
                     auto newP = cur.pos + dir;
                     if (!isInsideRect(newP)) continue;
-                    auto newCost = (getCell(newP) ? filledCost : emptyCost) +
-                                   (dir == cur.dir ? 0 : dirChangeCost) +
+                    auto newCost = (getCell(newP) ? filledCost : emptyCost) + (dir == cur.dir ? 0 : dirChangeCost) +
                                    currentPos->second.cost;
                     auto find = visited.find(newP);
                     if (find == visited.end() || newCost < find->second.cost) {
@@ -150,8 +154,10 @@ namespace AxiomModel {
         void setCell(QPoint pos, T *item) {
             if (!isInsideRect(pos)) return;
 
-            if (item == nullptr) cells.erase(pos);
-            else cells.emplace(pos, item);
+            if (item == nullptr)
+                cells.erase(pos);
+            else
+                cells.emplace(pos, item);
         }
 
         void setRect(QPoint pos, QSize size, T *item) {
@@ -169,7 +175,6 @@ namespace AxiomModel {
         }
 
     private:
-
         // for breadth-first search, sorting in the list of potential jumps
         class NearestAvailablePos {
         public:
@@ -183,9 +188,7 @@ namespace AxiomModel {
                 return std::sqrt((float) distP.x() * distP.x() + distP.y() * distP.y());
             }
 
-            bool operator<(const NearestAvailablePos &other) const {
-                return dist() > other.dist();
-            }
+            bool operator<(const NearestAvailablePos &other) const { return dist() > other.dist(); }
         };
 
         // for A* search, sorting in the list of potential jumps
@@ -197,13 +200,9 @@ namespace AxiomModel {
 
             CostPos(QPoint pos, QPoint dir, float priority) : pos(pos), dir(dir), priority(priority) {}
 
-            bool operator<(const CostPos &other) const {
-                return priority > other.priority;
-            }
+            bool operator<(const CostPos &other) const { return priority > other.priority; }
 
-            bool operator==(const CostPos &other) const {
-                return pos == other.pos;
-            }
+            bool operator==(const CostPos &other) const { return pos == other.pos; }
         };
 
         // for A* search, recording visited places
@@ -217,5 +216,4 @@ namespace AxiomModel {
 
         std::unordered_map<QPoint, T *> cells;
     };
-
 }

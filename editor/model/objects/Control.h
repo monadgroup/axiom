@@ -22,6 +22,8 @@ namespace AxiomModel {
 
     class Connection;
 
+    class CompositeAction;
+
     struct ControlCompileMeta {
         size_t index;
         bool writtenTo;
@@ -29,6 +31,12 @@ namespace AxiomModel {
 
         ControlCompileMeta(size_t index, bool writtenTo, bool readFrom)
             : index(index), writtenTo(writtenTo), readFrom(readFrom) {}
+    };
+
+    struct ControlPrepare {
+        QPoint pos;
+        QSize size;
+        std::unique_ptr<CompositeAction> preActions;
     };
 
     class Control : public GridItem, public ModelObject {
@@ -45,8 +53,13 @@ namespace AxiomModel {
                 QPoint pos, QSize size, bool selected, QString name, bool showName, const QUuid &exposerUuid,
                 const QUuid &exposingUuid, ModelRoot *root);
 
+        static QSize getDefaultSize(ControlType controlType);
+
         static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid,
-                                                      const QString &name, const QUuid &exposingUuid, ModelRoot *root);
+                                                      const QString &name, const QUuid &exposingUuid, QPoint pos,
+                                                      QSize size, ModelRoot *root);
+
+        static ControlPrepare buildControlPrepareAction(ControlType type, const QUuid &parentUuid, ModelRoot *root);
 
         ControlSurface *surface() const { return _surface; }
 

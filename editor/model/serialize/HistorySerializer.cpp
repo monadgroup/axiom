@@ -467,6 +467,8 @@ void HistorySerializer::serializeCreateControlAction(AxiomModel::CreateControlAc
     stream << action->parentUuid();
     stream << (uint8_t) action->type();
     stream << action->name();
+    stream << action->pos();
+    stream << action->size();
 }
 
 std::unique_ptr<CreateControlAction> HistorySerializer::deserializeCreateControlAction(QDataStream &stream,
@@ -480,8 +482,13 @@ std::unique_ptr<CreateControlAction> HistorySerializer::deserializeCreateControl
     stream >> typeInt;
     QString name;
     stream >> name;
+    QPoint pos;
+    stream >> pos;
+    QSize size;
+    stream >> size;
 
-    return CreateControlAction::create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), root);
+    return CreateControlAction::create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), pos, size,
+                                       root);
 }
 
 void HistorySerializer::serializeSetNumModeAction(AxiomModel::SetNumModeAction *action, QDataStream &stream) {
@@ -542,6 +549,8 @@ std::unique_ptr<SetShowNameAction> HistorySerializer::deserializeSetShowNameActi
 void HistorySerializer::serializeExposeControlAction(AxiomModel::ExposeControlAction *action, QDataStream &stream) {
     stream << action->controlUuid();
     stream << action->exposeUuid();
+    stream << action->pos();
+    stream << action->size();
 }
 
 std::unique_ptr<ExposeControlAction> HistorySerializer::deserializeExposeControlAction(QDataStream &stream,
@@ -551,8 +560,12 @@ std::unique_ptr<ExposeControlAction> HistorySerializer::deserializeExposeControl
     stream >> controlUuid;
     QUuid exposeUuid;
     stream >> exposeUuid;
+    QPoint pos;
+    stream >> pos;
+    QSize size;
+    stream >> size;
 
-    return ExposeControlAction::create(controlUuid, exposeUuid, root);
+    return ExposeControlAction::create(controlUuid, exposeUuid, pos, size, root);
 }
 
 void HistorySerializer::serializePasteBufferAction(AxiomModel::PasteBufferAction *action, QDataStream &stream) {
