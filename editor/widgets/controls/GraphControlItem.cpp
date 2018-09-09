@@ -14,6 +14,11 @@
 #include "../FloatingValueEditor.h"
 #include "editor/compiler/interface/Runtime.h"
 #include "editor/model/ModelRoot.h"
+#include "editor/model/actions/AddGraphPointAction.h"
+#include "editor/model/actions/DeleteGraphPointAction.h"
+#include "editor/model/actions/MoveGraphPointAction.h"
+#include "editor/model/actions/SetGraphTagAction.h"
+#include "editor/model/actions/SetGraphTensionAction.h"
 #include "editor/model/objects/GraphControl.h"
 
 using namespace AxiomGui;
@@ -268,22 +273,34 @@ void GraphControlPointKnob::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     item->setShowSnapMarks(true);
+    auto controlState = item->control->state();
 
     auto mouseDelta = event->scenePos() - dragStartMousePos;
     auto yScale = maxY - minY;
-    item->control->state()->curveStartVals[index] =
-        std::clamp(dragStartYVal - (float) (mouseDelta.y() / yScale), 0.f, 1.f);
+    controlState->curveStartVals[index] = std::clamp(dragStartYVal - (float) (mouseDelta.y() / yScale), 0.f, 1.f);
 
     if (index != 0) {
         auto timeDelta = mouseDelta.x() / scale;
-        item->control->state()->curveEndPositions[index - 1] = std::clamp(
+        controlState->curveEndPositions[index - 1] = std::clamp(
             (float) (round((dragStartTime + timeDelta) / snapSeconds) * snapSeconds), minSeconds, maxSeconds);
     }
 }
 
 void GraphControlPointKnob::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isDragging) return;
+
     isDragging = false;
     item->setShowSnapMarks(false);
+
+    auto controlState = item->control->state();
+    auto dragEndTime = index > 0 ? controlState->curveEndPositions[index - 1] : 0;
+    auto dragEndYVal = controlState->curveStartVals[index];
+    if (dragEndTime != dragStartTime || dragEndYVal != dragStartYVal) {
+        item->control->root()->history().append(
+            AxiomModel::MoveGraphPointAction::create(item->control->uuid(), index, dragStartTime, dragStartYVal,
+                                                     dragEndTime, dragEndYVal, item->control->root()));
+    }
+
     update();
 }
 
@@ -299,7 +316,14 @@ void GraphControlPointKnob::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 
 void GraphControlPointKnob::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     if (index != 0) {
-        item->control->removePoint(index);
+        auto controlState = item->control->state();
+        auto pointTime = controlState->curveEndPositions[index - 1];
+        auto pointValue = controlState->curveStartVals[index];
+        auto pointTension = controlState->curveTension[index - 1];
+        auto pointState = controlState->curveStates[index];
+        item->control->root()->history().append(AxiomModel::DeleteGraphPointAction::create(
+            item->control->uuid(), index, pointTime, pointValue, pointTension, pointState, item->control->root()));
+        isDragging = false;
     }
 }
 
@@ -351,16 +375,40 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
             auto inputFloat = newValue.toFloat(&validInput);
             if (!validInput) return;
 
-            item->control->state()->curveStartVals[index] = std::clamp(inputFloat, 0.f, 1.f);
+            auto controlState = item->control->state();
+            auto oldVal = controlState->curveStartVals[index];
+            auto newVal = std::clamp(inputFloat, 0.f, 1.f);
+            if (newVal != oldVal) {
+                auto pointTime = index > 0 ? controlState->curveEndPositions[index - 1] : 0;
+                item->control->root()->history().append(AxiomModel::MoveGraphPointAction::create(
+                    item->control->uuid(), index, pointTime, oldVal, pointTime, newVal, item->control->root()));
+            }
         });
     } else if (selectedAction == copyValueAction) {
         clipboard->setText(QString::number(item->control->state()->curveStartVals[index], 'f', 2));
     } else if (validClipboardNumber && selectedAction == pasteValueAction) {
-        item->control->state()->curveStartVals[index] = std::clamp(clipboardNumber, 0.f, 1.f);
+        auto controlState = item->control->state();
+        auto oldVal = controlState->curveStartVals[index];
+        auto newVal = std::clamp(clipboardNumber, 0.f, 1.f);
+        if (newVal != oldVal) {
+            auto pointTime = index > 0 ? controlState->curveEndPositions[index - 1] : 0;
+            item->control->root()->history().append(AxiomModel::MoveGraphPointAction::create(
+                item->control->uuid(), index, pointTime, oldVal, pointTime, newVal, item->control->root()));
+        }
     } else if (selectedAction == clearTagAction) {
-        item->control->state()->curveStates[index] = 0;
+        auto oldState = item->control->state()->curveStates[index];
+        uint8_t newState = 0;
+        if (newState != oldState) {
+            item->control->root()->history().append(AxiomModel::SetGraphTagAction::create(
+                item->control->uuid(), index, oldState, newState, item->control->root()));
+        }
     } else if (selectedAction == tagSuggestedAction) {
-        item->control->state()->curveStates[index] = (uint8_t)(suggestedTag + 1u);
+        auto oldState = item->control->state()->curveStates[index];
+        auto newState = (uint8_t)(suggestedTag + 1);
+        if (newState != oldState) {
+            item->control->root()->history().append(AxiomModel::SetGraphTagAction::create(
+                item->control->uuid(), index, oldState, newState, item->control->root()));
+        }
     } else if (selectedAction == setTagAction) {
         QString defaultText = "";
         if (currentTag > 0) defaultText = QString::number(currentTag - 1);
@@ -371,10 +419,21 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
             auto inputByte = newValue.toUInt(&validInput);
             if (!validInput || inputByte > UINT8_MAX - 1) return;
 
-            item->control->state()->curveStates[index] = (uint8_t)(inputByte + 1u);
+            auto oldState = item->control->state()->curveStates[index];
+            auto newState = (uint8_t)(inputByte + 1);
+            if (newState != oldState) {
+                item->control->root()->history().append(AxiomModel::SetGraphTagAction::create(
+                    item->control->uuid(), index, oldState, newState, item->control->root()));
+            }
         });
     } else if (index != 0 && selectedAction == deleteAction) {
-        item->control->removePoint(index);
+        auto controlState = item->control->state();
+        auto pointTime = controlState->curveEndPositions[index - 1];
+        auto pointValue = controlState->curveStartVals[index];
+        auto pointTension = controlState->curveTension[index - 1];
+        auto pointState = controlState->curveStates[index];
+        item->control->root()->history().append(AxiomModel::DeleteGraphPointAction::create(
+            item->control->uuid(), index, pointTime, pointValue, pointTension, pointState, item->control->root()));
     }
 }
 
@@ -422,6 +481,13 @@ void GraphControlTensionKnob::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 void GraphControlTensionKnob::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
 
+    auto controlState = control->state();
+    auto dragEndTension = controlState->curveTension[index];
+    if (dragEndTension != dragStartTension) {
+        control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
+            control->uuid(), index, (float) dragStartTension, dragEndTension, control->root()));
+    }
+
     auto view = scene()->views().first();
     auto scenePos = mapToScene(QPointF(0, 0));
     auto viewPos = view->mapFromScene(scenePos);
@@ -466,12 +532,24 @@ void GraphControlTensionKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *e
             auto convertedVal = newValue.toFloat(&couldConvert);
 
             if (!couldConvert) return;
-            control->state()->curveTension[index] = std::clamp(convertedVal / 100, -1.f, 1.f);
+            auto oldTension = control->state()->curveTension[index];
+            auto newTension = std::clamp(convertedVal / 100, -1.f, 1.f);
+            ;
+            if (oldTension != newTension) {
+                control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
+                    control->uuid(), index, oldTension, newTension, control->root()));
+            }
         });
     } else if (selectedAction == copyTensionAction) {
         clipboard->setText(QString::number(roundf(control->state()->curveTension[index] * 100)));
     } else if (validClipboardNumber && selectedAction == pasteTensionAction) {
-        control->state()->curveTension[index] = std::clamp(clipboardNumber / 100, -1.f, 1.f);
+        auto oldTension = control->state()->curveTension[index];
+        auto newTension = std::clamp(clipboardNumber / 100, -1.f, 1.f);
+        ;
+        if (oldTension != newTension) {
+            control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
+                control->uuid(), index, oldTension, newTension, control->root()));
+        }
     }
 }
 
@@ -600,7 +678,8 @@ void GraphControlArea::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
 
     auto insertIndex = item->control->determineInsertIndex((float) newPointTime);
     if (insertIndex) {
-        item->control->insertPoint(*insertIndex, (float) newPointTime, (float) newPointVal, 0);
+        item->control->root()->history().append(AxiomModel::AddGraphPointAction::create(
+            item->control->uuid(), *insertIndex, (float) newPointTime, (float) newPointVal, item->control->root()));
     }
 }
 

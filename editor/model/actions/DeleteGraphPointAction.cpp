@@ -7,14 +7,14 @@
 using namespace AxiomModel;
 
 DeleteGraphPointAction::DeleteGraphPointAction(const QUuid &controlUuid, uint8_t index, float time, float val,
-                                               float tension, AxiomModel::ModelRoot *root)
+                                               float tension, uint8_t state, AxiomModel::ModelRoot *root)
     : Action(ActionType::DELETE_GRAPH_POINT, root), _controlUuid(controlUuid), _index(index), _time(time), _val(val),
-      _tension(tension) {}
+      _tension(tension), _state(state) {}
 
 std::unique_ptr<DeleteGraphPointAction> DeleteGraphPointAction::create(const QUuid &controlUuid, uint8_t index,
                                                                        float time, float val, float tension,
-                                                                       AxiomModel::ModelRoot *root) {
-    return std::make_unique<DeleteGraphPointAction>(controlUuid, index, time, val, tension, root);
+                                                                       uint8_t state, AxiomModel::ModelRoot *root) {
+    return std::make_unique<DeleteGraphPointAction>(controlUuid, index, time, val, tension, state, root);
 }
 
 void DeleteGraphPointAction::forward(bool, std::vector<QUuid> &) {
@@ -22,5 +22,6 @@ void DeleteGraphPointAction::forward(bool, std::vector<QUuid> &) {
 }
 
 void DeleteGraphPointAction::backward(std::vector<QUuid> &) {
-    find<GraphControl *>(root()->pool().sequence(), _controlUuid)->insertPoint(_index, _time, _val, _tension);
+    find<GraphControl *>(root()->pool().sequence(), _controlUuid)
+        ->insertPoint((uint8_t)(_index - 1), _time, _val, _tension, _state);
 }

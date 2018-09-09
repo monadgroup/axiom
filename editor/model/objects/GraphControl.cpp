@@ -89,7 +89,7 @@ std::optional<uint8_t> GraphControl::determineInsertIndex(float time) {
     }
 }
 
-void GraphControl::insertPoint(uint8_t index, float time, float val, float tension) {
+void GraphControl::insertPoint(uint8_t index, float time, float val, float tension, uint8_t curveState) {
     auto controlState = state();
 
     // move old values after the place point
@@ -108,15 +108,15 @@ void GraphControl::insertPoint(uint8_t index, float time, float val, float tensi
     controlState->curveStartVals[index + 1] = val;
     controlState->curveEndPositions[index] = time;
     controlState->curveTension[index] = tension;
-    controlState->curveStates[index + 1] = 0;
+    controlState->curveStates[index + 1] = curveState;
     controlState->curveCount++;
 }
 
 void GraphControl::movePoint(uint8_t index, float time, float value) {
     auto controlState = state();
-    controlState->curveStartVals[index] = time;
+    controlState->curveStartVals[index] = value;
     if (index > 0) {
-        controlState->curveEndPositions[index - 1] = value;
+        controlState->curveEndPositions[index - 1] = time;
     }
 }
 

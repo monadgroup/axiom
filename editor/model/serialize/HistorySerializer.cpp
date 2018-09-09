@@ -601,7 +601,6 @@ void HistorySerializer::serializeAddGraphPointAction(AxiomModel::AddGraphPointAc
     stream << action->index();
     stream << action->time();
     stream << action->val();
-    stream << action->tension();
 }
 
 std::unique_ptr<AddGraphPointAction> HistorySerializer::deserializeAddGraphPointAction(QDataStream &stream,
@@ -615,10 +614,8 @@ std::unique_ptr<AddGraphPointAction> HistorySerializer::deserializeAddGraphPoint
     stream >> time;
     float val;
     stream >> val;
-    float tension;
-    stream >> tension;
 
-    return AddGraphPointAction::create(controlUuid, index, time, val, tension, root);
+    return AddGraphPointAction::create(controlUuid, index, time, val, root);
 }
 
 void HistorySerializer::serializeDeleteGraphPointAction(AxiomModel::DeleteGraphPointAction *action,
@@ -628,6 +625,7 @@ void HistorySerializer::serializeDeleteGraphPointAction(AxiomModel::DeleteGraphP
     stream << action->time();
     stream << action->val();
     stream << action->tension();
+    stream << action->state();
 }
 
 std::unique_ptr<DeleteGraphPointAction>
@@ -643,8 +641,10 @@ std::unique_ptr<DeleteGraphPointAction>
     stream >> val;
     float tension;
     stream >> tension;
+    uint8_t state;
+    stream >> state;
 
-    return DeleteGraphPointAction::create(controlUuid, index, time, val, tension, root);
+    return DeleteGraphPointAction::create(controlUuid, index, time, val, tension, state, root);
 }
 
 void HistorySerializer::serializeMoveGraphPointAction(AxiomModel::MoveGraphPointAction *action, QDataStream &stream) {
