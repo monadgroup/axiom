@@ -14,9 +14,11 @@ ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, Axiom
     _node->sizeChanged.connect(this, &ControlSurface::setSize);
     _node->deselected.connect(&_grid, &GridSurface::deselectAll);
     _grid.hasSelectionChanged.connect(this, [this](bool hasSelection) {
-                                          if (hasSelection) _node->select(true);
-                                      });
+        if (hasSelection) _node->select(true);
+    });
+    _grid.gridChanged.connect(this, &ControlSurface::updateControlsOnTopRow);
     setSize(_node->size());
+    updateControlsOnTopRow();
 }
 
 std::unique_ptr<ControlSurface> ControlSurface::create(const QUuid &uuid, const QUuid &parentUuid,
@@ -33,4 +35,19 @@ void ControlSurface::remove() {
 
 void ControlSurface::setSize(QSize size) {
     _grid.grid().maxRect = nodeToControl(QPoint(size.width(), size.height()));
+}
+
+void ControlSurface::updateControlsOnTopRow() {
+    auto hasControlsOnTopRow = false;
+    for (auto i = 0; i < _grid.grid().maxRect.x(); i++) {
+        if (_grid.grid().getCell(QPoint(i, 0))) {
+            hasControlsOnTopRow = true;
+            break;
+        }
+    }
+
+    if (hasControlsOnTopRow != _controlsOnTopRow) {
+        _controlsOnTopRow = hasControlsOnTopRow;
+        controlsOnTopRowChanged.trigger(hasControlsOnTopRow);
+    }
 }

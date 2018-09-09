@@ -13,6 +13,8 @@ namespace AxiomModel {
     public:
         using ChildCollection = WatchSequence<Control *>;
 
+        AxiomCommon::Event<bool> controlsOnTopRowChanged;
+
         ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
         static std::unique_ptr<ControlSurface> create(const QUuid &uuid, const QUuid &parentUuid,
@@ -48,13 +50,17 @@ namespace AxiomModel {
 
         const GridSurface &grid() const { return _grid; }
 
+        bool controlsOnTopRow() const { return _controlsOnTopRow; }
+
         void remove() override;
 
     private:
         Node *_node;
         ChildCollection _controls;
         GridSurface _grid;
+        bool _controlsOnTopRow = false;
 
         void setSize(QSize size);
+        void updateControlsOnTopRow();
     };
 }

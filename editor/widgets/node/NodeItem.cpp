@@ -52,6 +52,7 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
     node->removed.connect(this, &NodeItem::remove);
 
     node->controls().then([this](ControlSurface *surface) {
+        surface->controlsOnTopRowChanged.connect(this, &NodeItem::triggerUpdate);
         surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
     });
 
@@ -152,10 +153,22 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         }
     }
 
-    painter->setPen(QPen(QColor(100, 100, 100)));
-    auto br = boundingRect();
-    auto textBound = QRectF(br.topLeft(), QSizeF(br.width(), textOffset));
-    painter->drawText(textBound, Qt::AlignLeft | Qt::AlignTop, node->name());
+    if ((*node->controls().value())->controlsOnTopRow()) {
+        painter->setPen(QPen(QColor(100, 100, 100)));
+        auto br = boundingRect();
+        auto textBound = QRectF(br.topLeft(), QSizeF(br.width(), textOffset));
+        painter->drawText(textBound, Qt::AlignLeft | Qt::AlignTop, node->name());
+    } else {
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(node->isSelected() ? outlineColor : lightColor);
+        auto headerBr = drawBoundingRect();
+        headerBr.setHeight(NodeSurfaceCanvas::controlGridSize.height());
+        headerBr.setTopLeft(headerBr.topLeft() + QPointF(1, 1));
+        painter->drawRect(headerBr);
+        painter->setPen(QColor(200, 200, 200));
+        headerBr.setLeft(headerBr.left() + 8);
+        painter->drawText(headerBr, Qt::AlignLeft | Qt::AlignVCenter, node->name());
+    }
 }
 
 QPainterPath NodeItem::shape() const {
