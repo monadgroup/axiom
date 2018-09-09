@@ -600,12 +600,12 @@ void GraphControlArea::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     item->control->insertPoint((float) newPointTime, (float) newPointVal);
 }
 
-ScrollBarGraphicsItem::ScrollBarGraphicsItem(Qt::Orientation orientation) : scrollBar(orientation) {
+ScrollBarGraphicsItem::ScrollBarGraphicsItem(Qt::Orientation orientation) : scrollBar(new QScrollBar(orientation)) {
     setAcceptHoverEvents(true);
 
-    setWidget(&scrollBar);
+    setWidget(scrollBar);
 
-    connect(&scrollBar, &QScrollBar::valueChanged, this, &ScrollBarGraphicsItem::triggerUpdate);
+    connect(scrollBar, &QScrollBar::valueChanged, this, &ScrollBarGraphicsItem::triggerUpdate);
 }
 
 void ScrollBarGraphicsItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
@@ -645,7 +645,7 @@ GraphControlItem::GraphControlItem(AxiomModel::GraphControl *control, AxiomGui::
     _area.setParentItem(this);
 
     _scrollBar.setParentItem(this);
-    connect(&_scrollBar.scrollBar, &QScrollBar::valueChanged, this, &GraphControlItem::scrollBarChanged);
+    connect(_scrollBar.scrollBar, &QScrollBar::valueChanged, this, &GraphControlItem::scrollBarChanged);
 
     control->zoomChanged.connect(this, &GraphControlItem::stateChange);
     control->scrollChanged.connect(this, &GraphControlItem::stateChange);
@@ -788,12 +788,10 @@ void GraphControlItem::positionChildren() {
 }
 
 void GraphControlItem::stateChange() {
-    auto &scrollBar = _scrollBar.scrollBar;
-
     auto intMultiplier = SCROLL_MULTIPLIER;
     auto visibleSeconds = getWidthSeconds(control->zoom());
-    scrollBar.setPageStep((int) (visibleSeconds * intMultiplier));
-    scrollBar.setMaximum((int) ((getWidthSeconds(MAX_ZOOM) - visibleSeconds) * intMultiplier));
+    _scrollBar.scrollBar->setPageStep((int) (visibleSeconds * intMultiplier));
+    _scrollBar.scrollBar->setMaximum((int) ((getWidthSeconds(MAX_ZOOM) - visibleSeconds) * intMultiplier));
 
     _area.updateCurves();
     update();

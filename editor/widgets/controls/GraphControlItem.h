@@ -134,7 +134,7 @@ namespace AxiomGui {
 
     class ScrollBarGraphicsItem : public QGraphicsProxyWidget {
     public:
-        QScrollBar scrollBar;
+        QScrollBar *scrollBar;
 
         explicit ScrollBarGraphicsItem(Qt::Orientation orientation);
 
