@@ -481,7 +481,7 @@ impl Parser {
         let control_field = match prop_name.as_ref() {
             "value" if control_type == ControlType::Audio => ControlField::Audio(AudioField::Value),
             "value" if control_type == ControlType::Graph => ControlField::Graph(GraphField::Value),
-            "speed" if control_type == ControlType::Graph => ControlField::Graph(GraphField::Speed),
+            "state" if control_type == ControlType::Graph => ControlField::Graph(GraphField::State),
             "value" if control_type == ControlType::Midi => ControlField::Midi(MidiField::Value),
             "value" if control_type == ControlType::Roll => ControlField::Roll(RollField::Value),
             "speed" if control_type == ControlType::Roll => ControlField::Roll(RollField::Speed),

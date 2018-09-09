@@ -17,14 +17,14 @@ impl fmt::Display for AudioField {
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GraphField {
     Value,
-    Speed,
+    State,
 }
 
 impl fmt::Display for GraphField {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
             GraphField::Value => write!(f, "value"),
-            GraphField::Speed => write!(f, "speed"),
+            GraphField::State => write!(f, "state"),
         }
     }
 }

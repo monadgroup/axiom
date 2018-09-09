@@ -54,6 +54,17 @@ pub fn pow_v2f32(module: &Module) -> FunctionValue {
     })
 }
 
+pub fn pow_f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.pow.f32", false, &|| {
+        let context = module.get_context();
+        let f32_type = context.f32_type();
+        (
+            Linkage::ExternalLinkage,
+            f32_type.fn_type(&[&f32_type, &f32_type], false),
+        )
+    })
+}
+
 pub fn exp_v2f32(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "llvm.exp.v2f32", false, &|| {
         let v2f32_type = module.get_context().f32_type().vec_type(2);
