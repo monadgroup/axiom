@@ -46,7 +46,15 @@ namespace AxiomModel {
 
         GraphControlState *savedState() const { return _savedState.get(); }
 
-        void insertPoint(float time, float val);
+        std::optional<uint8_t> determineInsertIndex(float time);
+
+        void insertPoint(uint8_t index, float time, float val, float tension);
+
+        void movePoint(uint8_t index, float time, float value);
+
+        void setPointTag(uint8_t index, uint8_t tag);
+
+        void setCurveTension(uint8_t index, float tension);
 
         void removePoint(uint8_t index);
 

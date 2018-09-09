@@ -597,7 +597,11 @@ void GraphControlArea::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     auto newPointVal = 1 - drawBounded.y() / drawBounds.height();
     auto newPointTime =
         round((drawBounded.x() / pixelsPerSecond + item->control->scroll()) / snapSeconds) * snapSeconds;
-    item->control->insertPoint((float) newPointTime, (float) newPointVal);
+
+    auto insertIndex = item->control->determineInsertIndex((float) newPointTime);
+    if (insertIndex) {
+        item->control->insertPoint(*insertIndex, (float) newPointTime, (float) newPointVal, 0);
+    }
 }
 
 ScrollBarGraphicsItem::ScrollBarGraphicsItem(Qt::Orientation orientation) : scrollBar(new QScrollBar(orientation)) {

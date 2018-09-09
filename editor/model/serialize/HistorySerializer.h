@@ -26,6 +26,11 @@ namespace AxiomModel {
     class ExposeControlAction;
     class PasteBufferAction;
     class UnexposeControlAction;
+    class AddGraphPointAction;
+    class DeleteGraphPointAction;
+    class MoveGraphPointAction;
+    class SetGraphTagAction;
+    class SetGraphTensionAction;
 
     namespace HistorySerializer {
         void serialize(const HistoryList &history, QDataStream &stream);
@@ -123,6 +128,31 @@ namespace AxiomModel {
         void serializeUnexposeControlAction(UnexposeControlAction *action, QDataStream &stream);
 
         std::unique_ptr<UnexposeControlAction> deserializeUnexposeControlAction(QDataStream &stream, uint32_t version,
+                                                                                ModelRoot *root);
+
+        void serializeAddGraphPointAction(AddGraphPointAction *action, QDataStream &stream);
+
+        std::unique_ptr<AddGraphPointAction> deserializeAddGraphPointAction(QDataStream &stream, uint32_t version,
+                                                                            ModelRoot *root);
+
+        void serializeDeleteGraphPointAction(DeleteGraphPointAction *action, QDataStream &stream);
+
+        std::unique_ptr<DeleteGraphPointAction> deserializeDeleteGraphPointAction(QDataStream &stream, uint32_t version,
+                                                                                  ModelRoot *root);
+
+        void serializeMoveGraphPointAction(MoveGraphPointAction *action, QDataStream &stream);
+
+        std::unique_ptr<MoveGraphPointAction> deserializeMoveGraphPointAction(QDataStream &stream, uint32_t version,
+                                                                              ModelRoot *root);
+
+        void serializeSetGraphTagAction(SetGraphTagAction *action, QDataStream &stream);
+
+        std::unique_ptr<SetGraphTagAction> deserializeSetGraphTagAction(QDataStream &stream, uint32_t version,
+                                                                        ModelRoot *root);
+
+        void serializeSetGraphTensionAction(SetGraphTensionAction *action, QDataStream &stream);
+
+        std::unique_ptr<SetGraphTensionAction> deserializeSetGraphTensionAction(QDataStream &stream, uint32_t version,
                                                                                 ModelRoot *root);
     }
 }

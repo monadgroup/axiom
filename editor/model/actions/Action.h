@@ -35,6 +35,11 @@ namespace AxiomModel {
             PASTE_BUFFER,
             UNEXPOSE_CONTROL,
             RENAME_CONTROL,
+            ADD_GRAPH_POINT,
+            DELETE_GRAPH_POINT,
+            MOVE_GRAPH_POINT,
+            SET_GRAPH_TAG,
+            SET_GRAPH_TENSION,
         };
 
         Action(ActionType actionType, ModelRoot *root);
