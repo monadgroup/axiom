@@ -19,8 +19,8 @@ static Control::ControlType typeFromWireType(ConnectionWire::WireType wireType) 
 ExtractControl::ExtractControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
                                QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
                                ConnectionWire::WireType wireType, ActiveSlotFlags activeSlots, ModelRoot *root)
-    : Control(typeFromWireType(wireType), wireType, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-              exposerUuid, exposingUuid, root),
+    : Control(typeFromWireType(wireType), wireType, QSize(1, 1), uuid, parentUuid, pos, size, selected, std::move(name),
+              showName, exposerUuid, exposingUuid, root),
       _activeSlots(activeSlots) {}
 
 std::unique_ptr<ExtractControl> ExtractControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos,

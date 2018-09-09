@@ -18,8 +18,8 @@ PortalControl::PortalControl(const QUuid &uuid, const QUuid &parentUuid, QPoint 
                              AxiomModel::ConnectionWire::WireType wireType,
                              AxiomModel::PortalControl::PortalType portalType, uint64_t portalId,
                              AxiomModel::ModelRoot *root)
-    : Control(typeFromWireType(wireType), wireType, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-              exposerUuid, exposingUuid, root),
+    : Control(typeFromWireType(wireType), wireType, QSize(1, 1), uuid, parentUuid, pos, size, selected, std::move(name),
+              showName, exposerUuid, exposingUuid, root),
       _portalType(portalType), _portalId(portalId) {}
 
 std::unique_ptr<PortalControl> PortalControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,

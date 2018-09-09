@@ -5,8 +5,8 @@ using namespace AxiomModel;
 GraphControl::GraphControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
                            QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
                            std::unique_ptr<GraphControlState> savedState, AxiomModel::ModelRoot *root)
-    : Control(ControlType::GRAPH, ConnectionWire::WireType::NUM, uuid, parentUuid, pos, size, selected, std::move(name),
-              showName, exposerUuid, exposingUuid, root),
+    : Control(ControlType::GRAPH, ConnectionWire::WireType::NUM, QSize(4, 4), uuid, parentUuid, pos, size, selected,
+              std::move(name), showName, exposerUuid, exposingUuid, root),
       _savedState(std::move(savedState)) {}
 
 std::unique_ptr<GraphControl> GraphControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,

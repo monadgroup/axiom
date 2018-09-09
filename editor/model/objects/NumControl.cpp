@@ -5,8 +5,8 @@ using namespace AxiomModel;
 NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                        bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, DisplayMode displayMode,
                        Channel channel, NumValue value, ModelRoot *root)
-    : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, uuid, parentUuid, pos, size, selected,
-              std::move(name), showName, exposerUuid, exposingUuid, root),
+    : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, QSize(1, 1), uuid, parentUuid, pos, size,
+              selected, std::move(name), showName, exposerUuid, exposingUuid, root),
       _displayMode(displayMode), _channel(channel), _value(value) {}
 
 std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,

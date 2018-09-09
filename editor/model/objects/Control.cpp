@@ -19,9 +19,10 @@
 using namespace AxiomModel;
 
 Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::ConnectionWire::WireType wireType,
-                 QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                 bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, AxiomModel::ModelRoot *root)
-    : GridItem(&find(root->controlSurfaces(), parentUuid)->grid(), pos, size, selected),
+                 QSize minSize, QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
+                 QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
+                 AxiomModel::ModelRoot *root)
+    : GridItem(&find(root->controlSurfaces(), parentUuid)->grid(), pos, size, minSize, selected),
       ModelObject(ModelType::CONTROL, uuid, parentUuid, root), _surface(find(root->controlSurfaces(), parentUuid)),
       _controlType(controlType), _wireType(wireType), _name(std::move(name)), _showName(showName),
       _exposerUuid(exposerUuid), _exposingUuid(exposingUuid),
@@ -61,7 +62,7 @@ QSize Control::getDefaultSize(AxiomModel::Control::ControlType controlType) {
     case ControlType::MIDI_PORTAL:
         return QSize(2, 2);
     case ControlType::GRAPH:
-        return QSize(4, 4);
+        return QSize(6, 4);
     }
     unreachable;
 }

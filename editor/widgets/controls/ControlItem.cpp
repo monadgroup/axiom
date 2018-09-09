@@ -48,7 +48,9 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
             ItemResizer::TOP,       ItemResizer::RIGHT,    ItemResizer::BOTTOM,       ItemResizer::LEFT,
             ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT};
         for (auto i = 0; i < 8; i++) {
-            auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::controlGridSize);
+            auto resizer = new ItemResizer(
+                directions[i], QSize(NodeSurfaceCanvas::controlGridSize.width() * control->minSize().width(),
+                                     NodeSurfaceCanvas::controlGridSize.height() * control->minSize().height()));
             resizer->enablePainting();
             resizer->setVisible(false);
 

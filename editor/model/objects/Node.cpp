@@ -17,7 +17,7 @@ using namespace AxiomModel;
 
 Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
            QString name, const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
-    : GridItem(&find(root->nodeSurfaces(), parentUuid)->grid(), pos, size, selected),
+    : GridItem(&find(root->nodeSurfaces(), parentUuid)->grid(), pos, size, QSize(1, 1), selected),
       ModelObject(ModelType::NODE, uuid, parentUuid, root), _surface(find(root->nodeSurfaces(), parentUuid)),
       _nodeType(nodeType), _name(std::move(name)),
       _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {}

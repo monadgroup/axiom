@@ -62,7 +62,9 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
             ItemResizer::TOP,       ItemResizer::RIGHT,    ItemResizer::BOTTOM,       ItemResizer::LEFT,
             ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT};
         for (auto i = 0; i < 8; i++) {
-            auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::nodeGridSize);
+            auto resizer = new ItemResizer(directions[i],
+                                           QSize(NodeSurfaceCanvas::nodeGridSize.width() * node->minSize().width(),
+                                                 NodeSurfaceCanvas::nodeGridSize.height() * node->minSize().height()));
 
             // ensure corners are on top of edges
             resizer->setZValue(i > 3 ? 2 : 1);

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QtCore/QString>
 #include <QtCore/QPoint>
-#include <QtCore/QSize>
 #include <QtCore/QRect>
+#include <QtCore/QSize>
+#include <QtCore/QString>
 #include <memory>
 
 #include "common/Event.h"
@@ -26,17 +26,15 @@ namespace AxiomModel {
         AxiomCommon::Event<QPoint> draggedTo;
         AxiomCommon::Event<> finishedDragging;
 
-        GridItem(GridSurface *parent, QPoint pos, QSize size, bool selected);
+        GridItem(GridSurface *parent, QPoint pos, QSize size, QSize minSize, bool selected);
 
         virtual ~GridItem();
-
-        static void deserialize(QDataStream &stream, QPoint &pos, QSize &size, bool &selected);
-
-        void serialize(QDataStream &stream) const;
 
         QPoint pos() const { return m_pos; }
 
         QSize size() const { return m_size; }
+
+        QSize minSize() const { return m_minSize; }
 
         QRect rect() const { return QRect(m_pos, m_size); }
 
@@ -75,9 +73,9 @@ namespace AxiomModel {
     private:
         QPoint m_pos;
         QSize m_size;
+        QSize m_minSize;
         bool m_selected;
 
         QPoint _dragStartPos;
     };
-
 }
