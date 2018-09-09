@@ -51,7 +51,7 @@ GraphControlState *GraphControl::state() const {
     if (runtimePointers()) {
         return (GraphControlState *) runtimePointers()->data;
     } else {
-        return nullptr;
+        return _savedState.get();
     }
 }
 
@@ -133,7 +133,6 @@ void GraphControl::removePoint(uint8_t index) {
     if (index == 0) return;
 
     auto controlState = state();
-    if (!controlState) return;
 
     // move values to cover up the point
     auto moveItems = controlState->curveCount - index;
@@ -149,17 +148,17 @@ void GraphControl::removePoint(uint8_t index) {
 }
 
 void GraphControl::saveState() {
-    auto controlState = state();
-    if (!controlState) return;
-
-    _savedState = std::make_unique<GraphControlState>();
-    memcpy(_savedState.get(), controlState, sizeof(*controlState));
+    if (runtimePointers()) {
+        auto controlState = (GraphControlState *) runtimePointers()->data;
+        _savedState = std::make_unique<GraphControlState>();
+        memcpy(_savedState.get(), controlState, sizeof(*controlState));
+    }
 }
 
 void GraphControl::restoreState() {
-    auto controlState = state();
-    if (!controlState || !_savedState) return;
-
-    memcpy(controlState, _savedState.get(), sizeof(*controlState));
-    _savedState.reset();
+    if (_savedState && runtimePointers()) {
+        auto controlState = (GraphControlState *) runtimePointers()->data;
+        memcpy(controlState, _savedState.get(), sizeof(*controlState));
+        _savedState.reset();
+    }
 }

@@ -29,10 +29,6 @@ RootSurface *ModelRoot::rootSurface() const {
     return rootSurface;
 }
 
-void ModelRoot::attachBackend(AxiomBackend::AudioBackend *backend) {
-    _backend = backend;
-}
-
 void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
     _runtime = runtime;
 
@@ -62,7 +58,7 @@ void ModelRoot::applyCompile(const std::vector<QUuid> &items) {
     applyItemsTo(items, &transaction);
     applyTransaction(std::move(transaction));
 
-    if (!_project->linkedFile().isEmpty() || !_backend->doesSaveInternally()) {
+    if (!_project->linkedFile().isEmpty() || !_project->backend()->doesSaveInternally()) {
         _project->setIsDirty(true);
     }
 }
@@ -83,9 +79,7 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
             obj->restoreState();
         }
     }
-    if (_backend) {
-        _backend->internalUpdateConfiguration();
-    }
+    _project->backend()->internalUpdateConfiguration();
 }
 
 void ModelRoot::destroy() {

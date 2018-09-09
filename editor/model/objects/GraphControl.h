@@ -44,8 +44,6 @@ namespace AxiomModel {
 
         void setScroll(float scroll);
 
-        GraphControlState *savedState() const { return _savedState.get(); }
-
         std::optional<uint8_t> determineInsertIndex(float time);
 
         void insertPoint(uint8_t index, float time, float val, float tension, uint8_t curveState);

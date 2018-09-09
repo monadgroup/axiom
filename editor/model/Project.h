@@ -8,6 +8,7 @@
 
 namespace AxiomBackend {
     class DefaultConfiguration;
+    class AudioBackend;
 }
 
 namespace AxiomModel {
@@ -43,12 +44,17 @@ namespace AxiomModel {
 
         void setIsDirty(bool isDirty);
 
+        void attachBackend(AxiomBackend::AudioBackend *backend) { _backend = backend; }
+
+        AxiomBackend::AudioBackend *backend() const { return _backend; }
+
     private:
         std::unique_ptr<ModelRoot> _mainRoot;
         std::unique_ptr<Library> _library;
         QString _linkedFile;
         bool _isDirty = false;
 
+        AxiomBackend::AudioBackend *_backend = nullptr;
         RootSurface *_rootSurface;
     };
 }

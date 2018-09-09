@@ -160,7 +160,7 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     _project = std::move(project);
 
     // attach the backend and our runtime
-    _project->mainRoot().attachBackend(_backend);
+    _project->attachBackend(_backend);
     _project->mainRoot().attachRuntime(runtime());
 
     // find root surface and show it

@@ -12,10 +12,6 @@ namespace MaximCompiler {
     class Runtime;
 }
 
-namespace AxiomBackend {
-    class AudioBackend;
-}
-
 namespace AxiomModel {
 
     class Project;
@@ -78,8 +74,6 @@ namespace AxiomModel {
 
         const ConnectionCollection &connections() const { return _connections; }
 
-        void attachBackend(AxiomBackend::AudioBackend *backend);
-
         void attachRuntime(MaximCompiler::Runtime *runtime);
 
         MaximCompiler::Runtime *runtime() const { return _runtime; }
@@ -105,7 +99,6 @@ namespace AxiomModel {
         ConnectionCollection _connections;
 
         std::mutex _runtimeLock;
-        AxiomBackend::AudioBackend *_backend = nullptr;
         MaximCompiler::Runtime *_runtime = nullptr;
     };
 }

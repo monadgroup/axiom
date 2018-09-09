@@ -571,7 +571,6 @@ void GraphControlArea::updateBounds(QRectF newClipBounds, QRectF newDrawBounds) 
 
 void GraphControlArea::updateCurves() {
     auto state = item->control->state();
-    if (!state) return;
 
     // create/remove QGraphicsPathItems so we have the correct amount
     while (_curves.size() < state->curveCount) {
@@ -797,7 +796,6 @@ void GraphControlItem::paintControl(QPainter *painter) {
                       QPointF(clippedBodyRect.right() - 0.5, bodyRect.bottom() - 0.5));
 
     auto state = control->state();
-    if (!state) return;
 
     // draw a line at the end of the last curve
     auto endPos = state->curveEndPositions[state->curveCount - 1];
@@ -825,13 +823,15 @@ void GraphControlItem::paintControl(QPainter *painter) {
 
     // convert the controls internal time in samples to beats to display
     auto currentRuntime = control->root()->runtime();
-    auto timeBarPixels =
-        clippedBodyRect.left() + remapSecondsToPixels((state->currentTimeSamples * currentRuntime->getBpm()) /
-                                                          (currentRuntime->getSampleRate() * 60),
-                                                      (float) pixelsPerSecond, control->scroll());
-    painter->setPen(QPen(QColor(67, 160, 71)));
-    painter->drawLine(QPointF(timeBarPixels - 0.5, bodyRect.top() - 0.5),
-                      QPointF(timeBarPixels - 0.5, bodyRect.bottom() - 0.5));
+    if (currentRuntime) {
+        auto timeBarPixels =
+            clippedBodyRect.left() + remapSecondsToPixels((state->currentTimeSamples * currentRuntime->getBpm()) /
+                                                              (currentRuntime->getSampleRate() * 60),
+                                                          (float) pixelsPerSecond, control->scroll());
+        painter->setPen(QPen(QColor(67, 160, 71)));
+        painter->drawLine(QPointF(timeBarPixels - 0.5, bodyRect.top() - 0.5),
+                          QPointF(timeBarPixels - 0.5, bodyRect.bottom() - 0.5));
+    }
 }
 
 void GraphControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
