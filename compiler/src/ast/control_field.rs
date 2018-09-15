@@ -18,6 +18,7 @@ impl fmt::Display for AudioField {
 pub enum GraphField {
     Value,
     State,
+    Paused,
 }
 
 impl fmt::Display for GraphField {
@@ -25,6 +26,7 @@ impl fmt::Display for GraphField {
         match self {
             GraphField::Value => write!(f, "value"),
             GraphField::State => write!(f, "state"),
+            GraphField::Paused => write!(f, "paused"),
         }
     }
 }

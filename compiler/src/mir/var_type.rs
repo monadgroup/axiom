@@ -81,6 +81,7 @@ impl VarType {
             ControlField::Audio(AudioField::Value) => VarType::Num,
             ControlField::Graph(GraphField::Value) => VarType::Num,
             ControlField::Graph(GraphField::State) => VarType::Num,
+            ControlField::Graph(GraphField::Paused) => VarType::Num,
             ControlField::Midi(MidiField::Value) => VarType::Midi,
             ControlField::Roll(RollField::Value) => VarType::Midi,
             ControlField::Roll(RollField::Speed) => VarType::Num,

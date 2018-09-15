@@ -128,8 +128,9 @@ impl Control for GraphControl {
     fn data_type(context: &Context) -> StructType {
         context.struct_type(
             &[
-                &context.i32_type(), // current time
-                &context.i8_type(),  // current state
+                &context.i32_type(),  // current time
+                &context.i8_type(),   // current state
+                &context.bool_type(), // paused?
             ],
             false,
         )
@@ -171,6 +172,12 @@ impl Control for GraphControl {
                 "currentstate",
             )
             .into_int_value();
+        let is_paused_ptr = unsafe {
+            control
+                .ctx
+                .b
+                .build_struct_gep(&control.data_ptr, 2, "paused.ptr")
+        };
         let curve_count = control
             .ctx
             .b
@@ -504,6 +511,8 @@ impl Control for GraphControl {
             ),
             "",
         );
+        let is_paused = control.ctx.b.build_not(&increment_sample, "paused");
+        control.ctx.b.build_store(&is_paused_ptr, &is_paused);
         control.ctx.b.build_conditional_branch(
             &increment_sample,
             &increment_sample_true_block,
@@ -549,6 +558,11 @@ impl Control for GraphControl {
             ControlField::Graph(GraphField::State),
             &state_field_getter,
             &state_field_setter,
+        );
+        generator.generate(
+            ControlField::Graph(GraphField::Paused),
+            &paused_field_getter,
+            &paused_field_setter,
         );
     }
 }
@@ -641,4 +655,41 @@ fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
         &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 1, "") },
         &state_int,
     );
+}
+
+fn paused_field_getter(control: &mut ControlContext, out_val: PointerValue) {
+    let out_num = NumValue::new(out_val);
+
+    let is_paused_int = control
+        .ctx
+        .b
+        .build_load(
+            &unsafe {
+                control
+                    .ctx
+                    .b
+                    .build_struct_gep(&control.data_ptr, 2, "paused.int.ptr")
+            },
+            "paused.int",
+        )
+        .into_int_value();
+    let is_paused_float = control.ctx.b.build_unsigned_int_to_float(
+        is_paused_int,
+        control.ctx.context.f32_type(),
+        "paused.float",
+    );
+    let is_paused_spread = util::splat_vector(&control.ctx.b, is_paused_float, "paused.splat");
+    out_num.set_vec(&mut control.ctx.b, &is_paused_spread);
+    out_num.set_form(
+        &mut control.ctx.b,
+        &control
+            .ctx
+            .context
+            .i8_type()
+            .const_int(FormType::None as u64, false),
+    );
+}
+
+fn paused_field_setter(_control: &mut ControlContext, _in_val: PointerValue) {
+    // noop
 }

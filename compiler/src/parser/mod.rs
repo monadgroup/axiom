@@ -482,6 +482,9 @@ impl Parser {
             "value" if control_type == ControlType::Audio => ControlField::Audio(AudioField::Value),
             "value" if control_type == ControlType::Graph => ControlField::Graph(GraphField::Value),
             "state" if control_type == ControlType::Graph => ControlField::Graph(GraphField::State),
+            "paused" if control_type == ControlType::Graph => {
+                ControlField::Graph(GraphField::Paused)
+            }
             "value" if control_type == ControlType::Midi => ControlField::Midi(MidiField::Value),
             "value" if control_type == ControlType::Roll => ControlField::Roll(RollField::Value),
             "speed" if control_type == ControlType::Roll => ControlField::Roll(RollField::Speed),
