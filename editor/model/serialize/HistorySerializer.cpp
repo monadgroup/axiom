@@ -482,10 +482,19 @@ std::unique_ptr<CreateControlAction> HistorySerializer::deserializeCreateControl
     stream >> typeInt;
     QString name;
     stream >> name;
+
     QPoint pos;
-    stream >> pos;
     QSize size;
-    stream >> size;
+
+    // Position/size was added in 0.4.0 (schema version 5) for the enhanced control placement feature. The previous
+    // default was simply to place controls at (0, 0) with a size of (2, 2)
+    if (version >= 5) {
+        stream >> pos;
+        stream >> size;
+    } else {
+        pos = QPoint(0, 0);
+        size = QSize(2, 2);
+    }
 
     return CreateControlAction::create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), pos, size,
                                        root);

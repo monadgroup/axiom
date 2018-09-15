@@ -160,10 +160,17 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
                                                               AxiomModel::ModelRoot *root) {
     uint8_t displayModeInt;
     stream >> displayModeInt;
-    float minValue;
-    stream >> minValue;
-    float maxValue;
-    stream >> maxValue;
+
+    // Control min/max was added in 0.4.0 (schema version 5). Previously controls would always be between 0 and 1.
+    float minValue, maxValue;
+    if (version >= 5) {
+        stream >> minValue;
+        stream >> maxValue;
+    } else {
+        minValue = 0;
+        maxValue = 1;
+    }
+
     auto value = ValueSerializer::deserializeNum(stream, version);
     return NumControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
                               exposingUuid, (NumControl::DisplayMode) displayModeInt, minValue, maxValue, value, root);
