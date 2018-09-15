@@ -103,6 +103,16 @@ QRectF ControlItem::boundingRect() const {
     return br;
 }
 
+QPainterPath ControlItem::shape() const {
+    if (control->isSelected()) {
+        QPainterPath path;
+        path.addRect(drawBoundingRect());
+        return path;
+    } else {
+        return controlPath();
+    }
+}
+
 QRectF ControlItem::aspectBoundingRect() const {
     auto bound = drawBoundingRect();
     if (bound.size().width() > bound.size().height()) {

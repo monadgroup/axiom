@@ -20,11 +20,6 @@ void ExtractControlItem::paintControl(QPainter *painter) {
                          outlineActiveColor());
 }
 
-QPainterPath ExtractControlItem::shape() const {
-    if (control->isSelected()) return QGraphicsItem::shape();
-    return controlPath();
-}
-
 QRectF ExtractControlItem::useBoundingRect() const {
     return extractPainter.getBounds(aspectBoundingRect());
 }

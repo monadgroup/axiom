@@ -27,8 +27,6 @@ namespace AxiomGui {
 
         static bool unformatString(const QString &str, float *valOut, AxiomModel::FormType *formOut);
 
-        QPainterPath shape() const override;
-
     protected:
         bool showLabelInCenter() const override;
 

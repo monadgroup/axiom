@@ -2,41 +2,39 @@
 
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 
-#include "editor/model/objects/PortalControl.h"
-#include "../surface/NodeSurfaceCanvas.h"
 #include "../../util.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "editor/model/objects/PortalControl.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
 QString iconNameFromType(PortalControl::PortalType type, ConnectionWire::WireType wireType) {
     switch (type) {
-        case PortalControl::PortalType::INPUT:
-            switch (wireType) {
-                case ConnectionWire::WireType::NUM:
-                    return "input-num-portal.png";
-                case ConnectionWire::WireType::MIDI:
-                    return "input-midi-portal.png";
-            }
-            break;
-        case PortalControl::PortalType::OUTPUT:
-            switch (wireType) {
-                case ConnectionWire::WireType::NUM:
-                    return "output-num-portal.png";
-                case ConnectionWire::WireType::MIDI:
-                    return "output-midi-portal.png";
-            }
-            break;
-        case PortalControl::PortalType::AUTOMATION:
-            return "automation-portal.png";
+    case PortalControl::PortalType::INPUT:
+        switch (wireType) {
+        case ConnectionWire::WireType::NUM:
+            return "input-num-portal.png";
+        case ConnectionWire::WireType::MIDI:
+            return "input-midi-portal.png";
+        }
+        break;
+    case PortalControl::PortalType::OUTPUT:
+        switch (wireType) {
+        case ConnectionWire::WireType::NUM:
+            return "output-num-portal.png";
+        case ConnectionWire::WireType::MIDI:
+            return "output-midi-portal.png";
+        }
+        break;
+    case PortalControl::PortalType::AUTOMATION:
+        return "automation-portal.png";
     }
     unreachable;
 }
 
 PortalControlItem::PortalControlItem(AxiomModel::PortalControl *control, NodeSurfaceCanvas *canvas)
-    : ControlItem(control, canvas), control(control), _image(getImagePath(control)) {
-
-}
+    : ControlItem(control, canvas), control(control), _image(getImagePath(control)) {}
 
 void PortalControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     auto size = QSizeF(NodeSurfaceCanvas::controlRealSize(control->size()));
@@ -46,7 +44,7 @@ void PortalControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     painter->drawImage(QPointF(imagePos.width(), imagePos.height()), _image);
 }
 
-QPainterPath PortalControlItem::shape() const {
+QPainterPath PortalControlItem::controlPath() const {
     auto size = QSizeF(NodeSurfaceCanvas::controlRealSize(control->size()));
     auto centerPos = QPointF(size.width() / 2, size.height() / 2);
 

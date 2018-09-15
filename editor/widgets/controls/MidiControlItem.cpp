@@ -20,11 +20,6 @@ void MidiControlItem::paintControl(QPainter *painter) {
     plugPainter.paint(painter, aspectBoundingRect(), hoverState(), std::optional<AxiomModel::NumValue>(), Qt::black);
 }
 
-QPainterPath MidiControlItem::shape() const {
-    if (control->isSelected()) return QGraphicsItem::shape();
-    return controlPath();
-}
-
 QRectF MidiControlItem::useBoundingRect() const {
     return plugPainter.getBounds(aspectBoundingRect());
 }

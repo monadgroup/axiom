@@ -26,6 +26,8 @@ namespace AxiomGui {
 
         QRectF boundingRect() const override;
 
+        QPainterPath shape() const override;
+
         QRectF aspectBoundingRect() const;
 
         bool isEditable() const;

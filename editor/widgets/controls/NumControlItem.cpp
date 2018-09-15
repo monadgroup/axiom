@@ -165,11 +165,6 @@ void NumControlItem::paintControl(QPainter *painter) {
     }
 }
 
-QPainterPath NumControlItem::shape() const {
-    if (control->isSelected()) return QGraphicsItem::shape();
-    return controlPath();
-}
-
 bool NumControlItem::showLabelInCenter() const {
     switch (control->displayMode()) {
     case NumControl::DisplayMode::PLUG:

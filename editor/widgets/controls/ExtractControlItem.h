@@ -14,13 +14,11 @@ namespace AxiomGui {
     class NodeItem;
 
     class ExtractControlItem : public ControlItem {
-    Q_OBJECT
+        Q_OBJECT
     public:
         AxiomModel::ExtractControl *control;
 
         ExtractControlItem(AxiomModel::ExtractControl *control, NodeSurfaceCanvas *canvas);
-
-        QPainterPath shape() const override;
 
     protected:
         bool showLabelInCenter() const override { return true; }
@@ -36,5 +34,4 @@ namespace AxiomGui {
     private:
         ExtractPainter extractPainter;
     };
-
 }

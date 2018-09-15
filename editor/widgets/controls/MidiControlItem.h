@@ -18,10 +18,7 @@ namespace AxiomGui {
 
         MidiControlItem(AxiomModel::MidiControl *control, NodeSurfaceCanvas *canvas);
 
-        QPainterPath shape() const override;
-
     protected:
-
         bool showLabelInCenter() const override { return true; }
 
         QRectF useBoundingRect() const override;
@@ -34,7 +31,5 @@ namespace AxiomGui {
 
     private:
         PlugPainter plugPainter;
-
     };
-
 }
