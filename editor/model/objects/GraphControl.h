@@ -6,14 +6,17 @@ namespace AxiomModel {
 
     constexpr size_t GRAPH_CONTROL_CURVE_COUNT = 16;
 
-    struct GraphControlState {
+    struct GraphControlTimeState {
+        uint32_t currentTimeSamples;
+        uint8_t currentState;
+    };
+
+    struct GraphControlCurveState {
         uint8_t curveCount;
         float curveStartVals[GRAPH_CONTROL_CURVE_COUNT + 1];
         float curveEndPositions[GRAPH_CONTROL_CURVE_COUNT];
         float curveTension[GRAPH_CONTROL_CURVE_COUNT];
         uint8_t curveStates[GRAPH_CONTROL_CURVE_COUNT + 1];
-        uint32_t currentTimeSamples;
-        uint8_t currentState;
     };
 
     class GraphControl : public Control {
@@ -25,16 +28,19 @@ namespace AxiomModel {
 
         GraphControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                      bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                     std::unique_ptr<GraphControlState> savedState, ModelRoot *root);
+                     std::unique_ptr<GraphControlCurveState> savedState, ModelRoot *root);
 
         static std::unique_ptr<GraphControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                     bool selected, QString name, bool showName,
                                                     const QUuid &exposerUuid, const QUuid &exposingUuid,
-                                                    std::unique_ptr<GraphControlState> savedState, ModelRoot *root);
+                                                    std::unique_ptr<GraphControlCurveState> savedState,
+                                                    ModelRoot *root);
 
         void doRuntimeUpdate() override;
 
-        GraphControlState *state() const;
+        GraphControlTimeState *getTimeState() const;
+
+        GraphControlCurveState *getCurveState() const;
 
         float zoom() const { return _zoom; }
 
@@ -66,6 +72,6 @@ namespace AxiomModel {
         size_t _lastStateHash = 0;
         uint32_t _lastTime = 0;
 
-        std::unique_ptr<GraphControlState> _savedState;
+        std::unique_ptr<GraphControlCurveState> _savedState;
     };
 }

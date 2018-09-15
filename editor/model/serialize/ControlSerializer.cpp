@@ -201,7 +201,7 @@ std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
 }
 
 void ControlSerializer::serializeGraph(GraphControl *control, QDataStream &stream) {
-    auto savedState = control->state();
+    auto savedState = control->getCurveState();
     stream << (bool) savedState;
     if (savedState) {
         stream << savedState->curveCount;
@@ -221,12 +221,12 @@ std::unique_ptr<GraphControl> ControlSerializer::deserializeGraph(QDataStream &s
                                                                   bool showName, QUuid exposerUuid, QUuid exposingUuid,
                                                                   AxiomModel::ReferenceMapper *ref,
                                                                   AxiomModel::ModelRoot *root) {
-    std::unique_ptr<GraphControlState> savedState;
+    std::unique_ptr<GraphControlCurveState> savedState;
     bool hasSavedState;
     stream >> hasSavedState;
 
     if (hasSavedState) {
-        savedState = std::make_unique<GraphControlState>();
+        savedState = std::make_unique<GraphControlCurveState>();
         stream >> savedState->curveCount;
         stream >> savedState->curveStartVals[0];
         for (uint8_t i = 0; i < savedState->curveCount; i++) {

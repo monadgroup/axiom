@@ -128,13 +128,21 @@ impl Control for GraphControl {
     fn data_type(context: &Context) -> StructType {
         context.struct_type(
             &[
+                &context.i32_type(), // current time
+                &context.i8_type(),  // current state
+            ],
+            false,
+        )
+    }
+
+    fn shared_data_type(context: &Context) -> StructType {
+        context.struct_type(
+            &[
                 &context.i8_type(),                 // curve count
                 &context.f32_type().array_type(17), // start values
                 &context.f32_type().array_type(16), // end positions
                 &context.f32_type().array_type(16), // tension
                 &context.i8_type().array_type(17),  // states
-                &context.i32_type(),                // current time
-                &context.i8_type(),                 // current state
             ],
             false,
         )
@@ -148,7 +156,7 @@ impl Control for GraphControl {
             control
                 .ctx
                 .b
-                .build_struct_gep(&control.data_ptr, 5, "currentsamples.ptr")
+                .build_struct_gep(&control.data_ptr, 0, "currentsamples.ptr")
         };
         let current_time_samples = control
             .ctx
@@ -159,7 +167,7 @@ impl Control for GraphControl {
             .ctx
             .b
             .build_load(
-                &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 6, "") },
+                &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 1, "") },
                 "currentstate",
             )
             .into_int_value();
@@ -167,17 +175,18 @@ impl Control for GraphControl {
             .ctx
             .b
             .build_load(
-                &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 0, "") },
+                &unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 0, "") },
                 "curvecount",
             )
             .into_int_value();
 
         let start_vals_array_ptr =
-            unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 1, "") };
+            unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 1, "") };
         let end_positions_array_ptr =
-            unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 2, "") };
-        let tension_array_ptr = unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 3, "") };
-        let state_array_ptr = unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 4, "") };
+            unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 2, "") };
+        let tension_array_ptr =
+            unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 3, "") };
+        let state_array_ptr = unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 4, "") };
 
         let samplerate = control
             .ctx
@@ -549,7 +558,7 @@ fn state_field_getter(control: &mut ControlContext, out_val: PointerValue) {
         .ctx
         .b
         .build_load(
-            &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 6, "") },
+            &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 1, "") },
             "",
         )
         .into_int_value();
@@ -629,7 +638,7 @@ fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
         "",
     );
     control.ctx.b.build_store(
-        &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 6, "") },
+        &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 1, "") },
         &state_int,
     );
 }

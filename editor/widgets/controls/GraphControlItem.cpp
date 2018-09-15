@@ -130,7 +130,8 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     }
 
     // draw "tags" for each curve with a state
-    auto controlState = item->control->state();
+    auto controlState = item->control->getCurveState();
+    auto timeState = item->control->getTimeState();
     for (uint8_t i = 0; i < controlState->curveCount + 1; i++) {
         auto curveState = controlState->curveStates[i];
         if (curveState == 0) continue;
@@ -146,7 +147,7 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         painter->setBrush(QBrush(QColor(80, 80, 80)));
         painter->drawPolygon(tagPolygon.toFillPolygon(QMatrix().translate(posX - 12, rect.bottom() - 20)));
 
-        if (curveState == controlState->currentState + 1) {
+        if (timeState && curveState == timeState->currentState + 1) {
             painter->setPen(QPen(QColor(253, 216, 53)));
         } else {
             painter->setPen(QPen(QColor(200, 200, 200)));
@@ -264,8 +265,8 @@ void GraphControlPointKnob::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 
     isDragging = true;
     dragStartMousePos = event->scenePos();
-    dragStartYVal = item->control->state()->curveStartVals[index];
-    dragStartTime = index == 0 ? 0 : item->control->state()->curveEndPositions[index - 1];
+    dragStartYVal = item->control->getCurveState()->curveStartVals[index];
+    dragStartTime = index == 0 ? 0 : item->control->getCurveState()->curveEndPositions[index - 1];
     update();
 }
 
@@ -273,7 +274,7 @@ void GraphControlPointKnob::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     item->setShowSnapMarks(true);
-    auto controlState = item->control->state();
+    auto controlState = item->control->getCurveState();
 
     auto mouseDelta = event->scenePos() - dragStartMousePos;
     auto yScale = maxY - minY;
@@ -292,7 +293,7 @@ void GraphControlPointKnob::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
     item->setShowSnapMarks(false);
 
-    auto controlState = item->control->state();
+    auto controlState = item->control->getCurveState();
     auto dragEndTime = index > 0 ? controlState->curveEndPositions[index - 1] : 0;
     auto dragEndYVal = controlState->curveStartVals[index];
     if (dragEndTime != dragStartTime || dragEndYVal != dragStartYVal) {
@@ -316,7 +317,7 @@ void GraphControlPointKnob::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 
 void GraphControlPointKnob::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     if (index != 0) {
-        auto controlState = item->control->state();
+        auto controlState = item->control->getCurveState();
         auto pointTime = controlState->curveEndPositions[index - 1];
         auto pointValue = controlState->curveStartVals[index];
         auto pointTension = controlState->curveTension[index - 1];
@@ -332,14 +333,14 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
 
     uint8_t suggestedTag = 0;
     for (auto i = index - 1; i >= 0; i--) {
-        auto curveState = item->control->state()->curveStates[i];
+        auto curveState = item->control->getCurveState()->curveStates[i];
         if (curveState != 0) {
             suggestedTag = curveState;
             break;
         }
     }
 
-    auto currentTag = item->control->state()->curveStates[index];
+    auto currentTag = item->control->getCurveState()->curveStates[index];
     if (suggestedTag + 1 == currentTag) {
         suggestedTag++;
     }
@@ -367,15 +368,15 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == setValueAction) {
-        auto editor =
-            new FloatingValueEditor(QString::number(item->control->state()->curveStartVals[index]), event->scenePos());
+        auto editor = new FloatingValueEditor(QString::number(item->control->getCurveState()->curveStartVals[index]),
+                                              event->scenePos());
         scene()->addItem(editor);
         connect(editor, &FloatingValueEditor::valueSubmitted, this, [this](QString newValue) {
             bool validInput;
             auto inputFloat = newValue.toFloat(&validInput);
             if (!validInput) return;
 
-            auto controlState = item->control->state();
+            auto controlState = item->control->getCurveState();
             auto oldVal = controlState->curveStartVals[index];
             auto newVal = std::clamp(inputFloat, 0.f, 1.f);
             if (newVal != oldVal) {
@@ -385,9 +386,9 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
             }
         });
     } else if (selectedAction == copyValueAction) {
-        clipboard->setText(QString::number(item->control->state()->curveStartVals[index], 'f', 2));
+        clipboard->setText(QString::number(item->control->getCurveState()->curveStartVals[index], 'f', 2));
     } else if (validClipboardNumber && selectedAction == pasteValueAction) {
-        auto controlState = item->control->state();
+        auto controlState = item->control->getCurveState();
         auto oldVal = controlState->curveStartVals[index];
         auto newVal = std::clamp(clipboardNumber, 0.f, 1.f);
         if (newVal != oldVal) {
@@ -396,14 +397,14 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
                 item->control->uuid(), index, pointTime, oldVal, pointTime, newVal, item->control->root()));
         }
     } else if (selectedAction == clearTagAction) {
-        auto oldState = item->control->state()->curveStates[index];
+        auto oldState = item->control->getCurveState()->curveStates[index];
         uint8_t newState = 0;
         if (newState != oldState) {
             item->control->root()->history().append(AxiomModel::SetGraphTagAction::create(
                 item->control->uuid(), index, oldState, newState, item->control->root()));
         }
     } else if (selectedAction == tagSuggestedAction) {
-        auto oldState = item->control->state()->curveStates[index];
+        auto oldState = item->control->getCurveState()->curveStates[index];
         auto newState = (uint8_t)(suggestedTag + 1);
         if (newState != oldState) {
             item->control->root()->history().append(AxiomModel::SetGraphTagAction::create(
@@ -419,7 +420,7 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
             auto inputByte = newValue.toUInt(&validInput);
             if (!validInput || inputByte > UINT8_MAX - 1) return;
 
-            auto oldState = item->control->state()->curveStates[index];
+            auto oldState = item->control->getCurveState()->curveStates[index];
             auto newState = (uint8_t)(inputByte + 1);
             if (newState != oldState) {
                 item->control->root()->history().append(AxiomModel::SetGraphTagAction::create(
@@ -427,7 +428,7 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
             }
         });
     } else if (index != 0 && selectedAction == deleteAction) {
-        auto controlState = item->control->state();
+        auto controlState = item->control->getCurveState();
         auto pointTime = controlState->curveEndPositions[index - 1];
         auto pointValue = controlState->curveStartVals[index];
         auto pointTension = controlState->curveTension[index - 1];
@@ -465,7 +466,7 @@ void GraphControlTensionKnob::paint(QPainter *painter, const QStyleOptionGraphic
 void GraphControlTensionKnob::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = true;
     QApplication::setOverrideCursor(Qt::BlankCursor);
-    dragStartTension = control->state()->curveTension[index];
+    dragStartTension = control->getCurveState()->curveTension[index];
     dragStartMouseY = event->scenePos().y();
     update();
 }
@@ -475,13 +476,13 @@ void GraphControlTensionKnob::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto deltaY = event->scenePos().y() - dragStartMouseY;
     auto newTension = std::clamp(dragStartTension + deltaY / movementRange, -1., 1.);
-    control->state()->curveTension[index] = (float) newTension;
+    control->getCurveState()->curveTension[index] = (float) newTension;
 }
 
 void GraphControlTensionKnob::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
 
-    auto controlState = control->state();
+    auto controlState = control->getCurveState();
     auto dragEndTension = controlState->curveTension[index];
     if (dragEndTension != dragStartTension) {
         control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
@@ -524,15 +525,15 @@ void GraphControlTensionKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *e
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == setTensionAction) {
-        auto editor = new FloatingValueEditor(QString::number(roundf(control->state()->curveTension[index] * 100)),
-                                              event->scenePos());
+        auto editor = new FloatingValueEditor(
+            QString::number(roundf(control->getCurveState()->curveTension[index] * 100)), event->scenePos());
         scene()->addItem(editor);
         connect(editor, &FloatingValueEditor::valueSubmitted, this, [this](QString newValue) {
             bool couldConvert;
             auto convertedVal = newValue.toFloat(&couldConvert);
 
             if (!couldConvert) return;
-            auto oldTension = control->state()->curveTension[index];
+            auto oldTension = control->getCurveState()->curveTension[index];
             auto newTension = std::clamp(convertedVal / 100, -1.f, 1.f);
             ;
             if (oldTension != newTension) {
@@ -541,9 +542,9 @@ void GraphControlTensionKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *e
             }
         });
     } else if (selectedAction == copyTensionAction) {
-        clipboard->setText(QString::number(roundf(control->state()->curveTension[index] * 100)));
+        clipboard->setText(QString::number(roundf(control->getCurveState()->curveTension[index] * 100)));
     } else if (validClipboardNumber && selectedAction == pasteTensionAction) {
-        auto oldTension = control->state()->curveTension[index];
+        auto oldTension = control->getCurveState()->curveTension[index];
         auto newTension = std::clamp(clipboardNumber / 100, -1.f, 1.f);
         ;
         if (oldTension != newTension) {
@@ -570,7 +571,7 @@ void GraphControlArea::updateBounds(QRectF newClipBounds, QRectF newDrawBounds) 
 }
 
 void GraphControlArea::updateCurves() {
-    auto state = item->control->state();
+    auto state = item->control->getCurveState();
 
     // create/remove QGraphicsPathItems so we have the correct amount
     while (_curves.size() < state->curveCount) {
@@ -795,7 +796,7 @@ void GraphControlItem::paintControl(QPainter *painter) {
     painter->drawLine(QPointF(clippedBodyRect.right() - 0.5, bodyRect.top() - 0.5),
                       QPointF(clippedBodyRect.right() - 0.5, bodyRect.bottom() - 0.5));
 
-    auto state = control->state();
+    auto state = control->getCurveState();
 
     // draw a line at the end of the last curve
     auto endPos = state->curveEndPositions[state->curveCount - 1];
@@ -823,9 +824,10 @@ void GraphControlItem::paintControl(QPainter *painter) {
 
     // convert the controls internal time in samples to beats to display
     auto currentRuntime = control->root()->runtime();
-    if (currentRuntime) {
+    auto timeState = control->getTimeState();
+    if (currentRuntime && timeState) {
         auto timeBarPixels =
-            clippedBodyRect.left() + remapSecondsToPixels((state->currentTimeSamples * currentRuntime->getBpm()) /
+            clippedBodyRect.left() + remapSecondsToPixels((timeState->currentTimeSamples * currentRuntime->getBpm()) /
                                                               (currentRuntime->getSampleRate() * 60),
                                                           (float) pixelsPerSecond, control->scroll());
         painter->setPen(QPen(QColor(67, 160, 71)));

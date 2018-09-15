@@ -23,22 +23,28 @@ pub fn gen_math_op_statement(
     let right_vec = right_num.get_vec(node.ctx.b);
     let result_vec = match op {
         OperatorType::Identity => left_vec,
-        OperatorType::Add => node.ctx
+        OperatorType::Add => node
+            .ctx
             .b
             .build_float_add(left_vec, right_vec, "num.add.vec"),
-        OperatorType::Subtract => node.ctx
+        OperatorType::Subtract => node
+            .ctx
             .b
             .build_float_sub(left_vec, right_vec, "num.sub.vec"),
-        OperatorType::Multiply => node.ctx
+        OperatorType::Multiply => node
+            .ctx
             .b
             .build_float_mul(left_vec, right_vec, "num.mul.vec"),
-        OperatorType::Divide => node.ctx
+        OperatorType::Divide => node
+            .ctx
             .b
             .build_float_div(left_vec, right_vec, "num.divide.vec"),
-        OperatorType::Modulo => node.ctx
+        OperatorType::Modulo => node
+            .ctx
             .b
             .build_float_rem(left_vec, right_vec, "num.mod.vec"),
-        OperatorType::Power => node.ctx
+        OperatorType::Power => node
+            .ctx
             .b
             .build_call(&pow_intrinsic, &[&left_vec, &right_vec], "", false)
             .left()

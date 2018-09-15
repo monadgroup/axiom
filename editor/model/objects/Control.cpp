@@ -84,7 +84,7 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
                                       ConnectionWire::WireType::MIDI, 0, root);
     case Control::ControlType::GRAPH:
         return GraphControl::create(uuid, parentUuid, pos, size, false, name, true, QUuid(), exposingUuid,
-                                    std::make_unique<GraphControlState>(), root);
+                                    std::make_unique<GraphControlCurveState>(), root);
     default:
         unreachable;
     }
