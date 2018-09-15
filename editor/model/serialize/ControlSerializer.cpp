@@ -147,7 +147,8 @@ std::unique_ptr<MidiControl> ControlSerializer::deserializeMidi(QDataStream &str
 
 void ControlSerializer::serializeNum(AxiomModel::NumControl *control, QDataStream &stream) {
     stream << (uint8_t) control->displayMode();
-    stream << (uint8_t) control->channel();
+    stream << control->minValue();
+    stream << control->maxValue();
     ValueSerializer::serializeNum(control->value(), stream);
 }
 
@@ -159,12 +160,13 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
                                                               AxiomModel::ModelRoot *root) {
     uint8_t displayModeInt;
     stream >> displayModeInt;
-    uint8_t channelInt;
-    stream >> channelInt;
+    float minValue;
+    stream >> minValue;
+    float maxValue;
+    stream >> maxValue;
     auto value = ValueSerializer::deserializeNum(stream, version);
     return NumControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                              exposingUuid, (NumControl::DisplayMode) displayModeInt, (NumControl::Channel) channelInt,
-                              value, root);
+                              exposingUuid, (NumControl::DisplayMode) displayModeInt, minValue, maxValue, value, root);
 }
 
 void ControlSerializer::serializePortal(AxiomModel::PortalControl *control, QDataStream &stream) {

@@ -4,19 +4,18 @@ using namespace AxiomModel;
 
 NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                        bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, DisplayMode displayMode,
-                       Channel channel, NumValue value, ModelRoot *root)
+                       float minValue, float maxValue, NumValue value, ModelRoot *root)
     : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, QSize(1, 1), uuid, parentUuid, pos, size,
               selected, std::move(name), showName, exposerUuid, exposingUuid, root),
-      _displayMode(displayMode), _channel(channel), _value(value) {}
+      _displayMode(displayMode), _minValue(minValue), _maxValue(maxValue), _value(value) {}
 
 std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                bool selected, QString name, bool showName, const QUuid &exposerUuid,
                                                const QUuid &exposingUuid,
-                                               AxiomModel::NumControl::DisplayMode displayMode,
-                                               AxiomModel::NumControl::Channel channel, NumValue value,
-                                               AxiomModel::ModelRoot *root) {
+                                               AxiomModel::NumControl::DisplayMode displayMode, float minValue,
+                                               float maxValue, NumValue value, AxiomModel::ModelRoot *root) {
     return std::make_unique<NumControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                                        exposingUuid, displayMode, channel, value, root);
+                                        exposingUuid, displayMode, minValue, maxValue, value, root);
 }
 
 void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode) {
@@ -30,6 +29,20 @@ void NumControl::setChannel(AxiomModel::NumControl::Channel channel) {
     if (channel != _channel) {
         _channel = channel;
         channelChanged.trigger(channel);
+    }
+}
+
+void NumControl::setMinValue(float minValue) {
+    if (minValue != _minValue) {
+        _minValue = minValue;
+        minValueChanged.trigger(minValue);
+    }
+}
+
+void NumControl::setMaxValue(float maxValue) {
+    if (maxValue != _maxValue) {
+        _maxValue = maxValue;
+        maxValueChanged.trigger(maxValue);
     }
 }
 
