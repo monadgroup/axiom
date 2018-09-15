@@ -18,6 +18,7 @@
 #include "editor/model/ModelRoot.h"
 #include "editor/model/Project.h"
 #include "editor/model/actions/SetNumModeAction.h"
+#include "editor/model/actions/SetNumRangeAction.h"
 #include "editor/model/actions/SetNumValueAction.h"
 #include "editor/model/objects/NumControl.h"
 
@@ -34,6 +35,7 @@ NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control) {
     control->valueChanged.connect(this, &NumControlItem::controlValueChanged);
     control->displayModeChanged.connect(this, &NumControlItem::triggerUpdate);
+    control->rangeChanged.connect(this, &NumControlItem::triggerUpdate);
     control->connections().itemAdded.connect(this, &NumControlItem::triggerUpdate);
     control->connections().itemRemoved.connect(this, &NumControlItem::triggerUpdate);
 
@@ -79,7 +81,7 @@ QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
     unreachable;
 }
 
-QRegularExpression numRegex("^\\s*([\\d\\.]+)\\s*([kmgt])*?(v|a|q|hz|beats|ms|s|μ|db)?\\s*$",
+QRegularExpression numRegex("^\\s*([-e\\d\\.]+)\\s*([kmgt])*?(v|a|q|hz|beats|ms|s|μ|db)?\\s*$",
                             QRegularExpression::CaseInsensitiveOption);
 
 bool NumControlItem::unformatString(const QString &str, float *valOut, AxiomModel::FormType *formOut) {
@@ -259,7 +261,7 @@ void NumControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     }
 
     auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
-    auto delta = (float) (motionDelta / accuracy);
+    auto delta = (float) (motionDelta / accuracy * (control->maxValue() - control->minValue()));
     setNormalizedValue(clampValue(beforeDragVal.withLR(beforeDragVal.left - delta, beforeDragVal.right - delta)));
 }
 
@@ -284,7 +286,7 @@ void NumControlItem::wheelEvent(QGraphicsSceneWheelEvent *event) {
         return;
     }
 
-    auto delta = event->delta() / 1200.f;
+    auto delta = event->delta() / 1200.f * (control->maxValue() - control->minValue());
     auto cVal = getNormalizedValue();
     setNormalizedValue(clampValue(cVal.withLR(cVal.left + delta, cVal.right + delta)));
 }
@@ -317,6 +319,8 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto zeroAction = menu.addAction("Set to &0");
     auto oneAction = menu.addAction("Set to &1");
     menu.addSeparator();
+    auto setRangeAction = menu.addAction("Set &Range...");
+    menu.addSeparator();
     buildMenuEnd(menu);
 
     auto selectedAction = menu.exec(event->screenPos());
@@ -333,6 +337,50 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         setValue(control->value().withLR(0, 0));
     } else if (selectedAction == oneAction) {
         setValue(control->value().withLR(1, 1));
+    } else if (selectedAction == setRangeAction) {
+        // convert the min/max values to whatever form we current have
+        AxiomModel::NumValue currentMinMax = {control->minValue(), control->maxValue(), AxiomModel::FormType::CONTROL};
+        auto originalForm = control->value().form;
+        if (control->root()->runtime()) {
+            currentMinMax = control->root()->runtime()->convertNum(originalForm, currentMinMax);
+        }
+
+        auto editor = new FloatingValueEditor(formatNumber(currentMinMax.left, currentMinMax.form) % " - " %
+                                                  formatNumber(currentMinMax.right, currentMinMax.form),
+                                              event->scenePos());
+        scene()->addItem(editor);
+        connect(editor, &FloatingValueEditor::valueSubmitted, this,
+                [this, currentMinMax, originalForm](QString newRangeStr) {
+                    auto separatorIndex = newRangeStr.indexOf('-');
+                    if (separatorIndex < 0) return;
+
+                    auto leftStr = newRangeStr.left(separatorIndex);
+                    auto rightStr = newRangeStr.mid(separatorIndex + 1);
+
+                    std::cout << "Left str = '" << leftStr.toStdString() << "' Right str = '" << rightStr.toStdString()
+                              << "'" << std::endl;
+
+                    float minValue = currentMinMax.left, maxValue = currentMinMax.right;
+                    AxiomModel::FormType minForm = originalForm, maxForm = originalForm;
+
+                    if (!unformatString(leftStr, &minValue, &minForm)) return;
+                    if (!unformatString(rightStr, &maxValue, &maxForm)) return;
+
+                    // convert back to CONTROL space
+                    AxiomModel::NumValue newMinMax = {minValue, maxValue, minForm};
+                    if (control->root()->runtime()) {
+                        newMinMax = control->root()->runtime()->convertNum(AxiomModel::FormType::CONTROL, newMinMax);
+                    }
+
+                    // swap values if necessary
+                    if (newMinMax.left > newMinMax.right) {
+                        std::swap(newMinMax.left, newMinMax.right);
+                    }
+
+                    control->root()->history().append(SetNumRangeAction::create(control->uuid(), control->minValue(),
+                                                                                control->maxValue(), newMinMax.left,
+                                                                                newMinMax.right, control->root()));
+                });
     }
 }
 
@@ -383,9 +431,9 @@ QString NumControlItem::valueAsString(NumValue num) {
 }
 
 NumValue NumControlItem::stringAsValue(const QString &str, NumValue oldNum) {
-    auto commaIndex = str.indexOf('/');
-    auto leftStr = commaIndex >= 0 ? str.left(commaIndex) : str;
-    auto rightStr = commaIndex >= 0 ? str.mid(commaIndex + 1) : str;
+    auto separatorIndex = str.indexOf('/');
+    auto leftStr = separatorIndex >= 0 ? str.left(separatorIndex) : str;
+    auto rightStr = separatorIndex >= 0 ? str.mid(separatorIndex + 1) : str;
 
     float leftNum = oldNum.left, rightNum = oldNum.right;
     AxiomModel::FormType leftForm = oldNum.form, rightForm = oldNum.form;

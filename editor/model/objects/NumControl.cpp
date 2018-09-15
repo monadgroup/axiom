@@ -25,17 +25,11 @@ void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode)
     }
 }
 
-void NumControl::setMinValue(float minValue) {
-    if (minValue != _minValue) {
+void NumControl::setRange(float minValue, float maxValue) {
+    if (minValue != _minValue || maxValue != _maxValue) {
         _minValue = minValue;
-        minValueChanged.trigger(minValue);
-    }
-}
-
-void NumControl::setMaxValue(float maxValue) {
-    if (maxValue != _maxValue) {
         _maxValue = maxValue;
-        maxValueChanged.trigger(maxValue);
+        rangeChanged.trigger(minValue, maxValue);
     }
 }
 

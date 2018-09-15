@@ -73,6 +73,8 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
         return "Set Graph Tag";
     case ActionType::SET_GRAPH_TENSION:
         return "Set Graph Tension";
+    case ActionType::SET_NUM_RANGE:
+        return "Set Num Range";
     }
 
     unreachable;

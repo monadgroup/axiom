@@ -31,6 +31,7 @@ namespace AxiomModel {
     class MoveGraphPointAction;
     class SetGraphTagAction;
     class SetGraphTensionAction;
+    class SetNumRangeAction;
 
     namespace HistorySerializer {
         void serialize(const HistoryList &history, QDataStream &stream);
@@ -154,5 +155,10 @@ namespace AxiomModel {
 
         std::unique_ptr<SetGraphTensionAction> deserializeSetGraphTensionAction(QDataStream &stream, uint32_t version,
                                                                                 ModelRoot *root);
+
+        void serializeSetNumRangeAction(SetNumRangeAction *action, QDataStream &stream);
+
+        std::unique_ptr<SetNumRangeAction> deserializeSetNumRangeAction(QDataStream &stream, uint32_t version,
+                                                                        ModelRoot *root);
     }
 }

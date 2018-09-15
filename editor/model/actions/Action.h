@@ -40,6 +40,7 @@ namespace AxiomModel {
             MOVE_GRAPH_POINT,
             SET_GRAPH_TAG,
             SET_GRAPH_TENSION,
+            SET_NUM_RANGE
         };
 
         Action(ActionType actionType, ModelRoot *root);

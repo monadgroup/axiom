@@ -20,6 +20,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/SetGraphTagAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/SetGraphTensionAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/SetNumModeAction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/SetNumRangeAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/SetNumValueAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/SetShowNameAction.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/UnexposeControlAction.cpp")

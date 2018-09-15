@@ -25,6 +25,7 @@
 #include "../actions/SetGraphTagAction.h"
 #include "../actions/SetGraphTensionAction.h"
 #include "../actions/SetNumModeAction.h"
+#include "../actions/SetNumRangeAction.h"
 #include "../actions/SetNumValueAction.h"
 #include "../actions/SetShowNameAction.h"
 #include "../actions/UnexposeControlAction.h"
@@ -112,6 +113,8 @@ void HistorySerializer::serializeAction(AxiomModel::Action *action, QDataStream 
         serializeSetGraphTagAction(setGraphTag, stream);
     else if (auto setGraphTension = dynamic_cast<SetGraphTensionAction *>(action))
         serializeSetGraphTensionAction(setGraphTension, stream);
+    else if (auto setNumRange = dynamic_cast<SetNumRangeAction *>(action))
+        serializeSetNumRangeAction(setNumRange, stream);
     else
         unreachable;
 }
@@ -170,6 +173,8 @@ std::unique_ptr<Action> HistorySerializer::deserializeAction(QDataStream &stream
         return deserializeSetGraphTagAction(stream, version, root);
     case Action::ActionType::SET_GRAPH_TENSION:
         return deserializeSetGraphTensionAction(stream, version, root);
+    case Action::ActionType::SET_NUM_RANGE:
+        return deserializeSetNumRangeAction(stream, version, root);
     }
 
     unreachable;
@@ -739,4 +744,29 @@ std::unique_ptr<SetGraphTensionAction>
     stream >> newTension;
 
     return SetGraphTensionAction::create(controlUuid, index, oldTension, newTension, root);
+}
+
+void HistorySerializer::serializeSetNumRangeAction(AxiomModel::SetNumRangeAction *action, QDataStream &stream) {
+    stream << action->uuid();
+    stream << action->beforeMin();
+    stream << action->beforeMax();
+    stream << action->afterMin();
+    stream << action->afterMax();
+}
+
+std::unique_ptr<SetNumRangeAction> HistorySerializer::deserializeSetNumRangeAction(QDataStream &stream,
+                                                                                   uint32_t version,
+                                                                                   AxiomModel::ModelRoot *root) {
+    QUuid uuid;
+    stream >> uuid;
+    float beforeMin;
+    stream >> beforeMin;
+    float beforeMax;
+    stream >> beforeMax;
+    float afterMin;
+    stream >> afterMin;
+    float afterMax;
+    stream >> afterMax;
+
+    return SetNumRangeAction::create(uuid, beforeMin, beforeMax, afterMin, afterMax, root);
 }

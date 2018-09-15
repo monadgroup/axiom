@@ -11,8 +11,7 @@ namespace AxiomModel {
         enum class DisplayMode { PLUG, KNOB, SLIDER_H, SLIDER_V, TOGGLE };
 
         AxiomCommon::Event<DisplayMode> displayModeChanged;
-        AxiomCommon::Event<float> minValueChanged;
-        AxiomCommon::Event<float> maxValueChanged;
+        AxiomCommon::Event<float, float> rangeChanged;
         AxiomCommon::Event<const NumValue &> valueChanged;
 
         NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
@@ -30,11 +29,9 @@ namespace AxiomModel {
 
         float minValue() const { return _minValue; }
 
-        void setMinValue(float minValue);
-
         float maxValue() const { return _maxValue; }
 
-        void setMaxValue(float maxValue);
+        void setRange(float minValue, float maxValue);
 
         const NumValue &value() const { return _value; }
 
