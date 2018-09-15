@@ -450,6 +450,8 @@ impl Runtime {
             }
         }
 
+        println!("{:#?}", transaction);
+
         let patch_start = Instant::now();
         let (new_block_ids, affected_surfaces) = self.patch_transaction(transaction);
         println!(

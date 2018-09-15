@@ -64,7 +64,26 @@ impl<'a> AstLower<'a> {
 
     fn lower_assign_expr(&mut self, expr: &'a ast::AssignExpression) -> LowerResult {
         let rhs = self.lower_expression(&expr.right)?;
-        let right_values = self.get_expr_values(&expr.right.pos, rhs)?;
+        let expr_right_values = self.get_expr_values(&expr.right.pos, rhs)?;
+
+        let right_values = match expr.operator {
+            ast::OperatorType::Identity => expr_right_values,
+            _ => {
+                let left_vals = expr
+                    .left
+                    .data
+                    .assignments
+                    .iter()
+                    .map(|assignment| self.lower_assignable(assignment))
+                    .collect::<CompileResult<Vec<_>>>()?;
+                self.lower_math_op(
+                    &expr.left.pos,
+                    &left_vals,
+                    &expr_right_values,
+                    expr.operator,
+                )?
+            }
+        };
 
         match self.lower_assign(&expr.left, right_values) {
             Some(err) => Err(err),
@@ -84,6 +103,8 @@ impl<'a> AstLower<'a> {
         // the return value is _always_ what was on the RHS!
 
         // todo: this currently doesn't work with operators like += !
+
+        // perform math operation if needed
 
         if lvalue.data.assignments.len() == 1 {
             let tuple = self.squash_values(right_vals);
@@ -327,7 +348,8 @@ impl<'a> AstLower<'a> {
         pos: &ast::SourceRange,
         expr: &'a ast::PostfixExpression,
     ) -> LowerResult {
-        let vals = expr.left
+        let vals = expr
+            .left
             .data
             .assignments
             .iter()
@@ -355,7 +377,8 @@ impl<'a> AstLower<'a> {
         expr: &'a ast::UnaryExpression,
     ) -> LowerResult {
         let value = self.lower_expression(expr.expr.as_ref())?;
-        let results = self.get_expr_values(pos, value)?
+        let results = self
+            .get_expr_values(pos, value)?
             .iter()
             .map(|value| self.add_num_unary_op(pos, expr.operation, *value))
             .collect::<CompileResult<Vec<_>>>()?;
@@ -363,7 +386,8 @@ impl<'a> AstLower<'a> {
     }
 
     fn lower_tuple_expr(&mut self, expr: &'a ast::TupleExpression) -> LowerResult {
-        let values: CompileResult<Vec<_>> = expr.expressions
+        let values: CompileResult<Vec<_>> = expr
+            .expressions
             .iter()
             .map(|expression| self.lower_expression(expression))
             .collect();
@@ -614,7 +638,8 @@ impl<'a> AstLower<'a> {
         // if all arguments are constant, we can try to constant-fold
         // todo: might be good to only actually try this if we know the function can be constant
         // folded
-        let const_args: Option<Vec<_>> = args.iter()
+        let const_args: Option<Vec<_>> = args
+            .iter()
             .map(|index| self.get_constant(*index).cloned())
             .collect();
         if let Some(const_args) = const_args {
