@@ -11,12 +11,14 @@ namespace AxiomBackend {
 
     class ConfigurationPortal {
     public:
+        size_t _key;
+
         uint64_t id;
         PortalType type;
         PortalValue value;
         std::string name;
 
-        ConfigurationPortal(uint64_t id, PortalType type, PortalValue value, std::string name);
+        ConfigurationPortal(size_t _key, uint64_t id, PortalType type, PortalValue value, std::string name);
 
         bool operator==(const ConfigurationPortal &other) const;
 

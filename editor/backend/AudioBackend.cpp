@@ -171,7 +171,9 @@ void AudioBackend::internalUpdateConfiguration() {
     assert(_editor->window()->project()->rootSurface()->compileMeta());
     auto &compileMeta = *_editor->window()->project()->rootSurface()->compileMeta();
 
-    for (const auto &surfacePortal : compileMeta.portals) {
+    for (size_t portalIndex = 0; portalIndex < compileMeta.portals.size(); portalIndex++) {
+        const auto &surfacePortal = compileMeta.portals[portalIndex];
+
         PortalType newType;
         switch (surfacePortal.portalType) {
         case AxiomModel::PortalControl::PortalType::INPUT:
@@ -195,15 +197,15 @@ void AudioBackend::internalUpdateConfiguration() {
             break;
         }
 
-        newPortals.emplace_back(surfacePortal.id, newType, newValue, surfacePortal.name.toStdString());
+        newPortals.emplace_back(portalIndex, surfacePortal.id, newType, newValue, surfacePortal.name.toStdString());
     }
     std::sort(newPortals.begin(), newPortals.end());
 
     // update the value pointers
     portalValues.clear();
     portalValues.reserve(newPortals.size());
-    for (size_t i = 0; i < newPortals.size(); i++) {
-        portalValues.push_back(_editor->window()->runtime()->getPortalPtr(i));
+    for (const auto &newPortal : newPortals) {
+        portalValues.push_back(_editor->window()->runtime()->getPortalPtr(newPortal._key));
     }
 
     // no point continuing if the portals are the same

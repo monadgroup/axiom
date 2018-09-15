@@ -2,9 +2,9 @@
 
 using namespace AxiomBackend;
 
-ConfigurationPortal::ConfigurationPortal(uint64_t id, AxiomBackend::PortalType type, AxiomBackend::PortalValue value,
-                                         std::string name)
-    : id(id), type(type), value(value), name(std::move(name)) {}
+ConfigurationPortal::ConfigurationPortal(size_t _key, uint64_t id, AxiomBackend::PortalType type,
+                                         AxiomBackend::PortalValue value, std::string name)
+    : _key(_key), id(id), type(type), value(value), name(std::move(name)) {}
 
 bool ConfigurationPortal::operator==(const AxiomBackend::ConfigurationPortal &other) const {
     return type == other.type && value == other.value && name == other.name;
