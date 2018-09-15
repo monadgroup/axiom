@@ -85,7 +85,7 @@ pub fn gen_math_op_statement(
             node.ctx.context.bool_type(),
             &|lhs, rhs| node.ctx.b.build_or(lhs, rhs, "num.or.vec"),
         ),
-        OperatorType::LogicalEqual => int_to_float_vec(
+        OperatorType::LogicalEqual => unsigned_int_to_float_vec(
             node,
             node.ctx.b.build_float_compare(
                 FloatPredicate::OEQ,
@@ -94,7 +94,7 @@ pub fn gen_math_op_statement(
                 "num.vec.equal",
             ),
         ),
-        OperatorType::LogicalNotEqual => int_to_float_vec(
+        OperatorType::LogicalNotEqual => unsigned_int_to_float_vec(
             node,
             node.ctx.b.build_float_compare(
                 FloatPredicate::ONE,
@@ -103,25 +103,25 @@ pub fn gen_math_op_statement(
                 "num.vec.notequal",
             ),
         ),
-        OperatorType::LogicalGt => int_to_float_vec(
+        OperatorType::LogicalGt => unsigned_int_to_float_vec(
             node,
             node.ctx
                 .b
                 .build_float_compare(FloatPredicate::OGT, left_vec, right_vec, "num.vec.gt"),
         ),
-        OperatorType::LogicalLt => int_to_float_vec(
+        OperatorType::LogicalLt => unsigned_int_to_float_vec(
             node,
             node.ctx
                 .b
                 .build_float_compare(FloatPredicate::OLT, left_vec, right_vec, "num.vec.lt"),
         ),
-        OperatorType::LogicalGte => int_to_float_vec(
+        OperatorType::LogicalGte => unsigned_int_to_float_vec(
             node,
             node.ctx
                 .b
                 .build_float_compare(FloatPredicate::OGE, left_vec, right_vec, "num.vec.gte"),
         ),
-        OperatorType::LogicalLte => int_to_float_vec(
+        OperatorType::LogicalLte => unsigned_int_to_float_vec(
             node,
             node.ctx
                 .b
@@ -143,7 +143,11 @@ fn apply_int_op(
     let left_int = float_vec_to_int(node, lhs, num_type);
     let right_int = float_vec_to_int(node, rhs, num_type);
     let result_int = op(left_int, right_int);
-    int_to_float_vec(node, result_int)
+    node.ctx.b.build_signed_int_to_float(
+        result_int,
+        node.ctx.context.f32_type().vec_type(2),
+        "num.vec.float",
+    )
 }
 
 fn float_vec_to_int(node: &BlockContext, vec: VectorValue, num_type: IntType) -> VectorValue {
@@ -152,8 +156,8 @@ fn float_vec_to_int(node: &BlockContext, vec: VectorValue, num_type: IntType) ->
         .build_float_to_signed_int(vec, num_type.vec_type(2), "num.vec.int")
 }
 
-fn int_to_float_vec(node: &BlockContext, int: VectorValue) -> VectorValue {
-    node.ctx.b.build_signed_int_to_float(
+fn unsigned_int_to_float_vec(node: &BlockContext, int: VectorValue) -> VectorValue {
+    node.ctx.b.build_unsigned_int_to_float(
         int,
         node.ctx.context.f32_type().vec_type(2),
         "num.vec.float",
