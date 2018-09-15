@@ -25,6 +25,8 @@ namespace AxiomGui {
 
         static QString formatNumber(float val, AxiomModel::FormType form);
 
+        static bool unformatString(const QString &str, float *valOut, AxiomModel::FormType *formOut);
+
         QPainterPath shape() const override;
 
     protected:
@@ -75,14 +77,14 @@ namespace AxiomGui {
         SliderPainter sliderPainter;
         TogglePainter togglePainter;
 
-        QString valueAsString(AxiomModel::NumValue num);
+        AxiomModel::NumValue clampValue(AxiomModel::NumValue value);
+
+        AxiomModel::NumValue getNormalizedValue();
+
+        void setNormalizedValue(AxiomModel::NumValue val);
+
+        static QString valueAsString(AxiomModel::NumValue num);
 
         AxiomModel::NumValue stringAsValue(const QString &str, AxiomModel::NumValue oldNum);
-
-        static AxiomModel::NumValue clampVal(const AxiomModel::NumValue &val);
-
-        AxiomModel::NumValue getCVal() const;
-
-        void setCVal(AxiomModel::NumValue v) const;
     };
 }

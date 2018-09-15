@@ -25,13 +25,6 @@ void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode)
     }
 }
 
-void NumControl::setChannel(AxiomModel::NumControl::Channel channel) {
-    if (channel != _channel) {
-        _channel = channel;
-        channelChanged.trigger(channel);
-    }
-}
-
 void NumControl::setMinValue(float minValue) {
     if (minValue != _minValue) {
         _minValue = minValue;

@@ -1,10 +1,11 @@
 #include "SpaceCompleter.h"
 
+#include <QtCore/QRegularExpression>
 #include <QtWidgets/QLineEdit>
 
 using namespace AxiomGui;
 
-QRegExp spaceRegex("\\s");
+QRegularExpression spaceRegex("\\s");
 
 SpaceCompleter::SpaceCompleter(const QStringList &tags, QLineEdit *editor, QObject *parent)
     : QCompleter(tags, parent), editor(editor) {}

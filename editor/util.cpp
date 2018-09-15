@@ -22,8 +22,8 @@ QColor AxiomUtil::mixColor(QColor a, QColor b, float mix) {
                   a.blue() + static_cast<int>((b.blue() - a.blue()) * mix));
 }
 
-bool AxiomUtil::strToFloat(QString str, float &result) {
-    std::istringstream iss(str.toStdString());
-    iss >> std::noskipws >> result;
-    return iss.eof() && !iss.fail();
+bool AxiomUtil::strToFloat(const QString &str, float &result) {
+    bool ok;
+    result = str.toFloat(&ok);
+    return ok;
 }

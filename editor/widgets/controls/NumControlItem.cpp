@@ -1,5 +1,6 @@
 #include "NumControlItem.h"
 
+#include <QtCore/QRegularExpression>
 #include <QtCore/QStringBuilder>
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
@@ -64,7 +65,7 @@ QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
         return getNoteName(val);
     case AxiomModel::FormType::FREQUENCY:
         return val < 1000 ? static_cast<QString>(QString::number(val, 'f', 2) % " Hz")
-                          : static_cast<QString>(QString::number(val / 1000, 'f', 2) % "KHz");
+                          : static_cast<QString>(QString::number(val / 1000, 'f', 2) % " KHz");
     case AxiomModel::FormType::BEATS:
         return QString::number(val, 'f', 1) % " beats";
     case AxiomModel::FormType::SECONDS:
@@ -78,25 +79,86 @@ QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
     unreachable;
 }
 
+QRegularExpression numRegex("^\\s*([\\d\\.]+)\\s*([kmgt])*?(v|a|q|hz|beats|ms|s|μ|db)?\\s*$",
+                            QRegularExpression::CaseInsensitiveOption);
+
+bool NumControlItem::unformatString(const QString &str, float *valOut, AxiomModel::FormType *formOut) {
+    auto match = numRegex.match(str);
+    if (!match.hasMatch()) return false;
+
+    auto inputNum = match.captured(1);
+    auto inputModifier = match.captured(2);
+    auto inputForm = match.captured(3);
+
+    float parsedNum = *valOut;
+    if (!AxiomUtil::strToFloat(inputNum, parsedNum)) return false;
+
+    if (inputModifier.compare("k", Qt::CaseInsensitive) == 0) {
+        parsedNum *= 1e3;
+    } else if (inputModifier.compare("m", Qt::CaseInsensitive) == 0) {
+        parsedNum *= 1e6;
+    } else if (inputModifier.compare("g", Qt::CaseInsensitive) == 0) {
+        parsedNum *= 1e12;
+    } else if (inputModifier.compare("t", Qt::CaseInsensitive) == 0) {
+        parsedNum *= 1e15;
+    }
+
+    if (inputForm.compare("v", Qt::CaseInsensitive) == 0) {
+        *formOut = AxiomModel::FormType::OSCILLATOR;
+    } else if (inputForm.compare("a", Qt::CaseInsensitive) == 0) {
+        *formOut = AxiomModel::FormType::AMPLITUDE;
+    } else if (inputForm.compare("q", Qt::CaseInsensitive) == 0) {
+        *formOut = AxiomModel::FormType::Q;
+    } else if (inputForm.compare("hz", Qt::CaseInsensitive) == 0) {
+        *formOut = AxiomModel::FormType::FREQUENCY;
+    } else if (inputForm.compare("beats", Qt::CaseInsensitive) == 0 ||
+               inputForm.compare("b", Qt::CaseInsensitive) == 0) {
+        *formOut = AxiomModel::FormType::BEATS;
+    } else if (inputForm.compare("ms", Qt::CaseInsensitive) == 0) {
+        parsedNum /= 1000;
+        *formOut = AxiomModel::FormType::SECONDS;
+    } else if (inputForm.compare("s", Qt::CaseInsensitive) == 0) {
+        *formOut = AxiomModel::FormType::SECONDS;
+    } else if (inputForm.compare("μ", Qt::CaseInsensitive) == 0 ||
+               inputForm.compare("samples", Qt::CaseInsensitive) == 0) {
+        *formOut = AxiomModel::FormType::SAMPLES;
+    } else if (inputForm.compare("db", Qt::CaseInsensitive) == 0) {
+        *formOut = AxiomModel::FormType::DB;
+    } else {
+        *formOut = AxiomModel::FormType::NONE;
+    }
+
+    *valOut = parsedNum;
+    return true;
+}
+
 void NumControlItem::paintControl(QPainter *painter) {
+    auto normalizedVal = getNormalizedValue();
+
+    // rescale and clamp value correctly
+    normalizedVal = normalizedVal.withLR(
+        std::clamp((normalizedVal.left - control->minValue()) / (control->maxValue() - control->minValue()), 0.f, 1.f),
+        std::clamp((normalizedVal.right - control->minValue()) / (control->maxValue() - control->minValue()), 0.f,
+                   1.f));
+
     switch (control->displayMode()) {
     case NumControl::DisplayMode::PLUG:
-        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), getCVal(), CommonColors::numNormal);
+        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), normalizedVal, CommonColors::numNormal);
         break;
     case NumControl::DisplayMode::KNOB:
-        knobPainter.paint(painter, aspectBoundingRect(), hoverState(), getCVal(), CommonColors::numNormal,
+        knobPainter.paint(painter, aspectBoundingRect(), hoverState(), normalizedVal, CommonColors::numNormal,
                           CommonColors::numActive);
         break;
     case NumControl::DisplayMode::SLIDER_H:
-        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), getCVal(), false, CommonColors::numNormal,
+        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), normalizedVal, false, CommonColors::numNormal,
                             CommonColors::numActive);
         break;
     case NumControl::DisplayMode::SLIDER_V:
-        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), getCVal(), true, CommonColors::numNormal,
+        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), normalizedVal, true, CommonColors::numNormal,
                             CommonColors::numActive);
         break;
     case NumControl::DisplayMode::TOGGLE:
-        togglePainter.paint(painter, drawBoundingRect(), hoverState(), getCVal());
+        togglePainter.paint(painter, drawBoundingRect(), hoverState(), normalizedVal);
         break;
     }
 }
@@ -165,15 +227,15 @@ void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     event->accept();
 
     if (control->displayMode() == NumControl::DisplayMode::TOGGLE) {
-        auto cv = getCVal();
+        auto cv = getNormalizedValue();
         auto isActive = cv.left != 0 || cv.right != 0;
         auto newVal = !isActive;
-        setCVal(cv.withLR(newVal, newVal));
+        setNormalizedValue(cv.withLR(newVal, newVal));
         control->root()->history().append(
             SetNumValueAction::create(control->uuid(), cv, control->value(), control->root()));
     } else if (!isDragging) {
         isDragging = true;
-        beforeDragVal = getCVal();
+        beforeDragVal = clampValue(getNormalizedValue());
         mouseStartPoint = event->pos();
     }
 }
@@ -198,7 +260,7 @@ void NumControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
     auto delta = (float) (motionDelta / accuracy);
-    setCVal(beforeDragVal.withLR(beforeDragVal.left - delta, beforeDragVal.right - delta));
+    setNormalizedValue(clampValue(beforeDragVal.withLR(beforeDragVal.left - delta, beforeDragVal.right - delta)));
 }
 
 void NumControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
@@ -223,8 +285,8 @@ void NumControlItem::wheelEvent(QGraphicsSceneWheelEvent *event) {
     }
 
     auto delta = event->delta() / 1200.f;
-    auto cVal = getCVal();
-    setCVal(cVal.withLR(cVal.left + delta, cVal.right + delta));
+    auto cVal = getNormalizedValue();
+    setNormalizedValue(clampValue(cVal.withLR(cVal.left + delta, cVal.right + delta)));
 }
 
 void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
@@ -260,11 +322,11 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == setValAction) {
-        auto editor = new FloatingValueEditor(valueAsString(getCVal()), event->scenePos());
+        auto editor = new FloatingValueEditor(valueAsString(control->value()), event->scenePos());
         scene()->addItem(editor);
         connect(editor, &FloatingValueEditor::valueSubmitted, this, &NumControlItem::setStringValue);
     } else if (selectedAction == copyValAction) {
-        clipboard->setText(valueAsString(getCVal()));
+        clipboard->setText(valueAsString(control->value()));
     } else if (selectedAction == pasteValAction) {
         setStringValue(clipboard->text());
     } else if (selectedAction == zeroAction) {
@@ -288,7 +350,7 @@ void NumControlItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 }
 
 void NumControlItem::setStringValue(QString value) {
-    setValue(stringAsValue(value, getCVal()));
+    setValue(stringAsValue(value, control->value()));
 }
 
 void NumControlItem::controlValueChanged() {
@@ -313,92 +375,54 @@ void NumControlItem::setValue(NumValue value) {
 }
 
 QString NumControlItem::valueAsString(NumValue num) {
-    switch (control->channel()) {
-    case NumControl::Channel::LEFT:
-        return QString::number(num.left);
-    case NumControl::Channel::RIGHT:
-        return QString::number(num.right);
-    case NumControl::Channel::BOTH: {
-        if (num.left == num.right)
-            return QString::number(num.left);
-        else
-            return QString::number(num.left) + ", " + QString::number(num.right);
+    if (fabsf(num.left - num.right) < 0.01f) {
+        return formatNumber(num.left, num.form);
+    } else {
+        return formatNumber(num.left, num.form) % " / " % formatNumber(num.right, num.form);
     }
-    }
-    unreachable;
 }
 
 NumValue NumControlItem::stringAsValue(const QString &str, NumValue oldNum) {
-    auto commaIndex = str.indexOf(',');
+    auto commaIndex = str.indexOf('/');
     auto leftStr = commaIndex >= 0 ? str.left(commaIndex) : str;
     auto rightStr = commaIndex >= 0 ? str.mid(commaIndex + 1) : str;
 
-    float leftNum, rightNum;
-    if (!AxiomUtil::strToFloat(str, leftNum)) leftNum = oldNum.left;
-    if (!AxiomUtil::strToFloat(str, rightNum)) rightNum = oldNum.right;
+    float leftNum = oldNum.left, rightNum = oldNum.right;
+    AxiomModel::FormType leftForm = oldNum.form, rightForm = oldNum.form;
+    unformatString(leftStr, &leftNum, &leftForm);
+    unformatString(rightStr, &rightNum, &rightForm);
 
-    switch (control->channel()) {
-    case NumControl::Channel::LEFT:
-        return oldNum.withL(leftNum);
-    case NumControl::Channel::RIGHT:
-        return oldNum.withR(rightNum);
-    case NumControl::Channel::BOTH:
-        return oldNum.withLR(leftNum, rightNum);
-    }
-    unreachable;
+    // if no form was provided, default to the current one
+    if (leftForm == FormType::NONE) leftForm = rightForm;
+    if (leftForm == FormType::NONE) leftForm = oldNum.form;
+
+    return {leftNum, rightNum, leftForm};
 }
 
-NumValue NumControlItem::clampVal(const NumValue &val) {
-    return val.withLR(val.left < 0 ? 0 : val.left > 1 ? 1 : val.left,
-                      val.right < 0 ? 0 : val.right > 1 ? 1 : val.right);
+AxiomModel::NumValue NumControlItem::clampValue(AxiomModel::NumValue value) {
+    return value.withLR(std::clamp(value.left, control->minValue(), control->maxValue()),
+                        std::clamp(value.right, control->minValue(), control->maxValue()));
 }
 
-NumValue NumControlItem::getCVal() const {
-    auto v = control->value();
+AxiomModel::NumValue NumControlItem::getNormalizedValue() {
+    auto val = control->value();
     if (control->root()->runtime()) {
-        v = control->root()->runtime()->convertNum(FormType::CONTROL, v);
+        val = control->root()->runtime()->convertNum(FormType::CONTROL, val);
     }
-    v = clampVal(v);
-
-    switch (control->channel()) {
-    case NumControl::Channel::LEFT:
-        return v.withLR(v.left, v.left);
-    case NumControl::Channel::RIGHT:
-        return v.withLR(v.right, v.right);
-    case NumControl::Channel::BOTH:
-        return v;
-    }
-    unreachable;
+    return val;
 }
 
-void NumControlItem::setCVal(NumValue v) const {
-    NumValue setVal;
-
-    switch (control->channel()) {
-    case NumControl::Channel::LEFT:
-        setVal = control->value().withL(v.left);
-        break;
-    case NumControl::Channel::RIGHT:
-        setVal = control->value().withR(v.right);
-        break;
-    case NumControl::Channel::BOTH:
-        setVal = control->value().withLR(v.left, v.right);
-        break;
+void NumControlItem::setNormalizedValue(AxiomModel::NumValue val) {
+    auto currentForm = control->value().form;
+    if (control->root()->runtime()) {
+        val = control->root()->runtime()->convertNum(currentForm, val);
     }
-
-    setVal = clampVal(setVal).withForm(FormType::CONTROL);
-    control->setValue(setVal);
+    control->setValue(val);
 }
 
 QString NumControlItem::getLabelText() const {
     if ((hoverState() || isShowingValue) && !displayNameOverride) {
-        auto controlVal = control->value();
-        if (fabsf(controlVal.left - controlVal.right) < 0.01) {
-            return formatNumber(controlVal.left, controlVal.form);
-        } else {
-            return QString("%1 / %2").arg(formatNumber(controlVal.left, controlVal.form),
-                                          formatNumber(controlVal.right, controlVal.form));
-        }
+        return valueAsString(control->value());
     } else {
         return ControlItem::getLabelText();
     }
