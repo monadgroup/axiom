@@ -47,7 +47,10 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
         findLater<Control *>(root->controls(), _exposingUuid).then([this, uuid](Control *exposing) {
             exposing->setExposerUuid(uuid);
 
-            exposing->nameChanged.connect(this, &Control::setName);
+            exposing->nameChanged.connect(this, [this, exposing](const QString &) { updateExposingName(exposing); });
+            exposing->surface()->node()->nameChanged.connect(
+                this, [this, exposing](const QString &) { updateExposingName(exposing); });
+            updateExposingName(exposing);
         });
     }
 }
@@ -209,5 +212,14 @@ void Control::updateExposerRemoved() {
     if (!_exposingUuid.isNull()) {
         auto baseControl = findMaybe(root()->controls(), _exposingUuid);
         if (baseControl) (*baseControl)->setExposerUuid(QUuid());
+    }
+}
+
+void Control::updateExposingName(AxiomModel::Control *exposingControl) {
+    // if the control doesn't have a name, use the name of the node
+    if (exposingControl->name().isEmpty()) {
+        setName(exposingControl->surface()->node()->name());
+    } else {
+        setName(exposingControl->name());
     }
 }

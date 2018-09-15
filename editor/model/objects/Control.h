@@ -141,5 +141,7 @@ namespace AxiomModel {
         void updateSinkPos();
 
         void updateExposerRemoved();
+
+        void updateExposingName(Control *exposingControl);
     };
 }
