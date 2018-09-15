@@ -158,7 +158,7 @@ void GraphControl::removePoint(uint8_t index) {
 
 void GraphControl::saveState() {
     if (runtimePointers()) {
-        auto controlState = (GraphControlCurveState *) runtimePointers()->data;
+        auto controlState = (GraphControlCurveState *) runtimePointers()->shared;
         _savedState = std::make_unique<GraphControlCurveState>();
         memcpy(_savedState.get(), controlState, sizeof(*controlState));
     }
@@ -166,7 +166,7 @@ void GraphControl::saveState() {
 
 void GraphControl::restoreState() {
     if (_savedState && runtimePointers()) {
-        auto controlState = (GraphControlCurveState *) runtimePointers()->data;
+        auto controlState = (GraphControlCurveState *) runtimePointers()->shared;
         memcpy(controlState, _savedState.get(), sizeof(*controlState));
         _savedState.reset();
     }
