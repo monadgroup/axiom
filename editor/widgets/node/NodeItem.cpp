@@ -41,6 +41,10 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
+const qreal CONTROL_ZVALUE = 1;
+const qreal EDGE_RESIZE_ZVALUE = 2;
+const qreal CORNER_RESIZE_ZVALUE = 3;
+
 NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node(node) {
     node->nameChanged.connect(this, &NodeItem::triggerUpdate);
     node->extractedChanged.connect(this, &NodeItem::triggerUpdate);
@@ -67,7 +71,7 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
                                                  NodeSurfaceCanvas::nodeGridSize.height() * node->minSize().height()));
 
             // ensure corners are on top of edges
-            resizer->setZValue(i > 3 ? 2 : 1);
+            resizer->setZValue(i > 3 ? CORNER_RESIZE_ZVALUE : EDGE_RESIZE_ZVALUE);
 
             connect(this, &NodeItem::resizerPosChanged, resizer, &ItemResizer::setPos);
             connect(this, &NodeItem::resizerSizeChanged, resizer, &ItemResizer::setSize);
@@ -323,7 +327,7 @@ void NodeItem::addControl(Control *control) {
     }
 
     assert(item);
-    item->setZValue(2);
+    item->setZValue(CONTROL_ZVALUE);
     item->setParentItem(this);
 }
 
