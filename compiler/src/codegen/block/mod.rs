@@ -125,6 +125,7 @@ pub fn build_construct_func(module: &Module, cache: &ObjectCache, block: &Block)
                     LifecycleFunc::Construct,
                     ptrs.value,
                     ptrs.data,
+                    ptrs.shared,
                 );
 
                 if let Some(ui_ptr) = ptrs.ui {
@@ -135,6 +136,7 @@ pub fn build_construct_func(module: &Module, cache: &ObjectCache, block: &Block)
                         LifecycleFunc::Construct,
                         ptrs.value,
                         ptrs.data,
+                        ptrs.shared,
                         ui_ptr,
                     );
                 }
@@ -171,6 +173,7 @@ pub fn build_update_func(module: &Module, cache: &ObjectCache, block: &Block) {
                     LifecycleFunc::Update,
                     ptrs.value,
                     ptrs.data,
+                    ptrs.shared,
                 );
 
                 if let Some(ui_ptr) = ptrs.ui {
@@ -181,6 +184,7 @@ pub fn build_update_func(module: &Module, cache: &ObjectCache, block: &Block) {
                         LifecycleFunc::Update,
                         ptrs.value,
                         ptrs.data,
+                        ptrs.shared,
                         ui_ptr,
                     );
                 }
@@ -212,6 +216,7 @@ pub fn build_destruct_func(module: &Module, cache: &ObjectCache, block: &Block) 
                         LifecycleFunc::Destruct,
                         ptrs.value,
                         ptrs.data,
+                        ptrs.shared,
                         ui_ptr,
                     );
                 }
@@ -223,6 +228,7 @@ pub fn build_destruct_func(module: &Module, cache: &ObjectCache, block: &Block) 
                     LifecycleFunc::Destruct,
                     ptrs.value,
                     ptrs.data,
+                    ptrs.shared,
                 );
             }
 

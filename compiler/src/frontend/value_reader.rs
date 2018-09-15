@@ -10,12 +10,14 @@ pub type NodePtr = *mut c_void;
 pub type BlockPtr = *mut c_void;
 pub type ControlValuePtr = *mut c_void;
 pub type ControlDataPtr = *mut c_void;
+pub type ControlSharedPtr = *mut c_void;
 pub type ControlUiPtr = *mut c_void;
 
 #[repr(C)]
 pub struct ControlPointers {
     pub value: ControlValuePtr,
     pub data: ControlDataPtr,
+    pub shared: ControlSharedPtr,
     pub ui: ControlUiPtr,
 }
 
@@ -89,8 +91,9 @@ pub fn get_control_ptrs(
     ControlPointers {
         value: unsafe { *base_ptr },
         data: unsafe { *base_ptr.offset(1) },
+        shared: unsafe { *base_ptr.offset(2) },
         ui: if cache.target().include_ui {
-            unsafe { *base_ptr.offset(2) }
+            unsafe { *base_ptr.offset(3) }
         } else {
             null_mut()
         },

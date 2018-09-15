@@ -29,7 +29,17 @@ pub fn remap_pointer_source(
             unsafe { initialized.const_in_bounds_gep(&gep_indices) }.into()
         }
         PointerSource::Scratch(path) => {
-            let gep_indices = get_gep_indices(context, path.iter().map(|itm| *itm as u64));
+            let gep_indices = get_gep_indices(
+                context,
+                iter::once(0).chain(path.iter().map(|itm| *itm as u64)),
+            );
+            unsafe { scratch.const_in_bounds_gep(&gep_indices) }.into()
+        }
+        PointerSource::Shared(path) => {
+            let gep_indices = get_gep_indices(
+                context,
+                iter::once(1).chain(path.iter().map(|itm| *itm as u64)),
+            );
             unsafe { scratch.const_in_bounds_gep(&gep_indices) }.into()
         }
         PointerSource::Socket(socket, path) => {
@@ -82,8 +92,11 @@ pub fn build_scratch_global(
     name: &str,
 ) -> GlobalValue {
     let layout = cache.surface_layout(surface).unwrap();
-    let global = util::get_or_create_global(module, name, &layout.scratch_struct);
-    global.set_initializer(&layout.scratch_struct.const_null());
+    let virtual_scratch = module
+        .get_context()
+        .struct_type(&[&layout.scratch_struct, &layout.shared_struct], false);
+    let global = util::get_or_create_global(module, name, &virtual_scratch);
+    global.set_initializer(&virtual_scratch.const_null());
     //global.set_section("maxim.scratch");
     global
 }
@@ -100,7 +113,8 @@ pub fn build_sockets_global(
     pointers_name: &str,
 ) -> SocketsGlobal {
     let context = module.get_context();
-    let struct_types: Vec<_> = root.sockets
+    let struct_types: Vec<_> = root
+        .sockets
         .iter()
         .map(|vartype| remap_type(&context, vartype))
         .collect();

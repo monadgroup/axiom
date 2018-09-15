@@ -41,6 +41,7 @@ namespace MaximFrontend {
     struct ControlPointers {
         void *value;
         void *data;
+        void *shared;
         void *ui;
     };
 
