@@ -56,8 +56,8 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
 }
 
 void VstAudioBackend::insertParameter(size_t insertIndex, VstParameter param) {
-    while (parameters.size() < insertIndex) parameters.emplace_back(std::nullopt);
-    portalParameterMap.emplace(insertIndex, param.portalIndex);
+    while (parameters.size() <= insertIndex) parameters.emplace_back(std::nullopt);
+    portalParameterMap.emplace(param.portalIndex, insertIndex);
     parameters[insertIndex] = std::move(param);
 }
 
