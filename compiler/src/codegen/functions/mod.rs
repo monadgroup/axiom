@@ -3,6 +3,7 @@ mod channel_function;
 mod defer_function;
 mod delay_function;
 mod function_context;
+mod indexed_function;
 mod note_function;
 mod num_function;
 mod oscillator_function;
@@ -32,6 +33,7 @@ pub use self::biquad_filter_function::*;
 pub use self::channel_function::*;
 pub use self::defer_function::*;
 pub use self::delay_function::*;
+pub use self::indexed_function::*;
 pub use self::note_function::*;
 pub use self::num_function::*;
 pub use self::oscillator_function::*;
@@ -154,7 +156,8 @@ map_functions! {
     PeakBqFilter => PeakBqFilterFunction,
     Note => NoteFunction,
     Voices => VoicesFunction,
-    Channel => ChannelFunction
+    Channel => ChannelFunction,
+    Indexed => IndexedFunction
 }
 
 fn get_lifecycle_func(
@@ -256,7 +259,8 @@ fn build_update_func(
         let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
         let return_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
         let has_vararg = function.var_arg().is_some();
-        let arg_pointers: Vec<_> = ctx.func
+        let arg_pointers: Vec<_> = ctx
+            .func
             .params()
             .take(if has_vararg {
                 ctx.func.count_params() - 1

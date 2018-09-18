@@ -99,7 +99,8 @@ define_functions! {
     RmpOsc = "rmpOsc" func![(Num, ?Num) -> Num],
     Note = "note" func![(Midi) -> Tuple(vec![Num, Num, Num, Num])],
     Voices = "voices" func![(Midi, VarType::new_array(Num)) -> VarType::new_array(Midi)],
-    Channel = "channel" func![(Midi, Num) -> Midi]
+    Channel = "channel" func![(Midi, Num) -> Midi],
+    Indexed = "indexed" func![(Num) -> VarType::new_array(Num)]
 }
 
 #[derive(Debug, Clone)]
