@@ -85,5 +85,7 @@ namespace AxiomGui {
         static QString valueAsString(AxiomModel::NumValue num);
 
         AxiomModel::NumValue stringAsValue(const QString &str, AxiomModel::NumValue oldNum);
+
+        void editNumRange(bool selectStep, QPointF pos);
     };
 }

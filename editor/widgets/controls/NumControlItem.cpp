@@ -342,6 +342,7 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto oneAction = menu.addAction("Set to &1");
     menu.addSeparator();
     auto setRangeAction = menu.addAction("Set &Range...");
+    auto setStepAction = menu.addAction("Set &Step...");
     menu.addSeparator();
     buildMenuEnd(menu);
 
@@ -360,69 +361,9 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == oneAction) {
         setValue(control->value().withLR(1, 1));
     } else if (selectedAction == setRangeAction) {
-        // convert the min/max values to whatever form we current have
-        AxiomModel::NumValue currentMinMax = {control->minValue(), control->maxValue(), AxiomModel::FormType::CONTROL};
-        auto originalForm = control->value().form;
-        if (control->root()->runtime()) {
-            currentMinMax = control->root()->runtime()->convertNum(originalForm, currentMinMax);
-        }
-
-        auto editor = new FloatingValueEditor(formatNumber(currentMinMax.left, currentMinMax.form) % " - " %
-                                                  formatNumber(currentMinMax.right, currentMinMax.form) % " @ " %
-                                                  QString::number(control->step()),
-                                              event->scenePos());
-        scene()->addItem(editor);
-        connect(
-            editor, &FloatingValueEditor::valueSubmitted, this, [this, currentMinMax, originalForm](QString newStr) {
-                auto stepSeparatorIndex = newStr.indexOf('@');
-
-                QString rangeStr, stepStr;
-                if (stepSeparatorIndex < 0) {
-                    rangeStr = std::move(newStr);
-                    stepStr = "";
-                } else {
-                    rangeStr = newStr.left(stepSeparatorIndex);
-                    stepStr = newStr.mid(stepSeparatorIndex + 1);
-                }
-
-                auto minMaxSeparatorIndex = rangeStr.indexOf('-');
-                auto newMin = control->minValue();
-                auto newMax = control->maxValue();
-                if (minMaxSeparatorIndex > 0) {
-                    auto minStr = rangeStr.left(minMaxSeparatorIndex);
-                    auto maxStr = rangeStr.mid(minMaxSeparatorIndex + 1);
-
-                    float minValue = currentMinMax.left, maxValue = currentMinMax.right;
-                    AxiomModel::FormType minForm = originalForm, maxForm = originalForm;
-
-                    if (!unformatString(minStr, &minValue, &minForm)) return;
-                    if (!unformatString(maxStr, &maxValue, &maxForm)) return;
-
-                    // convert back to CONTROL space
-                    AxiomModel::NumValue newMinMax = {minValue, maxValue, minForm};
-                    if (control->root()->runtime()) {
-                        newMinMax = control->root()->runtime()->convertNum(AxiomModel::FormType::CONTROL, newMinMax);
-                    }
-
-                    // swap values if necessary
-                    if (newMinMax.left > newMinMax.right) {
-                        std::swap(newMinMax.left, newMinMax.right);
-                    }
-
-                    newMin = newMinMax.left;
-                    newMax = newMinMax.right;
-                }
-
-                bool stepValid;
-                uint32_t newStep = (uint32_t) stepStr.trimmed().toUInt(&stepValid);
-                if (!stepValid) newStep = control->step();
-
-                if (newMin != control->minValue() || newMax != control->maxValue() || newStep != control->step()) {
-                    control->root()->history().append(
-                        SetNumRangeAction::create(control->uuid(), control->minValue(), control->maxValue(),
-                                                  control->step(), newMin, newMax, newStep, control->root()));
-                }
-            });
+        editNumRange(false, event->scenePos());
+    } else if (selectedAction == setStepAction) {
+        editNumRange(true, event->scenePos());
     }
 }
 
@@ -524,4 +465,80 @@ QString NumControlItem::getLabelText() const {
     } else {
         return ControlItem::getLabelText();
     }
+}
+
+void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
+    // convert the min/max values to whatever form we current have
+    AxiomModel::NumValue currentMinMax = {control->minValue(), control->maxValue(), AxiomModel::FormType::CONTROL};
+    auto originalForm = control->value().form;
+    if (control->root()->runtime()) {
+        currentMinMax = control->root()->runtime()->convertNum(originalForm, currentMinMax);
+    }
+
+    auto minMaxDefaultStr = formatNumber(currentMinMax.left, currentMinMax.form) % " - " %
+                            formatNumber(currentMinMax.right, currentMinMax.form);
+    auto stepStr = QString::number(control->step());
+    QString stepSeparator = " @ ";
+
+    int selectStart, selectEnd;
+    if (selectStep) {
+        selectStart = minMaxDefaultStr.size() + stepSeparator.size();
+        selectEnd = selectStart + stepStr.size();
+    } else {
+        selectStart = 0;
+        selectEnd = minMaxDefaultStr.size();
+    }
+
+    auto editor = new FloatingValueEditor(minMaxDefaultStr % stepSeparator % stepStr, pos, selectStart, selectEnd);
+    scene()->addItem(editor);
+    connect(editor, &FloatingValueEditor::valueSubmitted, this, [this, currentMinMax, originalForm](QString newStr) {
+        auto stepSeparatorIndex = newStr.indexOf('@');
+
+        QString rangeStr, stepStr;
+        if (stepSeparatorIndex < 0) {
+            rangeStr = std::move(newStr);
+            stepStr = "";
+        } else {
+            rangeStr = newStr.left(stepSeparatorIndex);
+            stepStr = newStr.mid(stepSeparatorIndex + 1);
+        }
+
+        auto minMaxSeparatorIndex = rangeStr.indexOf('-');
+        auto newMin = control->minValue();
+        auto newMax = control->maxValue();
+        if (minMaxSeparatorIndex > 0) {
+            auto minStr = rangeStr.left(minMaxSeparatorIndex);
+            auto maxStr = rangeStr.mid(minMaxSeparatorIndex + 1);
+
+            float minValue = currentMinMax.left, maxValue = currentMinMax.right;
+            AxiomModel::FormType minForm = originalForm, maxForm = originalForm;
+
+            if (!unformatString(minStr, &minValue, &minForm)) return;
+            if (!unformatString(maxStr, &maxValue, &maxForm)) return;
+
+            // convert back to CONTROL space
+            AxiomModel::NumValue newMinMax = {minValue, maxValue, minForm};
+            if (control->root()->runtime()) {
+                newMinMax = control->root()->runtime()->convertNum(AxiomModel::FormType::CONTROL, newMinMax);
+            }
+
+            // swap values if necessary
+            if (newMinMax.left > newMinMax.right) {
+                std::swap(newMinMax.left, newMinMax.right);
+            }
+
+            newMin = newMinMax.left;
+            newMax = newMinMax.right;
+        }
+
+        bool stepValid;
+        uint32_t newStep = (uint32_t) stepStr.trimmed().toUInt(&stepValid);
+        if (!stepValid) newStep = control->step();
+
+        if (newMin != control->minValue() || newMax != control->maxValue() || newStep != control->step()) {
+            control->root()->history().append(SetNumRangeAction::create(control->uuid(), control->minValue(),
+                                                                        control->maxValue(), control->step(), newMin,
+                                                                        newMax, newStep, control->root()));
+        }
+    });
 }

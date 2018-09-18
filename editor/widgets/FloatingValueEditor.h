@@ -10,7 +10,7 @@ namespace AxiomGui {
         Q_OBJECT
 
     public:
-        explicit FloatingValueEditor(QString initialValue, QPointF scenePos);
+        FloatingValueEditor(QString initialValue, QPointF scenePos, int selectStart = 0, int selectEnd = 0);
 
     protected:
         bool eventFilter(QObject *object, QEvent *event) override;
