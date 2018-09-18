@@ -83,9 +83,20 @@ namespace AxiomBackend {
         // shown. This could be called at any time.
         virtual bool doesSaveInternally() const = 0;
 
+        // To be implemented by the audio backend, called from the UI thread when an automation portal value changes.
+        // This is not called every sample a value changes, but every "update cycle" (roughly every 16 milliseconds)
+        // where the value changed from the last cycle. The default implementation does nothing.
+        virtual void automationValueChanged(size_t portalId, NumValue value);
+
+        // To be implemented by the audio backend, called from the UI thread to determine if the user is able to
+        // "fiddle" automation portals. This should return true on backends where a potential host needs a value change
+        // to interact with the portal. The default implementation returns false.
+        virtual bool canFiddleAutomation() const;
+
         // Called internally. Not stable APIs.
         void setEditor(AxiomEditor *editor) { _editor = editor; }
         void internalUpdateConfiguration();
+        size_t internalRemapPortal(size_t index);
 
     private:
         struct QueuedEvent {

@@ -148,6 +148,12 @@ DefaultConfiguration AudioBackend::createDefaultConfiguration() {
                                  DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
 }
 
+void AudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumValue value) {}
+
+bool AudioBackend::canFiddleAutomation() const {
+    return false;
+}
+
 void AudioBackend::internalUpdateConfiguration() {
     std::vector<ConfigurationPortal> newPortals;
     assert(_editor->window()->project()->rootSurface()->compileMeta());
@@ -200,4 +206,11 @@ void AudioBackend::internalUpdateConfiguration() {
 
     currentPortals = std::move(currentConfiguration.portals);
     hasCurrent = true;
+}
+
+size_t AudioBackend::internalRemapPortal(size_t index) {
+    for (size_t portalIndex = 0; portalIndex < currentPortals.size(); portalIndex++) {
+        if (currentPortals[portalIndex]._key == index) return portalIndex;
+    }
+    unreachable;
 }

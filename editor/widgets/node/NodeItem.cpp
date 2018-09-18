@@ -29,6 +29,7 @@
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/NumControl.h"
 #include "editor/model/objects/PortalControl.h"
+#include "editor/model/objects/PortalNode.h"
 #include "editor/model/objects/RootSurface.h"
 #include "editor/model/serialize/ModelObjectSerializer.h"
 #include "editor/model/serialize/ProjectSerializer.h"
@@ -261,6 +262,19 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     saveModuleAction->setEnabled(!copyableItems.empty());
     menu.addSeparator();
 
+    QAction *fiddleAction = nullptr;
+    auto rootSurface = dynamic_cast<RootSurface *>(node->surface());
+    PortalControl *portalControl = nullptr;
+    if (auto portalNode = dynamic_cast<PortalNode *>(node); portalNode && rootSurface && rootSurface->compileMeta() &&
+                                                            node->root()->project()->backend()->canFiddleAutomation()) {
+        portalControl =
+            AxiomModel::takeAt(dynamicCast<PortalControl *>((*portalNode->controls().value())->controls()), 0);
+        if (portalControl->portalType() == PortalControl::PortalType::AUTOMATION) {
+            fiddleAction = menu.addAction(tr("&Fiddle"));
+            menu.addSeparator();
+        }
+    }
+
     auto deleteAction = menu.addAction(tr("&Delete"));
     deleteAction->setEnabled(node->isDeletable());
     auto selectedAction = menu.exec(event->screenPos());
@@ -298,6 +312,20 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         }
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
+    } else if (selectedAction == fiddleAction && portalControl) {
+        // remap the automation node into its portal index
+        auto &compileMeta = *rootSurface->compileMeta();
+
+        for (size_t portalIndex = 0; portalIndex < compileMeta.portals.size(); portalIndex++) {
+            const auto &portal = compileMeta.portals[portalIndex];
+            if (portal.id == portalControl->portalId()) {
+                auto backend = node->root()->project()->backend();
+                auto remappedIndex = backend->internalRemapPortal(portalIndex);
+                auto currentPortalValue = **backend->getAudioPortal(remappedIndex);
+                backend->automationValueChanged(remappedIndex, currentPortalValue);
+                break;
+            }
+        }
     }
 }
 
