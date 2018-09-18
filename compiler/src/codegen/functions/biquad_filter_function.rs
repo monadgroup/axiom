@@ -167,7 +167,8 @@ fn gen_biquad_call(
     let freq_vec = freq_num.get_vec(func.ctx.b);
     let q_vec = q_num.get_vec(func.ctx.b);
 
-    let cached_freq = func.ctx
+    let cached_freq = func
+        .ctx
         .b
         .build_load(&cached_freq_ptr, "cachedfreq")
         .into_vector_value();
@@ -175,7 +176,8 @@ fn gen_biquad_call(
         func.ctx
             .b
             .build_float_compare(FloatPredicate::ONE, freq_vec, cached_freq, "freqchanged");
-    let cached_q = func.ctx
+    let cached_q = func
+        .ctx
         .b
         .build_load(&cached_q_ptr, "cachedq")
         .into_vector_value();
@@ -185,7 +187,8 @@ fn gen_biquad_call(
             .build_float_compare(FloatPredicate::ONE, q_vec, cached_q, "qchanged");
     let needs_regen_vec = func.ctx.b.build_or(freq_changed, q_changed, "needsregen");
     let needs_regen_vec = if let Some(cached_gain_ptr) = cached_gain_ptr {
-        let cached_gain = func.ctx
+        let cached_gain = func
+            .ctx
             .b
             .build_load(&cached_gain_ptr, "cachedgain")
             .into_vector_value();
@@ -216,10 +219,12 @@ fn gen_biquad_call(
         "",
     );
 
-    let needs_regen_true_block = func.ctx
+    let needs_regen_true_block = func
+        .ctx
         .context
         .append_basic_block(&func.ctx.func, "needsregen.true");
-    let needs_regen_continue_block = func.ctx
+    let needs_regen_continue_block = func
+        .ctx
         .context
         .append_basic_block(&func.ctx.func, "needsregen.continue");
     func.ctx.b.build_conditional_branch(
@@ -236,7 +241,8 @@ fn gen_biquad_call(
     }
 
     // ensure Q is 0.5 or above to avoid dividing by zero later on
-    let q_vec = func.ctx
+    let q_vec = func
+        .ctx
         .b
         .build_call(
             &max_intrinsic,
@@ -264,11 +270,13 @@ fn gen_biquad_call(
             .into_vector_value(),
         "",
     );
-    let left_k = func.ctx
+    let left_k = func
+        .ctx
         .b
         .build_call(
             &tan_intrinsic,
-            &[&func.ctx
+            &[&func
+                .ctx
                 .b
                 .build_extract_element(&k_param, &left_element, "")],
             "leftk",
@@ -277,11 +285,13 @@ fn gen_biquad_call(
         .left()
         .unwrap()
         .into_float_value();
-    let right_k = func.ctx
+    let right_k = func
+        .ctx
         .b
         .build_call(
             &tan_intrinsic,
-            &[&func.ctx
+            &[&func
+                .ctx
                 .b
                 .build_extract_element(&k_param, &right_element, "")],
             "rightk",
@@ -290,10 +300,12 @@ fn gen_biquad_call(
         .left()
         .unwrap()
         .into_float_value();
-    let k_value = func.ctx
+    let k_value = func
+        .ctx
         .b
         .build_insert_element(
-            &func.ctx
+            &func
+                .ctx
                 .b
                 .build_insert_element(
                     &func.ctx.context.f32_type().vec_type(2).get_undef(),
@@ -319,7 +331,8 @@ fn gen_biquad_call(
     func.ctx.b.position_at_end(&needs_regen_continue_block);
     let input_vec = input_num.get_vec(func.ctx.b);
     let input_form = input_num.get_form(func.ctx.b);
-    let result_vec = func.ctx
+    let result_vec = func
+        .ctx
         .b
         .build_call(
             &internal_biquad_func,
@@ -390,7 +403,8 @@ fn low_filter_generate_coefficients(
     func.ctx.b.build_store(&a0_ptr, &a0);
 
     // a1 = 2 * a0
-    let a1 = func.ctx
+    let a1 = func
+        .ctx
         .b
         .build_float_mul(util::get_vec_spread(func.ctx.context, 2.), a0, "");
     func.ctx.b.build_store(&a1_ptr, &a1);
@@ -463,7 +477,8 @@ fn high_filter_generate_coefficients(
     func.ctx.b.build_store(&a0_ptr, &a0);
 
     // a1 = -2 * a0
-    let a1 = func.ctx
+    let a1 = func
+        .ctx
         .b
         .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), a0, "");
     func.ctx.b.build_store(&a1_ptr, &a1);
@@ -520,7 +535,8 @@ fn peak_filter_generate_coefficients(
     let abs_intrinsic = intrinsics::fabs_v2f32(func.ctx.module);
 
     let gain_vec = gain_vec.unwrap();
-    let v = func.ctx
+    let v = func
+        .ctx
         .b
         .build_call(
             &pow_intrinsic,
@@ -564,13 +580,16 @@ fn peak_filter_generate_coefficients(
         "",
     );
 
-    let positive_gain_block = func.ctx
+    let positive_gain_block = func
+        .ctx
         .context
         .append_basic_block(&func.ctx.func, "positivegain");
-    let negative_gain_block = func.ctx
+    let negative_gain_block = func
+        .ctx
         .context
         .append_basic_block(&func.ctx.func, "negativegain");
-    let continue_block = func.ctx
+    let continue_block = func
+        .ctx
         .context
         .append_basic_block(&func.ctx.func, "continue");
     func.ctx.b.build_conditional_branch(

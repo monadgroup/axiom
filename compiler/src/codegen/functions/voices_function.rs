@@ -39,13 +39,16 @@ impl Function for VoicesFunction {
         let result_array = ArrayValue::new(result);
         result_array.set_bitmap(func.ctx.b, &func.ctx.context.i32_type().const_int(0, false));
 
-        let init_index_ptr = func.ctx
+        let init_index_ptr = func
+            .ctx
             .allocb
             .build_alloca(&func.ctx.context.i8_type(), "initindex.ptr");
-        let event_index_ptr = func.ctx
+        let event_index_ptr = func
+            .ctx
             .allocb
             .build_alloca(&func.ctx.context.i8_type(), "eventindex.ptr");
-        let inner_index_ptr = func.ctx
+        let inner_index_ptr = func
+            .ctx
             .allocb
             .build_alloca(&func.ctx.context.i8_type(), "innerindex.ptr");
 
@@ -60,46 +63,59 @@ impl Function for VoicesFunction {
 
         let event_count = input_midi.get_count(func.ctx.b);
 
-        let init_loop_check_block = func.ctx
+        let init_loop_check_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "initloop.check");
-        let init_loop_run_block = func.ctx
+        let init_loop_run_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "initloop.run");
-        let init_active_block = func.ctx
+        let init_active_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "initactive.true");
 
-        let event_loop_check_block = func.ctx
+        let event_loop_check_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "eventloop.check");
-        let event_loop_run_block = func.ctx
+        let event_loop_run_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "eventloop.run");
-        let event_loop_finish_block = func.ctx
+        let event_loop_finish_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "eventloop.finish");
 
-        let note_on_loop_check_block = func.ctx
+        let note_on_loop_check_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteonloop.check");
-        let note_on_loop_run_block = func.ctx
+        let note_on_loop_run_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteonloop.run");
-        let note_on_loop_assign_block = func.ctx
+        let note_on_loop_assign_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteonloop.assign");
 
-        let note_else_loop_check_block = func.ctx
+        let note_else_loop_check_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteelseloop.check");
-        let note_else_loop_run_block = func.ctx
+        let note_else_loop_run_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteelseloop.run");
-        let note_else_loop_active_block = func.ctx
+        let note_else_loop_active_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteelseloop.active");
-        let note_else_loop_assign_block = func.ctx
+        let note_else_loop_assign_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteelseloop.assign");
 
@@ -338,7 +354,8 @@ impl Function for VoicesFunction {
                         "noteindex.ptr",
                     )
                 };
-                let current_note = func.ctx
+                let current_note = func
+                    .ctx
                     .b
                     .build_load(&current_note_ptr, "noteindex")
                     .into_int_value();

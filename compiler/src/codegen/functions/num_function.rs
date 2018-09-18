@@ -81,13 +81,15 @@ impl Function for ClampFunction {
         result_num.set_form(func.ctx.b, &result_form);
 
         let result_vec = x_num.get_vec(func.ctx.b);
-        let result_vec = func.ctx
+        let result_vec = func
+            .ctx
             .b
             .build_call(&min_intrinsic, &[&result_vec, &max_vec], "mined", false)
             .left()
             .unwrap()
             .into_vector_value();
-        let result_vec = func.ctx
+        let result_vec = func
+            .ctx
             .b
             .build_call(&max_intrinsic, &[&result_vec, &min_vec], "clamped", false)
             .left()
@@ -124,7 +126,8 @@ impl Function for PanFunction {
 
         let x_vec = x_num.get_vec(func.ctx.b);
         let clamped_pan = pan_num.get_vec(func.ctx.b);
-        let clamped_pan = func.ctx
+        let clamped_pan = func
+            .ctx
             .b
             .build_call(
                 &min_intrinsic,
@@ -135,7 +138,8 @@ impl Function for PanFunction {
             .left()
             .unwrap()
             .into_vector_value();
-        let clamped_pan = func.ctx
+        let clamped_pan = func
+            .ctx
             .b
             .build_call(
                 &max_intrinsic,
@@ -148,7 +152,8 @@ impl Function for PanFunction {
             .into_vector_value();
 
         let left_index = func.ctx.context.i32_type().const_int(0, false);
-        let left_pan = func.ctx
+        let left_pan = func
+            .ctx
             .b
             .build_extract_element(&clamped_pan, &left_index, "pan.left")
             .into_float_value();
@@ -182,7 +187,8 @@ impl Function for PanFunction {
         );
 
         let right_index = func.ctx.context.i32_type().const_int(1, false);
-        let right_pan = func.ctx
+        let right_pan = func
+            .ctx
             .b
             .build_extract_element(&clamped_pan, &right_index, "pan.right")
             .into_float_value();
@@ -215,7 +221,8 @@ impl Function for PanFunction {
             "",
         );
 
-        let base_vec = func.ctx
+        let base_vec = func
+            .ctx
             .b
             .build_insert_element(
                 &func.ctx.context.f32_type().vec_type(2).get_undef(),
@@ -224,12 +231,14 @@ impl Function for PanFunction {
                 "",
             )
             .into_vector_value();
-        let base_vec = func.ctx
+        let base_vec = func
+            .ctx
             .b
             .build_insert_element(&base_vec, &right_base, &right_index, "")
             .into_vector_value();
 
-        let multiplier_vec = func.ctx
+        let multiplier_vec = func
+            .ctx
             .b
             .build_call(
                 &sqrt_intrinsic,
@@ -273,7 +282,8 @@ impl Function for CombineFunction {
             &func.ctx.context.i32_type().const_int(0, false),
             &func.ctx.context.i32_type().const_int(3, false),
         ]);
-        let shuffled_vec = func.ctx
+        let shuffled_vec = func
+            .ctx
             .b
             .build_shuffle_vector(&left_vec, &right_vec, &shuffle_vec, "");
         result_num.set_vec(func.ctx.b, &shuffled_vec);
@@ -344,7 +354,8 @@ impl Function for SequenceFunction {
             func.ctx
                 .b
                 .build_int_z_extend(vararg_count, func.ctx.context.i32_type(), "");
-        let vararg_count_vec = func.ctx
+        let vararg_count_vec = func
+            .ctx
             .b
             .build_insert_element(
                 &func.ctx.context.i32_type().vec_type(2).get_undef(),
@@ -353,7 +364,8 @@ impl Function for SequenceFunction {
                 "",
             )
             .into_vector_value();
-        let vararg_count_vec = func.ctx
+        let vararg_count_vec = func
+            .ctx
             .b
             .build_insert_element(
                 &vararg_count_vec,
@@ -369,7 +381,8 @@ impl Function for SequenceFunction {
             func.ctx.context.i32_type().vec_type(2),
             "",
         );
-        let safe_index = func.ctx
+        let safe_index = func
+            .ctx
             .b
             .build_call(
                 &eucrem_intrinsic,
@@ -381,7 +394,8 @@ impl Function for SequenceFunction {
             .unwrap()
             .into_vector_value();
 
-        let left_index = func.ctx
+        let left_index = func
+            .ctx
             .b
             .build_extract_element(
                 &safe_index,
@@ -389,7 +403,8 @@ impl Function for SequenceFunction {
                 "",
             )
             .into_int_value();
-        let right_index = func.ctx
+        let right_index = func
+            .ctx
             .b
             .build_extract_element(
                 &safe_index,
@@ -405,7 +420,8 @@ impl Function for SequenceFunction {
             &func.ctx.context.i32_type().const_int(0, false),
             &func.ctx.context.i32_type().const_int(3, false),
         ]);
-        let result_vec = func.ctx
+        let result_vec = func
+            .ctx
             .b
             .build_shuffle_vector(&left_vec, &right_vec, &shuffle_vec, "");
         result_num.set_vec(func.ctx.b, &result_vec);
@@ -436,27 +452,33 @@ impl Function for MixdownFunction {
         let first_num_form = first_num.get_form(func.ctx.b);
         result_num.set_form(func.ctx.b, &first_num_form);
 
-        let loop_check_block = func.ctx
+        let loop_check_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loopcheck");
-        let loop_run_block = func.ctx
+        let loop_run_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "looprun");
-        let item_active_true_block = func.ctx
+        let item_active_true_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "itemactive.true");
-        let loop_continue_block = func.ctx
+        let loop_continue_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loopcontinue");
 
-        let result_vec = func.ctx
+        let result_vec = func
+            .ctx
             .allocb
             .build_alloca(&func.ctx.context.f32_type().vec_type(2), "resultvec.ptr");
         func.ctx
             .b
             .build_store(&result_vec, &util::get_vec_spread(func.ctx.context, 0.));
 
-        let index_ptr = func.ctx
+        let index_ptr = func
+            .ctx
             .allocb
             .build_alloca(&func.ctx.context.i32_type(), "index.ptr");
         func.ctx
@@ -510,7 +532,8 @@ impl Function for MixdownFunction {
         func.ctx.b.build_unconditional_branch(&loop_check_block);
 
         func.ctx.b.position_at_end(&loop_continue_block);
-        let result_vec = func.ctx
+        let result_vec = func
+            .ctx
             .b
             .build_load(&result_vec, "resultvec")
             .into_vector_value();
@@ -538,19 +561,22 @@ impl Function for NoiseFunction {
             )
         });
 
-        let left_rand = func.ctx
+        let left_rand = func
+            .ctx
             .b
             .build_call(&noise_func, &[], "rand.left", false)
             .left()
             .unwrap()
             .into_int_value();
-        let right_rand = func.ctx
+        let right_rand = func
+            .ctx
             .b
             .build_call(&noise_func, &[], "rand.right", false)
             .left()
             .unwrap()
             .into_int_value();
-        let rand_vec = func.ctx
+        let rand_vec = func
+            .ctx
             .b
             .build_insert_element(
                 &func.ctx.context.i32_type().vec_type(2).get_undef(),
@@ -559,7 +585,8 @@ impl Function for NoiseFunction {
                 "rand",
             )
             .into_vector_value();
-        let rand_vec = func.ctx
+        let rand_vec = func
+            .ctx
             .b
             .build_insert_element(
                 &rand_vec,
@@ -592,7 +619,8 @@ impl Function for NoiseFunction {
         result_num.set_vec(func.ctx.b, &rand_val);
         result_num.set_form(
             func.ctx.b,
-            &func.ctx
+            &func
+                .ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Oscillator as u64, false),

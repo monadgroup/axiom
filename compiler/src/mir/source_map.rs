@@ -51,7 +51,8 @@ impl SourceMap {
     }
 
     pub fn map_to_external(&self, internal: usize) -> Vec<usize> {
-        let mut mapped_items: Vec<_> = self.map
+        let mut mapped_items: Vec<_> = self
+            .map
             .iter()
             .filter(move |&(_, internal_ref)| internal_ref.node() == internal)
             .map(|(&external, _)| external)

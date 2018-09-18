@@ -28,7 +28,8 @@ fn gen_scalar_call(
     let result_form = NumValue::new(args[0]).get_form(func.ctx.b);
     result_num.set_form(func.ctx.b, &result_form);
 
-    let vec_values: Vec<_> = args.iter()
+    let vec_values: Vec<_> = args
+        .iter()
         .map(|ptr| NumValue::new(*ptr).get_vec(func.ctx.b))
         .collect();
     let const_left_index = func.ctx.context.i32_type().const_int(0, false);
@@ -44,7 +45,8 @@ fn gen_scalar_call(
         })
         .collect();
     let left_basic_values: Vec<_> = left_values.iter().map(|val| val as &BasicValue).collect();
-    let left_result = func.ctx
+    let left_result = func
+        .ctx
         .b
         .build_call(&call_func, &left_basic_values, "result.left", false)
         .left()
@@ -60,13 +62,15 @@ fn gen_scalar_call(
         })
         .collect();
     let right_basic_values: Vec<_> = right_values.iter().map(|val| val as &BasicValue).collect();
-    let right_result = func.ctx
+    let right_result = func
+        .ctx
         .b
         .build_call(&call_func, &right_basic_values, "result.right", false)
         .left()
         .unwrap();
 
-    let result_vec = func.ctx
+    let result_vec = func
+        .ctx
         .b
         .build_insert_element(
             &func.ctx.context.f32_type().vec_type(2).get_undef(),
@@ -75,7 +79,8 @@ fn gen_scalar_call(
             "vec.withleft",
         )
         .into_vector_value();
-    let result_vec = func.ctx
+    let result_vec = func
+        .ctx
         .b
         .build_insert_element(&result_vec, &right_result, &const_right_index, "vec")
         .into_vector_value();

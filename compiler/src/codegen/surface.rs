@@ -105,13 +105,15 @@ fn build_node_call(
             };
 
             // build a for loop to iterate over each instance
-            let index_ptr = ctx.allocb
+            let index_ptr = ctx
+                .allocb
                 .build_alloca(&ctx.context.i8_type(), "voiceindex.ptr");
             ctx.b
                 .build_store(&index_ptr, &ctx.context.i8_type().const_int(0, false));
 
             let check_block = ctx.context.append_basic_block(&ctx.func, "voice.check");
-            let check_active_block = ctx.context
+            let check_active_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "voice.checkactive");
             let run_block = ctx.context.append_basic_block(&ctx.func, "voice.run");
             let end_block = ctx.context.append_basic_block(&ctx.func, "voice.end");
@@ -120,7 +122,8 @@ fn build_node_call(
             ctx.b.position_at_end(&check_block);
 
             let current_index = ctx.b.build_load(&index_ptr, "voiceindex").into_int_value();
-            let iter_limit = ctx.context
+            let iter_limit = ctx
+                .context
                 .i8_type()
                 .const_int(values::ARRAY_CAPACITY as u64, false);
             let can_continue_loop = ctx.b.build_int_compare(
@@ -142,7 +145,8 @@ fn build_node_call(
             );
             ctx.b.build_store(&index_ptr, &next_index);
 
-            let index_32 = ctx.b
+            let index_32 = ctx
+                .b
                 .build_int_z_extend(current_index, ctx.context.i32_type(), "");
             if let Some(active_bitmap) = valid_bitmap {
                 // check if this iteration is active according to the bitmap

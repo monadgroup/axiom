@@ -78,25 +78,32 @@ impl DelayFunction {
             let has_buffer_true_block = ctx.context.append_basic_block(&ctx.func, "hasbuffer.true");
             let has_samples_true_block =
                 ctx.context.append_basic_block(&ctx.func, "hassamples.true");
-            let has_samples_continue_block = ctx.context
+            let has_samples_continue_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "hassamples.continue");
             let has_buffer_false_block =
                 ctx.context.append_basic_block(&ctx.func, "hasbuffer.false");
-            let has_buffer_continue_block = ctx.context
+            let has_buffer_continue_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "hasbuffer.continue");
-            let needs_realloc_true_block = ctx.context
+            let needs_realloc_true_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "needsrealloc.true");
-            let needs_realloc_continue_block = ctx.context
+            let needs_realloc_continue_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "needsrealloc.continue");
 
-            let result_ptr = ctx.allocb
+            let result_ptr = ctx
+                .allocb
                 .build_alloca(&ctx.context.f32_type(), "resultval");
-            let buffer_ptr = ctx.b
+            let buffer_ptr = ctx
+                .b
                 .build_load(&buffer_ptr_ptr, "bufferptr")
                 .into_pointer_value();
 
             // if (*currentSize) {
-            let current_size = ctx.b
+            let current_size = ctx
+                .b
                 .build_load(&current_size_ptr, "currentsize")
                 .into_int_value();
             let has_buffer = ctx.b.build_int_compare(
@@ -114,7 +121,8 @@ impl DelayFunction {
             ctx.b.position_at_end(&has_buffer_true_block);
 
             // *buffer[*currentPos] = input;
-            let current_pos = ctx.b
+            let current_pos = ctx
+                .b
                 .build_load(&current_pos_ptr, "currentpos")
                 .into_int_value();
             let sample_ptr = unsafe {
@@ -155,10 +163,12 @@ impl DelayFunction {
             ctx.b.position_at_end(&has_samples_continue_block);
 
             // resultVal = *buffer[*currentPos];
-            let current_pos = ctx.b
+            let current_pos = ctx
+                .b
                 .build_load(&current_pos_ptr, "currentpos")
                 .into_int_value();
-            let result_val = ctx.b
+            let result_val = ctx
+                .b
                 .build_load(
                     &unsafe {
                         ctx.b
@@ -230,7 +240,8 @@ impl DelayFunction {
                     .const_cast(&size_type, false),
                 "",
             );
-            let realloc_ptr = ctx.b
+            let realloc_ptr = ctx
+                .b
                 .build_call(
                     &realloc_intrinsic,
                     &[
@@ -344,7 +355,8 @@ impl Function for DelayFunction {
         let reserve_num = NumValue::new(args[2]);
         let result_num = NumValue::new(result);
 
-        let sample_rate = func.ctx
+        let sample_rate = func
+            .ctx
             .b
             .build_load(
                 &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
@@ -354,7 +366,8 @@ impl Function for DelayFunction {
 
         // determine reserve samples
         let reserve_vec = reserve_num.get_vec(func.ctx.b);
-        let reserve_samples_float = func.ctx
+        let reserve_samples_float = func
+            .ctx
             .b
             .build_call(
                 &max_intrinsic,
@@ -380,12 +393,14 @@ impl Function for DelayFunction {
 
         // saturate delayVal so it can't be out of bounds
         let delay_vec = delay_num.get_vec(func.ctx.b);
-        let delay_val_clamped = func.ctx
+        let delay_val_clamped = func
+            .ctx
             .b
             .build_call(
                 &max_intrinsic,
                 &[
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_call(
                             &min_intrinsic,
@@ -418,21 +433,25 @@ impl Function for DelayFunction {
         // update the buffer
         let input_vec = input_num.get_vec(func.ctx.b);
         let left_element = func.ctx.context.i32_type().const_int(0, false);
-        let left_result = func.ctx
+        let left_result = func
+            .ctx
             .b
             .build_call(
                 &channel_update_func,
                 &[
                     &left_pos_ptr,
                     &left_buffer_length_ptr,
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&delay_samples, &left_element, ""),
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&reserve_samples, &left_element, ""),
                     &left_buffer_ptr_ptr,
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&input_vec, &left_element, ""),
                 ],
@@ -444,21 +463,25 @@ impl Function for DelayFunction {
             .into_float_value();
 
         let right_element = func.ctx.context.i32_type().const_int(1, false);
-        let right_result = func.ctx
+        let right_result = func
+            .ctx
             .b
             .build_call(
                 &channel_update_func,
                 &[
                     &right_pos_ptr,
                     &right_buffer_length_ptr,
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&delay_samples, &right_element, ""),
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&reserve_samples, &right_element, ""),
                     &right_buffer_ptr_ptr,
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&input_vec, &right_element, ""),
                 ],
@@ -469,10 +492,12 @@ impl Function for DelayFunction {
             .unwrap()
             .into_float_value();
 
-        let result_vec = func.ctx
+        let result_vec = func
+            .ctx
             .b
             .build_insert_element(
-                &func.ctx
+                &func
+                    .ctx
                     .b
                     .build_insert_element(
                         &func.ctx.context.f32_type().vec_type(2).get_undef(),
@@ -493,7 +518,8 @@ impl Function for DelayFunction {
     }
 
     fn gen_destruct(func: &mut FunctionContext) {
-        let left_buffer_ptr = func.ctx
+        let left_buffer_ptr = func
+            .ctx
             .b
             .build_load(
                 &unsafe {
@@ -504,7 +530,8 @@ impl Function for DelayFunction {
                 "leftbuffer",
             )
             .into_pointer_value();
-        let right_buffer_ptr = func.ctx
+        let right_buffer_ptr = func
+            .ctx
             .b
             .build_load(
                 &unsafe {

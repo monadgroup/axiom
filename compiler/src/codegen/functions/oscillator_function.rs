@@ -39,18 +39,21 @@ fn gen_periodic_call(
     let freq_vec = freq_num.get_vec(func.ctx.b);
 
     // offset phase and store new value
-    let phase = func.ctx
+    let phase = func
+        .ctx
         .b
         .build_load(&phase_ptr, "phase")
         .into_vector_value();
-    let samplerate = func.ctx
+    let samplerate = func
+        .ctx
         .b
         .build_load(
             &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
             "samplerate",
         )
         .into_vector_value();
-    let phase_offset = func.ctx
+    let phase_offset = func
+        .ctx
         .b
         .build_float_div(freq_vec, samplerate, "phaseoffset");
     let new_phase = func.ctx.b.build_float_add(phase, phase_offset, "newphase");
@@ -63,7 +66,8 @@ fn gen_periodic_call(
 
     // calculate result
     let phase_offset_vec = phase_offset_num.get_vec(func.ctx.b);
-    let input_phase = func.ctx
+    let input_phase = func
+        .ctx
         .b
         .build_float_add(phase_offset_vec, phase, "inputphase");
     let result_vec = next_val(func, input_phase);
@@ -71,7 +75,8 @@ fn gen_periodic_call(
     result_num.set_vec(func.ctx.b, &result_vec);
     result_num.set_form(
         func.ctx.b,
-        &func.ctx
+        &func
+            .ctx
             .context
             .i8_type()
             .const_int(FormType::Oscillator as u64, false),

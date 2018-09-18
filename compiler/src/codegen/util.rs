@@ -34,30 +34,42 @@ pub fn get_array_type(t: &BasicTypeEnum, size: u32) -> ArrayType {
 
 pub fn get_constant_array(t: &BasicTypeEnum, items: &[BasicValueEnum]) -> ArrayValue {
     match t {
-        BasicTypeEnum::IntType(ty) => ty.const_array(&items
-            .iter()
-            .map(|val| val.into_int_value())
-            .collect::<Vec<_>>()),
-        BasicTypeEnum::FloatType(ty) => ty.const_array(&items
-            .iter()
-            .map(|val| val.into_float_value())
-            .collect::<Vec<_>>()),
-        BasicTypeEnum::PointerType(ty) => ty.const_array(&items
-            .iter()
-            .map(|val| val.into_pointer_value())
-            .collect::<Vec<_>>()),
-        BasicTypeEnum::StructType(ty) => ty.const_array(&items
-            .iter()
-            .map(|val| val.into_struct_value())
-            .collect::<Vec<_>>()),
-        BasicTypeEnum::ArrayType(ty) => ty.const_array(&items
-            .iter()
-            .map(|val| val.into_array_value())
-            .collect::<Vec<_>>()),
-        BasicTypeEnum::VectorType(ty) => ty.const_array(&items
-            .iter()
-            .map(|val| val.into_vector_value())
-            .collect::<Vec<_>>()),
+        BasicTypeEnum::IntType(ty) => ty.const_array(
+            &items
+                .iter()
+                .map(|val| val.into_int_value())
+                .collect::<Vec<_>>(),
+        ),
+        BasicTypeEnum::FloatType(ty) => ty.const_array(
+            &items
+                .iter()
+                .map(|val| val.into_float_value())
+                .collect::<Vec<_>>(),
+        ),
+        BasicTypeEnum::PointerType(ty) => ty.const_array(
+            &items
+                .iter()
+                .map(|val| val.into_pointer_value())
+                .collect::<Vec<_>>(),
+        ),
+        BasicTypeEnum::StructType(ty) => ty.const_array(
+            &items
+                .iter()
+                .map(|val| val.into_struct_value())
+                .collect::<Vec<_>>(),
+        ),
+        BasicTypeEnum::ArrayType(ty) => ty.const_array(
+            &items
+                .iter()
+                .map(|val| val.into_array_value())
+                .collect::<Vec<_>>(),
+        ),
+        BasicTypeEnum::VectorType(ty) => ty.const_array(
+            &items
+                .iter()
+                .map(|val| val.into_vector_value())
+                .collect::<Vec<_>>(),
+        ),
     }
 }
 
