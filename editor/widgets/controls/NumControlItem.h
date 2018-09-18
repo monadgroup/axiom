@@ -23,8 +23,6 @@ namespace AxiomGui {
 
         NumControlItem(AxiomModel::NumControl *control, NodeSurfaceCanvas *canvas);
 
-        static QString formatNumber(float val, AxiomModel::FormType form);
-
         static bool unformatString(const QString &str, float *valOut, AxiomModel::FormType *formOut);
 
     protected:
@@ -81,8 +79,6 @@ namespace AxiomGui {
         AxiomModel::NumValue getNormalizedValue();
 
         void setNormalizedValue(AxiomModel::NumValue val);
-
-        static QString valueAsString(AxiomModel::NumValue num);
 
         AxiomModel::NumValue stringAsValue(const QString &str, AxiomModel::NumValue oldNum);
 

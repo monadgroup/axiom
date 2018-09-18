@@ -42,45 +42,6 @@ NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     connect(&showValueTimer, &QTimer::timeout, this, &NumControlItem::showValueExpired);
 }
 
-static std::array<QString, 12> noteNames{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-
-static QString getNoteName(float noteVal) {
-    auto intNote = static_cast<size_t>(noteVal);
-    auto noteNameIndex = intNote % noteNames.size();
-    auto octave = intNote / noteNames.size();
-
-    return QString::number(intNote) % " " % noteNames[noteNameIndex] % QString::number(octave);
-}
-
-QString NumControlItem::formatNumber(float val, AxiomModel::FormType form) {
-    switch (form) {
-    case AxiomModel::FormType::NONE:
-    case AxiomModel::FormType::CONTROL:
-        return QString::number(val, 'f', 2);
-    case AxiomModel::FormType::OSCILLATOR:
-        return static_cast<QString>(QString::number(val, 'f', 2) % " V");
-    case AxiomModel::FormType::AMPLITUDE:
-        return static_cast<QString>(QString::number(val, 'f', 2) % " A");
-    case AxiomModel::FormType::Q:
-        return static_cast<QString>(QString::number(val, 'f', 1) % " Q");
-    case AxiomModel::FormType::NOTE:
-        return getNoteName(val);
-    case AxiomModel::FormType::FREQUENCY:
-        return val < 1000 ? static_cast<QString>(QString::number(val, 'f', 2) % " Hz")
-                          : static_cast<QString>(QString::number(val / 1000, 'f', 2) % " KHz");
-    case AxiomModel::FormType::BEATS:
-        return QString::number(val, 'f', 1) % " beats";
-    case AxiomModel::FormType::SECONDS:
-        return val < 0.1 ? static_cast<QString>(QString::number(val * 1000, 'f', 2) % " ms")
-                         : static_cast<QString>(QString::number(val, 'f', 2) % " s");
-    case AxiomModel::FormType::SAMPLES:
-        return static_cast<QString>(QString::number((int) val) % " μ");
-    case AxiomModel::FormType::DB:
-        return QString::number(val, 'f', 1) % " dB";
-    }
-    unreachable;
-}
-
 QRegularExpression numRegex("^\\s*([-e\\d\\.]+)\\s*([kmgt])*?(v|a|q|hz|beats|ms|s|μ|db)?\\s*$",
                             QRegularExpression::CaseInsensitiveOption);
 
@@ -349,11 +310,11 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == setValAction) {
-        auto editor = new FloatingValueEditor(valueAsString(control->value()), event->scenePos());
+        auto editor = new FloatingValueEditor(AxiomUtil::formatNumForm(control->value(), true), event->scenePos());
         scene()->addItem(editor);
         connect(editor, &FloatingValueEditor::valueSubmitted, this, &NumControlItem::setStringValue);
     } else if (selectedAction == copyValAction) {
-        clipboard->setText(valueAsString(control->value()));
+        clipboard->setText(AxiomUtil::formatNumForm(control->value(), true));
     } else if (selectedAction == pasteValAction) {
         setStringValue(clipboard->text());
     } else if (selectedAction == zeroAction) {
@@ -405,14 +366,6 @@ void NumControlItem::setValue(NumValue value) {
     }
 }
 
-QString NumControlItem::valueAsString(NumValue num) {
-    if (fabsf(num.left - num.right) < 0.01f) {
-        return formatNumber(num.left, num.form);
-    } else {
-        return formatNumber(num.left, num.form) % " / " % formatNumber(num.right, num.form);
-    }
-}
-
 NumValue NumControlItem::stringAsValue(const QString &str, NumValue oldNum) {
     auto separatorIndex = str.indexOf('/');
     auto leftStr = separatorIndex >= 0 ? str.left(separatorIndex) : str;
@@ -461,7 +414,7 @@ void NumControlItem::setNormalizedValue(AxiomModel::NumValue val) {
 
 QString NumControlItem::getLabelText() const {
     if ((hoverState() || isShowingValue) && !displayNameOverride) {
-        return valueAsString(control->value());
+        return AxiomUtil::formatNumForm(control->value(), true);
     } else {
         return ControlItem::getLabelText();
     }
@@ -475,8 +428,8 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
         currentMinMax = control->root()->runtime()->convertNum(originalForm, currentMinMax);
     }
 
-    auto minMaxDefaultStr = formatNumber(currentMinMax.left, currentMinMax.form) % " - " %
-                            formatNumber(currentMinMax.right, currentMinMax.form);
+    auto minMaxDefaultStr = AxiomUtil::formatChannelFull(currentMinMax.left, currentMinMax.form) % " - " %
+                            AxiomUtil::formatChannelFull(currentMinMax.right, currentMinMax.form);
     auto stepStr = QString::number(control->step());
     QString stepSeparator = " @ ";
 

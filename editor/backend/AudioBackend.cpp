@@ -9,6 +9,7 @@
 #include "../model/objects/RootSurface.h"
 #include "../model/serialize/ProjectSerializer.h"
 #include "../resources/resource.h"
+#include "../util.h"
 #include "../widgets/windows/MainWindow.h"
 
 using namespace AxiomBackend;
@@ -31,31 +32,12 @@ MidiValue **AudioBackend::getMidiPortal(size_t portalId) const {
     return (MidiValue **) &portalValues[portalId];
 }
 
-const char *AudioBackend::formatNumForm(AxiomBackend::NumForm form) const {
-    switch (form) {
-    case AxiomModel::FormType::NONE:
-    case AxiomModel::FormType::CONTROL:
-    case AxiomModel::FormType::OSCILLATOR:
-    case AxiomModel::FormType::AMPLITUDE:
-    case AxiomModel::FormType::Q:
-    case AxiomModel::FormType::NOTE:
-    case AxiomModel::FormType::SAMPLES:
-    default:
-        return "";
-    case AxiomModel::FormType::FREQUENCY:
-        return " Hz";
-    case AxiomModel::FormType::BEATS:
-        return " beats";
-    case AxiomModel::FormType::SECONDS:
-        return " s";
-    case AxiomModel::FormType::DB:
-        return " dB";
-    }
+const char *AudioBackend::formatNumForm(float testValue, AxiomBackend::NumForm form) const {
+    return AxiomUtil::getFormUnit(testValue, form);
 }
 
 std::string AudioBackend::formatNum(AxiomBackend::NumValue value, bool includeLabel) const {
-    // todo: refactor this with the code from NumControlItem
-    return "";
+    return AxiomUtil::formatNumForm(value, includeLabel).toStdString();
 }
 
 QByteArray AudioBackend::serialize() {

@@ -37,7 +37,7 @@ namespace AxiomBackend {
         void setSampleRate(float sampleRate);
 
         // Formats a form or number.
-        const char *formatNumForm(NumForm form) const;
+        const char *formatNumForm(float testValue, NumForm form) const;
         std::string formatNum(NumValue value, bool includeLabel) const;
 
         // Serializes or deserializes the current open project. Use this for saving/loading the project from a DAW
