@@ -140,32 +140,45 @@ void AxiomVstPlugin::setSampleRate(float sampleRate) {
 
 void AxiomVstPlugin::setParameter(VstInt32 index, float value) {
     if ((size_t) index >= backend.parameters.size()) return;
-    auto val = *backend.parameters[index].value;
-    val->left = value;
-    val->right = value;
-    val->form = NumForm::CONTROL;
+    auto &param = backend.parameters[index];
+    if (param) {
+        auto val = *param->value;
+        val->left = value;
+        val->right = value;
+        val->form = NumForm::CONTROL;
+    }
 }
 
 float AxiomVstPlugin::getParameter(VstInt32 index) {
     if ((size_t) index >= backend.parameters.size()) return 0;
-    return (*backend.parameters[index].value)->left;
+    auto &param = backend.parameters[index];
+    return param ? (*param->value)->left : 0;
 }
 
 void AxiomVstPlugin::getParameterLabel(VstInt32 index, char *label) {
     if ((size_t) index >= backend.parameters.size()) return;
-    auto val = *backend.parameters[index].value;
-    vst_strncpy(label, backend.formatNumForm(val->form), kVstMaxParamStrLen);
+    auto &param = backend.parameters[index];
+    if (param) {
+        auto val = *param->value;
+        vst_strncpy(label, backend.formatNumForm(val->left, val->form), kVstMaxParamStrLen);
+    }
 }
 
 void AxiomVstPlugin::getParameterDisplay(VstInt32 index, char *text) {
     if ((size_t) index >= backend.parameters.size()) return;
-    auto val = *backend.parameters[index].value;
-    vst_strncpy(text, backend.formatNum(*val, false).c_str(), kVstMaxParamStrLen);
+    auto &param = backend.parameters[index];
+    if (param) {
+        auto val = *param->value;
+        vst_strncpy(text, backend.formatNum(*val, false).c_str(), kVstMaxParamStrLen);
+    }
 }
 
 void AxiomVstPlugin::getParameterName(VstInt32 index, char *text) {
     if ((size_t) index >= backend.parameters.size()) return;
-    vst_strncpy(text, backend.parameters[index].name.c_str(), kVstMaxParamStrLen);
+    auto &param = backend.parameters[index];
+    if (param) {
+        vst_strncpy(text, param->name.c_str(), kVstMaxParamStrLen);
+    }
 }
 
 VstInt32 AxiomVstPlugin::getChunk(void **data, bool) {
