@@ -2,6 +2,8 @@
 
 #include <QtCore/QFile>
 #include <QtCore/QStringBuilder>
+#include <array>
+#include <cmath>
 #include <sstream>
 
 using namespace AxiomUtil;
@@ -97,7 +99,7 @@ QString AxiomUtil::formatChannelFull(float val, AxiomModel::FormType form) {
 }
 
 QString AxiomUtil::formatNumForm(AxiomModel::NumValue value, bool includeForm) {
-    if (std::abs(value.left - value.right) < 0.01f) {
+    if (fabsf(value.left - value.right) < 0.01f) {
         auto formattedNum = formatFloatForm(value.left, value.form);
         return includeForm ? static_cast<QString>(formattedNum % " " % getFormUnit(value.left, value.form))
                            : formattedNum;
