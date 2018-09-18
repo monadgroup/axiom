@@ -3,7 +3,11 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "AxiomVstPlugin.h"
+
 using namespace AxiomBackend;
+
+VstAudioBackend::VstAudioBackend(AxiomVstPlugin *plugin) : plugin(plugin) {}
 
 void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfiguration &configuration) {
     midiInputPortal = -1;
@@ -18,6 +22,7 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
         }
     }
 
+    portalParameterMap.clear();
     parameters.clear();
     std::unordered_set<size_t> takenIndices;
     std::vector<VstParameter> queuedParameters;
@@ -32,7 +37,7 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
         } else if (portal.type == PortalType::AUTOMATION && portal.value == PortalValue::AUDIO) {
             auto previousParameterIndex = parameterIndexMap.find(portal.id);
 
-            VstParameter insertParam = {portal.id, getAudioPortal(i), portal.name};
+            VstParameter insertParam = {portal.id, i, getAudioPortal(i), portal.name};
 
             if (previousParameterIndex != parameterIndexMap.end()) {
                 takenIndices.emplace(previousParameterIndex->second);
@@ -52,6 +57,7 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
 
 void VstAudioBackend::insertParameter(size_t insertIndex, VstParameter param) {
     while (parameters.size() < insertIndex) parameters.emplace_back(std::nullopt);
+    portalParameterMap.emplace(insertIndex, param.portalIndex);
     parameters[insertIndex] = std::move(param);
 }
 
@@ -63,4 +69,11 @@ void VstAudioBackend::pushParameter(VstParameter param) {
     }
 
     insertParameter(nextIndex, std::move(param));
+}
+
+void VstAudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumValue value) {
+    auto mapIndex = portalParameterMap.find(portalId);
+    if (mapIndex == portalParameterMap.end()) return;
+
+    plugin->backendSetParameter(mapIndex->second, value);
 }

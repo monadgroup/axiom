@@ -52,6 +52,8 @@ public:
 
     bool canParameterBeAutomated(VstInt32 index) override;
 
+    void backendSetParameter(size_t parameter, AxiomBackend::NumValue value);
+
 private:
     VstAudioBackend backend;
     AxiomVstEditor editor;

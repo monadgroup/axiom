@@ -13,7 +13,7 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 }
 
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 0), editor(&application, &backend) {
+    : AudioEffectX(audioMaster, 1, 0), backend(this), editor(&application, &backend) {
     isSynth();
     setNumInputs(0);
     setNumOutputs(2);
@@ -228,4 +228,10 @@ VstInt32 AxiomVstPlugin::getNumMidiInputChannels() {
 
 bool AxiomVstPlugin::canParameterBeAutomated(VstInt32 index) {
     return (size_t) index < backend.parameters.size();
+}
+
+void AxiomVstPlugin::backendSetParameter(size_t parameter, AxiomBackend::NumValue value) {
+    beginEdit(parameter);
+    setParameterAutomated(parameter, value.left);
+    endEdit(parameter);
 }
