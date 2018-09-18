@@ -4,18 +4,19 @@ using namespace AxiomModel;
 
 NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                        bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, DisplayMode displayMode,
-                       float minValue, float maxValue, NumValue value, ModelRoot *root)
+                       float minValue, float maxValue, uint32_t step, NumValue value, ModelRoot *root)
     : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, QSize(1, 1), uuid, parentUuid, pos, size,
               selected, std::move(name), showName, exposerUuid, exposingUuid, root),
-      _displayMode(displayMode), _minValue(minValue), _maxValue(maxValue), _value(value) {}
+      _displayMode(displayMode), _minValue(minValue), _maxValue(maxValue), _step(step), _value(value) {}
 
 std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                bool selected, QString name, bool showName, const QUuid &exposerUuid,
                                                const QUuid &exposingUuid,
                                                AxiomModel::NumControl::DisplayMode displayMode, float minValue,
-                                               float maxValue, NumValue value, AxiomModel::ModelRoot *root) {
+                                               float maxValue, uint32_t step, NumValue value,
+                                               AxiomModel::ModelRoot *root) {
     return std::make_unique<NumControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                                        exposingUuid, displayMode, minValue, maxValue, value, root);
+                                        exposingUuid, displayMode, minValue, maxValue, step, value, root);
 }
 
 void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode) {
@@ -25,11 +26,12 @@ void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode)
     }
 }
 
-void NumControl::setRange(float minValue, float maxValue) {
-    if (minValue != _minValue || maxValue != _maxValue) {
+void NumControl::setRange(float minValue, float maxValue, uint32_t step) {
+    if (minValue != _minValue || maxValue != _maxValue || step != _step) {
         _minValue = minValue;
         _maxValue = maxValue;
-        rangeChanged.trigger(minValue, maxValue);
+        _step = step;
+        rangeChanged.trigger(minValue, maxValue, step);
     }
 }
 

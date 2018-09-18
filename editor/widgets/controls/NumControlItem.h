@@ -66,6 +66,7 @@ namespace AxiomGui {
         bool isDragging = false;
         bool isShowingValue = false;
         bool displayNameOverride = false;
+        bool canReplaceHistoryOnScroll = false;
         QTimer showValueTimer;
         AxiomModel::NumValue beforeDragVal;
         QPointF mouseStartPoint;

@@ -235,6 +235,8 @@ void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         beforeDragVal = clampValue(getNormalizedValue());
         mouseStartPoint = event->pos();
     }
+
+    canReplaceHistoryOnScroll = false;
 }
 
 void NumControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
@@ -281,9 +283,34 @@ void NumControlItem::wheelEvent(QGraphicsSceneWheelEvent *event) {
         return;
     }
 
-    auto delta = event->delta() / 1200.f * (control->maxValue() - control->minValue());
+    auto oldValue = control->value();
+    auto numClicks = event->delta() / 120.f;
+
+    // if the control has stepping, increment/decrement by that amount - otherwise go by 1/10th
+    float stepAmount;
+    if (control->step()) {
+        stepAmount = numClicks * (control->maxValue() - control->minValue()) / control->step();
+    } else {
+        stepAmount = numClicks / 10.f * (control->maxValue() - control->minValue());
+    }
+
     auto cVal = getNormalizedValue();
-    setNormalizedValue(clampValue(cVal.withLR(cVal.left + delta, cVal.right + delta)));
+    setNormalizedValue(clampValue(cVal.withLR(cVal.left + stepAmount, cVal.right + stepAmount)));
+    auto newValue = control->value();
+
+    // to avoid spamming the history list, if the previous action was a SetNumValueAction on this control, just update
+    // it
+    auto &history = control->root()->history();
+    if (canReplaceHistoryOnScroll && history.stackPos() > 0) {
+        auto lastAction = history.stack()[history.stackPos() - 1].get();
+        if (auto setNumValueAction = dynamic_cast<SetNumValueAction *>(lastAction)) {
+            oldValue = setNumValueAction->beforeVal();
+            history.undo();
+        }
+    }
+    history.append(SetNumValueAction::create(control->uuid(), oldValue, newValue, control->root()));
+
+    canReplaceHistoryOnScroll = true;
 }
 
 void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
@@ -341,25 +368,35 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         }
 
         auto editor = new FloatingValueEditor(formatNumber(currentMinMax.left, currentMinMax.form) % " - " %
-                                                  formatNumber(currentMinMax.right, currentMinMax.form),
+                                                  formatNumber(currentMinMax.right, currentMinMax.form) % " @ " %
+                                                  QString::number(control->step()),
                                               event->scenePos());
         scene()->addItem(editor);
-        connect(editor, &FloatingValueEditor::valueSubmitted, this,
-                [this, currentMinMax, originalForm](QString newRangeStr) {
-                    auto separatorIndex = newRangeStr.indexOf('-');
-                    if (separatorIndex < 0) return;
+        connect(
+            editor, &FloatingValueEditor::valueSubmitted, this, [this, currentMinMax, originalForm](QString newStr) {
+                auto stepSeparatorIndex = newStr.indexOf('@');
 
-                    auto leftStr = newRangeStr.left(separatorIndex);
-                    auto rightStr = newRangeStr.mid(separatorIndex + 1);
+                QString rangeStr, stepStr;
+                if (stepSeparatorIndex < 0) {
+                    rangeStr = std::move(newStr);
+                    stepStr = "";
+                } else {
+                    rangeStr = newStr.left(stepSeparatorIndex);
+                    stepStr = newStr.mid(stepSeparatorIndex + 1);
+                }
 
-                    std::cout << "Left str = '" << leftStr.toStdString() << "' Right str = '" << rightStr.toStdString()
-                              << "'" << std::endl;
+                auto minMaxSeparatorIndex = rangeStr.indexOf('-');
+                auto newMin = control->minValue();
+                auto newMax = control->maxValue();
+                if (minMaxSeparatorIndex > 0) {
+                    auto minStr = rangeStr.left(minMaxSeparatorIndex);
+                    auto maxStr = rangeStr.mid(minMaxSeparatorIndex + 1);
 
                     float minValue = currentMinMax.left, maxValue = currentMinMax.right;
                     AxiomModel::FormType minForm = originalForm, maxForm = originalForm;
 
-                    if (!unformatString(leftStr, &minValue, &minForm)) return;
-                    if (!unformatString(rightStr, &maxValue, &maxForm)) return;
+                    if (!unformatString(minStr, &minValue, &minForm)) return;
+                    if (!unformatString(maxStr, &maxValue, &maxForm)) return;
 
                     // convert back to CONTROL space
                     AxiomModel::NumValue newMinMax = {minValue, maxValue, minForm};
@@ -372,10 +409,20 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                         std::swap(newMinMax.left, newMinMax.right);
                     }
 
-                    control->root()->history().append(SetNumRangeAction::create(control->uuid(), control->minValue(),
-                                                                                control->maxValue(), newMinMax.left,
-                                                                                newMinMax.right, control->root()));
-                });
+                    newMin = newMinMax.left;
+                    newMax = newMinMax.right;
+                }
+
+                bool stepValid;
+                uint32_t newStep = (uint32_t) stepStr.trimmed().toUInt(&stepValid);
+                if (!stepValid) newStep = control->step();
+
+                if (newMin != control->minValue() || newMax != control->maxValue() || newStep != control->step()) {
+                    control->root()->history().append(
+                        SetNumRangeAction::create(control->uuid(), control->minValue(), control->maxValue(),
+                                                  control->step(), newMin, newMax, newStep, control->root()));
+                }
+            });
     }
 }
 
@@ -456,10 +503,18 @@ AxiomModel::NumValue NumControlItem::getNormalizedValue() {
 }
 
 void NumControlItem::setNormalizedValue(AxiomModel::NumValue val) {
+    // apply stepping
+    if (control->step() > 0) {
+        auto stepSize = (control->maxValue() - control->minValue()) / control->step();
+        val.left = std::round(val.left / stepSize) * stepSize;
+        val.right = std::round(val.right / stepSize) * stepSize;
+    }
+
     auto currentForm = control->value().form;
     if (control->root()->runtime()) {
         val = control->root()->runtime()->convertNum(currentForm, val);
     }
+
     control->setValue(val);
 }
 

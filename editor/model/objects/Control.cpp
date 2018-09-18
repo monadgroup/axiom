@@ -76,7 +76,7 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
     switch (type) {
     case Control::ControlType::NUM_SCALAR:
         return NumControl::create(uuid, parentUuid, pos, size, false, name, true, QUuid(), exposingUuid,
-                                  NumControl::DisplayMode::KNOB, 0, 1, {0, 0, FormType::CONTROL}, root);
+                                  NumControl::DisplayMode::KNOB, 0, 1, 0, {0, 0, FormType::CONTROL}, root);
     case Control::ControlType::MIDI_SCALAR:
         return MidiControl::create(uuid, parentUuid, pos, size, false, name, true, QUuid(), exposingUuid, root);
     case Control::ControlType::NUM_EXTRACT:

@@ -750,8 +750,10 @@ void HistorySerializer::serializeSetNumRangeAction(AxiomModel::SetNumRangeAction
     stream << action->uuid();
     stream << action->beforeMin();
     stream << action->beforeMax();
+    stream << action->beforeStep();
     stream << action->afterMin();
     stream << action->afterMax();
+    stream << action->afterStep();
 }
 
 std::unique_ptr<SetNumRangeAction> HistorySerializer::deserializeSetNumRangeAction(QDataStream &stream,
@@ -763,10 +765,14 @@ std::unique_ptr<SetNumRangeAction> HistorySerializer::deserializeSetNumRangeActi
     stream >> beforeMin;
     float beforeMax;
     stream >> beforeMax;
+    uint32_t beforeStep;
+    stream >> beforeStep;
     float afterMin;
     stream >> afterMin;
     float afterMax;
     stream >> afterMax;
+    uint32_t afterStep;
+    stream >> afterStep;
 
-    return SetNumRangeAction::create(uuid, beforeMin, beforeMax, afterMin, afterMax, root);
+    return SetNumRangeAction::create(uuid, beforeMin, beforeMax, beforeStep, afterMin, afterMax, afterStep, root);
 }

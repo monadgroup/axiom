@@ -149,6 +149,7 @@ void ControlSerializer::serializeNum(AxiomModel::NumControl *control, QDataStrea
     stream << (uint8_t) control->displayMode();
     stream << control->minValue();
     stream << control->maxValue();
+    stream << control->step();
     ValueSerializer::serializeNum(control->value(), stream);
 }
 
@@ -161,19 +162,24 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
     uint8_t displayModeInt;
     stream >> displayModeInt;
 
-    // Control min/max was added in 0.4.0 (schema version 5). Previously controls would always be between 0 and 1.
+    // Control min/max/step was added in 0.4.0 (schema version 5). Previously controls would always be between 0 and 1,
+    // step would always be disabled (0).
     float minValue, maxValue;
+    uint32_t step;
     if (version >= 5) {
         stream >> minValue;
         stream >> maxValue;
+        stream >> step;
     } else {
         minValue = 0;
         maxValue = 1;
+        step = 0;
     }
 
     auto value = ValueSerializer::deserializeNum(stream, version);
     return NumControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                              exposingUuid, (NumControl::DisplayMode) displayModeInt, minValue, maxValue, value, root);
+                              exposingUuid, (NumControl::DisplayMode) displayModeInt, minValue, maxValue, step, value,
+                              root);
 }
 
 void ControlSerializer::serializePortal(AxiomModel::PortalControl *control, QDataStream &stream) {
