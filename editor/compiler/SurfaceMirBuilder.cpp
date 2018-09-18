@@ -259,7 +259,7 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         for (auto &portal : rootPortals) {
             mirRoot.addSocket(std::move(portal.vartype));
             portals.emplace_back(portal.control->portalId(), portal.control->portalType(), portal.control->wireType(),
-                                 portal.control->name());
+                                 portal.control->surface()->node()->name());
         }
 
         rootSurface->setCompileMeta(AxiomModel::RootSurfaceCompileMeta(std::move(portals)));
