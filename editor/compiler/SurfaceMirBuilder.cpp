@@ -282,7 +282,6 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
                 AxiomModel::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls()));
             for (const auto &control : controlPointers) {
                 if (!control->exposerUuid().isNull()) {
-                    // todo: set compile meta on exposed control
                     externalControls.push_back(control->exposerUuid());
                 }
 

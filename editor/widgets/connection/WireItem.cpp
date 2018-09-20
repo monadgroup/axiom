@@ -73,11 +73,6 @@ void WireItem::updateRoute(const std::deque<QPoint> &route, const std::vector<Ax
     auto firstPos = getRealPos(0, NodeSurfaceCanvas::nodeRealPos(wire->startPos()), route, lineIndices);
     auto lastPos = getRealPos(route.size() - 1, NodeSurfaceCanvas::nodeRealPos(wire->endPos()), route, lineIndices);
 
-    // todo: find spaces where several wires are, and make them look nice
-    // e.g. - if they're going in the same direction, separate them out a bit
-    //      - if they're crossing, ensure the z-index of the one crossing is either in front of
-    //        or behind all the others
-
     if (route.size() <= 2 && firstPos.x() != lastPos.x() && firstPos.y() != lastPos.y()) {
         path.moveTo(firstPos);
         path.lineTo(QPointF(lastPos.x(), firstPos.y()));

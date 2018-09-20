@@ -132,8 +132,6 @@ void CustomNode::updateControls(SetCodeAction *action) {
         ControlCompileMeta compileMeta(controlIndex, compiledControl.getIsWritten(), compiledControl.getIsRead());
 
         // find a control that matches name and type
-        // todo: after all name matches have been claimed, assign to an unnamed one
-        // (allows renaming in code to rename the actual control)
         auto foundControl = false;
         for (const auto &candidateControl : controlList) {
             if (candidateControl->name() == compiledName && candidateControl->controlType() == compiledModelType) {

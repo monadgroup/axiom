@@ -35,7 +35,6 @@ void WireGrid::addPoint(QPoint point, AxiomModel::ConnectionWire *wire, Directio
         }
 
         // make sure it isn't already in the collection
-        // todo: is this needed
         auto currentIndex = std::find(collection->begin(), collection->end(), wire);
         if (currentIndex != collection->end()) return;
 
