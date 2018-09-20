@@ -70,9 +70,8 @@ void WireItem::updateRoute(const std::deque<QPoint> &route, const std::vector<Ax
     auto halfNodeSize =
         QPointF(NodeSurfaceCanvas::nodeGridSize.width() / 2, NodeSurfaceCanvas::nodeGridSize.height() / 2);
 
-    auto firstPos = getRealPos(0, NodeSurfaceCanvas::nodeRealPos(wire->startPos()) + halfNodeSize, route, lineIndices);
-    auto lastPos =
-        getRealPos(route.size() - 1, NodeSurfaceCanvas::nodeRealPos(wire->endPos()) + halfNodeSize, route, lineIndices);
+    auto firstPos = getRealPos(0, NodeSurfaceCanvas::nodeRealPos(wire->startPos()), route, lineIndices);
+    auto lastPos = getRealPos(route.size() - 1, NodeSurfaceCanvas::nodeRealPos(wire->endPos()), route, lineIndices);
 
     // todo: find spaces where several wires are, and make them look nice
     // e.g. - if they're going in the same direction, separate them out a bit

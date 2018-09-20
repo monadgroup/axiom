@@ -128,8 +128,8 @@ void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     }
 
     if (!foundHoverItem) {
-        connectionWire->setEndPos(QPointF(mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width() - 0.5,
-                                          mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height() - 0.5));
+        connectionWire->setEndPos(QPointF(mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width(),
+                                          mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height()));
     }
 }
 

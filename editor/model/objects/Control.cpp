@@ -40,6 +40,7 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
                                                return std::optional<QUuid>();
                                            }))) {
     posChanged.connect(this, &Control::updateSinkPos);
+    sizeChanged.connect(this, &Control::updateSinkPos);
     removed.connect(this, &Control::updateExposerRemoved);
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
 
@@ -166,7 +167,8 @@ void Control::setIsActive(bool isActive) {
 }
 
 QPointF Control::worldPos() const {
-    auto worldPos = pos() + ControlSurface::nodeToControl(_surface->node()->pos());
+    auto worldPos = pos() + ControlSurface::nodeToControl(_surface->node()->pos()) +
+                    QPointF(size().width() / 2.f, size().height() / 2.f);
     return ControlSurface::controlToNode(worldPos);
 }
 
