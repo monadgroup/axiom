@@ -10,7 +10,7 @@ namespace AxiomCommon {
     public:
         SharedHookable();
 
-        ~SharedHookable() = default;
+        virtual ~SharedHookable() = default;
 
         HookContext *getContext() { return impl.get(); }
 

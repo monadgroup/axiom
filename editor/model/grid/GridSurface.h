@@ -1,17 +1,17 @@
 #pragma once
 
+#include <QtCore/QPointF>
+#include <QtCore/QString>
 #include <climits>
 #include <memory>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
-#include <QtCore/QString>
-#include <QtCore/QPointF>
+#include <vector>
 
-#include "common/Hookable.h"
-#include "common/Event.h"
-#include "Grid.h"
 #include "../Pool.h"
+#include "Grid.h"
+#include "common/Event.h"
+#include "common/Hookable.h"
 
 namespace AxiomModel {
 
@@ -26,8 +26,8 @@ namespace AxiomModel {
         AxiomCommon::Event<bool> hasSelectionChanged;
         AxiomCommon::Event<> gridChanged;
 
-        explicit GridSurface(ItemCollection view, QPoint minRect = QPoint(INT_MIN, INT_MIN),
-                             QPoint maxRect = QPoint(INT_MAX, INT_MAX));
+        GridSurface(ItemCollection view, bool deferDirty, QPoint minRect = QPoint(INT_MIN, INT_MIN),
+                    QPoint maxRect = QPoint(INT_MAX, INT_MAX));
 
         template<class T>
         static QPoint findCenter(const T &items) {
@@ -64,12 +64,16 @@ namespace AxiomModel {
 
         void finishDragging();
 
-        void flushGrid();
+        void setDirty();
+
+        void tryFlush();
 
     private:
         Grid<GridItem> _grid;
         ItemCollection _items;
         ItemCollection _selectedItems;
+        bool _deferDirty;
+        bool _isDirty = false;
 
         QPoint lastDragDelta;
 
@@ -78,7 +82,5 @@ namespace AxiomModel {
         QPoint findAvailableDelta(QPoint delta);
 
         void handleItemAdded(GridItem *const &item);
-
     };
-
 }

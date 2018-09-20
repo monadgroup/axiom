@@ -117,3 +117,26 @@ QString AxiomUtil::formatNumForm(AxiomModel::NumValue value, bool includeForm) {
             return formattedLeft % " " % leftUnit % " / " % formattedRight % " " % rightUnit;
     }
 }
+
+QRect AxiomUtil::makeRect(QPoint p1, QPoint p2) {
+    QPoint topLeft;
+    QPoint bottomRight;
+
+    if (p1.x() < p2.x()) {
+        topLeft.setX(p1.x());
+        bottomRight.setX(p2.x());
+    } else {
+        topLeft.setX(p2.x());
+        bottomRight.setX(p1.x());
+    }
+
+    if (p1.y() < p2.y()) {
+        topLeft.setY(p1.y());
+        bottomRight.setY(p2.y());
+    } else {
+        topLeft.setY(p2.y());
+        bottomRight.setY(p1.y());
+    }
+
+    return QRect(topLeft, bottomRight);
+}

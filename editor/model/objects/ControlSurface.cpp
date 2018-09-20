@@ -10,7 +10,7 @@ using namespace AxiomModel;
 ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::CONTROL_SURFACE, uuid, parentUuid, root), _node(find(root->nodes(), parentUuid)),
       _controls(findChildrenWatch(root->controls(), uuid)),
-      _grid(staticCastWatch<GridItem *>(_controls), QPoint(0, 0)) {
+      _grid(staticCastWatch<GridItem *>(_controls), false, QPoint(0, 0)) {
     _node->sizeChanged.connect(this, &ControlSurface::setSize);
     _node->deselected.connect(&_grid, &GridSurface::deselectAll);
     _grid.hasSelectionChanged.connect(this, [this](bool hasSelection) {
@@ -18,6 +18,8 @@ ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, Axiom
     });
     _grid.gridChanged.connect(this, &ControlSurface::updateControlsOnTopRow);
     setSize(_node->size());
+
+    _grid.tryFlush();
     updateControlsOnTopRow();
 }
 

@@ -17,15 +17,16 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
             auto controlA = std::get<0>(controls);
             auto controlB = std::get<1>(controls);
             assert(controlA->wireType() == controlB->wireType());
-            _wire.resolve(
-                ConnectionWire(&_surface->grid(), controlA->wireType(), controlA->worldPos(), controlB->worldPos()));
+            _wire.resolve(std::make_unique<ConnectionWire>(&_surface->grid(), &_surface->wireGrid(),
+                                                           controlA->wireType(), controlA->worldPos(),
+                                                           controlB->worldPos()));
             auto &wire = *_wire.value();
-            controlA->worldPosChanged.connect(&wire, &ConnectionWire::setStartPos);
-            controlB->worldPosChanged.connect(&wire, &ConnectionWire::setEndPos);
-            controlA->isActiveChanged.connect(&wire, &ConnectionWire::setStartActive);
-            controlB->isActiveChanged.connect(&wire, &ConnectionWire::setEndActive);
-            wire.activeChanged.connect(controlA, &Control::setIsActive);
-            wire.activeChanged.connect(controlB, &Control::setIsActive);
+            controlA->worldPosChanged.connect(wire.get(), &ConnectionWire::setStartPos);
+            controlB->worldPosChanged.connect(wire.get(), &ConnectionWire::setEndPos);
+            controlA->isActiveChanged.connect(wire.get(), &ConnectionWire::setStartActive);
+            controlB->isActiveChanged.connect(wire.get(), &ConnectionWire::setEndActive);
+            wire->activeChanged.connect(controlA, &Control::setIsActive);
+            wire->activeChanged.connect(controlB, &Control::setIsActive);
             controlA->removed.connect(this, &Connection::remove);
             controlB->removed.connect(this, &Connection::remove);
         });
@@ -37,6 +38,6 @@ std::unique_ptr<Connection> Connection::create(const QUuid &uuid, const QUuid &p
 }
 
 void Connection::remove() {
-    if (_wire.value()) (*_wire.value()).remove();
+    if (_wire.value()) (*_wire.value())->remove();
     ModelObject::remove();
 }

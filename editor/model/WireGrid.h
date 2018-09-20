@@ -1,8 +1,14 @@
 #pragma once
 
+#include <QtCore/QHash>
 #include <QtCore/QPoint>
-#include <unordered_map>
+#include <QtCore/QRect>
 #include <vector>
+
+#include "common/Event.h"
+#include "common/Hookable.h"
+
+inline uint qHash(const QPoint &);
 
 namespace AxiomModel {
 
@@ -13,19 +19,32 @@ namespace AxiomModel {
         size_t index;
     };
 
-    class WireGrid {
+    class WireGrid : public AxiomCommon::Hookable {
     public:
-        void addPoint(QPoint point, ConnectionWire *wire);
+        enum class Direction { HORIZONTAL, VERTICAL };
+
+        AxiomCommon::Event<> gridChanged;
+
+        void addPoint(QPoint point, ConnectionWire *wire, Direction direction);
 
         void removePoint(QPoint point, ConnectionWire *wire);
 
-        void addLine(QPoint start, QPoint end, ConnectionWire *wire);
+        void addRegion(QRect region, ConnectionWire *wire);
 
-        void removeLine(QPoint start, QPoint end, ConnectionWire *wire);
+        void removeRegion(QRect region, ConnectionWire *wire);
 
-        LineIndex getLineIndex(QPoint start, QPoint end, ConnectionWire *wire);
+        LineIndex getRegionIndex(QRect region, ConnectionWire *wire);
+
+        void tryFlush();
 
     private:
-        std::unordered_map<QPoint, std::vector<ConnectionWire *>> cells;
+        struct CellLists {
+            std::vector<ConnectionWire *> horizontal;
+            std::vector<ConnectionWire *> vertical;
+        };
+
+        QHash<QPoint, CellLists> cells;
+
+        bool _isDirty = false;
     };
 }

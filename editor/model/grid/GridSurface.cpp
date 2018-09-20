@@ -1,13 +1,15 @@
 #include "GridSurface.h"
 
-#include "GridItem.h"
 #include "../WatchSequenceOperators.h"
+#include "GridItem.h"
 
 using namespace AxiomModel;
 
-GridSurface::GridSurface(ItemCollection view, QPoint minRect, QPoint maxRect)
+GridSurface::GridSurface(ItemCollection view, bool deferDirty, QPoint minRect, QPoint maxRect)
     : _grid(minRect, maxRect), _items(std::move(view)),
-      _selectedItems(filterWatch(_items, std::function<bool(GridItem *const &)>([](GridItem *const &itm) { return itm->isSelected(); }))) {
+      _selectedItems(filterWatch(
+          _items, std::function<bool(GridItem *const &)>([](GridItem *const &itm) { return itm->isSelected(); }))),
+      _deferDirty(deferDirty) {
     _items.itemAdded.connect(this, &GridSurface::handleItemAdded);
 }
 
@@ -46,7 +48,7 @@ void GridSurface::dragTo(QPoint delta) {
     for (auto &item : selectedItems()) {
         _grid.setRect(item->pos(), item->size(), item);
     }
-    flushGrid();
+    setDirty();
 }
 
 void GridSurface::finishDragging() {
@@ -55,8 +57,20 @@ void GridSurface::finishDragging() {
     }
 }
 
-void GridSurface::flushGrid() {
-    gridChanged.trigger();
+void GridSurface::setDirty() {
+    if (_deferDirty) {
+        _isDirty = true;
+    } else {
+        gridChanged.trigger();
+        _isDirty = false;
+    }
+}
+
+void GridSurface::tryFlush() {
+    if (_isDirty) {
+        gridChanged.trigger();
+        _isDirty = false;
+    }
 }
 
 bool GridSurface::isAllDragAvailable(QPoint delta) {

@@ -1,14 +1,20 @@
 #include "ConnectionWire.h"
 
+#include "../util.h"
 #include "grid/GridSurface.h"
 
 using namespace AxiomModel;
 
-ConnectionWire::ConnectionWire(AxiomModel::GridSurface *grid, WireType wireType, const QPointF &startPos,
-                               const QPointF &endPos)
-    : _grid(grid), _wireType(wireType), _startPos(startPos), _endPos(endPos) {
+ConnectionWire::ConnectionWire(AxiomModel::GridSurface *grid, WireGrid *wireGrid, WireType wireType,
+                               const QPointF &startPos, const QPointF &endPos)
+    : _grid(grid), _wireGrid(wireGrid), _wireType(wireType), _startPos(startPos), _endPos(endPos) {
     _grid->gridChanged.connect(this, &ConnectionWire::updateRoute);
+    _wireGrid->gridChanged.connect(this, &ConnectionWire::updateLineIndices);
     updateRoute();
+}
+
+ConnectionWire::~ConnectionWire() {
+    clearWireGrid(_route);
 }
 
 void ConnectionWire::setStartPos(const QPointF &startPos) {
@@ -73,6 +79,45 @@ void ConnectionWire::updateActive() {
 }
 
 void ConnectionWire::updateRoute() {
+    clearWireGrid(_route);
     _route = _grid->grid().findPath(QPoint(_startPos.x(), _startPos.y()), QPoint(_endPos.x(), _endPos.y()), 1, 10, 4);
-    routeChanged.trigger(_route);
+    setWireGrid(_route);
+}
+
+void ConnectionWire::updateLineIndices() {
+    _lineIndices = getLineIndices(_route);
+    routeChanged.trigger(_route, _lineIndices);
+}
+
+void ConnectionWire::setWireGrid(const std::deque<QPoint> &route) {
+    for (size_t routeIndex = 1; routeIndex < route.size(); routeIndex++) {
+        auto lastPoint = route[routeIndex - 1];
+        auto currentPoint = route[routeIndex];
+        _wireGrid->addRegion(AxiomUtil::makeRect(lastPoint, currentPoint), this);
+    }
+}
+
+void ConnectionWire::clearWireGrid(const std::deque<QPoint> &route) {
+    for (size_t routeIndex = 1; routeIndex < route.size(); routeIndex++) {
+        auto lastPoint = route[routeIndex - 1];
+        auto currentPoint = route[routeIndex];
+        _wireGrid->removeRegion(AxiomUtil::makeRect(lastPoint, currentPoint), this);
+    }
+}
+
+std::vector<LineIndex> ConnectionWire::getLineIndices(const std::deque<QPoint> &route) {
+    std::vector<LineIndex> indices;
+    if (route.size() <= 1) return indices;
+
+    indices.reserve(route.size() - 1);
+
+    for (size_t routeIndex = 1; routeIndex < route.size(); routeIndex++) {
+        auto lastPoint = route[routeIndex - 1];
+        auto currentPoint = route[routeIndex];
+
+        auto regionIndex = _wireGrid->getRegionIndex(AxiomUtil::makeRect(lastPoint, currentPoint), this);
+        indices.push_back(regionIndex);
+    }
+
+    return indices;
 }

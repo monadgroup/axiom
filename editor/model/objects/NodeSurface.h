@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ModelObject.h"
+#include "../WireGrid.h"
 #include "../grid/GridSurface.h"
 #include "common/Event.h"
 
@@ -40,6 +41,10 @@ namespace AxiomModel {
 
         const GridSurface &grid() const { return _grid; }
 
+        WireGrid &wireGrid() { return _wireGrid; }
+
+        const WireGrid &wireGrid() const { return _wireGrid; }
+
         virtual QString name() = 0;
 
         virtual bool canExposeControl() const = 0;
@@ -72,6 +77,7 @@ namespace AxiomModel {
         ChildCollection _nodes;
         ConnectionCollection _connections;
         GridSurface _grid;
+        WireGrid _wireGrid;
         QPointF _pan;
         float _zoom;
 

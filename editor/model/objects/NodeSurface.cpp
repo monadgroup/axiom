@@ -15,8 +15,8 @@ using namespace AxiomModel;
 NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                          AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root), _nodes(findChildrenWatch(root->nodes(), uuid)),
-      _connections(findChildrenWatch(root->connections(), uuid)), _grid(staticCastWatch<GridItem *>(_nodes)), _pan(pan),
-      _zoom(zoom) {
+      _connections(findChildrenWatch(root->connections(), uuid)), _grid(staticCastWatch<GridItem *>(_nodes), true),
+      _pan(pan), _zoom(zoom) {
     _nodes.itemAdded.connect(this, &NodeSurface::nodeAdded);
 }
 
@@ -82,6 +82,10 @@ void NodeSurface::build(MaximCompiler::Transaction *transaction) {
 }
 
 void NodeSurface::doRuntimeUpdate() {
+    // flush the grid surfcaces
+    _grid.tryFlush();
+    _wireGrid.tryFlush();
+
     // todo: make this more efficient?
     for (const auto &control : root()->controls()) {
         if (control->surface()->node()->surface() == this) {

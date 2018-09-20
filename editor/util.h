@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore/QPoint>
+#include <QtCore/QRect>
 #include <QtCore/QString>
 #include <QtGui/QColor>
 #include <cassert>
@@ -32,6 +33,8 @@ namespace AxiomUtil {
     QString formatChannelFull(float val, AxiomModel::FormType form);
 
     QString formatNumForm(AxiomModel::NumValue value, bool includeForm);
+
+    QRect makeRect(QPoint p1, QPoint p2);
 
     template<class InputIterator, class T>
     InputIterator findUnique(InputIterator first, InputIterator last, const T *ptr) {

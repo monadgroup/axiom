@@ -95,7 +95,7 @@ namespace AxiomGui {
         QVector<QPointF> selectionPoints;
         QGraphicsPathItem *selectionPath;
 
-        std::optional<AxiomModel::ConnectionWire> connectionWire;
+        std::unique_ptr<AxiomModel::ConnectionWire> connectionWire;
         AxiomModel::Control *sourceControl;
 
         void leftMousePressEvent(QGraphicsSceneMouseEvent *event);

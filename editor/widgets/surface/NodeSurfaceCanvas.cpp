@@ -59,13 +59,13 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     }
 
     for (const auto &connection : surface->connections()) {
-        connection->wire().then(this, [this](ConnectionWire &wire) { addWire(&wire); });
+        connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     }
 
     // connect to model
     surface->nodes().itemAdded.connect(this, &NodeSurfaceCanvas::addNode);
     surface->connections().itemAdded.connect(this, [this](Connection *connection) {
-        connection->wire().then([this](ConnectionWire &wire) { addWire(&wire); });
+        connection->wire().then([this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     });
 
     // start update timer
@@ -104,7 +104,8 @@ void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
 
     sourceControl = control->sink();
     auto startPos = sourceControl->worldPos();
-    connectionWire = ConnectionWire(&surface->grid(), sourceControl->wireType(), startPos, startPos);
+    connectionWire = std::make_unique<ConnectionWire>(&surface->grid(), &surface->wireGrid(), sourceControl->wireType(),
+                                                      startPos, startPos);
     connectionWire->setStartActive(true);
     addWire(&*connectionWire);
 

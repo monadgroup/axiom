@@ -99,7 +99,7 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     for (auto &item : controlSurface->controls()) {
         controlSurface->grid().grid().setRect(item->pos(), item->size(), item);
     }
-    controlSurface->grid().flushGrid();
+    controlSurface->grid().setDirty();
 }
 
 void Node::doSizeAction() {

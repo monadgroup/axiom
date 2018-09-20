@@ -1,10 +1,10 @@
 #include "ModulePreviewCanvas.h"
 
-#include "../node/NodeItem.h"
 #include "../connection/WireItem.h"
-#include "editor/model/objects/NodeSurface.h"
-#include "editor/model/objects/Node.h"
+#include "../node/NodeItem.h"
 #include "editor/model/objects/Connection.h"
+#include "editor/model/objects/Node.h"
+#include "editor/model/objects/NodeSurface.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -17,13 +17,13 @@ ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface) {
     }
 
     for (const auto &connection : surface->connections()) {
-        connection->wire().then(this, [this](ConnectionWire &wire) { addWire(&wire); });
+        connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     }
 
     // connect to model
     surface->nodes().itemAdded.connect(this, &ModulePreviewCanvas::addNode);
     surface->connections().itemAdded.connect(this, [this](Connection *connection) {
-        connection->wire().then(this, [this](ConnectionWire &wire) { addWire(&wire); });
+        connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     });
 }
 
