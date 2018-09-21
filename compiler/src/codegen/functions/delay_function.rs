@@ -65,7 +65,7 @@ impl DelayFunction {
         let func = DelayFunction::get_channel_update_func(module);
         build_context_function(module, func, target, &|ctx: BuilderContext| {
             let target_data = target.machine.get_data();
-            let ctlz_intrinsic = intrinsics::ctlz_i64(ctx.module);
+            let next_power_intrinsic = intrinsics::next_power_i64(ctx.module);
             let realloc_intrinsic = intrinsics::realloc(ctx.module, &target_data);
 
             let current_pos_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
@@ -189,31 +189,17 @@ impl DelayFunction {
             ctx.b.position_at_end(&has_buffer_continue_block);
 
             // auto bufferSize = calculateNextPowerOfTwo(reserveSamples);
-            let new_buffer_size = ctx.b.build_left_shift(
-                ctx.context.i64_type().const_int(1, false),
-                ctx.b.build_int_sub(
-                    ctx.context.i64_type().const_int(64, false),
-                    ctx.b
-                        .build_call(
-                            &ctlz_intrinsic,
-                            &[
-                                &ctx.b.build_int_sub(
-                                    reserve_samples,
-                                    ctx.context.i64_type().const_int(1, false),
-                                    "",
-                                ),
-                                &ctx.context.bool_type().const_int(0, false),
-                            ],
-                            "",
-                            false,
-                        )
-                        .left()
-                        .unwrap()
-                        .into_int_value(),
-                    "",
-                ),
-                "newbuffersize",
-            );
+            let new_buffer_size = ctx
+                .b
+                .build_call(
+                    &next_power_intrinsic,
+                    &[&reserve_samples],
+                    "newbuffersize",
+                    false,
+                )
+                .left()
+                .unwrap()
+                .into_int_value();
 
             // if (bufferSize != *currentSize) {
             let needs_realloc = ctx.b.build_int_compare(
