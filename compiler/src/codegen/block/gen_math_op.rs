@@ -55,6 +55,7 @@ pub fn gen_math_op_statement(
             left_vec,
             right_vec,
             node.ctx.context.i32_type(),
+            true,
             &|lhs, rhs| node.ctx.b.build_and(lhs, rhs, "num.and.vec"),
         ),
         OperatorType::BitwiseOr => apply_int_op(
@@ -62,6 +63,7 @@ pub fn gen_math_op_statement(
             left_vec,
             right_vec,
             node.ctx.context.i32_type(),
+            true,
             &|lhs, rhs| node.ctx.b.build_or(lhs, rhs, "num.or.vec"),
         ),
         OperatorType::BitwiseXor => apply_int_op(
@@ -69,6 +71,7 @@ pub fn gen_math_op_statement(
             left_vec,
             right_vec,
             node.ctx.context.i32_type(),
+            true,
             &|lhs, rhs| node.ctx.b.build_xor(lhs, rhs, "num.xor.vec"),
         ),
         OperatorType::LogicalAnd => apply_int_op(
@@ -76,6 +79,7 @@ pub fn gen_math_op_statement(
             left_vec,
             right_vec,
             node.ctx.context.bool_type(),
+            false,
             &|lhs, rhs| node.ctx.b.build_and(lhs, rhs, "num.and.vec"),
         ),
         OperatorType::LogicalOr => apply_int_op(
@@ -83,6 +87,7 @@ pub fn gen_math_op_statement(
             left_vec,
             right_vec,
             node.ctx.context.bool_type(),
+            false,
             &|lhs, rhs| node.ctx.b.build_or(lhs, rhs, "num.or.vec"),
         ),
         OperatorType::LogicalEqual => unsigned_int_to_float_vec(
@@ -138,16 +143,26 @@ fn apply_int_op(
     lhs: VectorValue,
     rhs: VectorValue,
     num_type: IntType,
+    signed_result: bool,
     op: &Fn(VectorValue, VectorValue) -> VectorValue,
 ) -> VectorValue {
     let left_int = float_vec_to_int(node, lhs, num_type);
     let right_int = float_vec_to_int(node, rhs, num_type);
     let result_int = op(left_int, right_int);
-    node.ctx.b.build_signed_int_to_float(
-        result_int,
-        node.ctx.context.f32_type().vec_type(2),
-        "num.vec.float",
-    )
+
+    if signed_result {
+        node.ctx.b.build_signed_int_to_float(
+            result_int,
+            node.ctx.context.f32_type().vec_type(2),
+            "num.vec.float",
+        )
+    } else {
+        node.ctx.b.build_unsigned_int_to_float(
+            result_int,
+            node.ctx.context.f32_type().vec_type(2),
+            "num.vec.float",
+        )
+    }
 }
 
 fn float_vec_to_int(node: &BlockContext, vec: VectorValue, num_type: IntType) -> VectorValue {
