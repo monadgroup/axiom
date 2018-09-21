@@ -78,7 +78,7 @@ define_functions! {
     Swap = "swap" func![(Num) -> Num],
     Combine = "combine" func![(Num, Num) -> Num],
     Mix = "mix" func![(Num, Num, Num) -> Num],
-    Sequence = "sequence" func![(Num, Num => Num) -> Num],
+    Sequence = "sequence" func![(Num => Num) -> Num],
     Min = "min" func![(Num, Num) -> Num],
     Max = "max" func![(Num, Num) -> Num],
     Next = "next" func![(Num) -> Num],
@@ -148,9 +148,13 @@ impl Function {
     }
 
     pub fn arg_range(&self) -> FunctionArgRange {
-        let required_count = self.required_args().len();
+        let required_count = self
+            .arg_types()
+            .into_iter()
+            .filter(|param| !param.optional)
+            .count();
         if self.var_arg().is_some() {
-            FunctionArgRange::VarArg(required_count)
+            FunctionArgRange::VarArg(required_count + 1)
         } else if self.arg_types().len() == required_count {
             FunctionArgRange::Precise(required_count)
         } else {

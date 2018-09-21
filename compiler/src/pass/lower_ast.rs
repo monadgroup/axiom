@@ -169,7 +169,7 @@ impl<'a> AstLower<'a> {
         // the arguments are valid if:
         //  - all non-optional parameters have a counterpart, AND EITHER
         //  - there is no vararg and the number of arguments is <= the number of parameters, OR
-        //  - there is a vararg (in this case, we need to collect them into a separate array
+        //  - there is a vararg (in this case, we need to collect them into a separate array)
         let mut args = Vec::new();
         let arg_types = func.arg_types();
         for (i, arg_type) in arg_types.iter().enumerate() {
@@ -190,6 +190,15 @@ impl<'a> AstLower<'a> {
 
         let mut varargs = Vec::new();
         if func.var_arg().is_some() {
+            // the first vararg is required
+            if expr.arguments.len() == args.len() {
+                return Err(CompileError::mismatched_arg_count(
+                    func.arg_range(),
+                    expr.arguments.len(),
+                    *pos,
+                ));
+            }
+
             for arg_expr in expr.arguments.iter().skip(args.len()) {
                 varargs.push(self.lower_expression(arg_expr)?);
             }
