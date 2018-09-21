@@ -13,7 +13,7 @@ macro_rules! func {
         FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )*], None)
     );
     (($($arg_type:expr),*, $(?$optional_arg_type:expr),*) -> $return_type:expr) => (
-        FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )* $( ParamType::new(true, $optional_arg_type) )*], None)
+        FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )* $( ParamType::new(true, $optional_arg_type), )*], None)
     );
     (($($arg_type:expr),* => $vararg_type:expr) -> $return_type:expr) => (
         FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )*], Some($vararg_type))
@@ -93,7 +93,7 @@ define_functions! {
     PeakBqFilter = "peakBqFilter" func![(Num, Num, Num, Num) -> Num],
     Noise = "noise" func![() -> Num],
     SinOsc = "sinOsc" func![(Num, ?Num) -> Num],
-    SqrOsc = "sqrOsc" func![(Num, ?Num) -> Num],
+    SqrOsc = "sqrOsc" func![(Num, ?Num, ?Num) -> Num],
     SawOsc = "sawOsc" func![(Num, ?Num) -> Num],
     TriOsc = "triOsc" func![(Num, ?Num) -> Num],
     RmpOsc = "rmpOsc" func![(Num, ?Num) -> Num],
