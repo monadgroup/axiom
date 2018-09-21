@@ -59,6 +59,8 @@ struct PortalTemp {
 };
 
 void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomModel::NodeSurface *surface) {
+    if (!surface->root()->runtime()) return;
+
     auto mir = transaction->buildSurface(surface->getRuntimeId(), surface->name());
 
     // build control groups
