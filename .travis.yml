@@ -27,7 +27,7 @@ install:
 # setup cmake for building
 before_script:
   - export LLVM_SYS_60_PREFIX=/usr/local/opt/llvm
-  - cmake ../ -DVST2_SDK_ROOT="$TRAVIS_BUILD_DIR/build/VST_SDK/VST2_SDK" -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm" -DCMAKE_BUILD_TYPE=Release -DDEPLOY=ON
+  - cmake ../ -DVST2_SDK_ROOT="$TRAVIS_BUILD_DIR/build/VST_SDK/VST2_SDK" -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm@6" -DCMAKE_BUILD_TYPE=Release -DDEPLOY=ON
 
 # build it!
 script:

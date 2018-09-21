@@ -131,6 +131,7 @@ impl Runtime {
 
         // deploy the library to the JIT
         let library_module = Runtime::codegen_lib(&context, &target);
+        library_module.print_to_stderr();
         optimizer.optimize_module(&library_module);
         jit.deploy(&library_module);
 
