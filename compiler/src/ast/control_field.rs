@@ -19,6 +19,7 @@ pub enum GraphField {
     Value,
     State,
     Paused,
+    Time,
 }
 
 impl fmt::Display for GraphField {
@@ -27,6 +28,7 @@ impl fmt::Display for GraphField {
             GraphField::Value => write!(f, "value"),
             GraphField::State => write!(f, "state"),
             GraphField::Paused => write!(f, "paused"),
+            GraphField::Time => write!(f, "time"),
         }
     }
 }

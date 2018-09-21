@@ -564,6 +564,11 @@ impl Control for GraphControl {
             &paused_field_getter,
             &paused_field_setter,
         );
+        generator.generate(
+            ControlField::Graph(GraphField::Time),
+            &time_field_getter,
+            &time_field_setter,
+        )
     }
 }
 
@@ -679,9 +684,9 @@ fn paused_field_getter(control: &mut ControlContext, out_val: PointerValue) {
         "paused.float",
     );
     let is_paused_spread = util::splat_vector(&control.ctx.b, is_paused_float, "paused.splat");
-    out_num.set_vec(&mut control.ctx.b, &is_paused_spread);
+    out_num.set_vec(control.ctx.b, &is_paused_spread);
     out_num.set_form(
-        &mut control.ctx.b,
+        control.ctx.b,
         &control
             .ctx
             .context
@@ -692,4 +697,83 @@ fn paused_field_getter(control: &mut ControlContext, out_val: PointerValue) {
 
 fn paused_field_setter(_control: &mut ControlContext, _in_val: PointerValue) {
     // noop
+}
+
+fn time_field_getter(control: &mut ControlContext, out_val: PointerValue) {
+    let out_num = NumValue::new(out_val);
+
+    let current_time_int = control
+        .ctx
+        .b
+        .build_load(
+            &unsafe {
+                control
+                    .ctx
+                    .b
+                    .build_struct_gep(&control.data_ptr, 0, "time.int.ptr")
+            },
+            "time.int",
+        )
+        .into_int_value();
+    let current_time_float = control.ctx.b.build_unsigned_int_to_float(
+        current_time_int,
+        control.ctx.context.f32_type(),
+        "time.float",
+    );
+    let time_spread = util::splat_vector(&control.ctx.b, current_time_float, "time.splat");
+    out_num.set_vec(control.ctx.b, &time_spread);
+    out_num.set_form(
+        control.ctx.b,
+        &control
+            .ctx
+            .context
+            .i8_type()
+            .const_int(FormType::Samples as u64, false),
+    );
+}
+
+fn time_field_setter(control: &mut ControlContext, in_val: PointerValue) {
+    let max_intrinsic = intrinsics::maxnum_f32(control.ctx.module);
+
+    let in_num = NumValue::new(in_val);
+    let in_vec = in_num.get_vec(control.ctx.b);
+    let new_time_float = control
+        .ctx
+        .b
+        .build_extract_element(
+            &in_vec,
+            &control.ctx.context.i64_type().const_int(0, false),
+            "time.float",
+        )
+        .into_float_value();
+    let clamped_time = control
+        .ctx
+        .b
+        .build_call(
+            &max_intrinsic,
+            &[
+                &new_time_float,
+                &control.ctx.context.f32_type().const_float(0.),
+            ],
+            "",
+            false,
+        )
+        .left()
+        .unwrap()
+        .into_float_value();
+
+    let int_time = control.ctx.b.build_float_to_unsigned_int(
+        clamped_time,
+        control.ctx.context.i32_type(),
+        "time.int",
+    );
+    control.ctx.b.build_store(
+        &unsafe {
+            control
+                .ctx
+                .b
+                .build_struct_gep(&control.data_ptr, 0, "time.int.ptr")
+        },
+        &int_time,
+    );
 }

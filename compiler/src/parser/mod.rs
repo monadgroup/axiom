@@ -485,6 +485,7 @@ impl Parser {
             "paused" if control_type == ControlType::Graph => {
                 ControlField::Graph(GraphField::Paused)
             }
+            "time" if control_type == ControlType::Graph => ControlField::Graph(GraphField::Time),
             "value" if control_type == ControlType::Midi => ControlField::Midi(MidiField::Value),
             "value" if control_type == ControlType::Roll => ControlField::Roll(RollField::Value),
             "speed" if control_type == ControlType::Roll => ControlField::Roll(RollField::Speed),
