@@ -28,7 +28,7 @@ void ProjectSerializer::serialize(AxiomModel::Project *project, QDataStream &str
                                   std::function<void(QDataStream &)> writeLinkedFile) {
     writeHeader(stream, projectSchemaMagic);
     writeLinkedFile(stream);
-    ModelObjectSerializer::serializeRoot(&project->mainRoot(), stream);
+    ModelObjectSerializer::serializeRoot(&project->mainRoot(), true, stream);
     LibrarySerializer::serialize(&project->library(), stream);
 }
 
@@ -43,7 +43,7 @@ std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uin
 
     auto linkedFile = getLinkedFile(stream, version);
     auto project = std::make_unique<Project>(linkedFile);
-    auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, version, project.get());
+    auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, true, version, project.get());
     auto library = LibrarySerializer::deserialize(stream, version, project.get());
     project->init(std::move(modelRoot), std::move(library));
     return project;

@@ -14,9 +14,10 @@ namespace AxiomModel {
         std::vector<ModelObject *> deserializeChunk(QDataStream &stream, uint32_t version, ModelRoot *root,
                                                     const QUuid &parent, ReferenceMapper *ref);
 
-        void serializeRoot(ModelRoot *root, QDataStream &stream);
+        void serializeRoot(ModelRoot *root, bool includeHistory, QDataStream &stream);
 
-        std::unique_ptr<ModelRoot> deserializeRoot(QDataStream &stream, uint32_t version, Project *project);
+        std::unique_ptr<ModelRoot> deserializeRoot(QDataStream &stream, bool includeHistory, uint32_t version,
+                                                   Project *project);
 
         void serialize(ModelObject *obj, QDataStream &stream, const QUuid &parent);
 

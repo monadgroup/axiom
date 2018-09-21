@@ -17,9 +17,11 @@
 
 using namespace AxiomModel;
 
-void ModelObjectSerializer::serializeRoot(AxiomModel::ModelRoot *root, QDataStream &stream) {
+void ModelObjectSerializer::serializeRoot(AxiomModel::ModelRoot *root, bool includeHistory, QDataStream &stream) {
     serializeChunk(stream, QUuid(), dynamicCast<ModelObject *>(root->pool().sequence()));
-    HistorySerializer::serialize(root->history(), stream);
+    if (includeHistory) {
+        HistorySerializer::serialize(root->history(), stream);
+    }
 }
 
 std::vector<ModelObject *> ModelObjectSerializer::deserializeChunk(QDataStream &stream, uint32_t version,
@@ -43,13 +45,15 @@ std::vector<ModelObject *> ModelObjectSerializer::deserializeChunk(QDataStream &
     return usedObjects;
 }
 
-std::unique_ptr<ModelRoot> ModelObjectSerializer::deserializeRoot(QDataStream &stream, uint32_t version,
-                                                                  Project *project) {
+std::unique_ptr<ModelRoot> ModelObjectSerializer::deserializeRoot(QDataStream &stream, bool includeHistory,
+                                                                  uint32_t version, Project *project) {
     auto modelRoot = std::make_unique<ModelRoot>(project);
     IdentityReferenceMapper ref;
     deserializeChunk(stream, version, modelRoot.get(), QUuid(), &ref);
-    modelRoot->history() =
-        HistorySerializer::deserialize(stream, version, modelRoot.get(), std::move(modelRoot->history().applyer()));
+    if (includeHistory) {
+        modelRoot->history() =
+            HistorySerializer::deserialize(stream, version, modelRoot.get(), std::move(modelRoot->history().applyer()));
+    }
     return modelRoot;
 }
 

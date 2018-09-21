@@ -43,7 +43,7 @@ void LibrarySerializer::serializeEntry(AxiomModel::LibraryEntry *entry, QDataStr
     for (const auto &tag : entry->tags()) {
         stream << tag;
     }
-    ModelObjectSerializer::serializeRoot(entry->root(), stream);
+    ModelObjectSerializer::serializeRoot(entry->root(), false, stream);
 }
 
 std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &stream, uint32_t version,
@@ -66,7 +66,7 @@ std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &s
         tags.emplace(tag);
     }
 
-    auto root = ModelObjectSerializer::deserializeRoot(stream, version, project);
+    auto root = ModelObjectSerializer::deserializeRoot(stream, false, version, project);
     return LibraryEntry::create(std::move(name), baseUuid, modificationUuid, modificationDateTime, std::move(tags),
                                 std::move(root));
 }
