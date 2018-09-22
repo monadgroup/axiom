@@ -42,7 +42,7 @@ NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     connect(&showValueTimer, &QTimer::timeout, this, &NumControlItem::showValueExpired);
 }
 
-QRegularExpression numRegex("^\\s*([-e\\d\\.]+)\\s*([kmgt])*?(v|a|q|hz|beats|ms|s|μ|db)?\\s*$",
+QRegularExpression numRegex("^\\s*(-?[e\\d\\.]+)\\s*([kmgt])*?(v|a|q|hz|b|beat|beats|ms|s|samples|sample|μ|db)?\\s*$",
                             QRegularExpression::CaseInsensitiveOption);
 
 bool NumControlItem::unformatString(const QString &str, float *valOut, AxiomModel::FormType *formOut) {
@@ -75,6 +75,7 @@ bool NumControlItem::unformatString(const QString &str, float *valOut, AxiomMode
     } else if (inputForm.compare("hz", Qt::CaseInsensitive) == 0) {
         *formOut = AxiomModel::FormType::FREQUENCY;
     } else if (inputForm.compare("beats", Qt::CaseInsensitive) == 0 ||
+               inputForm.compare("beat", Qt::CaseInsensitive) == 0 ||
                inputForm.compare("b", Qt::CaseInsensitive) == 0) {
         *formOut = AxiomModel::FormType::BEATS;
     } else if (inputForm.compare("ms", Qt::CaseInsensitive) == 0) {
@@ -83,7 +84,8 @@ bool NumControlItem::unformatString(const QString &str, float *valOut, AxiomMode
     } else if (inputForm.compare("s", Qt::CaseInsensitive) == 0) {
         *formOut = AxiomModel::FormType::SECONDS;
     } else if (inputForm.compare("μ", Qt::CaseInsensitive) == 0 ||
-               inputForm.compare("samples", Qt::CaseInsensitive) == 0) {
+               inputForm.compare("samples", Qt::CaseInsensitive) == 0 ||
+               inputForm.compare("sample", Qt::CaseInsensitive) == 0) {
         *formOut = AxiomModel::FormType::SAMPLES;
     } else if (inputForm.compare("db", Qt::CaseInsensitive) == 0) {
         *formOut = AxiomModel::FormType::DB;
@@ -428,8 +430,9 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
         currentMinMax = control->root()->runtime()->convertNum(originalForm, currentMinMax);
     }
 
-    auto minMaxDefaultStr = AxiomUtil::formatChannelFull(currentMinMax.left, currentMinMax.form) % " - " %
-                            AxiomUtil::formatChannelFull(currentMinMax.right, currentMinMax.form);
+    auto minMaxDefaultStr =
+        static_cast<QString>(AxiomUtil::formatChannelFull(currentMinMax.left, currentMinMax.form) % " - " %
+                             AxiomUtil::formatChannelFull(currentMinMax.right, currentMinMax.form));
     auto stepStr = QString::number(control->step());
     QString stepSeparator = " @ ";
 
@@ -456,7 +459,7 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
             stepStr = newStr.mid(stepSeparatorIndex + 1);
         }
 
-        auto minMaxSeparatorIndex = rangeStr.indexOf('-');
+        auto minMaxSeparatorIndex = rangeStr.trimmed().indexOf('-', 1);
         auto newMin = control->minValue();
         auto newMax = control->maxValue();
         if (minMaxSeparatorIndex > 0) {

@@ -95,7 +95,7 @@ const char *AxiomUtil::getFormUnit(float val, AxiomModel::FormType form) {
 }
 
 QString AxiomUtil::formatChannelFull(float val, AxiomModel::FormType form) {
-    return formatFloatForm(val, form) % " " % getFormUnit(val, form);
+    return static_cast<QString>(formatFloatForm(val, form) % " " % getFormUnit(val, form)).trimmed();
 }
 
 QString AxiomUtil::formatNumForm(AxiomModel::NumValue value, bool includeForm) {
