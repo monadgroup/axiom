@@ -73,6 +73,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("rand", (uint64_t) & ::rand);
     jit->addBuiltin("realloc", (uint64_t) & ::realloc);
     jit->addBuiltin("free", (uint64_t) & ::free);
+    jit->addBuiltin("memset", (uint64_t) & ::memset);
     jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
 
 #ifdef APPLE

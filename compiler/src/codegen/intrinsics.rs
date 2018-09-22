@@ -43,6 +43,30 @@ pub fn realloc(module: &Module, target: &TargetData) -> FunctionValue {
     })
 }
 
+pub fn memset(module: &Module, target: &TargetData) -> FunctionValue {
+    let target_ptr_type = target.int_ptr_type_in_context(&module.get_context());
+    let intrinsic_name = format!("llvm.memset.p0i8.i{}", target_ptr_type.get_bit_width());
+    util::get_or_create_func(module, &intrinsic_name, false, &|| {
+        let ptr_type = module
+            .get_context()
+            .i8_type()
+            .ptr_type(AddressSpace::Generic);
+        (
+            Linkage::ExternalLinkage,
+            module.get_context().void_type().fn_type(
+                &[
+                    &ptr_type,
+                    &module.get_context().i8_type(),
+                    &target_ptr_type,
+                    &module.get_context().i32_type(),
+                    &module.get_context().bool_type(),
+                ],
+                false,
+            ),
+        )
+    })
+}
+
 pub fn pow_v2f32(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "llvm.pow.v2f32", false, &|| {
         let context = module.get_context();
