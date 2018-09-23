@@ -18,8 +18,12 @@ Sequence<ModelObject *> ModelObject::links() {
     return blank<ModelObject *>();
 }
 
-Sequence<QUuid> ModelObject::compileLinks() {
+Sequence<QUuid> ModelObject::deleteCompileLinks() {
     return oneShot(parentUuid());
+}
+
+Sequence<QUuid> ModelObject::compileLinks() {
+    return blank<QUuid>();
 }
 
 void ModelObject::remove() {

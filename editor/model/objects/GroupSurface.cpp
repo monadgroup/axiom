@@ -22,6 +22,11 @@ QString GroupSurface::name() {
     return _node->name();
 }
 
+Sequence<QUuid> GroupSurface::compileLinks() {
+    return flatten(
+        std::array<Sequence<QUuid>, 2>{oneShot(node()->surface()->uuid()), node()->surface()->compileLinks()});
+}
+
 void GroupSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     if (runtime) {
         runtimeId = runtime->nextId();

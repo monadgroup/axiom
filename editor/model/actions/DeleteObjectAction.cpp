@@ -22,7 +22,7 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
 }
 
 void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
-    auto sortedItems = collect(heapSort(getRemoveItems()));
+    auto sortedItems = heapSort(getRemoveItems());
 
     QDataStream stream(&_buffer, QIODevice::WriteOnly);
     ModelObjectSerializer::serializeChunk(stream, QUuid(), sortedItems);
@@ -38,7 +38,7 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
         usedIds.insert(itm->uuid());
         compileIds.remove(itm->uuid());
 
-        auto compileLinks = itm->compileLinks();
+        auto compileLinks = itm->deleteCompileLinks();
         for (const auto &compileItem : compileLinks) {
             compileIds.insert(compileItem);
         }
@@ -50,8 +50,8 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
         (*itemsToDelete.begin())->remove();
     }
 
-    for (const auto &parent : compileIds) {
-        compileItems.push_back(parent);
+    for (const auto &compileId : compileIds) {
+        compileItems.push_back(compileId);
     }
 }
 
@@ -65,7 +65,7 @@ void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
     for (const auto &obj : addedObjects) {
         compileItems.push_back(obj->uuid());
 
-        auto compileLinks = obj->compileLinks();
+        auto compileLinks = obj->deleteCompileLinks();
         for (const auto &compileItem : compileLinks) {
             compileItems.push_back(compileItem);
         }
@@ -74,9 +74,11 @@ void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
 
 Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
     auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
-    auto links = flatten(map(dependents, std::function<Sequence<ModelObject *>(ModelObject *const &)>([](ModelObject *const &obj) { return obj->links(); })));
+    auto links = flatten(map(dependents, std::function<Sequence<ModelObject *>(ModelObject *const &)>(
+                                             [](ModelObject *const &obj) { return obj->links(); })));
     auto linkDependents =
-        flatten(map(links, std::function<Sequence<ModelObject *>(ModelObject *const &)>([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
+        flatten(map(links, std::function<Sequence<ModelObject *>(ModelObject *const &)>(
+                               [this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
 
     return distinctByUuid(flatten(std::array<Sequence<ModelObject *>, 2>{dependents, linkDependents}));
 }

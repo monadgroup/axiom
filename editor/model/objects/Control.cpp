@@ -182,7 +182,7 @@ Sequence<ModelObject *> Control::links() {
         staticCast<ModelObject *>(_connections.sequence()).sequence()});
 }
 
-Sequence<QUuid> Control::compileLinks() {
+Sequence<QUuid> Control::deleteCompileLinks() {
     return oneShot(surface()->node()->parentUuid());
 }
 

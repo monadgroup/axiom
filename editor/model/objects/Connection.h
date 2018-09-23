@@ -18,8 +18,6 @@ namespace AxiomModel {
         static std::unique_ptr<Connection> create(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlA,
                                                   const QUuid &controlB, ModelRoot *root);
 
-        bool buildOnRemove() const override { return true; }
-
         NodeSurface *surface() const { return _surface; }
 
         const QUuid &controlAUuid() const { return _controlAUuid; }

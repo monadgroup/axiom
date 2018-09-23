@@ -1,5 +1,7 @@
 #include "ModelRoot.h"
 
+#include <chrono>
+
 #include "../backend/AudioBackend.h"
 #include "IdentityReferenceMapper.h"
 #include "ModelObject.h"
@@ -42,15 +44,35 @@ std::lock_guard<std::mutex> ModelRoot::lockRuntime() {
 }
 
 void ModelRoot::applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Transaction *transaction) {
+    if (items.empty()) return;
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+    std::vector<ModelObject *> inputItems;
     QSet<QUuid> processedItems;
-    for (const auto &item : items) {
+    std::deque<QUuid> addQueue(items.begin(), items.end());
+
+    while (!addQueue.empty()) {
+        auto item = addQueue.front();
+        addQueue.pop_front();
+
         if (processedItems.contains(item)) continue;
         processedItems.insert(item);
-
         if (auto object = findMaybe<ModelObject *>(pool().sequence(), item)) {
-            (*object)->build(transaction);
+            inputItems.push_back(*object);
+
+            for (const auto &linked : (*object)->compileLinks()) {
+                addQueue.push_back(linked);
+            }
         }
     }
+
+    for (const auto &item : inputItems) {
+        item->build(transaction);
+    }
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
+    std::cout << "Transaction build took " << duration.count() / 1000000000. << "s" << std::endl;
 }
 
 void ModelRoot::applyCompile(const std::vector<QUuid> &items) {

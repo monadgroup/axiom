@@ -105,7 +105,7 @@ namespace AxiomModel {
 
         Sequence<ModelObject *> links() override;
 
-        Sequence<QUuid> compileLinks() override;
+        Sequence<QUuid> deleteCompileLinks() override;
 
         const std::optional<ControlCompileMeta> &compileMeta() const;
 

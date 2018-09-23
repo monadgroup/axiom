@@ -25,8 +25,6 @@ namespace AxiomModel {
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
-        virtual bool buildOnRemove() const { return false; }
-
         ModelType modelType() const { return _modelType; }
 
         ModelRoot *root() const { return _root; }
@@ -36,6 +34,8 @@ namespace AxiomModel {
         virtual void restoreState() {}
 
         virtual Sequence<ModelObject *> links();
+
+        virtual Sequence<QUuid> deleteCompileLinks();
 
         virtual Sequence<QUuid> compileLinks();
 
