@@ -162,6 +162,12 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
     uint8_t displayModeInt;
     stream >> displayModeInt;
 
+    // Channel was removed in 0.4.0 (schema version 5)
+    if (version < 5) {
+        uint8_t channelDummy;
+        stream >> channelDummy;
+    }
+
     // Control min/max/step was added in 0.4.0 (schema version 5). Previously controls would always be between 0 and 1,
     // step would always be disabled (0).
     float minValue, maxValue;
