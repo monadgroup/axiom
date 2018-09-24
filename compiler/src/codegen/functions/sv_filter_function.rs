@@ -202,10 +202,7 @@ impl Function for SvFilterFunction {
                 input_vec,
                 func.ctx.b.build_float_mul(
                     damp,
-                    func.ctx
-                        .b
-                        .build_load(&notch_ptr, "notch")
-                        .into_vector_value(),
+                    func.ctx.b.build_load(&band_ptr, "band").into_vector_value(),
                     "",
                 ),
                 "newnotch",
