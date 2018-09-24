@@ -64,11 +64,6 @@ void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
 
     for (const auto &obj : addedObjects) {
         compileItems.push_back(obj->uuid());
-
-        auto compileLinks = obj->deleteCompileLinks();
-        for (const auto &compileItem : compileLinks) {
-            compileItems.push_back(compileItem);
-        }
     }
 }
 
