@@ -37,8 +37,14 @@ namespace AxiomBackend {
         void setSampleRate(float sampleRate);
 
         // Formats a form or number.
-        const char *formatNumForm(float testValue, NumForm form) const;
-        std::string formatNum(NumValue value, bool includeLabel) const;
+        static const char *formatNumForm(float testValue, NumForm form);
+        static std::string formatNum(NumValue value, bool includeLabel);
+
+        // Finds a file by the specified name in one of the data paths, or returns an empty string.
+        static std::string findDataFile(const std::string &name);
+
+        // Returns the main writable data path, guaranteed to exist.
+        static std::string getDataPath();
 
         // Serializes or deserializes the current open project. Use this for saving/loading the project from a DAW
         // project file.

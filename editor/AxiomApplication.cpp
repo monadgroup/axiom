@@ -1,6 +1,8 @@
 #include "AxiomApplication.h"
 
+#include <QtCore/QDir>
 #include <QtCore/QtCore>
+#include <iostream>
 
 #include "compiler/interface/Frontend.h"
 #include "util.h"
@@ -25,9 +27,18 @@ int argc = 0;
 char **argv = new char *[1];
 
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
+    setApplicationName("Axiom");
+    setApplicationVersion("0.3.2");
+
     MaximFrontend::maxim_initialize();
     AxiomGui::GlobalActions::setupActions();
 
     Q_INIT_RESOURCE(res);
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
+
+    auto dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    std::cout << "Using data path " << dataPath.toStdString() << std::endl;
+
+    // ensure the data path exists
+    QDir().mkpath(dataPath);
 }

@@ -1,6 +1,7 @@
 #include "AudioBackend.h"
 
 #include <QtCore/QFileInfo>
+#include <QtCore/QStandardPaths>
 #include <QtWidgets/QMessageBox>
 
 #include "../AxiomEditor.h"
@@ -32,12 +33,20 @@ MidiValue **AudioBackend::getMidiPortal(size_t portalId) const {
     return (MidiValue **) &portalValues[portalId];
 }
 
-const char *AudioBackend::formatNumForm(float testValue, AxiomBackend::NumForm form) const {
+const char *AudioBackend::formatNumForm(float testValue, AxiomBackend::NumForm form) {
     return AxiomUtil::getFormUnit(testValue, form);
 }
 
-std::string AudioBackend::formatNum(AxiomBackend::NumValue value, bool includeLabel) const {
+std::string AudioBackend::formatNum(AxiomBackend::NumValue value, bool includeLabel) {
     return AxiomUtil::formatNumForm(value, includeLabel).toStdString();
+}
+
+std::string AudioBackend::findDataFile(const std::string &name) {
+    return QStandardPaths::locate(QStandardPaths::AppDataLocation, QString::fromStdString(name)).toStdString();
+}
+
+std::string AudioBackend::getDataPath() {
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
 }
 
 QByteArray AudioBackend::serialize() {
