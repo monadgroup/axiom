@@ -14,7 +14,6 @@ namespace AxiomBackend {
 namespace AxiomModel {
 
     class RootSurface;
-    class Library;
     class ModelRoot;
 
     class Project : public AxiomCommon::Hookable {
@@ -26,13 +25,11 @@ namespace AxiomModel {
 
         explicit Project(QString linkedFile);
 
-        void init(std::unique_ptr<ModelRoot> mainRoot, std::unique_ptr<Library> library);
+        void init(std::unique_ptr<ModelRoot> mainRoot);
 
         ~Project() override;
 
         ModelRoot &mainRoot() const { return *_mainRoot; }
-
-        Library &library() const { return *_library; }
 
         RootSurface *rootSurface() const { return _rootSurface; }
 
@@ -50,7 +47,6 @@ namespace AxiomModel {
 
     private:
         std::unique_ptr<ModelRoot> _mainRoot;
-        std::unique_ptr<Library> _library;
         QString _linkedFile;
         bool _isDirty = false;
 

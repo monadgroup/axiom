@@ -1,7 +1,6 @@
 #include "Project.h"
 
 #include "../backend/AudioConfiguration.h"
-#include "Library.h"
 #include "ModelRoot.h"
 #include "PoolOperators.h"
 #include "actions/CreatePortalNodeAction.h"
@@ -11,7 +10,7 @@
 using namespace AxiomModel;
 
 Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
-    : _mainRoot(std::make_unique<ModelRoot>(this)), _library(std::make_unique<Library>()) {
+    : _mainRoot(std::make_unique<ModelRoot>(this)) {
     // setup default project
     //  1. create default surface
     auto rootId = QUuid::createUuid();
@@ -79,9 +78,8 @@ Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
 
 Project::Project(QString linkedFile) : _linkedFile(std::move(linkedFile)) {}
 
-void Project::init(std::unique_ptr<AxiomModel::ModelRoot> mainRoot, std::unique_ptr<AxiomModel::Library> library) {
+void Project::init(std::unique_ptr<AxiomModel::ModelRoot> mainRoot) {
     _mainRoot = std::move(mainRoot);
-    _library = std::move(library);
     _rootSurface = _mainRoot->rootSurface();
 }
 

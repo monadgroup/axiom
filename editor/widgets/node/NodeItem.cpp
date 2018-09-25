@@ -287,7 +287,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             node->root()->history().append(RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
         });
     } else if (selectedAction == saveModuleAction) {
-        ModulePropertiesWindow saveWindow(&node->root()->project()->library());
+        /*ModulePropertiesWindow saveWindow(&node->root()->project()->library());
         if (saveWindow.exec() == QDialog::Accepted) {
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();
@@ -309,7 +309,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                                                     newEntry->root(), newEntry->rootSurface()->uuid(), &ref);
 
             node->root()->project()->library().addEntry(std::move(newEntry));
-        }
+        }*/
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
     } else if (selectedAction == fiddleAction && portalControl) {

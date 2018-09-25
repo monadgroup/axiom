@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QtCore/QLockFile>
 #include <QtWidgets/QMainWindow>
 #include <memory>
 #include <unordered_map>
@@ -10,6 +11,8 @@
 
 namespace AxiomModel {
     class Project;
+
+    class Library;
 
     class NodeSurface;
 }
@@ -36,6 +39,14 @@ namespace AxiomGui {
 
         void setProject(std::unique_ptr<AxiomModel::Project> project);
 
+        static QString globalLibraryLockPath();
+
+        void lockGlobalLibrary();
+
+        void unlockGlobalLibrary();
+
+        void testLockGlobalLibrary();
+
     public slots:
 
         NodeSurfacePanel *showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split,
@@ -47,6 +58,8 @@ namespace AxiomGui {
 
     protected:
         void closeEvent(QCloseEvent *event) override;
+
+        bool event(QEvent *event) override;
 
     private slots:
 
@@ -70,10 +83,12 @@ namespace AxiomGui {
         AxiomBackend::AudioBackend *_backend;
         MaximCompiler::Runtime _runtime;
         std::unique_ptr<AxiomModel::Project> _project;
+        std::unique_ptr<AxiomModel::Library> _library;
         std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
         std::unique_ptr<HistoryPanel> _historyPanel;
         std::unique_ptr<ModuleBrowserPanel> _modulePanel;
         QMenu *_viewMenu;
+        QLockFile libraryLock;
 
         void saveProjectTo(const QString &path);
 

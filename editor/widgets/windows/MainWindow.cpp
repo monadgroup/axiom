@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 
+#include <QtCore/QStandardPaths>
 #include <QtCore/QStringBuilder>
 #include <QtCore/QTimer>
 #include <QtWidgets/QFileDialog>
@@ -25,7 +26,8 @@
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend), _runtime(true, true) {
+MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
+    : _backend(backend), _runtime(true, true), libraryLock(globalLibraryLockPath()) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -147,6 +149,15 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 }
 
+bool MainWindow::event(QEvent *event) {
+    if (event->type() == QEvent::WindowActivate) {
+        // block until the global library is unlocked
+        testLockGlobalLibrary();
+    }
+
+    return QMainWindow::event(event);
+}
+
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     // cleanup old project state
     _openPanels.clear();
@@ -173,17 +184,34 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
     _historyPanel->hide();
 
-    _modulePanel = std::make_unique<ModuleBrowserPanel>(this, &_project->library(), this);
-    addDockWidget(Qt::BottomDockWidgetArea, _modulePanel.get());
+    //_modulePanel = std::make_unique<ModuleBrowserPanel>(this, &_project->library(), this);
+    // addDockWidget(Qt::BottomDockWidgetArea, _modulePanel.get());
 
     _viewMenu->addAction(surfacePanel->toggleViewAction());
-    _viewMenu->addAction(_modulePanel->toggleViewAction());
+    //_viewMenu->addAction(_modulePanel->toggleViewAction());
     _viewMenu->addAction(_historyPanel->toggleViewAction());
 
     updateWindowTitle(_project->linkedFile(), _project->isDirty());
     _project->linkedFileChanged.connect(
         [this](const QString &newName) { updateWindowTitle(newName, _project->isDirty()); });
     _project->isDirtyChanged.connect([this](bool isDirty) { updateWindowTitle(_project->linkedFile(), isDirty); });
+}
+
+QString MainWindow::globalLibraryLockPath() {
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).filePath("library.lock");
+}
+
+void MainWindow::lockGlobalLibrary() {
+    libraryLock.lock();
+}
+
+void MainWindow::unlockGlobalLibrary() {
+    libraryLock.unlock();
+}
+
+void MainWindow::testLockGlobalLibrary() {
+    libraryLock.lock();
+    libraryLock.unlock();
 }
 
 void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {
@@ -297,7 +325,7 @@ void MainWindow::exportLibrary() {
 
     QDataStream stream(&file);
     AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
-    AxiomModel::LibrarySerializer::serialize(&_project->library(), stream);
+    // AxiomModel::LibrarySerializer::serialize(&_project->library(), stream);
     file.close();
 }
 
@@ -335,7 +363,7 @@ void MainWindow::importLibraryFrom(const QString &path) {
 
     auto mergeLibrary = AxiomModel::LibrarySerializer::deserialize(stream, readVersion, _project.get());
     file.close();
-    _project->library().import(
+    /*_project->library().import(
         mergeLibrary.get(), [](AxiomModel::LibraryEntry *oldEntry, AxiomModel::LibraryEntry *newEntry) {
             auto currentNewer = oldEntry->modificationDateTime() > newEntry->modificationDateTime();
 
@@ -378,7 +406,7 @@ void MainWindow::importLibraryFrom(const QString &path) {
                 return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
             else
                 unreachable;
-        });
+        });*/
 }
 
 bool MainWindow::checkCloseProject() {
