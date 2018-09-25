@@ -16,7 +16,7 @@ namespace AxiomModel {
 
     class Library : public AxiomCommon::Hookable {
     public:
-        enum class ConflictResolution { KEEP_OLD, KEEP_NEW, KEEP_BOTH };
+        enum class ConflictResolution { CANCEL, KEEP_OLD, KEEP_NEW, KEEP_BOTH };
 
         AxiomCommon::Event<LibraryEntry *> entryAdded;
         AxiomCommon::Event<const QString &> activeTagChanged;

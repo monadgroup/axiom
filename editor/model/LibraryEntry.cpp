@@ -40,6 +40,10 @@ void LibraryEntry::setName(const QString &newName) {
     }
 }
 
+void LibraryEntry::setBaseUuid(QUuid newUuid) {
+    _baseUuid = newUuid;
+}
+
 void LibraryEntry::addTag(const QString &tag) {
     if (_tags.insert(tag).second) {
         tagAdded.trigger(tag);

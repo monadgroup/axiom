@@ -342,7 +342,7 @@ void MainWindow::importLibraryFrom(const QString &path) {
             QMessageBox msgBox(
                 QMessageBox::Warning, "Module import conflict",
                 tr("Heads up! One of the modules in the imported library is conflicting with one you already had.\n\n"
-                   "Current module (") +
+                   "Original module (") +
                     (currentNewer ? "newer" : "older") +
                     ")\n"
                     "Name: " +
@@ -351,7 +351,7 @@ void MainWindow::importLibraryFrom(const QString &path) {
                     "Last edit: " +
                     oldEntry->modificationDateTime().toLocalTime().toString() +
                     "\n\n"
-                    "New module (" +
+                    "Imported module (" +
                     (currentNewer ? "older" : "newer") +
                     ")\n"
                     "Name: " +
@@ -361,18 +361,23 @@ void MainWindow::importLibraryFrom(const QString &path) {
                     newEntry->modificationDateTime().toLocalTime().toString() +
                     "\n\n"
                     "Would you like to keep the current module, imported one, or both?");
+            auto cancelBtn = msgBox.addButton(QMessageBox::Cancel);
             auto currentBtn = msgBox.addButton("Current", QMessageBox::ActionRole);
             auto importedBtn = msgBox.addButton("Imported", QMessageBox::ActionRole);
-            msgBox.addButton("Both", QMessageBox::ActionRole);
+            auto bothBtn = msgBox.addButton("Both", QMessageBox::ActionRole);
             msgBox.setDefaultButton(importedBtn);
             msgBox.exec();
 
-            if (msgBox.clickedButton() == currentBtn)
+            if (msgBox.clickedButton() == cancelBtn)
+                return AxiomModel::Library::ConflictResolution::CANCEL;
+            else if (msgBox.clickedButton() == currentBtn)
                 return AxiomModel::Library::ConflictResolution::KEEP_OLD;
             else if (msgBox.clickedButton() == importedBtn)
                 return AxiomModel::Library::ConflictResolution::KEEP_NEW;
-            else
+            else if (msgBox.clickedButton() == bothBtn)
                 return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
+            else
+                unreachable;
         });
 }
 

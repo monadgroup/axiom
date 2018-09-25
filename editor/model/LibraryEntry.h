@@ -33,6 +33,8 @@ namespace AxiomModel {
 
         void setName(const QString &newName);
 
+        void setBaseUuid(QUuid newUuid);
+
         const QUuid &baseUuid() const { return _baseUuid; }
 
         const QUuid &modificationUuid() const { return _modificationUuid; }
