@@ -32,6 +32,7 @@ void ProjectSerializer::serialize(AxiomModel::Project *project, QDataStream &str
 }
 
 std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uint32_t *versionOut,
+                                                        std::function<void(Library *)> importLibrary,
                                                         std::function<QString(QDataStream &, uint32_t)> getLinkedFile) {
     uint32_t version;
     if (!readHeader(stream, projectSchemaMagic, &version)) {
@@ -43,5 +44,13 @@ std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uin
     auto linkedFile = getLinkedFile(stream, version);
     auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, true, version);
     auto project = std::make_unique<Project>(linkedFile, std::move(modelRoot));
+
+    // Before schema version 5, the module library was included in the project file. To ensure modules aren't lost,
+    // merge the library in.
+    if (version < 5) {
+        auto library = LibrarySerializer::deserialize(stream, version);
+        importLibrary(library.get());
+    }
+
     return project;
 }

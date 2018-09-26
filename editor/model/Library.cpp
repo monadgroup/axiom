@@ -176,8 +176,9 @@ void Library::removeEntry(AxiomModel::LibraryEntry *entry) {
     for (auto i = _entries.begin(); i != _entries.end(); i++) {
         if (i->get() == entry) {
             _entries.erase(i);
-            return;
+            break;
         }
     }
-    unreachable;
+
+    changed.trigger();
 }

@@ -14,6 +14,7 @@
 #include <chrono>
 
 #include "../GlobalActions.h"
+#include "../InteractiveImport.h"
 #include "../history/HistoryPanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
 #include "../surface/NodeSurfacePanel.h"
@@ -423,7 +424,9 @@ void MainWindow::openProject() {
     QDataStream stream(&file);
     uint32_t readVersion = 0;
     auto newProject = AxiomModel::ProjectSerializer::deserialize(
-        stream, &readVersion, [selectedFile](QDataStream &, uint32_t) { return selectedFile; });
+        stream, &readVersion,
+        [this](AxiomModel::Library *importLibrary) { doInteractiveLibraryImport(library(), importLibrary); },
+        [selectedFile](QDataStream &, uint32_t) { return selectedFile; });
     file.close();
 
     if (!newProject) {
@@ -518,49 +521,7 @@ void MainWindow::importLibraryFrom(const QString &path) {
 
     auto mergeLibrary = AxiomModel::LibrarySerializer::deserialize(stream, readVersion);
     file.close();
-    _library->import(mergeLibrary.get(), [](AxiomModel::LibraryEntry *oldEntry, AxiomModel::LibraryEntry *newEntry) {
-        auto currentNewer = oldEntry->modificationDateTime() > newEntry->modificationDateTime();
-
-        QMessageBox msgBox(
-            QMessageBox::Warning, "Module import conflict",
-            tr("Heads up! One of the modules in the imported library is conflicting with one you already had.\n\n"
-               "Original module (") +
-                (currentNewer ? "newer" : "older") +
-                ")\n"
-                "Name: " +
-                oldEntry->name() +
-                "\n"
-                "Last edit: " +
-                oldEntry->modificationDateTime().toLocalTime().toString() +
-                "\n\n"
-                "Imported module (" +
-                (currentNewer ? "older" : "newer") +
-                ")\n"
-                "Name: " +
-                newEntry->name() +
-                "\n"
-                "Last edit: " +
-                newEntry->modificationDateTime().toLocalTime().toString() +
-                "\n\n"
-                "Would you like to keep the current module, imported one, or both?");
-        auto cancelBtn = msgBox.addButton(QMessageBox::Cancel);
-        auto currentBtn = msgBox.addButton("Current", QMessageBox::ActionRole);
-        auto importedBtn = msgBox.addButton("Imported", QMessageBox::ActionRole);
-        auto bothBtn = msgBox.addButton("Both", QMessageBox::ActionRole);
-        msgBox.setDefaultButton(importedBtn);
-        msgBox.exec();
-
-        if (msgBox.clickedButton() == cancelBtn)
-            return AxiomModel::Library::ConflictResolution::CANCEL;
-        else if (msgBox.clickedButton() == currentBtn)
-            return AxiomModel::Library::ConflictResolution::KEEP_OLD;
-        else if (msgBox.clickedButton() == importedBtn)
-            return AxiomModel::Library::ConflictResolution::KEEP_NEW;
-        else if (msgBox.clickedButton() == bothBtn)
-            return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
-        else
-            unreachable;
-    });
+    doInteractiveLibraryImport(_library.get(), mergeLibrary.get());
 }
 
 bool MainWindow::checkCloseProject() {
