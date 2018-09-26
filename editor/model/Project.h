@@ -23,9 +23,7 @@ namespace AxiomModel {
 
         explicit Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration);
 
-        explicit Project(QString linkedFile);
-
-        void init(std::unique_ptr<ModelRoot> mainRoot);
+        Project(QString linkedFile, std::unique_ptr<ModelRoot> mainRoot);
 
         ~Project() override;
 
@@ -52,5 +50,11 @@ namespace AxiomModel {
 
         AxiomBackend::AudioBackend *_backend = nullptr;
         RootSurface *_rootSurface;
+
+        void addRootListeners();
+
+        void rootModified();
+
+        void rootConfigurationChanged();
     };
 }

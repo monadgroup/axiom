@@ -263,18 +263,18 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     menu.addSeparator();
 
     QAction *fiddleAction = nullptr;
-    // auto rootSurface = dynamic_cast<RootSurface *>(node->surface());
+    auto rootSurface = dynamic_cast<RootSurface *>(node->surface());
+    auto mainWindow = canvas->panel->window;
     PortalControl *portalControl = nullptr;
-    // todo:
-    /*if (auto portalNode = dynamic_cast<PortalNode *>(node); portalNode && rootSurface && rootSurface->compileMeta() &&
-                                                            node->root()->project()->backend()->canFiddleAutomation()) {
+    if (auto portalNode = dynamic_cast<PortalNode *>(node); portalNode && rootSurface && rootSurface->compileMeta() &&
+                                                            mainWindow->project()->backend()->canFiddleAutomation()) {
         portalControl =
             AxiomModel::takeAt(dynamicCast<PortalControl *>((*portalNode->controls().value())->controls()), 0);
         if (portalControl->portalType() == PortalControl::PortalType::AUTOMATION) {
             fiddleAction = menu.addAction(tr("&Fiddle"));
             menu.addSeparator();
         }
-    }*/
+    }
 
     auto deleteAction = menu.addAction(tr("&Delete"));
     deleteAction->setEnabled(node->isDeletable());
@@ -288,14 +288,13 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             node->root()->history().append(RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
         });
     } else if (selectedAction == saveModuleAction) {
-        /*ModulePropertiesWindow saveWindow(&node->root()->project()->library());
+        ModulePropertiesWindow saveWindow(mainWindow->library());
         if (saveWindow.exec() == QDialog::Accepted) {
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();
 
             auto newEntry =
-                LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()),
-                                     node->root()->project());
+                LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()));
             auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems());
             QByteArray serializeArray;
             QDataStream serializeStream(&serializeArray, QIODevice::WriteOnly);
@@ -309,24 +308,24 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             ModelObjectSerializer::deserializeChunk(deserializeStream, ProjectSerializer::schemaVersion,
                                                     newEntry->root(), newEntry->rootSurface()->uuid(), &ref);
 
-            node->root()->project()->library().addEntry(std::move(newEntry));
-        }*/
+            mainWindow->library()->addEntry(std::move(newEntry));
+        }
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
     } else if (selectedAction == fiddleAction && portalControl) {
         // remap the automation node into its portal index
-        /*auto &compileMeta = *rootSurface->compileMeta();
+        auto &compileMeta = *rootSurface->compileMeta();
 
         for (size_t portalIndex = 0; portalIndex < compileMeta.portals.size(); portalIndex++) {
             const auto &portal = compileMeta.portals[portalIndex];
             if (portal.id == portalControl->portalId()) {
-                auto backend = node->root()->project()->backend();
+                auto backend = mainWindow->project()->backend();
                 auto remappedIndex = backend->internalRemapPortal(portalIndex);
                 auto currentPortalValue = **backend->getAudioPortal(remappedIndex);
                 backend->automationValueChanged(remappedIndex, currentPortalValue);
                 break;
             }
-        }*/
+        }
     }
 }
 

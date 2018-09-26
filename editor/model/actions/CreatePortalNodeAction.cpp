@@ -32,7 +32,7 @@ std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::create(const QUu
                                                                        AxiomModel::ConnectionWire::WireType wireType,
                                                                        AxiomModel::PortalControl::PortalType portalType,
                                                                        AxiomModel::ModelRoot *root) {
-    auto portalId = 0; // todo: root->project()->rootSurface()->takePortalId();
+    auto portalId = root->rootSurface()->takePortalId();
     return create(QUuid::createUuid(), parentUuid, pos, std::move(name), QUuid::createUuid(), wireType, portalType,
                   portalId, QUuid::createUuid(), root);
 }

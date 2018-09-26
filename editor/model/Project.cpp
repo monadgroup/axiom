@@ -1,5 +1,6 @@
 #include "Project.h"
 
+#include "../backend/AudioBackend.h"
 #include "../backend/AudioConfiguration.h"
 #include "ModelRoot.h"
 #include "PoolOperators.h"
@@ -11,6 +12,8 @@ using namespace AxiomModel;
 
 Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
     : _mainRoot(std::make_unique<ModelRoot>()) {
+    addRootListeners();
+
     // setup default project
     //  1. create default surface
     auto rootId = QUuid::createUuid();
@@ -76,11 +79,9 @@ Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
     }
 }
 
-Project::Project(QString linkedFile) : _linkedFile(std::move(linkedFile)) {}
-
-void Project::init(std::unique_ptr<AxiomModel::ModelRoot> mainRoot) {
-    _mainRoot = std::move(mainRoot);
-    _rootSurface = _mainRoot->rootSurface();
+Project::Project(QString linkedFile, std::unique_ptr<AxiomModel::ModelRoot> mainRoot)
+    : _mainRoot(std::move(mainRoot)), _linkedFile(std::move(linkedFile)), _rootSurface(_mainRoot->rootSurface()) {
+    addRootListeners();
 }
 
 Project::~Project() {
@@ -99,4 +100,19 @@ void Project::setIsDirty(bool isDirty) {
         _isDirty = isDirty;
         isDirtyChanged.trigger(isDirty);
     }
+}
+
+void Project::addRootListeners() {
+    _mainRoot->modified.connect(this, &Project::rootModified);
+    _mainRoot->configurationChanged.connect(this, &Project::rootConfigurationChanged);
+}
+
+void Project::rootModified() {
+    if (!linkedFile().isEmpty() || !backend()->doesSaveInternally()) {
+        setIsDirty(true);
+    }
+}
+
+void Project::rootConfigurationChanged() {
+    backend()->internalUpdateConfiguration();
 }

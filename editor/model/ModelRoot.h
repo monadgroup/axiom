@@ -32,13 +32,16 @@ namespace AxiomModel {
 
     class RootSurface;
 
-    class ModelRoot {
+    class ModelRoot : public AxiomCommon::Hookable {
     public:
         using NodeSurfaceCollection = WatchSequence<NodeSurface *>;
         using NodeCollection = WatchSequence<Node *>;
         using ControlSurfaceCollection = WatchSequence<ControlSurface *>;
         using ControlCollection = WatchSequence<Control *>;
         using ConnectionCollection = WatchSequence<Connection *>;
+
+        AxiomCommon::Event<> modified;
+        AxiomCommon::Event<> configurationChanged;
 
         ModelRoot();
 

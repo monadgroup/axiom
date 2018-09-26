@@ -39,6 +39,8 @@ namespace AxiomGui {
 
         AxiomModel::Project *project() const { return _project.get(); }
 
+        AxiomModel::Library *library() const { return _library.get(); }
+
         void setProject(std::unique_ptr<AxiomModel::Project> project);
 
         static QString globalLibraryLockPath();

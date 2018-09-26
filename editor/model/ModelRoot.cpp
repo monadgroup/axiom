@@ -80,10 +80,7 @@ void ModelRoot::applyCompile(const std::vector<QUuid> &items) {
     applyItemsTo(items, &transaction);
     applyTransaction(std::move(transaction));
 
-    // todo:
-    /*if (!_project->linkedFile().isEmpty() || !_project->backend()->doesSaveInternally()) {
-        _project->setIsDirty(true);
-    }*/
+    modified.trigger();
 }
 
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
@@ -103,8 +100,7 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
         }
     }
 
-    // todo:
-    //_project->backend()->internalUpdateConfiguration();
+    configurationChanged.trigger();
 }
 
 void ModelRoot::destroy() {
