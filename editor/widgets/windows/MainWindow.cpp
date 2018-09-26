@@ -224,6 +224,8 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     assert(defaultSurface.value());
     auto surfacePanel = showSurface(nullptr, *defaultSurface.value(), false, true);
 
+    _modulePanel->show();
+
     _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
     addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
     _historyPanel->hide();
