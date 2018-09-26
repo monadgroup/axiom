@@ -263,9 +263,10 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     menu.addSeparator();
 
     QAction *fiddleAction = nullptr;
-    auto rootSurface = dynamic_cast<RootSurface *>(node->surface());
+    // auto rootSurface = dynamic_cast<RootSurface *>(node->surface());
     PortalControl *portalControl = nullptr;
-    if (auto portalNode = dynamic_cast<PortalNode *>(node); portalNode && rootSurface && rootSurface->compileMeta() &&
+    // todo:
+    /*if (auto portalNode = dynamic_cast<PortalNode *>(node); portalNode && rootSurface && rootSurface->compileMeta() &&
                                                             node->root()->project()->backend()->canFiddleAutomation()) {
         portalControl =
             AxiomModel::takeAt(dynamicCast<PortalControl *>((*portalNode->controls().value())->controls()), 0);
@@ -273,7 +274,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             fiddleAction = menu.addAction(tr("&Fiddle"));
             menu.addSeparator();
         }
-    }
+    }*/
 
     auto deleteAction = menu.addAction(tr("&Delete"));
     deleteAction->setEnabled(node->isDeletable());
@@ -314,7 +315,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
     } else if (selectedAction == fiddleAction && portalControl) {
         // remap the automation node into its portal index
-        auto &compileMeta = *rootSurface->compileMeta();
+        /*auto &compileMeta = *rootSurface->compileMeta();
 
         for (size_t portalIndex = 0; portalIndex < compileMeta.portals.size(); portalIndex++) {
             const auto &portal = compileMeta.portals[portalIndex];
@@ -325,7 +326,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
                 backend->automationValueChanged(remappedIndex, currentPortalValue);
                 break;
             }
-        }
+        }*/
     }
 }
 

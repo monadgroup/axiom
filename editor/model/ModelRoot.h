@@ -40,9 +40,7 @@ namespace AxiomModel {
         using ControlCollection = WatchSequence<Control *>;
         using ConnectionCollection = WatchSequence<Connection *>;
 
-        explicit ModelRoot(Project *project);
-
-        Project *project() const { return _project; }
+        ModelRoot();
 
         RootSurface *rootSurface() const;
 
@@ -89,7 +87,6 @@ namespace AxiomModel {
         void destroy();
 
     private:
-        Project *_project;
         Pool _pool;
         HistoryList _history;
         NodeSurfaceCollection _nodeSurfaces;

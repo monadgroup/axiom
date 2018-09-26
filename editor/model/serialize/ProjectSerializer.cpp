@@ -42,7 +42,7 @@ std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uin
 
     auto linkedFile = getLinkedFile(stream, version);
     auto project = std::make_unique<Project>(linkedFile);
-    auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, true, version, project.get());
+    auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, true, version);
     // auto library = LibrarySerializer::deserialize(stream, version, project.get());
     project->init(std::move(modelRoot));
     return project;

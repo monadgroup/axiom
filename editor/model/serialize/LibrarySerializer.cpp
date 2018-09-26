@@ -17,7 +17,7 @@ void LibrarySerializer::serialize(AxiomModel::Library *library, QDataStream &str
     }
 }
 
-std::unique_ptr<Library> LibrarySerializer::deserialize(QDataStream &stream, uint32_t version, Project *project) {
+std::unique_ptr<Library> LibrarySerializer::deserialize(QDataStream &stream, uint32_t version) {
     QString activeTag;
     stream >> activeTag;
     QString activeSearch;
@@ -28,7 +28,7 @@ std::unique_ptr<Library> LibrarySerializer::deserialize(QDataStream &stream, uin
     stream >> entryCount;
     entries.reserve(entryCount);
     for (uint32_t i = 0; i < entryCount; i++) {
-        entries.push_back(deserializeEntry(stream, version, project));
+        entries.push_back(deserializeEntry(stream, version));
     }
 
     return std::make_unique<Library>(std::move(activeTag), std::move(activeSearch), std::move(entries));
@@ -46,8 +46,7 @@ void LibrarySerializer::serializeEntry(AxiomModel::LibraryEntry *entry, QDataStr
     ModelObjectSerializer::serializeRoot(entry->root(), false, stream);
 }
 
-std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &stream, uint32_t version,
-                                                                  AxiomModel::Project *project) {
+std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &stream, uint32_t version) {
     QString name;
     stream >> name;
     QUuid baseUuid;
@@ -69,7 +68,7 @@ std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &s
     // 0.4.0 (schema version 5) removed history from being serialized in the library
     auto deserializeHistory = version < 5;
 
-    auto root = ModelObjectSerializer::deserializeRoot(stream, deserializeHistory, version, project);
+    auto root = ModelObjectSerializer::deserializeRoot(stream, deserializeHistory, version);
     return LibraryEntry::create(std::move(name), baseUuid, modificationUuid, modificationDateTime, std::move(tags),
                                 std::move(root));
 }

@@ -10,7 +10,7 @@
 using namespace AxiomModel;
 
 Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
-    : _mainRoot(std::make_unique<ModelRoot>(this)) {
+    : _mainRoot(std::make_unique<ModelRoot>()) {
     // setup default project
     //  1. create default surface
     auto rootId = QUuid::createUuid();

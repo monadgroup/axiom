@@ -46,8 +46,8 @@ std::vector<ModelObject *> ModelObjectSerializer::deserializeChunk(QDataStream &
 }
 
 std::unique_ptr<ModelRoot> ModelObjectSerializer::deserializeRoot(QDataStream &stream, bool includeHistory,
-                                                                  uint32_t version, Project *project) {
-    auto modelRoot = std::make_unique<ModelRoot>(project);
+                                                                  uint32_t version) {
+    auto modelRoot = std::make_unique<ModelRoot>();
     IdentityReferenceMapper ref;
     deserializeChunk(stream, version, modelRoot.get(), QUuid(), &ref);
     if (includeHistory) {
