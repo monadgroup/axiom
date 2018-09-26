@@ -1,5 +1,9 @@
 #include "MainWindow.h"
 
+#include <QIODevice>
+#include <QStandardPaths>
+#include <QtCore/QDateTime>
+#include <QtCore/QStandardPaths>
 #include <QtCore/QStringBuilder>
 #include <QtCore/QTimer>
 #include <QtWidgets/QFileDialog>
@@ -7,8 +11,10 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
+#include <chrono>
 
 #include "../GlobalActions.h"
+#include "../InteractiveImport.h"
 #include "../history/HistoryPanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
 #include "../surface/NodeSurfacePanel.h"
@@ -25,7 +31,8 @@
 
 using namespace AxiomGui;
 
-MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend), _runtime(true, true) {
+MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
+    : _backend(backend), _runtime(true, true), libraryLock(globalLibraryLockPath()) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -36,7 +43,44 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
     setDockNestingEnabled(true);
     setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
-    // build
+    auto startTime = std::chrono::high_resolution_clock::now();
+    lockGlobalLibrary();
+    // load the library - if the file does not exist, use an empty project
+    auto library = loadGlobalLibrary();
+    if (!library) {
+        library = std::make_unique<AxiomModel::Library>();
+    }
+
+    // merge the internal library into the new library, using a strategy to always keep theirs in case of conflict
+    auto defaultLibrary = loadDefaultLibrary();
+    library->import(defaultLibrary.get(), [](AxiomModel::LibraryEntry *, AxiomModel::LibraryEntry *) {
+        return AxiomModel::Library::ConflictResolution::KEEP_OLD;
+    });
+
+    _library = std::move(library);
+    saveGlobalLibrary();
+    unlockGlobalLibrary();
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
+    std::cout << "Loading module library took " << duration.count() / 1000000000. << "s" << std::endl;
+
+    _library->changed.connect(this, &MainWindow::triggerLibraryChanged);
+
+    saveDebounceTimer.setSingleShot(true);
+    saveDebounceTimer.setInterval(500);
+    connect(&saveDebounceTimer, &QTimer::timeout, this, &MainWindow::triggerLibraryChangeDebounce);
+
+    globalLibraryWatcher.addPath(globalLibraryFilePath());
+    connect(&globalLibraryWatcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::triggerLibraryReload);
+
+    loadDebounceTimer.setSingleShot(true);
+    loadDebounceTimer.setInterval(500);
+    connect(&loadDebounceTimer, &QTimer::timeout, this, &MainWindow::triggerLibraryReloadDebounce);
+
+    _modulePanel = std::make_unique<ModuleBrowserPanel>(this, _library.get(), this);
+    addDockWidget(Qt::BottomDockWidgetArea, _modulePanel.get());
+
+    // build menus
     auto fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(GlobalActions::fileNew);
     fileMenu->addSeparator();
@@ -72,6 +116,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
     editMenu->addAction(GlobalActions::editPreferences);
 
     _viewMenu = menuBar()->addMenu(tr("&View"));
+    _viewMenu->addAction(_modulePanel->toggleViewAction());
 
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(GlobalActions::helpAbout);
@@ -89,7 +134,9 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend) : _backend(backend),
     connect(GlobalActions::helpAbout, &QAction::triggered, this, &MainWindow::showAbout);
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow() {
+    unlockGlobalLibrary();
+}
 
 NodeSurfacePanel *MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *surface, bool split,
                                           bool permanent) {
@@ -136,7 +183,6 @@ void MainWindow::newProject() {
     }
 
     setProject(std::make_unique<AxiomModel::Project>(_backend->createDefaultConfiguration()));
-    importLibraryFrom(":/default.axl");
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -145,6 +191,15 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     } else {
         event->ignore();
     }
+}
+
+bool MainWindow::event(QEvent *event) {
+    if (event->type() == QEvent::WindowActivate) {
+        // block until the global library is unlocked
+        testLockGlobalLibrary();
+    }
+
+    return QMainWindow::event(event);
 }
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
@@ -169,21 +224,45 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     assert(defaultSurface.value());
     auto surfacePanel = showSurface(nullptr, *defaultSurface.value(), false, true);
 
+    _modulePanel->show();
+
     _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
     addDockWidget(Qt::RightDockWidgetArea, _historyPanel.get());
     _historyPanel->hide();
 
-    _modulePanel = std::make_unique<ModuleBrowserPanel>(this, &_project->library(), this);
-    addDockWidget(Qt::BottomDockWidgetArea, _modulePanel.get());
-
     _viewMenu->addAction(surfacePanel->toggleViewAction());
-    _viewMenu->addAction(_modulePanel->toggleViewAction());
     _viewMenu->addAction(_historyPanel->toggleViewAction());
 
     updateWindowTitle(_project->linkedFile(), _project->isDirty());
     _project->linkedFileChanged.connect(
         [this](const QString &newName) { updateWindowTitle(newName, _project->isDirty()); });
     _project->isDirtyChanged.connect([this](bool isDirty) { updateWindowTitle(_project->linkedFile(), isDirty); });
+}
+
+QString MainWindow::globalLibraryLockPath() {
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).filePath("library.lock");
+}
+
+QString MainWindow::globalLibraryFilePath() {
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).filePath("library.axl");
+}
+
+void MainWindow::lockGlobalLibrary() {
+    if (isLibraryLocked) return;
+    isLibraryLocked = true;
+    libraryLock.lock();
+}
+
+void MainWindow::unlockGlobalLibrary() {
+    if (!isLibraryLocked) return;
+    libraryLock.unlock();
+    isLibraryLocked = false;
+}
+
+void MainWindow::testLockGlobalLibrary() {
+    if (isLibraryLocked) return;
+    libraryLock.lock();
+    libraryLock.unlock();
 }
 
 void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {
@@ -203,6 +282,113 @@ void MainWindow::saveAsProject() {
                                                      tr("Axiom Project Files (*.axp);;All Files (*.*)"));
     if (selectedFile.isNull()) return;
     saveProjectTo(selectedFile);
+}
+
+std::unique_ptr<AxiomModel::Library> MainWindow::loadGlobalLibrary() {
+    QFile libraryFile(globalLibraryFilePath());
+    if (!libraryFile.open(QIODevice::ReadOnly)) {
+        return nullptr;
+    }
+
+    QDataStream stream(&libraryFile);
+    uint32_t readVersion = 0;
+    if (!AxiomModel::ProjectSerializer::readHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic,
+                                                   &readVersion)) {
+        // we can't load the file - rename it as a backup, and return empty
+        auto newName = "library (" + QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss.z") + ").axl";
+
+        std::cout << "Failed to load global project (";
+        if (readVersion) {
+            std::cout << "schema version is " << readVersion << ", expected between "
+                      << AxiomModel::ProjectSerializer::minSchemaVersion << " and "
+                      << AxiomModel::ProjectSerializer::schemaVersion;
+        } else {
+            std::cout << "bad magic header";
+        }
+        std::cout << "), backing it up as '" << newName.toStdString() << "' and resetting library" << std::endl;
+
+        libraryFile.rename(newName);
+        return nullptr;
+    }
+
+    auto library = AxiomModel::LibrarySerializer::deserialize(stream, readVersion);
+    libraryFile.close();
+    return library;
+}
+
+std::unique_ptr<AxiomModel::Library> MainWindow::loadDefaultLibrary() {
+    QFile defaultFile(":/default.axl");
+    assert(defaultFile.open(QIODevice::ReadOnly));
+    QDataStream stream(&defaultFile);
+    uint32_t readVersion;
+    assert(AxiomModel::ProjectSerializer::readHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic,
+                                                     &readVersion));
+    auto library = AxiomModel::LibrarySerializer::deserialize(stream, readVersion);
+    defaultFile.close();
+    return library;
+}
+
+void MainWindow::saveGlobalLibrary() {
+    QFile file(globalLibraryFilePath());
+    if (!file.open(QIODevice::WriteOnly)) {
+        return;
+    }
+
+    QDataStream stream(&file);
+    AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
+    AxiomModel::LibrarySerializer::serialize(_library.get(), stream);
+    file.close();
+}
+
+void MainWindow::triggerLibraryChanged() {
+    std::cout << "Locking global library" << std::endl;
+    lockGlobalLibrary();
+    std::cout << "Starting save timer" << std::endl;
+    saveDebounceTimer.start();
+}
+
+void MainWindow::triggerLibraryChangeDebounce() {
+    // ignore any changes if they were caused by the library being loaded
+    if (didJustLoadLibrary) {
+        std::cout << "Ignoring change as library was just reloaded" << std::endl;
+        didJustLoadLibrary = false;
+        return;
+    }
+
+    didJustSaveLibrary = true;
+
+    std::cout << "Saving global library" << std::endl;
+    saveGlobalLibrary();
+    std::cout << "Unlocking global library" << std::endl;
+    unlockGlobalLibrary();
+}
+
+void MainWindow::triggerLibraryReload() {
+    std::cout << "Starting reload timer" << std::endl;
+    loadDebounceTimer.start();
+}
+
+void MainWindow::triggerLibraryReloadDebounce() {
+    // ignore any changes if they were caused by the library being saved
+    if (didJustSaveLibrary) {
+        std::cout << "Ignoring reload as library was just saved" << std::endl;
+        didJustSaveLibrary = false;
+        return;
+    }
+
+    didJustLoadLibrary = true;
+
+    std::cout << "Locking global library" << std::endl;
+    lockGlobalLibrary();
+    auto library = loadGlobalLibrary();
+    if (library) {
+        std::cout << "Importing global library changes" << std::endl;
+        _library->import(library.get(), [](AxiomModel::LibraryEntry *, AxiomModel::LibraryEntry *) {
+            return AxiomModel::Library::ConflictResolution::KEEP_NEW;
+        });
+    }
+    std::cout << "Unlocking global library" << std::endl;
+    unlockGlobalLibrary();
 }
 
 void MainWindow::saveProjectTo(const QString &path) {
@@ -240,7 +426,9 @@ void MainWindow::openProject() {
     QDataStream stream(&file);
     uint32_t readVersion = 0;
     auto newProject = AxiomModel::ProjectSerializer::deserialize(
-        stream, &readVersion, [selectedFile](QDataStream &, uint32_t) { return selectedFile; });
+        stream, &readVersion,
+        [this](AxiomModel::Library *importLibrary) { doInteractiveLibraryImport(library(), importLibrary); },
+        [selectedFile](QDataStream &, uint32_t) { return selectedFile; });
     file.close();
 
     if (!newProject) {
@@ -297,7 +485,7 @@ void MainWindow::exportLibrary() {
 
     QDataStream stream(&file);
     AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
-    AxiomModel::LibrarySerializer::serialize(&_project->library(), stream);
+    // AxiomModel::LibrarySerializer::serialize(&_project->library(), stream);
     file.close();
 }
 
@@ -333,52 +521,9 @@ void MainWindow::importLibraryFrom(const QString &path) {
         return;
     }
 
-    auto mergeLibrary = AxiomModel::LibrarySerializer::deserialize(stream, readVersion, _project.get());
+    auto mergeLibrary = AxiomModel::LibrarySerializer::deserialize(stream, readVersion);
     file.close();
-    _project->library().import(
-        mergeLibrary.get(), [](AxiomModel::LibraryEntry *oldEntry, AxiomModel::LibraryEntry *newEntry) {
-            auto currentNewer = oldEntry->modificationDateTime() > newEntry->modificationDateTime();
-
-            QMessageBox msgBox(
-                QMessageBox::Warning, "Module import conflict",
-                tr("Heads up! One of the modules in the imported library is conflicting with one you already had.\n\n"
-                   "Original module (") +
-                    (currentNewer ? "newer" : "older") +
-                    ")\n"
-                    "Name: " +
-                    oldEntry->name() +
-                    "\n"
-                    "Last edit: " +
-                    oldEntry->modificationDateTime().toLocalTime().toString() +
-                    "\n\n"
-                    "Imported module (" +
-                    (currentNewer ? "older" : "newer") +
-                    ")\n"
-                    "Name: " +
-                    newEntry->name() +
-                    "\n"
-                    "Last edit: " +
-                    newEntry->modificationDateTime().toLocalTime().toString() +
-                    "\n\n"
-                    "Would you like to keep the current module, imported one, or both?");
-            auto cancelBtn = msgBox.addButton(QMessageBox::Cancel);
-            auto currentBtn = msgBox.addButton("Current", QMessageBox::ActionRole);
-            auto importedBtn = msgBox.addButton("Imported", QMessageBox::ActionRole);
-            auto bothBtn = msgBox.addButton("Both", QMessageBox::ActionRole);
-            msgBox.setDefaultButton(importedBtn);
-            msgBox.exec();
-
-            if (msgBox.clickedButton() == cancelBtn)
-                return AxiomModel::Library::ConflictResolution::CANCEL;
-            else if (msgBox.clickedButton() == currentBtn)
-                return AxiomModel::Library::ConflictResolution::KEEP_OLD;
-            else if (msgBox.clickedButton() == importedBtn)
-                return AxiomModel::Library::ConflictResolution::KEEP_NEW;
-            else if (msgBox.clickedButton() == bothBtn)
-                return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
-            else
-                unreachable;
-        });
+    doInteractiveLibraryImport(_library.get(), mergeLibrary.get());
 }
 
 bool MainWindow::checkCloseProject() {

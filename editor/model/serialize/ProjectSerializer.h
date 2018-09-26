@@ -8,6 +8,8 @@ namespace AxiomModel {
 
     class Project;
 
+    class Library;
+
     namespace ProjectSerializer {
         // Schema version history:
         //  schemaVersion = 1 in 0.1.0
@@ -27,6 +29,7 @@ namespace AxiomModel {
         void serialize(Project *project, QDataStream &stream, std::function<void(QDataStream &)> writeLinkedFile);
 
         std::unique_ptr<Project> deserialize(QDataStream &stream, uint32_t *versionOut,
+                                             std::function<void(Library *)> importLibrary,
                                              std::function<QString(QDataStream &, uint32_t)> getLinkedFile);
     }
 }

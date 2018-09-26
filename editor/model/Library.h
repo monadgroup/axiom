@@ -23,6 +23,7 @@ namespace AxiomModel {
         AxiomCommon::Event<const QString &> activeSearchChanged;
         AxiomCommon::Event<const QString &> tagAdded;
         AxiomCommon::Event<const QString &> tagRemoved;
+        AxiomCommon::Event<> changed;
 
         Library();
 

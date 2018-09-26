@@ -8,7 +8,6 @@ namespace AxiomModel {
 
     class ModelRoot;
     class ReferenceMapper;
-    class Project;
 
     namespace ModelObjectSerializer {
         std::vector<ModelObject *> deserializeChunk(QDataStream &stream, uint32_t version, ModelRoot *root,
@@ -16,8 +15,7 @@ namespace AxiomModel {
 
         void serializeRoot(ModelRoot *root, bool includeHistory, QDataStream &stream);
 
-        std::unique_ptr<ModelRoot> deserializeRoot(QDataStream &stream, bool includeHistory, uint32_t version,
-                                                   Project *project);
+        std::unique_ptr<ModelRoot> deserializeRoot(QDataStream &stream, bool includeHistory, uint32_t version);
 
         void serialize(ModelObject *obj, QDataStream &stream, const QUuid &parent);
 

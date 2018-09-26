@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QtCore/QFileSystemWatcher>
+#include <QtCore/QLockFile>
+#include <QtCore/QTimer>
 #include <QtWidgets/QMainWindow>
 #include <memory>
 #include <unordered_map>
@@ -10,6 +13,8 @@
 
 namespace AxiomModel {
     class Project;
+
+    class Library;
 
     class NodeSurface;
 }
@@ -22,7 +27,7 @@ namespace AxiomGui {
 
     class ModuleBrowserPanel;
 
-    class MainWindow : public QMainWindow {
+    class MainWindow : public QMainWindow, public AxiomCommon::Hookable {
         Q_OBJECT
 
     public:
@@ -34,7 +39,19 @@ namespace AxiomGui {
 
         AxiomModel::Project *project() const { return _project.get(); }
 
+        AxiomModel::Library *library() const { return _library.get(); }
+
         void setProject(std::unique_ptr<AxiomModel::Project> project);
+
+        static QString globalLibraryLockPath();
+
+        static QString globalLibraryFilePath();
+
+        void lockGlobalLibrary();
+
+        void unlockGlobalLibrary();
+
+        void testLockGlobalLibrary();
 
     public slots:
 
@@ -47,6 +64,8 @@ namespace AxiomGui {
 
     protected:
         void closeEvent(QCloseEvent *event) override;
+
+        bool event(QEvent *event) override;
 
     private slots:
 
@@ -70,15 +89,38 @@ namespace AxiomGui {
         AxiomBackend::AudioBackend *_backend;
         MaximCompiler::Runtime _runtime;
         std::unique_ptr<AxiomModel::Project> _project;
+        std::unique_ptr<AxiomModel::Library> _library;
         std::unordered_map<AxiomModel::NodeSurface *, std::unique_ptr<NodeSurfacePanel>> _openPanels;
         std::unique_ptr<HistoryPanel> _historyPanel;
         std::unique_ptr<ModuleBrowserPanel> _modulePanel;
         QMenu *_viewMenu;
+        QLockFile libraryLock;
+        bool isLibraryLocked = false;
+        QTimer saveDebounceTimer;
+        QTimer loadDebounceTimer;
+        QFileSystemWatcher globalLibraryWatcher;
+
+        bool didJustSaveLibrary = false;
+        bool didJustLoadLibrary = false;
+
+        static std::unique_ptr<AxiomModel::Library> loadGlobalLibrary();
+        static std::unique_ptr<AxiomModel::Library> loadDefaultLibrary();
+
+        void saveGlobalLibrary();
+
+        void triggerLibraryChanged();
 
         void saveProjectTo(const QString &path);
 
         bool checkCloseProject();
 
         void updateWindowTitle(const QString &linkedFile, bool isDirty);
+
+    private slots:
+        void triggerLibraryChangeDebounce();
+
+        void triggerLibraryReload();
+
+        void triggerLibraryReloadDebounce();
     };
 }

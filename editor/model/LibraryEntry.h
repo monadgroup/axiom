@@ -17,6 +17,7 @@ namespace AxiomModel {
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<const QString &> tagAdded;
         AxiomCommon::Event<const QString &> tagRemoved;
+        AxiomCommon::Event<> changed;
         AxiomCommon::Event<> removed;
         AxiomCommon::Event<> cleanup;
 
@@ -27,7 +28,7 @@ namespace AxiomModel {
                                                     const QDateTime &modificationDateTime, std::set<QString> tags,
                                                     std::unique_ptr<ModelRoot> root);
 
-        static std::unique_ptr<LibraryEntry> create(QString name, std::set<QString> tags, Project *project);
+        static std::unique_ptr<LibraryEntry> create(QString name, std::set<QString> tags);
 
         const QString &name() const { return _name; }
 

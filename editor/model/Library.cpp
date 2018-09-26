@@ -15,12 +15,11 @@ Library::~Library() = default;
 
 Library::Library(QString activeTag, QString activeSearch,
                  std::vector<std::unique_ptr<AxiomModel::LibraryEntry>> entries)
-    : _entries(std::move(entries)), _activeTag(std::move(activeTag)), _activeSearch(std::move(activeSearch)) {
-    // add tags of all entries
-    for (const auto &entry : _entries) {
-        for (const auto &tag : entry->tags()) {
-            addTag(tag);
-        }
+    : _activeTag(std::move(activeTag)), _activeSearch(std::move(activeSearch)) {
+    // add all entries through the normal path, so we assign event handlers to them correctly
+    _entries.reserve(entries.size());
+    for (auto &entry : entries) {
+        addEntry(std::move(entry));
     }
 }
 
@@ -135,7 +134,10 @@ void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
     }
     entryPtr->tagAdded.connect(this, &Library::addTag);
     entryPtr->tagRemoved.connect(this, &Library::removeTag);
+    entryPtr->changed.connect(&changed);
     entryPtr->cleanup.connect(this, [this, entryPtr]() { removeEntry(entryPtr); });
+
+    changed.trigger();
 }
 
 LibraryEntry *Library::findById(const QUuid &id) {
@@ -174,8 +176,9 @@ void Library::removeEntry(AxiomModel::LibraryEntry *entry) {
     for (auto i = _entries.begin(); i != _entries.end(); i++) {
         if (i->get() == entry) {
             _entries.erase(i);
-            return;
+            break;
         }
     }
-    unreachable;
+
+    changed.trigger();
 }

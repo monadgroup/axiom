@@ -11,6 +11,7 @@
 #include "../model/serialize/ProjectSerializer.h"
 #include "../resources/resource.h"
 #include "../util.h"
+#include "../widgets/InteractiveImport.h"
 #include "../widgets/windows/MainWindow.h"
 
 using namespace AxiomBackend;
@@ -62,8 +63,12 @@ QByteArray AudioBackend::serialize() {
 void AudioBackend::deserialize(QByteArray *data) {
     QDataStream stream(data, QIODevice::ReadOnly);
     uint32_t readVersion = 0;
-    auto newProject =
-        AxiomModel::ProjectSerializer::deserialize(stream, &readVersion, [](QDataStream &stream, uint32_t version) {
+    auto newProject = AxiomModel::ProjectSerializer::deserialize(
+        stream, &readVersion,
+        [this](AxiomModel::Library *importLibrary) {
+            AxiomGui::doInteractiveLibraryImport(_editor->window()->library(), importLibrary);
+        },
+        [](QDataStream &stream, uint32_t version) {
             QString linkedFile;
             if (version >= 5) {
                 stream >> linkedFile;

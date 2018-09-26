@@ -15,8 +15,8 @@
 
 using namespace AxiomModel;
 
-ModelRoot::ModelRoot(Project *project)
-    : _project(project), _history([this](std::vector<QUuid> items) { applyCompile(items); }),
+ModelRoot::ModelRoot()
+    : _history([this](std::vector<QUuid> items) { applyCompile(items); }),
       _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.sequence())),
       _nodes(dynamicCastWatch<Node *>(_pool.sequence())),
       _controlSurfaces(dynamicCastWatch<ControlSurface *>(_pool.sequence())),
@@ -80,9 +80,7 @@ void ModelRoot::applyCompile(const std::vector<QUuid> &items) {
     applyItemsTo(items, &transaction);
     applyTransaction(std::move(transaction));
 
-    if (!_project->linkedFile().isEmpty() || !_project->backend()->doesSaveInternally()) {
-        _project->setIsDirty(true);
-    }
+    modified.trigger();
 }
 
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
@@ -101,7 +99,8 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
             obj->restoreState();
         }
     }
-    _project->backend()->internalUpdateConfiguration();
+
+    configurationChanged.trigger();
 }
 
 void ModelRoot::destroy() {
