@@ -58,7 +58,7 @@ namespace AxiomModel {
 
         static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid,
                                                       const QString &name, const QUuid &exposingUuid, QPoint pos,
-                                                      QSize size, ModelRoot *root);
+                                                      QSize size, bool isWrittenTo, ModelRoot *root);
 
         static ControlPrepare buildControlPrepareAction(ControlType type, const QUuid &parentUuid, ModelRoot *root);
 

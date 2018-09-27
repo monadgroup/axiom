@@ -474,6 +474,7 @@ void HistorySerializer::serializeCreateControlAction(AxiomModel::CreateControlAc
     stream << action->name();
     stream << action->pos();
     stream << action->size();
+    stream << action->isWrittenTo();
 }
 
 std::unique_ptr<CreateControlAction> HistorySerializer::deserializeCreateControlAction(QDataStream &stream,
@@ -501,8 +502,16 @@ std::unique_ptr<CreateControlAction> HistorySerializer::deserializeCreateControl
         size = QSize(2, 2);
     }
 
+    // Control written to state was added in 0.4.0 (schema version 5). The previous default was false
+    bool isWrittenTo;
+    if (version >= 5) {
+        stream >> isWrittenTo;
+    } else {
+        isWrittenTo = false;
+    }
+
     return CreateControlAction::create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), pos, size,
-                                       root);
+                                       isWrittenTo, root);
 }
 
 void HistorySerializer::serializeSetNumModeAction(AxiomModel::SetNumModeAction *action, QDataStream &stream) {

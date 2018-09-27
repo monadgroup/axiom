@@ -201,7 +201,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
     // can have the space cleared
     for (auto &newControl : unmatchedControls) {
         auto createAction = CreateControlAction::create((*controls().value())->uuid(), newControl.type,
-                                                        std::move(newControl.name), root());
+                                                        std::move(newControl.name), newControl.meta.writtenTo, root());
         std::vector<QUuid> dummy;
         createAction->forward(true, dummy);
 

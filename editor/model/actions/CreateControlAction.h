@@ -12,17 +12,18 @@ namespace AxiomModel {
     class CreateControlAction : public Action {
     public:
         CreateControlAction(const QUuid &uuid, const QUuid &parentUuid, Control::ControlType type, QString name,
-                            QPoint pos, QSize size, ModelRoot *root);
+                            QPoint pos, QSize size, bool isWrittenTo, ModelRoot *root);
 
         static std::unique_ptr<CreateControlAction> create(const QUuid &uuid, const QUuid &parentUuid,
                                                            Control::ControlType type, QString name, QPoint pos,
-                                                           QSize size, ModelRoot *root);
+                                                           QSize size, bool isWrittenTo, ModelRoot *root);
 
         static std::unique_ptr<CreateControlAction> create(const QUuid &parentUuid, Control::ControlType type,
-                                                           QString name, QPoint pos, QSize size, ModelRoot *root);
+                                                           QString name, QPoint pos, QSize size, bool isWrittenTo,
+                                                           ModelRoot *root);
 
         static std::unique_ptr<CompositeAction> create(const QUuid &parentUuid, Control::ControlType type, QString name,
-                                                       ModelRoot *root);
+                                                       bool isWrittenTo, ModelRoot *root);
 
         void forward(bool first, std::vector<QUuid> &compileItems) override;
 
@@ -40,6 +41,8 @@ namespace AxiomModel {
 
         QSize size() const { return _size; }
 
+        bool isWrittenTo() const { return _isWrittenTo; }
+
     private:
         QUuid _uuid;
         QUuid _parentUuid;
@@ -47,5 +50,6 @@ namespace AxiomModel {
         QString _name;
         QPoint _pos;
         QSize _size;
+        bool _isWrittenTo;
     };
 }

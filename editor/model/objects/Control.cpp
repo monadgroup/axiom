@@ -74,11 +74,12 @@ QSize Control::getDefaultSize(AxiomModel::Control::ControlType controlType) {
 
 std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType type, const QUuid &uuid,
                                                 const QUuid &parentUuid, const QString &name, const QUuid &exposingUuid,
-                                                QPoint pos, QSize size, AxiomModel::ModelRoot *root) {
+                                                QPoint pos, QSize size, bool isWrittenTo, AxiomModel::ModelRoot *root) {
     switch (type) {
     case Control::ControlType::NUM_SCALAR:
         return NumControl::create(uuid, parentUuid, pos, size, false, name, true, QUuid(), exposingUuid,
-                                  NumControl::DisplayMode::KNOB, 0, 1, 0, {0, 0, FormType::CONTROL}, root);
+                                  isWrittenTo ? NumControl::DisplayMode::PLUG : NumControl::DisplayMode::KNOB, 0, 1, 0,
+                                  {0, 0, FormType::CONTROL}, root);
     case Control::ControlType::MIDI_SCALAR:
         return MidiControl::create(uuid, parentUuid, pos, size, false, name, true, QUuid(), exposingUuid, root);
     case Control::ControlType::NUM_EXTRACT:
