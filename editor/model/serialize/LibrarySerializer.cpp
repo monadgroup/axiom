@@ -7,21 +7,18 @@
 using namespace AxiomModel;
 
 void LibrarySerializer::serialize(AxiomModel::Library *library, QDataStream &stream) {
-    stream << library->activeTag();
-    stream << library->activeSearch();
-
     auto entries = library->entries();
-    stream << (uint32_t) entries.size();
-    for (const auto &entry : entries) {
-        serializeEntry(entry, stream);
-    }
+    serializeEntries((uint32_t) entries.size(), entries.begin(), entries.end(), stream);
 }
 
 std::unique_ptr<Library> LibrarySerializer::deserialize(QDataStream &stream, uint32_t version) {
-    QString activeTag;
-    stream >> activeTag;
-    QString activeSearch;
-    stream >> activeSearch;
+    // Schema version 5 (Axiom version 0.4.0) stored an active tag and active search, since libraries were tried to
+    // projects.
+    if (version < 5) {
+        QString dummy;
+        stream >> dummy;
+        stream >> dummy;
+    }
 
     std::vector<std::unique_ptr<LibraryEntry>> entries;
     uint32_t entryCount;
@@ -31,7 +28,7 @@ std::unique_ptr<Library> LibrarySerializer::deserialize(QDataStream &stream, uin
         entries.push_back(deserializeEntry(stream, version));
     }
 
-    return std::make_unique<Library>(std::move(activeTag), std::move(activeSearch), std::move(entries));
+    return std::make_unique<Library>("", "", std::move(entries));
 }
 
 void LibrarySerializer::serializeEntry(AxiomModel::LibraryEntry *entry, QDataStream &stream) {
