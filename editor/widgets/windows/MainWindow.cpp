@@ -460,7 +460,7 @@ void MainWindow::exportLibrary() {
 
     QDataStream stream(&file);
     AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
-    // AxiomModel::LibrarySerializer::serialize(&_project->library(), stream);
+    AxiomModel::LibrarySerializer::serialize(_library.get(), stream);
     file.close();
 }
 
