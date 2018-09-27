@@ -193,15 +193,6 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 }
 
-bool MainWindow::event(QEvent *event) {
-    if (event->type() == QEvent::WindowActivate) {
-        // block until the global library is unlocked
-        testLockGlobalLibrary();
-    }
-
-    return QMainWindow::event(event);
-}
-
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     // cleanup old project state
     _openPanels.clear();
@@ -257,12 +248,6 @@ void MainWindow::unlockGlobalLibrary() {
     if (!isLibraryLocked) return;
     libraryLock.unlock();
     isLibraryLocked = false;
-}
-
-void MainWindow::testLockGlobalLibrary() {
-    if (isLibraryLocked) return;
-    libraryLock.lock();
-    libraryLock.unlock();
 }
 
 void MainWindow::removeSurface(AxiomModel::NodeSurface *surface) {

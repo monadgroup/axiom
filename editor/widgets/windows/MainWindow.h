@@ -51,8 +51,6 @@ namespace AxiomGui {
 
         void unlockGlobalLibrary();
 
-        void testLockGlobalLibrary();
-
     public slots:
 
         NodeSurfacePanel *showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split,
@@ -64,8 +62,6 @@ namespace AxiomGui {
 
     protected:
         void closeEvent(QCloseEvent *event) override;
-
-        bool event(QEvent *event) override;
 
     private slots:
 
