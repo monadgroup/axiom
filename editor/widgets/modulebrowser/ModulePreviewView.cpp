@@ -3,6 +3,7 @@
 #include <QtCore/QMimeData>
 #include <QtGui/QDrag>
 #include <QtGui/QMouseEvent>
+#include <QtWidgets/QFileDialog>
 #include <QtWidgets/QGraphicsItem>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMessageBox>
@@ -15,7 +16,9 @@
 #include "editor/model/PoolOperators.h"
 #include "editor/model/grid/GridItem.h"
 #include "editor/model/objects/RootSurface.h"
+#include "editor/model/serialize/LibrarySerializer.h"
 #include "editor/model/serialize/ModelObjectSerializer.h"
+#include "editor/model/serialize/ProjectSerializer.h"
 
 using namespace AxiomGui;
 
@@ -74,6 +77,8 @@ void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
     auto editAction = menu.addAction("&Edit");
     auto propertiesAction = menu.addAction("&Properties...");
     menu.addSeparator();
+    auto exportAction = menu.addAction("E&xport...");
+    menu.addSeparator();
     auto deleteAction = menu.addAction("&Delete");
     auto selectedAction = menu.exec(event->globalPos());
 
@@ -106,6 +111,23 @@ void ModulePreviewView::contextMenuEvent(QContextMenuEvent *event) {
                 entry->addTag(newTag);
             }
         }
+    } else if (selectedAction == exportAction) {
+        auto selectedFile = QFileDialog::getSaveFileName(this, "Export Module", QString(),
+                                                         tr("Axiom Library Files (*.axl);;All Files (*.*)"));
+        if (selectedFile.isNull()) return;
+
+        QFile file(selectedFile);
+        if (!file.open(QIODevice::WriteOnly)) {
+            QMessageBox(QMessageBox::Critical, "Failed to export module", "The file you selected couldn't be opened.",
+                        QMessageBox::Ok)
+                .exec();
+            return;
+        }
+
+        QDataStream stream(&file);
+        AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
+        AxiomModel::LibrarySerializer::serializeEntries(1, &entry, &entry + 1, stream);
+        file.close();
     } else if (selectedAction == deleteAction) {
         QMessageBox confirmBox(QMessageBox::Warning, "Confirm Delete",
                                "Are you sure you want to delete this module?\n\n"
