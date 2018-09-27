@@ -258,9 +258,6 @@ void AxiomVstPlugin::backendSetParameter(size_t parameter, AxiomBackend::NumValu
 }
 
 void AxiomVstPlugin::backendUpdateIo() {
-    std::cout << backend.audioInputs.size() << " inputs" << std::endl;
-    std::cout << backend.audioOutputs.size() << " outputs" << std::endl;
-
     setNumInputs(2 * backend.audioInputs.size());
     setNumOutputs(2 * backend.audioOutputs.size());
     ioChanged();
