@@ -13,19 +13,7 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
     midiInputPortal = -1;
     outputPortal = nullptr;
 
-    // build an map of the portal ID to parameter index
-    std::unordered_map<uint64_t, size_t> parameterIndexMap;
-    for (size_t parameterIndex = 0; parameterIndex < parameters.size(); parameterIndex++) {
-        auto &parameter = parameters[parameterIndex];
-        if (parameter) {
-            parameterIndexMap.emplace(parameter->id, parameterIndex);
-        }
-    }
-
-    portalParameterMap.clear();
-    parameters.clear();
-    std::unordered_set<size_t> takenIndices;
-    std::vector<VstParameter> queuedParameters;
+    std::vector<AxiomBackend::NumParameter> newParameters;
 
     // we want the first MIDI input, audio output, and every automation parameter
     for (size_t i = 0; i < configuration.portals.size(); i++) {
@@ -35,45 +23,16 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
         } else if (outputPortal == nullptr && portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
             outputPortal = getAudioPortal(i);
         } else if (portal.type == PortalType::AUTOMATION && portal.value == PortalValue::AUDIO) {
-            auto previousParameterIndex = parameterIndexMap.find(portal.id);
-
-            VstParameter insertParam = {portal.id, i, getAudioPortal(i), portal.name};
-
-            if (previousParameterIndex != parameterIndexMap.end()) {
-                takenIndices.emplace(previousParameterIndex->second);
-                insertParameter(previousParameterIndex->second, std::move(insertParam));
-            } else {
-                // queue the parameter to be added after all "taken" ones are
-                queuedParameters.push_back(std::move(insertParam));
-            }
+            newParameters.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
         }
     }
 
-    // now go through and insert all remaining ones
-    for (auto &queuedParam : queuedParameters) {
-        pushParameter(std::move(queuedParam));
-    }
-}
-
-void VstAudioBackend::insertParameter(size_t insertIndex, VstParameter param) {
-    while (parameters.size() <= insertIndex) parameters.emplace_back(std::nullopt);
-    portalParameterMap.emplace(param.portalIndex, insertIndex);
-    parameters[insertIndex] = std::move(param);
-}
-
-void VstAudioBackend::pushParameter(VstParameter param) {
-    // loop until we find an available index
-    size_t nextIndex = 0;
-    while (nextIndex < parameters.size() && parameters[nextIndex]) {
-        nextIndex++;
-    }
-
-    insertParameter(nextIndex, std::move(param));
+    parameters.setParameters(std::move(newParameters));
 }
 
 void VstAudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumValue value) {
-    auto mapIndex = portalParameterMap.find(portalId);
-    if (mapIndex == portalParameterMap.end()) return;
+    auto mapIndex = parameters.portalParameterMap().find(portalId);
+    if (mapIndex == parameters.portalParameterMap().end()) return;
 
     plugin->backendSetParameter(mapIndex->second, value);
 }

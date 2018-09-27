@@ -54,6 +54,8 @@ public:
 
     void backendSetParameter(size_t parameter, AxiomBackend::NumValue value);
 
+    void backendUpdateIo();
+
 private:
     VstAudioBackend backend;
     AxiomVstEditor editor;

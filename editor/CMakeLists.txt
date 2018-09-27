@@ -27,7 +27,8 @@ add_library(axiom_editor
         AxiomApplication.h AxiomApplication.cpp
         AxiomEditor.h AxiomEditor.cpp
         backend/AudioBackend.h backend/AudioBackend.cpp
-        backend/AudioConfiguration.h backend/AudioConfiguration.cpp)
+        backend/AudioConfiguration.h backend/AudioConfiguration.cpp
+        backend/PersistentParameters.h backend/PersistentParameters.cpp)
 target_link_libraries(axiom_editor axiom_widgets axiom_model axiom_common maxim_compiler Qt5::Widgets)
 
 add_subdirectory(backend)
