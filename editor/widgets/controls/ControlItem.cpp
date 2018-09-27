@@ -40,6 +40,7 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
     control->isActiveChanged.connect(this, &ControlItem::triggerUpdate);
     control->showNameChanged.connect(this, &ControlItem::triggerUpdate);
     control->exposerUuidChanged.connect(this, &ControlItem::triggerUpdate);
+    control->isEnabledChanged.connect(this, &ControlItem::triggerUpdate);
     control->removed.connect(this, &ControlItem::remove);
 
     // create resize items
@@ -143,8 +144,12 @@ void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 
     // draw an outline if we're connected to something
     if (!control->connections().empty()) {
+        auto isEnabled = control->isEnabled();
+        auto useNormalColor = isEnabled ? outlineNormalColor() : CommonColors::disabledNormal;
+        auto useActiveColor = isEnabled ? outlineActiveColor() : CommonColors::disabledActive;
+
         auto bounds = controlPath();
-        auto activeColor = AxiomUtil::mixColor(outlineNormalColor(), outlineActiveColor(), control->isActive());
+        auto activeColor = AxiomUtil::mixColor(useNormalColor, useActiveColor, control->isActive());
         painter->setPen(QPen(activeColor, 3));
         painter->setBrush(QBrush(activeColor));
         painter->drawPath(bounds);

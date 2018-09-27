@@ -114,6 +114,16 @@ pub unsafe extern "C" fn maxim_get_node_ptr(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_get_extracted_bitmask_ptr(
+    runtime: *const Runtime,
+    surface: u64,
+    surface_ptr: *mut c_void,
+    node: usize,
+) -> *const u32 {
+    value_reader::get_node_active_bitmap_ptr(&*runtime, surface, surface_ptr, node)
+}
+
+#[no_mangle]
 pub extern "C" fn maxim_get_surface_ptr(node_ptr: *mut c_void) -> *mut c_void {
     value_reader::get_surface_ptr(node_ptr)
 }

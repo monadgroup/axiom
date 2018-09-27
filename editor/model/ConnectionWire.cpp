@@ -47,6 +47,20 @@ void ConnectionWire::setEndActive(bool active) {
     }
 }
 
+void ConnectionWire::setStartEnabled(bool enabled) {
+    if (enabled != _startEnabled) {
+        _startEnabled = enabled;
+        updateEnabled();
+    }
+}
+
+void ConnectionWire::setEndEnabled(bool enabled) {
+    if (enabled != _endEnabled) {
+        _endEnabled = enabled;
+        updateEnabled();
+    }
+}
+
 void ConnectionWire::remove() {
     removed.trigger();
 }
@@ -75,6 +89,14 @@ void ConnectionWire::updateActive() {
 
     if (!_startActive && !_endActive) {
         activeState = ActiveState::NONE;
+    }
+}
+
+void ConnectionWire::updateEnabled() {
+    auto newEnabled = _startEnabled || _endEnabled;
+    if (newEnabled != _enabled) {
+        _enabled = newEnabled;
+        enabledChanged.trigger(newEnabled);
     }
 }
 

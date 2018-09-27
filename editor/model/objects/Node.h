@@ -29,6 +29,7 @@ namespace AxiomModel {
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> extractedChanged;
+        AxiomCommon::Event<bool> activeChanged;
 
         Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
              QString name, const QUuid &controlsUuid, ModelRoot *root);
@@ -48,6 +49,10 @@ namespace AxiomModel {
         bool isExtracted() const { return _isExtracted; }
 
         void setExtracted(bool extracted);
+
+        bool isActive() const { return _isActive; }
+
+        void setActive(bool active);
 
         bool isMovable() const override { return true; }
 
@@ -71,6 +76,8 @@ namespace AxiomModel {
 
         virtual void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr);
 
+        void doRuntimeUpdate() override;
+
         void remove() override;
 
     private:
@@ -81,5 +88,7 @@ namespace AxiomModel {
         AxiomCommon::Promise<ControlSurface *> _controls;
         QRect sizeStartRect;
         std::optional<NodeCompileMeta> _compileMeta;
+        uint32_t *_activeBitmap = nullptr;
+        bool _isActive = true;
     };
 }

@@ -33,6 +33,8 @@ namespace AxiomModel {
 
         virtual void restoreState() {}
 
+        virtual void doRuntimeUpdate() {}
+
         virtual Sequence<ModelObject *> links();
 
         virtual Sequence<QUuid> deleteCompileLinks();

@@ -20,6 +20,8 @@
 #include "editor/model/actions/SetNumModeAction.h"
 #include "editor/model/actions/SetNumRangeAction.h"
 #include "editor/model/actions/SetNumValueAction.h"
+#include "editor/model/objects/ControlSurface.h"
+#include "editor/model/objects/Node.h"
 #include "editor/model/objects/NumControl.h"
 
 using namespace AxiomGui;
@@ -107,21 +109,22 @@ void NumControlItem::paintControl(QPainter *painter) {
     auto clampedVal =
         normalizedVal.withLR(std::clamp(unclampedVal.left, 0.f, 1.f), std::clamp(unclampedVal.right, 0.f, 1.f));
 
+    auto controlEnabled = control->isEnabled();
+    auto normalColor = controlEnabled ? CommonColors::numNormal : CommonColors::disabledNormal;
+    auto activeColor = controlEnabled ? CommonColors::numActive : CommonColors::disabledActive;
+
     switch (control->displayMode()) {
     case NumControl::DisplayMode::PLUG:
-        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, CommonColors::numNormal);
+        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, normalColor);
         break;
     case NumControl::DisplayMode::KNOB:
-        knobPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, CommonColors::numNormal,
-                          CommonColors::numActive);
+        knobPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, normalColor, activeColor);
         break;
     case NumControl::DisplayMode::SLIDER_H:
-        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), clampedVal, false, CommonColors::numNormal,
-                            CommonColors::numActive);
+        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), clampedVal, false, normalColor, activeColor);
         break;
     case NumControl::DisplayMode::SLIDER_V:
-        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), clampedVal, true, CommonColors::numNormal,
-                            CommonColors::numActive);
+        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), clampedVal, true, normalColor, activeColor);
         break;
     case NumControl::DisplayMode::TOGGLE:
         togglePainter.paint(painter, drawBoundingRect(), hoverState(), unclampedVal);

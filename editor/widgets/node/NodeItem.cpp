@@ -130,12 +130,12 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     case Node::NodeType::PORTAL_NODE:
     case Node::NodeType::CUSTOM_NODE:
         darkColor = CommonColors::customNodeNormal;
-        lightColor = CommonColors::customNodeActive;
+        lightColor = CommonColors::customNodeSelected;
         outlineColor = CommonColors::customNodeBorder;
         break;
     case Node::NodeType::GROUP_NODE:
         darkColor = CommonColors::groupNodeNormal;
-        lightColor = CommonColors::groupNodeActive;
+        lightColor = CommonColors::groupNodeSelected;
         outlineColor = CommonColors::groupNodeBorder;
         break;
     }

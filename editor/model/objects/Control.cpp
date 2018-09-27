@@ -43,6 +43,7 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
     sizeChanged.connect(this, &Control::updateSinkPos);
     removed.connect(this, &Control::updateExposerRemoved);
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
+    _surface->node()->activeChanged.connect(&isEnabledChanged);
 
     if (!_exposingUuid.isNull()) {
         findLater<Control *>(root->controls(), _exposingUuid).then([this, uuid](Control *exposing) {
@@ -136,6 +137,10 @@ ControlPrepare Control::buildControlPrepareAction(AxiomModel::Control::ControlTy
 
         return {nearestPos, controlSize, std::move(compositeAction)};
     }
+}
+
+bool Control::isEnabled() const {
+    return surface()->node()->isActive();
 }
 
 void Control::setName(const QString &name) {

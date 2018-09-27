@@ -17,6 +17,7 @@ namespace AxiomModel {
         AxiomCommon::Event<const QPointF &> endPosChanged;
         AxiomCommon::Event<const std::deque<QPoint> &, const std::vector<LineIndex> &> routeChanged;
         AxiomCommon::Event<bool> activeChanged;
+        AxiomCommon::Event<bool> enabledChanged;
         AxiomCommon::Event<> removed;
 
         enum class WireType { NUM, MIDI };
@@ -54,6 +55,16 @@ namespace AxiomModel {
 
         bool active() const { return _active; }
 
+        bool startEnabled() const { return _startEnabled; }
+
+        void setStartEnabled(bool enabled);
+
+        bool endEnabled() const { return _endEnabled; }
+
+        void setEndEnabled(bool enabled);
+
+        bool enabled() const { return _enabled; }
+
         void remove();
 
     private:
@@ -70,12 +81,17 @@ namespace AxiomModel {
         bool _startActive = false;
         bool _endActive = false;
         bool _active = false;
+        bool _startEnabled = true;
+        bool _endEnabled = true;
+        bool _enabled = true;
 
         void updateRoute();
 
         void updateLineIndices();
 
         void updateActive();
+
+        void updateEnabled();
 
         void setWireGrid(const std::deque<QPoint> &route);
 

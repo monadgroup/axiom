@@ -65,6 +65,7 @@ pub struct SurfaceLayout {
     pub shared_struct: StructType,
     pub pointer_struct: StructType,
     pub pointer_sources: Vec<PointerSource>,
+    pub node_layouts: Vec<NodeLayout>,
     node_scratch_offset: usize,
     node_initializer_offset: usize,
 }
@@ -120,11 +121,22 @@ pub fn build_node_layout(
                 false,
             );
 
-            let new_pointer_sources: Vec<_> = surface_layout
-                .pointer_sources
-                .iter()
-                .map(|pointer_source| reparent_scratch_shared_source(pointer_source.clone(), 0, 1))
-                .collect();
+            let new_pointer_sources = map_pointer_sources(
+                surface_layout
+                    .pointer_sources
+                    .iter()
+                    .map(|source| source.clone()),
+                PointerSource::Initialized,
+                |mut indices| {
+                    indices.insert(0, 0);
+                    PointerSource::Scratch(indices)
+                },
+                |mut indices| {
+                    indices.insert(0, 1);
+                    PointerSource::Scratch(indices)
+                },
+                PointerSource::Socket,
+            );
 
             NodeLayout {
                 initialized_const: surface_layout.initialized_const,
@@ -164,9 +176,24 @@ pub fn build_node_layout(
             // The extract group also needs access to the source and destination arrays.
             // Note: we put the underlying surface's pointers first, as this enables value
             // read-back to read the first instance without any special behavior.
+            // For the editor, we also want a pointer to the actual active state of the surface,
+            // which we'll put in the scratch.
+            //
             // This array must match the struct defined below as `pointer_struct`.
             let pointer_sources = vec![
-                PointerSource::Aggregate(PointerSourceAggregateType::Array, voice_pointer_sources),
+                PointerSource::Aggregate(
+                    PointerSourceAggregateType::Array,
+                    map_pointer_sources(
+                        voice_pointer_sources,
+                        PointerSource::Initialized,
+                        |mut indices| {
+                            indices.insert(0, 0);
+                            PointerSource::Scratch(indices)
+                        },
+                        PointerSource::Shared,
+                        PointerSource::Socket,
+                    ),
+                ),
                 PointerSource::Aggregate(
                     PointerSourceAggregateType::Struct,
                     source_sockets
@@ -181,6 +208,7 @@ pub fn build_node_layout(
                         .map(|socket| PointerSource::Socket(*socket, vec![]))
                         .collect(),
                 ),
+                PointerSource::Scratch(vec![1]),
             ];
 
             let source_socket_types: Vec<_> = source_sockets
@@ -209,14 +237,25 @@ pub fn build_node_layout(
                 .map(|ptr_type| ptr_type as &BasicType)
                 .collect();
 
+            let scratch_struct = context.struct_type(
+                &[
+                    &surface_layout
+                        .scratch_struct
+                        .array_type(values::ARRAY_CAPACITY as u32),
+                    &context.i32_type(),
+                ],
+                false,
+            );
+
             let pointer_struct = context.struct_type(
-                &vec![
+                &[
                     &surface_layout
                         .pointer_struct
                         .array_type(values::ARRAY_CAPACITY as u32)
                         as &BasicType,
                     &context.struct_type(&source_type_refs, false) as &BasicType,
                     &context.struct_type(&dest_type_refs, false) as &BasicType,
+                    &context.i32_type().ptr_type(AddressSpace::Generic),
                 ],
                 false,
             );
@@ -226,10 +265,7 @@ pub fn build_node_layout(
             NodeLayout {
                 initialized_const: surface_layout.initialized_const,
                 shared_struct: surface_layout.shared_struct.into(),
-                scratch_struct: surface_layout
-                    .scratch_struct
-                    .array_type(values::ARRAY_CAPACITY as u32)
-                    .into(),
+                scratch_struct: scratch_struct.into(),
                 pointer_struct,
                 pointer_sources,
             }
@@ -435,8 +471,13 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
     let node_scratch_offset = scratch_types.len();
     let node_initializer_offset = initialized_values.len();
 
-    for node in &surface.nodes {
-        let layout = build_node_layout(cache, node, &surface.groups);
+    let node_layouts: Vec<_> = surface
+        .nodes
+        .iter()
+        .map(|node| build_node_layout(cache, node, &surface.groups))
+        .collect();
+
+    for (node, layout) in surface.nodes.iter().zip(node_layouts.iter()) {
         let initialized_index = initialized_values.len();
         let scratch_index = scratch_types.len();
         let shared_index = shared_types.len();
@@ -447,20 +488,26 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
         pointer_types.push(layout.pointer_struct);
         let new_pointer_source = PointerSource::Aggregate(
             PointerSourceAggregateType::Struct,
-            layout
-                .pointer_sources
-                .into_iter()
-                .map(|original_src| {
-                    reparent_pointer_source(
-                        original_src,
-                        initialized_index,
-                        scratch_index,
-                        shared_index,
-                        node,
-                        &group_pointers,
-                    )
-                })
-                .collect(),
+            map_pointer_sources(
+                layout.pointer_sources.iter().map(|source| source.clone()),
+                |mut indices| {
+                    indices.insert(0, initialized_index);
+                    PointerSource::Initialized(indices)
+                },
+                |mut indices| {
+                    indices.insert(0, scratch_index);
+                    PointerSource::Scratch(indices)
+                },
+                |mut indices| {
+                    indices.insert(0, shared_index);
+                    PointerSource::Shared(indices)
+                },
+                |socket_index, sub_indices| {
+                    let socket_group = node.sockets[socket_index].group_id;
+                    let new_pointer_source = group_pointers[socket_group].clone();
+                    append_path_to_pointer_source(new_pointer_source, &sub_indices)
+                },
+            ),
         );
         pointer_sources.push(new_pointer_source);
     }
@@ -478,71 +525,35 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
         scratch_struct: context.struct_type(&scratch_type_refs, false),
         shared_struct: context.struct_type(&shared_type_refs, false),
         pointer_struct: context.struct_type(&pointer_type_refs, false),
+        node_layouts,
         pointer_sources,
         node_scratch_offset,
         node_initializer_offset,
     }
 }
 
-fn reparent_scratch_shared_source(
+fn modify_pointer_source(
     source: PointerSource,
-    scratch_index: usize,
-    shared_index: usize,
+    initialized_modifier: &Fn(Vec<usize>) -> PointerSource,
+    scratch_modifier: &Fn(Vec<usize>) -> PointerSource,
+    shared_modifier: &Fn(Vec<usize>) -> PointerSource,
+    socket_modifier: &Fn(usize, Vec<usize>) -> PointerSource,
 ) -> PointerSource {
     match source {
-        PointerSource::Scratch(mut indexes) => {
-            indexes.insert(0, scratch_index);
-            PointerSource::Scratch(indexes)
-        }
-        PointerSource::Shared(mut indexes) => {
-            indexes.insert(0, shared_index);
-            PointerSource::Scratch(indexes)
-        }
-        PointerSource::Aggregate(aggregate_type, mut sources) => {
-            for src in sources.iter_mut() {
-                *src = reparent_scratch_shared_source(src.clone(), scratch_index, shared_index)
-            }
-            PointerSource::Aggregate(aggregate_type, sources)
-        }
-        _ => source,
-    }
-}
-
-fn reparent_pointer_source(
-    source: PointerSource,
-    initialized_index: usize,
-    scratch_index: usize,
-    shared_index: usize,
-    node: &Node,
-    pointer_sources: &[PointerSource],
-) -> PointerSource {
-    match source {
-        PointerSource::Initialized(mut indexes) => {
-            indexes.insert(0, initialized_index);
-            PointerSource::Initialized(indexes)
-        }
-        PointerSource::Scratch(mut indexes) => {
-            indexes.insert(0, scratch_index);
-            PointerSource::Scratch(indexes)
-        }
-        PointerSource::Shared(mut indexes) => {
-            indexes.insert(0, shared_index);
-            PointerSource::Shared(indexes)
-        }
+        PointerSource::Initialized(indices) => initialized_modifier(indices),
+        PointerSource::Scratch(indices) => scratch_modifier(indices),
+        PointerSource::Shared(indices) => shared_modifier(indices),
         PointerSource::Socket(socket_index, sub_indices) => {
-            let socket_group = node.sockets[socket_index].group_id;
-            let new_pointer_source = pointer_sources[socket_group].clone();
-            append_path_to_pointer_source(new_pointer_source, &sub_indices)
+            socket_modifier(socket_index, sub_indices)
         }
         PointerSource::Aggregate(aggregate_type, mut sources) => {
             for src in sources.iter_mut() {
-                *src = reparent_pointer_source(
+                *src = modify_pointer_source(
                     src.clone(),
-                    initialized_index,
-                    scratch_index,
-                    shared_index,
-                    node,
-                    pointer_sources,
+                    initialized_modifier,
+                    scratch_modifier,
+                    shared_modifier,
+                    socket_modifier,
                 )
             }
             PointerSource::Aggregate(aggregate_type, sources)
@@ -550,31 +561,47 @@ fn reparent_pointer_source(
     }
 }
 
+fn map_pointer_sources<'a>(
+    sources: impl IntoIterator<Item = PointerSource>,
+    initialized_modifier: impl Fn(Vec<usize>) -> PointerSource,
+    scratch_modifier: impl Fn(Vec<usize>) -> PointerSource,
+    shared_modifier: impl Fn(Vec<usize>) -> PointerSource,
+    socket_modifier: impl Fn(usize, Vec<usize>) -> PointerSource,
+) -> Vec<PointerSource> {
+    sources
+        .into_iter()
+        .map(|pointer_source| {
+            modify_pointer_source(
+                pointer_source,
+                &initialized_modifier,
+                &scratch_modifier,
+                &shared_modifier,
+                &socket_modifier,
+            )
+        })
+        .collect()
+}
+
 fn append_path_to_pointer_source(source: PointerSource, path: &[usize]) -> PointerSource {
-    match source {
-        PointerSource::Initialized(mut indexes) => {
-            indexes.extend(path.clone());
-            PointerSource::Initialized(indexes)
-        }
-        PointerSource::Scratch(mut indexes) => {
-            indexes.extend(path.clone());
-            PointerSource::Scratch(indexes)
-        }
-        PointerSource::Shared(mut indexes) => {
-            indexes.extend(path.clone());
-            PointerSource::Shared(indexes)
-        }
-        PointerSource::Socket(socket_index, mut sub_indices) => {
+    modify_pointer_source(
+        source,
+        &|mut indices| {
+            indices.extend(path.clone());
+            PointerSource::Initialized(indices)
+        },
+        &|mut indices| {
+            indices.extend(path.clone());
+            PointerSource::Scratch(indices)
+        },
+        &|mut indices| {
+            indices.extend(path.clone());
+            PointerSource::Shared(indices)
+        },
+        &|socket_index, mut sub_indices| {
             sub_indices.extend(path.clone());
             PointerSource::Socket(socket_index, sub_indices)
-        }
-        PointerSource::Aggregate(aggregate_type, mut sources) => {
-            for src in sources.iter_mut() {
-                *src = append_path_to_pointer_source(src.clone(), path)
-            }
-            PointerSource::Aggregate(aggregate_type, sources)
-        }
-    }
+        },
+    )
 }
 
 impl NodeLayout {

@@ -15,6 +15,7 @@ const float WIRE_SEPARATION = 6;
 WireItem::WireItem(QObject *parent, AxiomModel::ConnectionWire *wire) : QObject(parent), wire(wire) {
     wire->routeChanged.connect(this, &WireItem::updateRoute);
     wire->activeChanged.connect(this, &WireItem::setIsActive);
+    wire->enabledChanged.connect(this, &WireItem::triggerUpdate);
     wire->removed.connect(this, &WireItem::remove);
 
     setBrush(Qt::NoBrush);
@@ -25,10 +26,14 @@ WireItem::WireItem(QObject *parent, AxiomModel::ConnectionWire *wire) : QObject(
 }
 
 void WireItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    auto normalColor =
-        wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numNormal : CommonColors::midiNormal;
-    auto activeColor =
-        wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numActive : CommonColors::midiActive;
+    auto normalColor = CommonColors::disabledNormal;
+    auto activeColor = CommonColors::disabledActive;
+    if (wire->enabled()) {
+        normalColor =
+            wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numNormal : CommonColors::midiNormal;
+        activeColor =
+            wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numActive : CommonColors::midiActive;
+    }
     auto currentColor = wire->active() ? activeColor : normalColor;
 
     QPen pen(QColor(20, 20, 20), 4);
@@ -40,6 +45,10 @@ void WireItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     pen.setWidth(2);
     painter->setPen(pen);
     painter->drawPath(path());
+}
+
+void WireItem::triggerUpdate() {
+    update();
 }
 
 static QPointF getRealPos(size_t index, QPointF routePos, const std::deque<QPoint> &route,
@@ -110,15 +119,6 @@ void WireItem::updateRoute(const std::deque<QPoint> &route, const std::vector<Ax
 }
 
 void WireItem::setIsActive(bool active) {
-    auto normalColor =
-        wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numNormal : CommonColors::midiNormal;
-    auto activeColor =
-        wire->wireType() == ConnectionWire::WireType::NUM ? CommonColors::numActive : CommonColors::midiActive;
-
-    QPen pen(active ? activeColor : normalColor, 2);
-    pen.setJoinStyle(Qt::MiterJoin);
-    setPen(pen);
-
     setZValue(active ? NodeSurfaceCanvas::activeWireZVal : NodeSurfaceCanvas::wireZVal);
 }
 

@@ -57,6 +57,10 @@ void *Runtime::getNodePtr(uint64_t surface, void *surfacePtr, size_t node) {
     return MaximFrontend::maxim_get_node_ptr(get(), surface, surfacePtr, node);
 }
 
+uint32_t *Runtime::getExtractedBitmaskPtr(uint64_t surface, void *surfacePtr, size_t node) {
+    return MaximFrontend::maxim_get_extracted_bitmask_ptr(get(), surface, surfacePtr, node);
+}
+
 void *Runtime::getSurfacePtr(void *nodePtr) {
     return MaximFrontend::maxim_get_surface_ptr(nodePtr);
 }

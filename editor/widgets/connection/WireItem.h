@@ -25,6 +25,8 @@ namespace AxiomGui {
 
     private slots:
 
+        void triggerUpdate();
+
         void updateRoute(const std::deque<QPoint> &route, const std::vector<AxiomModel::LineIndex> &lineIndices);
 
         void setIsActive(bool active);

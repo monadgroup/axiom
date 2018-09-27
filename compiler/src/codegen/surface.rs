@@ -66,6 +66,8 @@ fn build_node_call(
                 unsafe { ctx.b.build_struct_gep(&pointers_ptr, 1, "sources.ptr") };
             let dest_socket_pointers =
                 unsafe { ctx.b.build_struct_gep(&pointers_ptr, 2, "dests.ptr") };
+            let bitmap_pointer =
+                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 3, "bitmap.ptr.ptr") };
 
             // if this is the update lifecycle function and there are source groups, generate a
             // bitmap of which indices are valid
@@ -80,7 +82,7 @@ fn build_node_call(
                 );
                 let first_bitmap = first_array.get_bitmap(ctx.b);
 
-                Some(
+                let active_bitmap =
                     (1..source_sockets.len()).fold(first_bitmap, |acc, socket_index| {
                         let nth_array = values::ArrayValue::new(
                             ctx.b
@@ -98,8 +100,15 @@ fn build_node_call(
                         );
                         let nth_bitmap = nth_array.get_bitmap(ctx.b);
                         ctx.b.build_or(acc, nth_bitmap, "")
-                    }),
-                )
+                    });
+                ctx.b.build_store(
+                    &ctx.b
+                        .build_load(&bitmap_pointer, "bitmap.ptr")
+                        .into_pointer_value(),
+                    &active_bitmap,
+                );
+
+                Some(active_bitmap)
             } else {
                 None
             };

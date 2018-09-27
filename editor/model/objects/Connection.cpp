@@ -25,10 +25,19 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
             controlB->worldPosChanged.connect(wire.get(), &ConnectionWire::setEndPos);
             controlA->isActiveChanged.connect(wire.get(), &ConnectionWire::setStartActive);
             controlB->isActiveChanged.connect(wire.get(), &ConnectionWire::setEndActive);
+            controlA->isEnabledChanged.connect(wire.get(), &ConnectionWire::setStartEnabled);
+            controlB->isEnabledChanged.connect(wire.get(), &ConnectionWire::setEndEnabled);
             wire->activeChanged.connect(controlA, &Control::setIsActive);
             wire->activeChanged.connect(controlB, &Control::setIsActive);
             controlA->removed.connect(this, &Connection::remove);
             controlB->removed.connect(this, &Connection::remove);
+
+            wire->setStartPos(controlA->worldPos());
+            wire->setEndPos(controlB->worldPos());
+            wire->setStartActive(controlA->isActive());
+            wire->setEndActive(controlB->isActive());
+            wire->setStartEnabled(controlA->isEnabled());
+            wire->setEndEnabled(controlB->isEnabled());
         });
 }
 

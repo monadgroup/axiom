@@ -48,6 +48,7 @@ namespace AxiomModel {
         AxiomCommon::Event<QPointF> worldPosChanged;
         AxiomCommon::Event<bool> isActiveChanged;
         AxiomCommon::Event<QUuid> exposerUuidChanged;
+        AxiomCommon::Event<bool> isEnabledChanged;
 
         Control(ControlType controlType, ConnectionWire::WireType wireType, QSize minSize, QUuid uuid,
                 const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, bool showName,
@@ -66,6 +67,8 @@ namespace AxiomModel {
         ControlType controlType() const { return _controlType; }
 
         ConnectionWire::WireType wireType() const { return _wireType; }
+
+        bool isEnabled() const;
 
         bool isMovable() const override { return true; }
 
@@ -118,8 +121,6 @@ namespace AxiomModel {
 
             restoreState();
         }
-
-        virtual void doRuntimeUpdate() = 0;
 
         void remove() override;
 

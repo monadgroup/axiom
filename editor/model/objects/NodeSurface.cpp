@@ -92,6 +92,9 @@ void NodeSurface::doRuntimeUpdate() {
             control->doRuntimeUpdate();
         }
     }
+    for (const auto &node : nodes()) {
+        node->doRuntimeUpdate();
+    }
 }
 
 void NodeSurface::remove() {

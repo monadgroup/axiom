@@ -63,6 +63,8 @@ namespace MaximFrontend {
     void *maxim_get_portal_ptr(MaximRuntimeRef *runtime, size_t portal);
     void *maxim_get_root_ptr(MaximRuntimeRef *runtime);
     void *maxim_get_node_ptr(MaximRuntimeRef *runtime, uint64_t surface, void *surface_ptr, size_t node);
+    uint32_t *maxim_get_extracted_bitmask_ptr(MaximRuntimeRef *runtime, uint64_t surface, void *surface_ptr,
+                                              size_t node);
     void *maxim_get_surface_ptr(void *node_ptr);
     void *maxim_get_block_ptr(void *block_ptr);
     ControlPointers maxim_get_control_ptrs(MaximRuntimeRef *runtime, uint64_t block, void *block_ptr, size_t control);

@@ -36,6 +36,13 @@ void Node::setExtracted(bool extracted) {
     }
 }
 
+void Node::setActive(bool active) {
+    if (active != _isActive) {
+        _isActive = active;
+        activeChanged.trigger(active);
+    }
+}
+
 void Node::startSize() {
     sizeStartRect = rect();
     if (_controls.value()) {
@@ -126,10 +133,18 @@ void Node::doSizeAction() {
     }
 }
 
-void Node::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *) {
+void Node::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
     if (compileMeta()) {
         setExtracted(runtime->isNodeExtracted(surface()->getRuntimeId(), compileMeta()->mirIndex));
+        _activeBitmap = runtime->getExtractedBitmaskPtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
     }
+}
+
+void Node::doRuntimeUpdate() {
+    if (_activeBitmap) {
+        setActive(static_cast<bool>(*_activeBitmap & 1));
+    } else
+        setActive(true);
 }
 
 void Node::remove() {
