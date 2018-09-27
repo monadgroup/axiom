@@ -81,9 +81,8 @@ namespace AxiomBackend {
 
         // To be implemented by the audio backend, called from the UI thread when a new project is created to setup
         // a default configuration. `handleConfigurationChange` will still be called after the runtime is built for the
-        // first time. The default implementation of this provides a configuration with one MIDI input and one audio
-        // output.
-        virtual DefaultConfiguration createDefaultConfiguration();
+        // first time.
+        virtual DefaultConfiguration createDefaultConfiguration() = 0;
 
         // To be implemented by the audio backend, called from the UI thread to determine if save dialogues should be
         // shown. This could be called at any time.

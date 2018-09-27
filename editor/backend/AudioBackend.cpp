@@ -157,11 +157,6 @@ void AudioBackend::generate() {
     _editor->window()->runtime()->runUpdate();
 }
 
-DefaultConfiguration AudioBackend::createDefaultConfiguration() {
-    return DefaultConfiguration({DefaultPortal(PortalType::INPUT, PortalValue::MIDI, "Keyboard"),
-                                 DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
-}
-
 void AudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumValue value) {}
 
 bool AudioBackend::canFiddleAutomation() const {

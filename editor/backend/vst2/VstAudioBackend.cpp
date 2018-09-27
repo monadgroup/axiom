@@ -51,3 +51,13 @@ void VstAudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumV
 
     plugin->backendSetParameter(mapIndex->second, value);
 }
+
+DefaultConfiguration VstAudioBackend::createDefaultConfiguration() {
+#ifdef AXIOM_VST2_IS_SYNTH
+    return DefaultConfiguration({DefaultPortal(PortalType::INPUT, PortalValue::MIDI, "Keyboard"),
+                                 DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
+#else
+    return DefaultConfiguration({DefaultPortal(PortalType::INPUT, PortalValue::AUDIO, "Input"),
+                                 DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Output")});
+#endif
+}

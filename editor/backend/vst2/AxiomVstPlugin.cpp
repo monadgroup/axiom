@@ -14,7 +14,9 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
     : AudioEffectX(audioMaster, 1, 255), backend(this), editor(&application, &backend) {
+#ifdef AXIOM_VST2_IS_SYNTH
     isSynth();
+#endif
 
     setUniqueID(0x41584F4D); // 'AXOM'
     programsAreChunks();

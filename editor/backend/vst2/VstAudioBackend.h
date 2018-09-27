@@ -25,6 +25,8 @@ public:
 
     bool canFiddleAutomation() const override { return true; }
 
+    AxiomBackend::DefaultConfiguration createDefaultConfiguration() override;
+
 private:
     AxiomVstPlugin *plugin;
 };
