@@ -10,29 +10,44 @@ using namespace AxiomBackend;
 VstAudioBackend::VstAudioBackend(AxiomVstPlugin *plugin) : plugin(plugin) {}
 
 void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfiguration &configuration) {
+    std::vector<AxiomBackend::NumParameter> newAudioInputs;
+    std::vector<AxiomBackend::NumParameter> newAudioOutputs;
+    std::vector<AxiomBackend::NumParameter> newAutomationInputs;
+
     midiInputPortal = -1;
-    outputPortal = nullptr;
 
-    std::vector<AxiomBackend::NumParameter> newParameters;
-
-    // we want the first MIDI input, audio output, and every automation parameter
     for (size_t i = 0; i < configuration.portals.size(); i++) {
         const auto &portal = configuration.portals[i];
-        if (midiInputPortal == -1 && portal.type == PortalType::INPUT && portal.value == PortalValue::MIDI) {
-            midiInputPortal = i;
-        } else if (outputPortal == nullptr && portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
-            outputPortal = getAudioPortal(i);
-        } else if (portal.type == PortalType::AUTOMATION && portal.value == PortalValue::AUDIO) {
-            newParameters.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
+        switch (portal.type) {
+        case PortalType::INPUT:
+            if (portal.value == PortalValue::AUDIO) {
+                newAudioInputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
+            } else if (portal.value == PortalValue::MIDI && midiInputPortal == -1) {
+                midiInputPortal = i;
+            }
+            break;
+        case PortalType::OUTPUT:
+            if (portal.value == PortalValue::AUDIO) {
+                newAudioOutputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
+            }
+            break;
+        case PortalType::AUTOMATION:
+            if (portal.value == PortalValue::AUDIO) {
+                newAutomationInputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
+            }
         }
     }
 
-    parameters.setParameters(std::move(newParameters));
+    audioInputs.setParameters(std::move(newAudioInputs));
+    audioOutputs.setParameters(std::move(newAudioOutputs));
+    automationInputs.setParameters(std::move(newAutomationInputs));
+
+    plugin->backendUpdateIo();
 }
 
 void VstAudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumValue value) {
-    auto mapIndex = parameters.portalParameterMap().find(portalId);
-    if (mapIndex == parameters.portalParameterMap().end()) return;
+    auto mapIndex = automationInputs.portalParameterMap().find(portalId);
+    if (mapIndex == automationInputs.portalParameterMap().end()) return;
 
     plugin->backendSetParameter(mapIndex->second, value);
 }

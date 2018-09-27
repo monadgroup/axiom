@@ -60,4 +60,7 @@ private:
     VstAudioBackend backend;
     AxiomVstEditor editor;
     QByteArray saveBuffer;
+
+    size_t expectedInputCount = 0;
+    size_t expectedOutputCount = 0;
 };

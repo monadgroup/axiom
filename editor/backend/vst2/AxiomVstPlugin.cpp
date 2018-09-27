@@ -15,8 +15,7 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
     : AudioEffectX(audioMaster, 1, 255), backend(this), editor(&application, &backend) {
     isSynth();
-    // setNumInputs(0);
-    // setNumOutputs(2);
+
     setUniqueID(0x41584F4D); // 'AXOM'
     programsAreChunks();
     canProcessReplacing();
@@ -52,7 +51,7 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
         if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;
 
         for (auto i = processPos; i < endProcessPos; i++) {
-            for (size_t inputIndex = 0; inputIndex < backend.audioInputs.size(); inputIndex++) {
+            for (size_t inputIndex = 0; inputIndex < expectedInputCount; inputIndex++) {
                 const auto &input = backend.audioInputs[inputIndex];
                 if (input) {
                     auto &inputNum = **input->value;
@@ -64,7 +63,7 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
 
             backend.generate();
 
-            for (size_t outputIndex = 0; outputIndex < backend.audioOutputs.size(); outputIndex++) {
+            for (size_t outputIndex = 0; outputIndex < expectedOutputCount; outputIndex++) {
                 const auto &output = backend.audioOutputs[outputIndex];
                 auto leftIndex = outputIndex * 2;
                 auto rightIndex = leftIndex + 1;
@@ -86,6 +85,9 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
 
         processPos = endProcessPos;
     }
+
+    expectedInputCount = backend.audioInputs.size();
+    expectedOutputCount = backend.audioOutputs.size();
 }
 
 VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
@@ -262,4 +264,7 @@ void AxiomVstPlugin::backendUpdateIo() {
     setNumInputs(2 * backend.audioInputs.size());
     setNumOutputs(2 * backend.audioOutputs.size());
     ioChanged();
+
+    expectedInputCount = std::min(expectedInputCount, backend.audioInputs.size());
+    expectedOutputCount = std::min(expectedOutputCount, backend.audioOutputs.size());
 }

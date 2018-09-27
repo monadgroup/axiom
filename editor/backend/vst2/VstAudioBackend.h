@@ -11,8 +11,9 @@ class AxiomVstPlugin;
 class VstAudioBackend : public AxiomBackend::AudioBackend {
 public:
     ssize_t midiInputPortal = 0;
-    AxiomBackend::NumValue **outputPortal = nullptr;
-    AxiomBackend::NumParameters parameters;
+    AxiomBackend::NumParameters audioInputs;
+    AxiomBackend::NumParameters audioOutputs;
+    AxiomBackend::NumParameters automationInputs;
 
     explicit VstAudioBackend(AxiomVstPlugin *plugin);
 
