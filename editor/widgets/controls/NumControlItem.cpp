@@ -100,30 +100,31 @@ bool NumControlItem::unformatString(const QString &str, float *valOut, AxiomMode
 void NumControlItem::paintControl(QPainter *painter) {
     auto normalizedVal = getNormalizedValue();
 
-    // rescale and clamp value correctly
-    normalizedVal = normalizedVal.withLR(
-        std::clamp((normalizedVal.left - control->minValue()) / (control->maxValue() - control->minValue()), 0.f, 1.f),
-        std::clamp((normalizedVal.right - control->minValue()) / (control->maxValue() - control->minValue()), 0.f,
-                   1.f));
+    auto unclampedVal =
+        normalizedVal.withLR((normalizedVal.left - control->minValue()) / (control->maxValue() - control->minValue()),
+                             (normalizedVal.right - control->minValue()) / (control->maxValue() - control->minValue()));
+
+    auto clampedVal =
+        normalizedVal.withLR(std::clamp(unclampedVal.left, 0.f, 1.f), std::clamp(unclampedVal.right, 0.f, 1.f));
 
     switch (control->displayMode()) {
     case NumControl::DisplayMode::PLUG:
-        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), normalizedVal, CommonColors::numNormal);
+        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, CommonColors::numNormal);
         break;
     case NumControl::DisplayMode::KNOB:
-        knobPainter.paint(painter, aspectBoundingRect(), hoverState(), normalizedVal, CommonColors::numNormal,
+        knobPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, CommonColors::numNormal,
                           CommonColors::numActive);
         break;
     case NumControl::DisplayMode::SLIDER_H:
-        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), normalizedVal, false, CommonColors::numNormal,
+        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), clampedVal, false, CommonColors::numNormal,
                             CommonColors::numActive);
         break;
     case NumControl::DisplayMode::SLIDER_V:
-        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), normalizedVal, true, CommonColors::numNormal,
+        sliderPainter.paint(painter, drawBoundingRect(), hoverState(), clampedVal, true, CommonColors::numNormal,
                             CommonColors::numActive);
         break;
     case NumControl::DisplayMode::TOGGLE:
-        togglePainter.paint(painter, drawBoundingRect(), hoverState(), normalizedVal);
+        togglePainter.paint(painter, drawBoundingRect(), hoverState(), unclampedVal);
         break;
     }
 }
