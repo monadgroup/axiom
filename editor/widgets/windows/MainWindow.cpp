@@ -326,53 +326,43 @@ void MainWindow::saveGlobalLibrary() {
 }
 
 void MainWindow::triggerLibraryChanged() {
-    std::cout << "Locking global library" << std::endl;
     lockGlobalLibrary();
-    std::cout << "Starting save timer" << std::endl;
     saveDebounceTimer.start();
 }
 
 void MainWindow::triggerLibraryChangeDebounce() {
     // ignore any changes if they were caused by the library being loaded
     if (didJustLoadLibrary) {
-        std::cout << "Ignoring change as library was just reloaded" << std::endl;
         didJustLoadLibrary = false;
         return;
     }
 
     didJustSaveLibrary = true;
 
-    std::cout << "Saving global library" << std::endl;
     saveGlobalLibrary();
-    std::cout << "Unlocking global library" << std::endl;
     unlockGlobalLibrary();
 }
 
 void MainWindow::triggerLibraryReload() {
-    std::cout << "Starting reload timer" << std::endl;
     loadDebounceTimer.start();
 }
 
 void MainWindow::triggerLibraryReloadDebounce() {
     // ignore any changes if they were caused by the library being saved
     if (didJustSaveLibrary) {
-        std::cout << "Ignoring reload as library was just saved" << std::endl;
         didJustSaveLibrary = false;
         return;
     }
 
     didJustLoadLibrary = true;
 
-    std::cout << "Locking global library" << std::endl;
     lockGlobalLibrary();
     auto library = loadGlobalLibrary();
     if (library) {
-        std::cout << "Importing global library changes" << std::endl;
         _library->import(library.get(), [](AxiomModel::LibraryEntry *, AxiomModel::LibraryEntry *) {
             return AxiomModel::Library::ConflictResolution::KEEP_NEW;
         });
     }
-    std::cout << "Unlocking global library" << std::endl;
     unlockGlobalLibrary();
 }
 
