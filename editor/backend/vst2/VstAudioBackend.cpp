@@ -45,6 +45,12 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
     plugin->backendUpdateIo();
 }
 
+void VstAudioBackend::previewEvent(AxiomBackend::MidiEvent event) {
+    if (midiInputPortal == -1) return;
+    auto lock = lockRuntime();
+    queueMidiEvent(0, (size_t) midiInputPortal, event);
+}
+
 void VstAudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumValue value) {
     auto mapIndex = automationInputs.portalParameterMap().find(portalId);
     if (mapIndex == automationInputs.portalParameterMap().end()) return;

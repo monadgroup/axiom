@@ -7,6 +7,7 @@
 #include <QtCore/QStringBuilder>
 #include <QtCore/QTimer>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QPlainTextEdit>
@@ -183,6 +184,37 @@ void MainWindow::newProject() {
     }
 
     setProject(std::make_unique<AxiomModel::Project>(_backend->createDefaultConfiguration()));
+}
+
+bool MainWindow::isInputFieldFocused() const {
+    return dynamic_cast<QLineEdit *>(focusWidget()) || dynamic_cast<QTextEdit *>(focusWidget());
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event) {
+    QMainWindow::keyPressEvent(event);
+    if (event->isAccepted() || isInputFieldFocused() || event->isAutoRepeat()) return;
+
+    auto midiCode = AxiomUtil::noteKeyToMidi(event->key());
+    if (midiCode) {
+        AxiomBackend::MidiEvent midiEvent;
+        midiEvent.event = AxiomBackend::MidiEventType::NOTE_ON;
+        midiEvent.note = *midiCode;
+        midiEvent.param = 255;
+        _backend->previewEvent(midiEvent);
+    }
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event) {
+    QMainWindow::keyReleaseEvent(event);
+    if (event->isAccepted() || isInputFieldFocused() || event->isAutoRepeat()) return;
+
+    auto midiCode = AxiomUtil::noteKeyToMidi(event->key());
+    if (midiCode) {
+        AxiomBackend::MidiEvent midiEvent;
+        midiEvent.event = AxiomBackend::MidiEventType::NOTE_OFF;
+        midiEvent.note = *midiCode;
+        _backend->previewEvent(midiEvent);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

@@ -10,15 +10,22 @@ using namespace AxiomBackend;
 
 class StandaloneAudioBackend : public AudioBackend {
 public:
+    ssize_t midiInputPortal = -1;
     NumValue **outputPortal = nullptr;
 
     void handleConfigurationChange(const AudioConfiguration &configuration) override {
-        // we only care about the first number output portal
+        // we only care about the first MIDI input and first number output portal
+        midiInputPortal = -1;
         outputPortal = nullptr;
         for (size_t i = 0; i < configuration.portals.size(); i++) {
             const auto &portal = configuration.portals[i];
-            if (portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
+            if (outputPortal == nullptr && portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
                 outputPortal = getAudioPortal(i);
+            } else if (midiInputPortal == -1 && portal.type == PortalType::INPUT && portal.value == PortalValue::MIDI) {
+                midiInputPortal = (ssize_t) i;
+            }
+
+            if (outputPortal != nullptr && midiInputPortal != -1) {
                 break;
             }
         }
@@ -29,6 +36,12 @@ public:
     }
 
     bool doesSaveInternally() const override { return false; }
+
+    void previewEvent(AxiomBackend::MidiEvent event) override {
+        if (midiInputPortal == -1) return;
+        auto lock = lockRuntime();
+        queueMidiEvent(0, (size_t) midiInputPortal, event);
+    }
 
 #ifdef PORTAUDIO
     PaStream *stream = nullptr;
@@ -61,6 +74,10 @@ public:
                     auto outputNum = **backend->outputPortal;
                     *outputNums++ = outputNum.left;
                     *outputNums++ = outputNum.right;
+                }
+
+                if (backend->midiInputPortal != -1 && i == processPos) {
+                    backend->clearMidi((size_t) backend->midiInputPortal);
                 }
             }
 

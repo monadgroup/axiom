@@ -263,6 +263,7 @@ void AxiomVstPlugin::backendUpdateIo() {
     setNumInputs(2 * backend.audioInputs.size());
     setNumOutputs(2 * backend.audioOutputs.size());
     ioChanged();
+    updateDisplay();
 
     expectedInputCount = std::min(expectedInputCount, backend.audioInputs.size());
     expectedOutputCount = std::min(expectedOutputCount, backend.audioOutputs.size());

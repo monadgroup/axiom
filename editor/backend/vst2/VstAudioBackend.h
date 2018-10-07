@@ -21,6 +21,8 @@ public:
 
     bool doesSaveInternally() const override { return true; }
 
+    void previewEvent(AxiomBackend::MidiEvent event) override;
+
     void automationValueChanged(size_t portalId, AxiomBackend::NumValue value) override;
 
     bool canFiddleAutomation() const override { return true; }

@@ -140,3 +140,80 @@ QRect AxiomUtil::makeRect(QPoint p1, QPoint p2) {
 
     return QRect(topLeft, bottomRight);
 }
+
+std::optional<uint8_t> AxiomUtil::noteKeyToMidi(int keyCode) {
+    switch (keyCode) {
+    case Qt::Key_2:
+        return 61;
+    case Qt::Key_3:
+        return 63;
+    case Qt::Key_5:
+        return 66;
+    case Qt::Key_6:
+        return 68;
+    case Qt::Key_7:
+        return 70;
+    case Qt::Key_9:
+        return 73;
+    case Qt::Key_0:
+        return 75;
+    case Qt::Key_Q:
+        return 60;
+    case Qt::Key_W:
+        return 62;
+    case Qt::Key_E:
+        return 64;
+    case Qt::Key_R:
+        return 65;
+    case Qt::Key_T:
+        return 67;
+    case Qt::Key_Y:
+        return 69;
+    case Qt::Key_U:
+        return 71;
+    case Qt::Key_I:
+        return 72;
+    case Qt::Key_O:
+        return 74;
+    case Qt::Key_P:
+        return 76;
+    case Qt::Key_BracketLeft:
+        return 77;
+    case Qt::Key_BracketRight:
+        return 79;
+    case Qt::Key_S:
+        return 49;
+    case Qt::Key_D:
+        return 51;
+    case Qt::Key_G:
+        return 54;
+    case Qt::Key_H:
+        return 56;
+    case Qt::Key_J:
+        return 58;
+    case Qt::Key_L:
+        return 61;
+    case Qt::Key_Semicolon:
+        return 63;
+    case Qt::Key_Z:
+        return 48;
+    case Qt::Key_X:
+        return 50;
+    case Qt::Key_C:
+        return 52;
+    case Qt::Key_V:
+        return 53;
+    case Qt::Key_B:
+        return 55;
+    case Qt::Key_N:
+        return 57;
+    case Qt::Key_M:
+        return 59;
+    case Qt::Key_Comma:
+        return 60;
+    case Qt::Key_Period:
+        return 62;
+    default:
+        return std::nullopt;
+    }
+}

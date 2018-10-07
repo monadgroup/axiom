@@ -61,6 +61,10 @@ namespace AxiomGui {
         void newProject();
 
     protected:
+        void keyPressEvent(QKeyEvent *event) override;
+
+        void keyReleaseEvent(QKeyEvent *event) override;
+
         void closeEvent(QCloseEvent *event) override;
 
     private slots:
@@ -111,6 +115,8 @@ namespace AxiomGui {
         bool checkCloseProject();
 
         void updateWindowTitle(const QString &linkedFile, bool isDirty);
+
+        bool isInputFieldFocused() const;
 
     private slots:
         void triggerLibraryChangeDebounce();

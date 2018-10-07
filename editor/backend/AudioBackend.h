@@ -88,6 +88,10 @@ namespace AxiomBackend {
         // shown. This could be called at any time.
         virtual bool doesSaveInternally() const = 0;
 
+        // To be implemented by the audio backend, called from the UI thread when the user presses or releases a key
+        // corresponding to a MIDI note. The default implementation does nothing.
+        virtual void previewEvent(MidiEvent event);
+
         // To be implemented by the audio backend, called from the UI thread when an automation portal value changes.
         // This is not called every sample a value changes, but every "update cycle" (roughly every 16 milliseconds)
         // where the value changed from the last cycle. The default implementation does nothing.

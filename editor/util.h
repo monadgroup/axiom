@@ -36,6 +36,8 @@ namespace AxiomUtil {
 
     QRect makeRect(QPoint p1, QPoint p2);
 
+    std::optional<uint8_t> noteKeyToMidi(int keyCode);
+
     template<class InputIterator, class T>
     InputIterator findUnique(InputIterator first, InputIterator last, const T *ptr) {
         while (first != last) {

@@ -157,6 +157,8 @@ void AudioBackend::generate() {
     _editor->window()->runtime()->runUpdate();
 }
 
+void AudioBackend::previewEvent(AxiomBackend::MidiEvent event) {}
+
 void AudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumValue value) {}
 
 bool AudioBackend::canFiddleAutomation() const {
