@@ -45,6 +45,7 @@ namespace AxiomBackend {
             }
 
             _parameters.clear();
+            _portalParameterMap.clear();
             std::vector<PersistentParameter<T>> queuedParameters;
 
             for (auto &newParameter : newParameters) {
@@ -79,7 +80,6 @@ namespace AxiomBackend {
             while (nextIndex < _parameters.size() && _parameters[nextIndex]) {
                 nextIndex++;
             }
-
             insertParameter(nextIndex, std::move(param));
         }
     };
