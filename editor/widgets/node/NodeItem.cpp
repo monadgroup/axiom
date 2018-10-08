@@ -190,7 +190,6 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
 
-        // todo: clean up how drag works
         isDragging = true;
         mouseStartPoint = event->screenPos();
         node->startedDragging.trigger();

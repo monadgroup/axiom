@@ -29,7 +29,6 @@ impl Function for ChannelFunction {
         let channel_vec = channel_num.get_vec(func.ctx.b);
 
         // clamp the channel to {0,16}
-        // todo: use eucrem here?
         let channel_float = func
             .ctx
             .b

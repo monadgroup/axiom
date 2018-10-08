@@ -13,11 +13,6 @@
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(Q_OS_DARWIN)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
-/*
- * TODO/NOTE: is this precise enough, or should a distinction between
- * Linux/${foo}BSD/... be made?
- * xcb should normally work on anything unix-like, though.
- */
 #elif defined(Q_OS_UNIX)
 Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 #endif
