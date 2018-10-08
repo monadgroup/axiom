@@ -262,6 +262,16 @@ pub fn ctlz_i64(module: &Module) -> FunctionValue {
     })
 }
 
+pub fn copysign_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.copysign.v2f32", false, &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+        )
+    })
+}
+
 pub fn eucrem_v2i32(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.eucrem.v2i32", true, &|| {
         let v2i32_type = module.get_context().i32_type().vec_type(2);

@@ -129,6 +129,7 @@ map_functions! {
     ToRad => ToRadFunction,
     ToDeg => ToDegFunction,
     Clamp => ClampFunction,
+    CopySign => CopySignFunction,
     Pan => PanFunction,
     Left => LeftFunction,
     Right => RightFunction,

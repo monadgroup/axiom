@@ -99,6 +99,40 @@ impl Function for ClampFunction {
     }
 }
 
+pub struct CopySignFunction {}
+impl Function for CopySignFunction {
+    fn function_type() -> block::Function {
+        block::Function::CopySign
+    }
+
+    fn gen_call(
+        func: &mut FunctionContext,
+        args: &[PointerValue],
+        _varargs: Option<VarArgs>,
+        result: PointerValue,
+    ) {
+        let copysign_intrinsic = intrinsics::copysign_v2f32(func.ctx.module);
+
+        let mag_num = NumValue::new(args[0]);
+        let sign_num = NumValue::new(args[1]);
+
+        let result_form = mag_num.get_form(func.ctx.b);
+        let result_num = NumValue::new(result);
+        result_num.set_form(func.ctx.b, &result_form);
+
+        let mag_vec = mag_num.get_vec(func.ctx.b);
+        let sign_vec = sign_num.get_vec(func.ctx.b);
+        let result_vec = func
+            .ctx
+            .b
+            .build_call(&copysign_intrinsic, &[&mag_vec, &sign_vec], "", false)
+            .left()
+            .unwrap()
+            .into_vector_value();
+        result_num.set_vec(func.ctx.b, &result_vec);
+    }
+}
+
 pub struct PanFunction {}
 impl Function for PanFunction {
     fn function_type() -> block::Function {

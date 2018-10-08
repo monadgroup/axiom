@@ -72,6 +72,7 @@ define_functions! {
     ToRad = "toRad" func![(Num) -> Num],
     ToDeg = "toDeg" func![(Num) -> Num],
     Clamp = "clamp" func![(Num, Num, Num) -> Num],
+    CopySign = "copysign" func![(Num, Num) -> Num],
     Pan = "pan" func![(Num, Num) -> Num],
     Left = "left" func![(Num) -> Num],
     Right = "right" func![(Num) -> Num],
