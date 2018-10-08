@@ -455,8 +455,6 @@ impl Runtime {
             precise_duration_seconds(&patch_start.elapsed())
         );
 
-        self.print_mir();
-
         let codegen_start = Instant::now();
         self.codegen_transaction(&new_block_ids, &affected_surfaces);
         println!(
