@@ -31,6 +31,8 @@ namespace AxiomModel {
 
         void restoreState() override;
 
+        bool needsLabelUpdate() const { return _needsLabelUpdate; }
+
         const QString &portalLabel() const { return _portalLabel; }
 
         void setPortalLabel(QString portalLabel);
@@ -38,6 +40,7 @@ namespace AxiomModel {
     private:
         PortalType _portalType;
         uint64_t _portalId;
+        bool _needsLabelUpdate = true;
         QString _portalLabel;
     };
 }

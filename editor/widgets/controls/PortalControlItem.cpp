@@ -47,13 +47,12 @@ static QString getNewPortalLabel(PortalControl *control, AxiomBackend::AudioBack
 
 PortalControlItem::PortalControlItem(AxiomModel::PortalControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control), _image(getImagePath(control)) {
-    control->labelWillChange.connect(this, &PortalControlItem::updatePortalLabel);
+    control->labelWillChange.connect(this, &PortalControlItem::triggerUpdate);
 }
 
 void PortalControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    if (_needsLabelUpdate) {
+    if (control->needsLabelUpdate()) {
         control->setPortalLabel(getNewPortalLabel(control, canvas->panel->window->project()->backend()));
-        _needsLabelUpdate = false;
     }
 
     auto size = QSizeF(NodeSurfaceCanvas::controlRealSize(control->size()));
@@ -79,9 +78,4 @@ QPainterPath PortalControlItem::controlPath() const {
 
 QString PortalControlItem::getImagePath(AxiomModel::PortalControl *control) {
     return ":/icons/" + iconNameFromType(control->portalType(), control->wireType());
-}
-
-void PortalControlItem::updatePortalLabel() {
-    _needsLabelUpdate = true;
-    update();
 }
