@@ -2,6 +2,7 @@
 
 #include <QtCore/QByteArray>
 #include <deque>
+#include <functional>
 #include <mutex>
 
 #include "../model/Value.h"
@@ -48,8 +49,10 @@ namespace AxiomBackend {
 
         // Serializes or deserializes the current open project. Use this for saving/loading the project from a DAW
         // project file.
-        QByteArray serialize();
-        void deserialize(QByteArray *data);
+        QByteArray serialize(std::optional<std::function<void(QDataStream &)>> serializeCustomCallback = std::nullopt);
+        void deserialize(
+            QByteArray *data,
+            std::optional<std::function<void(QDataStream &, uint32_t)>> deserializeCustomCallback = std::nullopt);
 
         // Queues a MIDI event to be input in a certain number of samples time. Should be called from the audio thread.
         // You should call clearMidi after the first generated sample (at least) to clear the MIDI portals that had

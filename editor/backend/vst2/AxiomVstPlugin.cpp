@@ -207,14 +207,22 @@ void AxiomVstPlugin::getParameterName(VstInt32 index, char *text) {
 VstInt32 AxiomVstPlugin::getChunk(void **data, bool) {
     // the VST specification requires that the returned buffer is valid until the next suspend/resume call,
     // so we store the QByteArray and clear it above.
-    saveBuffer = backend.serialize();
+    saveBuffer = backend.serialize([this](QDataStream &stream) {
+        backend.audioInputs.serialize(stream);
+        backend.audioOutputs.serialize(stream);
+        backend.automationInputs.serialize(stream);
+    });
     *data = saveBuffer.data();
     return saveBuffer.size();
 }
 
 VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool) {
     auto byteArray = QByteArray::fromRawData((char *) data, byteSize);
-    backend.deserialize(&byteArray);
+    backend.deserialize(&byteArray, [this](QDataStream &stream, uint32_t version) {
+        backend.audioInputs = AxiomBackend::NumParameters::deserialize(stream, version);
+        backend.audioOutputs = AxiomBackend::NumParameters::deserialize(stream, version);
+        backend.automationInputs = AxiomBackend::NumParameters::deserialize(stream, version);
+    });
     return 0;
 }
 

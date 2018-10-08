@@ -50,17 +50,21 @@ std::string AudioBackend::getDataPath() {
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
 }
 
-QByteArray AudioBackend::serialize() {
+QByteArray AudioBackend::serialize(std::optional<std::function<void(QDataStream &)>> serializeCustomCallback) {
     QByteArray buffer;
     QDataStream stream(&buffer, QIODevice::WriteOnly);
 
     auto project = _editor->window()->project();
     AxiomModel::ProjectSerializer::serialize(project, stream,
                                              [project](QDataStream &stream) { stream << project->linkedFile(); });
+    if (serializeCustomCallback) {
+        (*serializeCustomCallback)(stream);
+    }
     return buffer;
 }
 
-void AudioBackend::deserialize(QByteArray *data) {
+void AudioBackend::deserialize(QByteArray *data,
+                               std::optional<std::function<void(QDataStream &, uint32_t)>> deserializeCustomCallback) {
     QDataStream stream(data, QIODevice::ReadOnly);
     uint32_t readVersion = 0;
     auto newProject = AxiomModel::ProjectSerializer::deserialize(
@@ -100,6 +104,9 @@ void AudioBackend::deserialize(QByteArray *data) {
                 .exec();
         }
     } else {
+        if (deserializeCustomCallback) {
+            (*deserializeCustomCallback)(stream, readVersion);
+        }
         _editor->window()->setProject(std::move(newProject));
     }
 }
