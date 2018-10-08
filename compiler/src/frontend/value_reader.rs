@@ -1,4 +1,4 @@
-use codegen::data_analyzer::{build_node_layout, SurfaceLayout};
+use codegen::data_analyzer::SurfaceLayout;
 use codegen::ObjectCache;
 use codegen::TargetProperties;
 use mir::{BlockRef, InternalNodeRef, NodeData, SurfaceRef};

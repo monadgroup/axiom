@@ -5,6 +5,7 @@
 #include <QtCore/QString>
 #include <QtGui/QColor>
 #include <cassert>
+#include <optional>
 
 #include "model/Value.h"
 

@@ -69,7 +69,7 @@ namespace AxiomModel {
 
         void build(MaximCompiler::Transaction *transaction) override;
 
-        void doRuntimeUpdate();
+        void doRuntimeUpdate() override;
 
         void remove() override;
 
