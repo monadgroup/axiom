@@ -4,6 +4,7 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <optional>
 
 #include "../model/Value.h"
 #include "AudioConfiguration.h"
