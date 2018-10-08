@@ -11,7 +11,7 @@ using namespace AxiomGui;
 
 void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState,
                            AxiomModel::ExtractControl::ActiveSlotFlags activeFlags, const QColor &baseColor,
-                           const QColor &activeColor) {
+                           const QColor &activeColor, const QImage &image) {
     auto scaledBorder = 0.06f * aspectBoundingRect.width();
     auto externBr = getBounds(aspectBoundingRect);
 
@@ -42,6 +42,9 @@ void ExtractPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, 
                                          externBr.height() / 2 * std::sin(markerAngle));
         painter->drawLine((centerP + 2 * markerP) / 3, (centerP + 10 * markerP) / 11);
     }
+
+    auto imagePos = aspectBoundingRect.center() - QPointF(image.size().width(), image.size().height()) / 2;
+    painter->drawImage(imagePos, image);
 }
 
 void ExtractPainter::shape(QPainterPath &path, const QRectF &aspectBoundingRect) const {

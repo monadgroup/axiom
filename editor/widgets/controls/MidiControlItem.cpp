@@ -10,14 +10,15 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 MidiControlItem::MidiControlItem(AxiomModel::MidiControl *control, NodeSurfaceCanvas *canvas)
-    : ControlItem(control, canvas), control(control) {
+    : ControlItem(control, canvas), control(control), _plugImage(":/icons/midi-plug.png") {
     control->valueChanged.connect(this, &MidiControlItem::triggerUpdate);
     control->connections().itemAdded.connect(this, &MidiControlItem::triggerUpdate);
     control->connections().itemRemoved.connect(this, &MidiControlItem::triggerUpdate);
 }
 
 void MidiControlItem::paintControl(QPainter *painter) {
-    plugPainter.paint(painter, aspectBoundingRect(), hoverState(), std::optional<AxiomModel::NumValue>(), Qt::black);
+    plugPainter.paint(painter, aspectBoundingRect(), hoverState(), std::optional<AxiomModel::NumValue>(), Qt::black,
+                      _plugImage);
 }
 
 QRectF MidiControlItem::useBoundingRect() const {

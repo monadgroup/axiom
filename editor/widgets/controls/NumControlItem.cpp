@@ -34,7 +34,7 @@ static std::vector<std::pair<QString, NumControl::DisplayMode>> modes = {
     std::make_pair("&Toggle Button", NumControl::DisplayMode::TOGGLE)};
 
 NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
-    : ControlItem(control, canvas), control(control) {
+    : ControlItem(control, canvas), control(control), _plugImage(":/icons/num-plug.png") {
     control->valueChanged.connect(this, &NumControlItem::controlValueChanged);
     control->displayModeChanged.connect(this, &NumControlItem::triggerUpdate);
     control->rangeChanged.connect(this, &NumControlItem::triggerUpdate);
@@ -115,7 +115,7 @@ void NumControlItem::paintControl(QPainter *painter) {
 
     switch (control->displayMode()) {
     case NumControl::DisplayMode::PLUG:
-        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, normalColor);
+        plugPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, normalColor, _plugImage);
         break;
     case NumControl::DisplayMode::KNOB:
         knobPainter.paint(painter, aspectBoundingRect(), hoverState(), clampedVal, normalColor, activeColor);

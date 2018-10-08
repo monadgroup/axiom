@@ -32,6 +32,7 @@ namespace AxiomGui {
         void paintControl(QPainter *painter) override;
 
     private:
+        QImage _plugImage;
         ExtractPainter extractPainter;
     };
 }
