@@ -26,8 +26,7 @@ fn amplitude_from_db(
             ],
             "",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_vector_value()
 }

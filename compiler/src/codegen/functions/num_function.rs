@@ -134,8 +134,7 @@ impl Function for PanFunction {
                 &[&clamped_pan, &util::get_vec_spread(func.ctx.context, 1.)],
                 "clamped",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
         let clamped_pan = func
@@ -146,8 +145,7 @@ impl Function for PanFunction {
                 &[&clamped_pan, &util::get_vec_spread(func.ctx.context, -1.)],
                 "clamped",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
 
@@ -179,8 +177,7 @@ impl Function for PanFunction {
                     )],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_float_value(),
             "",
@@ -214,8 +211,7 @@ impl Function for PanFunction {
                     )],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_float_value(),
             "",
@@ -229,8 +225,7 @@ impl Function for PanFunction {
                 &left_base,
                 &left_index,
                 "",
-            )
-            .into_vector_value();
+            ).into_vector_value();
         let base_vec = func
             .ctx
             .b
@@ -249,8 +244,7 @@ impl Function for PanFunction {
                 )],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
         let result_vec = func.ctx.b.build_float_mul(x_vec, multiplier_vec, "");
@@ -362,8 +356,7 @@ impl Function for SequenceFunction {
                 &vararg_count,
                 &func.ctx.context.i32_type().const_int(0, false),
                 "",
-            )
-            .into_vector_value();
+            ).into_vector_value();
         let vararg_count_vec = func
             .ctx
             .b
@@ -372,8 +365,7 @@ impl Function for SequenceFunction {
                 &vararg_count,
                 &func.ctx.context.i32_type().const_int(1, false),
                 "",
-            )
-            .into_vector_value();
+            ).into_vector_value();
 
         let index_vec = index_num.get_vec(func.ctx.b);
         let index_int_vec = func.ctx.b.build_float_to_signed_int(
@@ -389,8 +381,7 @@ impl Function for SequenceFunction {
                 &[&index_int_vec, &vararg_count_vec],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
 
@@ -401,8 +392,7 @@ impl Function for SequenceFunction {
                 &safe_index,
                 &func.ctx.context.i32_type().const_int(0, false),
                 "",
-            )
-            .into_int_value();
+            ).into_int_value();
         let right_index = func
             .ctx
             .b
@@ -410,8 +400,7 @@ impl Function for SequenceFunction {
                 &safe_index,
                 &func.ctx.context.i32_type().const_int(1, false),
                 "",
-            )
-            .into_int_value();
+            ).into_int_value();
 
         let left_vec = NumValue::new(varargs.at(left_index, func.ctx.b)).get_vec(func.ctx.b);
         let right_vec = NumValue::new(varargs.at(right_index, func.ctx.b)).get_vec(func.ctx.b);
@@ -583,8 +572,7 @@ impl Function for NoiseFunction {
                 &left_rand,
                 &func.ctx.context.i32_type().const_int(0, false),
                 "rand",
-            )
-            .into_vector_value();
+            ).into_vector_value();
         let rand_vec = func
             .ctx
             .b
@@ -593,8 +581,7 @@ impl Function for NoiseFunction {
                 &right_rand,
                 &func.ctx.context.i32_type().const_int(1, false),
                 "rand",
-            )
-            .into_vector_value();
+            ).into_vector_value();
         let rand_vec_float = func.ctx.b.build_signed_int_to_float(
             rand_vec,
             func.ctx.context.f32_type().vec_type(2),

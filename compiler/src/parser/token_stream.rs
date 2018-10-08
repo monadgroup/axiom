@@ -104,8 +104,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     Some(caps) => Some((matcher.1, caps)),
                     None => None,
                 }
-            })
-            .next();
+            }).next();
 
         let token = match matched_pair {
             Some((token_type, captures)) => {

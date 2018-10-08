@@ -51,15 +51,13 @@ fn frequency_from_control(
                             &[&val, &util::get_vec_spread(context, 8.)],
                             "",
                             false,
-                        )
-                        .left()
+                        ).left()
                         .unwrap()
                         .into_vector_value(),
                 ],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value(),
         util::get_vec_spread(context, 1.),
@@ -90,8 +88,7 @@ fn frequency_from_note(
                 ],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value(),
         "",
@@ -109,8 +106,7 @@ fn frequency_from_samples(
             .build_load(
                 &globals::get_sample_rate(module).as_pointer_value(),
                 "samplerate",
-            )
-            .into_vector_value(),
+            ).into_vector_value(),
         val,
         "",
     )

@@ -63,16 +63,14 @@ impl Function for SvFilterFunction {
                                 .build_load(
                                     &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                                     "samplerate",
-                                )
-                                .into_vector_value(),
+                                ).into_vector_value(),
                             "",
                         ),
                         "fparam",
                     )],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_vector_value(),
             util::get_vec_spread(func.ctx.context, 2.),
@@ -111,8 +109,7 @@ impl Function for SvFilterFunction {
                         ],
                         "damppow",
                         false,
-                    )
-                    .left()
+                    ).left()
                     .unwrap()
                     .into_vector_value(),
                 "inversedamppow",
@@ -144,8 +141,7 @@ impl Function for SvFilterFunction {
                 ],
                 "maxdamp",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
         let damp = func

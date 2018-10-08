@@ -210,8 +210,7 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
                                 .ptr_type(AddressSpace::Generic),
                         ],
                         false,
-                    )
-                    .into(),
+                    ).into(),
             )
         }
 
@@ -266,8 +265,7 @@ fn build_update_func(
                 ctx.func.count_params() - 1
             } else {
                 ctx.func.count_params()
-            } as usize)
-            .skip(2)
+            } as usize).skip(2)
             .map(|val| val.into_pointer_value())
             .collect();
 

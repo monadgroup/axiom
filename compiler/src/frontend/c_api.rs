@@ -178,8 +178,7 @@ pub unsafe extern "C" fn maxim_vartype_tuple(
         .map(|index| {
             let boxed = Box::from_raw(*subtypes.offset(index as isize));
             *boxed
-        })
-        .collect();
+        }).collect();
     Box::into_raw(Box::new(mir::VarType::Tuple(subtypes_vec)))
 }
 
@@ -228,8 +227,7 @@ pub unsafe extern "C" fn maxim_constant_tuple(
         .map(|index| {
             let boxed = Box::from_raw(*items.offset(index as isize));
             *boxed
-        })
-        .collect();
+        }).collect();
     Box::into_raw(Box::new(mir::ConstantValue::Tuple(mir::ConstantTuple {
         items: items_vec,
     })))

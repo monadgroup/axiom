@@ -32,8 +32,7 @@ impl Function for IndexedFunction {
                 &input_vec,
                 &func.ctx.context.i64_type().const_int(0, false),
                 "input.left",
-            )
-            .into_float_value();
+            ).into_float_value();
         let input_count_clamped = func
             .ctx
             .b
@@ -51,8 +50,7 @@ impl Function for IndexedFunction {
                             ],
                             "",
                             false,
-                        )
-                        .left()
+                        ).left()
                         .unwrap()
                         .into_float_value(),
                     &func
@@ -63,8 +61,7 @@ impl Function for IndexedFunction {
                 ],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_float_value();
 

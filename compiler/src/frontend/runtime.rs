@@ -261,12 +261,10 @@ impl Runtime {
                 let new_surfaces = pass::group_extracted(&mut surface, self);
                 pass::remove_dead_groups(&mut surface);
                 new_surfaces.into_iter().chain(iter::once(surface))
-            })
-            .map(|mut surface| {
+            }).map(|mut surface| {
                 pass::order_nodes(&mut surface);
                 surface
-            })
-            .collect()
+            }).collect()
     }
 
     fn patch_in_blocks(&mut self, blocks: Vec<Block>) {

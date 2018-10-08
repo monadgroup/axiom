@@ -42,8 +42,7 @@ fn gen_scalar_call(
                 .b
                 .build_extract_element(vec, &const_left_index, "arg.left")
                 .into_float_value()
-        })
-        .collect();
+        }).collect();
     let left_basic_values: Vec<_> = left_values.iter().map(|val| val as &BasicValue).collect();
     let left_result = func
         .ctx
@@ -59,8 +58,7 @@ fn gen_scalar_call(
                 .b
                 .build_extract_element(vec, &const_right_index, "arg.right")
                 .into_float_value()
-        })
-        .collect();
+        }).collect();
     let right_basic_values: Vec<_> = right_values.iter().map(|val| val as &BasicValue).collect();
     let right_result = func
         .ctx
@@ -77,8 +75,7 @@ fn gen_scalar_call(
             &left_result,
             &const_left_index,
             "vec.withleft",
-        )
-        .into_vector_value();
+        ).into_vector_value();
     let result_vec = func
         .ctx
         .b

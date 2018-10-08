@@ -194,8 +194,7 @@ impl DelayFunction {
                             .build_in_bounds_gep(&buffer_ptr, &[read_position], "result.ptr")
                     },
                     "result",
-                )
-                .into_float_value();
+                ).into_float_value();
             ctx.b.build_store(&result_ptr, &result_val);
             ctx.b
                 .build_unconditional_branch(&has_samples_continue_block);
@@ -237,8 +236,7 @@ impl DelayFunction {
                     &[&reserve_samples],
                     "newbuffersize",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_int_value();
 
@@ -283,8 +281,7 @@ impl DelayFunction {
                     ],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_pointer_value();
 
@@ -452,8 +449,7 @@ impl Function for DelayFunction {
             .build_load(
                 &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                 "samplerate",
-            )
-            .into_vector_value();
+            ).into_vector_value();
 
         // determine reserve samples
         let reserve_vec = reserve_num.get_vec(func.ctx.b);
@@ -472,8 +468,7 @@ impl Function for DelayFunction {
                 ],
                 "reservesamples.clamped",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
         let reserve_samples = func.ctx.b.build_float_to_unsigned_int(
@@ -498,16 +493,14 @@ impl Function for DelayFunction {
                             &[&delay_vec, &util::get_vec_spread(func.ctx.context, 1.)],
                             "delayval.clamped",
                             false,
-                        )
-                        .left()
+                        ).left()
                         .unwrap()
                         .into_vector_value(),
                     &util::get_vec_spread(func.ctx.context, 0.),
                 ],
                 "delayval.clamped",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
         let delay_samples_float = func.ctx.b.build_float_mul(
@@ -548,8 +541,7 @@ impl Function for DelayFunction {
                 ],
                 "result.left",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_float_value();
 
@@ -578,8 +570,7 @@ impl Function for DelayFunction {
                 ],
                 "result.right",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_float_value();
 
@@ -595,13 +586,11 @@ impl Function for DelayFunction {
                         &left_result,
                         &left_element,
                         "",
-                    )
-                    .into_vector_value(),
+                    ).into_vector_value(),
                 &right_result,
                 &right_element,
                 "",
-            )
-            .into_vector_value();
+            ).into_vector_value();
         result_num.set_vec(func.ctx.b, &result_vec);
 
         let input_form = input_num.get_form(func.ctx.b);
@@ -619,8 +608,7 @@ impl Function for DelayFunction {
                         .build_struct_gep(&func.data_ptr, 4, "leftbuffer.ptr")
                 },
                 "leftbuffer",
-            )
-            .into_pointer_value();
+            ).into_pointer_value();
         let right_buffer_ptr = func
             .ctx
             .b
@@ -631,8 +619,7 @@ impl Function for DelayFunction {
                         .build_struct_gep(&func.data_ptr, 5, "rightbuffer.ptr")
                 },
                 "rightbuffer",
-            )
-            .into_pointer_value();
+            ).into_pointer_value();
         func.ctx.b.build_free(&left_buffer_ptr);
         func.ctx.b.build_free(&right_buffer_ptr);
     }

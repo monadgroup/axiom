@@ -168,8 +168,7 @@ impl Function for VoicesFunction {
                         &init_last_active_vec,
                         &func.ctx.context.i32_type().const_int(0, false),
                         "initactiveval",
-                    )
-                    .into_float_value(),
+                    ).into_float_value(),
                 func.ctx.context.f32_type().const_float(0.),
                 "activecond",
             );

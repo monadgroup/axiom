@@ -132,10 +132,8 @@ pub fn build_sockets_global(
                 .const_in_bounds_gep(&[
                     context.i64_type().const_int(0, false),
                     context.i32_type().const_int(index as u64, false),
-                ])
-                .const_cast(&void_ptr_ty)
-        })
-        .collect();
+                ]).const_cast(&void_ptr_ty)
+        }).collect();
     let pointers_arr = void_ptr_ty.const_array(&array_itms);
     let pointers_global =
         util::get_or_create_global(module, pointers_name, &pointers_arr.get_type());

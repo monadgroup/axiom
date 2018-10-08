@@ -46,8 +46,7 @@ fn db_from_control(
                 &[&builder.build_float_mul(val, util::get_vec_spread(context, 2.), "")],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value(),
         util::get_vec_spread(context, 20.),

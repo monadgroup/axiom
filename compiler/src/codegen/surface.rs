@@ -77,8 +77,7 @@ fn build_node_call(
                         .build_load(
                             &unsafe { ctx.b.build_struct_gep(&source_socket_pointers, 0, "") },
                             "",
-                        )
-                        .into_pointer_value(),
+                        ).into_pointer_value(),
                 );
                 let first_bitmap = first_array.get_bitmap(ctx.b);
 
@@ -95,8 +94,7 @@ fn build_node_call(
                                         )
                                     },
                                     "",
-                                )
-                                .into_pointer_value(),
+                                ).into_pointer_value(),
                         );
                         let nth_bitmap = nth_array.get_bitmap(ctx.b);
                         ctx.b.build_and(acc, nth_bitmap, "")
@@ -207,8 +205,7 @@ fn build_node_call(
                                     )
                                 },
                                 "",
-                            )
-                            .into_pointer_value(),
+                            ).into_pointer_value(),
                     );
                     dest_array.set_bitmap(ctx.b, &active_bitmap);
                 }

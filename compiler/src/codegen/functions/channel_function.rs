@@ -51,16 +51,14 @@ impl Function for ChannelFunction {
                             ],
                             "",
                             false,
-                        )
-                        .left()
+                        ).left()
                         .unwrap()
                         .into_float_value(),
                     &func.ctx.context.f32_type().const_float(16.),
                 ],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_float_value();
         let channel_int =

@@ -57,8 +57,7 @@ fn gen_periodic_call(
         .build_load(
             &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
             "samplerate",
-        )
-        .into_vector_value();
+        ).into_vector_value();
     let phase_offset = func
         .ctx
         .b
@@ -155,8 +154,7 @@ fn sqr_next_value(
             util::get_vec_spread(func.ctx.context, 1.),
             util::get_vec_spread(func.ctx.context, -1.),
             "result",
-        )
-        .into_vector_value()
+        ).into_vector_value()
 }
 define_periodic_func!(SqrOscFunction: block::Function::SqrOsc, true => sqr_next_value);
 
@@ -202,8 +200,7 @@ fn tri_next_value(
                 )],
                 "normalized",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value(),
         util::get_vec_spread(func.ctx.context, 1.),

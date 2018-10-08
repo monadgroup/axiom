@@ -91,16 +91,14 @@ impl Function for AmplitudeFunction {
                                 .build_load(
                                     &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                                     "samplerate",
-                                )
-                                .into_vector_value(),
+                                ).into_vector_value(),
                             "",
                         ),
                         "",
                     )],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_vector_value(),
             "",

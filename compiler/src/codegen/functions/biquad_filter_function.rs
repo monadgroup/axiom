@@ -249,8 +249,7 @@ fn gen_biquad_call(
             &[&q_vec, &util::get_vec_spread(func.ctx.context, 0.5)],
             "",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_vector_value();
 
@@ -266,8 +265,7 @@ fn gen_biquad_call(
             .build_load(
                 &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                 "",
-            )
-            .into_vector_value(),
+            ).into_vector_value(),
         "",
     );
     let left_k = func
@@ -281,8 +279,7 @@ fn gen_biquad_call(
                 .build_extract_element(&k_param, &left_element, "")],
             "leftk",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_float_value();
     let right_k = func
@@ -296,8 +293,7 @@ fn gen_biquad_call(
                 .build_extract_element(&k_param, &right_element, "")],
             "rightk",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_float_value();
     let k_value = func
@@ -312,13 +308,11 @@ fn gen_biquad_call(
                     &left_k,
                     &left_element,
                     "",
-                )
-                .into_vector_value(),
+                ).into_vector_value(),
             &right_k,
             &right_element,
             "k",
-        )
-        .into_vector_value();
+        ).into_vector_value();
     let k_squared = func.ctx.b.build_float_mul(k_value, k_value, "ksquared");
 
     generate_coefficients(
@@ -348,8 +342,7 @@ fn gen_biquad_call(
             ],
             "resultvec",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_vector_value();
     result_num.set_vec(func.ctx.b, &result_vec);
@@ -555,8 +548,7 @@ fn peak_filter_generate_coefficients(
             ],
             "",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_vector_value();
 

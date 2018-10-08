@@ -56,8 +56,7 @@ fn beats_from_samples(
                 .build_load(
                     &globals::get_sample_rate(module).as_pointer_value(),
                     "samplerate",
-                )
-                .into_vector_value(),
+                ).into_vector_value(),
             util::get_vec_spread(context, 60.),
             "",
         ),

@@ -356,8 +356,7 @@ fn build_next_power_i64(module: &Module) {
                     ],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_int_value(),
             "",
