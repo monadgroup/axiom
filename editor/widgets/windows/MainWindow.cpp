@@ -219,6 +219,11 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event) {
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     if (checkCloseProject()) {
+        // save the global library
+        lockGlobalLibrary();
+        saveGlobalLibrary();
+        unlockGlobalLibrary();
+
         event->accept();
     } else {
         event->ignore();
