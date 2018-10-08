@@ -99,7 +99,7 @@ fn build_node_call(
                                 .into_pointer_value(),
                         );
                         let nth_bitmap = nth_array.get_bitmap(ctx.b);
-                        ctx.b.build_or(acc, nth_bitmap, "")
+                        ctx.b.build_and(acc, nth_bitmap, "")
                     });
                 ctx.b.build_store(
                     &ctx.b
