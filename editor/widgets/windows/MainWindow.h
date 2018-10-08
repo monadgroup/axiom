@@ -101,7 +101,7 @@ namespace AxiomGui {
         QFileSystemWatcher globalLibraryWatcher;
 
         bool didJustSaveLibrary = false;
-        bool didJustLoadLibrary = false;
+        bool isLoadingLibrary = false;
 
         static std::unique_ptr<AxiomModel::Library> loadGlobalLibrary();
         static std::unique_ptr<AxiomModel::Library> loadDefaultLibrary();

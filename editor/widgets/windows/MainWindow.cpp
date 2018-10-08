@@ -358,19 +358,19 @@ void MainWindow::saveGlobalLibrary() {
 }
 
 void MainWindow::triggerLibraryChanged() {
+    // ignore any changes if they were caused by the library being loaded
+    if (isLoadingLibrary) {
+        return;
+    }
+
     lockGlobalLibrary();
     saveDebounceTimer.start();
 }
 
 void MainWindow::triggerLibraryChangeDebounce() {
-    // ignore any changes if they were caused by the library being loaded
-    if (didJustLoadLibrary) {
-        didJustLoadLibrary = false;
-        return;
-    }
-
     didJustSaveLibrary = true;
 
+    std::cout << "Saving module library after internal change" << std::endl;
     saveGlobalLibrary();
     unlockGlobalLibrary();
 }
@@ -386,7 +386,8 @@ void MainWindow::triggerLibraryReloadDebounce() {
         return;
     }
 
-    didJustLoadLibrary = true;
+    isLoadingLibrary = true;
+    std::cout << "Reloading module library after filesystem change" << std::endl;
 
     lockGlobalLibrary();
     auto library = loadGlobalLibrary();
@@ -396,6 +397,8 @@ void MainWindow::triggerLibraryReloadDebounce() {
         });
     }
     unlockGlobalLibrary();
+
+    isLoadingLibrary = false;
 }
 
 void MainWindow::saveProjectTo(const QString &path) {
