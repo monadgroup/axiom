@@ -219,9 +219,9 @@ void AudioBackend::internalUpdateConfiguration() {
     hasCurrent = true;
 }
 
-size_t AudioBackend::internalRemapPortal(size_t index) {
+size_t AudioBackend::internalRemapPortal(uint64_t id) {
     for (size_t portalIndex = 0; portalIndex < currentPortals.size(); portalIndex++) {
-        if (currentPortals[portalIndex]._key == index) return portalIndex;
+        if (currentPortals[portalIndex].id == id) return portalIndex;
     }
     unreachable;
 }

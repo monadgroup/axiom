@@ -45,6 +45,23 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
     plugin->backendUpdateIo();
 }
 
+std::string VstAudioBackend::getPortalLabel(size_t portalIndex) const {
+    if ((ssize_t) portalIndex == midiInputPortal) return "1";
+
+    auto audioInputIndex = audioInputs.portalParameterMap().find(portalIndex);
+    if (audioInputIndex != audioInputs.portalParameterMap().end()) return std::to_string(audioInputIndex->second + 1);
+
+    auto audioOutputIndex = audioOutputs.portalParameterMap().find(portalIndex);
+    if (audioOutputIndex != audioOutputs.portalParameterMap().end())
+        return std::to_string(audioOutputIndex->second + 1);
+
+    auto automationIndex = automationInputs.portalParameterMap().find(portalIndex);
+    if (automationIndex != automationInputs.portalParameterMap().end())
+        return std::to_string(automationIndex->second + 1);
+
+    return "?";
+}
+
 void VstAudioBackend::previewEvent(AxiomBackend::MidiEvent event) {
     if (midiInputPortal == -1) return;
     auto lock = lockRuntime();

@@ -11,15 +11,18 @@ using namespace AxiomBackend;
 class StandaloneAudioBackend : public AudioBackend {
 public:
     ssize_t midiInputPortal = -1;
+    ssize_t audioOutputPortal = -1;
     NumValue **outputPortal = nullptr;
 
     void handleConfigurationChange(const AudioConfiguration &configuration) override {
         // we only care about the first MIDI input and first number output portal
         midiInputPortal = -1;
+        audioOutputPortal = -1;
         outputPortal = nullptr;
         for (size_t i = 0; i < configuration.portals.size(); i++) {
             const auto &portal = configuration.portals[i];
             if (outputPortal == nullptr && portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
+                audioOutputPortal = i;
                 outputPortal = getAudioPortal(i);
             } else if (midiInputPortal == -1 && portal.type == PortalType::INPUT && portal.value == PortalValue::MIDI) {
                 midiInputPortal = (ssize_t) i;
@@ -36,6 +39,13 @@ public:
     }
 
     bool doesSaveInternally() const override { return false; }
+
+    std::string getPortalLabel(size_t portalIndex) const override {
+        if ((ssize_t) portalIndex == midiInputPortal || (ssize_t) portalIndex == audioOutputPortal) {
+            return "1";
+        }
+        return "?";
+    }
 
     void previewEvent(AxiomBackend::MidiEvent event) override {
         if (midiInputPortal == -1) return;

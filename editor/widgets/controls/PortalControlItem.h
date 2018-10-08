@@ -27,7 +27,10 @@ namespace AxiomGui {
 
     private:
         QImage _image;
+        bool _needsLabelUpdate = true;
 
         static QString getImagePath(AxiomModel::PortalControl *control);
+
+        void updatePortalLabel();
     };
 }

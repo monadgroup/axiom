@@ -8,6 +8,9 @@ namespace AxiomModel {
     public:
         enum class PortalType { INPUT, OUTPUT, AUTOMATION };
 
+        AxiomCommon::Event<> labelWillChange;
+        AxiomCommon::Event<const QString &> labelChanged;
+
         PortalControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                       bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
                       ConnectionWire::WireType wireType, PortalType portalType, uint64_t portalId, ModelRoot *root);
@@ -26,8 +29,15 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override {}
 
+        void restoreState() override;
+
+        const QString &portalLabel() const { return _portalLabel; }
+
+        void setPortalLabel(QString portalLabel);
+
     private:
         PortalType _portalType;
         uint64_t _portalId;
+        QString _portalLabel;
     };
 }

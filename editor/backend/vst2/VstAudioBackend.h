@@ -21,6 +21,8 @@ public:
 
     bool doesSaveInternally() const override { return true; }
 
+    std::string getPortalLabel(size_t portalIndex) const override;
+
     void previewEvent(AxiomBackend::MidiEvent event) override;
 
     void automationValueChanged(size_t portalId, AxiomBackend::NumValue value) override;

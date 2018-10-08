@@ -88,6 +88,9 @@ namespace AxiomBackend {
         // shown. This could be called at any time.
         virtual bool doesSaveInternally() const = 0;
 
+        // To be implemented by the audio backend, called from the UI thread to determine a label for portal nodes.
+        virtual std::string getPortalLabel(size_t portalIndex) const = 0;
+
         // To be implemented by the audio backend, called from the UI thread when the user presses or releases a key
         // corresponding to a MIDI note. The default implementation does nothing.
         virtual void previewEvent(MidiEvent event);
@@ -95,7 +98,7 @@ namespace AxiomBackend {
         // To be implemented by the audio backend, called from the UI thread when an automation portal value changes.
         // This is not called every sample a value changes, but every "update cycle" (roughly every 16 milliseconds)
         // where the value changed from the last cycle. The default implementation does nothing.
-        virtual void automationValueChanged(size_t portalId, NumValue value);
+        virtual void automationValueChanged(size_t portalIndex, NumValue value);
 
         // To be implemented by the audio backend, called from the UI thread to determine if the user is able to
         // "fiddle" automation portals. This should return true on backends where a potential host needs a value change
@@ -105,7 +108,7 @@ namespace AxiomBackend {
         // Called internally. Not stable APIs.
         void setEditor(AxiomEditor *editor) { _editor = editor; }
         void internalUpdateConfiguration();
-        size_t internalRemapPortal(size_t index);
+        size_t internalRemapPortal(uint64_t id);
 
     private:
         struct QueuedEvent {

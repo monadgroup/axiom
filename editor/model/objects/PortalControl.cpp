@@ -1,4 +1,5 @@
 #include "PortalControl.h"
+
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -30,4 +31,15 @@ std::unique_ptr<PortalControl> PortalControl::create(const QUuid &uuid, const QU
                                                      uint64_t portalId, AxiomModel::ModelRoot *root) {
     return std::make_unique<PortalControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName,
                                            exposerUuid, exposingUuid, wireType, portalType, portalId, root);
+}
+
+void PortalControl::restoreState() {
+    labelWillChange.trigger();
+}
+
+void PortalControl::setPortalLabel(QString portalLabel) {
+    if (portalLabel != _portalLabel) {
+        _portalLabel = portalLabel;
+        labelChanged.trigger(portalLabel);
+    }
 }

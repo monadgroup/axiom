@@ -313,19 +313,10 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
     } else if (selectedAction == fiddleAction && portalControl) {
-        // remap the automation node into its portal index
-        auto &compileMeta = *rootSurface->compileMeta();
-
-        for (size_t portalIndex = 0; portalIndex < compileMeta.portals.size(); portalIndex++) {
-            const auto &portal = compileMeta.portals[portalIndex];
-            if (portal.id == portalControl->portalId()) {
-                auto backend = mainWindow->project()->backend();
-                auto remappedIndex = backend->internalRemapPortal(portalIndex);
-                auto currentPortalValue = **backend->getAudioPortal(remappedIndex);
-                backend->automationValueChanged(remappedIndex, currentPortalValue);
-                break;
-            }
-        }
+        auto backend = mainWindow->project()->backend();
+        auto remappedIndex = backend->internalRemapPortal(portalControl->portalId());
+        auto currentPortalValue = **backend->getAudioPortal(remappedIndex);
+        backend->automationValueChanged(remappedIndex, currentPortalValue);
     }
 }
 
