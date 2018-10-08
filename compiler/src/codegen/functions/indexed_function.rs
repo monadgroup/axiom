@@ -86,13 +86,14 @@ impl Function for IndexedFunction {
 
         // LLVM defines shifting left by the same number of bits as the input as undefined (so we can't shift a 32-bit number 32 bits left).
         // Since this will happen when the input value is 0, we do the shifting as 64-bit integers and truncate the result to 32 bits.
-        let bitmap = func.ctx.b.build_left_shift(
-            func.ctx.context.i64_type().const_int(!0u64 as u64, false),
+        let bitmap = func.ctx.b.build_right_shift(
+            func.ctx.context.i64_type().const_int(!0u32 as u64, false),
             func.ctx.b.build_int_z_extend_or_bit_cast(
                 shift_amount,
                 func.ctx.context.i64_type(),
                 "",
             ),
+            false,
             "",
         );
         let truncated_bitmap =
