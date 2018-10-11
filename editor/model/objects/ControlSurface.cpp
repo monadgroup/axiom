@@ -50,6 +50,6 @@ void ControlSurface::updateControlsOnTopRow() {
 
     if (hasControlsOnTopRow != _controlsOnTopRow) {
         _controlsOnTopRow = hasControlsOnTopRow;
-        controlsOnTopRowChanged.trigger(hasControlsOnTopRow);
+        controlsOnTopRowChanged(hasControlsOnTopRow);
     }
 }

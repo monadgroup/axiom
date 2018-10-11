@@ -32,7 +32,7 @@ namespace AxiomModel {
 
     class RootSurface;
 
-    class ModelRoot : public AxiomCommon::Hookable {
+    class ModelRoot : public AxiomCommon::TrackedObject {
     public:
         using NodeSurfaceCollection = WatchSequence<NodeSurface *>;
         using NodeCollection = WatchSequence<Node *>;

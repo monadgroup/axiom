@@ -1,13 +1,14 @@
 #pragma once
 
+#include <iostream>
+
 #include "SequenceMapFilter.h"
 #include "common/Event.h"
-#include <iostream>
 
 namespace AxiomModel {
 
     template<class Item>
-    class WatchSequence : public AxiomCommon::Hookable {
+    class WatchSequence {
     public:
         using sequence_type = Sequence<Item>;
         using value_type = typename sequence_type::value_type;
@@ -18,33 +19,60 @@ namespace AxiomModel {
         using iterator = typename sequence_type::iterator;
         using const_iterator = typename sequence_type::const_iterator;
 
-        AxiomCommon::Event<const Item &> itemAdded;
-        AxiomCommon::Event<const Item &> itemRemoved;
+        using ItemEvent = AxiomCommon::Event<const Item &>;
 
-        explicit WatchSequence(sequence_type sequence) : _sequence(std::move(sequence)) {}
-
-        template<class InputItem>
-        WatchSequence(const SequenceMapFilter<Item, InputItem> &mapFilter,
-                      AxiomCommon::Event<const InputItem &> &parentAdded,
-                      AxiomCommon::Event<const InputItem &> &parentRemoved)
-            : _sequence(mapFilter.sequence()) {
-            auto mapFilterNext = mapFilter.next();
-            auto itemAddedEvent = itemAdded;
-            auto itemRemovedEvent = itemRemoved;
-            parentAdded.connect(&itemAdded, [itemAddedEvent, mapFilterNext](const InputItem &input) {
-                auto result = mapFilterNext(input);
-                if (result) itemAddedEvent.trigger(*result);
-            });
-            parentRemoved.connect(&itemRemoved,
-                                  [itemRemovedEvent, mapFilterNext](const InputItem &input) {
-                                      auto result = mapFilterNext(input);
-                                      if (result) itemRemovedEvent.trigger(*result);
-                                  });
-        }
+        explicit WatchSequence(sequence_type sequence)
+            : _sequence(std::move(sequence)), _itemAdded(std::make_shared<EventBinding>()),
+              _itemRemoved(std::make_shared<EventBinding>()) {}
 
         template<class InputItem>
         WatchSequence(const SequenceMapFilter<Item, InputItem> &mapFilter, WatchSequence<InputItem> &parent)
-            : WatchSequence(mapFilter, parent.itemAdded, parent.itemRemoved) {}
+            : _sequence(mapFilter.sequence()), _itemAdded(std::make_shared<EventBinding>(parent.itemAddedBinding())),
+              _itemRemoved(std::make_shared<EventBinding>(parent.itemRemovedBinding())) {
+            auto mapFilterNext = mapFilter.next();
+
+            // Forward events from the parent sequence.
+            // We want these events to continue running even if this class is destroyed (as long as something is
+            // receiving the events), hence why we use shared pointers. We don't, however, want to keep these events
+            // going if the only reference to them is the code here to forward events to them - hence we use weak
+            // pointers. Note that locking the weak pointer inside the callback is always safe, as Event.connect
+            // will disconnect when `_itemAdded` is destructed.
+            auto itemAddedEvent = _itemAdded.get();
+            auto itemRemovedEvent = _itemRemoved.get();
+            parent.itemAdded().connect(&itemAddedEvent->event, [itemAddedEvent, mapFilterNext](const InputItem &input) {
+                std::cout << "Got itemAdded event, ";
+                auto result = mapFilterNext(input);
+                if (result) {
+                    std::cout << "forwarding it on" << std::endl;
+                    itemAddedEvent->event(*result);
+                } else {
+                    std::cout << "ignoring it" << std::endl;
+                }
+            });
+            parent.itemRemoved().connect(&itemRemovedEvent->event,
+                                         [itemRemovedEvent, mapFilterNext](const InputItem &input) {
+                                             std::cout << "Got itemRemoved event, ";
+                                             auto result = mapFilterNext(input);
+                                             if (result) {
+                                                 std::cout << "forwarding it on" << std::endl;
+                                                 itemRemovedEvent->event(*result);
+                                             } else {
+                                                 std::cout << "ignoring it" << std::endl;
+                                             }
+                                         });
+        }
+
+        ItemEvent &itemAdded() { return _itemAdded->event; }
+
+        const ItemEvent &itemAdded() const { return _itemAdded->event; }
+
+        ItemEvent &itemRemoved() { return _itemRemoved->event; }
+
+        const ItemEvent &itemRemoved() const { return _itemRemoved->event; }
+
+        std::shared_ptr<void> itemAddedBinding() { return _itemAdded; }
+
+        std::shared_ptr<void> itemRemovedBinding() { return _itemRemoved; }
 
         sequence_type &sequence() { return _sequence; }
 
@@ -60,5 +88,16 @@ namespace AxiomModel {
 
     private:
         sequence_type _sequence;
+        struct EventBinding {
+            ItemEvent event;
+            std::shared_ptr<void> parentEvent;
+
+            EventBinding() {}
+
+            EventBinding(std::shared_ptr<void> parentEvent) : parentEvent(parentEvent) {}
+        };
+
+        std::shared_ptr<EventBinding> _itemAdded;
+        std::shared_ptr<EventBinding> _itemRemoved;
     };
 }

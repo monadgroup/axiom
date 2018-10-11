@@ -38,13 +38,13 @@ void GraphControl::doRuntimeUpdate() {
     }
 
     if (newStateHash != _lastStateHash) {
-        stateChanged.trigger();
+        stateChanged();
         _lastStateHash = newStateHash;
     }
 
     if (timeState && timeState->currentTimeSamples != _lastTime) {
         _lastTime = timeState->currentTimeSamples;
-        timeChanged.trigger();
+        timeChanged();
     }
 }
 
@@ -67,14 +67,14 @@ GraphControlCurveState *GraphControl::getCurveState() const {
 void GraphControl::setZoom(float zoom) {
     if (zoom != _zoom) {
         _zoom = zoom;
-        zoomChanged.trigger(zoom);
+        zoomChanged(zoom);
     }
 }
 
 void GraphControl::setScroll(float scroll) {
     if (scroll != _scroll) {
         _scroll = scroll;
-        scrollChanged.trigger(scroll);
+        scrollChanged(scroll);
     }
 }
 

@@ -31,11 +31,11 @@ void GridItem::setSize(QSize size) {
 
         if (!parentSurface->grid().isRectAvailable(m_pos, size, this)) return;
 
-        beforeSizeChanged.trigger(size);
+        beforeSizeChanged(size);
         parentSurface->grid().moveRect(m_pos, m_size, m_pos, size, this);
         parentSurface->setDirty();
         m_size = size;
-        sizeChanged.trigger(size);
+        sizeChanged(size);
     }
 }
 
@@ -70,27 +70,27 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (topLeft == m_pos && newSize == m_size) return;
     parentSurface->grid().moveRect(m_pos, m_size, topLeft, newSize, this);
     parentSurface->setDirty();
-    beforePosChanged.trigger(topLeft);
+    beforePosChanged(topLeft);
     m_pos = topLeft;
-    posChanged.trigger(m_pos);
-    beforeSizeChanged.trigger(newSize);
+    posChanged(m_pos);
+    beforeSizeChanged(newSize);
     m_size = newSize;
-    sizeChanged.trigger(m_size);
+    sizeChanged(m_size);
 }
 
 void GridItem::select(bool exclusive) {
     if (exclusive || !m_selected) {
         m_selected = true;
-        selectedChanged.trigger(m_selected);
-        selected.trigger(exclusive);
+        selectedChanged(m_selected);
+        selected(exclusive);
     }
 }
 
 void GridItem::deselect() {
     if (!m_selected) return;
     m_selected = false;
-    selectedChanged.trigger(m_selected);
-    deselected.trigger();
+    selectedChanged(m_selected);
+    deselected();
 }
 
 void GridItem::startDragging() {
@@ -109,12 +109,12 @@ void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
 
         if (pos == m_pos) return;
 
-        beforePosChanged.trigger(pos);
+        beforePosChanged(pos);
         if (updateGrid) {
             parentSurface->grid().moveRect(m_pos, m_size, pos, m_size, this);
             parentSurface->setDirty();
         }
         m_pos = pos;
-        posChanged.trigger(pos);
+        posChanged(pos);
     }
 }

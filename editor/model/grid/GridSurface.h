@@ -11,13 +11,13 @@
 #include "../Pool.h"
 #include "Grid.h"
 #include "common/Event.h"
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
 
     class GridItem;
 
-    class GridSurface : public AxiomCommon::Hookable {
+    class GridSurface : public AxiomCommon::TrackedObject {
     public:
         using ItemGrid = Grid<GridItem>;
         using ItemCollection = WatchSequence<GridItem *>;

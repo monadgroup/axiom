@@ -20,7 +20,7 @@ ConnectionWire::~ConnectionWire() {
 void ConnectionWire::setStartPos(const QPointF &startPos) {
     if (startPos != _startPos) {
         _startPos = startPos;
-        startPosChanged.trigger(startPos);
+        startPosChanged(startPos);
         updateRoute();
     }
 }
@@ -28,7 +28,7 @@ void ConnectionWire::setStartPos(const QPointF &startPos) {
 void ConnectionWire::setEndPos(const QPointF &endPos) {
     if (endPos != _endPos) {
         _endPos = endPos;
-        endPosChanged.trigger(endPos);
+        endPosChanged(endPos);
         updateRoute();
     }
 }
@@ -62,7 +62,7 @@ void ConnectionWire::setEndEnabled(bool enabled) {
 }
 
 void ConnectionWire::remove() {
-    removed.trigger();
+    removed();
 }
 
 void ConnectionWire::updateActive() {
@@ -84,7 +84,7 @@ void ConnectionWire::updateActive() {
 
     if (newActive != _active) {
         _active = newActive;
-        activeChanged.trigger(newActive);
+        activeChanged(newActive);
     }
 
     if (!_startActive && !_endActive) {
@@ -96,7 +96,7 @@ void ConnectionWire::updateEnabled() {
     auto newEnabled = _startEnabled || _endEnabled;
     if (newEnabled != _enabled) {
         _enabled = newEnabled;
-        enabledChanged.trigger(newEnabled);
+        enabledChanged(newEnabled);
     }
 }
 
@@ -108,7 +108,7 @@ void ConnectionWire::updateRoute() {
 
 void ConnectionWire::updateLineIndices() {
     _lineIndices = getLineIndices(_route);
-    routeChanged.trigger(_route, _lineIndices);
+    routeChanged(_route, _lineIndices);
 }
 
 void ConnectionWire::setWireGrid(const std::deque<QPoint> &route) {

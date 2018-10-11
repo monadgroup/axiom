@@ -5,7 +5,7 @@
 #include <memory>
 #include <set>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 #include "editor/model/ConnectionWire.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/PortalControl.h"
@@ -26,7 +26,7 @@ namespace AxiomGui {
 
     class NodeSurfacePanel;
 
-    class NodeSurfaceCanvas : public QGraphicsScene, public AxiomCommon::Hookable {
+    class NodeSurfaceCanvas : public QGraphicsScene, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:

@@ -35,13 +35,13 @@ std::unique_ptr<PortalControl> PortalControl::create(const QUuid &uuid, const QU
 
 void PortalControl::restoreState() {
     _needsLabelUpdate = true;
-    labelWillChange.trigger();
+    labelWillChange();
 }
 
 void PortalControl::setPortalLabel(QString portalLabel) {
     _needsLabelUpdate = false;
     if (portalLabel != _portalLabel) {
         _portalLabel = portalLabel;
-        labelChanged.trigger(portalLabel);
+        labelChanged(portalLabel);
     }
 }

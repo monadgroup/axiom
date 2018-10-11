@@ -4,6 +4,7 @@
 #include <QtCore/QUuid>
 #include <functional>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "common/Event.h"
@@ -14,7 +15,7 @@ namespace AxiomModel {
 
     class Project;
 
-    class Library : public AxiomCommon::Hookable {
+    class Library : public AxiomCommon::TrackedObject {
     public:
         enum class ConflictResolution { CANCEL, KEEP_OLD, KEEP_NEW, KEEP_BOTH };
 

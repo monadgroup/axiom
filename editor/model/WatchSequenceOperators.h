@@ -36,25 +36,24 @@ namespace AxiomModel {
     };
 
     template<class Item>
-    AxiomCommon::Promise<Item> getFirst(WatchSequence<Item> input) {
-        if (!input.empty()) {
-            return from<Item>(*input.begin());
+    std::shared_ptr<AxiomCommon::Promise<Item>> getFirst(WatchSequence<Item> input) {
+        if (input.empty()) {
+            auto result = std::make_shared<AxiomCommon::Promise<Item>>();
+            input.itemAdded().connect([input, result](const Item &item) mutable { result->resolve(item); });
+            return std::move(result);
+        } else {
+            return std::make_shared<AxiomCommon::Promise<Item>>(from<Item>(*input.begin()));
         }
-
-        AxiomCommon::Promise<Item> result;
-        input.itemAdded.connect([result](const Item &item) mutable { result.resolve(item); });
-
-        return std::move(result);
     };
 
     template<class Item>
-    AxiomCommon::Promise<Item> takeAtLater(WatchSequence<Item> input, size_t index) {
+    std::shared_ptr<AxiomCommon::Promise<Item>> takeAtLater(WatchSequence<Item> input, size_t index) {
         auto inputSize = input.size();
         if (inputSize > index) {
             return from<Item>(takeAt(input, index));
         }
 
-        AxiomCommon::Promise<Item> result;
+        auto result = std::make_shared<AxiomCommon::Promise<Item>>();
         input.itemAdded.connect([inputSize, index, result](const Item &item) mutable {
             inputSize++;
             if (inputSize == index + 1) result.resolve(item);

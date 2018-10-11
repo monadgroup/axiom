@@ -13,7 +13,7 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
     : ModelObject(ModelType::CONNECTION, uuid, parentUuid, root), _surface(find(root->nodeSurfaces(), parentUuid)),
       _controlAUuid(controlAUuid), _controlBUuid(controlBUuid) {
     all(findLater<Control *>(root->controls(), controlAUuid), findLater<Control *>(root->controls(), controlBUuid))
-        .then([this](const std::tuple<Control *, Control *> &controls) {
+        ->then([this](const std::tuple<Control *, Control *> &controls) {
             auto controlA = std::get<0>(controls);
             auto controlB = std::get<1>(controls);
             assert(controlA->wireType() == controlB->wireType());

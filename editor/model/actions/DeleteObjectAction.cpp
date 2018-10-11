@@ -43,7 +43,7 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
             compileIds.insert(compileItem);
         }
     }
-    auto itemsToDelete = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(usedIds));
+    auto itemsToDelete = findAll(dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), std::move(usedIds));
 
     // remove all items
     while (!itemsToDelete.empty()) {
@@ -68,7 +68,7 @@ void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
 }
 
 Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
-    auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
+    auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), uuid);
     auto links = flatten(map(dependents, std::function<Sequence<ModelObject *>(ModelObject *const &)>(
                                              [](ModelObject *const &obj) { return obj->links(); })));
     auto linkDependents =

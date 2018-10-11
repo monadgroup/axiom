@@ -5,13 +5,13 @@
 
 #include "WireGrid.h"
 #include "common/Event.h"
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
 
     class GridSurface;
 
-    class ConnectionWire : public AxiomCommon::Hookable {
+    class ConnectionWire : public AxiomCommon::TrackedObject {
     public:
         AxiomCommon::Event<const QPointF &> startPosChanged;
         AxiomCommon::Event<const QPointF &> endPosChanged;

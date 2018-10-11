@@ -3,7 +3,7 @@
 #include <QtWidgets/QGraphicsObject>
 #include <QtWidgets/QPlainTextEdit>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 class QGraphicsProxyWidget;
 
@@ -16,7 +16,7 @@ namespace AxiomGui {
 
     class SyntaxHighlighter;
 
-    class CustomNodePanel : public QGraphicsObject, public AxiomCommon::Hookable {
+    class CustomNodePanel : public QGraphicsObject, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:

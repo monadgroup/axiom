@@ -27,6 +27,6 @@ Sequence<QUuid> ModelObject::compileLinks() {
 }
 
 void ModelObject::remove() {
-    removed.trigger();
+    removed();
     PoolObject::remove();
 }

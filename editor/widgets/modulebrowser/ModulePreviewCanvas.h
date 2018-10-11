@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QGraphicsScene>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
     class NodeSurface;
@@ -14,11 +14,10 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class ModulePreviewCanvas : public QGraphicsScene, public AxiomCommon::Hookable {
-    Q_OBJECT
+    class ModulePreviewCanvas : public QGraphicsScene, public AxiomCommon::TrackedObject {
+        Q_OBJECT
 
     public:
-
         explicit ModulePreviewCanvas(AxiomModel::NodeSurface *surface);
 
     signals:
@@ -30,7 +29,5 @@ namespace AxiomGui {
         void addNode(AxiomModel::Node *node);
 
         void addWire(AxiomModel::ConnectionWire *wire);
-
     };
-
 }

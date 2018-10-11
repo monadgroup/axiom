@@ -21,8 +21,8 @@ ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface) {
     }
 
     // connect to model
-    surface->nodes().itemAdded.connect(this, &ModulePreviewCanvas::addNode);
-    surface->connections().itemAdded.connect(this, [this](Connection *connection) {
+    surface->nodes().itemAdded().connect(this, &ModulePreviewCanvas::addNode);
+    surface->connections().itemAdded().connect(this, [this](Connection *connection) {
         connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     });
 }

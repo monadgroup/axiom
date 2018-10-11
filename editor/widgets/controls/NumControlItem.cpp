@@ -38,8 +38,8 @@ NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
     control->valueChanged.connect(this, &NumControlItem::controlValueChanged);
     control->displayModeChanged.connect(this, &NumControlItem::triggerUpdate);
     control->rangeChanged.connect(this, &NumControlItem::triggerUpdate);
-    control->connections().itemAdded.connect(this, &NumControlItem::triggerUpdate);
-    control->connections().itemRemoved.connect(this, &NumControlItem::triggerUpdate);
+    control->connections().itemAdded().connect(this, &NumControlItem::triggerUpdate);
+    control->connections().itemRemoved().connect(this, &NumControlItem::triggerUpdate);
 
     connect(&showValueTimer, &QTimer::timeout, this, &NumControlItem::showValueExpired);
 }

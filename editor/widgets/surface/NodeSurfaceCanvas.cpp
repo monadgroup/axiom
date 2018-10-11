@@ -63,8 +63,8 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     }
 
     // connect to model
-    surface->nodes().itemAdded.connect(this, &NodeSurfaceCanvas::addNode);
-    surface->connections().itemAdded.connect(this, [this](Connection *connection) {
+    surface->nodes().itemAdded().connect(this, &NodeSurfaceCanvas::addNode);
+    surface->connections().itemAdded().connect(this, [this](Connection *connection) {
         connection->wire().then([this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     });
 

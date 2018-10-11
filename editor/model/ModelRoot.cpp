@@ -24,7 +24,7 @@ ModelRoot::ModelRoot()
       _connections(dynamicCastWatch<Connection *>(_pool.sequence())) {}
 
 RootSurface *ModelRoot::rootSurface() const {
-    auto rootSurfaces = findChildren(nodeSurfaces(), QUuid());
+    auto rootSurfaces = findChildren(nodeSurfaces().sequence(), QUuid());
     assert(rootSurfaces.size() == 1);
     auto rootSurface = dynamic_cast<RootSurface *>(takeAt(rootSurfaces, 0));
     assert(rootSurface);
@@ -80,14 +80,14 @@ void ModelRoot::applyCompile(const std::vector<QUuid> &items) {
     applyItemsTo(items, &transaction);
     applyTransaction(std::move(transaction));
 
-    modified.trigger();
+    modified();
 }
 
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     auto lock = lockRuntime();
 
     if (_runtime) {
-        auto allObjects = dynamicCast<ModelObject *>(_pool.sequence());
+        auto allObjects = dynamicCast<ModelObject *>(_pool.sequence().sequence());
         for (const auto &obj : allObjects) {
             obj->saveState();
         }
@@ -100,7 +100,7 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
         }
     }
 
-    configurationChanged.trigger();
+    configurationChanged();
 }
 
 void ModelRoot::destroy() {

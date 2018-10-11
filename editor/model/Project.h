@@ -16,7 +16,7 @@ namespace AxiomModel {
     class RootSurface;
     class ModelRoot;
 
-    class Project : public AxiomCommon::Hookable {
+    class Project : public AxiomCommon::TrackedObject {
     public:
         AxiomCommon::Event<const QString &> linkedFileChanged;
         AxiomCommon::Event<bool> isDirtyChanged;

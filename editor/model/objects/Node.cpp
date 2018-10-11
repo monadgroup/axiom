@@ -20,43 +20,46 @@ Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint
     : GridItem(&find(root->nodeSurfaces(), parentUuid)->grid(), pos, size, QSize(1, 1), selected),
       ModelObject(ModelType::NODE, uuid, parentUuid, root), _surface(find(root->nodeSurfaces(), parentUuid)),
       _nodeType(nodeType), _name(std::move(name)),
-      _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {}
+      _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {
+    std::cout << "Waiting for control with UUID " << controlsUuid.toString().toStdString() << std::endl;
+    _controls->then([](ControlSurface *) { std::cout << "Found control surface" << std::endl; });
+}
 
 void Node::setName(const QString &name) {
     if (name != _name) {
         _name = name;
-        nameChanged.trigger(name);
+        nameChanged(name);
     }
 }
 
 void Node::setExtracted(bool extracted) {
     if (extracted != _isExtracted) {
         _isExtracted = extracted;
-        extractedChanged.trigger(extracted);
+        extractedChanged(extracted);
     }
 }
 
 void Node::setActive(bool active) {
     if (active != _isActive) {
         _isActive = active;
-        activeChanged.trigger(active);
+        activeChanged(active);
     }
 }
 
 void Node::startSize() {
     sizeStartRect = rect();
-    if (_controls.value()) {
-        for (const auto &control : (*_controls.value())->controls()) {
+    if (controls().value()) {
+        for (const auto &control : (*controls().value())->controls()) {
             control->startDragging();
         }
     }
 }
 
 void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
-    if (!_controls.value()) {
+    if (!controls().value()) {
         return GridItem::setCorners(topLeft, bottomRight);
     }
-    auto controlSurface = *_controls.value();
+    auto controlSurface = *controls().value();
 
     auto initialPos = pos();
     auto initialBottomRight = initialPos + QPoint(size().width(), size().height());
@@ -112,8 +115,8 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
 void Node::doSizeAction() {
     std::vector<std::unique_ptr<Action>> actions;
 
-    if (_controls.value()) {
-        for (const auto &control : (*_controls.value())->controls()) {
+    if (controls().value()) {
+        for (const auto &control : (*controls().value())->controls()) {
             auto startSurfacePos = sizeStartRect.topLeft() * 2 + control->dragStartPos();
             auto endSurfacePos = pos() * 2 + control->pos();
 
@@ -148,6 +151,6 @@ void Node::doRuntimeUpdate() {
 }
 
 void Node::remove() {
-    if (_controls.value()) (*_controls.value())->remove();
+    if (controls().value()) (*controls().value())->remove();
     ModelObject::remove();
 }

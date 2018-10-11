@@ -159,7 +159,7 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         valueGroupIndices.emplace(pair.first, currentIndex);
         valueGroups.push_back(pair.first);
         auto controlPointers =
-            AxiomModel::collect(AxiomModel::findMap(pair.first->controls, surface->root()->controls()));
+            AxiomModel::collect(AxiomModel::findMap(pair.first->controls, surface->root()->controls().sequence()));
 
         auto groupType = getGroupType(controlPointers);
         auto vartype = VarType::ofControl(fromModelType(groupType));
@@ -281,7 +281,7 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
 
             auto valueGroup = valueGroups[socketGroup];
             auto controlPointers =
-                AxiomModel::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls()));
+                AxiomModel::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls().sequence()));
             for (const auto &control : controlPointers) {
                 if (!control->exposerUuid().isNull()) {
                     externalControls.push_back(control->exposerUuid());

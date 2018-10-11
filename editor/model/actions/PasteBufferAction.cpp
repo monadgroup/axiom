@@ -80,7 +80,7 @@ void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
         usedSet.insert(uuid);
     }
 
-    auto objs = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), usedSet);
+    auto objs = findAll(dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), usedSet);
     auto collected = collect(objs);
 
     QSet<QUuid> parentIds;

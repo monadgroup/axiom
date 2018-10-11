@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "common/Event.h"
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 inline uint qHash(const QPoint &);
 
@@ -19,7 +19,7 @@ namespace AxiomModel {
         size_t index;
     };
 
-    class WireGrid : public AxiomCommon::Hookable {
+    class WireGrid : public AxiomCommon::TrackedObject {
     public:
         enum class Direction { HORIZONTAL, VERTICAL };
 

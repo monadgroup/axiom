@@ -17,13 +17,13 @@ NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan
     : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root), _nodes(findChildrenWatch(root->nodes(), uuid)),
       _connections(findChildrenWatch(root->connections(), uuid)), _grid(staticCastWatch<GridItem *>(_nodes), true),
       _pan(pan), _zoom(zoom) {
-    _nodes.itemAdded.connect(this, &NodeSurface::nodeAdded);
+    _nodes.itemAdded().connect(this, &NodeSurface::nodeAdded);
 }
 
 void NodeSurface::setPan(QPointF pan) {
     if (pan != _pan) {
         _pan = pan;
-        panChanged.trigger(pan);
+        panChanged(pan);
     }
 }
 
@@ -31,7 +31,7 @@ void NodeSurface::setZoom(float zoom) {
     zoom = zoom < -0.5f ? -0.5f : zoom > 0.5f ? 0.5f : zoom;
     if (zoom != _zoom) {
         _zoom = zoom;
-        zoomChanged.trigger(zoom);
+        zoomChanged(zoom);
     }
 }
 

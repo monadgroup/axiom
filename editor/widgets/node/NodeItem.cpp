@@ -108,7 +108,7 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
             addControl(control);
         }
 
-        surface->controls().itemAdded.connect(this, &NodeItem::addControl);
+        surface->controls().itemAdded().connect(this, &NodeItem::addControl);
         surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
     });
 }
@@ -192,7 +192,7 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 
         isDragging = true;
         mouseStartPoint = event->screenPos();
-        node->startedDragging.trigger();
+        node->startedDragging();
     }
 
     event->accept();
@@ -202,8 +202,8 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
-    node->draggedTo.trigger(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-                                   qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())));
+    node->draggedTo(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                           qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())));
 
     event->accept();
 }
@@ -211,7 +211,7 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
     isDragging = false;
-    node->finishedDragging.trigger();
+    node->finishedDragging();
 
     std::vector<std::unique_ptr<Action>> dragEvents;
     auto selectedNodes = staticCast<Node *>(node->parentSurface->selectedItems().sequence());

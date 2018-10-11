@@ -43,10 +43,10 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
     sizeChanged.connect(this, &Control::updateSinkPos);
     removed.connect(this, &Control::updateExposerRemoved);
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
-    _surface->node()->activeChanged.connect(&isEnabledChanged);
+    _surface->node()->activeChanged.forward(&isEnabledChanged);
 
     if (!_exposingUuid.isNull()) {
-        findLater<Control *>(root->controls(), _exposingUuid).then([this, uuid](Control *exposing) {
+        findLater<Control *>(root->controls(), _exposingUuid)->then([this, uuid](Control *exposing) {
             exposing->setExposerUuid(uuid);
 
             exposing->nameChanged.connect(this, [this, exposing](const QString &) { updateExposingName(exposing); });
@@ -147,28 +147,28 @@ bool Control::isEnabled() const {
 void Control::setName(const QString &name) {
     if (name != _name) {
         _name = name;
-        nameChanged.trigger(name);
+        nameChanged(name);
     }
 }
 
 void Control::setShowName(bool showName) {
     if (showName != _showName) {
         _showName = showName;
-        showNameChanged.trigger(showName);
+        showNameChanged(showName);
     }
 }
 
 void Control::setExposerUuid(QUuid exposerUuid) {
     if (exposerUuid != _exposerUuid) {
         _exposerUuid = exposerUuid;
-        exposerUuidChanged.trigger(exposerUuid);
+        exposerUuidChanged(exposerUuid);
     }
 }
 
 void Control::setIsActive(bool isActive) {
     if (isActive != _isActive) {
         _isActive = isActive;
-        isActiveChanged.trigger(isActive);
+        isActiveChanged(isActive);
     }
 }
 
@@ -213,12 +213,13 @@ void Control::remove() {
 }
 
 void Control::updateSinkPos() {
-    worldPosChanged.trigger(worldPos());
+    worldPosChanged(worldPos());
 }
 
 void Control::updateExposerRemoved() {
     if (!_exposingUuid.isNull()) {
-        auto baseControl = findMaybe(root()->controls(), _exposingUuid);
+        auto &controls = root()->controls();
+        auto baseControl = findMaybe(controls, _exposingUuid);
         if (baseControl) (*baseControl)->setExposerUuid(QUuid());
     }
 }

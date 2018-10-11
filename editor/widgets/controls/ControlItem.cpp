@@ -65,8 +65,8 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
             connect(resizer, &ItemResizer::changed, this, &ControlItem::resizerChanged);
             connect(resizer, &ItemResizer::endDrag, this, &ControlItem::resizerEndDrag);
 
-            control->selected.connect(this, std::function<void()>([resizer]() { resizer->setVisible(true); }));
-            control->deselected.connect(this, std::function<void()>([resizer]() { resizer->setVisible(false); }));
+            control->selected.connect(this, [resizer](bool) { resizer->setVisible(true); });
+            control->deselected.connect(this, [resizer]() { resizer->setVisible(false); });
 
             resizer->setParentItem(this);
         }
@@ -216,7 +216,7 @@ void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
         isMoving = true;
         mouseStartPoint = event->screenPos();
-        control->startedDragging.trigger();
+        control->startedDragging();
     } else {
         event->setAccepted(control->isMovable());
         control->surface()->grid().deselectAll();
@@ -232,9 +232,8 @@ void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         auto mouseDelta = event->screenPos() - mouseStartPoint;
-        control->draggedTo.trigger(
-            QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
-                   qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())));
+        control->draggedTo(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
+                                  qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())));
     } else {
         event->ignore();
     }
@@ -250,7 +249,7 @@ void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         isMoving = false;
-        control->finishedDragging.trigger();
+        control->finishedDragging();
 
         if (control->dragStartPos() != control->pos()) {
             control->root()->history().append(

@@ -19,7 +19,7 @@ PoolObject *Pool::registerObj(std::unique_ptr<AxiomModel::PoolObject> obj) {
 
 void Pool::registerObj(AxiomModel::PoolObject *obj) {
     _objects.push_back(obj);
-    _sequence.itemAdded.trigger(obj);
+    _sequence.itemAdded()(obj);
 }
 
 std::unique_ptr<PoolObject> Pool::removeObj(AxiomModel::PoolObject *obj) {
@@ -28,7 +28,7 @@ std::unique_ptr<PoolObject> Pool::removeObj(AxiomModel::PoolObject *obj) {
     _objects.erase(index);
 
     // trigger itemRemoved before removing from owner pool, so it's still a valid reference
-    _sequence.itemRemoved.trigger(obj);
+    _sequence.itemRemoved()(obj);
 
     auto ownedIndex = AxiomUtil::findUnique(_ownedObjects.begin(), _ownedObjects.end(), obj);
     if (ownedIndex != _ownedObjects.end()) {

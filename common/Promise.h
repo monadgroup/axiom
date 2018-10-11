@@ -1,49 +1,49 @@
 #pragma once
 
-#include <functional>
-#include <set>
-
 #include "Event.h"
 
 namespace AxiomCommon {
 
-    template<class A>
+    template<class V>
     class Promise {
     public:
-        using func_type = typename Event<A &>::func_type;
+        using Value = V;
+        using FuncType = typename Event<Value &>::FuncType;
 
-        Promise() : _value(std::make_shared<std::optional<A>>(std::optional<A>())) {}
+        Promise() = default;
 
-        std::optional<A> &value() { return *_value; }
+        Promise(Promise &&a) noexcept : event(std::move(a.event)), _value(std::move(a._value)) {}
 
-        const std::optional<A> &value() const { return *_value; }
+        std::optional<Value> &value() { return _value; }
 
-        void then(func_type func) {
-            if (*_value) {
-                func(**_value);
+        const std::optional<Value> &value() const { return _value; }
+
+        void then(FuncType func) {
+            if (_value) {
+                func(*_value);
             } else {
                 event.connect(std::move(func));
             }
         }
 
-        void then(Hookable *hook, func_type func) {
-            if (*_value) {
-                func(**_value);
+        void then(TrackedObject *obj, FuncType func) {
+            if (_value) {
+                func(*_value);
             } else {
-                event.connect(hook, std::move(func));
+                event.connect(obj, std::move(func));
             }
         }
 
-        void resolve(A val) {
-            if (*_value) return;
+        void resolve(Value val) {
+            if (_value) return;
 
-            *_value = std::move(val);
-            event.trigger(**_value);
-            event.detach();
+            _value = std::move(val);
+            event(*_value);
+            event.disconnectAll();
         }
 
     private:
-        Event<A &> event;
-        std::shared_ptr<std::optional<A>> _value;
+        Event<Value &> event;
+        std::optional<Value> _value;
     };
 }

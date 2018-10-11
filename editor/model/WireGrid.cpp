@@ -130,7 +130,7 @@ LineIndex WireGrid::getRegionIndex(QRect region, AxiomModel::ConnectionWire *wir
 
 void WireGrid::tryFlush() {
     if (_isDirty) {
-        gridChanged.trigger();
+        gridChanged();
         _isDirty = false;
     }
 }

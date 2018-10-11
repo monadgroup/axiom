@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QScrollArea>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
     class Library;
@@ -16,8 +16,8 @@ namespace AxiomGui {
 
     class MainWindow;
 
-    class ModulePreviewList : public QScrollArea, public AxiomCommon::Hookable {
-    Q_OBJECT
+    class ModulePreviewList : public QScrollArea, public AxiomCommon::TrackedObject {
+        Q_OBJECT
 
     public:
         explicit ModulePreviewList(MainWindow *window, AxiomModel::Library *library, QWidget *parent = nullptr);
@@ -27,10 +27,8 @@ namespace AxiomGui {
         void addEntry(AxiomModel::LibraryEntry *entry);
 
     private:
-
         MainWindow *window;
         AxiomModel::Library *library;
         FlowLayout *layout;
     };
-
 }

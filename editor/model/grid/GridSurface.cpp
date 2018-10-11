@@ -10,7 +10,7 @@ GridSurface::GridSurface(ItemCollection view, bool deferDirty, QPoint minRect, Q
       _selectedItems(filterWatch(
           _items, std::function<bool(GridItem *const &)>([](GridItem *const &itm) { return itm->isSelected(); }))),
       _deferDirty(deferDirty) {
-    _items.itemAdded.connect(this, &GridSurface::handleItemAdded);
+    _items.itemAdded().connect(this, &GridSurface::handleItemAdded);
 }
 
 void GridSurface::selectAll() {
@@ -61,14 +61,14 @@ void GridSurface::setDirty() {
     if (_deferDirty) {
         _isDirty = true;
     } else {
-        gridChanged.trigger();
+        gridChanged();
         _isDirty = false;
     }
 }
 
 void GridSurface::tryFlush() {
     if (_isDirty) {
-        gridChanged.trigger();
+        gridChanged();
         _isDirty = false;
     }
 }
@@ -103,12 +103,12 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
             }
         }
         if (_selectedItems.size() == 1) {
-            hasSelectionChanged.trigger(true);
+            hasSelectionChanged(true);
         }
     });
     item->deselected.connect(this, [this]() {
         if (_selectedItems.empty()) {
-            hasSelectionChanged.trigger(false);
+            hasSelectionChanged(false);
         }
     });
 }

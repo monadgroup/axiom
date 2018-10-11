@@ -39,7 +39,8 @@ namespace AxiomModel {
             using iterator_category = std::forward_iterator_tag;
 
             explicit iterator(next_functor next) {
-                if (auto newImpl = std::make_shared<SequenceStorage>(std::move(next)); newImpl->currentVal) {
+                SequenceStorage newImpl(std::move(next));
+                if (newImpl.currentVal) {
                     impl = std::move(newImpl);
                 }
             }
@@ -78,7 +79,7 @@ namespace AxiomModel {
             pointer operator->() { return &*impl->currentVal; }
 
         private:
-            std::shared_ptr<SequenceStorage> impl;
+            std::optional<SequenceStorage> impl;
 
             void increment() {
                 if (impl) {
