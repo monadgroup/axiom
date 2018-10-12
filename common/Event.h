@@ -47,10 +47,22 @@ namespace AxiomCommon {
             return eventId;
         }
 
+        // call the provided function, passing in the follow instance even if it's moved
+        template<class TB>
+        EventId connect(TB *follow, std::function<void(TB *, Args...)> listener) {
+            auto followId = follow->trackedObjectId();
+            auto followManager = follow->trackedObjectManager();
+            return connect(follow,
+                           std::function<void(Args && ...)>([followId, followManager, listener](Args &&... params) {
+                               auto followReified = (TB *) followManager->getObject(followId);
+                               listener(followReified, std::forward<Args>(params)...);
+                           }));
+        }
+
         // call the provided method, automatically disconnecting when the base object is destructed
         template<class TB, class TFB, class TR, class... TA>
         EventId connect(TB *follow, TR (TFB::*listener)(TA...)) {
-            return connect(follow, std::function<void(Args && ...)>([follow, listener](Args &&... params) {
+            return connect(follow, std::function<void(TB *, Args...)>([listener](TB *follow, Args... params) {
                                auto wrapper = std::mem_fn(listener);
                                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
                            }));
@@ -58,7 +70,7 @@ namespace AxiomCommon {
 
         template<class TB, class TFB, class TR, class... TA>
         EventId connect(TB *follow, TR (TFB::*listener)(TA...) const) {
-            return connect(follow, std::function<void(Args && ...)>([follow, listener](Args &&... params) {
+            return connect(follow, std::function<void(TB *, Args...)>([listener](TB *follow, Args... params) {
                                auto wrapper = std::mem_fn(listener);
                                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
                            }));

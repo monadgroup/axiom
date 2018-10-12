@@ -5,6 +5,8 @@
 #include <tuple>
 #include <vector>
 
+#include "Cast.h"
+
 namespace AxiomCommon {
 
     template<class Generator>
@@ -107,11 +109,15 @@ namespace AxiomCommon {
         std::optional<Item> next() { return std::move(item); }
     };
 
-    template<class Output, class Sequence, class Functor>
+    template<class Sequence, class Functor>
     class FilterMapGenerator {
     public:
-        using Item = Output;
+        using Input = typename Sequence::value_type;
+        using Item = typename std::result_of<Functor>::type;
         using Manager = GeneratorManager<FilterMapGenerator, Sequence, Functor>;
+
+        static constexpr size_t SequenceIndex = 1;
+        static constexpr size_t FunctorIndex = 2;
 
         Sequence sequence;
         typename Sequence::iterator sequenceBegin;
@@ -122,9 +128,11 @@ namespace AxiomCommon {
             : sequence(std::move(seq)), sequenceBegin(sequence.begin()), sequenceEnd(sequence.end()),
               functor(std::move(functor)) {}
 
+        static std::optional<Item> mapFilter(Functor &functor, Input input) { return functor(std::forward(input)); }
+
         std::optional<Item> next() {
             while (sequenceBegin != sequenceEnd) {
-                auto mappedValue = functor(std::move(*sequenceBegin));
+                auto mappedValue = mapFilter(functor, std::move(*sequenceBegin));
                 *sequenceBegin++;
 
                 if (mappedValue) {
@@ -140,7 +148,11 @@ namespace AxiomCommon {
     class FilterGenerator {
     public:
         using Item = typename Sequence::value_type;
+        using Input = Item;
         using Manager = GeneratorManager<FilterGenerator, Sequence, Functor>;
+
+        static constexpr size_t SequenceIndex = 1;
+        static constexpr size_t FunctorIndex = 2;
 
         Sequence sequence;
         typename Sequence::iterator sequenceBegin;
@@ -150,6 +162,13 @@ namespace AxiomCommon {
         explicit FilterGenerator(Sequence seq, Functor functor)
             : sequence(std::move(seq)), sequenceBegin(sequence.begin()), sequenceEnd(sequence.end()),
               functor(std::move(functor)) {}
+
+        static std::optional<Item> mapFilter(Functor &functor, Item input) {
+            if (functor(input))
+                return input;
+            else
+                return std::nullopt;
+        }
 
         std::optional<Item> next() {
             while (sequenceBegin != sequenceEnd) {
@@ -165,11 +184,15 @@ namespace AxiomCommon {
         }
     };
 
-    template<class Output, class Sequence, class Functor>
+    template<class Sequence, class Functor>
     class MapGenerator {
     public:
-        using Item = Output;
+        using Input = typename Sequence::value_type;
+        using Item = typename std::result_of<Functor>::type;
         using Manager = GeneratorManager<MapGenerator, Sequence, Functor>;
+
+        static constexpr size_t SequenceIndex = 1;
+        static constexpr size_t FunctorIndex = 2;
 
         Sequence sequence;
         typename Sequence::iterator sequenceBegin;
@@ -179,6 +202,8 @@ namespace AxiomCommon {
         explicit MapGenerator(Sequence seq, Functor functor)
             : sequence(std::move(seq)), sequenceBegin(sequence.begin()), sequenceEnd(sequence.end()),
               functor(std::move(functor)) {}
+
+        static std::optional<Item> mapFilter(Functor &functor, Item input) { return functor(std::move(input)); }
 
         std::optional<Item> next() {
             if (sequenceBegin != sequenceEnd) {
@@ -274,6 +299,18 @@ namespace AxiomCommon {
     };
 
     template<class Generator>
+    class Sequence;
+
+    template<class InternalSequence, class FilterMapFunctor>
+    using FilterMapSequence = Sequence<FilterMapGenerator<InternalSequence, FilterMapFunctor>>;
+
+    template<class InternalSequence, class FilterFunctor>
+    using FilterSequence = Sequence<FilterGenerator<InternalSequence, FilterFunctor>>;
+
+    template<class InternalSequence, class MapFunctor>
+    using MapSequence = Sequence<MapGenerator<InternalSequence, MapFunctor>>;
+
+    template<class Generator>
     class Sequence {
     public:
         using Manager = typename Generator::Manager;
@@ -324,55 +361,36 @@ namespace AxiomCommon {
         }
 
         // functions to create chained sequences
-        template<class MapOutput, class FilterMapFunctor>
-        Sequence<FilterMapGenerator<MapOutput, Sequence, FilterMapFunctor>> filterMap(FilterMapFunctor functor) {
+        template<class FilterMapFunctor>
+        FilterMapSequence<Sequence, FilterMapFunctor> filterMap(FilterMapFunctor functor) {
             return Sequence(GeneratorManager(*this, functor));
         }
 
         template<class FilterFunctor>
-        Sequence<FilterGenerator<Sequence, FilterFunctor>> filter(FilterFunctor functor) {
+        FilterSequence<Sequence, FilterFunctor> filter(FilterFunctor functor) {
             return Sequence(GeneratorManager(*this, functor));
         }
 
-        template<class MapOutput, class MapFunctor>
-        Sequence<MapGenerator<MapOutput, Sequence, MapFunctor>> map(MapFunctor functor) {
+        template<class MapFunctor>
+        MapSequence<Sequence, MapFunctor> map(MapFunctor functor) {
             return Sequence(GeneratorManager(*this, functor));
         }
 
         Sequence<FlattenGenerator<Sequence>> flatten() { return Sequence(GeneratorManager(*this)); }
 
         template<class Output>
-        using MapPtr = Output (*)(Item);
-
-        template<class MapOutput>
-        Sequence<MapGenerator<MapOutput, Sequence, MapPtr<MapOutput>>> dynamicCast() {
-            return map(&Sequence::dynamicCast<MapOutput>);
-        }
-
-        template<class MapOutput>
-        Sequence<MapGenerator<MapOutput, Sequence, MapPtr<MapOutput>>> staticCast() {
-            return map(&Sequence::staticCast<MapOutput>);
-        }
-
-        template<class MapOutput>
-        Sequence<MapGenerator<MapOutput, Sequence, MapPtr<MapOutput>>> reinterpretCast() {
-            return map(&Sequence::reinterpretCast<MapOutput>);
-        }
-
-    private:
-        template<class Output>
-        static Output dynamicCast(Item input) {
-            return dynamic_cast<Output>(input);
+        MapSequence<Sequence, Output (*)(Item)> dynamicCast() {
+            return map(AxiomCommon::dynamicCast);
         }
 
         template<class Output>
-        static Output staticCast(Item input) {
-            return static_cast<Output>(input);
+        MapSequence<Sequence, Output (*)(Item)> staticCast() {
+            return map(AxiomCommon::staticCast);
         }
 
         template<class Output>
-        static Output reinterpretCast(Item input) {
-            return reinterpret_cast<Output>(input);
+        MapSequence<Sequence, Output (*)(Item)> reinterpretCast() {
+            return map(AxiomCommon::reinterpretCast);
         }
     };
 
