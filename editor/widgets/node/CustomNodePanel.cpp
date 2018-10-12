@@ -5,6 +5,7 @@
 #include "../CommonColors.h"
 #include "../ItemResizer.h"
 #include "../surface/NodeSurfaceCanvas.h"
+#include "SyntaxHighlighter.h"
 #include "editor/model/Project.h"
 #include "editor/model/grid/GridSurface.h"
 #include "editor/model/objects/CustomNode.h"
@@ -39,6 +40,9 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     textEditor->setWordWrapMode(QTextOption::NoWrap);
     textEditor->setPlainText(node->code());
     connect(textEditor, &QPlainTextEdit::textChanged, this, &CustomNodePanel::controlTextChanged);
+
+    // highlighter automatically attaches itself to the text editor and manages its own memory
+    highlighter = new SyntaxHighlighter(textEditor->document());
 
     codeChanged(node->code());
     setOpen(node->isPanelOpen());

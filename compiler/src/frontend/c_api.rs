@@ -464,3 +464,15 @@ pub unsafe extern "C" fn maxim_control_get_written(control: *const mir::block::C
 pub unsafe extern "C" fn maxim_control_get_read(control: *const mir::block::Control) -> bool {
     (*control).value_read
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_function_table_size() -> usize {
+    mir::FUNCTION_TABLE.len()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_function_table_entry(index: usize) -> *mut std::os::raw::c_char {
+    std::ffi::CString::new(mir::FUNCTION_TABLE[index])
+        .unwrap()
+        .into_raw()
+}

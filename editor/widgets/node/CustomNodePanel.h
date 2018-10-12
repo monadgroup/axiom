@@ -14,6 +14,8 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
+    class SyntaxHighlighter;
+
     class CustomNodePanel : public QGraphicsObject, public AxiomCommon::Hookable {
         Q_OBJECT
 
@@ -54,6 +56,7 @@ namespace AxiomGui {
     private:
         QGraphicsProxyWidget *textProxy;
         QPlainTextEdit *textEditor;
+        SyntaxHighlighter *highlighter;
         QString beforeCode;
         // bool hasErrors = false;
         // bool showingErrors = false;
