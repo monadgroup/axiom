@@ -39,7 +39,7 @@ public:
         // number formatting
         HighlightRule numberRule;
         numberRule.pattern =
-            QRegExp(R"(([0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)\s*[kmgt]?\s*(hz|db|q|s|b)?\b)", Qt::CaseInsensitive);
+            QRegExp(R"(\b([0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)\s*[kmgt]?\s*(hz|db|q|s|b)?\b)", Qt::CaseInsensitive);
         numberRule.format.setForeground(QColor(193, 127, 226)); // purple
         numberRule.format.setFontWeight(QFont::Bold);
         highlightRules.push_back(std::move(numberRule));
