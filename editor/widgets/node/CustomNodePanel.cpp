@@ -8,6 +8,7 @@
 #include "editor/model/Project.h"
 #include "editor/model/grid/GridSurface.h"
 #include "editor/model/objects/CustomNode.h"
+//#include "editor/widgets/node/SyntaxHighlighter.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -39,6 +40,8 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     textEditor->setWordWrapMode(QTextOption::NoWrap);
     textEditor->setPlainText(node->code());
     connect(textEditor, &QPlainTextEdit::textChanged, this, &CustomNodePanel::controlTextChanged);
+
+    highlighter = new SyntaxHighlighter(textEditor->document());
 
     codeChanged(node->code());
     setOpen(node->isPanelOpen());

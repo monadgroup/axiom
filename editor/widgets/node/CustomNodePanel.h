@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SyntaxHighlighter.h"
 #include <QtWidgets/QGraphicsObject>
 #include <QtWidgets/QPlainTextEdit>
 
@@ -54,6 +55,7 @@ namespace AxiomGui {
     private:
         QGraphicsProxyWidget *textProxy;
         QPlainTextEdit *textEditor;
+        SyntaxHighlighter *highlighter;
         QString beforeCode;
         // bool hasErrors = false;
         // bool showingErrors = false;

@@ -1,35 +1,38 @@
 #pragma once
 
+#include <QMainWindow>
+#include <QRegExp>
+#include <QString>
+#include <QTextEdit>
+#include <QtCore/QRegExp>
+#include <QtCore/QVector>
 #include <QtGui/QSyntaxHighlighter>
-#include <QtCore/QRegularExpression>
+#include <QtGui/QTextCharFormat>
+//#include <QFont>
 
 namespace AxiomGui {
-
     class SyntaxHighlighter : public QSyntaxHighlighter {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
         explicit SyntaxHighlighter(QTextDocument *parent);
 
     protected:
-        void highlightBlock(const QString &text) override;
+        void highlightBlock(const QString &text);
 
     private:
         struct HighlightRule {
-            QRegularExpression pattern;
+            QRegExp pattern;
             QTextCharFormat format;
         };
         QVector<HighlightRule> highlightRules;
 
-        QRegularExpression commentStartExpression;
-        QRegularExpression commentEndExpression;
+        QRegExp commentStartExpression;
+        QRegExp commentEndExpression;
 
-        QTextCharFormat keywordFormat;
-        QTextCharFormat classFormat;
-        QTextCharFormat singleLineCommentFormat;
-        QTextCharFormat multiLineCommentFormat;
-        QTextCharFormat quotationFormat;
         QTextCharFormat functionFormat;
+        QTextCharFormat controlFormat;
+        QTextCharFormat numberFormat;
+        QTextCharFormat typeFormat;
     };
-
 }
