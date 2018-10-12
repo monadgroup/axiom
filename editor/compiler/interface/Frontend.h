@@ -123,5 +123,8 @@ namespace MaximFrontend {
     bool maxim_control_get_read(MaximBlockControlRef *control);
 
     void maxim_commit(MaximRuntimeRef *runtime, MaximTransaction *transaction);
+
+    size_t maxim_get_function_table_size();
+    const char *maxim_get_function_table_entry(size_t index);
     }
 }

@@ -1,5 +1,9 @@
 #include "SyntaxHighlighter.h"
 
+#include <QtCore/QStringBuilder>
+
+#include "editor/compiler/interface/FunctionTable.h"
+
 using namespace AxiomGui;
 
 class CachedHighlightRules {
@@ -20,12 +24,17 @@ public:
         highlightRules.push_back(std::move(controlRule));
 
         // function formatting
-        // todo: add this in with a proper list of functions
-        /*HighlightRule functionRule;
-        functionRule.pattern = QRegExp(R"(\b(mix|clamp|accum|hold|pan|amplitude|sawOsc)\b)");
+        // build a regex based on the list of function names
+        QStringList list;
+        auto functionTableSize = MaximCompiler::FunctionTable::size();
+        for (size_t functionIndex = 0; functionIndex < functionTableSize; functionIndex++) {
+            list.append(MaximCompiler::FunctionTable::find(functionIndex));
+        }
+        HighlightRule functionRule;
+        functionRule.pattern = QRegExp(R"(\b()" % list.join('|') % R"()\b)");
         functionRule.format.setForeground(QColor(123, 181, 247)); // blue
         functionRule.format.setFontWeight(QFont::Bold);
-        highlightRules.push_back(std::move(functionRule));*/
+        highlightRules.push_back(std::move(functionRule));
 
         // number formatting
         HighlightRule numberRule;

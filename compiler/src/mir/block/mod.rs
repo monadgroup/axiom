@@ -5,7 +5,7 @@ mod function;
 mod statement;
 
 pub use self::control::Control;
-pub use self::function::{Function, FunctionArgRange};
+pub use self::function::{Function, FunctionArgRange, FUNCTION_TABLE};
 pub use self::statement::{Global, Statement};
 
 pub type BlockRef = PoolRef;

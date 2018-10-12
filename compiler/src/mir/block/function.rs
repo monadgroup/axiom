@@ -50,6 +50,8 @@ macro_rules! define_functions {
                 }
             }
         }
+
+        pub const FUNCTION_TABLE: [&str; 51] = [$($str_name, )*];
     );
 }
 

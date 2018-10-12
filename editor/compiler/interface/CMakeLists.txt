@@ -4,6 +4,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/ControlRef.h" "${CMAKE_CURRENT_SOURCE_DIR}/ControlRef.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Error.h" "${CMAKE_CURRENT_SOURCE_DIR}/Error.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Frontend.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/FunctionTable.h" "${CMAKE_CURRENT_SOURCE_DIR}/FunctionTable.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/NodeRef.h" "${CMAKE_CURRENT_SOURCE_DIR}/NodeRef.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/OwnedObject.h" "${CMAKE_CURRENT_SOURCE_DIR}/OwnedObject.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/RootRef.h" "${CMAKE_CURRENT_SOURCE_DIR}/RootRef.cpp"
