@@ -5,7 +5,7 @@
 
 #include "HistoryList.h"
 #include "Pool.h"
-#include "WatchSequence.h"
+#include "common/WatchSequence.h"
 #include "editor/compiler/interface/Transaction.h"
 
 namespace MaximCompiler {
@@ -34,11 +34,15 @@ namespace AxiomModel {
 
     class ModelRoot : public AxiomCommon::TrackedObject {
     public:
-        using NodeSurfaceCollection = WatchSequence<NodeSurface *>;
-        using NodeCollection = WatchSequence<Node *>;
-        using ControlSurfaceCollection = WatchSequence<ControlSurface *>;
-        using ControlCollection = WatchSequence<Control *>;
-        using ConnectionCollection = WatchSequence<Connection *>;
+        template<class CollectionType>
+        using ModelRootCollection =
+            AxiomCommon::WatchSequence<AxiomCommon::MapSequence<Pool::Sequence, CollectionType (*)(PoolObject *)>>;
+
+        using NodeSurfaceCollection = ModelRootCollection<NodeSurface *>;
+        using NodeCollection = ModelRootCollection<Node *>;
+        using ControlSurfaceCollection = ModelRootCollection<ControlSurface *>;
+        using ControlCollection = ModelRootCollection<Control *>;
+        using ConnectionCollection = ModelRootCollection<Connection *>;
 
         AxiomCommon::Event<> modified;
         AxiomCommon::Event<> configurationChanged;

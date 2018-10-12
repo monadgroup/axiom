@@ -4,8 +4,8 @@
 #include <memory>
 
 #include "PoolObject.h"
-#include "Sequence.h"
 #include "common/Event.h"
+#include "common/Sequence.h"
 
 namespace MaximCompiler {
     class Transaction;
@@ -35,11 +35,11 @@ namespace AxiomModel {
 
         virtual void doRuntimeUpdate() {}
 
-        virtual Sequence<ModelObject *> links();
+        virtual AxiomCommon::BoxedSequence<ModelObject *> links();
 
-        virtual Sequence<QUuid> deleteCompileLinks();
+        virtual AxiomCommon::BoxedSequence<QUuid> deleteCompileLinks();
 
-        virtual Sequence<QUuid> compileLinks();
+        virtual AxiomCommon::BoxedSequence<QUuid> compileLinks();
 
         virtual void build(MaximCompiler::Transaction *transaction) {}
 

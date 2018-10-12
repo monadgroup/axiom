@@ -4,7 +4,7 @@
 #include <QtCore/QUuid>
 
 #include "../util.h"
-#include "WatchSequenceOperators.h"
+#include "common/WatchSequenceOperators.h"
 
 namespace AxiomModel {
 
@@ -47,7 +47,37 @@ namespace AxiomModel {
         return find<typename InputCollection::value_type>(collection, uuid);
     };
 
-    template<class UuidCollection, class FindCollection>
+    /*template<class UuidSequence, class FindSequence>
+    class FindMapGenerator {
+    public:
+        using Sequence = UuidSequence;
+        using Input = typename UuidSequence::value_type;
+        using Item = typename FindSequence::value_type;
+        using Manager = AxiomCommon::GeneratorManager<FindMapGenerator, UuidSequence &, FindSequence &>;
+
+        static constexpr size_t SequenceIndex = 1;
+        static constexpr size_t FindSequenceIndex = 2;
+
+        typename Sequence::iterator sequenceBegin;
+        typename Sequence::iterator sequenceEnd;
+        FindSequence &findSequence;
+
+        FindMapGenerator(UuidSequence uuidSequence, FindSequence findSequence) : uuidSequence(uuidSequence),
+    findSequence(findSequence) {}
+
+        static std::optional<Item> mapFilter(Manager &manager, Input input) {
+            return find(std::get<FindSequenceIndex>(manager.args), input);
+        }
+
+        std::optional<Item> next() {
+
+        }
+    };*/
+
+    // template<class UuidCollection, class FindCollection>
+    // AxiomCommon::FilterMapSequence<
+
+    /*template<class UuidCollection, class FindCollection>
     SequenceMapFilter<typename FindCollection::value_type, typename UuidCollection::value_type>
         findMap(UuidCollection uuids, const FindCollection &src) {
         return map(
@@ -178,5 +208,5 @@ namespace AxiomModel {
                 return std::optional<typename InputCollection::value_type>();
             };
         });
-    }
+    }*/
 }

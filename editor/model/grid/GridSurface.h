@@ -12,6 +12,7 @@
 #include "Grid.h"
 #include "common/Event.h"
 #include "common/TrackedObject.h"
+#include "common/WatchSequence.h"
 
 namespace AxiomModel {
 
@@ -20,7 +21,7 @@ namespace AxiomModel {
     class GridSurface : public AxiomCommon::TrackedObject {
     public:
         using ItemGrid = Grid<GridItem>;
-        using ItemCollection = WatchSequence<GridItem *>;
+        using ItemCollection = AxiomCommon::BoxedWatchSequence<GridItem *>;
 
         AxiomCommon::Event<GridItem *> itemAdded;
         AxiomCommon::Event<bool> hasSelectionChanged;

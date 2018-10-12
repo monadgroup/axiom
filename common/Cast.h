@@ -3,17 +3,17 @@
 namespace AxiomCommon {
 
     template<class Output, class Input>
-    Output dynamicCast(Input input) {
+    Output wrapDynamicCast(Input input) {
         return dynamic_cast<Output>(input);
     }
 
     template<class Output, class Input>
-    Output staticCast(Input input) {
+    Output wrapStaticCast(Input input) {
         return static_cast<Output>(input);
     }
 
     template<class Output, class Input>
-    Output reinterpretCast(Input input) {
+    Output wrapReinterpretCast(Input input) {
         return reinterpret_cast<Output>(input);
     }
 }

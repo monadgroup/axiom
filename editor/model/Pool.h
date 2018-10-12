@@ -5,33 +5,35 @@
 #include <unordered_set>
 
 #include "PoolObject.h"
-#include "WatchSequence.h"
+#include "common/WatchSequence.h"
+#include "common/WatchSequenceOperators.h"
 
 namespace AxiomModel {
 
     class PoolObject;
 
     class Pool {
+        using BaseSequence = AxiomCommon::BaseWatchSequence<std::vector<std::unique_ptr<PoolObject>>>;
+
     public:
+        using Sequence = AxiomCommon::CastWatchSequence<PoolObject *, BaseSequence>;
+
         Pool();
 
         virtual ~Pool();
 
         PoolObject *registerObj(std::unique_ptr<PoolObject> obj);
 
-        void registerObj(PoolObject *obj);
-
         std::unique_ptr<PoolObject> removeObj(PoolObject *obj);
 
-        WatchSequence<PoolObject *> &sequence() { return _sequence; }
+        Sequence &sequence() { return _sequence; }
 
-        const WatchSequence<PoolObject *> &sequence() const { return _sequence; }
+        const Sequence &sequence() const { return _sequence; }
 
         void destroy();
 
     private:
-        std::vector<std::unique_ptr<PoolObject>> _ownedObjects;
-        std::vector<PoolObject *> _objects;
-        WatchSequence<PoolObject *> _sequence;
+        BaseSequence _baseSequence;
+        Sequence _sequence;
     };
 }
