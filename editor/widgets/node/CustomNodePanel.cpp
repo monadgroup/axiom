@@ -5,10 +5,10 @@
 #include "../CommonColors.h"
 #include "../ItemResizer.h"
 #include "../surface/NodeSurfaceCanvas.h"
+#include "SyntaxHighlighter.h"
 #include "editor/model/Project.h"
 #include "editor/model/grid/GridSurface.h"
 #include "editor/model/objects/CustomNode.h"
-//#include "editor/widgets/node/SyntaxHighlighter.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -41,6 +41,7 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     textEditor->setPlainText(node->code());
     connect(textEditor, &QPlainTextEdit::textChanged, this, &CustomNodePanel::controlTextChanged);
 
+    // highlighter automatically attaches itself to the text editor and manages its own memory
     highlighter = new SyntaxHighlighter(textEditor->document());
 
     codeChanged(node->code());

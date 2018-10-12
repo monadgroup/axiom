@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SyntaxHighlighter.h"
 #include <QtWidgets/QGraphicsObject>
 #include <QtWidgets/QPlainTextEdit>
 
@@ -14,6 +13,8 @@ namespace AxiomModel {
 }
 
 namespace AxiomGui {
+
+    class SyntaxHighlighter;
 
     class CustomNodePanel : public QGraphicsObject, public AxiomCommon::Hookable {
         Q_OBJECT
