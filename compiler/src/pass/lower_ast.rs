@@ -316,7 +316,11 @@ impl<'a> AstLower<'a> {
                 .collect()
         } else {
             // only one side is a tuple
-            let iter_count = left_items.len().max(right_items.len());
+            let iter_count = if left_items.len() == 1 {
+                right_items.len()
+            } else {
+                left_items.len()
+            };
             (0..iter_count)
                 .map(|index| {
                     let left_index = if index >= left_items.len() { 0 } else { index };
