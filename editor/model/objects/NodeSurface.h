@@ -4,6 +4,7 @@
 #include "../WireGrid.h"
 #include "../grid/GridSurface.h"
 #include "common/Event.h"
+#include "common/WatchSequence.h"
 
 namespace MaximCompiler {
     class Runtime;
@@ -20,8 +21,8 @@ namespace AxiomModel {
 
     class NodeSurface : public ModelObject {
     public:
-        using ChildCollection = WatchSequence<Node *>;
-        using ConnectionCollection = WatchSequence<Connection *>;
+        using ChildCollection = AxiomCommon::BoxedWatchSequence<Node *>;
+        using ConnectionCollection = AxiomCommon::BoxedWatchSequence<Connection *>;
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<const QPointF &> panChanged;
@@ -59,7 +60,7 @@ namespace AxiomModel {
 
         void setZoom(float zoom);
 
-        Sequence<ModelObject *> getCopyItems() const;
+        AxiomCommon::BoxedWatchSequence<ModelObject *> getCopyItems() const;
 
         virtual uint64_t getRuntimeId() = 0;
 

@@ -104,11 +104,11 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
 
     // create items for all controls that already exist
     node->controls().then([this](ControlSurface *surface) {
-        for (const auto &control : surface->controls()) {
+        for (const auto &control : surface->controls().sequence()) {
             addControl(control);
         }
 
-        surface->controls().itemAdded().connect(this, &NodeItem::addControl);
+        surface->controls().events().itemAdded().connect(this, &NodeItem::addControl);
         surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
     });
 }
@@ -214,7 +214,7 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     node->finishedDragging();
 
     std::vector<std::unique_ptr<Action>> dragEvents;
-    auto selectedNodes = staticCast<Node *>(node->parentSurface->selectedItems().sequence());
+    auto selectedNodes = AxiomCommon::staticCast<Node *>(node->parentSurface->selectedItems().sequence());
     for (const auto &selectedNode : selectedNodes) {
         auto beforePos = selectedNode->dragStartPos();
         auto afterPos = selectedNode->pos();

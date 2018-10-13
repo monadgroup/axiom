@@ -15,9 +15,9 @@ std::unique_ptr<RenameNodeAction> RenameNodeAction::create(const QUuid &uuid, QS
 }
 
 void RenameNodeAction::forward(bool, std::vector<QUuid> &) {
-    find(root()->nodes(), _uuid)->setName(_newName);
+    find(root()->nodes().sequence(), _uuid)->setName(_newName);
 }
 
 void RenameNodeAction::backward(std::vector<QUuid> &) {
-    find(root()->nodes(), _uuid)->setName(_oldName);
+    find(root()->nodes().sequence(), _uuid)->setName(_oldName);
 }

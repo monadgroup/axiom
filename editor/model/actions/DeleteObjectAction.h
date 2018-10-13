@@ -31,7 +31,5 @@ namespace AxiomModel {
         QByteArray _buffer;
 
         AxiomCommon::BoxedSequence<ModelObject *> getLinkedItems(const QUuid &seed) const;
-
-        AxiomCommon::BoxedSequence<ModelObject *> getRemoveItems() const;
     };
 }

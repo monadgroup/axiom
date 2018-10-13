@@ -31,7 +31,7 @@ namespace AxiomModel {
                     QPoint maxRect = QPoint(INT_MAX, INT_MAX));
 
         template<class T>
-        static QPoint findCenter(const T &items) {
+        static QPoint findCenter(T items) {
             QPoint currentCenter;
             int count = 0;
             for (const auto &item : items) {
@@ -53,7 +53,7 @@ namespace AxiomModel {
 
         const ItemCollection &selectedItems() const { return _selectedItems; }
 
-        bool hasSelection() const { return !_selectedItems.empty(); }
+        bool hasSelection() const { return !_selectedItems.sequence().empty(); }
 
         void selectAll();
 

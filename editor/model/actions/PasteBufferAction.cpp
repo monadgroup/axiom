@@ -38,7 +38,7 @@ void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
     stream >> objectCenter;
 
     // deselect all nodes so we can just select the new ones
-    find(root()->nodeSurfaces(), _surfaceUuid)->grid().deselectAll();
+    find(root()->nodeSurfaces().sequence(), _surfaceUuid)->grid().deselectAll();
 
     std::vector<ModelObject *> used;
     if (_isBufferFormatted) {
@@ -80,7 +80,7 @@ void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
         usedSet.insert(uuid);
     }
 
-    auto objs = findAll(dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), usedSet);
+    auto objs = findAll(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), usedSet);
     auto collected = collect(objs);
 
     QSet<QUuid> parentIds;

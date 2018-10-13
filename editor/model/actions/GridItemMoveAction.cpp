@@ -16,9 +16,9 @@ std::unique_ptr<GridItemMoveAction> GridItemMoveAction::create(const QUuid &uuid
 }
 
 void GridItemMoveAction::forward(bool, std::vector<QUuid> &) {
-    find<GridItem *>(root()->pool().sequence(), _uuid)->setPos(_afterPos);
+    find<GridItem *>(root()->pool().sequence().sequence(), _uuid)->setPos(_afterPos);
 }
 
 void GridItemMoveAction::backward(std::vector<QUuid> &) {
-    find<GridItem *>(root()->pool().sequence(), _uuid)->setPos(_beforePos);
+    find<GridItem *>(root()->pool().sequence().sequence(), _uuid)->setPos(_beforePos);
 }

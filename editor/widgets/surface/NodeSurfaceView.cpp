@@ -225,7 +225,7 @@ void NodeSurfaceView::copySelected() {
     QByteArray serializeArray;
     QDataStream stream(&serializeArray, QIODevice::WriteOnly);
     stream << centerPos;
-    ModelObjectSerializer::serializeChunk(stream, surface->uuid(), surface->getCopyItems());
+    ModelObjectSerializer::serializeChunk(stream, surface->uuid(), surface->getCopyItems().sequence());
 
     auto mimeData = new QMimeData();
     mimeData->setData("application/axiom-partial-surface", serializeArray);

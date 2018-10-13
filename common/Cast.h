@@ -1,19 +1,30 @@
 #pragma once
 
+#include <optional>
+
 namespace AxiomCommon {
 
     template<class Output, class Input>
-    Output wrapDynamicCast(Input input) {
-        return dynamic_cast<Output>(input);
+    std::optional<Output> wrapDynamicCast(Input input) {
+        if (auto cast = dynamic_cast<Output>(input)) {
+            return cast;
+        }
+        return std::nullopt;
     }
 
     template<class Output, class Input>
-    Output wrapStaticCast(Input input) {
-        return static_cast<Output>(input);
+    std::optional<Output> wrapStaticCast(Input input) {
+        if (auto cast = static_cast<Output>(input)) {
+            return cast;
+        }
+        return std::nullopt;
     }
 
     template<class Output, class Input>
-    Output wrapReinterpretCast(Input input) {
-        return reinterpret_cast<Output>(input);
+    std::optional<Output> wrapReinterpretCast(Input input) {
+        if (auto cast = reinterpret_cast<Output>(input)) {
+            return cast;
+        }
+        return std::nullopt;
     }
 }

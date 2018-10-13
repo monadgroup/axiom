@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NodeSurface.h"
+#include "common/Sequence.h"
 
 namespace AxiomModel {
 
@@ -40,7 +41,7 @@ namespace AxiomModel {
 
         uint64_t getRuntimeId() override { return runtimeId; }
 
-        Sequence<QUuid> compileLinks() override;
+        AxiomCommon::BoxedSequence<QUuid> compileLinks() override;
 
         void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 

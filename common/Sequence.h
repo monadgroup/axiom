@@ -19,6 +19,14 @@ namespace AxiomCommon {
 
         explicit SequenceIterator(Generator generator) : generator(std::move(generator)) { increment(); }
 
+        SequenceIterator(const SequenceIterator &) = default;
+
+        SequenceIterator(SequenceIterator &&) noexcept = default;
+
+        SequenceIterator &operator=(const SequenceIterator &) = default;
+
+        SequenceIterator &operator=(SequenceIterator &&) noexcept = default;
+
         bool ended() const { return !generator; }
 
         self_type operator++() {
@@ -44,9 +52,9 @@ namespace AxiomCommon {
 
         bool operator!=(const SequenceIterator &rhs) const { return !(*this == rhs); }
 
-        Generator &operator*() { return *currentValue; }
+        Item &operator*() { return *currentValue; }
 
-        Generator *operator->() { return &*currentValue; }
+        Item *operator->() { return &*currentValue; }
 
     private:
         size_t _index = 0;
@@ -63,241 +71,17 @@ namespace AxiomCommon {
         }
     };
 
-    template<class G, class... Args>
+    template<class G>
     class GeneratorManager {
     public:
         using Generator = G;
-        using Sequence = typename Generator::Sequence;
+        using Data = typename Generator::Data;
 
-        std::tuple<Args...> args;
+        Data data;
 
-        explicit GeneratorManager(Args... args) : args(std::make_tuple(std::forward(args)...)) {}
+        explicit GeneratorManager(Data data) : data(std::move(data)) {}
 
-        SequenceIterator<Generator> begin() const {
-            return createIteratorIndexed(std::make_index_sequence<sizeof...(Args)>());
-        }
-
-    private:
-        template<size_t... I>
-        SequenceIterator<Generator> createIteratorIndexed(std::index_sequence<I...>) {
-            return SequenceIterator(Generator(std::get<I>(args)...));
-        }
-    };
-
-    template<class Output>
-    class BlankGenerator {
-    public:
-        using Item = Output;
-        using Manager = GeneratorManager<BlankGenerator>;
-
-        BlankGenerator() = default;
-
-        std::optional<Item> next() { return std::nullopt; }
-    };
-
-    template<class Output>
-    class OnceGenerator {
-    public:
-        using Item = Output;
-        using Manager = GeneratorManager<OnceGenerator>;
-
-        std::optional<Item> item;
-
-        explicit OnceGenerator(Item item) : item(std::move(item)) {}
-
-        std::optional<Item> next() { return std::move(item); }
-    };
-
-    template<class S, class Functor>
-    class FilterMapGenerator {
-    public:
-        using Sequence = S;
-        using Input = typename Sequence::value_type;
-        using Item = typename std::result_of<Functor(Input)>::type;
-        using Manager = GeneratorManager<FilterMapGenerator, Sequence &, Functor &>;
-
-        static constexpr size_t SequenceIndex = 1;
-        static constexpr size_t FunctorIndex = 2;
-
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
-        Functor &functor;
-
-        FilterMapGenerator(Sequence &sequence, Functor &functor)
-            : sequenceBegin(sequence.begin()), sequenceEnd(sequence.end()), functor(functor) {}
-
-        static std::optional<Item> mapFilter(Manager &manager, Input input) {
-            return std::get<FunctorIndex>(manager.args)(std::forward(input));
-        }
-
-        std::optional<Item> next() {
-            while (sequenceBegin != sequenceEnd) {
-                auto mappedValue = mapFilter(functor, std::move(*sequenceBegin));
-                *sequenceBegin++;
-
-                if (mappedValue) {
-                    return mappedValue;
-                }
-            }
-
-            return std::nullopt;
-        }
-    };
-
-    template<class S, class Functor>
-    class FilterGenerator {
-    public:
-        using Sequence = S;
-        using Item = typename Sequence::value_type;
-        using Input = Item;
-        using Manager = GeneratorManager<FilterGenerator, Sequence &, Functor &>;
-
-        static constexpr size_t SequenceIndex = 1;
-        static constexpr size_t FunctorIndex = 2;
-
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
-        Functor &functor;
-
-        explicit FilterGenerator(Sequence &sequence, Functor &functor)
-            : sequenceBegin(sequence.begin()), sequenceEnd(sequence.end()), functor(functor) {}
-
-        static std::optional<Item> mapFilter(Manager &manager, Input input) {
-            if (std::get<FunctorIndex>(manager.args)(input))
-                return input;
-            else
-                return std::nullopt;
-        }
-
-        std::optional<Item> next() {
-            while (sequenceBegin != sequenceEnd) {
-                auto nextValue = std::move(*sequenceBegin);
-                sequenceBegin++;
-
-                if (functor(nextValue)) {
-                    return nextValue;
-                }
-            }
-
-            return std::nullopt;
-        }
-    };
-
-    template<class S, class Functor>
-    class MapGenerator {
-    public:
-        using Sequence = S;
-        using Input = typename Sequence::value_type;
-        using Item = typename std::result_of<Functor(Input)>::type;
-        using Manager = GeneratorManager<MapGenerator, Sequence &, Functor &>;
-
-        static constexpr size_t SequenceIndex = 1;
-        static constexpr size_t FunctorIndex = 2;
-
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
-        Functor &functor;
-
-        explicit MapGenerator(Sequence &sequence, Functor &functor)
-            : sequenceBegin(sequence.begin()), sequenceEnd(sequence.end()), functor(functor) {}
-
-        static std::optional<Item> mapFilter(Manager &manager, Input input) {
-            return std::get<FunctorIndex>(manager)(std::move(input));
-        }
-
-        std::optional<Item> next() {
-            if (sequenceBegin != sequenceEnd) {
-                auto mappedValue = functor(std::move(*sequenceBegin));
-                *sequenceBegin++;
-
-                return mappedValue;
-            }
-            return std::nullopt;
-        }
-    };
-
-    template<class S, class Data, class Functor>
-    class FunctorGenerator {};
-
-    template<class S>
-    class FlattenGenerator {
-    public:
-        using Sequence = S;
-        using Item = typename Sequence::value_type::value_type;
-        using Manager = GeneratorManager<FlattenGenerator, Sequence &>;
-
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
-        std::optional<typename Sequence::value_type> innerSequence;
-        std::optional<typename Sequence::value_type::iterator> innerBegin;
-        std::optional<typename Sequence::value_type::iterator> innerEnd;
-
-        explicit FlattenGenerator(Sequence &sequence) : sequenceBegin(sequence.begin()), sequenceEnd(sequence.end()) {}
-
-        std::optional<Item> next() {
-            while (!innerBegin || !innerEnd || *innerBegin == *innerEnd) {
-                if (*sequenceBegin == *sequenceEnd) {
-                    return std::nullopt;
-                }
-
-                innerSequence = std::move(*sequenceBegin);
-                innerBegin = innerSequence->begin();
-                innerEnd = innerSequence->end();
-                sequenceBegin++;
-            }
-
-            auto innerValue = std::move(*innerBegin);
-            innerBegin++;
-            return innerValue;
-        }
-    };
-
-    template<class Collection>
-    class IterGenerator {
-    public:
-        using Item = typename Collection::value_type *;
-        using Manager = GeneratorManager<IterGenerator, Collection *>;
-
-        typename Collection::iterator sequenceBegin;
-        typename Collection::iterator sequenceEnd;
-
-        explicit IterGenerator(Collection &collection)
-            : sequenceBegin(collection.begin()), sequenceEnd(collection.end()) {}
-
-        std::optional<Item> next() {
-            if (sequenceBegin != sequenceEnd) {
-                auto nextValue = &*sequenceBegin;
-                *sequenceBegin++;
-
-                return nextValue;
-            }
-            return std::nullopt;
-        }
-    };
-
-    template<class Collection>
-    class IntoIterGenerator {
-    public:
-        using Item = typename Collection::value_type;
-        using Manager = GeneratorManager<IntoIterGenerator, Collection>;
-
-        Collection ownedCollection;
-        typename Collection::iterator sequenceBegin;
-        typename Collection::iterator sequenceEnd;
-
-        explicit IntoIterGenerator(Collection collection)
-            : ownedCollection(std::move(collection)), sequenceBegin(ownedCollection.begin()),
-              sequenceEnd(ownedCollection.end()) {}
-
-        std::optional<Item> next() {
-            if (sequenceBegin != sequenceEnd) {
-                auto nextValue = std::move(*sequenceBegin);
-                *sequenceBegin++;
-
-                return nextValue;
-            }
-            return std::nullopt;
-        }
+        SequenceIterator<Generator> begin() { return SequenceIterator(Generator(&data)); }
     };
 
     template<class G>
@@ -318,47 +102,57 @@ namespace AxiomCommon {
 
         explicit Sequence(Manager manager) : manager(std::move(manager)) {}
 
-        iterator begin() const { return manager.begin(); }
+        iterator begin() { return manager.begin(); }
 
-        iterator end() const { return manager.end(); }
+        iterator end() const { return iterator(); }
 
-        bool empty() const { return begin() == end(); }
+        bool empty() { return begin() == end(); }
 
-        size_t size() const {
+        size_t size() {
             size_t acc = 0;
             for (auto i = begin(); i != end(); i++) {
                 acc++;
             }
             return acc;
         }
+    };
 
-        std::vector<Item> collect() {
-            std::vector<Item> result;
-            for (auto &itm : *this) {
-                result.push_back(std::move(itm));
-            }
-            return result;
-        }
+    // provides a sequence interface backed up by a reference to a sequence
+    template<class S>
+    class RefSequence {
+    public:
+        using Sequence = S;
+        using Item = typename Sequence::Item;
 
-        std::optional<Item> takeAt(size_t index) {
-            size_t currentIndex = 0;
-            for (auto &itm : *this) {
-                if (currentIndex == index) {
-                    return std::move(itm);
-                }
-                currentIndex++;
-            }
-            return std::nullopt;
-        }
+        using value_type = Item;
+        using reference = value_type &;
+        using const_reference = const value_type &;
+        using pointer = value_type *;
+        using const_pointer = const value_type *;
+        using iterator = typename Sequence::iterator;
+
+        explicit RefSequence(Sequence *seq) : seq(seq) {}
+
+        iterator begin() { return seq->begin(); }
+
+        iterator end() const { return seq->end(); }
+
+        bool empty() const { return seq->empty(); }
+
+        size_t size() { return seq->size(); }
+
+    private:
+        Sequence *seq;
     };
 
     template<class Item>
     class IteratorAdapter {
+    public:
         virtual std::unique_ptr<IteratorAdapter> clone() const = 0;
         virtual bool ended() const = 0;
         virtual void increment() = 0;
         virtual bool equals(IteratorAdapter *adapter) const = 0;
-        virtual Item *deref() const = 0;
+        virtual Item *deref() = 0;
     };
 
     template<class Item, class IterType>
@@ -382,7 +176,7 @@ namespace AxiomCommon {
             return iterator == specifiedAdapter->iterator;
         }
 
-        Item *deref() const override { return &*iterator; }
+        Item *deref() override { return &*iterator; }
     };
 
     template<class Item>
@@ -433,10 +227,11 @@ namespace AxiomCommon {
     class BoxedSequence {
         class BoxAdapter {
         public:
-            virtual std::unique_ptr<IteratorAdapter<I>> begin() const = 0;
-            virtual std::unique_ptr<IteratorAdapter<I>> end() const = 0;
-            virtual bool empty() const = 0;
-            virtual size_t size() const = 0;
+            virtual std::unique_ptr<BoxAdapter> clone() = 0;
+            virtual std::unique_ptr<IteratorAdapter<I>> begin() = 0;
+            virtual std::unique_ptr<IteratorAdapter<I>> end() = 0;
+            virtual bool empty() = 0;
+            virtual size_t size() = 0;
         };
 
         template<class Sequence>
@@ -446,17 +241,19 @@ namespace AxiomCommon {
 
             explicit SpecifiedBoxAdapter(Sequence sequence) : sequence(std::move(sequence)) {}
 
-            std::unique_ptr<IteratorAdapter<I>> begin() const override {
-                return std::make_unique<SpecifiedIteratorAdapter>(sequence.begin());
+            std::unique_ptr<BoxAdapter> clone() override { return std::make_unique<SpecifiedBoxAdapter>(sequence); }
+
+            std::unique_ptr<IteratorAdapter<I>> begin() override {
+                return std::make_unique<SpecifiedIteratorAdapter<I, typename Sequence::iterator>>(sequence.begin());
             }
 
-            std::unique_ptr<IteratorAdapter<I>> end() const override {
-                return std::make_unique<SpecifiedIteratorAdapter>(sequence.end());
+            std::unique_ptr<IteratorAdapter<I>> end() override {
+                return std::make_unique<SpecifiedIteratorAdapter<I, typename Sequence::iterator>>(sequence.end());
             }
 
-            bool empty() const override { return sequence.empty(); }
+            bool empty() override { return sequence.empty(); }
 
-            size_t size() const override { return sequence.size(); }
+            size_t size() override { return sequence.size(); }
         };
 
     public:
@@ -473,9 +270,20 @@ namespace AxiomCommon {
         explicit BoxedSequence(Sequence sequence)
             : adapter(std::make_unique<SpecifiedBoxAdapter<Sequence>>(std::move(sequence))) {}
 
-        iterator begin() const { return IteratorAdapterIterator(adapter->begin()); }
+        BoxedSequence(BoxedSequence &a) : adapter(a.adapter->clone()) {}
 
-        iterator end() const { return IteratorAdapterIterator(adapter->end()); }
+        BoxedSequence(BoxedSequence &&) noexcept = default;
+
+        BoxedSequence &operator=(const BoxedSequence &a) {
+            adapter = a.adapter->clone();
+            return *this;
+        }
+
+        BoxedSequence &operator=(BoxedSequence &&) noexcept = default;
+
+        iterator begin() { return IteratorAdapterIterator(adapter->begin()); }
+
+        iterator end() { return IteratorAdapterIterator(adapter->end()); }
 
         bool empty() const { return adapter->empty(); }
 
@@ -484,4 +292,14 @@ namespace AxiomCommon {
     private:
         std::unique_ptr<BoxAdapter> adapter;
     };
+
+    template<class Sequence>
+    static RefSequence<Sequence> refSequence(Sequence *sequence) {
+        return RefSequence<Sequence>(sequence);
+    }
+
+    template<class Sequence>
+    static BoxedSequence<typename Sequence::value_type> boxSequence(Sequence sequence) {
+        return BoxedSequence<typename Sequence::value_type>(std::move(sequence));
+    }
 }

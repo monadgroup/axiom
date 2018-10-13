@@ -5,175 +5,230 @@
 
 namespace AxiomCommon {
 
-    template<class Sequence>
-    class WatchSequence : public TrackedObject {
+    template<class Item>
+    class BaseWatchEvents {
     public:
-        using Manager = typename Sequence::Manager;
-        using Item = typename Sequence::Item;
-        using ItemEvent = Event<Item>;
+        using OutputItem = Item;
 
-        using InnerWatchSequence = typename Sequence::Generator::Sequence;
-        using InputItem = typename InnerWatchSequence::Item;
+        Event<Item> &itemAdded() { return _itemAdded; }
 
-        using value_type = Item;
-        using reference = value_type &;
-        using const_reference = const value_type &;
-        using pointer = value_type *;
-        using const_pointer = const value_type *;
-        using iterator = typename Sequence::iterator;
+        const Event<Item> &itemAdded() const { return _itemAdded; }
 
-        Sequence sequence;
+        Event<Item> &itemRemoved() { return _itemRemoved; }
 
-        // The provided Sequence should be a FilterMap wrapper around another WatchSequence.
-        // The FilterMapped sequence will be exposed as `sequence`, and events from the internal WatchSequence will
-        // be passed through the Functor to the events on this WatchSequence.
-        explicit WatchSequence(Sequence sequence) : sequence(std::move(sequence)) {
-            auto &watchSequence = std::get<Sequence::Generator::SequenceIndex>(sequence.manager.args);
-            watchSequence.itemAdded().connect(this, &WatchSequence::parentItemAdded);
-            watchSequence.itemRemoved().connect(this, &WatchSequence::parentItemRemoved);
-        }
-
-        ItemEvent &itemAdded() { return _itemAdded; }
-
-        const ItemEvent &itemAdded() const { return _itemAdded; }
-
-        ItemEvent &itemRemoved() { return _itemRemoved; }
-
-        const ItemEvent &itemRemoved() const { return _itemRemoved; }
-
-        iterator begin() const { return sequence.begin(); }
-
-        iterator end() const { return sequence.end(); }
-
-        bool empty() const { return sequence.empty(); }
-
-        size_t size() const { return sequence.size(); }
+        const Event<Item> &itemRemoved() const { return _itemRemoved; }
 
     private:
-        ItemEvent _itemAdded;
-        ItemEvent _itemRemoved;
+        Event<Item> _itemAdded;
+        Event<Item> _itemRemoved;
+    };
+
+    template<class Sequence, class InputEvents>
+    class WatchEvents : public TrackedObject {
+    public:
+        using InputItem = typename InputEvents::OutputItem;
+        using OutputItem = typename Sequence::value_type;
+
+        WatchEvents(Sequence &sequence, InputEvents inputEvents)
+            : _sequence(sequence), _inputEvents(std::move(inputEvents)) {
+            _inputEvents.itemAdded().connect(this, &WatchEvents::parentItemAdded);
+            _inputEvents.itemRemoved().connect(this, &WatchEvents::parentItemRemoved);
+        }
+
+        Event<OutputItem> &itemAdded() { return _itemAdded; }
+
+        const Event<OutputItem> &itemAdded() const { return _itemAdded; }
+
+        Event<OutputItem> &itemRemoved() { return _itemRemoved; }
+
+        const Event<OutputItem> &itemRemoved() const { return _itemRemoved; }
+
+    private:
+        Sequence &_sequence;
+        InputEvents _inputEvents;
+        Event<OutputItem> _itemAdded;
+        Event<OutputItem> _itemRemoved;
 
         void parentItemAdded(InputItem input) {
-            auto mappedValue = Sequence::Generator::mapFilter(sequence.manager, std::move(input));
+            auto mappedValue = Sequence::Generator::mapFilter(_sequence.manager, std::move(input));
             if (mappedValue) {
-                itemAdded(std::move(*mappedValue));
+                _itemAdded(std::move(*mappedValue));
             }
         }
 
-        void parentItemRemoved(const InputItem &input) {
-            auto mappedValue = Sequence::Generator::mapFilter(sequence.manager, std::move(input));
+        void parentItemRemoved(InputItem input) {
+            auto mappedValue = Sequence::Generator::mapFilter(_sequence.manager, std::move(input));
             if (mappedValue) {
-                itemRemoved(std::move(*mappedValue));
+                _itemRemoved(std::move(*mappedValue));
             }
         }
     };
 
-    template<class Sequence>
-    class BaseWatchSequence {
+    template<class W>
+    class RefWatchEvents {
     public:
-        using Item = typename Sequence::value_type;
-        using ItemEvent = Event<Item>;
+        using WatchEvents = W;
+        using OutputItem = typename WatchEvents::OutputItem;
 
-        using value_type = Item;
-        using reference = value_type &;
-        using const_reference = const value_type &;
-        using pointer = value_type *;
-        using const_pointer = const value_type *;
-        using iterator = typename Sequence::iterator;
+        explicit RefWatchEvents(WatchEvents *watchEvents) : watchEvents(watchEvents) {}
 
-        Sequence sequence;
+        Event<OutputItem> &itemAdded() { return watchEvents->itemAdded(); }
 
-        explicit BaseWatchSequence(Sequence sequence) : sequence(std::move(sequence)) {}
+        const Event<OutputItem> &itemAdded() const { return watchEvents->itemAdded(); }
 
-        ItemEvent &itemAdded() { return _itemAdded; }
+        Event<OutputItem> &itemRemoved() { return watchEvents->itemRemoved(); }
 
-        const ItemEvent &itemAdded() const { return _itemAdded; }
-
-        ItemEvent &itemRemoved() { return _itemRemoved; }
-
-        const ItemEvent &itemRemoved() const { return _itemRemoved; }
-
-        iterator begin() const { return sequence.begin(); }
-
-        iterator end() const { return sequence.end(); }
-
-        bool empty() const { return sequence.empty(); }
-
-        size_t size() const { return sequence.size(); }
+        const Event<OutputItem> &itemRemoved() const { return watchEvents->itemRemoved(); }
 
     private:
-        ItemEvent _itemAdded;
-        ItemEvent _itemRemoved;
+        WatchEvents *watchEvents;
     };
 
-    template<class I>
-    class BoxedWatchSequence {
+    template<class Item>
+    class BoxedWatchEvents {
         class BoxAdapter {
         public:
-            virtual Event<I> &itemAdded() = 0;
-            virtual Event<I> &itemRemoved() = 0;
-            virtual std::unique_ptr<IteratorAdapter<I>> begin() const = 0;
-            virtual std::unique_ptr<IteratorAdapter<I>> end() const = 0;
-            virtual bool empty() const = 0;
-            virtual size_t size() const = 0;
+            virtual Event<Item> &itemAdded() = 0;
+            virtual Event<Item> &itemRemoved() = 0;
         };
 
-        template<class Sequence>
+        template<class Events>
         class SpecifiedBoxAdapter : public BoxAdapter {
         public:
-            Sequence sequence;
+            Events events;
 
-            explicit SpecifiedBoxAdapter(Sequence sequence) : sequence(std::move(sequence)) {}
+            explicit SpecifiedBoxAdapter(Events events) : events(std::move(events)) {}
 
-            Event<I> &itemAdded() override { return sequence.itemAdded(); }
+            Event<Item> &itemAdded() override { return events.itemAdded(); }
 
-            Event<I> &itemRemoved() override { return sequence.itemRemoved(); }
-
-            std::unique_ptr<IteratorAdapter<I>> begin() const override {
-                return std::make_unique<SpecifiedIteratorAdapter>(sequence.begin());
-            }
-
-            std::unique_ptr<IteratorAdapter<I>> end() const override {
-                return std::make_unique<SpecifiedIteratorAdapter>(sequence.end());
-            }
-
-            bool empty() const override { return sequence.empty(); }
-
-            size_t size() const override { return sequence.size(); }
+            Event<Item> &itemRemoved() override { return events.itemRemoved(); }
         };
 
     public:
-        using Item = I;
-        using ItemEvent = Event<Item>;
+        using OutputItem = Item;
 
-        using value_type = Item;
-        using reference = value_type &;
-        using const_reference = const value_type &;
-        using pointer = value_type *;
-        using const_pointer = const value_type *;
-        using iterator = IteratorAdapterIterator<Item>;
+        template<class Events>
+        explicit BoxedWatchEvents(Events events)
+            : adapter(std::make_unique<SpecifiedBoxAdapter<Events>>(std::move(events))) {}
 
-        template<class Sequence>
-        explicit BoxedWatchSequence(Sequence sequence)
-            : adapter(std::make_unique<SpecifiedBoxAdapter<Sequence>>(std::move(sequence))) {}
+        Event<OutputItem> &itemAdded() { return adapter->itemAdded(); }
 
-        ItemEvent &itemAdded() { return adapter->itemAdded(); }
+        const Event<OutputItem> &itemAdded() const { return adapter->itemAdded(); }
 
-        const ItemEvent &itemAdded() const { return adapter->itemAdded(); }
+        Event<OutputItem> &itemRemoved() { return adapter->itemRemoved(); }
 
-        ItemEvent &itemRemoved() { return adapter->itemRemoved(); }
-
-        const ItemEvent &itemRemoved() const { return adapter->itemRemoved(); }
-
-        iterator begin() const { return IteratorAdapterIterator(adapter->begin()); }
-
-        iterator end() const { return IteratorAdapterIterator(adapter->end()); }
-
-        bool empty() const { return adapter->empty(); }
-
-        size_t size() const { return adapter->size(); }
+        const Event<OutputItem> &itemRemoved() const { return adapter->itemRemoved(); }
 
     private:
         std::unique_ptr<BoxAdapter> adapter;
     };
+
+    template<class S, class E>
+    class BaseWatchSequence {
+    public:
+        using Sequence = S;
+        using Events = E;
+
+        BaseWatchSequence(Sequence sequence, Events events)
+            : _sequence(std::move(sequence)), _events(std::move(events)) {}
+
+        Sequence &sequence() { return _sequence; }
+
+        const Sequence &sequence() const { return _sequence; }
+
+        Events &events() { return _events; }
+
+        const Events &events() const { return _events; }
+
+    private:
+        Sequence _sequence;
+        Events _events;
+    };
+
+    template<class S, class InputEvents>
+    class WatchSequence {
+    public:
+        using Sequence = S;
+        using Events = WatchEvents<Sequence, InputEvents>;
+
+        WatchSequence(Sequence sequence, InputEvents events)
+            : _sequence(std::move(sequence)), _events(_sequence, std::move(events)) {}
+
+        Sequence &sequence() { return _sequence; }
+
+        const Sequence &sequence() const { return _sequence; }
+
+        Events &events() { return _events; }
+
+        const Events &events() const { return _events; }
+
+    private:
+        Sequence _sequence;
+        Events _events;
+    };
+
+    template<class WatchSequence>
+    class RefWatchSequence {
+    public:
+        using Sequence = RefSequence<typename WatchSequence::Sequence>;
+        using Events = RefWatchEvents<typename WatchSequence::Events>;
+
+        RefWatchSequence(Sequence sequence, Events events)
+            : _sequence(std::move(sequence)), _events(std::move(events)) {}
+
+        Sequence &sequence() { return _sequence; }
+
+        const Sequence &sequence() const { return _sequence; }
+
+        Events &events() { return _events; }
+
+        const Events &events() const { return _events; }
+
+    private:
+        Sequence _sequence;
+        Events _events;
+    };
+
+    template<class Item>
+    class BoxedWatchSequence {
+    public:
+        using Sequence = BoxedSequence<Item>;
+        using Events = BoxedWatchEvents<Item>;
+
+        BoxedWatchSequence(Sequence sequence, Events events)
+            : _sequence(std::move(sequence)), _events(std::move(events)) {}
+
+        Sequence &sequence() { return _sequence; }
+
+        const Sequence &sequence() const { return _sequence; }
+
+        Events &events() { return _events; }
+
+        const Events &events() const { return _events; }
+
+    private:
+        Sequence _sequence;
+        Events _events;
+    };
+
+    template<class WatchEvents>
+    RefWatchEvents<WatchEvents> refWatchEvents(WatchEvents *events) {
+        return RefWatchEvents<WatchEvents>(events);
+    }
+
+    template<class Sequence>
+    RefWatchSequence<Sequence> refWatchSequence(Sequence *sequence) {
+        return RefWatchSequence<Sequence>(refSequence(&sequence->sequence()), refWatchEvents(&sequence->events()));
+    }
+
+    template<class WatchEvents>
+    BoxedWatchEvents<typename WatchEvents::OutputItem> boxWatchEvents(WatchEvents events) {
+        return BoxedWatchEvents<typename WatchEvents::OutputItem>(std::move(events));
+    }
+
+    template<class Sequence>
+    BoxedWatchSequence<typename Sequence::Sequence::value_type> boxWatchSequence(Sequence sequence) {
+        return BoxedWatchSequence<typename Sequence::Sequence::value_type>(
+            boxSequence(std::move(sequence.sequence())), boxWatchEvents(std::move(sequence.events())));
+    }
 }

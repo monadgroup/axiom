@@ -1,33 +1,33 @@
 #include "GridSurface.h"
 
-#include "../WatchSequenceOperators.h"
 #include "GridItem.h"
+#include "common/WatchSequenceOperators.h"
 
 using namespace AxiomModel;
 
 GridSurface::GridSurface(ItemCollection view, bool deferDirty, QPoint minRect, QPoint maxRect)
     : _grid(minRect, maxRect), _items(std::move(view)),
-      _selectedItems(filterWatch(
-          _items, std::function<bool(GridItem *const &)>([](GridItem *const &itm) { return itm->isSelected(); }))),
+      _selectedItems(AxiomCommon::boxWatchSequence(AxiomCommon::filterWatch(
+          AxiomCommon::refWatchSequence(&_items), [](GridItem *itm) { return itm->isSelected(); }))),
       _deferDirty(deferDirty) {
-    _items.itemAdded().connect(this, &GridSurface::handleItemAdded);
+    _items.events().itemAdded().connect(this, &GridSurface::handleItemAdded);
 }
 
 void GridSurface::selectAll() {
-    for (const auto &item : items()) {
+    for (const auto &item : items().sequence()) {
         item->select(false);
     }
 }
 
 void GridSurface::deselectAll() {
-    for (const auto &item : items()) {
+    for (const auto &item : items().sequence()) {
         item->deselect();
     }
 }
 
 void GridSurface::startDragging() {
     lastDragDelta = QPoint(0, 0);
-    for (auto &item : selectedItems()) {
+    for (auto &item : selectedItems().sequence()) {
         item->startDragging();
     }
 }
@@ -35,24 +35,24 @@ void GridSurface::startDragging() {
 void GridSurface::dragTo(QPoint delta) {
     if (delta == lastDragDelta) return;
 
-    for (auto &item : selectedItems()) {
+    for (auto &item : selectedItems().sequence()) {
         _grid.setRect(item->pos(), item->size(), nullptr);
     }
 
     auto availableDelta = findAvailableDelta(delta);
     lastDragDelta = availableDelta;
-    for (auto &item : selectedItems()) {
+    for (auto &item : selectedItems().sequence()) {
         item->dragTo(availableDelta);
     }
 
-    for (auto &item : selectedItems()) {
+    for (auto &item : selectedItems().sequence()) {
         _grid.setRect(item->pos(), item->size(), item);
     }
     setDirty();
 }
 
 void GridSurface::finishDragging() {
-    for (auto &item : selectedItems()) {
+    for (auto &item : selectedItems().sequence()) {
         item->finishDragging();
     }
 }
@@ -74,7 +74,7 @@ void GridSurface::tryFlush() {
 }
 
 bool GridSurface::isAllDragAvailable(QPoint delta) {
-    for (auto &item : selectedItems()) {
+    for (auto &item : selectedItems().sequence()) {
         if (!item->isDragAvailable(delta)) return false;
     }
     return true;
@@ -102,12 +102,12 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
                 (*clearItems.begin())->deselect();
             }
         }
-        if (_selectedItems.size() == 1) {
+        if (_selectedItems.sequence().size() == 1) {
             hasSelectionChanged(true);
         }
     });
     item->deselected.connect(this, [this]() {
-        if (_selectedItems.empty()) {
+        if (_selectedItems.sequence().empty()) {
             hasSelectionChanged(false);
         }
     });

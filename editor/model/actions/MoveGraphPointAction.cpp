@@ -18,9 +18,9 @@ std::unique_ptr<MoveGraphPointAction> MoveGraphPointAction::create(const QUuid &
 }
 
 void MoveGraphPointAction::forward(bool, std::vector<QUuid> &) {
-    find<GraphControl *>(root()->pool().sequence(), _controlUuid)->movePoint(_index, _newTime, _newValue);
+    find<GraphControl *>(root()->pool().sequence().sequence(), _controlUuid)->movePoint(_index, _newTime, _newValue);
 }
 
 void MoveGraphPointAction::backward(std::vector<QUuid> &compileItems) {
-    find<GraphControl *>(root()->pool().sequence(), _controlUuid)->movePoint(_index, _oldTime, _oldValue);
+    find<GraphControl *>(root()->pool().sequence().sequence(), _controlUuid)->movePoint(_index, _oldTime, _oldValue);
 }

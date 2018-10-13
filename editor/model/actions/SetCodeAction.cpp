@@ -20,7 +20,7 @@ std::unique_ptr<SetCodeAction> SetCodeAction::create(const QUuid &uuid, QString 
 }
 
 void SetCodeAction::forward(bool first, std::vector<QUuid> &compileItems) {
-    auto node = find<CustomNode *>(root()->nodes(), _uuid);
+    auto node = find<CustomNode *>(root()->nodes().sequence(), _uuid);
     node->setCode(_newCode);
 
     compileItems.push_back(node->uuid());
@@ -31,7 +31,7 @@ void SetCodeAction::forward(bool first, std::vector<QUuid> &compileItems) {
 }
 
 void SetCodeAction::backward(std::vector<QUuid> &compileItems) {
-    auto node = find<CustomNode *>(root()->nodes(), _uuid);
+    auto node = find<CustomNode *>(root()->nodes().sequence(), _uuid);
     node->setCode(_oldCode);
 
     compileItems.push_back(node->uuid());

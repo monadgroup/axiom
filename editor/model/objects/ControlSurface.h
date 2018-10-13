@@ -2,6 +2,7 @@
 
 #include "../ModelObject.h"
 #include "../grid/GridSurface.h"
+#include "common/WatchSequence.h"
 
 namespace AxiomModel {
 
@@ -11,7 +12,7 @@ namespace AxiomModel {
 
     class ControlSurface : public ModelObject {
     public:
-        using ChildCollection = WatchSequence<Control *>;
+        using ChildCollection = AxiomCommon::BoxedWatchSequence<Control *>;
 
         AxiomCommon::Event<bool> controlsOnTopRowChanged;
 

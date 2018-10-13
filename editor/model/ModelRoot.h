@@ -35,21 +35,20 @@ namespace AxiomModel {
     class ModelRoot : public AxiomCommon::TrackedObject {
     public:
         template<class CollectionType>
-        using ModelRootCollection =
-            AxiomCommon::WatchSequence<AxiomCommon::MapSequence<Pool::Sequence, CollectionType (*)(PoolObject *)>>;
+        using ModelRootCollection = AxiomCommon::CastWatchSequence<CollectionType, Pool::Sequence>;
 
-        using NodeSurfaceCollection = ModelRootCollection<NodeSurface *>;
-        using NodeCollection = ModelRootCollection<Node *>;
-        using ControlSurfaceCollection = ModelRootCollection<ControlSurface *>;
-        using ControlCollection = ModelRootCollection<Control *>;
-        using ConnectionCollection = ModelRootCollection<Connection *>;
+        using NodeSurfaceCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<NodeSurface *>>;
+        using NodeCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<Node *>>;
+        using ControlSurfaceCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<ControlSurface *>>;
+        using ControlCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<Control *>>;
+        using ConnectionCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<Connection *>>;
 
         AxiomCommon::Event<> modified;
         AxiomCommon::Event<> configurationChanged;
 
         ModelRoot();
 
-        RootSurface *rootSurface() const;
+        RootSurface *rootSurface();
 
         Pool &pool() { return _pool; }
 
@@ -59,25 +58,15 @@ namespace AxiomModel {
 
         const HistoryList &history() const { return _history; }
 
-        NodeSurfaceCollection &nodeSurfaces() { return _nodeSurfaces; }
+        NodeSurfaceCollection nodeSurfaces() { return AxiomCommon::refWatchSequence(&_nodeSurfaces); }
 
-        const NodeSurfaceCollection &nodeSurfaces() const { return _nodeSurfaces; }
+        NodeCollection nodes() { return AxiomCommon::refWatchSequence(&_nodes); }
 
-        NodeCollection &nodes() { return _nodes; }
+        ControlSurfaceCollection controlSurfaces() { return AxiomCommon::refWatchSequence(&_controlSurfaces); }
 
-        const NodeCollection &nodes() const { return _nodes; }
+        ControlCollection controls() { return AxiomCommon::refWatchSequence(&_controls); }
 
-        ControlSurfaceCollection &controlSurfaces() { return _controlSurfaces; }
-
-        const ControlSurfaceCollection &controlSurfaces() const { return _controlSurfaces; }
-
-        ControlCollection &controls() { return _controls; }
-
-        const ControlCollection &controls() const { return _controls; }
-
-        ConnectionCollection &connections() { return _connections; }
-
-        const ConnectionCollection &connections() const { return _connections; }
+        ConnectionCollection connections() { return AxiomCommon::refWatchSequence(&_connections); }
 
         void attachRuntime(MaximCompiler::Runtime *runtime);
 
@@ -96,11 +85,11 @@ namespace AxiomModel {
     private:
         Pool _pool;
         HistoryList _history;
-        NodeSurfaceCollection _nodeSurfaces;
-        NodeCollection _nodes;
-        ControlSurfaceCollection _controlSurfaces;
-        ControlCollection _controls;
-        ConnectionCollection _connections;
+        ModelRootCollection<NodeSurface *> _nodeSurfaces;
+        ModelRootCollection<Node *> _nodes;
+        ModelRootCollection<ControlSurface *> _controlSurfaces;
+        ModelRootCollection<Control *> _controls;
+        ModelRootCollection<Connection *> _connections;
 
         std::mutex _runtimeLock;
         MaximCompiler::Runtime *_runtime = nullptr;

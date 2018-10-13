@@ -12,8 +12,8 @@ using namespace AxiomModel;
 MidiControlItem::MidiControlItem(AxiomModel::MidiControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control), _plugImage(":/icons/midi-plug.png") {
     control->valueChanged.connect(this, &MidiControlItem::triggerUpdate);
-    control->connections().itemAdded().connect(this, &MidiControlItem::triggerUpdate);
-    control->connections().itemRemoved().connect(this, &MidiControlItem::triggerUpdate);
+    control->connections().events().itemAdded().connect(this, &MidiControlItem::triggerUpdate);
+    control->connections().events().itemRemoved().connect(this, &MidiControlItem::triggerUpdate);
 }
 
 void MidiControlItem::paintControl(QPainter *painter) {

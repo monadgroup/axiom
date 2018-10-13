@@ -17,9 +17,9 @@ std::unique_ptr<SetGraphTagAction> SetGraphTagAction::create(const QUuid &contro
 }
 
 void SetGraphTagAction::forward(bool, std::vector<QUuid> &) {
-    find<GraphControl *>(root()->pool().sequence(), _controlUuid)->setPointTag(_index, _newTag);
+    find<GraphControl *>(root()->pool().sequence().sequence(), _controlUuid)->setPointTag(_index, _newTag);
 }
 
 void SetGraphTagAction::backward(std::vector<QUuid> &compileItems) {
-    find<GraphControl *>(root()->pool().sequence(), _controlUuid)->setPointTag(_index, _oldTag);
+    find<GraphControl *>(root()->pool().sequence().sequence(), _controlUuid)->setPointTag(_index, _oldTag);
 }

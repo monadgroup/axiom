@@ -1,5 +1,6 @@
 set(SOURCE_FILES Cast.h
                  Event.h
+                 NamedLambda.h
                  Promise.h
                  Sequence.h
                  SequenceOperators.h

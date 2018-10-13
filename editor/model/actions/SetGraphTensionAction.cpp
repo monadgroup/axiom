@@ -18,9 +18,9 @@ std::unique_ptr<SetGraphTensionAction> SetGraphTensionAction::create(const QUuid
 }
 
 void SetGraphTensionAction::forward(bool, std::vector<QUuid> &) {
-    find<GraphControl *>(root()->pool().sequence(), _controlUuid)->setCurveTension(_index, _newTension);
+    find<GraphControl *>(root()->pool().sequence().sequence(), _controlUuid)->setCurveTension(_index, _newTension);
 }
 
 void SetGraphTensionAction::backward(std::vector<QUuid> &) {
-    find<GraphControl *>(root()->pool().sequence(), _controlUuid)->setCurveTension(_index, _oldTension);
+    find<GraphControl *>(root()->pool().sequence().sequence(), _controlUuid)->setCurveTension(_index, _oldTension);
 }

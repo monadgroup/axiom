@@ -13,10 +13,13 @@ namespace AxiomModel {
     class PoolObject;
 
     class Pool {
-        using BaseSequence = AxiomCommon::BaseWatchSequence<std::vector<std::unique_ptr<PoolObject>>>;
+        using IterSequence = AxiomCommon::IterSequence<std::vector<std::unique_ptr<PoolObject>>>;
+        using BaseSequence = AxiomCommon::BaseWatchSequence<
+            AxiomCommon::MapSequence<IterSequence, PoolObject *(*) (std::unique_ptr<PoolObject> *)>,
+            AxiomCommon::BaseWatchEvents<PoolObject *>>;
 
     public:
-        using Sequence = AxiomCommon::CastWatchSequence<PoolObject *, BaseSequence>;
+        using Sequence = AxiomCommon::RefWatchSequence<BaseSequence>;
 
         Pool();
 
@@ -26,14 +29,12 @@ namespace AxiomModel {
 
         std::unique_ptr<PoolObject> removeObj(PoolObject *obj);
 
-        Sequence &sequence() { return _sequence; }
-
-        const Sequence &sequence() const { return _sequence; }
+        Sequence sequence() { return AxiomCommon::refWatchSequence(&_sequence); }
 
         void destroy();
 
     private:
-        BaseSequence _baseSequence;
-        Sequence _sequence;
+        std::vector<std::unique_ptr<PoolObject>> objects;
+        BaseSequence _sequence;
     };
 }

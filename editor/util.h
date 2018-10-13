@@ -47,4 +47,9 @@ namespace AxiomUtil {
         }
         return last;
     };
+
+    template<class T>
+    typename std::remove_reference<T>::type clone(T value) {
+        return value;
+    }
 }

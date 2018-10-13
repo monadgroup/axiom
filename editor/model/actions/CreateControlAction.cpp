@@ -43,5 +43,5 @@ void CreateControlAction::forward(bool, std::vector<QUuid> &) {
 }
 
 void CreateControlAction::backward(std::vector<QUuid> &) {
-    find(root()->controls(), _uuid)->remove();
+    find(root()->controls().sequence(), _uuid)->remove();
 }

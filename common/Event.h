@@ -84,7 +84,6 @@ namespace AxiomCommon {
         void disconnectAll() { connections.clear(); }
 
         void trackedObjectNotifyRemove(TrackedObjectManager::ObjectId id, EventId eventId) override {
-            std::cout << "Disconnecting EventId " << eventId << " from " << this << std::endl;
             disconnect(eventId);
         }
 

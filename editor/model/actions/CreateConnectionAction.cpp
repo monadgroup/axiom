@@ -30,6 +30,6 @@ void CreateConnectionAction::forward(bool, std::vector<QUuid> &compileItems) {
 }
 
 void CreateConnectionAction::backward(std::vector<QUuid> &compileItems) {
-    find(root()->connections(), _uuid)->remove();
+    find(root()->connections().sequence(), _uuid)->remove();
     compileItems.push_back(_parentUuid);
 }
