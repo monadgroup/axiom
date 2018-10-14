@@ -47,9 +47,16 @@ public:
         // form formatting
         HighlightRule formRule;
         formRule.pattern = QRegExp(R"(\b(none|control|osc|note|freq|beats|secs|samples|db|amp|q)\b)");
-        formRule.format.setForeground(QColor(101, 216, 105));
+        formRule.format.setForeground(QColor(101, 216, 105)); // green
         formRule.format.setFontWeight(QFont::Bold);
         highlightRules.push_back(std::move(formRule));
+
+        // comment (single line) formatting
+        HighlightRule commentRule;
+        commentRule.pattern = QRegExp(R"(#[^\n]*)");
+        commentRule.format.setForeground(QColor(121, 121, 121)); // grey
+        commentRule.format.setFontWeight(QFont::StyleItalic);
+        highlightRules.push_back(std::move(commentRule));
     }
 };
 CachedHighlightRules cachedRules;
