@@ -83,18 +83,16 @@ void NodeSurface::build(MaximCompiler::Transaction *transaction) {
 }
 
 void NodeSurface::doRuntimeUpdate() {
-    // flush the grid surfcaces
+    // flush the grid surfaces
     _grid.tryFlush();
     _wireGrid.tryFlush();
 
-    // todo: make this more efficient?
-    auto rootControls = root()->controls();
-    for (const auto &control : rootControls.sequence()) {
-        if (control->surface()->node()->surface() == this) {
-            control->doRuntimeUpdate();
-        }
-    }
     for (const auto &node : nodes().sequence()) {
+        if (auto controls = node->controls().value()) {
+            for (const auto &control : (*controls)->controls().sequence()) {
+                control->doRuntimeUpdate();
+            }
+        }
         node->doRuntimeUpdate();
     }
 }

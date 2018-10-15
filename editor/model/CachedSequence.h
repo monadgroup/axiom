@@ -4,6 +4,7 @@
 #include <QUuid>
 #include <vector>
 
+#include "../util.h"
 #include "IndexedSequence.h"
 #include "common/WatchSequenceOperators.h"
 
