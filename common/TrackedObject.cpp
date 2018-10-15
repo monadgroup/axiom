@@ -1,7 +1,5 @@
 #include "TrackedObject.h"
 
-#include <iostream>
-
 using namespace AxiomCommon;
 
 TrackedObjectManager TrackedObjectManager::main;
@@ -12,7 +10,6 @@ bool TrackedObjectManager::objectExists(AxiomCommon::TrackedObjectManager::Objec
 
 void TrackedObjectManager::allocateTrackedObject(AxiomCommon::TrackedObjectManager::ObjectId id) {
     map.emplace(id, MapEntry());
-    std::cout << map.size() << " TrackedObjects allocated after adding" << std::endl;
 }
 
 void TrackedObjectManager::removeTrackedObject(AxiomCommon::TrackedObjectManager::ObjectId id) {
@@ -23,7 +20,6 @@ void TrackedObjectManager::removeTrackedObject(AxiomCommon::TrackedObjectManager
         removeHandler.notifier->trackedObjectNotifyRemove(id, removeHandler.attachedData);
     }
     map.erase(iter);
-    std::cout << map.size() << " TrackedObjects allocated after removing" << std::endl;
 }
 
 void TrackedObjectManager::listenForRemove(AxiomCommon::TrackedObjectManager::ObjectId listenId,

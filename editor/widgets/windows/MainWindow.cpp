@@ -45,7 +45,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     setDockNestingEnabled(true);
     setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
-    /*auto startTime = std::chrono::high_resolution_clock::now();
+    auto startTime = std::chrono::high_resolution_clock::now();
     lockGlobalLibrary();
     // load the library - if the file does not exist, use an empty project
     auto library = loadGlobalLibrary();
@@ -64,9 +64,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     unlockGlobalLibrary();
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
-    std::cout << "Loading module library took " << duration.count() / 1000000000. << "s" << std::endl;*/
-
-    _library = std::make_unique<AxiomModel::Library>();
+    std::cout << "Loading module library took " << duration.count() / 1000000000. << "s" << std::endl;
 
     _library->changed.connect(this, &MainWindow::triggerLibraryChanged);
 
