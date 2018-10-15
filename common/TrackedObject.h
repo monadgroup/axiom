@@ -7,40 +7,9 @@
 
 namespace AxiomCommon {
 
-    class TrackedObject;
-
-    class TrackedObjectManager {
-    public:
-        using ObjectId = const TrackedObject *;
-
-    private:
-        struct RemoveHandler {
-            TrackedObject *notifier;
-            size_t attachedData;
-        };
-
-        struct MapEntry {
-            std::vector<RemoveHandler> removeHandlers;
-        };
-
-    public:
-        static TrackedObjectManager main;
-
-        bool objectExists(ObjectId id);
-
-        // not part of the public API, used by TrackedObject
-        void allocateTrackedObject(ObjectId id);
-        void removeTrackedObject(ObjectId id);
-
-        void listenForRemove(ObjectId listenId, TrackedObject *removeNotifierId, size_t attachedData);
-
-    private:
-        std::unordered_map<ObjectId, MapEntry> map;
-    };
-
     class TrackedObject {
     public:
-        explicit TrackedObject(TrackedObjectManager *manager = &TrackedObjectManager::main);
+        TrackedObject() = default;
 
         TrackedObject(const TrackedObject &a) = delete;
 
@@ -52,13 +21,19 @@ namespace AxiomCommon {
 
         virtual ~TrackedObject();
 
-        TrackedObjectManager *trackedObjectManager() const { return manager; }
+        void trackedObjectListenForRemove(TrackedObject *removeNotifier, size_t attachedData);
 
-        TrackedObjectManager::ObjectId trackedObjectId() const { return this; }
-
-        virtual void trackedObjectNotifyRemove(TrackedObjectManager::ObjectId, size_t) {}
+        virtual void trackedObjectNotifyRemove(TrackedObject *obj, size_t attachedData) {}
 
     private:
-        TrackedObjectManager *manager;
+        struct RemoveHandler {
+            TrackedObject *notifier;
+            size_t attachedData;
+        };
+        std::vector<RemoveHandler> removeHandlers;
+        std::vector<TrackedObject *> registeredEmitters;
+
+        void stopListeningForRemove(TrackedObject *removeNotifier);
+        void stopTrackingEmitter(TrackedObject *emitter);
     };
 }

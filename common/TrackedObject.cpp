@@ -1,36 +1,41 @@
 #include "TrackedObject.h"
 
+#include <iostream>
+
 using namespace AxiomCommon;
 
-TrackedObjectManager TrackedObjectManager::main;
-
-bool TrackedObjectManager::objectExists(AxiomCommon::TrackedObjectManager::ObjectId id) {
-    return map.find(id) != map.end();
-}
-
-void TrackedObjectManager::allocateTrackedObject(AxiomCommon::TrackedObjectManager::ObjectId id) {
-    map.emplace(id, MapEntry());
-}
-
-void TrackedObjectManager::removeTrackedObject(AxiomCommon::TrackedObjectManager::ObjectId id) {
-    auto iter = map.find(id);
-    auto removeHandlers = std::move(iter->second.removeHandlers);
-    for (const auto &removeHandler : removeHandlers) {
-        if (!objectExists(removeHandler.notifier)) continue;
-        removeHandler.notifier->trackedObjectNotifyRemove(id, removeHandler.attachedData);
-    }
-    map.erase(iter);
-}
-
-void TrackedObjectManager::listenForRemove(AxiomCommon::TrackedObjectManager::ObjectId listenId,
-                                           TrackedObject *removeNotifierId, size_t attachedData) {
-    map[listenId].removeHandlers.push_back({removeNotifierId, attachedData});
-}
-
-TrackedObject::TrackedObject(AxiomCommon::TrackedObjectManager *manager) : manager(manager) {
-    manager->allocateTrackedObject(this);
-}
-
 TrackedObject::~TrackedObject() {
-    manager->removeTrackedObject(this);
+    auto handlers = std::move(removeHandlers);
+    for (const auto &handler : handlers) {
+        handler.notifier->trackedObjectNotifyRemove(this, handler.attachedData);
+        handler.notifier->stopTrackingEmitter(this);
+    }
+
+    auto emitters = std::move(registeredEmitters);
+    for (const auto &emitter : emitters) {
+        emitter->stopListeningForRemove(this);
+    }
+}
+
+void TrackedObject::trackedObjectListenForRemove(AxiomCommon::TrackedObject *removeNotifier, size_t attachedData) {
+    removeHandlers.push_back({removeNotifier, attachedData});
+    removeNotifier->registeredEmitters.push_back(this);
+}
+
+void TrackedObject::stopListeningForRemove(AxiomCommon::TrackedObject *removeNotifier) {
+    for (auto it = removeHandlers.begin(); it != removeHandlers.end(); ++it) {
+        if (it->notifier == removeNotifier) {
+            removeHandlers.erase(it);
+            --it;
+        }
+    }
+}
+
+void TrackedObject::stopTrackingEmitter(AxiomCommon::TrackedObject *emitter) {
+    for (auto it = registeredEmitters.begin(); it != registeredEmitters.end(); ++it) {
+        if (*it == emitter) {
+            registeredEmitters.erase(it);
+            --it;
+        }
+    }
 }

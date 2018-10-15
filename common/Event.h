@@ -35,9 +35,7 @@ namespace AxiomCommon {
 
             void disconnect(EventId event) { connections.erase(event); }
 
-            void trackedObjectNotifyRemove(TrackedObjectManager::ObjectId id, EventId eventId) override {
-                disconnect(eventId);
-            }
+            void trackedObjectNotifyRemove(TrackedObject *, EventId eventId) override { disconnect(eventId); }
         };
 
     public:
@@ -52,7 +50,7 @@ namespace AxiomCommon {
         // provided object is destructed
         EventId connect(TrackedObject *obj, FuncType listener) {
             auto eventId = connect(std::move(listener));
-            obj->trackedObjectManager()->listenForRemove(obj, data.get(), eventId);
+            obj->trackedObjectListenForRemove(data.get(), eventId);
             return eventId;
         }
 
