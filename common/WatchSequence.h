@@ -25,45 +25,54 @@ namespace AxiomCommon {
     };
 
     template<class Sequence, class InputEvents>
-    class WatchEvents : public TrackedObject {
+    class WatchEvents {
     public:
         using InputItem = typename InputEvents::OutputItem;
         using OutputItem = typename Sequence::value_type;
         using ItemEvent = Event<OutputItem>;
 
+    private:
+        struct WatchEventsData : public TrackedObject {
+            Sequence sequence;
+            InputEvents inputEvents;
+            ItemEvent itemAdded;
+            ItemEvent itemRemoved;
+
+            WatchEventsData(Sequence sequence, InputEvents inputEvents)
+                : sequence(std::move(sequence)), inputEvents(std::move(inputEvents)) {}
+
+            void parentItemAdded(InputItem input) {
+                auto mappedValue = Sequence::Generator::mapFilter(sequence.manager, std::move(input));
+                if (mappedValue) {
+                    itemAdded(std::move(*mappedValue));
+                }
+            }
+
+            void parentItemRemoved(InputItem input) {
+                auto mappedValue = Sequence::Generator::mapFilter(sequence.manager, std::move(input));
+                if (mappedValue) {
+                    itemRemoved(std::move(*mappedValue));
+                }
+            }
+        };
+
+    public:
         WatchEvents(Sequence sequence, InputEvents inputEvents)
-            : _sequence(std::move(sequence)), _inputEvents(std::move(inputEvents)) {
-            _inputEvents.itemAdded().connect(this, &WatchEvents::parentItemAdded);
-            _inputEvents.itemRemoved().connect(this, &WatchEvents::parentItemRemoved);
+            : data(std::make_unique<WatchEventsData>(std::move(sequence), std::move(inputEvents))) {
+            data->inputEvents.itemAdded().connect(data.get(), &WatchEventsData::parentItemAdded);
+            data->inputEvents.itemRemoved().connect(data.get(), &WatchEventsData::parentItemRemoved);
         }
 
-        Event<OutputItem> &itemAdded() { return _itemAdded; }
+        Event<OutputItem> &itemAdded() { return data->itemAdded; }
 
-        const Event<OutputItem> &itemAdded() const { return _itemAdded; }
+        const Event<OutputItem> &itemAdded() const { return data->itemAdded; }
 
-        Event<OutputItem> &itemRemoved() { return _itemRemoved; }
+        Event<OutputItem> &itemRemoved() { return data->itemRemoved; }
 
-        const Event<OutputItem> &itemRemoved() const { return _itemRemoved; }
+        const Event<OutputItem> &itemRemoved() const { return data->itemRemoved; }
 
     private:
-        Sequence _sequence;
-        InputEvents _inputEvents;
-        Event<OutputItem> _itemAdded;
-        Event<OutputItem> _itemRemoved;
-
-        void parentItemAdded(InputItem input) {
-            auto mappedValue = Sequence::Generator::mapFilter(_sequence.manager, std::move(input));
-            if (mappedValue) {
-                _itemAdded(std::move(*mappedValue));
-            }
-        }
-
-        void parentItemRemoved(InputItem input) {
-            auto mappedValue = Sequence::Generator::mapFilter(_sequence.manager, std::move(input));
-            if (mappedValue) {
-                _itemRemoved(std::move(*mappedValue));
-            }
-        }
+        std::unique_ptr<WatchEventsData> data;
     };
 
     template<class W>

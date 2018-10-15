@@ -1,5 +1,7 @@
 #include "HistorySerializer.h"
 
+#include <iostream>
+
 #include "../../util.h"
 #include "../HistoryList.h"
 #include "../ModelRoot.h"

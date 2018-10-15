@@ -19,10 +19,7 @@ Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint
            QString name, const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
     : GridItem(&find(root->nodeSurfaces().sequence(), parentUuid)->grid(), pos, size, QSize(1, 1), selected),
       ModelObject(ModelType::NODE, uuid, parentUuid, root), _surface(find(root->nodeSurfaces().sequence(), parentUuid)),
-      _nodeType(nodeType), _name(std::move(name)), _controls(findLater(root->controlSurfaces(), controlsUuid)) {
-    std::cout << "Waiting for control with UUID " << controlsUuid.toString().toStdString() << std::endl;
-    _controls->then([](ControlSurface *) { std::cout << "Found control surface" << std::endl; });
-}
+      _nodeType(nodeType), _name(std::move(name)), _controls(findLater(root->controlSurfaces(), controlsUuid)) {}
 
 void Node::setName(const QString &name) {
     if (name != _name) {

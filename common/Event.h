@@ -1,6 +1,6 @@
 #pragma once
 
-#include <iostream>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -10,7 +10,11 @@
 namespace AxiomCommon {
 
     template<class... Args>
-    class Event : public TrackedObject {
+    class Event {
+    public:
+        using FuncType = std::function<void(Args...)>;
+        using EventId = typename SlotMap<FuncType>::key;
+
     private:
         struct EventRef {
             Event *event;
@@ -20,78 +24,68 @@ namespace AxiomCommon {
             void operator()(const Args &... params) { (*event)(std::forward<const Args &>(params)...); }
         };
 
-    public:
-        using FuncType = std::function<void(Args...)>;
-        using EventId = typename SlotMap<FuncType>::key;
+        struct EventData : public TrackedObject {
+            SlotMap<FuncType> connections;
 
-        Event() = default;
-
-        Event(Event &&) noexcept = default;
-
-        Event &operator=(Event &&) noexcept = default;
-
-        void operator()(const Args &... params) {
-            for (const auto &connection : connections) {
-                connection.value(params...);
+            void dispatch(const Args &... params) {
+                for (const auto &connection : connections) {
+                    connection.value(params...);
+                }
             }
-        }
+
+            void disconnect(EventId event) { connections.erase(event); }
+
+            void trackedObjectNotifyRemove(TrackedObjectManager::ObjectId id, EventId eventId) override {
+                disconnect(eventId);
+            }
+        };
+
+    public:
+        Event() : data(std::make_unique<EventData>()) {}
+
+        void operator()(const Args &... params) { data->dispatch(params...); }
 
         // call the provided function when the event is triggered
-        EventId connect(FuncType listener) { return connections.insert(std::move(listener)); }
+        EventId connect(FuncType listener) { return data->connections.insert(std::move(listener)); }
 
         // call the provided function when the event is triggered, automatically disconnecting when the
         // provided object is destructed
         EventId connect(TrackedObject *obj, FuncType listener) {
             auto eventId = connect(std::move(listener));
-            obj->trackedObjectManager()->listenForRemove(obj->trackedObjectId(), trackedObjectId(), eventId);
+            obj->trackedObjectManager()->listenForRemove(obj, data.get(), eventId);
             return eventId;
-        }
-
-        // call the provided function, passing in the follow instance even if it's moved
-        template<class TB>
-        EventId connect(TB *follow, std::function<void(TB *, Args...)> listener) {
-            auto followId = follow->trackedObjectId();
-            auto followManager = follow->trackedObjectManager();
-            return connect(follow,
-                           std::function<void(Args && ...)>([followId, followManager, listener](Args &&... params) {
-                               auto followReified = (TB *) followManager->getObject(followId);
-                               listener(followReified, std::forward<Args>(params)...);
-                           }));
         }
 
         // call the provided method, automatically disconnecting when the base object is destructed
         template<class TB, class TFB, class TR, class... TA>
         EventId connect(TB *follow, TR (TFB::*listener)(TA...)) {
-            return connect(follow, std::function<void(TB *, Args...)>([listener](TB *follow, Args... params) {
-                               auto wrapper = std::mem_fn(listener);
-                               applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-                           }));
+            return connect(follow, [follow, listener](Args... params) {
+                auto wrapper = std::mem_fn(listener);
+                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+            });
         }
 
         template<class TB, class TFB, class TR, class... TA>
         EventId connect(TB *follow, TR (TFB::*listener)(TA...) const) {
-            return connect(follow, std::function<void(TB *, Args...)>([listener](TB *follow, Args... params) {
-                               auto wrapper = std::mem_fn(listener);
-                               applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-                           }));
+            return connect(follow, [follow, listener](Args... params) {
+                auto wrapper = std::mem_fn(listener);
+                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+            });
         }
 
         // trigger the provided event when this event is triggered
         EventId forward(Event *event) {
-            return connect(event,
-                           std::function([](Event *evt, Args... params) { (*evt)(std::forward<Args>(params)...); }));
+            // data is guaranteed to not move
+            auto dataPtr = event->data.get();
+            return connect(dataPtr, [dataPtr](Args... params) { dataPtr->dispatch(params...); });
         }
 
-        void disconnect(EventId event) { connections.erase(event); }
+        void disconnect(EventId event) { data->disconnect(event); }
 
-        void disconnectAll() { connections.clear(); }
-
-        void trackedObjectNotifyRemove(TrackedObjectManager::ObjectId id, EventId eventId) override {
-            disconnect(eventId);
-        }
+        void disconnectAll() { data->connections.clear(); }
 
     private:
-        SlotMap<FuncType> connections;
+        std::unique_ptr<EventData> data;
 
         // Utilities that allow us to call a function with more arguments than it needs
         // e.g. calling void myFunc(int) as myFunc(5, "hello", 2.6);

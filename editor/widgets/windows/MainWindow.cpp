@@ -13,6 +13,7 @@
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
 #include <chrono>
+#include <iostream>
 
 #include "../GlobalActions.h"
 #include "../InteractiveImport.h"

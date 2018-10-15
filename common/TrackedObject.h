@@ -11,33 +11,31 @@ namespace AxiomCommon {
 
     class TrackedObjectManager {
     public:
+        using ObjectId = const TrackedObject *;
+
     private:
         struct RemoveHandler {
-            size_t notifier;
+            TrackedObject *notifier;
             size_t attachedData;
         };
 
         struct MapEntry {
-            TrackedObject *obj;
             std::vector<RemoveHandler> removeHandlers;
         };
 
     public:
-        using ObjectId = SlotMap<MapEntry>::key;
-
         static TrackedObjectManager main;
 
-        TrackedObject *getObject(ObjectId id);
+        bool objectExists(ObjectId id);
 
         // not part of the public API, used by TrackedObject
-        ObjectId allocateTrackedObject(TrackedObject *);
-        void moveTrackedObject(ObjectId id, TrackedObject *);
+        void allocateTrackedObject(ObjectId id);
         void removeTrackedObject(ObjectId id);
 
-        void listenForRemove(ObjectId listenId, ObjectId removeNotifierId, size_t attachedData);
+        void listenForRemove(ObjectId listenId, TrackedObject *removeNotifierId, size_t attachedData);
 
     private:
-        SlotMap<MapEntry> map;
+        std::unordered_map<ObjectId, MapEntry> map;
     };
 
     class TrackedObject {
@@ -46,23 +44,21 @@ namespace AxiomCommon {
 
         TrackedObject(const TrackedObject &a) = delete;
 
-        TrackedObject(TrackedObject &&a) noexcept;
+        TrackedObject(TrackedObject &&a) = delete;
 
         TrackedObject &operator=(const TrackedObject &a) = delete;
 
-        TrackedObject &operator=(TrackedObject &&a) noexcept;
+        TrackedObject &operator=(TrackedObject &&a) = delete;
 
         virtual ~TrackedObject();
 
         TrackedObjectManager *trackedObjectManager() const { return manager; }
 
-        TrackedObjectManager::ObjectId trackedObjectId() const { return objectId; }
+        TrackedObjectManager::ObjectId trackedObjectId() const { return this; }
 
         virtual void trackedObjectNotifyRemove(TrackedObjectManager::ObjectId, size_t) {}
 
     private:
-        bool hasMoved = false;
         TrackedObjectManager *manager;
-        TrackedObjectManager::ObjectId objectId;
     };
 }

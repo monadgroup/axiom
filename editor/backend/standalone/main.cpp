@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "../../AxiomApplication.h"
 #include "../../AxiomEditor.h"
 #include "../AudioBackend.h"

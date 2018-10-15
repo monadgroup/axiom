@@ -1,6 +1,7 @@
 #include "ModelRoot.h"
 
 #include <chrono>
+#include <iostream>
 
 #include "../backend/AudioBackend.h"
 #include "IdentityReferenceMapper.h"

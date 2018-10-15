@@ -17,7 +17,7 @@ namespace AxiomModel {
 
     class Action;
 
-    class HistoryList : public AxiomCommon::TrackedObject {
+    class HistoryList {
     public:
         AxiomCommon::Event<> stackChanged;
 

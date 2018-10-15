@@ -1,5 +1,7 @@
 #include "CustomNode.h"
 
+#include <iostream>
+
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../actions/CompositeAction.h"
