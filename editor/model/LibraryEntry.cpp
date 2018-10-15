@@ -12,7 +12,7 @@ LibraryEntry::LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &mod
       _modificationDateTime(modificationDateTime), _tags(std::move(tags)), _root(std::move(root)) {
     auto rootSurfaces = findChildren(_root->nodeSurfaces().sequence(), QUuid());
     assert(rootSurfaces.size() == 1);
-    _rootSurface = dynamic_cast<RootSurface *>(*AxiomCommon::takeAt(rootSurfaces, 0));
+    _rootSurface = dynamic_cast<RootSurface *>(*AxiomCommon::takeAt(std::move(rootSurfaces), 0));
     assert(_rootSurface);
 
     _root->history().stackChanged.connect(this, &LibraryEntry::modified);

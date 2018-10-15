@@ -2,6 +2,7 @@
 
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
+#include "../PromiseOperators.h"
 #include "../ReferenceMapper.h"
 #include "Control.h"
 #include "NodeSurface.h"
@@ -10,9 +11,10 @@ using namespace AxiomModel;
 
 Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &controlAUuid, const QUuid &controlBUuid,
                        AxiomModel::ModelRoot *root)
-    : ModelObject(ModelType::CONNECTION, uuid, parentUuid, root), _surface(find(root->nodeSurfaces(), parentUuid)),
-      _controlAUuid(controlAUuid), _controlBUuid(controlBUuid) {
-    all(findLater<Control *>(root->controls(), controlAUuid), findLater<Control *>(root->controls(), controlBUuid))
+    : ModelObject(ModelType::CONNECTION, uuid, parentUuid, root),
+      _surface(find(root->nodeSurfaces().sequence(), parentUuid)), _controlAUuid(controlAUuid),
+      _controlBUuid(controlBUuid) {
+    all(findLater(root->controls(), controlAUuid), findLater(root->controls(), controlBUuid))
         ->then([this](const std::tuple<Control *, Control *> &controls) {
             auto controlA = std::get<0>(controls);
             auto controlB = std::get<1>(controls);

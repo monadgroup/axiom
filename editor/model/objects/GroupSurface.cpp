@@ -9,7 +9,7 @@ using namespace AxiomModel;
 
 GroupSurface::GroupSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                            AxiomModel::ModelRoot *root)
-    : NodeSurface(uuid, parentUuid, pan, zoom, root), _node(find<GroupNode *>(root->nodes(), parentUuid)) {
+    : NodeSurface(uuid, parentUuid, pan, zoom, root), _node(find<GroupNode *>(root->nodes().sequence(), parentUuid)) {
     _node->nameChanged.forward(&nameChanged);
 }
 
@@ -22,9 +22,9 @@ QString GroupSurface::name() {
     return _node->name();
 }
 
-Sequence<QUuid> GroupSurface::compileLinks() {
-    return flatten(
-        std::array<Sequence<QUuid>, 2>{oneShot(node()->surface()->uuid()), node()->surface()->compileLinks()});
+AxiomCommon::BoxedSequence<QUuid> GroupSurface::compileLinks() {
+    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<QUuid>, 2>{
+        AxiomCommon::boxSequence(AxiomCommon::once(node()->surface()->uuid())), node()->surface()->compileLinks()}));
 }
 
 void GroupSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {

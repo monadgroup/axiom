@@ -11,7 +11,7 @@ using namespace AxiomModel;
 GroupNode::GroupNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                      const QUuid &controlsUuid, const QUuid &innerUuid, AxiomModel::ModelRoot *root)
     : Node(NodeType::GROUP_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
-      _nodes(findLater<GroupSurface *>(root->nodeSurfaces(), innerUuid)) {}
+      _nodes(findLater(AxiomCommon::dynamicCastWatch<GroupSurface *>(root->nodeSurfaces()), innerUuid)) {}
 
 std::unique_ptr<GroupNode> GroupNode::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                              bool selected, QString name, const QUuid &controlsUuid,
@@ -32,8 +32,9 @@ void GroupNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *sur
         subsurface->updateRuntimePointers(runtime, subsurfacePtr);
     });
     controls().then([this](ControlSurface *controlSurface) {
-        for (const auto &control : controlSurface->controls()) {
-            control->setRuntimePointers(find(root()->controls(), control->exposingUuid())->runtimePointers());
+        for (const auto &control : controlSurface->controls().sequence()) {
+            control->setRuntimePointers(
+                find(root()->controls().sequence(), control->exposingUuid())->runtimePointers());
         }
     });
 }

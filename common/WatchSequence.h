@@ -9,6 +9,7 @@ namespace AxiomCommon {
     class BaseWatchEvents {
     public:
         using OutputItem = Item;
+        using ItemEvent = Event<OutputItem>;
 
         Event<Item> &itemAdded() { return _itemAdded; }
 
@@ -28,9 +29,10 @@ namespace AxiomCommon {
     public:
         using InputItem = typename InputEvents::OutputItem;
         using OutputItem = typename Sequence::value_type;
+        using ItemEvent = Event<OutputItem>;
 
-        WatchEvents(Sequence &sequence, InputEvents inputEvents)
-            : _sequence(sequence), _inputEvents(std::move(inputEvents)) {
+        WatchEvents(Sequence sequence, InputEvents inputEvents)
+            : _sequence(std::move(sequence)), _inputEvents(std::move(inputEvents)) {
             _inputEvents.itemAdded().connect(this, &WatchEvents::parentItemAdded);
             _inputEvents.itemRemoved().connect(this, &WatchEvents::parentItemRemoved);
         }
@@ -44,7 +46,7 @@ namespace AxiomCommon {
         const Event<OutputItem> &itemRemoved() const { return _itemRemoved; }
 
     private:
-        Sequence &_sequence;
+        Sequence _sequence;
         InputEvents _inputEvents;
         Event<OutputItem> _itemAdded;
         Event<OutputItem> _itemRemoved;
@@ -69,6 +71,7 @@ namespace AxiomCommon {
     public:
         using WatchEvents = W;
         using OutputItem = typename WatchEvents::OutputItem;
+        using ItemEvent = Event<OutputItem>;
 
         explicit RefWatchEvents(WatchEvents *watchEvents) : watchEvents(watchEvents) {}
 
@@ -153,6 +156,14 @@ namespace AxiomCommon {
 
         WatchSequence(Sequence sequence, InputEvents events)
             : _sequence(std::move(sequence)), _events(_sequence, std::move(events)) {}
+
+        WatchSequence(const WatchSequence &) = delete;
+
+        WatchSequence(WatchSequence &&) noexcept = default;
+
+        WatchSequence &operator=(const WatchSequence &) = delete;
+
+        WatchSequence &operator=(WatchSequence &&) noexcept = default;
 
         Sequence &sequence() { return _sequence; }
 

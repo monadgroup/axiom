@@ -44,7 +44,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     setDockNestingEnabled(true);
     setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
-    auto startTime = std::chrono::high_resolution_clock::now();
+    /*auto startTime = std::chrono::high_resolution_clock::now();
     lockGlobalLibrary();
     // load the library - if the file does not exist, use an empty project
     auto library = loadGlobalLibrary();
@@ -63,7 +63,9 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     unlockGlobalLibrary();
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
-    std::cout << "Loading module library took " << duration.count() / 1000000000. << "s" << std::endl;
+    std::cout << "Loading module library took " << duration.count() / 1000000000. << "s" << std::endl;*/
+
+    _library = std::make_unique<AxiomModel::Library>();
 
     _library->changed.connect(this, &MainWindow::triggerLibraryChanged);
 
@@ -248,7 +250,7 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
 
     // find root surface and show it
     auto defaultSurface =
-        AxiomModel::getFirst(AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
+        AxiomCommon::getFirst(AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
     assert(defaultSurface->value());
     auto surfacePanel = showSurface(nullptr, *defaultSurface->value(), false, true);
 

@@ -4,6 +4,7 @@ set(SOURCE_FILES Cast.h
                  Promise.h
                  Sequence.h
                  SequenceOperators.h
+                 SingleIter.h
                  SlotMap.h
                  TrackedObject.h TrackedObject.cpp
                  WatchSequence.h

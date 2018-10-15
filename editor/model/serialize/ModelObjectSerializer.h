@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ModelObject.h"
+#include "common/SequenceOperators.h"
 #include <QtCore/QDataStream>
 #include <memory>
 
@@ -30,7 +31,7 @@ namespace AxiomModel {
 
         template<class T>
         void serializeChunk(QDataStream &stream, const QUuid &parent, T objects) {
-            stream << (uint32_t) objects.size();
+            stream << (uint32_t) AxiomCommon::refSequence(&objects).size();
             for (const auto &obj : objects) {
                 QByteArray objectBuffer;
                 QDataStream objectStream(&objectBuffer, QIODevice::WriteOnly);

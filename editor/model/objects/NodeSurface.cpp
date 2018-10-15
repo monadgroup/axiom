@@ -14,10 +14,14 @@ using namespace AxiomModel;
 
 NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                          AxiomModel::ModelRoot *root)
-    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root), _nodes(findChildrenWatch(root->nodes(), uuid)),
-      _connections(findChildrenWatch(root->connections(), uuid)), _grid(staticCastWatch<GridItem *>(_nodes), true),
+    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
+      _nodes(AxiomCommon::boxWatchSequence(findChildrenWatch(root->nodes(), uuid))),
+      _connections(AxiomCommon::boxWatchSequence(findChildrenWatch(root->connections(), uuid))),
+      _grid(AxiomCommon::boxWatchSequence(
+                AxiomCommon::staticCastWatch<GridItem *>(AxiomCommon::refWatchSequence(&_nodes))),
+            true),
       _pan(pan), _zoom(zoom) {
-    _nodes.itemAdded().connect(this, &NodeSurface::nodeAdded);
+    _nodes.events().itemAdded().connect(this, &NodeSurface::nodeAdded);
 }
 
 void NodeSurface::setPan(QPointF pan) {
@@ -35,34 +39,36 @@ void NodeSurface::setZoom(float zoom) {
     }
 }
 
-Sequence<ModelObject *> NodeSurface::getCopyItems() const {
+AxiomCommon::BoxedSequence<ModelObject *> NodeSurface::getCopyItems() {
     // we want to copy:
     // all nodes and their children (but NOT nodes that aren't copyable!)
     // all connections that connect to controls in nodes that are selected
 
-    auto copyNodes = filter(_nodes, [](Node *const &node) { return node->isSelected() && node->isCopyable(); });
-    auto poolSequence = dynamicCast<ModelObject *>(pool()->sequence().sequence());
-    auto copyChildren = flatten(map<Sequence<ModelObject *>, Sequence<Node *>>(
-        copyNodes.sequence(), [poolSequence](Node *const &node) -> Sequence<ModelObject *> {
-            return findDependents(poolSequence, node->uuid());
-        }));
-    auto copyControls = dynamicCast<Control *>(copyChildren);
+    auto copyNodes = AxiomCommon::filter(AxiomCommon::refSequence(&_nodes.sequence()),
+                                         [](Node *node) { return node->isSelected() && node->isCopyable(); });
+    auto poolSequence = AxiomCommon::dynamicCast<ModelObject *>(pool()->sequence().sequence());
+    auto copyChildren = AxiomCommon::flatten(
+        AxiomCommon::map(copyNodes, [poolSequence](Node *node) { return findDependents(poolSequence, node->uuid()); }));
+    auto copyControls = AxiomCommon::dynamicCast<Control *>(copyChildren);
     QSet<QUuid> controlUuids;
     for (const auto &control : copyControls) {
         controlUuids.insert(control->uuid());
     }
 
-    auto copyConnections = filter(_connections, [controlUuids](Connection *const &connection) {
-        return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
-    });
+    auto copyConnections =
+        AxiomCommon::filter(AxiomCommon::refSequence(&_connections.sequence()), [controlUuids](Connection *connection) {
+            return controlUuids.contains(connection->controlAUuid()) &&
+                   controlUuids.contains(connection->controlBUuid());
+        });
 
-    return flatten(
-        std::array<Sequence<ModelObject *>, 2>{copyChildren, staticCast<ModelObject *>(copyConnections).sequence()});
+    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
+        AxiomCommon::boxSequence(std::move(copyChildren)),
+        AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(copyConnections))}));
 }
 
 void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     _runtime = runtime;
-    for (const auto &node : nodes()) {
+    for (const auto &node : nodes().sequence()) {
         node->attachRuntime(runtime, transaction);
     }
 
@@ -72,7 +78,7 @@ void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::
 }
 
 void NodeSurface::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
-    for (const auto &node : nodes()) {
+    for (const auto &node : nodes().sequence()) {
         node->updateRuntimePointers(runtime, surfacePtr);
     }
 }
@@ -87,22 +93,22 @@ void NodeSurface::doRuntimeUpdate() {
     _wireGrid.tryFlush();
 
     // todo: make this more efficient?
-    for (const auto &control : root()->controls()) {
+    for (const auto &control : root()->controls().sequence()) {
         if (control->surface()->node()->surface() == this) {
             control->doRuntimeUpdate();
         }
     }
-    for (const auto &node : nodes()) {
+    for (const auto &node : nodes().sequence()) {
         node->doRuntimeUpdate();
     }
 }
 
 void NodeSurface::remove() {
-    while (!_nodes.empty()) {
-        (*_nodes.begin())->remove();
+    while (!_nodes.sequence().empty()) {
+        (*_nodes.sequence().begin())->remove();
     }
-    while (!_connections.empty()) {
-        (*_connections.begin())->remove();
+    while (!_connections.sequence().empty()) {
+        (*_connections.sequence().begin())->remove();
     }
     ModelObject::remove();
 }

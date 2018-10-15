@@ -110,7 +110,7 @@ namespace AxiomCommon {
 
         size_t size() {
             size_t acc = 0;
-            for (auto i = begin(); i != end(); i++) {
+            for (auto iter = begin(); iter != end(); ++iter) {
                 acc++;
             }
             return acc;
@@ -122,7 +122,7 @@ namespace AxiomCommon {
     class RefSequence {
     public:
         using Sequence = S;
-        using Item = typename Sequence::Item;
+        using Item = typename Sequence::value_type;
 
         using value_type = Item;
         using reference = value_type &;
@@ -270,7 +270,7 @@ namespace AxiomCommon {
         explicit BoxedSequence(Sequence sequence)
             : adapter(std::make_unique<SpecifiedBoxAdapter<Sequence>>(std::move(sequence))) {}
 
-        BoxedSequence(BoxedSequence &a) : adapter(a.adapter->clone()) {}
+        BoxedSequence(const BoxedSequence &a) : adapter(a.adapter->clone()) {}
 
         BoxedSequence(BoxedSequence &&) noexcept = default;
 

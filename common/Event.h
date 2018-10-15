@@ -77,7 +77,10 @@ namespace AxiomCommon {
         }
 
         // trigger the provided event when this event is triggered
-        EventId forward(Event *event) { return connect(event, std::function<void(const Args &...)>(EventRef(event))); }
+        EventId forward(Event *event) {
+            return connect(event,
+                           std::function([](Event *evt, Args... params) { (*evt)(std::forward<Args>(params)...); }));
+        }
 
         void disconnect(EventId event) { connections.erase(event); }
 

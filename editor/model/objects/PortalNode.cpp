@@ -1,6 +1,5 @@
 #include "PortalNode.h"
 
-#include "../WatchSequenceOperators.h"
 #include "Control.h"
 #include "ControlSurface.h"
 

@@ -76,11 +76,12 @@ std::unique_ptr<Control> ControlSerializer::deserialize(QDataStream &stream, uin
         // hot path if the exposer control happens to already exist
         exposerUuid = ref->mapUuid(maybeExposerUuid);
     } else if (!maybeExposerUuid.isNull()) {
-        auto controlSurface = findMaybe(root->controlSurfaces(), parentUuid);
+        auto controlSurface = findMaybe(root->controlSurfaces().sequence(), parentUuid);
         if (controlSurface) {
-            auto parentNode = findMaybe(root->nodes(), (*controlSurface)->parentUuid());
+            auto parentNode = findMaybe(root->nodes().sequence(), (*controlSurface)->parentUuid());
             if (parentNode) {
-                auto groupSurface = findMaybe<GroupSurface *>(root->nodeSurfaces(), (*parentNode)->parentUuid());
+                auto groupSurface =
+                    findMaybe<GroupSurface *>(root->nodeSurfaces().sequence(), (*parentNode)->parentUuid());
                 if (groupSurface && ref->isValid((*groupSurface)->parentUuid())) {
                     exposerUuid = ref->mapUuid(maybeExposerUuid);
                 }
@@ -205,7 +206,10 @@ std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
     if (version >= 5) {
         stream >> portalId;
     } else {
-        portalId = takeAt(dynamicCast<RootSurface *>(findChildren(root->nodeSurfaces(), QUuid())), 0)->takePortalId();
+        portalId =
+            (*takeAt(AxiomCommon::dynamicCast<RootSurface *>(findChildren(root->nodeSurfaces().sequence(), QUuid())),
+                     0))
+                ->takePortalId();
     }
 
     return PortalControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,

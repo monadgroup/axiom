@@ -17,10 +17,9 @@ using namespace AxiomModel;
 
 Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
            QString name, const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
-    : GridItem(&find(root->nodeSurfaces(), parentUuid)->grid(), pos, size, QSize(1, 1), selected),
-      ModelObject(ModelType::NODE, uuid, parentUuid, root), _surface(find(root->nodeSurfaces(), parentUuid)),
-      _nodeType(nodeType), _name(std::move(name)),
-      _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {
+    : GridItem(&find(root->nodeSurfaces().sequence(), parentUuid)->grid(), pos, size, QSize(1, 1), selected),
+      ModelObject(ModelType::NODE, uuid, parentUuid, root), _surface(find(root->nodeSurfaces().sequence(), parentUuid)),
+      _nodeType(nodeType), _name(std::move(name)), _controls(findLater(root->controlSurfaces(), controlsUuid)) {
     std::cout << "Waiting for control with UUID " << controlsUuid.toString().toStdString() << std::endl;
     _controls->then([](ControlSurface *) { std::cout << "Found control surface" << std::endl; });
 }
@@ -49,7 +48,7 @@ void Node::setActive(bool active) {
 void Node::startSize() {
     sizeStartRect = rect();
     if (controls().value()) {
-        for (const auto &control : (*controls().value())->controls()) {
+        for (const auto &control : (*controls().value())->controls().sequence()) {
             control->startDragging();
         }
     }
@@ -67,7 +66,7 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     // calculate controls bounding region
     auto controlsTopLeft = pos() + QPoint(size().width(), size().height());
     auto controlsBottomRight = pos();
-    for (auto &item : controlSurface->controls()) {
+    for (auto &item : controlSurface->controls().sequence()) {
         auto itemTopLeft = pos() + ControlSurface::controlToNodeFloor(item->pos());
         auto itemBottomRight = pos() + ControlSurface::controlToNodeCeil(
                                            item->pos() + QPoint(item->size().width(), item->size().height()));
@@ -100,13 +99,13 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
         QPoint(qMax(0, topLeft.x() - controlsTopLeft.x()) + qMin(0, bottomRight.x() - controlsBottomRight.x()),
                qMax(0, topLeft.y() - controlsTopLeft.y()) + qMin(0, bottomRight.y() - controlsBottomRight.y()));
     auto delta = ControlSurface::nodeToControl(initialPos - pos() + controlsShift);
-    for (auto &item : controlSurface->controls()) {
+    for (auto &item : controlSurface->controls().sequence()) {
         controlSurface->grid().grid().setRect(item->pos(), item->size(), nullptr);
     }
-    for (auto &item : controlSurface->controls()) {
+    for (auto &item : controlSurface->controls().sequence()) {
         item->setPos(item->pos() + delta, false, false);
     }
-    for (auto &item : controlSurface->controls()) {
+    for (auto &item : controlSurface->controls().sequence()) {
         controlSurface->grid().grid().setRect(item->pos(), item->size(), item);
     }
     controlSurface->grid().setDirty();
@@ -116,7 +115,7 @@ void Node::doSizeAction() {
     std::vector<std::unique_ptr<Action>> actions;
 
     if (controls().value()) {
-        for (const auto &control : (*controls().value())->controls()) {
+        for (const auto &control : (*controls().value())->controls().sequence()) {
             auto startSurfacePos = sizeStartRect.topLeft() * 2 + control->dragStartPos();
             auto endSurfacePos = pos() * 2 + control->pos();
 

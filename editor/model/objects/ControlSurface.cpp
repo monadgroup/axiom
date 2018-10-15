@@ -8,9 +8,12 @@
 using namespace AxiomModel;
 
 ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root)
-    : ModelObject(ModelType::CONTROL_SURFACE, uuid, parentUuid, root), _node(find(root->nodes(), parentUuid)),
-      _controls(findChildrenWatch(root->controls(), uuid)),
-      _grid(staticCastWatch<GridItem *>(_controls), false, QPoint(0, 0)) {
+    : ModelObject(ModelType::CONTROL_SURFACE, uuid, parentUuid, root),
+      _node(find(root->nodes().sequence(), parentUuid)),
+      _controls(AxiomCommon::boxWatchSequence(findChildrenWatch(root->controls(), uuid))),
+      _grid(AxiomCommon::boxWatchSequence(
+                AxiomCommon::staticCastWatch<GridItem *>(AxiomCommon::refWatchSequence(&_controls))),
+            false, QPoint(0, 0)) {
     _node->sizeChanged.connect(this, &ControlSurface::setSize);
     _node->deselected.connect(&_grid, &GridSurface::deselectAll);
     _grid.hasSelectionChanged.connect(this, [this](bool hasSelection) {
@@ -29,8 +32,8 @@ std::unique_ptr<ControlSurface> ControlSurface::create(const QUuid &uuid, const 
 }
 
 void ControlSurface::remove() {
-    while (!_controls.empty()) {
-        (*_controls.begin())->remove();
+    while (!_controls.sequence().empty()) {
+        (*_controls.sequence().begin())->remove();
     }
     ModelObject::remove();
 }

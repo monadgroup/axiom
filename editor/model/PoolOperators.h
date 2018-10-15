@@ -14,7 +14,7 @@ namespace AxiomModel {
         for (auto i = begin; i != end; i++) {
             auto item = *i;
             if (item->uuid() == uuid) {
-                return dynamic_cast<OutputItem>(item);
+                return AxiomCommon::wrapDynamicCast<OutputItem>(item);
             }
         }
         return std::optional<OutputItem>();
@@ -151,9 +151,12 @@ namespace AxiomModel {
     }
 
     template<class Sequence>
-    std::shared_ptr<AxiomCommon::Promise<typename Sequence::value_type>> findLater(Sequence input, QUuid uuid) {
-        return AxiomCommon::getFirst(AxiomCommon::filterWatch(
-            std::move(input), [uuid](const typename Sequence::value_type &base) { return base->uuid() == uuid; }));
+    std::shared_ptr<AxiomCommon::Promise<typename Sequence::Sequence::value_type>> findLater(Sequence input,
+                                                                                             QUuid uuid) {
+        return AxiomCommon::getFirst(
+            AxiomCommon::filterWatch(std::move(input), [uuid](const typename Sequence::Sequence::value_type &base) {
+                return base->uuid() == uuid;
+            }));
     }
 
     struct FindChildrenLambdaData {
@@ -204,23 +207,14 @@ namespace AxiomModel {
         };
 
         Data *data;
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
+        AxiomCommon::SingleIter<Item, typename Sequence::iterator> iter;
         QSet<QUuid> visitedIds;
 
-        explicit DependentsGenerator(Data *data)
-            : data(data), sequenceBegin(data->sequence.begin()), sequenceEnd(data->sequence.end()) {}
+        explicit DependentsGenerator(Data *data) : data(data), iter(data->sequence.begin(), data->sequence.end()) {}
 
         std::optional<Item> next() {
-            // Objects in a pool are always in heap-sorted order - this means that a child is _always_ after a parent
-            // in the array. We can take advantage of that here by doing a simple iteration over all items in the input
-            // pool, and checking to see if we've seen the items parent before, by keeping a set of all seen UUIDs.
-            // If we have seen the item before, it must be a dependent of the base item, so we yield it and add it to
-            // the set.
-
-            while (sequenceBegin != sequenceEnd) {
-                auto obj = std::move(*sequenceBegin);
-                sequenceBegin++;
+            while (auto nextVal = iter.next()) {
+                auto obj = std::move(**nextVal);
                 if (obj->uuid() == data->uuid || visitedIds.contains(obj->parentUuid())) {
                     visitedIds.insert(obj->uuid());
                     if (obj->uuid() != data->uuid || data->includeSelf) return std::move(obj);
@@ -251,18 +245,14 @@ namespace AxiomModel {
             Sequence sequence;
         };
 
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
+        AxiomCommon::SingleIter<Item, typename Sequence::iterator> iter;
         QSet<QUuid> seenIds;
 
-        explicit DistinctByUuidGenerator(Data *data)
-            : sequenceBegin(data->sequence.begin()), sequenceEnd(data->sequence.end()) {}
+        explicit DistinctByUuidGenerator(Data *data) : iter(data->sequence.begin(), data->sequence.end()) {}
 
         std::optional<Item> next() {
-            while (sequenceBegin != sequenceEnd) {
-                auto obj = std::move(*sequenceBegin);
-                sequenceBegin++;
-
+            while (auto nextVal = iter.next()) {
+                auto obj = std::move(**nextVal);
                 if (!seenIds.contains(obj->uuid())) {
                     seenIds.insert(obj->uuid());
                     return std::move(obj);

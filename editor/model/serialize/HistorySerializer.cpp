@@ -325,7 +325,9 @@ std::unique_ptr<CreatePortalNodeAction>
         stream >> nextPortalId;
     } else {
         nextPortalId =
-            takeAt(dynamicCast<RootSurface *>(findChildren(root->nodeSurfaces(), QUuid())), 0)->takePortalId();
+            (*takeAt(AxiomCommon::dynamicCast<RootSurface *>(findChildren(root->nodeSurfaces().sequence(), QUuid())),
+                     0))
+                ->takePortalId();
     }
 
     return CreatePortalNodeAction::create(uuid, parentUuid, pos, std::move(name), controlsUuid,

@@ -2,6 +2,7 @@
 
 #include "Cast.h"
 #include "Sequence.h"
+#include "SingleIter.h"
 
 namespace AxiomCommon {
     template<class Output>
@@ -50,11 +51,9 @@ namespace AxiomCommon {
         };
 
         Data *data;
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
+        SingleIter<Input, typename Sequence::iterator> iter;
 
-        explicit FilterMapGenerator(Data *data)
-            : data(data), sequenceBegin(data->sequence.begin()), sequenceEnd(data->sequence.end()) {}
+        explicit FilterMapGenerator(Data *data) : data(data), iter(data->sequence.begin(), data->sequence.end()) {}
 
         static Sequence &sequence(Manager &manager) { return manager.data.sequence; }
 
@@ -63,15 +62,11 @@ namespace AxiomCommon {
         }
 
         std::optional<Item> next() {
-            while (sequenceBegin != sequenceEnd) {
-                auto mappedValue = data->functor(std::move(*sequenceBegin));
-                sequenceBegin++;
-
-                if (mappedValue) {
+            while (auto nextVal = iter.next()) {
+                if (auto mappedValue = data->functor(std::move(**nextVal))) {
                     return mappedValue;
                 }
             }
-
             return std::nullopt;
         }
     };
@@ -90,11 +85,9 @@ namespace AxiomCommon {
         };
 
         Data *data;
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
+        SingleIter<Item, typename Sequence::iterator> iter;
 
-        explicit FilterGenerator(Data *data)
-            : data(data), sequenceBegin(data->sequence.begin()), sequenceEnd(data->sequence.end()) {}
+        explicit FilterGenerator(Data *data) : data(data), iter(data->sequence.begin(), data->sequence.end()) {}
 
         static Sequence &sequence(Manager &manager) { return manager.data.sequence; }
 
@@ -106,15 +99,11 @@ namespace AxiomCommon {
         }
 
         std::optional<Item> next() {
-            while (sequenceBegin != sequenceEnd) {
-                auto nextValue = std::move(*sequenceBegin);
-                sequenceBegin++;
-
-                if (data->functor(nextValue)) {
-                    return nextValue;
+            while (auto nextVal = iter.next()) {
+                if (data->functor(**nextVal)) {
+                    return std::move(**nextVal);
                 }
             }
-
             return std::nullopt;
         }
     };
@@ -133,11 +122,9 @@ namespace AxiomCommon {
         };
 
         Data *data;
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
+        SingleIter<Input, typename Sequence::iterator> iter;
 
-        explicit MapGenerator(Data *data)
-            : data(data), sequenceBegin(data->sequence.begin()), sequenceEnd(data->sequence.end()) {}
+        explicit MapGenerator(Data *data) : data(data), iter(data->sequence.begin(), data->sequence.end()) {}
 
         static Sequence &sequence(Manager &manager) { return manager.data.sequence; }
 
@@ -146,11 +133,8 @@ namespace AxiomCommon {
         }
 
         std::optional<Item> next() {
-            if (sequenceBegin != sequenceEnd) {
-                auto mappedValue = data->functor(std::move(*sequenceBegin));
-                sequenceBegin++;
-
-                return mappedValue;
+            if (auto nextVal = iter.next()) {
+                return data->functor(std::move(**nextVal));
             }
             return std::nullopt;
         }
@@ -167,30 +151,37 @@ namespace AxiomCommon {
             Sequence sequence;
         };
 
-        typename Sequence::iterator sequenceBegin;
-        typename Sequence::iterator sequenceEnd;
+        SingleIter<typename Sequence::value_type, typename Sequence::iterator> iter;
         std::optional<typename Sequence::value_type> innerSequence;
-        std::optional<typename Sequence::value_type::iterator> innerBegin;
-        std::optional<typename Sequence::value_type::iterator> innerEnd;
+        std::optional<SingleIter<Item, typename Sequence::value_type::iterator>> innerIter;
 
-        explicit FlattenGenerator(Data *data)
-            : sequenceBegin(data->sequence.begin()), sequenceEnd(data->sequence.end()) {}
+        explicit FlattenGenerator(Data *data) : iter(data->sequence.begin(), data->sequence.end()) {}
 
+    public:
         std::optional<Item> next() {
-            while (!innerBegin || !innerEnd || *innerBegin == *innerEnd) {
-                if (sequenceBegin == sequenceEnd) {
-                    return std::nullopt;
+            // update the inner sequence
+            std::optional<Item *> nextValue;
+            while (!nextValue) {
+                if (innerIter) {
+                    nextValue = innerIter->next();
                 }
 
-                innerSequence = std::move(*sequenceBegin);
-                innerBegin = innerSequence->begin();
-                innerEnd = innerSequence->end();
-                sequenceBegin++;
+                if (!nextValue) {
+                    auto nextSequence = iter.next();
+                    if (!nextSequence) {
+                        innerSequence.reset();
+                        innerIter.reset();
+                        return std::nullopt;
+                    }
+
+                    innerSequence = std::move(**nextSequence);
+                    innerIter = SingleIter<Item, typename Sequence::value_type::iterator>(innerSequence->begin(),
+                                                                                          innerSequence->end());
+                    nextValue = innerIter->next();
+                }
             }
 
-            auto innerValue = std::move(*innerBegin);
-            innerBegin++;
-            return innerValue;
+            return std::move(**nextValue);
         }
     };
 
@@ -204,21 +195,11 @@ namespace AxiomCommon {
             Collection *collection;
         };
 
-        typename Collection::iterator sequenceBegin;
-        typename Collection::iterator sequenceEnd;
+        SingleIter<typename Collection::value_type, typename Collection::iterator> iter;
 
-        explicit IterGenerator(Data *data)
-            : sequenceBegin(data->collection->begin()), sequenceEnd(data->collection->end()) {}
+        explicit IterGenerator(Data *data) : iter(data->collection->begin(), data->collection->end()) {}
 
-        std::optional<Item> next() {
-            if (sequenceBegin != sequenceEnd) {
-                auto nextValue = &*sequenceBegin;
-                sequenceBegin++;
-
-                return nextValue;
-            }
-            return std::nullopt;
-        }
+        std::optional<Item> next() { return iter.next(); }
     };
 
     template<class Collection>
@@ -231,21 +212,11 @@ namespace AxiomCommon {
             Collection collection;
         };
 
-        typename Collection::iterator sequenceBegin;
-        typename Collection::iterator sequenceEnd;
+        SingleIter<typename Collection::value_type, typename Collection::iterator> iter;
 
-        explicit IntoIterGenerator(Data *data)
-            : sequenceBegin(data->collection.begin()), sequenceEnd(data->collection.end()) {}
+        explicit IntoIterGenerator(Data *data) : iter(data->collection.begin(), data->collection.end()) {}
 
-        std::optional<Item *> next() {
-            if (sequenceBegin != sequenceEnd) {
-                auto nextValue = &*sequenceBegin;
-                sequenceBegin++;
-
-                return nextValue;
-            }
-            return std::nullopt;
-        }
+        std::optional<Item *> next() { return iter.next(); }
     };
 
     template<class InternalSequence, class FilterMapFunctor>

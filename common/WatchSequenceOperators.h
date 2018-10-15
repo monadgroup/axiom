@@ -25,7 +25,7 @@ namespace AxiomCommon {
 
     template<class Sequence, class FilterMapFunctor>
     FilterMapWatchSequence<Sequence, FilterMapFunctor> filterMapWatch(Sequence sequence, FilterMapFunctor functor) {
-        return WatchSequence(filterMap(std::move(sequence.sequence(), std::move(functor))),
+        return WatchSequence(filterMap(std::move(sequence.sequence()), std::move(functor)),
                              std::move(sequence.events()));
     }
 
@@ -55,29 +55,33 @@ namespace AxiomCommon {
     }
 
     template<class Sequence>
-    std::shared_ptr<AxiomCommon::Promise<typename Sequence::value_type>> getFirst(Sequence input) {
+    std::shared_ptr<AxiomCommon::Promise<typename Sequence::Sequence::value_type>> getFirst(Sequence input) {
+        using ValueType = typename Sequence::Sequence::value_type;
+
+        auto result = std::make_shared<AxiomCommon::Promise<ValueType>>();
+
         // if there is a first item, return that
-        auto firstItem = takeAt<Sequence &>(input, 0);
+        auto firstItem = takeAt(AxiomCommon::refSequence(&input.sequence()), 0);
         if (firstItem) {
-            return *firstItem;
+            result->resolve(*firstItem);
+            return result;
         }
 
         struct HandlerSharedData {
             Sequence input;
-            typename Sequence::ItemEvent::EventId eventId;
+            typename Sequence::Events::ItemEvent::EventId eventId;
+
+            explicit HandlerSharedData(Sequence input) : input(std::move(input)) {}
         };
 
         // put the input sequence on the heap so we can keep it around until the event has fired
-        auto sharedData = std::make_unique<HandlerSharedData>();
-        sharedData->input = std::move(input);
-
-        auto result = std::make_shared<AxiomCommon::Promise<typename Sequence::value_type>>();
+        auto sharedData = std::make_shared<HandlerSharedData>(std::move(input));
         sharedData->eventId =
-            sharedData->input.itemAdded.connect([result, sharedData](typename Sequence::value_type item) mutable {
-                result.resolve(std::move(item));
+            sharedData->input.events().itemAdded().connect([result, sharedData](ValueType item) mutable {
+                result->resolve(std::move(item));
 
                 // remove this event handler, which will in turn clear the shared data
-                sharedData->input.itemAdded.disconnect(sharedData->eventId);
+                sharedData->input.events().itemAdded().disconnect(sharedData->eventId);
             });
 
         return result;
