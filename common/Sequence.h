@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <tuple>
 #include <type_traits>
@@ -30,14 +31,14 @@ namespace AxiomCommon {
         bool ended() const { return !generator; }
 
         self_type operator++() {
-            self_type i = *this;
             increment();
-            return i;
+            return *this;
         }
 
         const self_type operator++(int) {
+            self_type i = *this;
             increment();
-            return *this;
+            return i;
         }
 
         bool operator==(const SequenceIterator &rhs) const {
