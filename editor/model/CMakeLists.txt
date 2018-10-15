@@ -1,7 +1,9 @@
 set(SOURCE_FILES
+        CachedSequence.h
         CloneReferenceMapper.cpp
         ConnectionWire.cpp
         HistoryList.cpp
+        IndexedSequence.h
         Library.cpp
         LibraryEntry.cpp
         ModelObject.cpp

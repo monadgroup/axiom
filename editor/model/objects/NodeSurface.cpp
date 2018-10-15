@@ -13,21 +13,12 @@ using namespace AxiomModel;
 
 NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                          AxiomModel::ModelRoot *root)
-    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root), _nodes(findChildrenWatch(root->nodes(), uuid)),
-      _connections(findChildrenWatch(root->connections(), uuid)),
-      _grid(AxiomCommon::boxWatchSequence(
-                AxiomCommon::staticCastWatch<GridItem *>(AxiomCommon::refWatchSequence(&_nodes))),
-            true),
-      _pan(pan), _zoom(zoom) {
+    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
+      _nodes(cacheSequence(findChildrenWatch(root->nodes(), uuid))),
+      _connections(cacheSequence(findChildrenWatch(root->connections(), uuid))),
+      _grid(AxiomCommon::boxWatchSequence(AxiomCommon::staticCastWatch<GridItem *>(_nodes.asRef())), true), _pan(pan),
+      _zoom(zoom) {
     _nodes.events().itemAdded().connect(this, &NodeSurface::nodeAdded);
-}
-
-NodeSurface::ChildCollection NodeSurface::nodes() {
-    return AxiomCommon::refWatchSequence(&_nodes);
-}
-
-NodeSurface::ConnectionCollection NodeSurface::connections() {
-    return AxiomCommon::refWatchSequence(&_connections);
 }
 
 void NodeSurface::setPan(QPointF pan) {
@@ -50,8 +41,8 @@ AxiomCommon::BoxedSequence<ModelObject *> NodeSurface::getCopyItems() {
     // all nodes and their children (but NOT nodes that aren't copyable!)
     // all connections that connect to controls in nodes that are selected
 
-    auto copyNodes = AxiomCommon::filter(AxiomCommon::refSequence(&_nodes.sequence()),
-                                         [](Node *node) { return node->isSelected() && node->isCopyable(); });
+    auto copyNodes =
+        AxiomCommon::filter(_nodes.sequence(), [](Node *node) { return node->isSelected() && node->isCopyable(); });
     auto poolSequence = AxiomCommon::dynamicCast<ModelObject *>(pool()->sequence().sequence());
     auto copyChildren = AxiomCommon::flatten(
         AxiomCommon::map(copyNodes, [poolSequence](Node *node) { return findDependents(poolSequence, node->uuid()); }));
@@ -61,11 +52,9 @@ AxiomCommon::BoxedSequence<ModelObject *> NodeSurface::getCopyItems() {
         controlUuids.insert(control->uuid());
     }
 
-    auto copyConnections =
-        AxiomCommon::filter(AxiomCommon::refSequence(&_connections.sequence()), [controlUuids](Connection *connection) {
-            return controlUuids.contains(connection->controlAUuid()) &&
-                   controlUuids.contains(connection->controlBUuid());
-        });
+    auto copyConnections = AxiomCommon::filter(_connections.sequence(), [controlUuids](Connection *connection) {
+        return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
+    });
 
     return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
         AxiomCommon::boxSequence(std::move(copyChildren)),
@@ -111,11 +100,13 @@ void NodeSurface::doRuntimeUpdate() {
 }
 
 void NodeSurface::remove() {
-    while (!_nodes.sequence().empty()) {
-        (*_nodes.sequence().begin())->remove();
+    auto nodes = findChildren(root()->nodes().sequence(), uuid());
+    while (!nodes.empty()) {
+        (*nodes.begin())->remove();
     }
-    while (!_connections.sequence().empty()) {
-        (*_connections.sequence().begin())->remove();
+    auto connections = findChildren(root()->connections().sequence(), uuid());
+    while (!connections.empty()) {
+        (*connections.begin())->remove();
     }
     ModelObject::remove();
 }

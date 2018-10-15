@@ -9,7 +9,7 @@ static PoolObject *deref(std::unique_ptr<PoolObject> *obj) {
 }
 
 Pool::Pool()
-    : _sequence(BaseSequence(AxiomCommon::map(AxiomCommon::iter(&objects), deref),
+    : _sequence(BaseSequence(indexSequence(AxiomCommon::map(AxiomCommon::iter(&objects), deref), &index),
                              AxiomCommon::BaseWatchEvents<PoolObject *>())) {}
 
 Pool::~Pool() {
@@ -19,6 +19,7 @@ Pool::~Pool() {
 PoolObject *Pool::registerObj(std::unique_ptr<AxiomModel::PoolObject> obj) {
     objects.push_back(std::move(obj));
     auto ptr = objects.back().get();
+    index.insert(ptr->uuid(), ptr);
     _sequence.events().itemAdded()(ptr);
     return ptr;
 }
@@ -31,6 +32,7 @@ std::unique_ptr<PoolObject> Pool::removeObj(AxiomModel::PoolObject *obj) {
     // move the object out of the array
     auto ownedObj = std::move(*ownedIndex);
     objects.erase(ownedIndex);
+    index.remove(ownedObj->uuid());
 
     // trigger itemRemoved after removing from the pool, so it can't be iterated over
     _sequence.events().itemRemoved()(ownedObj.get());

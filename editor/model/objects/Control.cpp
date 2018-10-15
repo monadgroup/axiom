@@ -97,7 +97,7 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
 
 ControlPrepare Control::buildControlPrepareAction(AxiomModel::Control::ControlType type, const QUuid &parentUuid,
                                                   AxiomModel::ModelRoot *root) {
-    auto controlSurface = find<ControlSurface *>(root->pool().sequence().sequence(), parentUuid);
+    auto controlSurface = find(root->controlSurfaces().sequence(), parentUuid);
     auto node = controlSurface->node();
     auto controlSurfaceSize = ControlSurface::nodeToControl(node->size());
 
@@ -218,7 +218,7 @@ void Control::updateSinkPos() {
 
 void Control::updateExposerRemoved() {
     if (!_exposingUuid.isNull()) {
-        auto baseControl = findMaybe(root()->controls().sequence(), _exposingUuid);
+        auto baseControl = root()->controls().sequence().find(_exposingUuid);
         if (baseControl) (*baseControl)->setExposerUuid(QUuid());
     }
 }

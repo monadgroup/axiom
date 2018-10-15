@@ -8,10 +8,10 @@ using namespace AxiomModel;
 
 ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::CONTROL_SURFACE, uuid, parentUuid, root),
-      _node(find(root->nodes().sequence(), parentUuid)), _controls(findChildrenWatch(root->controls(), uuid)),
-      _grid(AxiomCommon::boxWatchSequence(
-                AxiomCommon::staticCastWatch<GridItem *>(AxiomCommon::refWatchSequence(&_controls))),
-            false, QPoint(0, 0)) {
+      _node(find(root->nodes().sequence(), parentUuid)),
+      _controls(cacheSequence(findChildrenWatch(root->controls(), uuid))),
+      _grid(AxiomCommon::boxWatchSequence(AxiomCommon::staticCastWatch<GridItem *>(_controls.asRef())), false,
+            QPoint(0, 0)) {
     _node->sizeChanged.connect(this, &ControlSurface::setSize);
     _node->deselected.connect(&_grid, &GridSurface::deselectAll);
     _grid.hasSelectionChanged.connect(this, [this](bool hasSelection) {
@@ -29,13 +29,10 @@ std::unique_ptr<ControlSurface> ControlSurface::create(const QUuid &uuid, const 
     return std::make_unique<ControlSurface>(uuid, parentUuid, root);
 }
 
-ControlSurface::ChildCollection ControlSurface::controls() {
-    return AxiomCommon::refWatchSequence(&_controls);
-}
-
 void ControlSurface::remove() {
-    while (!_controls.sequence().empty()) {
-        (*_controls.sequence().begin())->remove();
+    auto controls = findChildren(root()->controls().sequence(), uuid());
+    while (!controls.empty()) {
+        (*controls.begin())->remove();
     }
     ModelObject::remove();
 }

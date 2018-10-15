@@ -18,10 +18,11 @@ std::unique_ptr<DeleteGraphPointAction> DeleteGraphPointAction::create(const QUu
 }
 
 void DeleteGraphPointAction::forward(bool, std::vector<QUuid> &) {
-    find<GraphControl *>(root()->pool().sequence().sequence(), _controlUuid)->removePoint(_index);
+    find(AxiomCommon::dynamicCast<GraphControl *>(root()->pool().sequence().sequence()), _controlUuid)
+        ->removePoint(_index);
 }
 
 void DeleteGraphPointAction::backward(std::vector<QUuid> &) {
-    find<GraphControl *>(root()->pool().sequence().sequence(), _controlUuid)
+    find(AxiomCommon::dynamicCast<GraphControl *>(root()->pool().sequence().sequence()), _controlUuid)
         ->insertPoint((uint8_t)(_index - 1), _time, _val, _tension, _state);
 }

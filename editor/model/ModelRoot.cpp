@@ -58,7 +58,7 @@ void ModelRoot::applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Tra
 
         if (processedItems.contains(item)) continue;
         processedItems.insert(item);
-        if (auto object = findMaybe<ModelObject *>(pool().sequence().sequence(), item)) {
+        if (auto object = AxiomCommon::dynamicCast<ModelObject *>(pool().sequence().sequence()).find(item)) {
             inputItems.push_back(*object);
 
             for (const auto &linked : (*object)->compileLinks()) {

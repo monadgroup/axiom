@@ -76,12 +76,12 @@ std::unique_ptr<Control> ControlSerializer::deserialize(QDataStream &stream, uin
         // hot path if the exposer control happens to already exist
         exposerUuid = ref->mapUuid(maybeExposerUuid);
     } else if (!maybeExposerUuid.isNull()) {
-        auto controlSurface = findMaybe(root->controlSurfaces().sequence(), parentUuid);
+        auto controlSurface = root->controlSurfaces().sequence().find(parentUuid);
         if (controlSurface) {
-            auto parentNode = findMaybe(root->nodes().sequence(), (*controlSurface)->parentUuid());
+            auto parentNode = root->nodes().sequence().find((*controlSurface)->parentUuid());
             if (parentNode) {
-                auto groupSurface =
-                    findMaybe<GroupSurface *>(root->nodeSurfaces().sequence(), (*parentNode)->parentUuid());
+                auto groupSurface = AxiomCommon::dynamicCast<GroupSurface *>(root->nodeSurfaces().sequence())
+                                        .find((*parentNode)->parentUuid());
                 if (groupSurface && ref->isValid((*groupSurface)->parentUuid())) {
                     exposerUuid = ref->mapUuid(maybeExposerUuid);
                 }

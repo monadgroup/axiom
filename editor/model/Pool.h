@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_set>
 
+#include "IndexedSequence.h"
 #include "PoolObject.h"
 #include "common/WatchSequence.h"
 #include "common/WatchSequenceOperators.h"
@@ -15,7 +16,7 @@ namespace AxiomModel {
     class Pool {
         using IterSequence = AxiomCommon::IterSequence<std::vector<std::unique_ptr<PoolObject>>>;
         using BaseSequence = AxiomCommon::BaseWatchSequence<
-            AxiomCommon::MapSequence<IterSequence, PoolObject *(*) (std::unique_ptr<PoolObject> *)>,
+            IndexedSequence<AxiomCommon::MapSequence<IterSequence, PoolObject *(*) (std::unique_ptr<PoolObject> *)>>,
             AxiomCommon::BaseWatchEvents<PoolObject *>>;
 
     public:
@@ -35,6 +36,7 @@ namespace AxiomModel {
 
     private:
         std::vector<std::unique_ptr<PoolObject>> objects;
+        QHash<QUuid, PoolObject *> index;
         BaseSequence _sequence;
     };
 }

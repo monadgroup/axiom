@@ -19,9 +19,11 @@ std::unique_ptr<SetNumRangeAction> SetNumRangeAction::create(const QUuid &uuid, 
 }
 
 void SetNumRangeAction::forward(bool, std::vector<QUuid> &) {
-    find<NumControl *>(root()->controls().sequence(), _uuid)->setRange(_afterMin, _afterMax, _afterStep);
+    find(AxiomCommon::dynamicCast<NumControl *>(root()->controls().sequence()), _uuid)
+        ->setRange(_afterMin, _afterMax, _afterStep);
 }
 
 void SetNumRangeAction::backward(std::vector<QUuid> &) {
-    find<NumControl *>(root()->controls().sequence(), _uuid)->setRange(_beforeMin, _beforeMax, _beforeStep);
+    find(AxiomCommon::dynamicCast<NumControl *>(root()->controls().sequence()), _uuid)
+        ->setRange(_beforeMin, _beforeMax, _beforeStep);
 }

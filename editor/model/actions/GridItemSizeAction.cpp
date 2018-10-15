@@ -16,9 +16,9 @@ std::unique_ptr<GridItemSizeAction> GridItemSizeAction::create(const QUuid &uuid
 }
 
 void GridItemSizeAction::forward(bool, std::vector<QUuid> &) {
-    find<GridItem *>(root()->pool().sequence().sequence(), _uuid)->setRect(_afterRect);
+    find(AxiomCommon::dynamicCast<GridItem *>(root()->pool().sequence().sequence()), _uuid)->setRect(_afterRect);
 }
 
 void GridItemSizeAction::backward(std::vector<QUuid> &) {
-    find<GridItem *>(root()->pool().sequence().sequence(), _uuid)->setRect(_beforeRect);
+    find(AxiomCommon::dynamicCast<GridItem *>(root()->pool().sequence().sequence()), _uuid)->setRect(_beforeRect);
 }

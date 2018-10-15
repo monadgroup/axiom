@@ -16,6 +16,8 @@ namespace AxiomCommon {
 
         explicit BlankGenerator(Data *) {}
 
+        static std::optional<Item> find(Manager &manager, const QUuid &id) { return std::nullopt; }
+
         std::optional<Item> next() { return std::nullopt; }
     };
 
@@ -29,6 +31,8 @@ namespace AxiomCommon {
         std::optional<Item> item;
 
         explicit OnceGenerator(Item *item) : item(*item) {}
+
+        static std::optional<Item> find(Manager &manager, const QUuid &id) { return std::nullopt; }
 
         std::optional<Item> next() {
             auto val = std::move(item);
@@ -59,6 +63,13 @@ namespace AxiomCommon {
 
         static std::optional<Item> mapFilter(Manager &manager, Input input) {
             return manager.data.functor(std::move(input));
+        }
+
+        static std::optional<Item> find(Manager &manager, const QUuid &id) {
+            if (auto internalFound = manager.data.sequence.find(id)) {
+                return mapFilter(manager, std::move(*internalFound));
+            } else
+                return std::nullopt;
         }
 
         std::optional<Item> next() {
@@ -98,6 +109,13 @@ namespace AxiomCommon {
                 return std::nullopt;
         }
 
+        static std::optional<Item> find(Manager &manager, const QUuid &id) {
+            if (auto internalFound = manager.data.sequence.find(id)) {
+                return mapFilter(manager, std::move(*internalFound));
+            } else
+                return std::nullopt;
+        }
+
         std::optional<Item> next() {
             while (auto nextVal = iter.next()) {
                 if (data->functor(**nextVal)) {
@@ -132,6 +150,13 @@ namespace AxiomCommon {
             return manager.data.functor(std::move(input));
         }
 
+        static std::optional<Item> find(Manager &manager, const QUuid &id) {
+            if (auto internalFound = manager.data.sequence.find(id)) {
+                return mapFilter(manager, std::move(*internalFound));
+            } else
+                return std::nullopt;
+        }
+
         std::optional<Item> next() {
             if (auto nextVal = iter.next()) {
                 return data->functor(std::move(**nextVal));
@@ -157,7 +182,8 @@ namespace AxiomCommon {
 
         explicit FlattenGenerator(Data *data) : iter(data->sequence.begin(), data->sequence.end()) {}
 
-    public:
+        static std::optional<Item> find(Manager &manager, const QUuid &id) { return std::nullopt; }
+
         std::optional<Item> next() {
             // update the inner sequence
             std::optional<Item *> nextValue;

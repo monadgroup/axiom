@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QtCore/QUuid>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -116,6 +117,8 @@ namespace AxiomCommon {
             }
             return acc;
         }
+
+        std::optional<Item> find(const QUuid &id) { return Generator::find(manager, id); }
     };
 
     // provides a sequence interface backed up by a reference to a sequence
@@ -141,6 +144,8 @@ namespace AxiomCommon {
         bool empty() const { return seq->empty(); }
 
         size_t size() { return seq->size(); }
+
+        std::optional<Item> find(const QUuid &id) { return seq->find(id); }
 
     private:
         Sequence *seq;
@@ -233,6 +238,7 @@ namespace AxiomCommon {
             virtual std::unique_ptr<IteratorAdapter<I>> end() = 0;
             virtual bool empty() = 0;
             virtual size_t size() = 0;
+            virtual std::optional<I> find(const QUuid &id) = 0;
         };
 
         template<class Sequence>
@@ -255,6 +261,8 @@ namespace AxiomCommon {
             bool empty() override { return sequence.empty(); }
 
             size_t size() override { return sequence.size(); }
+
+            std::optional<I> find(const QUuid &id) override { return sequence.find(id); }
         };
 
     public:
@@ -289,6 +297,8 @@ namespace AxiomCommon {
         bool empty() const { return adapter->empty(); }
 
         size_t size() const { return adapter->size(); }
+
+        std::optional<Item> find(const QUuid &id) { return adapter->find(id); }
 
     private:
         std::unique_ptr<BoxAdapter> adapter;
