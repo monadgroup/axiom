@@ -93,7 +93,8 @@ void NodeSurface::doRuntimeUpdate() {
     _wireGrid.tryFlush();
 
     // todo: make this more efficient?
-    for (const auto &control : root()->controls().sequence()) {
+    auto rootControls = root()->controls();
+    for (const auto &control : rootControls.sequence()) {
         if (control->surface()->node()->surface() == this) {
             control->doRuntimeUpdate();
         }
