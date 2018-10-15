@@ -21,13 +21,14 @@ namespace AxiomModel {
     class GridSurface : public AxiomCommon::TrackedObject {
     public:
         using ItemGrid = Grid<GridItem>;
-        using ItemCollection = AxiomCommon::BoxedWatchSequence<GridItem *>;
+        using BoxedItemCollection = AxiomCommon::BoxedWatchSequence<GridItem *>;
+        using ItemCollection = AxiomCommon::RefWatchSequence<BoxedItemCollection>;
 
         AxiomCommon::Event<GridItem *> itemAdded;
         AxiomCommon::Event<bool> hasSelectionChanged;
         AxiomCommon::Event<> gridChanged;
 
-        GridSurface(ItemCollection view, bool deferDirty, QPoint minRect = QPoint(INT_MIN, INT_MIN),
+        GridSurface(BoxedItemCollection view, bool deferDirty, QPoint minRect = QPoint(INT_MIN, INT_MIN),
                     QPoint maxRect = QPoint(INT_MAX, INT_MAX));
 
         template<class T>
@@ -45,13 +46,9 @@ namespace AxiomModel {
 
         const ItemGrid &grid() const { return _grid; }
 
-        ItemCollection &items() { return _items; }
+        ItemCollection items();
 
-        const ItemCollection &items() const { return _items; }
-
-        ItemCollection &selectedItems() { return _selectedItems; }
-
-        const ItemCollection &selectedItems() const { return _selectedItems; }
+        ItemCollection selectedItems();
 
         bool hasSelection() const { return !_selectedItems.sequence().empty(); }
 
@@ -71,8 +68,8 @@ namespace AxiomModel {
 
     private:
         Grid<GridItem> _grid;
-        ItemCollection _items;
-        ItemCollection _selectedItems;
+        BoxedItemCollection _items;
+        BoxedItemCollection _selectedItems;
         bool _deferDirty;
         bool _isDirty = false;
 

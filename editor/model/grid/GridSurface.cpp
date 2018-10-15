@@ -5,12 +5,20 @@
 
 using namespace AxiomModel;
 
-GridSurface::GridSurface(ItemCollection view, bool deferDirty, QPoint minRect, QPoint maxRect)
+GridSurface::GridSurface(BoxedItemCollection view, bool deferDirty, QPoint minRect, QPoint maxRect)
     : _grid(minRect, maxRect), _items(std::move(view)),
       _selectedItems(AxiomCommon::boxWatchSequence(AxiomCommon::filterWatch(
           AxiomCommon::refWatchSequence(&_items), [](GridItem *itm) { return itm->isSelected(); }))),
       _deferDirty(deferDirty) {
     _items.events().itemAdded().connect(this, &GridSurface::handleItemAdded);
+}
+
+GridSurface::ItemCollection GridSurface::items() {
+    return AxiomCommon::refWatchSequence(&_items);
+}
+
+GridSurface::ItemCollection GridSurface::selectedItems() {
+    return AxiomCommon::refWatchSequence(&_selectedItems);
 }
 
 void GridSurface::selectAll() {

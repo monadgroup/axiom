@@ -1,7 +1,6 @@
 #include "NodeSurface.h"
 
 #include "../ModelRoot.h"
-#include "../PoolOperators.h"
 #include "Connection.h"
 #include "ControlSurface.h"
 #include "GroupSurface.h"
@@ -14,14 +13,21 @@ using namespace AxiomModel;
 
 NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                          AxiomModel::ModelRoot *root)
-    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root),
-      _nodes(AxiomCommon::boxWatchSequence(findChildrenWatch(root->nodes(), uuid))),
-      _connections(AxiomCommon::boxWatchSequence(findChildrenWatch(root->connections(), uuid))),
+    : ModelObject(ModelType::NODE_SURFACE, uuid, parentUuid, root), _nodes(findChildrenWatch(root->nodes(), uuid)),
+      _connections(findChildrenWatch(root->connections(), uuid)),
       _grid(AxiomCommon::boxWatchSequence(
                 AxiomCommon::staticCastWatch<GridItem *>(AxiomCommon::refWatchSequence(&_nodes))),
             true),
       _pan(pan), _zoom(zoom) {
     _nodes.events().itemAdded().connect(this, &NodeSurface::nodeAdded);
+}
+
+NodeSurface::ChildCollection NodeSurface::nodes() {
+    return AxiomCommon::refWatchSequence(&_nodes);
+}
+
+NodeSurface::ConnectionCollection NodeSurface::connections() {
+    return AxiomCommon::refWatchSequence(&_connections);
 }
 
 void NodeSurface::setPan(QPointF pan) {

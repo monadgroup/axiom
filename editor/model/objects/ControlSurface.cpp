@@ -1,7 +1,6 @@
 #include "ControlSurface.h"
 
 #include "../ModelRoot.h"
-#include "../PoolOperators.h"
 #include "Control.h"
 #include "Node.h"
 
@@ -9,8 +8,7 @@ using namespace AxiomModel;
 
 ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root)
     : ModelObject(ModelType::CONTROL_SURFACE, uuid, parentUuid, root),
-      _node(find(root->nodes().sequence(), parentUuid)),
-      _controls(AxiomCommon::boxWatchSequence(findChildrenWatch(root->controls(), uuid))),
+      _node(find(root->nodes().sequence(), parentUuid)), _controls(findChildrenWatch(root->controls(), uuid)),
       _grid(AxiomCommon::boxWatchSequence(
                 AxiomCommon::staticCastWatch<GridItem *>(AxiomCommon::refWatchSequence(&_controls))),
             false, QPoint(0, 0)) {
@@ -29,6 +27,10 @@ ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, Axiom
 std::unique_ptr<ControlSurface> ControlSurface::create(const QUuid &uuid, const QUuid &parentUuid,
                                                        AxiomModel::ModelRoot *root) {
     return std::make_unique<ControlSurface>(uuid, parentUuid, root);
+}
+
+ControlSurface::ChildCollection ControlSurface::controls() {
+    return AxiomCommon::refWatchSequence(&_controls);
 }
 
 void ControlSurface::remove() {

@@ -1,10 +1,12 @@
 #pragma once
 
 #include "../ModelObject.h"
+#include "../PoolOperators.h"
 #include "../WireGrid.h"
 #include "../grid/GridSurface.h"
 #include "common/Event.h"
 #include "common/WatchSequence.h"
+#include <editor/model/ModelRoot.h>
 
 namespace MaximCompiler {
     class Runtime;
@@ -20,9 +22,12 @@ namespace AxiomModel {
     class Connection;
 
     class NodeSurface : public ModelObject {
+        using InternalChildCollection = FindChildrenWatchSequence<ModelRoot::NodeCollection>;
+        using InternalConnectionCollection = FindChildrenWatchSequence<ModelRoot::ConnectionCollection>;
+
     public:
-        using ChildCollection = AxiomCommon::BoxedWatchSequence<Node *>;
-        using ConnectionCollection = AxiomCommon::BoxedWatchSequence<Connection *>;
+        using ChildCollection = AxiomCommon::RefWatchSequence<InternalChildCollection>;
+        using ConnectionCollection = AxiomCommon::RefWatchSequence<InternalConnectionCollection>;
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<const QPointF &> panChanged;
@@ -30,13 +35,9 @@ namespace AxiomModel {
 
         NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
 
-        ChildCollection &nodes() { return _nodes; }
+        ChildCollection nodes();
 
-        const ChildCollection &nodes() const { return _nodes; }
-
-        ConnectionCollection &connections() { return _connections; }
-
-        const ConnectionCollection &connections() const { return _connections; }
+        ConnectionCollection connections();
 
         GridSurface &grid() { return _grid; }
 
@@ -75,8 +76,8 @@ namespace AxiomModel {
         void remove() override;
 
     private:
-        ChildCollection _nodes;
-        ConnectionCollection _connections;
+        InternalChildCollection _nodes;
+        InternalConnectionCollection _connections;
         GridSurface _grid;
         WireGrid _wireGrid;
         QPointF _pan;
