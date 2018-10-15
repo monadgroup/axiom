@@ -201,14 +201,14 @@ namespace AxiomCommon {
         IteratorAdapterIterator &operator=(IteratorAdapterIterator &&a) noexcept = default;
 
         self_type operator++() {
-            self_type i = *this;
             adapter->increment();
-            return i;
+            return *this;
         }
 
         const self_type operator++(int) {
+            self_type i = *this;
             adapter->increment();
-            return *this;
+            return i;
         }
 
         bool operator==(const IteratorAdapterIterator &rhs) const { return adapter->equals(rhs.adapter.get()); }
