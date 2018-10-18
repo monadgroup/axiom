@@ -30,6 +30,6 @@ namespace AxiomModel {
         QUuid _uuid;
         QByteArray _buffer;
 
-        AxiomCommon::BoxedSequence<ModelObject *> getLinkedItems(const QUuid &seed) const;
+        std::vector<ModelObject *> getLinkedItems(const QUuid &seed) const;
     };
 }

@@ -22,7 +22,7 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
 }
 
 void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
-    auto sortedItems = heapSort(AxiomCommon::collect(getLinkedItems(_uuid)));
+    auto sortedItems = heapSort(getLinkedItems(_uuid));
 
     QDataStream stream(&_buffer, QIODevice::WriteOnly);
     ModelObjectSerializer::serializeChunk(stream, QUuid(), sortedItems);
@@ -69,13 +69,20 @@ void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
     }
 }
 
-AxiomCommon::BoxedSequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &seed) const {
-    auto dependents =
-        findDependents(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), seed);
-    auto links = AxiomCommon::flatten(AxiomCommon::map(dependents, [](ModelObject *obj) { return obj->links(); }));
-    auto linkDependents =
-        AxiomCommon::flatten(AxiomCommon::map(links, [this](ModelObject *obj) { return getLinkedItems(obj->uuid()); }));
-    return AxiomCommon::boxSequence(
-        distinctByUuid(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
-            AxiomCommon::boxSequence(dependents), AxiomCommon::boxSequence(linkDependents)})));
+std::vector<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &seed) const {
+    auto dependents = AxiomCommon::collect(
+        findDependents(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), seed));
+    auto links = AxiomCommon::flatten(
+        AxiomCommon::map(AxiomCommon::refSequence(&dependents), [](ModelObject *obj) { return obj->links(); }));
+    auto linkDependents = AxiomCommon::collect(AxiomCommon::flatten(
+        AxiomCommon::map(links, [this](ModelObject *obj) { return getLinkedItems(obj->uuid()); })));
+
+    std::vector<ModelObject *> subSequences;
+    subSequences.reserve(links.size() + linkDependents.size());
+
+    std::back_insert_iterator<std::vector<ModelObject *>> iter(subSequences);
+    std::copy(dependents.begin(), dependents.end(), iter);
+    std::copy(linkDependents.begin(), linkDependents.end(), iter);
+
+    return AxiomCommon::collect(distinctByUuid(std::move(subSequences)));
 }
