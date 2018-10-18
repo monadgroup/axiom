@@ -1,5 +1,7 @@
 #include "CustomNode.h"
 
+#include <iostream>
+
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../actions/CompositeAction.h"
@@ -22,7 +24,7 @@ CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
     : Node(NodeType::CUSTOM_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
       _code(std::move(code)), _isPanelOpen(panelOpen), _panelHeight(panelHeight) {
     controls().then([this](ControlSurface *controls) {
-        controls->controls().itemAdded.connect(this, &CustomNode::surfaceControlAdded);
+        controls->controls().events().itemAdded().connect(this, &CustomNode::surfaceControlAdded);
     });
 }
 
@@ -36,7 +38,7 @@ std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &p
 void CustomNode::setCode(const QString &code) {
     if (_code != code) {
         _code = code;
-        codeChanged.trigger(code);
+        codeChanged(code);
 
         if (runtimeId) {
             buildCode();
@@ -56,16 +58,16 @@ void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
 void CustomNode::setPanelOpen(bool panelOpen) {
     if (_isPanelOpen != panelOpen) {
         _isPanelOpen = panelOpen;
-        panelOpenChanged.trigger(panelOpen);
+        panelOpenChanged(panelOpen);
     }
 }
 
 void CustomNode::setPanelHeight(float panelHeight) {
     if (panelHeight < minPanelHeight) panelHeight = minPanelHeight;
     if (_panelHeight != panelHeight) {
-        beforePanelHeightChanged.trigger(panelHeight);
+        beforePanelHeightChanged(panelHeight);
         _panelHeight = panelHeight;
-        panelHeightChanged.trigger(panelHeight);
+        panelHeightChanged(panelHeight);
     }
 }
 
@@ -91,7 +93,7 @@ void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *su
     auto runtimeId = getRuntimeId();
 
     controls().then([blockPtr, runtime, runtimeId](ControlSurface *controlSurface) {
-        for (const auto &control : controlSurface->controls()) {
+        for (const auto &control : controlSurface->controls().sequence()) {
             control->setRuntimePointers(runtime->getControlPtrs(runtimeId, blockPtr, control->compileMeta()->index));
         }
     });
@@ -124,7 +126,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
     std::vector<NewControl> newControls;
 
     QSet<QUuid> retainedControls;
-    auto controlList = collect((*controls().value())->controls());
+    auto controlList = collect((*controls().value())->controls().sequence());
     for (size_t controlIndex = 0; controlIndex < compiledControlCount; controlIndex++) {
         auto compiledControl = _compiledBlock->getControl(controlIndex);
         auto compiledModelType = MaximCompiler::toModelType(compiledControl.getType());
@@ -237,13 +239,13 @@ void CustomNode::buildCode() {
 
     if (compileSuccess) {
         _compiledBlock = std::move(block);
-        codeCompileSuccess.trigger();
+        codeCompileSuccess();
     } else {
         auto errorDescription = error.getDescription();
         auto errorRange = error.getRange();
         std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> "
                   << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString()
                   << std::endl;
-        codeCompileError.trigger(errorDescription, errorRange);
+        codeCompileError(errorDescription, errorRange);
     }
 }

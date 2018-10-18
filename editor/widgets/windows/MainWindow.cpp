@@ -13,6 +13,7 @@
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
 #include <chrono>
+#include <iostream>
 
 #include "../GlobalActions.h"
 #include "../InteractiveImport.h"
@@ -248,9 +249,9 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
 
     // find root surface and show it
     auto defaultSurface =
-        AxiomModel::getFirst(AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
-    assert(defaultSurface.value());
-    auto surfacePanel = showSurface(nullptr, *defaultSurface.value(), false, true);
+        AxiomCommon::getFirst(AxiomModel::findChildrenWatch(_project->mainRoot().nodeSurfaces(), QUuid()));
+    assert(defaultSurface->value());
+    auto surfacePanel = showSurface(nullptr, *defaultSurface->value(), false, true);
 
     _modulePanel->show();
 
@@ -340,11 +341,13 @@ std::unique_ptr<AxiomModel::Library> MainWindow::loadGlobalLibrary() {
 
 std::unique_ptr<AxiomModel::Library> MainWindow::loadDefaultLibrary() {
     QFile defaultFile(":/default.axl");
-    assert(defaultFile.open(QIODevice::ReadOnly));
+    auto couldOpenFile = defaultFile.open(QIODevice::ReadOnly);
+    assert(couldOpenFile);
     QDataStream stream(&defaultFile);
     uint32_t readVersion;
-    assert(AxiomModel::ProjectSerializer::readHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic,
-                                                     &readVersion));
+    auto couldReadHeader = AxiomModel::ProjectSerializer::readHeader(
+        stream, AxiomModel::ProjectSerializer::librarySchemaMagic, &readVersion);
+    assert(couldReadHeader);
     auto library = AxiomModel::LibrarySerializer::deserialize(stream, readVersion);
     defaultFile.close();
     return library;

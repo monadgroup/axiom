@@ -36,9 +36,9 @@ namespace AxiomModel {
 
         NodeSurface *surface() const { return _surface; }
 
-        AxiomCommon::Promise<ControlSurface *> &controls() { return _controls; }
+        AxiomCommon::Promise<ControlSurface *> &controls() { return *_controls; }
 
-        const AxiomCommon::Promise<ControlSurface *> &controls() const { return _controls; }
+        const AxiomCommon::Promise<ControlSurface *> &controls() const { return *_controls; }
 
         NodeType nodeType() const { return _nodeType; }
 
@@ -85,7 +85,7 @@ namespace AxiomModel {
         NodeType _nodeType;
         QString _name;
         bool _isExtracted = false;
-        AxiomCommon::Promise<ControlSurface *> _controls;
+        std::shared_ptr<AxiomCommon::Promise<ControlSurface *>> _controls;
         QRect sizeStartRect;
         std::optional<NodeCompileMeta> _compileMeta;
         uint32_t *_activeBitmap = nullptr;

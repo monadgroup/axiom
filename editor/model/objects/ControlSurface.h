@@ -1,7 +1,11 @@
 #pragma once
 
+#include "../CachedSequence.h"
 #include "../ModelObject.h"
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
 #include "../grid/GridSurface.h"
+#include "common/WatchSequence.h"
 
 namespace AxiomModel {
 
@@ -11,7 +15,7 @@ namespace AxiomModel {
 
     class ControlSurface : public ModelObject {
     public:
-        using ChildCollection = WatchSequence<Control *>;
+        using ChildCollection = CachedSequence<FindChildrenWatchSequence<ModelRoot::ControlCollection>>;
 
         AxiomCommon::Event<bool> controlsOnTopRowChanged;
 
@@ -43,8 +47,6 @@ namespace AxiomModel {
         Node *node() const { return _node; }
 
         ChildCollection &controls() { return _controls; }
-
-        const ChildCollection &controls() const { return _controls; }
 
         GridSurface &grid() { return _grid; }
 

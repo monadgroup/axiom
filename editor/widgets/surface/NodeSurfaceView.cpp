@@ -157,7 +157,7 @@ void NodeSurfaceView::dragLeaveEvent(QDragLeaveEvent *event) {
 void NodeSurfaceView::dropEvent(QDropEvent *event) {
     surface->grid().finishDragging();
 
-    auto selectedNodes = staticCast<Node *>(surface->grid().selectedItems().sequence());
+    auto selectedNodes = AxiomCommon::staticCast<Node *>(surface->grid().selectedItems().sequence());
     for (const auto &selectedNode : selectedNodes) {
         auto beforePos = selectedNode->dragStartPos();
         auto afterPos = selectedNode->pos();
@@ -219,9 +219,9 @@ void NodeSurfaceView::cutSelected() {
 }
 
 void NodeSurfaceView::copySelected() {
-    if (!hasFocus() || surface->grid().selectedItems().empty()) return;
+    if (!hasFocus() || surface->grid().selectedItems().sequence().empty()) return;
 
-    auto centerPos = AxiomModel::GridSurface::findCenter(surface->grid().selectedItems());
+    auto centerPos = AxiomModel::GridSurface::findCenter(surface->grid().selectedItems().sequence());
     QByteArray serializeArray;
     QDataStream stream(&serializeArray, QIODevice::WriteOnly);
     stream << centerPos;

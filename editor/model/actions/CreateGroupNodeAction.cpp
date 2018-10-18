@@ -38,7 +38,7 @@ void CreateGroupNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
 }
 
 void CreateGroupNodeAction::backward(std::vector<QUuid> &compileItems) {
-    find(root()->nodes(), _uuid)->remove();
+    find(root()->nodes().sequence(), _uuid)->remove();
 
     compileItems.push_back(_parentUuid);
 }

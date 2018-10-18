@@ -3,7 +3,7 @@
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
     class Library;
@@ -15,8 +15,8 @@ namespace AxiomGui {
 
     class MainWindow;
 
-    class ModulePreviewButton : public QFrame, public AxiomCommon::Hookable {
-    Q_OBJECT
+    class ModulePreviewButton : public QFrame, public AxiomCommon::TrackedObject {
+        Q_OBJECT
 
     public:
         explicit ModulePreviewButton(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry,
@@ -30,7 +30,5 @@ namespace AxiomGui {
         void setName(QString name);
 
         void updateIsVisible();
-
     };
-
 }

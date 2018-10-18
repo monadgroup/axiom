@@ -91,14 +91,14 @@ Project::~Project() {
 void Project::setLinkedFile(QString linkedFile) {
     if (linkedFile != _linkedFile) {
         _linkedFile = std::move(linkedFile);
-        linkedFileChanged.trigger(_linkedFile);
+        linkedFileChanged(_linkedFile);
     }
 }
 
 void Project::setIsDirty(bool isDirty) {
     if (isDirty != _isDirty) {
         _isDirty = isDirty;
-        isDirtyChanged.trigger(isDirty);
+        isDirtyChanged(isDirty);
     }
 }
 

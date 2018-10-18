@@ -6,10 +6,10 @@
 
 #include "../ConnectionWire.h"
 #include "../ModelObject.h"
-#include "../WatchSequence.h"
 #include "../grid/GridItem.h"
 #include "common/Event.h"
 #include "common/Promise.h"
+#include "common/WatchSequence.h"
 #include "editor/compiler/interface/Frontend.h"
 
 namespace MaximCompiler {
@@ -96,19 +96,19 @@ namespace AxiomModel {
 
         void setIsActive(bool isActive);
 
-        WatchSequence<Connection *> &connections() { return _connections; }
+        AxiomCommon::BoxedWatchSequence<Connection *> &connections() { return _connections; }
 
-        const WatchSequence<Connection *> &connections() const { return _connections; }
+        const AxiomCommon::BoxedWatchSequence<Connection *> &connections() const { return _connections; }
 
-        WatchSequence<QUuid> &connectedControls() { return _connectedControls; }
+        AxiomCommon::BoxedWatchSequence<QUuid> &connectedControls() { return _connectedControls; }
 
-        const WatchSequence<QUuid> &connectedControls() const { return _connectedControls; }
+        const AxiomCommon::BoxedWatchSequence<QUuid> &connectedControls() const { return _connectedControls; }
 
         QPointF worldPos() const;
 
-        Sequence<ModelObject *> links() override;
+        AxiomCommon::BoxedSequence<ModelObject *> links() override;
 
-        Sequence<QUuid> deleteCompileLinks() override;
+        AxiomCommon::BoxedSequence<QUuid> compileLinks() override;
 
         const std::optional<ControlCompileMeta> &compileMeta() const;
 
@@ -136,8 +136,8 @@ namespace AxiomModel {
         std::optional<ControlCompileMeta> _compileMeta;
         std::optional<MaximFrontend::ControlPointers> _runtimePointers;
 
-        WatchSequence<Connection *> _connections;
-        WatchSequence<QUuid> _connectedControls;
+        AxiomCommon::BoxedWatchSequence<Connection *> _connections;
+        AxiomCommon::BoxedWatchSequence<QUuid> _connectedControls;
 
         void updateSinkPos();
 

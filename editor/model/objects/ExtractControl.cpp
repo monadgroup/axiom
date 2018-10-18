@@ -36,7 +36,7 @@ std::unique_ptr<ExtractControl> ExtractControl::create(const QUuid &uuid, const 
 void ExtractControl::setActiveSlots(AxiomModel::ExtractControl::ActiveSlotFlags activeSlots) {
     if (activeSlots != _activeSlots) {
         _activeSlots = activeSlots;
-        activeSlotsChanged.trigger(activeSlots);
+        activeSlotsChanged(activeSlots);
     }
 }
 

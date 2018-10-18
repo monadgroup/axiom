@@ -26,7 +26,7 @@ std::unique_ptr<ExposeControlAction> ExposeControlAction::create(const QUuid &co
 }
 
 std::unique_ptr<CompositeAction> ExposeControlAction::create(const QUuid &controlUuid, AxiomModel::ModelRoot *root) {
-    auto controlToExpose = find(root->controls(), controlUuid);
+    auto controlToExpose = find(root->controls().sequence(), controlUuid);
     auto controlSurface = dynamic_cast<GroupSurface *>(controlToExpose->surface()->node()->surface());
     assert(controlSurface);
     auto exposeNode = controlSurface->node();
@@ -39,7 +39,7 @@ std::unique_ptr<CompositeAction> ExposeControlAction::create(const QUuid &contro
 }
 
 void ExposeControlAction::forward(bool, std::vector<QUuid> &compileItems) {
-    auto controlToExpose = find(root()->controls(), _controlUuid);
+    auto controlToExpose = find(root()->controls().sequence(), _controlUuid);
     controlToExpose->setExposerUuid(_exposeUuid);
     auto controlSurface = dynamic_cast<GroupSurface *>(controlToExpose->surface()->node()->surface());
     assert(controlSurface);
@@ -56,10 +56,10 @@ void ExposeControlAction::forward(bool, std::vector<QUuid> &compileItems) {
 }
 
 void ExposeControlAction::backward(std::vector<QUuid> &compileItems) {
-    auto innerControl = find(root()->controls(), _controlUuid);
+    auto innerControl = find(root()->controls().sequence(), _controlUuid);
     auto innerSurface = innerControl->surface()->node()->surface();
 
-    auto exposedControl = find(root()->controls(), _exposeUuid);
+    auto exposedControl = find(root()->controls().sequence(), _exposeUuid);
     auto exposeSurface = exposedControl->surface()->node()->surface();
 
     exposedControl->remove();

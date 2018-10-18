@@ -5,6 +5,7 @@
 
 #include "actions/Action.h"
 #include "common/Event.h"
+#include "common/TrackedObject.h"
 
 namespace MaximCompiler {
     class Transaction;
@@ -16,7 +17,7 @@ namespace AxiomModel {
 
     class Action;
 
-    class HistoryList : public AxiomCommon::Hookable {
+    class HistoryList {
     public:
         AxiomCommon::Event<> stackChanged;
 

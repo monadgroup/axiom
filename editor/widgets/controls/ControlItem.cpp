@@ -65,8 +65,8 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
             connect(resizer, &ItemResizer::changed, this, &ControlItem::resizerChanged);
             connect(resizer, &ItemResizer::endDrag, this, &ControlItem::resizerEndDrag);
 
-            control->selected.connect(this, std::function<void()>([resizer]() { resizer->setVisible(true); }));
-            control->deselected.connect(this, std::function<void()>([resizer]() { resizer->setVisible(false); }));
+            control->selected.connect(this, [resizer](bool) { resizer->setVisible(true); });
+            control->deselected.connect(this, [resizer]() { resizer->setVisible(false); });
 
             resizer->setParentItem(this);
         }
@@ -131,11 +131,11 @@ void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     // draw an outline if we're exposed
     if (!control->exposerUuid().isNull()) {
         auto bounds = controlPath();
-        painter->setPen(QPen(CommonColors::exposedBorder, control->connections().empty() ? 3 : 7));
+        painter->setPen(QPen(CommonColors::exposedBorder, control->connections().sequence().empty() ? 3 : 7));
         painter->setBrush(QBrush(CommonColors::exposedBorder));
         painter->drawPath(bounds);
 
-        if (!control->connections().empty()) {
+        if (!control->connections().sequence().empty()) {
             painter->setPen(QPen(Qt::black, 4));
             painter->setBrush(QBrush(Qt::black));
             painter->drawPath(bounds);
@@ -143,7 +143,7 @@ void ControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     }
 
     // draw an outline if we're connected to something
-    if (!control->connections().empty()) {
+    if (!control->connections().sequence().empty()) {
         auto isEnabled = control->isEnabled();
         auto useNormalColor = isEnabled ? outlineNormalColor() : CommonColors::disabledNormal;
         auto useActiveColor = isEnabled ? outlineActiveColor() : CommonColors::disabledActive;
@@ -216,7 +216,7 @@ void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
         isMoving = true;
         mouseStartPoint = event->screenPos();
-        control->startedDragging.trigger();
+        control->startedDragging();
     } else {
         event->setAccepted(control->isMovable());
         control->surface()->grid().deselectAll();
@@ -232,9 +232,8 @@ void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         auto mouseDelta = event->screenPos() - mouseStartPoint;
-        control->draggedTo.trigger(
-            QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
-                   qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())));
+        control->draggedTo(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
+                                  qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())));
     } else {
         event->ignore();
     }
@@ -250,7 +249,7 @@ void ControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         event->accept();
 
         isMoving = false;
-        control->finishedDragging.trigger();
+        control->finishedDragging();
 
         if (control->dragStartPos() != control->pos()) {
             control->root()->history().append(
@@ -336,11 +335,11 @@ void ControlItem::triggerUpdate() {
 
 void ControlItem::buildMenuStart(QMenu &menu) {
     auto clearAction = menu.addAction("&Clear Connections");
-    clearAction->setEnabled(!control->connections().empty());
+    clearAction->setEnabled(!control->connections().sequence().empty());
 
     connect(clearAction, &QAction::triggered, this, [this]() {
         std::vector<std::unique_ptr<Action>> clearActions;
-        for (const auto &connection : control->connections()) {
+        for (const auto &connection : control->connections().sequence()) {
             clearActions.push_back(DeleteObjectAction::create(connection->uuid(), connection->root()));
         }
         control->root()->history().append(CompositeAction::create(std::move(clearActions), control->root()));

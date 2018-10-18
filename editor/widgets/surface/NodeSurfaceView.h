@@ -3,7 +3,7 @@
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QMenu>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 #include "editor/compiler/interface/Transaction.h"
 #include "editor/model/actions/CompositeAction.h"
 
@@ -17,7 +17,7 @@ namespace AxiomGui {
 
     class NodeSurfaceCanvas;
 
-    class NodeSurfaceView : public QGraphicsView, public AxiomCommon::Hookable {
+    class NodeSurfaceView : public QGraphicsView, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:

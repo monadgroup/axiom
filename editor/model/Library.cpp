@@ -96,14 +96,14 @@ void Library::import(
 void Library::setActiveTag(const QString &activeTag) {
     if (activeTag != _activeTag) {
         _activeTag = activeTag;
-        activeTagChanged.trigger(activeTag);
+        activeTagChanged(activeTag);
     }
 }
 
 void Library::setActiveSearch(const QString &search) {
     if (search != _activeSearch) {
         _activeSearch = search;
-        activeSearchChanged.trigger(search);
+        activeSearchChanged(search);
     }
 }
 
@@ -127,17 +127,17 @@ QStringList Library::tags() const {
 void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
     auto entryPtr = entry.get();
     _entries.push_back(std::move(entry));
-    entryAdded.trigger(entryPtr);
+    entryAdded(entryPtr);
 
     for (const auto &tag : entryPtr->tags()) {
         addTag(tag);
     }
     entryPtr->tagAdded.connect(this, &Library::addTag);
     entryPtr->tagRemoved.connect(this, &Library::removeTag);
-    entryPtr->changed.connect(&changed);
+    entryPtr->changed.forward(&changed);
     entryPtr->cleanup.connect(this, [this, entryPtr]() { removeEntry(entryPtr); });
 
-    changed.trigger();
+    changed();
 }
 
 LibraryEntry *Library::findById(const QUuid &id) {
@@ -153,7 +153,7 @@ void Library::addTag(const QString &tag) {
         index->second++;
     } else {
         _tags.emplace(tag, 1);
-        tagAdded.trigger(tag);
+        tagAdded(tag);
     }
 }
 
@@ -164,7 +164,7 @@ void Library::removeTag(const QString &tag) {
     index->second--;
     if (!index->second) {
         _tags.erase(index);
-        tagRemoved.trigger(tag);
+        tagRemoved(tag);
     }
 }
 
@@ -180,5 +180,5 @@ void Library::removeEntry(AxiomModel::LibraryEntry *entry) {
         }
     }
 
-    changed.trigger();
+    changed();
 }

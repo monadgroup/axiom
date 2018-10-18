@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QGraphicsObject>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
     class Node;
@@ -14,8 +14,8 @@ namespace AxiomGui {
 
     class NodeSurfaceCanvas;
 
-    class NodeItem : public QGraphicsObject, public AxiomCommon::Hookable {
-    Q_OBJECT
+    class NodeItem : public QGraphicsObject, public AxiomCommon::TrackedObject {
+        Q_OBJECT
 
     public:
         NodeSurfaceCanvas *canvas;
@@ -33,7 +33,6 @@ namespace AxiomGui {
         QPainterPath shape() const override;
 
     protected:
-
         void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 
         void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -78,5 +77,4 @@ namespace AxiomGui {
 
         static const int textOffset = 15;
     };
-
 }

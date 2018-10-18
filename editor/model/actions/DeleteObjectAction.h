@@ -2,8 +2,8 @@
 
 #include <QtCore/QUuid>
 
-#include "../Sequence.h"
 #include "Action.h"
+#include "common/Sequence.h"
 
 namespace AxiomModel {
 
@@ -30,8 +30,6 @@ namespace AxiomModel {
         QUuid _uuid;
         QByteArray _buffer;
 
-        Sequence<ModelObject *> getLinkedItems(const QUuid &seed) const;
-
-        Sequence<ModelObject *> getRemoveItems() const;
+        std::vector<ModelObject *> getLinkedItems(const QUuid &seed) const;
     };
 }

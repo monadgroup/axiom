@@ -17,9 +17,9 @@ namespace AxiomModel {
                                                  bool selected, QString name, const QUuid &controlsUuid,
                                                  const QUuid &innerUuid, ModelRoot *root);
 
-        AxiomCommon::Promise<GroupSurface *> &nodes() { return _nodes; }
+        AxiomCommon::Promise<GroupSurface *> &nodes() { return *_nodes; }
 
-        const AxiomCommon::Promise<GroupSurface *> &nodes() const { return _nodes; }
+        const AxiomCommon::Promise<GroupSurface *> &nodes() const { return *_nodes; }
 
         void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 
@@ -28,6 +28,6 @@ namespace AxiomModel {
         void remove() override;
 
     private:
-        AxiomCommon::Promise<GroupSurface *> _nodes;
+        std::shared_ptr<AxiomCommon::Promise<GroupSurface *>> _nodes;
     };
 }

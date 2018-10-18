@@ -67,10 +67,10 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
     std::unordered_map<ValueGroup *, std::unique_ptr<ValueGroup>> groups;
     QHash<QUuid, ValueGroup *> controlGroups;
 
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
         auto controlsContainer = *node->controls().value();
-        for (const auto &control : controlsContainer->controls()) {
-            if (control->connectedControls().empty()) {
+        for (const auto &control : controlsContainer->controls().sequence()) {
+            if (control->connectedControls().sequence().empty()) {
                 // assign the control a single group
                 auto newGroup = std::make_unique<ValueGroup>();
                 newGroup->controls.push_back(control->uuid());
@@ -89,7 +89,7 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
                     myGroup = myGroupIndex.value();
                 }
 
-                for (const auto &connectedControl : control->connectedControls()) {
+                for (const auto &connectedControl : control->connectedControls().sequence()) {
                     auto connectedGroupIndex = controlGroups.find(connectedControl);
                     if (connectedGroupIndex == controlGroups.end()) {
                         // add the control to our group
@@ -114,7 +114,7 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
     }
 
     // merge control groups for controls that are merged internally
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
         auto groupNode = dynamic_cast<AxiomModel::GroupNode *>(node);
         if (!groupNode) continue;
 
@@ -154,12 +154,12 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
     std::unordered_map<ValueGroup *, size_t> valueGroupIndices;
     std::vector<size_t> sockets;
     size_t index = 0;
-    for (const auto &pair : groups) {
+    for (auto &pair : groups) {
         auto currentIndex = index++;
         valueGroupIndices.emplace(pair.first, currentIndex);
         valueGroups.push_back(pair.first);
-        auto controlPointers =
-            AxiomModel::collect(AxiomModel::findMap(pair.first->controls, surface->root()->controls()));
+        auto controlPointers = AxiomCommon::collect(
+            AxiomModel::findMap<std::vector<QUuid>>(pair.first->controls, surface->root()->controls().sequence()));
 
         auto groupType = getGroupType(controlPointers);
         auto vartype = VarType::ofControl(fromModelType(groupType));
@@ -210,13 +210,13 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
 
     // build nodes
     size_t nodeIndex = 0;
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
         if (auto customNode = dynamic_cast<AxiomModel::CustomNode *>(node)) {
             customNode->setCompileMeta(AxiomModel::NodeCompileMeta(nodeIndex));
             auto mirNode = mir.addCustomNode(customNode->getRuntimeId());
 
             // we need a sorted list of controls
-            auto sortedControls = AxiomModel::collect((*customNode->controls().value())->controls());
+            auto sortedControls = AxiomCommon::collect((*customNode->controls().value())->controls().sequence());
             std::sort(sortedControls.begin(), sortedControls.end(), [](AxiomModel::Control *a, AxiomModel::Control *b) {
                 return a->compileMeta()->index < b->compileMeta()->index;
             });
@@ -281,7 +281,7 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
 
             auto valueGroup = valueGroups[socketGroup];
             auto controlPointers =
-                AxiomModel::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls()));
+                AxiomCommon::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls().sequence()));
             for (const auto &control : controlPointers) {
                 if (!control->exposerUuid().isNull()) {
                     externalControls.push_back(control->exposerUuid());

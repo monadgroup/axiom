@@ -2,6 +2,7 @@
 
 #include <QtCore/QDateTime>
 #include <QtCore/QString>
+#include <set>
 
 #include "ModelRoot.h"
 #include "common/Event.h"
@@ -12,7 +13,7 @@ namespace AxiomModel {
 
     class RootSurface;
 
-    class LibraryEntry : public AxiomCommon::Hookable {
+    class LibraryEntry : public AxiomCommon::TrackedObject {
     public:
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<const QString &> tagAdded;

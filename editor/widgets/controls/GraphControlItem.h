@@ -15,7 +15,7 @@ namespace AxiomGui {
 
     class GraphControlItem;
 
-    class GraphControlTicks : public QGraphicsObject, public AxiomCommon::Hookable {
+    class GraphControlTicks : public QGraphicsObject, public AxiomCommon::TrackedObject {
     public:
         GraphControlItem *item;
 
@@ -30,7 +30,7 @@ namespace AxiomGui {
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
     };
 
-    class GraphControlZoom : public QGraphicsObject, public AxiomCommon::Hookable {
+    class GraphControlZoom : public QGraphicsObject, public AxiomCommon::TrackedObject {
     public:
         AxiomModel::GraphControl *control;
 
@@ -153,7 +153,7 @@ namespace AxiomGui {
         void triggerUpdate();
     };
 
-    class GraphControlArea : public QGraphicsObject, public AxiomCommon::Hookable {
+    class GraphControlArea : public QGraphicsObject, public AxiomCommon::TrackedObject {
     public:
         GraphControlItem *item;
         QRectF clipBounds;

@@ -54,17 +54,17 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     selectionPath->setZValue(selectionZVal);
 
     // create items for all nodes & wires that already exist
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
         addNode(node);
     }
 
-    for (const auto &connection : surface->connections()) {
+    for (const auto &connection : surface->connections().sequence()) {
         connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     }
 
     // connect to model
-    surface->nodes().itemAdded.connect(this, &NodeSurfaceCanvas::addNode);
-    surface->connections().itemAdded.connect(this, [this](Connection *connection) {
+    surface->nodes().events().itemAdded().connect(this, &NodeSurfaceCanvas::addNode);
+    surface->connections().events().itemAdded().connect(this, [this](Connection *connection) {
         connection->wire().then([this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     });
 
@@ -143,9 +143,10 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
             connectable && connectable->sink()->wireType() == sourceControl->wireType()) {
             // if the sinks are already connected, remove the connection
             auto otherUuid = connectable->sink()->uuid();
-            auto connectors = filter(sourceControl->connections(), [otherUuid](Connection *const &connection) {
-                return connection->controlAUuid() == otherUuid || connection->controlBUuid() == otherUuid;
-            });
+            auto connectors =
+                filter(sourceControl->connections().sequence(), [otherUuid](Connection *const &connection) {
+                    return connection->controlAUuid() == otherUuid || connection->controlBUuid() == otherUuid;
+                });
             auto firstConnector = connectors.begin();
             if (firstConnector == connectors.end()) {
                 // there isn't currently a connection, create a new one

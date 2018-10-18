@@ -18,7 +18,7 @@
 using namespace AxiomModel;
 
 void ModelObjectSerializer::serializeRoot(AxiomModel::ModelRoot *root, bool includeHistory, QDataStream &stream) {
-    serializeChunk(stream, QUuid(), dynamicCast<ModelObject *>(root->pool().sequence()));
+    serializeChunk(stream, QUuid(), AxiomCommon::dynamicCast<ModelObject *>(root->pool().sequence().sequence()));
     if (includeHistory) {
         HistorySerializer::serialize(root->history(), stream);
     }

@@ -12,17 +12,17 @@ using namespace AxiomModel;
 ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface) {
     // create items for all nodes and wires that already exist
     // todo: this could be refactored with NodeSurfaceCanvas
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
         addNode(node);
     }
 
-    for (const auto &connection : surface->connections()) {
+    for (const auto &connection : surface->connections().sequence()) {
         connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     }
 
     // connect to model
-    surface->nodes().itemAdded.connect(this, &ModulePreviewCanvas::addNode);
-    surface->connections().itemAdded.connect(this, [this](Connection *connection) {
+    surface->nodes().events().itemAdded().connect(this, &ModulePreviewCanvas::addNode);
+    surface->connections().events().itemAdded().connect(this, [this](Connection *connection) {
         connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     });
 }

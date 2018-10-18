@@ -47,14 +47,14 @@ void ModulePreviewView::mousePressEvent(QMouseEvent *event) {
         auto drag = new QDrag(this);
 
         // serialize the surface and set mime data
-        auto centerPos = AxiomModel::GridSurface::findCenter(entry->rootSurface()->grid().items());
+        auto centerPos = AxiomModel::GridSurface::findCenter(entry->rootSurface()->grid().items().sequence());
         QByteArray serializeArray;
         QDataStream stream(&serializeArray, QIODevice::WriteOnly);
         stream << centerPos;
         AxiomModel::ModelObjectSerializer::serializeChunk(
             stream, entry->rootSurface()->uuid(),
             AxiomModel::findDependents(
-                AxiomModel::dynamicCast<AxiomModel::ModelObject *>(entry->root()->pool().sequence()),
+                AxiomCommon::dynamicCast<AxiomModel::ModelObject *>(entry->root()->pool().sequence().sequence()),
                 entry->rootSurface()->uuid(), false));
 
         auto mimeData = new QMimeData();

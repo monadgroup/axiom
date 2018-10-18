@@ -27,7 +27,7 @@ namespace AxiomGui {
 
     class ModuleBrowserPanel;
 
-    class MainWindow : public QMainWindow, public AxiomCommon::Hookable {
+    class MainWindow : public QMainWindow, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:

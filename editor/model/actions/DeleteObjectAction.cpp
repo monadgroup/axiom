@@ -22,7 +22,7 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
 }
 
 void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
-    auto sortedItems = heapSort(getRemoveItems());
+    auto sortedItems = heapSort(getLinkedItems(_uuid));
 
     QDataStream stream(&_buffer, QIODevice::WriteOnly);
     ModelObjectSerializer::serializeChunk(stream, QUuid(), sortedItems);
@@ -43,7 +43,8 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
             compileIds.insert(compileItem);
         }
     }
-    auto itemsToDelete = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(usedIds));
+    auto itemsToDelete =
+        findAll(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), std::move(usedIds));
 
     // remove all items
     while (!itemsToDelete.empty()) {
@@ -67,17 +68,20 @@ void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
     }
 }
 
-Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
-    auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
-    auto links = flatten(map(dependents, std::function<Sequence<ModelObject *>(ModelObject *const &)>(
-                                             [](ModelObject *const &obj) { return obj->links(); })));
-    auto linkDependents =
-        flatten(map(links, std::function<Sequence<ModelObject *>(ModelObject *const &)>(
-                               [this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
+std::vector<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &seed) const {
+    auto dependents = AxiomCommon::collect(
+        findDependents(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), seed));
+    auto links = AxiomCommon::flatten(
+        AxiomCommon::map(AxiomCommon::refSequence(&dependents), [](ModelObject *obj) { return obj->links(); }));
+    auto linkDependents = AxiomCommon::collect(AxiomCommon::flatten(
+        AxiomCommon::map(links, [this](ModelObject *obj) { return getLinkedItems(obj->uuid()); })));
 
-    return distinctByUuid(flatten(std::array<Sequence<ModelObject *>, 2>{dependents, linkDependents}));
-}
+    std::vector<ModelObject *> subSequences;
+    subSequences.reserve(links.size() + linkDependents.size());
 
-Sequence<ModelObject *> DeleteObjectAction::getRemoveItems() const {
-    return getLinkedItems(_uuid);
+    std::back_insert_iterator<std::vector<ModelObject *>> iter(subSequences);
+    std::copy(dependents.begin(), dependents.end(), iter);
+    std::copy(linkDependents.begin(), linkDependents.end(), iter);
+
+    return AxiomCommon::collect(distinctByUuid(std::move(subSequences)));
 }

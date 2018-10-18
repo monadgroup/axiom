@@ -104,11 +104,11 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
 
     // create items for all controls that already exist
     node->controls().then([this](ControlSurface *surface) {
-        for (const auto &control : surface->controls()) {
+        for (const auto &control : surface->controls().sequence()) {
             addControl(control);
         }
 
-        surface->controls().itemAdded.connect(this, &NodeItem::addControl);
+        surface->controls().events().itemAdded().connect(this, &NodeItem::addControl);
         surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
     });
 }
@@ -192,7 +192,7 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 
         isDragging = true;
         mouseStartPoint = event->screenPos();
-        node->startedDragging.trigger();
+        node->startedDragging();
     }
 
     event->accept();
@@ -202,8 +202,8 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
     auto mouseDelta = event->screenPos() - mouseStartPoint;
-    node->draggedTo.trigger(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-                                   qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())));
+    node->draggedTo(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                           qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())));
 
     event->accept();
 }
@@ -211,10 +211,10 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
     isDragging = false;
-    node->finishedDragging.trigger();
+    node->finishedDragging();
 
     std::vector<std::unique_ptr<Action>> dragEvents;
-    auto selectedNodes = staticCast<Node *>(node->parentSurface->selectedItems().sequence());
+    auto selectedNodes = AxiomCommon::staticCast<Node *>(node->parentSurface->selectedItems().sequence());
     for (const auto &selectedNode : selectedNodes) {
         auto beforePos = selectedNode->dragStartPos();
         auto afterPos = selectedNode->pos();
@@ -247,13 +247,13 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 
     auto copyableItems =
-        AxiomModel::filter(AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()),
-                           [](Node *const &node) { return node->isCopyable(); });
+        AxiomCommon::filter(AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()),
+                            [](Node *const &node) { return node->isCopyable(); });
 
     QMenu menu;
 
     auto renameAction = menu.addAction(tr("&Rename..."));
-    renameAction->setVisible(node->parentSurface->selectedItems().size() == 1);
+    renameAction->setVisible(node->parentSurface->selectedItems().sequence().size() == 1);
     menu.addSeparator();
     auto groupAction = menu.addAction(tr("&Group..."));
     groupAction->setEnabled(!copyableItems.empty());
@@ -267,8 +267,8 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     PortalControl *portalControl = nullptr;
     if (auto portalNode = dynamic_cast<PortalNode *>(node); portalNode && rootSurface && rootSurface->compileMeta() &&
                                                             mainWindow->project()->backend()->canFiddleAutomation()) {
-        portalControl =
-            AxiomModel::takeAt(dynamicCast<PortalControl *>((*portalNode->controls().value())->controls()), 0);
+        portalControl = *AxiomCommon::takeAt(
+            AxiomCommon::dynamicCast<PortalControl *>((*portalNode->controls().value())->controls().sequence()), 0);
         if (portalControl->portalType() == PortalControl::PortalType::AUTOMATION) {
             fiddleAction = menu.addAction(tr("&Fiddle"));
             menu.addSeparator();
@@ -294,7 +294,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
             auto newEntry =
                 LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()));
-            auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems());
+            auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems().sequence());
             QByteArray serializeArray;
             QDataStream serializeStream(&serializeArray, QIODevice::WriteOnly);
             ModelObjectSerializer::serializeChunk(serializeStream, node->surface()->uuid(),

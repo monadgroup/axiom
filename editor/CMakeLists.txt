@@ -23,7 +23,7 @@ add_subdirectory(widgets)
 add_subdirectory(compiler)
 add_library(axiom_editor
         "${RES_DIR}/axiom.rc" "${RES_DIR}/res.qrc"
-        util.h util.cpp
+        util.h Cast.cpp
         AxiomApplication.h AxiomApplication.cpp
         AxiomEditor.h AxiomEditor.cpp
         backend/AudioBackend.h backend/AudioBackend.cpp

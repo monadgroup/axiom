@@ -22,7 +22,7 @@ std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &p
 void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode) {
     if (displayMode != _displayMode) {
         _displayMode = displayMode;
-        displayModeChanged.trigger(displayMode);
+        displayModeChanged(displayMode);
     }
 }
 
@@ -31,7 +31,7 @@ void NumControl::setRange(float minValue, float maxValue, uint32_t step) {
         _minValue = minValue;
         _maxValue = maxValue;
         _step = step;
-        rangeChanged.trigger(minValue, maxValue, step);
+        rangeChanged(minValue, maxValue, step);
     }
 }
 
@@ -47,6 +47,6 @@ void NumControl::doRuntimeUpdate() {
 void NumControl::setInternalValue(NumValue value) {
     if (value != _value) {
         _value = value;
-        valueChanged.trigger(value);
+        valueChanged(value);
     }
 }

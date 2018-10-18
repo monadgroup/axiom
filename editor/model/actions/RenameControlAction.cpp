@@ -17,9 +17,9 @@ std::unique_ptr<RenameControlAction> RenameControlAction::create(const QUuid &uu
 }
 
 void RenameControlAction::forward(bool, std::vector<QUuid> &compileItems) {
-    find(root()->controls(), _uuid)->setName(_newName);
+    find(root()->controls().sequence(), _uuid)->setName(_newName);
 }
 
 void RenameControlAction::backward(std::vector<QUuid> &compileItems) {
-    find(root()->controls(), _uuid)->setName(_oldName);
+    find(root()->controls().sequence(), _uuid)->setName(_oldName);
 }

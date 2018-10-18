@@ -24,7 +24,9 @@ namespace AxiomModel {
 
         const QUuid &controlBUuid() const { return _controlBUuid; }
 
-        AxiomCommon::Promise<std::unique_ptr<ConnectionWire>> wire() const { return _wire; }
+        AxiomCommon::Promise<std::unique_ptr<ConnectionWire>> &wire() { return _wire; }
+
+        const AxiomCommon::Promise<std::unique_ptr<ConnectionWire>> &wire() const { return _wire; }
 
         void remove() override;
 

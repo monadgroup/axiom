@@ -1,9 +1,13 @@
 #pragma once
 
+#include "../CachedSequence.h"
 #include "../ModelObject.h"
+#include "../PoolOperators.h"
 #include "../WireGrid.h"
 #include "../grid/GridSurface.h"
 #include "common/Event.h"
+#include "common/WatchSequence.h"
+#include <editor/model/ModelRoot.h>
 
 namespace MaximCompiler {
     class Runtime;
@@ -20,8 +24,8 @@ namespace AxiomModel {
 
     class NodeSurface : public ModelObject {
     public:
-        using ChildCollection = WatchSequence<Node *>;
-        using ConnectionCollection = WatchSequence<Connection *>;
+        using ChildCollection = CachedSequence<FindChildrenWatchSequence<ModelRoot::NodeCollection>>;
+        using ConnectionCollection = CachedSequence<FindChildrenWatchSequence<ModelRoot::ConnectionCollection>>;
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<const QPointF &> panChanged;
@@ -31,11 +35,7 @@ namespace AxiomModel {
 
         ChildCollection &nodes() { return _nodes; }
 
-        const ChildCollection &nodes() const { return _nodes; }
-
         ConnectionCollection &connections() { return _connections; }
-
-        const ConnectionCollection &connections() const { return _connections; }
 
         GridSurface &grid() { return _grid; }
 
@@ -59,7 +59,7 @@ namespace AxiomModel {
 
         void setZoom(float zoom);
 
-        Sequence<ModelObject *> getCopyItems() const;
+        std::vector<ModelObject *> getCopyItems();
 
         virtual uint64_t getRuntimeId() = 0;
 

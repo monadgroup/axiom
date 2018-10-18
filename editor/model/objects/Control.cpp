@@ -22,31 +22,30 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
                  QSize minSize, QUuid uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
                  QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
                  AxiomModel::ModelRoot *root)
-    : GridItem(&find(root->controlSurfaces(), parentUuid)->grid(), pos, size, minSize, selected),
-      ModelObject(ModelType::CONTROL, uuid, parentUuid, root), _surface(find(root->controlSurfaces(), parentUuid)),
-      _controlType(controlType), _wireType(wireType), _name(std::move(name)), _showName(showName),
-      _exposerUuid(exposerUuid), _exposingUuid(exposingUuid),
-      _connections(filterWatch(root->connections(),
-                               std::function<bool(Connection *const &)>([uuid](Connection *const &connection) {
-                                   return connection->controlAUuid() == uuid || connection->controlBUuid() == uuid;
-                               }))),
-      _connectedControls(
-          mapFilterWatch(_connections, std::function<std::optional<QUuid>(Connection *const &)>(
-                                           [uuid](Connection *const &connection) -> std::optional<QUuid> {
-                                               if (connection->controlAUuid() == uuid)
-                                                   return connection->controlBUuid();
-                                               if (connection->controlBUuid() == uuid)
-                                                   return connection->controlAUuid();
-                                               return std::optional<QUuid>();
-                                           }))) {
+    : GridItem(&find(root->controlSurfaces().sequence(), parentUuid)->grid(), pos, size, minSize, selected),
+      ModelObject(ModelType::CONTROL, uuid, parentUuid, root),
+      _surface(find(root->controlSurfaces().sequence(), parentUuid)), _controlType(controlType), _wireType(wireType),
+      _name(std::move(name)), _showName(showName), _exposerUuid(exposerUuid), _exposingUuid(exposingUuid),
+      _connections(AxiomCommon::boxWatchSequence(AxiomCommon::filterWatch(root->connections(),
+                                                                          [uuid](Connection *const &connection) {
+                                                                              return connection->controlAUuid() ==
+                                                                                         uuid ||
+                                                                                     connection->controlBUuid() == uuid;
+                                                                          }))),
+      _connectedControls(AxiomCommon::boxWatchSequence(AxiomCommon::filterMapWatch(
+          AxiomCommon::refWatchSequence(&_connections), [uuid](Connection *const &connection) -> std::optional<QUuid> {
+              if (connection->controlAUuid() == uuid) return connection->controlBUuid();
+              if (connection->controlBUuid() == uuid) return connection->controlAUuid();
+              return std::optional<QUuid>();
+          }))) {
     posChanged.connect(this, &Control::updateSinkPos);
     sizeChanged.connect(this, &Control::updateSinkPos);
     removed.connect(this, &Control::updateExposerRemoved);
     _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
-    _surface->node()->activeChanged.connect(&isEnabledChanged);
+    _surface->node()->activeChanged.forward(&isEnabledChanged);
 
     if (!_exposingUuid.isNull()) {
-        findLater<Control *>(root->controls(), _exposingUuid).then([this, uuid](Control *exposing) {
+        findLater(root->controls(), _exposingUuid)->then([this, uuid](Control *exposing) {
             exposing->setExposerUuid(uuid);
 
             exposing->nameChanged.connect(this, [this, exposing](const QString &) { updateExposingName(exposing); });
@@ -98,7 +97,7 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
 
 ControlPrepare Control::buildControlPrepareAction(AxiomModel::Control::ControlType type, const QUuid &parentUuid,
                                                   AxiomModel::ModelRoot *root) {
-    auto controlSurface = find<ControlSurface *>(root->pool().sequence(), parentUuid);
+    auto controlSurface = find(root->controlSurfaces().sequence(), parentUuid);
     auto node = controlSurface->node();
     auto controlSurfaceSize = ControlSurface::nodeToControl(node->size());
 
@@ -147,28 +146,28 @@ bool Control::isEnabled() const {
 void Control::setName(const QString &name) {
     if (name != _name) {
         _name = name;
-        nameChanged.trigger(name);
+        nameChanged(name);
     }
 }
 
 void Control::setShowName(bool showName) {
     if (showName != _showName) {
         _showName = showName;
-        showNameChanged.trigger(showName);
+        showNameChanged(showName);
     }
 }
 
 void Control::setExposerUuid(QUuid exposerUuid) {
     if (exposerUuid != _exposerUuid) {
         _exposerUuid = exposerUuid;
-        exposerUuidChanged.trigger(exposerUuid);
+        exposerUuidChanged(exposerUuid);
     }
 }
 
 void Control::setIsActive(bool isActive) {
     if (isActive != _isActive) {
         _isActive = isActive;
-        isActiveChanged.trigger(isActive);
+        isActiveChanged(isActive);
     }
 }
 
@@ -178,25 +177,26 @@ QPointF Control::worldPos() const {
     return ControlSurface::controlToNode(worldPos);
 }
 
-Sequence<ModelObject *> Control::links() {
+AxiomCommon::BoxedSequence<ModelObject *> Control::links() {
     auto expId = exposerUuid();
-    return flatten(std::array<Sequence<ModelObject *>, 2>{
-        staticCast<ModelObject *>(
-            filter(root()->controls(), std::function<bool(Control *const &)>(
-                                           [expId](Control *const &obj) -> bool { return obj->uuid() == expId; })))
-            .sequence(),
-        staticCast<ModelObject *>(_connections.sequence()).sequence()});
+    auto exposerControl =
+        AxiomCommon::filter(root()->controls().sequence(), [expId](Control *obj) { return obj->uuid() == expId; });
+    auto connections = _connections.sequence();
+
+    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
+        AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(exposerControl)),
+        AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(connections))}));
 }
 
-Sequence<QUuid> Control::deleteCompileLinks() {
-    return oneShot(surface()->node()->parentUuid());
+AxiomCommon::BoxedSequence<QUuid> Control::compileLinks() {
+    return AxiomCommon::boxSequence(AxiomCommon::once(surface()->node()->parentUuid()));
 }
 
 const std::optional<ControlCompileMeta> &Control::compileMeta() const {
     if (exposingUuid().isNull()) {
         return _compileMeta;
     } else {
-        return find(root()->controls(), exposingUuid())->compileMeta();
+        return find(root()->controls().sequence(), exposingUuid())->compileMeta();
     }
 }
 
@@ -204,7 +204,7 @@ const std::optional<MaximFrontend::ControlPointers> &Control::runtimePointers() 
     if (exposingUuid().isNull()) {
         return _runtimePointers;
     } else {
-        return find(root()->controls(), exposingUuid())->runtimePointers();
+        return find(root()->controls().sequence(), exposingUuid())->runtimePointers();
     }
 }
 
@@ -213,12 +213,12 @@ void Control::remove() {
 }
 
 void Control::updateSinkPos() {
-    worldPosChanged.trigger(worldPos());
+    worldPosChanged(worldPos());
 }
 
 void Control::updateExposerRemoved() {
     if (!_exposingUuid.isNull()) {
-        auto baseControl = findMaybe(root()->controls(), _exposingUuid);
+        auto baseControl = root()->controls().sequence().find(_exposingUuid);
         if (baseControl) (*baseControl)->setExposerUuid(QUuid());
     }
 }

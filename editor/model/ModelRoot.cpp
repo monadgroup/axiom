@@ -1,6 +1,7 @@
 #include "ModelRoot.h"
 
 #include <chrono>
+#include <iostream>
 
 #include "../backend/AudioBackend.h"
 #include "IdentityReferenceMapper.h"
@@ -17,16 +18,16 @@ using namespace AxiomModel;
 
 ModelRoot::ModelRoot()
     : _history([this](std::vector<QUuid> items) { applyCompile(items); }),
-      _nodeSurfaces(dynamicCastWatch<NodeSurface *>(_pool.sequence())),
-      _nodes(dynamicCastWatch<Node *>(_pool.sequence())),
-      _controlSurfaces(dynamicCastWatch<ControlSurface *>(_pool.sequence())),
-      _controls(dynamicCastWatch<Control *>(_pool.sequence())),
-      _connections(dynamicCastWatch<Connection *>(_pool.sequence())) {}
+      _nodeSurfaces(AxiomCommon::dynamicCastWatch<NodeSurface *>(_pool.sequence())),
+      _nodes(AxiomCommon::dynamicCastWatch<Node *>(_pool.sequence())),
+      _controlSurfaces(AxiomCommon::dynamicCastWatch<ControlSurface *>(_pool.sequence())),
+      _controls(AxiomCommon::dynamicCastWatch<Control *>(_pool.sequence())),
+      _connections(AxiomCommon::dynamicCastWatch<Connection *>(_pool.sequence())) {}
 
-RootSurface *ModelRoot::rootSurface() const {
-    auto rootSurfaces = findChildren(nodeSurfaces(), QUuid());
+RootSurface *ModelRoot::rootSurface() {
+    auto rootSurfaces = findChildren(nodeSurfaces().sequence(), QUuid());
     assert(rootSurfaces.size() == 1);
-    auto rootSurface = dynamic_cast<RootSurface *>(takeAt(rootSurfaces, 0));
+    auto rootSurface = dynamic_cast<RootSurface *>(*takeAt(rootSurfaces, 0));
     assert(rootSurface);
     return rootSurface;
 }
@@ -57,7 +58,7 @@ void ModelRoot::applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Tra
 
         if (processedItems.contains(item)) continue;
         processedItems.insert(item);
-        if (auto object = findMaybe<ModelObject *>(pool().sequence(), item)) {
+        if (auto object = AxiomCommon::dynamicCast<ModelObject *>(pool().sequence().sequence()).find(item)) {
             inputItems.push_back(*object);
 
             for (const auto &linked : (*object)->compileLinks()) {
@@ -80,14 +81,14 @@ void ModelRoot::applyCompile(const std::vector<QUuid> &items) {
     applyItemsTo(items, &transaction);
     applyTransaction(std::move(transaction));
 
-    modified.trigger();
+    modified();
 }
 
 void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
     auto lock = lockRuntime();
 
     if (_runtime) {
-        auto allObjects = dynamicCast<ModelObject *>(_pool.sequence());
+        auto allObjects = AxiomCommon::dynamicCast<ModelObject *>(_pool.sequence().sequence());
         for (const auto &obj : allObjects) {
             obj->saveState();
         }
@@ -100,7 +101,7 @@ void ModelRoot::applyTransaction(MaximCompiler::Transaction transaction) {
         }
     }
 
-    configurationChanged.trigger();
+    configurationChanged();
 }
 
 void ModelRoot::destroy() {

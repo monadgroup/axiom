@@ -15,9 +15,9 @@ std::unique_ptr<SetShowNameAction> SetShowNameAction::create(const QUuid &uuid, 
 }
 
 void SetShowNameAction::forward(bool first, std::vector<QUuid> &) {
-    find(root()->controls(), _uuid)->setShowName(_afterVal);
+    find(root()->controls().sequence(), _uuid)->setShowName(_afterVal);
 }
 
 void SetShowNameAction::backward(std::vector<QUuid> &) {
-    find(root()->controls(), _uuid)->setShowName(_beforeVal);
+    find(root()->controls().sequence(), _uuid)->setShowName(_beforeVal);
 }

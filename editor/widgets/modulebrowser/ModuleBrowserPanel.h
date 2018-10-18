@@ -3,7 +3,7 @@
 #include <map>
 
 #include "../dock/DockPanel.h"
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 class QTabBar;
 class QLineEdit;
@@ -16,7 +16,7 @@ namespace AxiomGui {
 
     class MainWindow;
 
-    class ModuleBrowserPanel : public DockPanel, public AxiomCommon::Hookable {
+    class ModuleBrowserPanel : public DockPanel, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:

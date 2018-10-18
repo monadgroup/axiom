@@ -29,7 +29,7 @@ void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forwar
 
     _stack.push_back(std::move(action));
 
-    stackChanged.trigger();
+    stackChanged();
 }
 
 bool HistoryList::canUndo() const {
@@ -50,7 +50,7 @@ void HistoryList::undo() {
     undoAction->backward(compileItems);
     applyCompile(std::move(compileItems));
 
-    stackChanged.trigger();
+    stackChanged();
 }
 
 bool HistoryList::canRedo() const {
@@ -72,5 +72,5 @@ void HistoryList::redo() {
 
     applyCompile(std::move(compileItems));
 
-    stackChanged.trigger();
+    stackChanged();
 }
