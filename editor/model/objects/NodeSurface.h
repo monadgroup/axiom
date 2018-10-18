@@ -59,7 +59,7 @@ namespace AxiomModel {
 
         void setZoom(float zoom);
 
-        AxiomCommon::BoxedSequence<ModelObject *> getCopyItems();
+        std::vector<ModelObject *> getCopyItems();
 
         virtual uint64_t getRuntimeId() = 0;
 

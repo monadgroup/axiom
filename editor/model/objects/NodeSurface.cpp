@@ -36,16 +36,17 @@ void NodeSurface::setZoom(float zoom) {
     }
 }
 
-AxiomCommon::BoxedSequence<ModelObject *> NodeSurface::getCopyItems() {
+std::vector<ModelObject *> NodeSurface::getCopyItems() {
     // we want to copy:
     // all nodes and their children (but NOT nodes that aren't copyable!)
     // all connections that connect to controls in nodes that are selected
 
     auto copyNodes =
         AxiomCommon::filter(_nodes.sequence(), [](Node *node) { return node->isSelected() && node->isCopyable(); });
-    auto poolSequence = AxiomCommon::dynamicCast<ModelObject *>(pool()->sequence().sequence());
-    auto copyChildren = AxiomCommon::flatten(
-        AxiomCommon::map(copyNodes, [poolSequence](Node *node) { return findDependents(poolSequence, node->uuid()); }));
+    auto poolSequence = AxiomCommon::collect(AxiomCommon::dynamicCast<ModelObject *>(pool()->sequence().sequence()));
+    auto poolSequenceRef = AxiomCommon::refSequence(&poolSequence);
+    auto copyChildren = AxiomCommon::flatten(AxiomCommon::map(
+        copyNodes, [poolSequenceRef](Node *node) { return findDependents(poolSequenceRef, node->uuid()); }));
     auto copyControls = AxiomCommon::dynamicCast<Control *>(copyChildren);
     QSet<QUuid> controlUuids;
     for (const auto &control : copyControls) {
@@ -56,8 +57,8 @@ AxiomCommon::BoxedSequence<ModelObject *> NodeSurface::getCopyItems() {
         return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
     });
 
-    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
-        AxiomCommon::boxSequence(std::move(copyChildren)),
+    return AxiomCommon::collect(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
+        AxiomCommon::boxSequence(copyChildren),
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(copyConnections))}));
 }
 
