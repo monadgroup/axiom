@@ -22,20 +22,23 @@ GridSurface::ItemCollection GridSurface::selectedItems() {
 }
 
 void GridSurface::selectAll() {
-    for (const auto &item : items().sequence()) {
+    auto itms = items();
+    for (const auto &item : itms.sequence()) {
         item->select(false);
     }
 }
 
 void GridSurface::deselectAll() {
-    for (const auto &item : items().sequence()) {
+    auto itms = items();
+    for (const auto &item : itms.sequence()) {
         item->deselect();
     }
 }
 
 void GridSurface::startDragging() {
     lastDragDelta = QPoint(0, 0);
-    for (auto &item : selectedItems().sequence()) {
+    auto selectedItms = selectedItems();
+    for (auto &item : selectedItms.sequence()) {
         item->startDragging();
     }
 }
@@ -43,24 +46,26 @@ void GridSurface::startDragging() {
 void GridSurface::dragTo(QPoint delta) {
     if (delta == lastDragDelta) return;
 
-    for (auto &item : selectedItems().sequence()) {
+    auto selectedItms = selectedItems();
+    for (auto &item : selectedItms.sequence()) {
         _grid.setRect(item->pos(), item->size(), nullptr);
     }
 
     auto availableDelta = findAvailableDelta(delta);
     lastDragDelta = availableDelta;
-    for (auto &item : selectedItems().sequence()) {
+    for (auto &item : selectedItms.sequence()) {
         item->dragTo(availableDelta);
     }
 
-    for (auto &item : selectedItems().sequence()) {
+    for (auto &item : selectedItms.sequence()) {
         _grid.setRect(item->pos(), item->size(), item);
     }
     setDirty();
 }
 
 void GridSurface::finishDragging() {
-    for (auto &item : selectedItems().sequence()) {
+    auto selectedItms = selectedItems();
+    for (auto &item : selectedItms.sequence()) {
         item->finishDragging();
     }
 }
@@ -82,7 +87,8 @@ void GridSurface::tryFlush() {
 }
 
 bool GridSurface::isAllDragAvailable(QPoint delta) {
-    for (auto &item : selectedItems().sequence()) {
+    auto selectedItms = selectedItems();
+    for (auto &item : selectedItms.sequence()) {
         if (!item->isDragAvailable(delta)) return false;
     }
     return true;
