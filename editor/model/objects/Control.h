@@ -108,7 +108,7 @@ namespace AxiomModel {
 
         AxiomCommon::BoxedSequence<ModelObject *> links() override;
 
-        AxiomCommon::BoxedSequence<QUuid> deleteCompileLinks() override;
+        AxiomCommon::BoxedSequence<QUuid> compileLinks() override;
 
         const std::optional<ControlCompileMeta> &compileMeta() const;
 

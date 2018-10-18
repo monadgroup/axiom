@@ -188,7 +188,7 @@ AxiomCommon::BoxedSequence<ModelObject *> Control::links() {
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(connections))}));
 }
 
-AxiomCommon::BoxedSequence<QUuid> Control::deleteCompileLinks() {
+AxiomCommon::BoxedSequence<QUuid> Control::compileLinks() {
     return AxiomCommon::boxSequence(AxiomCommon::once(surface()->node()->parentUuid()));
 }
 
