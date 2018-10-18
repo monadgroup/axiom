@@ -177,7 +177,7 @@ namespace AxiomCommon {
         };
 
         SingleIter<typename Sequence::value_type, typename Sequence::iterator> iter;
-        std::optional<typename Sequence::value_type> innerSequence;
+        std::optional<typename Sequence::value_type *> innerSequence;
         std::optional<SingleIter<Item, typename Sequence::value_type::iterator>> innerIter;
 
         explicit FlattenGenerator(Data *data) : iter(data->sequence.begin(), data->sequence.end()) {}
@@ -200,9 +200,9 @@ namespace AxiomCommon {
                         return std::nullopt;
                     }
 
-                    innerSequence = std::move(**nextSequence);
-                    innerIter = SingleIter<Item, typename Sequence::value_type::iterator>(innerSequence->begin(),
-                                                                                          innerSequence->end());
+                    innerSequence = *nextSequence;
+                    innerIter = SingleIter<Item, typename Sequence::value_type::iterator>((*innerSequence)->begin(),
+                                                                                          (*innerSequence)->end());
                     nextValue = innerIter->next();
                 }
             }
@@ -242,7 +242,7 @@ namespace AxiomCommon {
 
         explicit IntoIterGenerator(Data *data) : iter(data->collection.begin(), data->collection.end()) {}
 
-        std::optional<Item *> next() { return iter.next(); }
+        std::optional<Item> next() { return iter.next(); }
     };
 
     template<class InternalSequence, class FilterMapFunctor>
