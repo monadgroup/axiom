@@ -254,6 +254,18 @@ impl Control for GraphControl {
             .ctx
             .context
             .append_basic_block(&control.ctx.func, "curveactive.true");
+        let curve_has_length_true_block = control
+            .ctx
+            .context
+            .append_basic_block(&control.ctx.func, "curvelength.true");
+        let curve_has_length_false_block = control
+            .ctx
+            .context
+            .append_basic_block(&control.ctx.func, "curvelength.false");
+        let curve_has_length_continue_block = control
+            .ctx
+            .context
+            .append_basic_block(&control.ctx.func, "curvelength.continue");
         let increment_sample_true_block = control
             .ctx
             .context
@@ -337,8 +349,59 @@ impl Control for GraphControl {
             curve_end_samples,
             "curveactive.cond",
         );
+
+        // determine if the graph is paused at the curves start - we must pause here even if the
+        // curve isn't active - this happens if the curve is zero-length but still tagged
+        let curve_state = control
+            .ctx
+            .b
+            .build_load(
+                &unsafe {
+                    control.ctx.b.build_in_bounds_gep(
+                        &state_array_ptr,
+                        &[
+                            control.ctx.context.i64_type().const_int(0, false),
+                            current_loop_index,
+                        ],
+                        "curvestate.ptr",
+                    )
+                },
+                "curvestate",
+            ).into_int_value();
+        let last_curve_end_samples = control
+            .ctx
+            .b
+            .build_load(&last_curve_end_samples_ptr, "lastcurveend")
+            .into_int_value();
+        let increment_sample = control.ctx.b.build_or(
+            control.ctx.b.build_int_compare(
+                IntPredicate::UGT,
+                current_time_samples,
+                last_curve_end_samples,
+                "",
+            ),
+            control.ctx.b.build_int_compare(
+                IntPredicate::NE,
+                curve_state,
+                control.ctx.b.build_int_add(
+                    current_state,
+                    control.ctx.context.i8_type().const_int(1, false),
+                    "",
+                ),
+                "",
+            ),
+            "",
+        );
+        let is_paused = control.ctx.b.build_not(&increment_sample, "paused");
+
+        let curve_active_or_paused =
+            control
+                .ctx
+                .b
+                .build_or(curve_active_cond, is_paused, "activeorpaused.cond");
+
         control.ctx.b.build_conditional_branch(
-            &curve_active_cond,
+            &curve_active_or_paused,
             &curve_active_true_block,
             &curve_active_false_block,
         );
@@ -346,11 +409,6 @@ impl Control for GraphControl {
         control.ctx.b.position_at_end(&curve_active_true_block);
 
         // calculate current output in this graph
-        let last_curve_end_samples = control
-            .ctx
-            .b
-            .build_load(&last_curve_end_samples_ptr, "lastcurveend")
-            .into_int_value();
         let sample_offset = control.ctx.b.build_int_sub(
             current_time_samples,
             last_curve_end_samples,
@@ -361,6 +419,40 @@ impl Control for GraphControl {
                 .ctx
                 .b
                 .build_int_sub(curve_end_samples, last_curve_end_samples, "curveduration");
+        let curve_min_value = control
+            .ctx
+            .b
+            .build_load(
+                &unsafe {
+                    control.ctx.b.build_in_bounds_gep(
+                        &start_vals_array_ptr,
+                        &[
+                            control.ctx.context.i64_type().const_int(0, false),
+                            current_loop_index,
+                        ],
+                        "curvemin.ptr",
+                    )
+                },
+                "curvemin",
+            ).into_float_value();
+        let curve_has_duration = control.ctx.b.build_int_compare(
+            IntPredicate::NE,
+            curve_duration_int,
+            control.ctx.context.i32_type().const_int(0, false),
+            "curveduration.cond",
+        );
+        control.ctx.b.build_conditional_branch(
+            &curve_has_duration,
+            &curve_has_length_true_block,
+            &curve_has_length_false_block,
+        );
+
+        let output_float_ptr = control
+            .ctx
+            .allocb
+            .build_alloca(&control.ctx.context.f32_type(), "output.float.ptr");
+
+        control.ctx.b.position_at_end(&curve_has_length_true_block);
         let curve_function_x = control.ctx.b.build_float_div(
             control.ctx.b.build_unsigned_int_to_float(
                 sample_offset,
@@ -401,23 +493,6 @@ impl Control for GraphControl {
             ).left()
             .unwrap()
             .into_float_value();
-
-        let curve_min_value = control
-            .ctx
-            .b
-            .build_load(
-                &unsafe {
-                    control.ctx.b.build_in_bounds_gep(
-                        &start_vals_array_ptr,
-                        &[
-                            control.ctx.context.i64_type().const_int(0, false),
-                            current_loop_index,
-                        ],
-                        "curvemin.ptr",
-                    )
-                },
-                "curvemin",
-            ).into_float_value();
         let curve_max_value = control
             .ctx
             .b
@@ -448,6 +523,31 @@ impl Control for GraphControl {
             ),
             "output.float",
         );
+        control.ctx.b.build_store(&output_float_ptr, &output_float);
+        control
+            .ctx
+            .b
+            .build_unconditional_branch(&curve_has_length_continue_block);
+
+        control.ctx.b.position_at_end(&curve_has_length_false_block);
+        control
+            .ctx
+            .b
+            .build_store(&output_float_ptr, &curve_min_value);
+        control
+            .ctx
+            .b
+            .build_unconditional_branch(&curve_has_length_continue_block);
+
+        control
+            .ctx
+            .b
+            .position_at_end(&curve_has_length_continue_block);
+        let output_float = control
+            .ctx
+            .b
+            .build_load(&output_float_ptr, "output.float")
+            .into_float_value();
         let output_vec = util::splat_vector(control.ctx.b, output_float, "output.vec");
         let output_num = NumValue::new(control.val_ptr);
         output_num.set_vec(control.ctx.b, &output_vec);
@@ -461,42 +561,6 @@ impl Control for GraphControl {
         );
 
         // increment time if not at the start of the curve OR state == input state
-        let curve_state = control
-            .ctx
-            .b
-            .build_load(
-                &unsafe {
-                    control.ctx.b.build_in_bounds_gep(
-                        &state_array_ptr,
-                        &[
-                            control.ctx.context.i64_type().const_int(0, false),
-                            current_loop_index,
-                        ],
-                        "curvestate.ptr",
-                    )
-                },
-                "curvestate",
-            ).into_int_value();
-        let increment_sample = control.ctx.b.build_or(
-            control.ctx.b.build_int_compare(
-                IntPredicate::UGT,
-                current_time_samples,
-                last_curve_end_samples,
-                "",
-            ),
-            control.ctx.b.build_int_compare(
-                IntPredicate::NE,
-                curve_state,
-                control.ctx.b.build_int_add(
-                    current_state,
-                    control.ctx.context.i8_type().const_int(1, false),
-                    "",
-                ),
-                "",
-            ),
-            "",
-        );
-        let is_paused = control.ctx.b.build_not(&increment_sample, "paused");
         control.ctx.b.build_store(&is_paused_ptr, &is_paused);
         control.ctx.b.build_conditional_branch(
             &increment_sample,
