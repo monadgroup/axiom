@@ -25,7 +25,7 @@ using namespace AxiomGui;
 
 static constexpr int SCROLL_MULTIPLIER = 1000;
 
-static constexpr float MIN_ZOOM = -2;
+static constexpr float MIN_ZOOM = -3;
 static constexpr float MAX_ZOOM = 3;
 
 static float remapSecondsToPixels(float seconds, float secondsPerPixel, float scroll) {
@@ -60,7 +60,7 @@ static void drawTensionGraph(QPainterPath &path, QPointF startLeft, QPointF endR
 
 static double getSnapSeconds(double widthSeconds, double boxWidth) {
     const double snappingPoint = 2;
-    return pow(snappingPoint, ceil(log(widthSeconds / boxWidth * 20) / log(snappingPoint)));
+    return pow(snappingPoint, ceil(log(widthSeconds / boxWidth * 10) / log(snappingPoint)));
 }
 
 static QPainterPath generateTagPolygon() {
@@ -681,6 +681,26 @@ void GraphControlArea::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
         item->control->root()->history().append(AxiomModel::AddGraphPointAction::create(
             item->control->uuid(), *insertIndex, (float) newPointTime, (float) newPointVal, item->control->root()));
     }
+}
+
+void GraphControlArea::wheelEvent(QGraphicsSceneWheelEvent *event) {
+    auto mousePos = event->pos().x() - drawBounds.x();
+
+    // get the scroll that would be required to start at the mouse position as it is now
+    auto lastWidthSeconds = getWidthSeconds(item->control->zoom());
+    auto lastPixelsPerSecond = drawBounds.width() / lastWidthSeconds;
+    auto lastMouseScrollPos = mousePos / lastPixelsPerSecond;
+
+    auto delta = -4 * event->delta() / 1200.f;
+    item->control->setZoom(qMax(MIN_ZOOM, qMin(item->control->zoom() + delta, MAX_ZOOM)));
+
+    auto newWidthSeconds = getWidthSeconds(item->control->zoom());
+    auto newPixelsPerSecond = drawBounds.width() / newWidthSeconds;
+    auto newMouseScrollPos = mousePos / newPixelsPerSecond;
+
+    auto maxZoom = getWidthSeconds(MAX_ZOOM) - newWidthSeconds;
+    item->control->setScroll(
+        qMax(0.f, qMin((float) (item->control->scroll() - newMouseScrollPos + lastMouseScrollPos), maxZoom)));
 }
 
 ScrollBarGraphicsItem::ScrollBarGraphicsItem(Qt::Orientation orientation) : scrollBar(new QScrollBar(orientation)) {

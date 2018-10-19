@@ -174,6 +174,8 @@ namespace AxiomGui {
 
         void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
+        void wheelEvent(QGraphicsSceneWheelEvent *event) override;
+
     private:
         std::vector<std::unique_ptr<QGraphicsPathItem>> _curves;
         std::vector<std::unique_ptr<GraphControlTensionKnob>> _tensionKnobs;
