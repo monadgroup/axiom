@@ -100,6 +100,7 @@ namespace AxiomCommon {
     class BoxedWatchEvents {
         class BoxAdapter {
         public:
+            virtual ~BoxAdapter() = default;
             virtual Event<Item> &itemAdded() = 0;
             virtual Event<Item> &itemRemoved() = 0;
         };
