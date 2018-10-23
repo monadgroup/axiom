@@ -154,6 +154,7 @@ namespace AxiomCommon {
     template<class Item>
     class IteratorAdapter {
     public:
+        virtual ~IteratorAdapter() = default;
         virtual std::unique_ptr<IteratorAdapter> clone() const = 0;
         virtual bool ended() const = 0;
         virtual void increment() = 0;
@@ -233,6 +234,7 @@ namespace AxiomCommon {
     class BoxedSequence {
         class BoxAdapter {
         public:
+            virtual ~BoxAdapter() = default;
             virtual std::unique_ptr<BoxAdapter> clone() = 0;
             virtual std::unique_ptr<IteratorAdapter<I>> begin() = 0;
             virtual std::unique_ptr<IteratorAdapter<I>> end() = 0;
