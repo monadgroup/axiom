@@ -40,7 +40,7 @@ namespace AxiomCommon {
             using iterator_category = std::forward_iterator_tag;
 
             struct iterator_reference {
-                key key;
+                size_t key;
                 reference value;
             };
 
