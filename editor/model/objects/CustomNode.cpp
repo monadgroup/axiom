@@ -35,6 +35,10 @@ std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &p
                                         panelOpen, panelHeight, root);
 }
 
+QString CustomNode::debugName() {
+    return "CustomNode '" + name() + "'";
+}
+
 void CustomNode::setCode(const QString &code) {
     if (_code != code) {
         _code = code;
@@ -42,17 +46,17 @@ void CustomNode::setCode(const QString &code) {
 
         if (runtimeId) {
             buildCode();
+            setDirty();
         }
     }
 }
 
 void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
-    std::vector<QUuid> compileItems;
     auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), {}, root());
-    setCodeAction->forward(true, compileItems);
+    setCodeAction->forward(true);
     updateControls(setCodeAction.get());
     root()->history().append(std::move(setCodeAction), false);
-    root()->applyCompile(compileItems);
+    root()->compileDirtyItems();
 }
 
 void CustomNode::setPanelOpen(bool panelOpen) {
@@ -172,8 +176,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
 
             auto renameAction = RenameControlAction::create(tryClaimControl->uuid(), tryClaimControl->name(),
                                                             std::move(newControl.name), tryClaimControl->root());
-            std::vector<QUuid> dummy;
-            renameAction->forward(true, dummy);
+            renameAction->forward(true);
 
             assert(action);
             action->controlActions().push_back(std::move(renameAction));
@@ -191,8 +194,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
     // remove any controls that weren't retained
     for (const auto &removedControl : removeControls) {
         auto deleteAction = DeleteObjectAction::create(removedControl->uuid(), root());
-        std::vector<QUuid> dummy;
-        deleteAction->forward(true, dummy);
+        deleteAction->forward(true);
 
         assert(action);
         action->controlActions().push_back(std::move(deleteAction));
@@ -204,8 +206,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
     for (auto &newControl : unmatchedControls) {
         auto createAction = CreateControlAction::create((*controls().value())->uuid(), newControl.type,
                                                         std::move(newControl.name), newControl.meta.writtenTo, root());
-        std::vector<QUuid> dummy;
-        createAction->forward(true, dummy);
+        createAction->forward(true);
 
         assert(action);
         action->controlActions().push_back(std::move(createAction));

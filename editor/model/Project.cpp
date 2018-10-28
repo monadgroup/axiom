@@ -55,24 +55,23 @@ Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
             break;
         }
 
-        std::vector<QUuid> dummyItems;
         switch (portal.type) {
         case AxiomBackend::PortalType::INPUT:
             CreatePortalNodeAction::create(rootId, QPoint(-3, inputOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::INPUT, &mainRoot())
-                ->forward(true, dummyItems);
+                ->forward(true);
             inputOffset += portalSpacing;
             break;
         case AxiomBackend::PortalType::OUTPUT:
             CreatePortalNodeAction::create(rootId, QPoint(3, outputOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::OUTPUT, &mainRoot())
-                ->forward(true, dummyItems);
+                ->forward(true);
             outputOffset += portalSpacing;
             break;
         case AxiomBackend::PortalType::AUTOMATION:
             CreatePortalNodeAction::create(rootId, QPoint(0, automationOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::AUTOMATION, &mainRoot())
-                ->forward(true, dummyItems);
+                ->forward(true);
             automationOffset += portalSpacing;
             break;
         }

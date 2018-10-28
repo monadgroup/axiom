@@ -47,8 +47,7 @@ void HistorySerializer::serialize(const AxiomModel::HistoryList &history, QDataS
     }
 }
 
-HistoryList HistorySerializer::deserialize(QDataStream &stream, uint32_t version, ModelRoot *root,
-                                           HistoryList::CompileApplyer applyer) {
+HistoryList HistorySerializer::deserialize(QDataStream &stream, uint32_t version, ModelRoot *root) {
     uint32_t stackPos;
     stream >> stackPos;
     uint32_t stackSize;
@@ -63,7 +62,7 @@ HistoryList HistorySerializer::deserialize(QDataStream &stream, uint32_t version
         stack.push_back(deserializeAction(actionStream, version, root));
     }
 
-    return HistoryList(stackPos, std::move(stack), std::move(applyer));
+    return HistoryList(stackPos, std::move(stack));
 }
 
 void HistorySerializer::serializeAction(AxiomModel::Action *action, QDataStream &stream) {

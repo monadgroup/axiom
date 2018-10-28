@@ -36,6 +36,8 @@ namespace AxiomModel {
                                                     std::unique_ptr<GraphControlCurveState> savedState,
                                                     ModelRoot *root);
 
+        QString debugName() override;
+
         void doRuntimeUpdate() override;
 
         GraphControlTimeState *getTimeState() const;

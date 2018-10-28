@@ -108,8 +108,6 @@ namespace AxiomModel {
 
         AxiomCommon::BoxedSequence<ModelObject *> links() override;
 
-        AxiomCommon::BoxedSequence<QUuid> compileLinks() override;
-
         const std::optional<ControlCompileMeta> &compileMeta() const;
 
         const std::optional<MaximFrontend::ControlPointers> &runtimePointers() const;
@@ -121,8 +119,6 @@ namespace AxiomModel {
 
             restoreState();
         }
-
-        void remove() override;
 
     private:
         ControlSurface *_surface;

@@ -33,6 +33,8 @@ namespace AxiomModel {
 
         QString name() override;
 
+        QString debugName() override;
+
         bool canExposeControl() const override { return true; }
 
         bool canHavePortals() const override { return false; }
@@ -40,8 +42,6 @@ namespace AxiomModel {
         GroupNode *node() const { return _node; }
 
         uint64_t getRuntimeId() override { return runtimeId; }
-
-        AxiomCommon::BoxedSequence<QUuid> compileLinks() override;
 
         void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 

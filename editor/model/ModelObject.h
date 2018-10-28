@@ -29,6 +29,12 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
+        virtual QString debugName() = 0;
+
+        bool isDirty() const { return _isDirty; }
+
+        void clearDirty() { _isDirty = false; }
+
         virtual void saveState() {}
 
         virtual void restoreState() {}
@@ -37,16 +43,16 @@ namespace AxiomModel {
 
         virtual AxiomCommon::BoxedSequence<ModelObject *> links();
 
-        virtual AxiomCommon::BoxedSequence<QUuid> deleteCompileLinks();
-
-        virtual AxiomCommon::BoxedSequence<QUuid> compileLinks();
-
         virtual void build(MaximCompiler::Transaction *transaction) {}
 
         void remove() override;
 
+    protected:
+        void setDirty() { _isDirty = true; }
+
     private:
         ModelType _modelType;
         ModelRoot *_root;
+        bool _isDirty = true;
     };
 }

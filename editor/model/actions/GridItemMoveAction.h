@@ -14,9 +14,9 @@ namespace AxiomModel {
         static std::unique_ptr<GridItemMoveAction> create(const QUuid &uuid, QPoint beforePos, QPoint afterPos,
                                                           AxiomModel::ModelRoot *root);
 
-        void forward(bool first, std::vector<QUuid> &compileItems) override;
+        void forward(bool first) override;
 
-        void backward(std::vector<QUuid> &compileItems) override;
+        void backward() override;
 
         const QUuid &uuid() const { return _uuid; }
 

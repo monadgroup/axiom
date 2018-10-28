@@ -30,12 +30,14 @@ namespace AxiomModel {
 
         std::unique_ptr<PoolObject> removeObj(PoolObject *obj);
 
+        const std::vector<std::unique_ptr<PoolObject>> &objects() const { return _objects; }
+
         Sequence sequence() { return AxiomCommon::refWatchSequence(&_sequence); }
 
         void destroy();
 
     private:
-        std::vector<std::unique_ptr<PoolObject>> objects;
+        std::vector<std::unique_ptr<PoolObject>> _objects;
         QHash<QUuid, PoolObject *> index;
         BaseSequence _sequence;
     };

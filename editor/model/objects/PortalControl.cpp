@@ -33,6 +33,10 @@ std::unique_ptr<PortalControl> PortalControl::create(const QUuid &uuid, const QU
                                            exposerUuid, exposingUuid, wireType, portalType, portalId, root);
 }
 
+QString PortalControl::debugName() {
+    return "PortalControl '" + name() + "'";
+}
+
 void PortalControl::restoreState() {
     _needsLabelUpdate = true;
     labelWillChange();

@@ -38,7 +38,7 @@ std::unique_ptr<CompositeAction> ExposeControlAction::create(const QUuid &contro
     return std::move(prepareData.preActions);
 }
 
-void ExposeControlAction::forward(bool, std::vector<QUuid> &compileItems) {
+void ExposeControlAction::forward(bool) {
     auto controlToExpose = find(root()->controls().sequence(), _controlUuid);
     controlToExpose->setExposerUuid(_exposeUuid);
     auto controlSurface = dynamic_cast<GroupSurface *>(controlToExpose->surface()->node()->surface());
@@ -50,20 +50,9 @@ void ExposeControlAction::forward(bool, std::vector<QUuid> &compileItems) {
     auto newControl = Control::createDefault(controlToExpose->controlType(), _exposeUuid, exposeSurface->uuid(),
                                              controlToExpose->name(), _controlUuid, _pos, _size, isWrittenTo, root());
     root()->pool().registerObj(std::move(newControl));
-
-    compileItems.push_back(controlSurface->uuid());
-    compileItems.push_back(exposeNode->surface()->uuid());
 }
 
-void ExposeControlAction::backward(std::vector<QUuid> &compileItems) {
-    auto innerControl = find(root()->controls().sequence(), _controlUuid);
-    auto innerSurface = innerControl->surface()->node()->surface();
-
+void ExposeControlAction::backward() {
     auto exposedControl = find(root()->controls().sequence(), _exposeUuid);
-    auto exposeSurface = exposedControl->surface()->node()->surface();
-
     exposedControl->remove();
-
-    compileItems.push_back(innerSurface->uuid());
-    compileItems.push_back(exposeSurface->uuid());
 }

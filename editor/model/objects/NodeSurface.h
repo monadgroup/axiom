@@ -83,6 +83,6 @@ namespace AxiomModel {
 
         MaximCompiler::Runtime *_runtime = nullptr;
 
-        void nodeAdded(Node *node) const;
+        void nodeAdded(Node *node);
     };
 }

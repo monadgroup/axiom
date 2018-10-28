@@ -14,10 +14,10 @@ std::unique_ptr<SetShowNameAction> SetShowNameAction::create(const QUuid &uuid, 
     return std::make_unique<SetShowNameAction>(uuid, beforeVal, afterVal, root);
 }
 
-void SetShowNameAction::forward(bool first, std::vector<QUuid> &) {
+void SetShowNameAction::forward(bool first) {
     find(root()->controls().sequence(), _uuid)->setShowName(_afterVal);
 }
 
-void SetShowNameAction::backward(std::vector<QUuid> &) {
+void SetShowNameAction::backward() {
     find(root()->controls().sequence(), _uuid)->setShowName(_beforeVal);
 }

@@ -19,6 +19,10 @@ std::unique_ptr<GroupNode> GroupNode::create(const QUuid &uuid, const QUuid &par
     return std::make_unique<GroupNode>(uuid, parentUuid, pos, size, selected, name, controlsUuid, innerUuid, root);
 }
 
+QString GroupNode::debugName() {
+    return "GroupNode '" + name() + "'";
+}
+
 void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     nodes().then([runtime, transaction](NodeSurface *const &surface) { surface->attachRuntime(runtime, transaction); });
 }

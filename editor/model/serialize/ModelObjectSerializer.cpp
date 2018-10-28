@@ -51,8 +51,7 @@ std::unique_ptr<ModelRoot> ModelObjectSerializer::deserializeRoot(QDataStream &s
     IdentityReferenceMapper ref;
     deserializeChunk(stream, version, modelRoot.get(), QUuid(), &ref);
     if (includeHistory) {
-        modelRoot->history() =
-            HistorySerializer::deserialize(stream, version, modelRoot.get(), std::move(modelRoot->history().applyer()));
+        modelRoot->setHistory(HistorySerializer::deserialize(stream, version, modelRoot.get()));
     }
     return modelRoot;
 }

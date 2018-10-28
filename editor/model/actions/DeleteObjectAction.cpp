@@ -21,7 +21,7 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
     return create(uuid, QByteArray(), root);
 }
 
-void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
+void DeleteObjectAction::forward(bool) {
     auto sortedItems = heapSort(getLinkedItems(_uuid));
 
     QDataStream stream(&_buffer, QIODevice::WriteOnly);
@@ -33,39 +33,24 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
     // until that's empty.
     // We'll also need a list of parent UUIDs to build transactions later, so we can do that here.
     QSet<QUuid> usedIds;
-    QSet<QUuid> compileIds;
     for (const auto &itm : sortedItems) {
         usedIds.insert(itm->uuid());
-        compileIds.remove(itm->uuid());
-
-        auto compileLinks = itm->deleteCompileLinks();
-        for (const auto &compileItem : compileLinks) {
-            compileIds.insert(compileItem);
-        }
     }
     auto itemsToDelete =
-        findAll(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), std::move(usedIds));
+        findAll(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), usedIds);
 
     // remove all items
     while (!itemsToDelete.empty()) {
         (*itemsToDelete.begin())->remove();
     }
-
-    for (const auto &compileId : compileIds) {
-        compileItems.push_back(compileId);
-    }
 }
 
-void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
+void DeleteObjectAction::backward() {
     QDataStream stream(&_buffer, QIODevice::ReadOnly);
     IdentityReferenceMapper ref;
     auto addedObjects =
         ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), QUuid(), &ref);
     _buffer.clear();
-
-    for (const auto &obj : addedObjects) {
-        compileItems.push_back(obj->uuid());
-    }
 }
 
 std::vector<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &seed) const {

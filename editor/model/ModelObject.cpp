@@ -18,14 +18,6 @@ AxiomCommon::BoxedSequence<ModelObject *> ModelObject::links() {
     return AxiomCommon::boxSequence(AxiomCommon::blank<ModelObject *>());
 }
 
-AxiomCommon::BoxedSequence<QUuid> ModelObject::deleteCompileLinks() {
-    return AxiomCommon::boxSequence(AxiomCommon::once(parentUuid()));
-}
-
-AxiomCommon::BoxedSequence<QUuid> ModelObject::compileLinks() {
-    return AxiomCommon::boxSequence(AxiomCommon::blank<QUuid>());
-}
-
 void ModelObject::remove() {
     removed();
     PoolObject::remove();

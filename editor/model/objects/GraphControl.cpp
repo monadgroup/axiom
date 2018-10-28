@@ -18,6 +18,10 @@ std::unique_ptr<GraphControl> GraphControl::create(const QUuid &uuid, const QUui
                                           exposingUuid, std::move(savedState), root);
 }
 
+QString GraphControl::debugName() {
+    return "GraphControl ' " + name() + "'";
+}
+
 void GraphControl::doRuntimeUpdate() {
     // hash the current state so we can compare it
     auto currentState = getCurveState();

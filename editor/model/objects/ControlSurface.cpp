@@ -29,6 +29,10 @@ std::unique_ptr<ControlSurface> ControlSurface::create(const QUuid &uuid, const 
     return std::make_unique<ControlSurface>(uuid, parentUuid, root);
 }
 
+QString ControlSurface::debugName() {
+    return "ControlSurface";
+}
+
 void ControlSurface::remove() {
     auto controls = findChildren(root()->controls().sequence(), uuid());
     while (!controls.empty()) {
