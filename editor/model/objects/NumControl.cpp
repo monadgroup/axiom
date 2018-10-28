@@ -35,6 +35,13 @@ QString NumControl::debugName() {
 }
 
 void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode) {
+    // if we're exposing, set it on the underlying control
+    if (!exposingUuid().isNull()) {
+        auto exposingControl = dynamic_cast<NumControl *>(find(root()->controls().sequence(), exposingUuid()));
+        assert(exposingControl);
+        exposingControl->setDisplayMode(displayMode);
+    }
+
     if (displayMode != _displayMode) {
         _displayMode = displayMode;
         displayModeChanged(displayMode);
@@ -42,6 +49,13 @@ void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode)
 }
 
 void NumControl::setRange(float minValue, float maxValue, uint32_t step) {
+    // if we're exposing, set it on the underlying control
+    if (!exposingUuid().isNull()) {
+        auto exposingControl = dynamic_cast<NumControl *>(find(root()->controls().sequence(), exposingUuid()));
+        assert(exposingControl);
+        exposingControl->setRange(minValue, maxValue, step);
+    }
+
     if (minValue != _minValue || maxValue != _maxValue || step != _step) {
         _minValue = minValue;
         _maxValue = maxValue;
