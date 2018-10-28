@@ -46,9 +46,7 @@ void ExposeControlAction::forward(bool) {
     auto exposeNode = controlSurface->node();
     auto exposeSurface = *exposeNode->controls().value();
 
-    auto isWrittenTo = controlToExpose->compileMeta() ? controlToExpose->compileMeta()->writtenTo : false;
-    auto newControl = Control::createDefault(controlToExpose->controlType(), _exposeUuid, exposeSurface->uuid(),
-                                             controlToExpose->name(), _controlUuid, _pos, _size, isWrittenTo, root());
+    auto newControl = Control::createExposed(controlToExpose, _exposeUuid, exposeSurface->uuid(), _pos, _size);
     root()->pool().registerObj(std::move(newControl));
 }
 

@@ -95,6 +95,19 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
     }
 }
 
+std::unique_ptr<Control> Control::createExposed(AxiomModel::Control *base, const QUuid &uuid, const QUuid &parentUuid,
+                                                QPoint pos, QSize size) {
+    if (auto numControl = dynamic_cast<NumControl *>(base)) {
+        return NumControl::create(uuid, parentUuid, pos, size, false, numControl->name(), numControl->showName(),
+                                  QUuid(), numControl->uuid(), numControl->displayMode(), numControl->minValue(),
+                                  numControl->maxValue(), numControl->step(), numControl->value(), numControl->root());
+    } else {
+        auto isWrittenTo = base->compileMeta() ? base->compileMeta()->writtenTo : false;
+        return createDefault(base->controlType(), uuid, parentUuid, base->name(), base->uuid(), pos, size, isWrittenTo,
+                             base->root());
+    }
+}
+
 ControlPrepare Control::buildControlPrepareAction(AxiomModel::Control::ControlType type, const QUuid &parentUuid,
                                                   AxiomModel::ModelRoot *root) {
     auto controlSurface = find(root->controlSurfaces().sequence(), parentUuid);

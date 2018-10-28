@@ -60,6 +60,9 @@ namespace AxiomModel {
                                                       const QString &name, const QUuid &exposingUuid, QPoint pos,
                                                       QSize size, bool isWrittenTo, ModelRoot *root);
 
+        static std::unique_ptr<Control> createExposed(Control *base, const QUuid &uuid, const QUuid &parentUuid,
+                                                      QPoint pos, QSize size);
+
         static ControlPrepare buildControlPrepareAction(ControlType type, const QUuid &parentUuid, ModelRoot *root);
 
         ControlSurface *surface() const { return _surface; }

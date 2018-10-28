@@ -13,7 +13,10 @@ NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
       _displayMode(displayMode), _minValue(minValue), _maxValue(maxValue), _step(step), _value(value) {
     if (!exposingUuid.isNull()) {
         findLater(AxiomCommon::dynamicCastWatch<NumControl *>(root->controls()), exposingUuid)
-            ->then([this](NumControl *exposing) { setValue(exposing->value()); });
+            ->then([this](NumControl *exposing) {
+                exposing->displayModeChanged.connect(this, &NumControl::setDisplayMode);
+                exposing->rangeChanged.connect(this, &NumControl::setRange);
+            });
     }
 }
 
