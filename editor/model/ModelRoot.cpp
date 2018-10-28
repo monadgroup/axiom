@@ -39,6 +39,13 @@ void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
     MaximCompiler::Transaction buildTransaction;
     rootSurface()->attachRuntime(_runtime, &buildTransaction);
     applyTransaction(std::move(buildTransaction));
+
+    // clear the dirty state of everything, since we've just compiled them
+    for (const auto &obj : pool().sequence().sequence()) {
+        if (auto modelObj = dynamic_cast<ModelObject *>(obj)) {
+            modelObj->clearDirty();
+        }
+    }
 }
 
 std::lock_guard<std::mutex> ModelRoot::lockRuntime() {
@@ -51,32 +58,29 @@ void ModelRoot::setHistory(AxiomModel::HistoryList history) {
 }
 
 void ModelRoot::applyDirtyItemsTo(MaximCompiler::Transaction *transaction) {
+    auto startTime = std::chrono::high_resolution_clock::now();
+
     // iterate over pool items in reverse order, since we need to compile children before parents
+    size_t dirtyItemCount = 0;
     for (auto rit = pool().objects().rbegin(); rit < pool().objects().rend(); rit++) {
         auto obj = dynamic_cast<ModelObject *>(rit->get());
         if (obj && obj->isDirty()) {
-            std::string parentObjName = "<root>";
-            if (!obj->parentUuid().isNull()) {
-                auto parentObj = dynamic_cast<ModelObject *>(find(pool().sequence().sequence(), obj->parentUuid()));
-                parentObjName = parentObj->debugName().toStdString();
-            }
-
-            std::cout << "Recompiling " << obj->debugName().toStdString() << " (in " << parentObjName << ")"
-                      << std::endl;
             obj->clearDirty();
             obj->build(transaction);
+            dirtyItemCount++;
         }
     }
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
+    std::cout << "Transaction build (" << dirtyItemCount << " items"
+              << ") took " << duration.count() / 1000000000. << "s" << std::endl;
 }
 
 void ModelRoot::compileDirtyItems() {
-    std::cout << "Compiling dirty items..." << std::endl;
     MaximCompiler::Transaction transaction;
     applyDirtyItemsTo(&transaction);
-    std::cout << "Applied dirty items, transaction is now:" << std::endl;
-    transaction.printToStdout();
     applyTransaction(std::move(transaction));
-    std::cout << "Finished applying" << std::endl;
 
     modified();
 }
