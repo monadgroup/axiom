@@ -22,6 +22,7 @@ std::unique_ptr<SetCodeAction> SetCodeAction::create(const QUuid &uuid, QString 
 void SetCodeAction::forward(bool first) {
     auto node = find(AxiomCommon::dynamicCast<CustomNode *>(root()->nodes().sequence()), _uuid);
     node->setCode(_newCode);
+    node->promoteStaging();
 
     for (const auto &action : _controlActions) {
         action->forward(first);
@@ -31,6 +32,7 @@ void SetCodeAction::forward(bool first) {
 void SetCodeAction::backward() {
     auto node = find(AxiomCommon::dynamicCast<CustomNode *>(root()->nodes().sequence()), _uuid);
     node->setCode(_oldCode);
+    node->promoteStaging();
 
     for (auto rit = _controlActions.rbegin(); rit < _controlActions.rend(); rit++) {
         (*rit)->backward();

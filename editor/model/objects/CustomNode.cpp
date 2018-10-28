@@ -43,11 +43,15 @@ void CustomNode::setCode(const QString &code) {
     if (_code != code) {
         _code = code;
         codeChanged(code);
+        buildCode();
+    }
+}
 
-        if (runtimeId) {
-            buildCode();
-            setDirty();
-        }
+void CustomNode::promoteStaging() {
+    if (_stagingBlock) {
+        _compiledBlock = std::move(_stagingBlock);
+        _stagingBlock = std::nullopt;
+        setDirty();
     }
 }
 
@@ -79,6 +83,9 @@ void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::T
     if (runtime) {
         runtimeId = runtime->nextId();
         buildCode();
+
+        // todo: if there's a build failure, find the latest working version
+        promoteStaging();
     } else {
         runtimeId = 0;
     }
@@ -103,12 +110,8 @@ void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *su
     });
 }
 
-std::optional<MaximCompiler::Block> CustomNode::compiledBlock() const {
-    if (_compiledBlock) {
-        return _compiledBlock->clone();
-    } else {
-        return std::nullopt;
-    }
+const std::optional<CustomNodeError> &CustomNode::compileError() const {
+    return _compileError;
 }
 
 void CustomNode::build(MaximCompiler::Transaction *transaction) {
@@ -239,7 +242,8 @@ void CustomNode::buildCode() {
     auto compileSuccess = MaximCompiler::Block::compile(getRuntimeId(), name(), code(), &block, &error);
 
     if (compileSuccess) {
-        _compiledBlock = std::move(block);
+        _stagingBlock = std::move(block);
+        _compileError.reset();
         codeCompileSuccess();
     } else {
         auto errorDescription = error.getDescription();
@@ -247,6 +251,8 @@ void CustomNode::buildCode() {
         std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> "
                   << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString()
                   << std::endl;
-        codeCompileError(errorDescription, errorRange);
+        _compileError = CustomNodeError(std::move(errorDescription), errorRange);
+        _stagingBlock.reset();
+        codeCompileError(*_compileError);
     }
 }
