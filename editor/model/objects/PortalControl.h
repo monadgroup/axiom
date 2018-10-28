@@ -21,6 +21,8 @@ namespace AxiomModel {
                                                      ConnectionWire::WireType wireType, PortalType portalType,
                                                      uint64_t portalId, ModelRoot *root);
 
+        QString debugName() override;
+
         bool isMovable() const override { return false; }
 
         PortalType portalType() const { return _portalType; }

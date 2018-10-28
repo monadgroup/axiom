@@ -19,6 +19,10 @@ std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &p
                                         exposingUuid, displayMode, minValue, maxValue, step, value, root);
 }
 
+QString NumControl::debugName() {
+    return "NumControl '" + name() + "'";
+}
+
 void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode) {
     if (displayMode != _displayMode) {
         _displayMode = displayMode;

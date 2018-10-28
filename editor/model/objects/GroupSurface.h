@@ -33,6 +33,8 @@ namespace AxiomModel {
 
         QString name() override;
 
+        QString debugName() override;
+
         bool canExposeControl() const override { return true; }
 
         bool canHavePortals() const override { return false; }

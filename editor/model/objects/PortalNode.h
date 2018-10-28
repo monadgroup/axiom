@@ -13,6 +13,8 @@ namespace AxiomModel {
                                                   bool selected, QString name, const QUuid &controlsUuid,
                                                   ModelRoot *root);
 
+        QString debugName() override;
+
         bool isResizable() const override { return false; }
 
         bool isCopyable() const override { return false; }

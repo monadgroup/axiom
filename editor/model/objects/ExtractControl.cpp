@@ -33,6 +33,10 @@ std::unique_ptr<ExtractControl> ExtractControl::create(const QUuid &uuid, const 
                                             exposerUuid, exposingUuid, wireType, activeSlots, root);
 }
 
+QString ExtractControl::debugName() {
+    return "ExtractControl '" + name() + "'";
+}
+
 void ExtractControl::setActiveSlots(AxiomModel::ExtractControl::ActiveSlotFlags activeSlots) {
     if (activeSlots != _activeSlots) {
         _activeSlots = activeSlots;

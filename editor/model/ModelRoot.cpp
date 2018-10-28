@@ -55,6 +55,14 @@ void ModelRoot::applyDirtyItemsTo(MaximCompiler::Transaction *transaction) {
     for (auto rit = pool().objects().rbegin(); rit < pool().objects().rend(); rit++) {
         auto obj = dynamic_cast<ModelObject *>(rit->get());
         if (obj && obj->isDirty()) {
+            std::string parentObjName = "<root>";
+            if (!obj->parentUuid().isNull()) {
+                auto parentObj = dynamic_cast<ModelObject *>(find(pool().sequence().sequence(), obj->parentUuid()));
+                parentObjName = parentObj->debugName().toStdString();
+            }
+
+            std::cout << "Recompiling " << obj->debugName().toStdString() << " (in " << parentObjName << ")"
+                      << std::endl;
             obj->clearDirty();
             obj->build(transaction);
         }
@@ -62,9 +70,13 @@ void ModelRoot::applyDirtyItemsTo(MaximCompiler::Transaction *transaction) {
 }
 
 void ModelRoot::compileDirtyItems() {
+    std::cout << "Compiling dirty items..." << std::endl;
     MaximCompiler::Transaction transaction;
     applyDirtyItemsTo(&transaction);
+    std::cout << "Applied dirty items, transaction is now:" << std::endl;
+    transaction.printToStdout();
     applyTransaction(std::move(transaction));
+    std::cout << "Finished applying" << std::endl;
 
     modified();
 }

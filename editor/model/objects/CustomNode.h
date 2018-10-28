@@ -32,6 +32,8 @@ namespace AxiomModel {
 
         const QString &code() const { return _code; }
 
+        QString debugName() override;
+
         void setCode(const QString &code);
 
         void doSetCodeAction(QString beforeCode, QString afterCode);

@@ -23,6 +23,8 @@ namespace AxiomModel {
                                                   const QUuid &exposingUuid, DisplayMode displayMode, float minValue,
                                                   float maxValue, uint32_t step, NumValue value, ModelRoot *root);
 
+        QString debugName() override;
+
         DisplayMode displayMode() const { return _displayMode; }
 
         void setDisplayMode(DisplayMode displayMode);

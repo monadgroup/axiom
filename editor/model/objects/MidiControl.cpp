@@ -14,3 +14,7 @@ std::unique_ptr<MidiControl> MidiControl::create(const QUuid &uuid, const QUuid 
     return std::make_unique<MidiControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
                                          exposingUuid, root);
 }
+
+QString MidiControl::debugName() {
+    return "MidiControl '" + name() + "'";
+}

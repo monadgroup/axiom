@@ -17,6 +17,8 @@ namespace AxiomModel {
                                                    bool selected, QString name, bool showName, const QUuid &exposerUuid,
                                                    const QUuid &exposingUuid, ModelRoot *root);
 
+        QString debugName() override;
+
         void doRuntimeUpdate() override {}
     };
 }

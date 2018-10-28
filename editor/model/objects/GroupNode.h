@@ -17,6 +17,8 @@ namespace AxiomModel {
                                                  bool selected, QString name, const QUuid &controlsUuid,
                                                  const QUuid &innerUuid, ModelRoot *root);
 
+        QString debugName() override;
+
         AxiomCommon::Promise<GroupSurface *> &nodes() { return *_nodes; }
 
         const AxiomCommon::Promise<GroupSurface *> &nodes() const { return *_nodes; }

@@ -14,3 +14,7 @@ std::unique_ptr<PortalNode> PortalNode::create(const QUuid &uuid, const QUuid &p
                                                AxiomModel::ModelRoot *root) {
     return std::make_unique<PortalNode>(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root);
 }
+
+QString PortalNode::debugName() {
+    return "PortalNode '" + name() + "'";
+}

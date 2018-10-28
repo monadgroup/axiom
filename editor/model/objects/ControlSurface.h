@@ -44,6 +44,8 @@ namespace AxiomModel {
 
         static QSizeF controlToNode(QSizeF p) { return {p.width() / 2., p.height() / 2.}; }
 
+        QString debugName() override;
+
         Node *node() const { return _node; }
 
         ChildCollection &controls() { return _controls; }

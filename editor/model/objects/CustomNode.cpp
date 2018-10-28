@@ -35,6 +35,10 @@ std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &p
                                         panelOpen, panelHeight, root);
 }
 
+QString CustomNode::debugName() {
+    return "CustomNode '" + name() + "'";
+}
+
 void CustomNode::setCode(const QString &code) {
     if (_code != code) {
         _code = code;

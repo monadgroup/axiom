@@ -48,6 +48,11 @@ std::unique_ptr<Connection> Connection::create(const QUuid &uuid, const QUuid &p
     return std::make_unique<Connection>(uuid, parentUuid, controlA, controlB, root);
 }
 
+QString Connection::debugName() {
+    return "Connection (" + find(root()->controls().sequence(), controlAUuid())->debugName() + " -> " +
+           find(root()->controls().sequence(), controlBUuid())->debugName() + ")";
+}
+
 void Connection::remove() {
     if (_wire.value()) (*_wire.value())->remove();
     ModelObject::remove();

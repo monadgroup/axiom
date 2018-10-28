@@ -29,6 +29,8 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
+        virtual QString debugName() = 0;
+
         bool isDirty() const { return _isDirty; }
 
         void clearDirty() { _isDirty = false; }

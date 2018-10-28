@@ -128,9 +128,6 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
     auto action = PasteBufferAction::create(surface->uuid(), std::move(data), nodePos, surface->root());
 
     action->forward(true);
-    MaximCompiler::Transaction transaction;
-    surface->root()->applyDirtyItemsTo(&transaction);
-    dragAndDropTransaction = std::move(transaction);
 
     std::vector<std::unique_ptr<Action>> actions;
     actions.push_back(std::move(action));
@@ -167,8 +164,6 @@ void NodeSurfaceView::dropEvent(QDropEvent *event) {
     }
 
     surface->root()->history().append(std::move(dragAndDropAction), false);
-    surface->root()->applyTransaction(std::move(*dragAndDropTransaction));
-    dragAndDropTransaction = std::nullopt;
 }
 
 void NodeSurfaceView::focusInEvent(QFocusEvent *event) {
