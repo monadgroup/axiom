@@ -68,6 +68,12 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
     QHash<QUuid, ValueGroup *> controlGroups;
 
     for (const auto &node : surface->nodes().sequence()) {
+        // skip if the node is a custom node and couldn't be compiled to avoid making empty groups later on
+        if (auto customNode = dynamic_cast<AxiomModel::CustomNode *>(node);
+            customNode && !customNode->hasValidBlock()) {
+            continue;
+        }
+
         auto controlsContainer = *node->controls().value();
         for (const auto &control : controlsContainer->controls().sequence()) {
             if (control->connectedControls().sequence().empty()) {
@@ -90,6 +96,7 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
                 }
 
                 for (const auto &connectedControl : control->connectedControls().sequence()) {
+                    // skip the control if it's on a CustomNode that can't be compiled
                     auto connectedGroupIndex = controlGroups.find(connectedControl);
                     if (connectedGroupIndex == controlGroups.end()) {
                         // add the control to our group
@@ -158,8 +165,13 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         auto currentIndex = index++;
         valueGroupIndices.emplace(pair.first, currentIndex);
         valueGroups.push_back(pair.first);
-        auto controlPointers = AxiomCommon::collect(
-            AxiomModel::findMap<std::vector<QUuid>>(pair.first->controls, surface->root()->controls().sequence()));
+        auto controlPointers = AxiomCommon::collect(AxiomCommon::filter(
+            AxiomModel::findMap<std::vector<QUuid>>(pair.first->controls, surface->root()->controls().sequence()),
+            [](AxiomModel::Control *control) {
+                // if the control is on a CustomNode that can't be compiled, we need to skip it
+                auto customNode = dynamic_cast<AxiomModel::CustomNode *>(control->surface()->node());
+                return !customNode || customNode->hasValidBlock();
+            }));
 
         auto groupType = getGroupType(controlPointers);
         auto vartype = VarType::ofControl(fromModelType(groupType));
@@ -212,6 +224,11 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
     size_t nodeIndex = 0;
     for (const auto &node : surface->nodes().sequence()) {
         if (auto customNode = dynamic_cast<AxiomModel::CustomNode *>(node)) {
+            // ignore the node if it's not compiled yet
+            if (!customNode->hasValidBlock()) {
+                continue;
+            }
+
             customNode->setCompileMeta(AxiomModel::NodeCompileMeta(nodeIndex));
             auto mirNode = mir.addCustomNode(customNode->getRuntimeId());
 

@@ -109,8 +109,6 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
                 node->doSetCodeAction(std::move(beforeCode), node->code());
                 beforeCode = node->code();
             }
-
-            node->setInErrorState(willBeInErrorState);
         } else if (event->type() == QEvent::FocusIn) {
             node->parentSurface->deselectAll();
             beforeCode = node->code();
@@ -142,13 +140,9 @@ void CustomNodePanel::compileError(const AxiomModel::CustomNodeError &error) {
     QList<QTextEdit::ExtraSelection> selections;
     selections.push_back({cursor, squigglyFormat});
     textEditor->setExtraSelections(selections);
-
-    willBeInErrorState = true;
 }
 
 void CustomNodePanel::compileSuccess() {
-    willBeInErrorState = false;
-    node->setInErrorState(false);
     textEditor->setExtraSelections({});
 }
 

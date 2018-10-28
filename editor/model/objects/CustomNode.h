@@ -62,6 +62,8 @@ namespace AxiomModel {
 
         void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) override;
 
+        bool hasValidBlock() const { return static_cast<bool>(_compiledBlock); }
+
         const std::optional<CustomNodeError> &compileError() const;
 
         void build(MaximCompiler::Transaction *transaction) override;

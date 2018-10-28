@@ -63,6 +63,8 @@ namespace AxiomModel {
 
         virtual uint64_t getRuntimeId() = 0;
 
+        void forceCompile();
+
         virtual void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction);
 
         void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr);

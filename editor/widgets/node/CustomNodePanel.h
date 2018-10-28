@@ -56,7 +56,6 @@ namespace AxiomGui {
         QPlainTextEdit *textEditor;
         SyntaxHighlighter *highlighter;
         QString beforeCode;
-        bool willBeInErrorState = false;
 
         void controlTextChanged();
 

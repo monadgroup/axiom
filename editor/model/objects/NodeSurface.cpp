@@ -67,6 +67,10 @@ std::vector<ModelObject *> NodeSurface::getCopyItems() {
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(copyConnections))}));
 }
 
+void NodeSurface::forceCompile() {
+    setDirty();
+}
+
 void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     _runtime = runtime;
     for (const auto &node : nodes().sequence()) {

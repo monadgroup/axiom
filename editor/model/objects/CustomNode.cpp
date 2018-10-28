@@ -52,6 +52,9 @@ void CustomNode::promoteStaging() {
         _compiledBlock = std::move(_stagingBlock);
         _stagingBlock = std::nullopt;
         setDirty();
+        surface()->forceCompile();
+    } else {
+        setInErrorState(true);
     }
 }
 
@@ -83,20 +86,20 @@ void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::T
     if (runtime) {
         runtimeId = runtime->nextId();
         buildCode();
-
-        // todo: if there's a build failure, find the latest working version
         promoteStaging();
     } else {
         runtimeId = 0;
     }
 
-    if (transaction) {
+    if (transaction && _compiledBlock) {
         build(transaction);
         updateControls(nullptr);
     }
 }
 
 void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    if (!_compiledBlock) return;
+
     Node::updateRuntimePointers(runtime, surfacePtr);
 
     auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
@@ -245,6 +248,7 @@ void CustomNode::buildCode() {
         _stagingBlock = std::move(block);
         _compileError.reset();
         codeCompileSuccess();
+        setInErrorState(false);
     } else {
         auto errorDescription = error.getDescription();
         auto errorRange = error.getRange();
