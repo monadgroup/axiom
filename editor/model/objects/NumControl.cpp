@@ -1,5 +1,8 @@
 #include "NumControl.h"
 
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
+
 using namespace AxiomModel;
 
 NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
@@ -7,7 +10,12 @@ NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
                        float minValue, float maxValue, uint32_t step, NumValue value, ModelRoot *root)
     : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, QSize(1, 1), uuid, parentUuid, pos, size,
               selected, std::move(name), showName, exposerUuid, exposingUuid, root),
-      _displayMode(displayMode), _minValue(minValue), _maxValue(maxValue), _step(step), _value(value) {}
+      _displayMode(displayMode), _minValue(minValue), _maxValue(maxValue), _step(step), _value(value) {
+    if (!exposingUuid.isNull()) {
+        findLater(AxiomCommon::dynamicCastWatch<NumControl *>(root->controls()), exposingUuid)
+            ->then([this](NumControl *exposing) { setValue(exposing->value()); });
+    }
+}
 
 std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                bool selected, QString name, bool showName, const QUuid &exposerUuid,
