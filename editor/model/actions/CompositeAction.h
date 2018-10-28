@@ -12,9 +12,9 @@ namespace AxiomModel {
 
         static std::unique_ptr<CompositeAction> create(std::vector<std::unique_ptr<Action>> actions, ModelRoot *root);
 
-        void forward(bool first, std::vector<QUuid> &compileItems) override;
+        void forward(bool first) override;
 
-        void backward(std::vector<QUuid> &compileItems) override;
+        void backward() override;
 
         std::vector<std::unique_ptr<Action>> &actions() { return _actions; }
 

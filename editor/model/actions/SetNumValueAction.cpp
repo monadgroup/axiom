@@ -15,10 +15,10 @@ std::unique_ptr<SetNumValueAction> SetNumValueAction::create(const QUuid &uuid, 
     return std::make_unique<SetNumValueAction>(uuid, beforeVal, afterVal, root);
 }
 
-void SetNumValueAction::forward(bool, std::vector<QUuid> &) {
+void SetNumValueAction::forward(bool) {
     find(AxiomCommon::dynamicCast<NumControl *>(root()->controls().sequence()), _uuid)->setValue(_afterVal);
 }
 
-void SetNumValueAction::backward(std::vector<QUuid> &) {
+void SetNumValueAction::backward() {
     find(AxiomCommon::dynamicCast<NumControl *>(root()->controls().sequence()), _uuid)->setValue(_beforeVal);
 }

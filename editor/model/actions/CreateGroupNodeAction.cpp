@@ -27,18 +27,13 @@ std::unique_ptr<CreateGroupNodeAction> CreateGroupNodeAction::create(const QUuid
                   root);
 }
 
-void CreateGroupNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
+void CreateGroupNodeAction::forward(bool) {
     root()->pool().registerObj(
         GroupNode::create(_uuid, _parentUuid, _pos, QSize(3, 2), false, _name, _controlsUuid, _innerUuid, root()));
     root()->pool().registerObj(ControlSurface::create(_controlsUuid, _uuid, root()));
     root()->pool().registerObj(GroupSurface::create(_innerUuid, _uuid, QPoint(0, 0), 0, root()));
-
-    compileItems.push_back(_innerUuid);
-    compileItems.push_back(_parentUuid);
 }
 
-void CreateGroupNodeAction::backward(std::vector<QUuid> &compileItems) {
+void CreateGroupNodeAction::backward() {
     find(root()->nodes().sequence(), _uuid)->remove();
-
-    compileItems.push_back(_parentUuid);
 }

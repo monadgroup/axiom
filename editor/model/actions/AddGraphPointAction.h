@@ -13,9 +13,9 @@ namespace AxiomModel {
         static std::unique_ptr<AddGraphPointAction> create(const QUuid &controlUuid, uint8_t index, float time,
                                                            float val, ModelRoot *root);
 
-        void forward(bool first, std::vector<QUuid> &compileItems) override;
+        void forward(bool first) override;
 
-        void backward(std::vector<QUuid> &compileItems) override;
+        void backward() override;
 
         const QUuid &controlUuid() const { return _controlUuid; }
 

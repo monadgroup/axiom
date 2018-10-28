@@ -23,11 +23,6 @@ QString GroupSurface::name() {
     return _node->name();
 }
 
-AxiomCommon::BoxedSequence<QUuid> GroupSurface::compileLinks() {
-    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<QUuid>, 2>{
-        AxiomCommon::boxSequence(AxiomCommon::once(node()->surface()->uuid())), node()->surface()->compileLinks()}));
-}
-
 void GroupSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
     if (runtime) {
         runtimeId = runtime->nextId();

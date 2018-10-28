@@ -29,7 +29,7 @@ std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfac
     return create(surfaceUuid, false, std::move(buffer), QVector<QUuid>(), center, root);
 }
 
-void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
+void PasteBufferAction::forward(bool) {
     assert(!_buffer.isEmpty());
     assert(_usedUuids.isEmpty());
 
@@ -62,15 +62,9 @@ void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
         }
         _usedUuids.push_back(obj->uuid());
     }
-
-    std::reverse(used.begin(), used.end());
-    for (const auto &obj : used) {
-        compileItems.push_back(obj->uuid());
-        compileItems.push_back(obj->parentUuid());
-    }
 }
 
-void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
+void PasteBufferAction::backward() {
     assert(_buffer.isEmpty());
     assert(!_usedUuids.isEmpty());
 
@@ -96,9 +90,5 @@ void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
 
     while (!objs.empty()) {
         (*objs.begin())->remove();
-    }
-
-    for (const auto &id : parentIds) {
-        compileItems.push_back(id);
     }
 }

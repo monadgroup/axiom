@@ -4,18 +4,13 @@
 
 using namespace AxiomModel;
 
-HistoryList::HistoryList(CompileApplyer applyer) : applyCompile(std::move(applyer)) {}
-
-HistoryList::HistoryList(size_t stackPos, std::vector<std::unique_ptr<AxiomModel::Action>> stack,
-                         AxiomModel::HistoryList::CompileApplyer applyer)
-    : _stackPos(stackPos), _stack(std::move(stack)), applyCompile(std::move(applyer)) {}
+HistoryList::HistoryList(size_t stackPos, std::vector<std::unique_ptr<AxiomModel::Action>> stack)
+    : _stackPos(stackPos), _stack(std::move(stack)) {}
 
 void HistoryList::append(std::unique_ptr<AxiomModel::Action> action, bool forward) {
     // run the action forward
     if (forward) {
-        std::vector<QUuid> compileItems;
-        action->forward(true, compileItems);
-        applyCompile(std::move(compileItems));
+        action->forward(true);
     }
 
     // remove items ahead of where we are
@@ -46,9 +41,7 @@ void HistoryList::undo() {
 
     _stackPos--;
     auto undoAction = _stack[_stackPos].get();
-    std::vector<QUuid> compileItems;
-    undoAction->backward(compileItems);
-    applyCompile(std::move(compileItems));
+    undoAction->backward();
 
     stackChanged();
 }
@@ -67,10 +60,8 @@ void HistoryList::redo() {
 
     auto redoAction = _stack[_stackPos].get();
     std::vector<QUuid> compileItems;
-    redoAction->forward(false, compileItems);
+    redoAction->forward(false);
     _stackPos++;
-
-    applyCompile(std::move(compileItems));
 
     stackChanged();
 }

@@ -13,9 +13,9 @@ namespace AxiomModel {
         static std::unique_ptr<SetGraphTagAction> create(const QUuid &controlUuid, uint8_t index, uint8_t oldTag,
                                                          uint8_t newTag, ModelRoot *root);
 
-        void forward(bool first, std::vector<QUuid> &compileItems) override;
+        void forward(bool first) override;
 
-        void backward(std::vector<QUuid> &compileItems) override;
+        void backward() override;
 
         const QUuid &controlUuid() const { return _controlUuid; }
 

@@ -17,12 +17,12 @@ std::unique_ptr<SetGraphTensionAction> SetGraphTensionAction::create(const QUuid
     return std::make_unique<SetGraphTensionAction>(controlUuid, index, oldTension, newTension, root);
 }
 
-void SetGraphTensionAction::forward(bool, std::vector<QUuid> &) {
+void SetGraphTensionAction::forward(bool) {
     find(AxiomCommon::dynamicCast<GraphControl *>(root()->pool().sequence().sequence()), _controlUuid)
         ->setCurveTension(_index, _newTension);
 }
 
-void SetGraphTensionAction::backward(std::vector<QUuid> &) {
+void SetGraphTensionAction::backward() {
     find(AxiomCommon::dynamicCast<GraphControl *>(root()->pool().sequence().sequence()), _controlUuid)
         ->setCurveTension(_index, _oldTension);
 }

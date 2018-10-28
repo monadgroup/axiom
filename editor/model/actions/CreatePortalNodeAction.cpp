@@ -37,19 +37,15 @@ std::unique_ptr<CreatePortalNodeAction> CreatePortalNodeAction::create(const QUu
                   portalId, QUuid::createUuid(), root);
 }
 
-void CreatePortalNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
+void CreatePortalNodeAction::forward(bool) {
     root()->pool().registerObj(
         PortalNode::create(_uuid, _parentUuid, _pos, QSize(1, 1), false, _name, _controlsUuid, root()));
     root()->pool().registerObj(ControlSurface::create(_controlsUuid, _uuid, root()));
     root()->pool().registerObj(PortalControl::create(_controlUuid, _controlsUuid, QPoint(0, 0), QSize(2, 2), false, "",
                                                      false, QUuid(), QUuid(), _wireType, _portalType, _portalId,
                                                      root()));
-
-    compileItems.push_back(_parentUuid);
 }
 
-void CreatePortalNodeAction::backward(std::vector<QUuid> &compileItems) {
+void CreatePortalNodeAction::backward() {
     find(root()->nodes().sequence(), _uuid)->remove();
-
-    compileItems.push_back(_parentUuid);
 }

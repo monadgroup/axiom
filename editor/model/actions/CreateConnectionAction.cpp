@@ -24,12 +24,10 @@ std::unique_ptr<CreateConnectionAction> CreateConnectionAction::create(const QUu
     return create(QUuid::createUuid(), parentUuid, controlA, controlB, root);
 }
 
-void CreateConnectionAction::forward(bool, std::vector<QUuid> &compileItems) {
+void CreateConnectionAction::forward(bool) {
     root()->pool().registerObj(Connection::create(_uuid, _parentUuid, _controlA, _controlB, root()));
-    compileItems.push_back(_parentUuid);
 }
 
-void CreateConnectionAction::backward(std::vector<QUuid> &compileItems) {
+void CreateConnectionAction::backward() {
     find(root()->connections().sequence(), _uuid)->remove();
-    compileItems.push_back(_parentUuid);
 }

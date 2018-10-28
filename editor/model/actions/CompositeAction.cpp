@@ -10,14 +10,14 @@ std::unique_ptr<CompositeAction> CompositeAction::create(std::vector<std::unique
     return std::make_unique<CompositeAction>(std::move(actions), root);
 }
 
-void CompositeAction::forward(bool first, std::vector<QUuid> &compileItems) {
+void CompositeAction::forward(bool first) {
     for (const auto &action : _actions) {
-        action->forward(first, compileItems);
+        action->forward(first);
     }
 }
 
-void CompositeAction::backward(std::vector<QUuid> &compileItems) {
+void CompositeAction::backward() {
     for (auto i = _actions.end() - 1; i >= _actions.begin(); i--) {
-        (*i)->backward(compileItems);
+        (*i)->backward();
     }
 }

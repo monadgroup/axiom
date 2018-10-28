@@ -188,10 +188,6 @@ AxiomCommon::BoxedSequence<ModelObject *> Control::links() {
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(connections))}));
 }
 
-AxiomCommon::BoxedSequence<QUuid> Control::compileLinks() {
-    return AxiomCommon::boxSequence(AxiomCommon::once(surface()->node()->parentUuid()));
-}
-
 const std::optional<ControlCompileMeta> &Control::compileMeta() const {
     if (exposingUuid().isNull()) {
         return _compileMeta;
@@ -206,10 +202,6 @@ const std::optional<MaximFrontend::ControlPointers> &Control::runtimePointers() 
     } else {
         return find(root()->controls().sequence(), exposingUuid())->runtimePointers();
     }
-}
-
-void Control::remove() {
-    ModelObject::remove();
 }
 
 void Control::updateSinkPos() {

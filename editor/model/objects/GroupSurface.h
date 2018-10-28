@@ -41,8 +41,6 @@ namespace AxiomModel {
 
         uint64_t getRuntimeId() override { return runtimeId; }
 
-        AxiomCommon::BoxedSequence<QUuid> compileLinks() override;
-
         void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
 
         const std::optional<GroupSurfaceCompileMeta> &compileMeta() const { return _compileMeta; }

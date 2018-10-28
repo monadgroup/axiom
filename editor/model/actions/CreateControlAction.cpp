@@ -37,11 +37,11 @@ std::unique_ptr<CompositeAction> CreateControlAction::create(const QUuid &parent
     return std::move(prepareData.preActions);
 }
 
-void CreateControlAction::forward(bool, std::vector<QUuid> &) {
+void CreateControlAction::forward(bool) {
     root()->pool().registerObj(
         Control::createDefault(_type, _uuid, _parentUuid, _name, QUuid(), _pos, _size, _isWrittenTo, root()));
 }
 
-void CreateControlAction::backward(std::vector<QUuid> &) {
+void CreateControlAction::backward() {
     find(root()->controls().sequence(), _uuid)->remove();
 }

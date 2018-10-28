@@ -36,8 +36,7 @@ namespace AxiomModel {
     namespace HistorySerializer {
         void serialize(const HistoryList &history, QDataStream &stream);
 
-        HistoryList deserialize(QDataStream &stream, uint32_t version, ModelRoot *root,
-                                HistoryList::CompileApplyer applyer);
+        HistoryList deserialize(QDataStream &stream, uint32_t version, ModelRoot *root);
 
         void serializeAction(Action *action, QDataStream &stream);
 

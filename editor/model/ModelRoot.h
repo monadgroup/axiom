@@ -74,9 +74,11 @@ namespace AxiomModel {
 
         std::lock_guard<std::mutex> lockRuntime();
 
-        void applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Transaction *transaction);
+        void setHistory(HistoryList history);
 
-        void applyCompile(const std::vector<QUuid> &items);
+        void applyDirtyItemsTo(MaximCompiler::Transaction *transaction);
+
+        void compileDirtyItems();
 
         void applyTransaction(MaximCompiler::Transaction transaction);
 

@@ -17,12 +17,13 @@
 using namespace AxiomModel;
 
 ModelRoot::ModelRoot()
-    : _history([this](std::vector<QUuid> items) { applyCompile(items); }),
-      _nodeSurfaces(AxiomCommon::dynamicCastWatch<NodeSurface *>(_pool.sequence())),
+    : _nodeSurfaces(AxiomCommon::dynamicCastWatch<NodeSurface *>(_pool.sequence())),
       _nodes(AxiomCommon::dynamicCastWatch<Node *>(_pool.sequence())),
       _controlSurfaces(AxiomCommon::dynamicCastWatch<ControlSurface *>(_pool.sequence())),
       _controls(AxiomCommon::dynamicCastWatch<Control *>(_pool.sequence())),
-      _connections(AxiomCommon::dynamicCastWatch<Connection *>(_pool.sequence())) {}
+      _connections(AxiomCommon::dynamicCastWatch<Connection *>(_pool.sequence())) {
+    _history.stackChanged.connect(this, &ModelRoot::compileDirtyItems);
+}
 
 RootSurface *ModelRoot::rootSurface() {
     auto rootSurfaces = findChildren(nodeSurfaces().sequence(), QUuid());
@@ -44,41 +45,25 @@ std::lock_guard<std::mutex> ModelRoot::lockRuntime() {
     return std::lock_guard(_runtimeLock);
 }
 
-void ModelRoot::applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Transaction *transaction) {
-    if (items.empty()) return;
-
-    auto startTime = std::chrono::high_resolution_clock::now();
-    std::vector<ModelObject *> inputItems;
-    QSet<QUuid> processedItems;
-    std::deque<QUuid> addQueue(items.begin(), items.end());
-
-    while (!addQueue.empty()) {
-        auto item = addQueue.front();
-        addQueue.pop_front();
-
-        if (processedItems.contains(item)) continue;
-        processedItems.insert(item);
-        if (auto object = AxiomCommon::dynamicCast<ModelObject *>(pool().sequence().sequence()).find(item)) {
-            inputItems.push_back(*object);
-
-            for (const auto &linked : (*object)->compileLinks()) {
-                addQueue.push_back(linked);
-            }
-        }
-    }
-
-    for (const auto &item : inputItems) {
-        item->build(transaction);
-    }
-
-    auto endTime = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
-    std::cout << "Transaction build took " << duration.count() / 1000000000. << "s" << std::endl;
+void ModelRoot::setHistory(AxiomModel::HistoryList history) {
+    _history = std::move(history);
+    _history.stackChanged.connect(this, &ModelRoot::compileDirtyItems);
 }
 
-void ModelRoot::applyCompile(const std::vector<QUuid> &items) {
+void ModelRoot::applyDirtyItemsTo(MaximCompiler::Transaction *transaction) {
+    // iterate over pool items in reverse order, since we need to compile children before parents
+    for (auto rit = pool().objects().rbegin(); rit < pool().objects().rend(); rit++) {
+        auto obj = dynamic_cast<ModelObject *>(rit->get());
+        if (obj && obj->isDirty()) {
+            obj->clearDirty();
+            obj->build(transaction);
+        }
+    }
+}
+
+void ModelRoot::compileDirtyItems() {
     MaximCompiler::Transaction transaction;
-    applyItemsTo(items, &transaction);
+    applyDirtyItemsTo(&transaction);
     applyTransaction(std::move(transaction));
 
     modified();

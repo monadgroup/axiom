@@ -15,10 +15,10 @@ std::unique_ptr<GridItemSizeAction> GridItemSizeAction::create(const QUuid &uuid
     return std::make_unique<GridItemSizeAction>(uuid, beforeRect, afterRect, root);
 }
 
-void GridItemSizeAction::forward(bool, std::vector<QUuid> &) {
+void GridItemSizeAction::forward(bool) {
     find(AxiomCommon::dynamicCast<GridItem *>(root()->pool().sequence().sequence()), _uuid)->setRect(_afterRect);
 }
 
-void GridItemSizeAction::backward(std::vector<QUuid> &) {
+void GridItemSizeAction::backward() {
     find(AxiomCommon::dynamicCast<GridItem *>(root()->pool().sequence().sequence()), _uuid)->setRect(_beforeRect);
 }

@@ -19,6 +19,11 @@ NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan
       _grid(AxiomCommon::boxWatchSequence(AxiomCommon::staticCastWatch<GridItem *>(_nodes.asRef())), true), _pan(pan),
       _zoom(zoom) {
     _nodes.events().itemAdded().connect(this, &NodeSurface::nodeAdded);
+
+    _nodes.events().itemAdded().connect(this, &NodeSurface::setDirty);
+    _nodes.events().itemRemoved().connect(this, &NodeSurface::setDirty);
+    _connections.events().itemAdded().connect(this, &NodeSurface::setDirty);
+    _connections.events().itemRemoved().connect(this, &NodeSurface::setDirty);
 }
 
 void NodeSurface::setPan(QPointF pan) {
@@ -110,7 +115,12 @@ void NodeSurface::remove() {
     ModelObject::remove();
 }
 
-void NodeSurface::nodeAdded(AxiomModel::Node *node) const {
+void NodeSurface::nodeAdded(AxiomModel::Node *node) {
+    node->controls().then([this](ControlSurface *surface) {
+        surface->controls().events().itemAdded().connect(this, &NodeSurface::setDirty);
+        surface->controls().events().itemRemoved().connect(this, &NodeSurface::setDirty);
+    });
+
     if (_runtime) {
         node->attachRuntime(_runtime, nullptr);
     }

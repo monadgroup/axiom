@@ -16,12 +16,12 @@ std::unique_ptr<SetGraphTagAction> SetGraphTagAction::create(const QUuid &contro
     return std::make_unique<SetGraphTagAction>(controlUuid, index, oldTag, newTag, root);
 }
 
-void SetGraphTagAction::forward(bool, std::vector<QUuid> &) {
+void SetGraphTagAction::forward(bool) {
     find(AxiomCommon::dynamicCast<GraphControl *>(root()->pool().sequence().sequence()), _controlUuid)
         ->setPointTag(_index, _newTag);
 }
 
-void SetGraphTagAction::backward(std::vector<QUuid> &compileItems) {
+void SetGraphTagAction::backward() {
     find(AxiomCommon::dynamicCast<GraphControl *>(root()->pool().sequence().sequence()), _controlUuid)
         ->setPointTag(_index, _oldTag);
 }

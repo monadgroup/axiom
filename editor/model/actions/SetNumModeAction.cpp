@@ -16,10 +16,10 @@ std::unique_ptr<SetNumModeAction> SetNumModeAction::create(const QUuid &uuid,
     return std::make_unique<SetNumModeAction>(uuid, beforeMode, afterMode, root);
 }
 
-void SetNumModeAction::forward(bool, std::vector<QUuid> &) {
+void SetNumModeAction::forward(bool) {
     find(AxiomCommon::dynamicCast<NumControl *>(root()->controls().sequence()), _uuid)->setDisplayMode(_afterMode);
 }
 
-void SetNumModeAction::backward(std::vector<QUuid> &) {
+void SetNumModeAction::backward() {
     find(AxiomCommon::dynamicCast<NumControl *>(root()->controls().sequence()), _uuid)->setDisplayMode(_beforeMode);
 }

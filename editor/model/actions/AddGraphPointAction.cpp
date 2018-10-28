@@ -15,12 +15,12 @@ std::unique_ptr<AddGraphPointAction> AddGraphPointAction::create(const QUuid &co
     return std::make_unique<AddGraphPointAction>(controlUuid, index, time, val, root);
 }
 
-void AddGraphPointAction::forward(bool, std::vector<QUuid> &) {
+void AddGraphPointAction::forward(bool) {
     find(AxiomCommon::dynamicCast<GraphControl *>(root()->pool().sequence().sequence()), _controlUuid)
         ->insertPoint(_index, _time, _val, 0, 0);
 }
 
-void AddGraphPointAction::backward(std::vector<QUuid> &) {
+void AddGraphPointAction::backward() {
     find(AxiomCommon::dynamicCast<GraphControl *>(root()->pool().sequence().sequence()), _controlUuid)
         ->removePoint((uint8_t)(_index + 1));
 }
