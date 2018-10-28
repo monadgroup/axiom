@@ -119,6 +119,9 @@ void NodeSurface::nodeAdded(AxiomModel::Node *node) {
     node->controls().then([this](ControlSurface *surface) {
         surface->controls().events().itemAdded().connect(this, &NodeSurface::setDirty);
         surface->controls().events().itemRemoved().connect(this, &NodeSurface::setDirty);
+
+        surface->controls().events().itemAdded().connect(
+            [this](Control *control) { control->exposerUuidChanged.connect(this, &NodeSurface::setDirty); });
     });
 
     if (_runtime) {
