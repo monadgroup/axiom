@@ -15,6 +15,10 @@ Features:
 
 There are currently pre-packaged versions available for Windows on [the Releases page](https://github.com/monadgroup/axiom/releases). Stay tuned for macOS and Linux builds!
 
+## Usage Guide
+
+*Coming soon! For now, see the [0.3.0 Release Readme](https://github.com/monadgroup/axiom/wiki/0.3.0-Readme) or check out the [example projects](https://github.com/monadgroup/axiom/tree/master/examples).*
+
 ## Backends
 
 Axiom currently supports the following audio backends:
@@ -22,10 +26,6 @@ Axiom currently supports the following audio backends:
  - Standalone with PortAudio - doesn't require a DAW or host, allowing experimentation with the editor. MIDI input is not currently supported.
  - VST2 - runs in a VST host as an instrument, currently with one MIDI input and one audio output.
  - _Other backends such as VST3 are planned_
-
-## Usage Guide
-
-*Coming soon! For now, see the [Readme](https://github.com/monadgroup/axiom/wiki/0.3.0-Readme) or check out the [example projects](https://github.com/monadgroup/axiom/tree/master/examples).*
 
 ## Building
 
