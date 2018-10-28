@@ -6,6 +6,8 @@ const QColor CommonColors::customNodeNormal = QColor(27, 27, 27, 100);
 const QColor CommonColors::customNodeSelected = QColor(57, 57, 57, 100);
 const QColor CommonColors::customNodeBorder = QColor(51, 51, 51);
 
+const QColor CommonColors::errorNodeNormal = QColor(100, 0, 0, 100);
+const QColor CommonColors::errorNodeSelected = QColor(200, 0, 0, 100);
 const QColor CommonColors::errorNodeBorder = QColor(255, 0, 0);
 
 const QColor CommonColors::groupNodeNormal = QColor(29, 15, 33, 100);

@@ -10,6 +10,8 @@ namespace AxiomGui {
         static const QColor customNodeSelected;
         static const QColor customNodeBorder;
 
+        static const QColor errorNodeNormal;
+        static const QColor errorNodeSelected;
         static const QColor errorNodeBorder;
 
         static const QColor groupNodeNormal;

@@ -42,6 +42,13 @@ void Node::setActive(bool active) {
     }
 }
 
+void Node::setInErrorState(bool inErrorState) {
+    if (inErrorState != _isInErrorState) {
+        _isInErrorState = inErrorState;
+        inErrorStateChanged(inErrorState);
+    }
+}
+
 void Node::startSize() {
     sizeStartRect = rect();
     if (controls().value()) {

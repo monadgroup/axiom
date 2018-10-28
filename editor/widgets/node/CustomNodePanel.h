@@ -4,10 +4,12 @@
 #include <QtWidgets/QPlainTextEdit>
 
 #include "common/TrackedObject.h"
+#include "editor/compiler/interface/Frontend.h"
 
 class QGraphicsProxyWidget;
 
 namespace AxiomModel {
+    struct CustomNodeError;
 
     class CustomNode;
 }
@@ -37,8 +39,6 @@ namespace AxiomGui {
 
         void setOpen(bool open);
 
-        void clearError();
-
         void codeChanged(const QString &newCode);
 
         void triggerUpdate();
@@ -46,8 +46,6 @@ namespace AxiomGui {
         void triggerGeometryChange();
 
         void resizerChanged(QPointF topLeft, QPointF bottomRight);
-
-        void compileFinished();
 
     signals:
 
@@ -58,9 +56,14 @@ namespace AxiomGui {
         QPlainTextEdit *textEditor;
         SyntaxHighlighter *highlighter;
         QString beforeCode;
-        // bool hasErrors = false;
-        // bool showingErrors = false;
+        bool willBeInErrorState = false;
 
         void controlTextChanged();
+
+        void compileError(const AxiomModel::CustomNodeError &error);
+
+        void compileSuccess();
+
+        static void moveCursor(QTextCursor &cursor, MaximFrontend::SourcePos pos, QTextCursor::MoveMode mode);
     };
 }

@@ -30,6 +30,7 @@ namespace AxiomModel {
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> extractedChanged;
         AxiomCommon::Event<bool> activeChanged;
+        AxiomCommon::Event<bool> inErrorStateChanged;
 
         Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
              QString name, const QUuid &controlsUuid, ModelRoot *root);
@@ -53,6 +54,10 @@ namespace AxiomModel {
         bool isActive() const { return _isActive; }
 
         void setActive(bool active);
+
+        void setInErrorState(bool inErrorState);
+
+        bool isInErrorState() const { return _isInErrorState; }
 
         bool isMovable() const override { return true; }
 
@@ -90,5 +95,6 @@ namespace AxiomModel {
         std::optional<NodeCompileMeta> _compileMeta;
         uint32_t *_activeBitmap = nullptr;
         bool _isActive = true;
+        bool _isInErrorState = false;
     };
 }

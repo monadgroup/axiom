@@ -54,6 +54,7 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
     node->sizeChanged.connect(this, &NodeItem::setSize);
     node->selectedChanged.connect(this, &NodeItem::setIsSelected);
     node->deselected.connect(this, &NodeItem::triggerUpdate);
+    node->inErrorStateChanged.connect(this, &NodeItem::triggerUpdate);
     node->removed.connect(this, &NodeItem::remove);
 
     node->controls().then([this](ControlSurface *surface) {
@@ -138,6 +139,11 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         lightColor = CommonColors::groupNodeSelected;
         outlineColor = CommonColors::groupNodeBorder;
         break;
+    }
+
+    if (node->isInErrorState()) {
+        darkColor = CommonColors::errorNodeNormal;
+        outlineColor = CommonColors::errorNodeBorder;
     }
 
     painter->setPen(QPen(outlineColor, node->isExtracted() ? 3 : 1));
