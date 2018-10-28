@@ -41,7 +41,8 @@ void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
     applyTransaction(std::move(buildTransaction));
 
     // clear the dirty state of everything, since we've just compiled them
-    for (const auto &obj : pool().sequence().sequence()) {
+    auto poolSequence = pool().sequence().sequence();
+    for (const auto &obj : poolSequence) {
         if (auto modelObj = dynamic_cast<ModelObject *>(obj)) {
             modelObj->clearDirty();
         }
@@ -62,7 +63,8 @@ void ModelRoot::applyDirtyItemsTo(MaximCompiler::Transaction *transaction) {
 
     // iterate over pool items in reverse order, since we need to compile children before parents
     size_t dirtyItemCount = 0;
-    for (auto rit = pool().objects().rbegin(); rit < pool().objects().rend(); rit++) {
+    const auto &poolObjects = pool().objects();
+    for (auto rit = poolObjects.rbegin(); rit < poolObjects.rend(); rit++) {
         auto obj = dynamic_cast<ModelObject *>(rit->get());
         if (obj && obj->isDirty()) {
             obj->clearDirty();
