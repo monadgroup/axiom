@@ -19,19 +19,9 @@ ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface) {
     for (const auto &connection : surface->connections().sequence()) {
         connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     }
-
-    // connect to model
-    surface->nodes().events().itemAdded().connect(this, &ModulePreviewCanvas::addNode);
-    surface->connections().events().itemAdded().connect(this, [this](Connection *connection) {
-        connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
-    });
 }
 
 void ModulePreviewCanvas::addNode(AxiomModel::Node *node) {
-    node->posChanged.connect(this, &ModulePreviewCanvas::contentChanged);
-    node->sizeChanged.connect(this, &ModulePreviewCanvas::contentChanged);
-    node->removed.connect(this, &ModulePreviewCanvas::contentChanged);
-
     auto item = new NodeItem(node, nullptr);
     item->setZValue(1);
     addItem(item);

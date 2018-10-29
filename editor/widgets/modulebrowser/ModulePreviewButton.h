@@ -24,13 +24,24 @@ namespace AxiomGui {
 
         AxiomModel::LibraryEntry *entry() { return _entry; }
 
+    protected:
+        void mousePressEvent(QMouseEvent *event) override;
+
+        void mouseDoubleClickEvent(QMouseEvent *event) override;
+
+        void contextMenuEvent(QContextMenuEvent *event) override;
+
     private:
+        MainWindow *window;
         AxiomModel::Library *library;
         AxiomModel::LibraryEntry *_entry;
+        QLabel *image;
         QLabel *label;
 
         void setName(QString name);
 
         void updateIsVisible();
+
+        void updateImage();
     };
 }

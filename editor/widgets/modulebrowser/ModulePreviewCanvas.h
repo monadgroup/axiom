@@ -20,10 +20,6 @@ namespace AxiomGui {
     public:
         explicit ModulePreviewCanvas(AxiomModel::NodeSurface *surface);
 
-    signals:
-
-        void contentChanged();
-
     private slots:
 
         void addNode(AxiomModel::Node *node);
