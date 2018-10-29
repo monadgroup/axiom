@@ -14,14 +14,13 @@
 #include <QtWidgets/QPushButton>
 #include <chrono>
 #include <iostream>
-#include <editor/widgets/dock/ads_globals.h>
 
 #include "../GlobalActions.h"
 #include "../InteractiveImport.h"
+#include "../dock/DockManager.h"
 #include "../history/HistoryPanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
 #include "../surface/NodeSurfacePanel.h"
-#include "../dock/DockManager.h"
 #include "AboutWindow.h"
 #include "editor/AxiomApplication.h"
 #include "editor/backend/AudioBackend.h"
@@ -152,33 +151,20 @@ NodeSurfacePanel *MainWindow::showSurface(NodeSurfacePanel *fromPanel, AxiomMode
 
     auto newDock = std::make_unique<NodeSurfacePanel>(this, surface);
     auto newDockPtr = newDock.get();
-    if (!fromPanel) {
-        dockManager->addDockWidget(ads::LeftDockWidgetArea, newDockPtr);
-    } else {
-        dockManager->addDockWidget(ads::RightDockWidgetArea, newDockPtr, fromPanel->dockAreaWidget());
 
-        // raise() doesn't seem to work when called synchronously after tabifyDockWidget, so we wait for the next
-        // event loop iteration
-        QTimer::singleShot(0, newDockPtr, [newDockPtr]() {
-            newDockPtr->raise();
-            newDockPtr->setFocus(Qt::OtherFocusReason);
-        });
+    if (!fromPanel) {
+        auto rootSurface = _project->rootSurface();
+        if (surface == rootSurface) {
+            dockManager->addDockWidget(ads::TopDockWidgetArea, newDockPtr);
+        } else {
+            fromPanel = _openPanels[_project->rootSurface()].get();
+        }
     }
 
-    /*if (!fromPanel) {
-        addDockWidget(Qt::LeftDockWidgetArea, newDockPtr);
-    } else if (split) {
-        splitDockWidget(fromPanel, newDockPtr, Qt::Horizontal);
-    } else {
-        tabifyDockWidget(fromPanel, newDockPtr);
-
-        // raise() doesn't seem to work when called synchronously after tabifyDockWidget, so we wait for the next
-        // event loop iteration
-        QTimer::singleShot(0, newDockPtr, [newDockPtr]() {
-            newDockPtr->raise();
-            newDockPtr->setFocus(Qt::OtherFocusReason);
-        });
-    }*/
+    if (fromPanel) {
+        auto area = split ? ads::RightDockWidgetArea : ads::CenterDockWidgetArea;
+        dockManager->addDockWidget(area, newDockPtr, fromPanel->dockAreaWidget());
+    }
 
     if (!permanent) {
         connect(newDockPtr, &NodeSurfacePanel::closed, this, [this, surface]() { removeSurface(surface); });
@@ -271,7 +257,7 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
 
     _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
     dockManager->addDockWidget(ads::RightDockWidgetArea, _historyPanel.get());
-    _historyPanel->hide();
+    _historyPanel->toggleView(false);
 
     _viewMenu->addAction(surfacePanel->toggleViewAction());
     _viewMenu->addAction(_historyPanel->toggleViewAction());

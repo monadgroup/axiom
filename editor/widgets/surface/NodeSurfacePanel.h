@@ -19,16 +19,10 @@ namespace AxiomGui {
     public:
         MainWindow *window;
 
-        explicit NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *surface);
+        NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *surface);
 
-    signals:
+    private slots:
 
-        void closed();
-
-    protected:
-        void closeEvent(QCloseEvent *event) override;
-
-    private:
-        QGraphicsScene *scene;
+        void cleanup();
     };
 }

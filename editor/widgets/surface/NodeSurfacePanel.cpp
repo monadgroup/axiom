@@ -12,13 +12,12 @@ NodeSurfacePanel::NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/SchematicPanel.qss"));
 
     surface->nameChanged.connect(this, &NodeSurfacePanel::setWindowTitle);
-    surface->removed.connect(this, &NodeSurfacePanel::close);
+    surface->removed.connect(this, &NodeSurfacePanel::cleanup);
 
     setWidget(new NodeSurfaceView(this, surface));
     widget()->setParent(this);
 }
 
-void NodeSurfacePanel::closeEvent(QCloseEvent *event) {
-    ads::CDockWidget::closeEvent(event);
-    emit closed();
+void NodeSurfacePanel::cleanup() {
+    toggleView(false);
 }

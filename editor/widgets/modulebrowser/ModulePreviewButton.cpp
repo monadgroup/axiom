@@ -85,7 +85,7 @@ void ModulePreviewButton::mousePressEvent(QMouseEvent *event) {
 }
 
 void ModulePreviewButton::mouseDoubleClickEvent(QMouseEvent *event) {
-    window->showSurface(nullptr, _entry->rootSurface(), true, false);
+    window->showSurface(nullptr, _entry->rootSurface(), false, false);
 }
 
 void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
@@ -101,7 +101,7 @@ void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
 
     auto selectedAction = menu.exec(event->globalPos());
     if (selectedAction == editAction) {
-        window->showSurface(nullptr, _entry->rootSurface(), true, false);
+        window->showSurface(nullptr, _entry->rootSurface(), false, false);
     } else if (selectedAction == propertiesAction) {
         ModulePropertiesWindow propWindow(library);
         propWindow.setEnteredName(_entry->name());
