@@ -164,6 +164,7 @@ void NodeSurfaceView::dropEvent(QDropEvent *event) {
     }
 
     surface->root()->history().append(std::move(dragAndDropAction), false);
+    setFocus(Qt::OtherFocusReason);
 }
 
 void NodeSurfaceView::focusInEvent(QFocusEvent *event) {
