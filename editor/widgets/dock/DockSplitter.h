@@ -18,7 +18,6 @@
 ** License along with this library; If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-
 //============================================================================
 /// \file   DockSplitter.h
 /// \author Uwe Kindler
@@ -31,34 +30,32 @@
 //============================================================================
 #include <QSplitter>
 
-namespace ads
-{
-struct DockSplitterPrivate;
+namespace ads {
+    struct DockSplitterPrivate;
 
-/**
- * Splitter used internally instead of QSplitter
- */
-class CDockSplitter : public QSplitter
-{
-	Q_OBJECT
-private:
-	DockSplitterPrivate* d;
-	friend struct DockSplitterPrivate;
+    /**
+     * Splitter used internally instead of QSplitter
+     */
+    class CDockSplitter : public QSplitter {
+        Q_OBJECT
+    private:
+        DockSplitterPrivate *d;
+        friend struct DockSplitterPrivate;
 
-public:
-	CDockSplitter(QWidget *parent = Q_NULLPTR);
-	CDockSplitter(Qt::Orientation orientation, QWidget *parent = Q_NULLPTR);
+    public:
+        CDockSplitter(QWidget *parent = Q_NULLPTR);
+        CDockSplitter(Qt::Orientation orientation, QWidget *parent = Q_NULLPTR);
 
-	/**
-	 * Prints debug info
-	 */
-	virtual ~CDockSplitter();
+        /**
+         * Prints debug info
+         */
+        virtual ~CDockSplitter();
 
-	/**
-	 * Returns true, if any of the internal widgets is visible
-	 */
-	bool hasVisibleContent() const;
-}; // class CDockSplitter
+        /**
+         * Returns true, if any of the internal widgets is visible
+         */
+        bool hasVisibleContent() const;
+    }; // class CDockSplitter
 
 } // namespace ads
 
