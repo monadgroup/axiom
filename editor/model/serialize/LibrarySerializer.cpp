@@ -65,7 +65,7 @@ std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &s
     // 0.4.0 (schema version 5) removed history from being serialized in the library
     auto deserializeHistory = version < 5;
 
-    auto root = ModelObjectSerializer::deserializeRoot(stream, deserializeHistory, version);
+    auto root = ModelObjectSerializer::deserializeRoot(stream, deserializeHistory, true, version);
     return LibraryEntry::create(std::move(name), baseUuid, modificationUuid, modificationDateTime, std::move(tags),
                                 std::move(root));
 }

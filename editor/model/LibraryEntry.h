@@ -11,7 +11,7 @@ namespace AxiomModel {
 
     class Library;
 
-    class RootSurface;
+    class ModuleSurface;
 
     class LibraryEntry : public AxiomCommon::TrackedObject {
     public:
@@ -51,7 +51,7 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root.get(); }
 
-        RootSurface *rootSurface() const { return _rootSurface; }
+        ModuleSurface *rootSurface() const { return _rootSurface; }
 
         void modified();
 
@@ -64,6 +64,6 @@ namespace AxiomModel {
         QDateTime _modificationDateTime;
         std::set<QString> _tags;
         std::unique_ptr<ModelRoot> _root;
-        RootSurface *_rootSurface;
+        ModuleSurface *_rootSurface;
     };
 }

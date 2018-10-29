@@ -12,22 +12,23 @@ namespace AxiomModel {
 
     namespace ModelObjectSerializer {
         std::vector<ModelObject *> deserializeChunk(QDataStream &stream, uint32_t version, ModelRoot *root,
-                                                    const QUuid &parent, ReferenceMapper *ref);
+                                                    const QUuid &parent, ReferenceMapper *ref, bool isLibrary);
 
         void serializeRoot(ModelRoot *root, bool includeHistory, QDataStream &stream);
 
-        std::unique_ptr<ModelRoot> deserializeRoot(QDataStream &stream, bool includeHistory, uint32_t version);
+        std::unique_ptr<ModelRoot> deserializeRoot(QDataStream &stream, bool includeHistory, bool isLibrary,
+                                                   uint32_t version);
 
         void serialize(ModelObject *obj, QDataStream &stream, const QUuid &parent);
 
         std::unique_ptr<ModelObject> deserialize(QDataStream &stream, uint32_t version, ModelRoot *root,
-                                                 const QUuid &parent, ReferenceMapper *ref);
+                                                 const QUuid &parent, ReferenceMapper *ref, bool isLibrary);
 
         void serializeInner(ModelObject *obj, QDataStream &stream);
 
         std::unique_ptr<ModelObject> deserializeInner(QDataStream &stream, uint32_t version, ModelRoot *root,
                                                       ModelObject::ModelType type, const QUuid &uuid,
-                                                      const QUuid &parent, ReferenceMapper *ref);
+                                                      const QUuid &parent, ReferenceMapper *ref, bool isLibrary);
 
         template<class T>
         void serializeChunk(QDataStream &stream, const QUuid &parent, T objects) {

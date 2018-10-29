@@ -5,6 +5,7 @@
         <file>logo.png</file>
 
         <file>styles/MainStyles.qss</file>
+        <file>styles/Dock.qss</file>
         <file>styles/ModuleBrowserPanel.qss</file>
         <file>styles/ModulePreviewList.qss</file>
         <file>styles/SchematicPanel.qss</file>
@@ -19,6 +20,8 @@
         <file>icons/output-midi-portal.png</file>
         <file>icons/output-num-portal.png</file>
         <file>icons/automation-portal.png</file>
+        <file>icons/dock-close.png</file>
+        <file>icons/dock-menu.png</file>
 
         <file>default.axl</file>
     </qresource>

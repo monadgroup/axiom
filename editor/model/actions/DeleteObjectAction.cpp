@@ -49,7 +49,7 @@ void DeleteObjectAction::backward() {
     QDataStream stream(&_buffer, QIODevice::ReadOnly);
     IdentityReferenceMapper ref;
     auto addedObjects =
-        ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), QUuid(), &ref);
+        ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), QUuid(), &ref, false);
     _buffer.clear();
 }
 

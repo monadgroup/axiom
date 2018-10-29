@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "../dock/DockPanel.h"
+#include "../dock/DockWidget.h"
 #include "common/TrackedObject.h"
 
 class QTabBar;
@@ -16,7 +16,7 @@ namespace AxiomGui {
 
     class MainWindow;
 
-    class ModuleBrowserPanel : public DockPanel, public AxiomCommon::TrackedObject {
+    class ModuleBrowserPanel : public ads::CDockWidget, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:

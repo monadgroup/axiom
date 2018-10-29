@@ -5,7 +5,7 @@
 
 using namespace AxiomGui;
 
-HistoryPanel::HistoryPanel(AxiomModel::HistoryList *list, QWidget *parent) : DockPanel("History", parent), list(list) {
+HistoryPanel::HistoryPanel(AxiomModel::HistoryList *list, QWidget *parent) : ads::CDockWidget("History", parent), list(list) {
     listWidget = new QListWidget(this);
     setWidget(listWidget);
 

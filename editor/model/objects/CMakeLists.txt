@@ -3,6 +3,7 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/Control.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ControlSurface.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/MidiControl.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ModuleSurface.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Node.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CustomNode.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ExtractControl.cpp"

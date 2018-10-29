@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QGraphicsScene>
 
-#include "../dock/DockPanel.h"
+#include "../dock/DockWidget.h"
 #include "common/TrackedObject.h"
 
 namespace AxiomModel {
@@ -13,22 +13,16 @@ namespace AxiomGui {
 
     class MainWindow;
 
-    class NodeSurfacePanel : public DockPanel, public AxiomCommon::TrackedObject {
+    class NodeSurfacePanel : public ads::CDockWidget, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:
         MainWindow *window;
 
-        explicit NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *surface);
+        NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *surface);
 
-    signals:
+    private slots:
 
-        void closed();
-
-    protected:
-        void closeEvent(QCloseEvent *event) override;
-
-    private:
-        QGraphicsScene *scene;
+        void cleanup();
     };
 }

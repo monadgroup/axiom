@@ -42,7 +42,7 @@ std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uin
     if (versionOut) *versionOut = version;
 
     auto linkedFile = getLinkedFile(stream, version);
-    auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, true, version);
+    auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, true, false, version);
     auto project = std::make_unique<Project>(linkedFile, std::move(modelRoot));
 
     // Before schema version 5, the module library was included in the project file. To ensure modules aren't lost,

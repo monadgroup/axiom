@@ -44,13 +44,13 @@ void PasteBufferAction::forward(bool) {
     if (_isBufferFormatted) {
         IdentityReferenceMapper ref;
         used = ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), _surfaceUuid,
-                                                       &ref);
+                                                       &ref, false);
     } else {
         CloneReferenceMapper ref;
         ref.setUuid(_surfaceUuid, _surfaceUuid);
         ref.setPos(_surfaceUuid, _center - objectCenter);
         used = ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), _surfaceUuid,
-                                                       &ref);
+                                                       &ref, false);
     }
 
     _isBufferFormatted = true;
