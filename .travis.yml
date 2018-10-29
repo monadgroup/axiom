@@ -17,8 +17,6 @@ cache:
 install:
   - mkdir build
   - cd build
-  - curl http://download.steinberg.net/sdk_downloads/vstsdk3611_22_10_2018_build_34.zip > vstsdk.zip
-  - unzip vstsdk.zip VST_SDK/VST2_SDK/**/*
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   - source $HOME/.cargo/env
   - rustc --version && cargo --version
@@ -27,11 +25,11 @@ install:
 # setup cmake for building
 before_script:
   - export LLVM_SYS_60_PREFIX=/usr/local/opt/llvm@6
-  - cmake ../ -DVST2_SDK_ROOT="$TRAVIS_BUILD_DIR/build/VST_SDK/VST2_SDK" -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm@6" -DCMAKE_BUILD_TYPE=Release -DDEPLOY=ON
+  - cmake ../ -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm@6" -DCMAKE_BUILD_TYPE=Release -DDEPLOY=ON
 
 # build it!
 script:
-  - make
+  - make axiom_standalone
 
 # create installers with cpack
 before_deploy:
