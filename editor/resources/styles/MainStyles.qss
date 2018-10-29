@@ -42,12 +42,8 @@ QScrollBar:vertical {
 QScrollBar::add-line, QScrollBar::sub-line {
     border: none;
     background: none;
-}
-
-QScrollBar::left-arrow, QScrollBar::right-arrow, QScrollBar::add-page, QScrollBar::sub-page {
-    border: none;
-    background: none;
-    color: none;
+    width: 0;
+    height: 0;
 }
 
 QScrollBar::add-page, QScrollBar::sub-page {
