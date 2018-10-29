@@ -35,7 +35,7 @@ add_subdirectory(backend)
 
 if (DEPLOY)
     set(CPACK_PACKAGE_NAME Axiom)
-    set(CPACK_PACKAGE_VERSION 0.3.2)
+    set(CPACK_PACKAGE_VERSION 0.4.0-rc1)
     set(CPACK_PACKAGE_VENDOR MONAD)
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Axiom: node-based synth")
 

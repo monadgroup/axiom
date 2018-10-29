@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "compiler/interface/Frontend.h"
+#include "editor/resources/resource.h"
 #include "util.h"
 #include "widgets/GlobalActions.h"
 
@@ -23,7 +24,7 @@ char **argv = new char *[1];
 
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     setApplicationName("Axiom");
-    setApplicationVersion("0.3.2");
+    setApplicationVersion(VER_FILEVERSION_STR);
 
     MaximFrontend::maxim_initialize();
     AxiomGui::GlobalActions::setupActions();

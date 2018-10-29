@@ -28,7 +28,7 @@ set_target_properties(axiom_standalone PROPERTIES
     
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_INFO_PLIST "${RES_DIR}/Info.plist.in"
-    MACOSX_BUNDLE_INFO_STRING "Axiom Standalone 0.3.2"
+    MACOSX_BUNDLE_INFO_STRING "Axiom Standalone 0.4.0-rc1"
     MACOSX_BUNDLE_NAME "Axiom Standalone")
 
 target_link_libraries(axiom_standalone ${AXIOM_LINK_FLAGS} axiom_editor ${PORTAUDIO_LIBRARIES})

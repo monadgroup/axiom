@@ -27,7 +27,7 @@ set_target_properties(axiom_vst2_instrument PROPERTIES
         BUNDLE_EXTENSION "vst"
         XCODE_ATTRIBUTE_WRAPPER_EXTENSION "vst"
         MACOSX_BUNDLE_INFO_PLIST "${RES_DIR}/Info.plist.in"
-        MACOSX_BUNDLE_INFO_STRING "Axiom VST2 Instrument 0.3.2"
+        MACOSX_BUNDLE_INFO_STRING "Axiom VST2 Instrument 0.4.0-rc1"
         MACOSX_BUNDLE_NAME "Axiom VST2 Instrument")
 target_link_libraries(axiom_vst2_instrument ${AXIOM_LINK_FLAGS} axiom_editor)
 install(TARGETS axiom_vst2_instrument DESTINATION .)
@@ -42,7 +42,7 @@ set_target_properties(axiom_vst2_effect PROPERTIES
         BUNDLE_EXTENSION "vst"
         XCODE_ATTRIBUTE_WRAPPER_EXTENSION "vst"
         MACOSX_BUNDLE_INFO_PLIST "${RES_DIR}/Info.plist.in"
-        MACOSX_BUNDLE_INFO_STRING "Axiom VST2 Effect 0.3.2"
+        MACOSX_BUNDLE_INFO_STRING "Axiom VST2 Effect 0.4.0-rc1"
         MACOSX_BUNDLE_NAME "Axiom VST2 Effect")
 target_link_libraries(axiom_vst2_effect ${AXIOM_LINK_FLAGS} axiom_editor)
 install(TARGETS axiom_vst2_effect DESTINATION .)
