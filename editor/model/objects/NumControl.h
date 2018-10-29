@@ -41,6 +41,10 @@ namespace AxiomModel {
 
         void doRuntimeUpdate() override;
 
+        void saveState() override;
+
+        void restoreState() override;
+
         void setValue(NumValue value);
 
     private:

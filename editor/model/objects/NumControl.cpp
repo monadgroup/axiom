@@ -66,11 +66,19 @@ void NumControl::setRange(float minValue, float maxValue, uint32_t step) {
 
 void NumControl::setValue(NumValue value) {
     setInternalValue(value);
-    if (runtimePointers()) *(NumValue *) runtimePointers()->value = value;
+    restoreState();
 }
 
 void NumControl::doRuntimeUpdate() {
+    saveState();
+}
+
+void NumControl::saveState() {
     if (runtimePointers()) setInternalValue(*(NumValue *) runtimePointers()->value);
+}
+
+void NumControl::restoreState() {
+    if (runtimePointers()) *(NumValue *) runtimePointers()->value = _value;
 }
 
 void NumControl::setInternalValue(NumValue value) {
