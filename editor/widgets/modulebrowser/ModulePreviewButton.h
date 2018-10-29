@@ -22,9 +22,11 @@ namespace AxiomGui {
         explicit ModulePreviewButton(MainWindow *window, AxiomModel::Library *library, AxiomModel::LibraryEntry *entry,
                                      QWidget *parent = nullptr);
 
+        AxiomModel::LibraryEntry *entry() { return _entry; }
+
     private:
         AxiomModel::Library *library;
-        AxiomModel::LibraryEntry *entry;
+        AxiomModel::LibraryEntry *_entry;
         QLabel *label;
 
         void setName(QString name);

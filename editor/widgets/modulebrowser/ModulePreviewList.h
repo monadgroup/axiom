@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QScrollArea>
 
+#include "../layouts/FlowLayout.h"
 #include "common/TrackedObject.h"
 
 namespace AxiomModel {
@@ -11,8 +12,6 @@ namespace AxiomModel {
 };
 
 namespace AxiomGui {
-
-    class FlowLayout;
 
     class MainWindow;
 
@@ -27,6 +26,12 @@ namespace AxiomGui {
         void addEntry(AxiomModel::LibraryEntry *entry);
 
     private:
+        class Sorter : public FlowLayoutSorter {
+        public:
+            bool aAfterB(QLayoutItem *a, QLayoutItem *b) override;
+        };
+
+        Sorter sorter;
         MainWindow *window;
         AxiomModel::Library *library;
         FlowLayout *layout;

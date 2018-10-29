@@ -5,11 +5,17 @@
 
 namespace AxiomGui {
 
+    class FlowLayoutSorter {
+    public:
+        virtual bool aAfterB(QLayoutItem *a, QLayoutItem *b) = 0;
+    };
+
     class FlowLayout : public QLayout {
     public:
-        explicit FlowLayout(QWidget *parent, int margin = -1, int hSpacing = -1, int vSpacing = -1);
+        explicit FlowLayout(QWidget *parent, int margin = -1, int hSpacing = -1, int vSpacing = -1,
+                            FlowLayoutSorter *sorter = nullptr);
 
-        explicit FlowLayout(int margin = -1, int hSpacing = -1, int vSpacing = -1);
+        explicit FlowLayout(int margin = -1, int hSpacing = -1, int vSpacing = -1, FlowLayoutSorter *sorter = nullptr);
 
         ~FlowLayout() override;
 
@@ -45,6 +51,6 @@ namespace AxiomGui {
         QList<QLayoutItem *> itemList;
         int m_hSpace;
         int m_vSpace;
+        FlowLayoutSorter *sorter;
     };
-
 }

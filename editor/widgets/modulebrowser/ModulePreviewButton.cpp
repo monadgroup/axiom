@@ -1,18 +1,17 @@
 #include "ModulePreviewButton.h"
 
-#include <QtWidgets/QGridLayout>
 #include <QtGui/QContextMenuEvent>
+#include <QtWidgets/QGridLayout>
 
+#include "ModulePreviewView.h"
 #include "editor/model/Library.h"
 #include "editor/model/LibraryEntry.h"
-#include "ModulePreviewView.h"
 
 using namespace AxiomGui;
 
 ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library *library,
-                                         AxiomModel::LibraryEntry *entry, QWidget *parent) : QFrame(parent),
-                                                                                             library(library),
-                                                                                             entry(entry) {
+                                         AxiomModel::LibraryEntry *entry, QWidget *parent)
+    : QFrame(parent), library(library), _entry(entry) {
     setFixedWidth(110);
 
     auto mainLayout = new QGridLayout(this);
@@ -44,8 +43,8 @@ void ModulePreviewButton::setName(QString name) {
 }
 
 void ModulePreviewButton::updateIsVisible() {
-    auto hasTag = library->activeTag() == "" || entry->tags().find(library->activeTag()) != entry->tags().end();
+    auto hasTag = library->activeTag() == "" || _entry->tags().find(library->activeTag()) != _entry->tags().end();
     auto hasSearch =
-        library->activeSearch() == "" || entry->name().contains(library->activeSearch(), Qt::CaseInsensitive);
+        library->activeSearch() == "" || _entry->name().contains(library->activeSearch(), Qt::CaseInsensitive);
     setVisible(hasTag && hasSearch);
 }
