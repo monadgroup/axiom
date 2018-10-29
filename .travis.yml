@@ -17,7 +17,7 @@ cache:
 install:
   - mkdir build
   - cd build
-  - curl http://download.steinberg.net/sdk_downloads/vstsdk3610_11_06_2018_build_37.zip > vstsdk.zip
+  - curl http://download.steinberg.net/sdk_downloads/vstsdk3611_22_10_2018_build_34.zip > vstsdk.zip
   - unzip vstsdk.zip VST_SDK/VST2_SDK/**/*
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   - source $HOME/.cargo/env
