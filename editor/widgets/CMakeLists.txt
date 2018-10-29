@@ -14,7 +14,7 @@ add_library(axiom_widgets ${SOURCE_FILES})
 
 add_subdirectory(connection)
 add_subdirectory(controls)
-add_subdirectory(dock)
+add_subdirectory(../../vendor/dock dock)
 add_subdirectory(history)
 add_subdirectory(layouts)
 add_subdirectory(modulebrowser)

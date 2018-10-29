@@ -8,4 +8,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 VST is a trademark of Steinberg Media Technologies GmbH
 
-Code in the editor/widgets/dock folder is based on the "Qt Advanced Docking System" (https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System), and so is licensed under LGPL v2.1. See the LICENSE file in that folder for details.
+Code in the vendor/dock folder is based on the "Qt Advanced Docking System" (https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System), and so is licensed under LGPL v2.1. See the LICENSE file in that folder for details.

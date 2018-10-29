@@ -17,7 +17,6 @@
 
 #include "../GlobalActions.h"
 #include "../InteractiveImport.h"
-#include "../dock/DockManager.h"
 #include "../history/HistoryPanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
 #include "../surface/NodeSurfacePanel.h"
@@ -31,6 +30,7 @@
 #include "editor/model/serialize/LibrarySerializer.h"
 #include "editor/model/serialize/ProjectSerializer.h"
 #include "editor/resources/resource.h"
+#include "vendor/dock/DockManager.h"
 
 using namespace AxiomGui;
 

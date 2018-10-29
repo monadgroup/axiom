@@ -2,8 +2,8 @@
 
 #include <map>
 
-#include "../dock/DockWidget.h"
 #include "common/TrackedObject.h"
+#include "vendor/dock/DockWidget.h"
 
 class QTabBar;
 class QLineEdit;

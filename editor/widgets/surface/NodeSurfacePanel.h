@@ -2,8 +2,8 @@
 
 #include <QtWidgets/QGraphicsScene>
 
-#include "../dock/DockWidget.h"
 #include "common/TrackedObject.h"
+#include "vendor/dock/DockWidget.h"
 
 namespace AxiomModel {
     class NodeSurface;
