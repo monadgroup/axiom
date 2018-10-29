@@ -15,7 +15,7 @@
 #include "ModulePreviewCanvas.h"
 #include "editor/model/Library.h"
 #include "editor/model/LibraryEntry.h"
-#include "editor/model/objects/RootSurface.h"
+#include "editor/model/objects/ModuleSurface.h"
 #include "editor/model/serialize/LibrarySerializer.h"
 #include "editor/model/serialize/ModelObjectSerializer.h"
 #include "editor/model/serialize/ProjectSerializer.h"

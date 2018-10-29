@@ -26,6 +26,7 @@
 #include "editor/model/objects/GraphControl.h"
 #include "editor/model/objects/GroupNode.h"
 #include "editor/model/objects/MidiControl.h"
+#include "editor/model/objects/ModuleSurface.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/NumControl.h"
 #include "editor/model/objects/PortalControl.h"
@@ -311,7 +312,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             ref.setUuid(newEntry->rootSurface()->uuid(), newEntry->rootSurface()->uuid());
             ref.setPos(newEntry->rootSurface()->uuid(), -centerPos);
             ModelObjectSerializer::deserializeChunk(deserializeStream, ProjectSerializer::schemaVersion,
-                                                    newEntry->root(), newEntry->rootSurface()->uuid(), &ref);
+                                                    newEntry->root(), newEntry->rootSurface()->uuid(), &ref, false);
 
             mainWindow->library()->addEntry(std::move(newEntry));
         }

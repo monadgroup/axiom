@@ -13,6 +13,7 @@ namespace AxiomModel {
         void serialize(NodeSurface *surface, QDataStream &stream);
 
         std::unique_ptr<NodeSurface> deserialize(QDataStream &stream, uint32_t version, const QUuid &uuid,
-                                                 const QUuid &parentUuid, ReferenceMapper *ref, ModelRoot *root);
+                                                 const QUuid &parentUuid, ReferenceMapper *ref, ModelRoot *root,
+                                                 bool isLibrary);
     }
 }

@@ -26,7 +26,7 @@ void ModelObjectSerializer::serializeRoot(AxiomModel::ModelRoot *root, bool incl
 
 std::vector<ModelObject *> ModelObjectSerializer::deserializeChunk(QDataStream &stream, uint32_t version,
                                                                    ModelRoot *root, const QUuid &parent,
-                                                                   AxiomModel::ReferenceMapper *ref) {
+                                                                   AxiomModel::ReferenceMapper *ref, bool isLibrary) {
     std::vector<ModelObject *> usedObjects;
 
     uint32_t objectCount;
@@ -37,7 +37,7 @@ std::vector<ModelObject *> ModelObjectSerializer::deserializeChunk(QDataStream &
         stream >> objectBuffer;
         QDataStream objectStream(&objectBuffer, QIODevice::ReadOnly);
 
-        auto newObject = deserialize(objectStream, version, root, parent, ref);
+        auto newObject = deserialize(objectStream, version, root, parent, ref, isLibrary);
         usedObjects.push_back(newObject.get());
         root->pool().registerObj(std::move(newObject));
     }
@@ -46,10 +46,10 @@ std::vector<ModelObject *> ModelObjectSerializer::deserializeChunk(QDataStream &
 }
 
 std::unique_ptr<ModelRoot> ModelObjectSerializer::deserializeRoot(QDataStream &stream, bool includeHistory,
-                                                                  uint32_t version) {
+                                                                  bool isLibrary, uint32_t version) {
     auto modelRoot = std::make_unique<ModelRoot>();
     IdentityReferenceMapper ref;
-    deserializeChunk(stream, version, modelRoot.get(), QUuid(), &ref);
+    deserializeChunk(stream, version, modelRoot.get(), QUuid(), &ref, isLibrary);
     if (includeHistory) {
         modelRoot->setHistory(HistorySerializer::deserialize(stream, version, modelRoot.get()));
     }
@@ -65,7 +65,7 @@ void ModelObjectSerializer::serialize(AxiomModel::ModelObject *obj, QDataStream 
 
 std::unique_ptr<ModelObject> ModelObjectSerializer::deserialize(QDataStream &stream, uint32_t version,
                                                                 AxiomModel::ModelRoot *root, const QUuid &parent,
-                                                                AxiomModel::ReferenceMapper *ref) {
+                                                                AxiomModel::ReferenceMapper *ref, bool isLibrary) {
     QUuid uuid;
     stream >> uuid;
     uuid = ref->mapUuid(uuid);
@@ -80,7 +80,7 @@ std::unique_ptr<ModelObject> ModelObjectSerializer::deserialize(QDataStream &str
     uint8_t typeInt;
     stream >> typeInt;
 
-    return deserializeInner(stream, version, root, (ModelObject::ModelType) typeInt, uuid, parentUuid, ref);
+    return deserializeInner(stream, version, root, (ModelObject::ModelType) typeInt, uuid, parentUuid, ref, isLibrary);
 }
 
 void ModelObjectSerializer::serializeInner(AxiomModel::ModelObject *obj, QDataStream &stream) {
@@ -98,10 +98,10 @@ std::unique_ptr<ModelObject> ModelObjectSerializer::deserializeInner(QDataStream
                                                                      AxiomModel::ModelRoot *root,
                                                                      AxiomModel::ModelObject::ModelType type,
                                                                      const QUuid &uuid, const QUuid &parent,
-                                                                     AxiomModel::ReferenceMapper *ref) {
+                                                                     AxiomModel::ReferenceMapper *ref, bool isLibrary) {
     switch (type) {
     case ModelObject::ModelType::NODE_SURFACE:
-        return NodeSurfaceSerializer::deserialize(stream, version, uuid, parent, ref, root);
+        return NodeSurfaceSerializer::deserialize(stream, version, uuid, parent, ref, root, isLibrary);
     case ModelObject::ModelType::NODE:
         return NodeSerializer::deserialize(stream, version, uuid, parent, ref, root);
     case ModelObject::ModelType::CONTROL_SURFACE:
