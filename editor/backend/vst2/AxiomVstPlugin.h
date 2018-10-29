@@ -5,6 +5,7 @@
 
 #include "AxiomVstEditor.h"
 #include "VstAudioBackend.h"
+#include "common/LazyInitializer.h"
 
 class AxiomVstPlugin : public AudioEffectX {
 public:
@@ -57,6 +58,7 @@ public:
     void backendUpdateIo();
 
 private:
+    AxiomCommon::LazyInitializer<AxiomApplication>::Ref appRef;
     VstAudioBackend backend;
     AxiomVstEditor editor;
     QByteArray saveBuffer;

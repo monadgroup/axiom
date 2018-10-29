@@ -2,7 +2,7 @@
 
 using namespace AxiomBackend;
 
-AxiomApplication application;
+AxiomCommon::LazyInitializer<AxiomApplication> application;
 
 extern "C" {
 AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
@@ -13,7 +13,7 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 }
 
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 255), backend(this), editor(&application, &backend) {
+    : AudioEffectX(audioMaster, 1, 255), appRef(application.get()), backend(this), editor(&*appRef, &backend) {
 #ifdef AXIOM_VST2_IS_SYNTH
     isSynth();
 #endif
