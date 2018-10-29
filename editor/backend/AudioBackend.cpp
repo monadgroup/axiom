@@ -177,9 +177,7 @@ void AudioBackend::internalUpdateConfiguration() {
     assert(_editor->window()->project()->rootSurface()->compileMeta());
     auto &compileMeta = *_editor->window()->project()->rootSurface()->compileMeta();
 
-    for (size_t portalIndex = 0; portalIndex < compileMeta.portals.size(); portalIndex++) {
-        const auto &surfacePortal = compileMeta.portals[portalIndex];
-
+    for (const auto &surfacePortal : compileMeta.portals) {
         PortalType newType;
         switch (surfacePortal.portalType) {
         case AxiomModel::PortalControl::PortalType::INPUT:
@@ -203,7 +201,8 @@ void AudioBackend::internalUpdateConfiguration() {
             break;
         }
 
-        newPortals.emplace_back(portalIndex, surfacePortal.id, newType, newValue, surfacePortal.name.toStdString());
+        newPortals.emplace_back(surfacePortal.socketIndex, surfacePortal.id, newType, newValue,
+                                surfacePortal.name.toStdString());
     }
     std::sort(newPortals.begin(), newPortals.end());
 

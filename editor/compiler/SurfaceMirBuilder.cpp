@@ -54,8 +54,11 @@ AxiomModel::Control::ControlType getGroupType(const std::vector<AxiomModel::Cont
 }
 
 struct PortalTemp {
-    AxiomModel::PortalControl *control;
+    std::vector<AxiomModel::PortalControl *> controls;
     VarType vartype;
+
+    PortalTemp(std::vector<AxiomModel::PortalControl *> controls, VarType vartype)
+        : controls(std::move(controls)), vartype(std::move(vartype)) {}
 };
 
 void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomModel::NodeSurface *surface) {
@@ -177,9 +180,19 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         auto vartype = VarType::ofControl(fromModelType(groupType));
 
         if (rootSurface) {
-            if (auto portal = findPortal(controlPointers)) {
+            std::vector<AxiomModel::PortalControl *> portalControls;
+            for (const auto &control : controlPointers) {
+                if (control->controlType() == AxiomModel::Control::ControlType::NUM_PORTAL ||
+                    control->controlType() == AxiomModel::Control::ControlType::MIDI_PORTAL) {
+                    auto portalControl = dynamic_cast<AxiomModel::PortalControl *>(control);
+                    assert(portalControl);
+                    portalControls.push_back(portalControl);
+                }
+            }
+
+            if (!portalControls.empty()) {
                 auto socketIndex = sockets.size();
-                rootPortals.push_back({portal, vartype.clone()});
+                rootPortals.emplace_back(std::move(portalControls), vartype.clone());
                 sockets.push_back(currentIndex);
                 mir.addValueGroup(std::move(vartype), ValueGroupSource::socket(socketIndex));
                 continue;
@@ -275,10 +288,15 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         auto mirRoot = transaction->buildRoot();
         std::vector<AxiomModel::RootSurfacePortal> portals;
 
-        for (auto &portal : rootPortals) {
+        for (size_t i = 0; i < rootPortals.size(); i++) {
+            auto &portal = rootPortals[i];
+
             mirRoot.addSocket(std::move(portal.vartype));
-            portals.emplace_back(portal.control->portalId(), portal.control->portalType(), portal.control->wireType(),
-                                 portal.control->surface()->node()->name());
+
+            for (const auto &control : portal.controls) {
+                portals.emplace_back(control->portalId(), i, control->portalType(), control->wireType(),
+                                     control->surface()->node()->name());
+            }
         }
 
         rootSurface->setCompileMeta(AxiomModel::RootSurfaceCompileMeta(std::move(portals)));

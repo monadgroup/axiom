@@ -10,13 +10,14 @@ namespace AxiomModel {
 
     struct RootSurfacePortal {
         uint64_t id;
+        size_t socketIndex;
         PortalControl::PortalType portalType;
         ConnectionWire::WireType valueType;
         QString name;
 
-        RootSurfacePortal(uint64_t id, PortalControl::PortalType portalType, ConnectionWire::WireType valueType,
-                          QString name)
-            : id(id), portalType(portalType), valueType(valueType), name(std::move(name)) {}
+        RootSurfacePortal(uint64_t id, size_t socketIndex, PortalControl::PortalType portalType,
+                          ConnectionWire::WireType valueType, QString name)
+            : id(id), socketIndex(socketIndex), portalType(portalType), valueType(valueType), name(std::move(name)) {}
     };
 
     struct RootSurfaceCompileMeta {
