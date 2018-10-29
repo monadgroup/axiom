@@ -20,6 +20,8 @@
         <file>icons/output-midi-portal.png</file>
         <file>icons/output-num-portal.png</file>
         <file>icons/automation-portal.png</file>
+        <file>icons/dock-close.png</file>
+        <file>icons/dock-menu.png</file>
 
         <file>default.axl</file>
     </qresource>

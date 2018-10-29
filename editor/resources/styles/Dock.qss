@@ -1,54 +1,53 @@
-
-/*
- * Default style sheet on Windows Platforms
- * Note: Always use CSS-classes with and without "ads--" namespace to support Qt4 & Qt5
- */
-
-ads--CDockContainerWidget
-{
+ads--CDockContainerWidget {
     background: #292929;
 }
 
-ads--CDockContainerWidget QSplitter::handle
-{
+ads--CDockContainerWidget QSplitter::handle {
     border-right: 2px solid #292929;
     border-bottom: 2px solid #292929;
 }
 
-ads--CDockAreaWidget
-{
+ads--CDockAreaWidget {
     background: #292929;
 }
 
-ads--CDockAreaWidget #tabsMenuButton::menu-indicator
-{
+ads--CDockAreaWidget #tabsContainerWidget, ads--CDockAreaWidget #dockAreaTitleBar {
+    background: #292929;
+}
+
+ads--CDockAreaWidget #tabsMenuButton::menu-indicator {
     image: none;
 }
 
-ads--CDockWidgetTitleBar
-{
+ads--CDockWidgetTitleBar {
     background: transparent;
     padding: 8px 10px;
 }
 
-ads--CDockWidgetTitleBar:hover, ads--CDockWidgetTitleBar[activeTab="true"]
-{
-    background: #333;
+ads--CDockWidgetTitleBar:hover, ads--CDockWidgetTitleBar[activeTab="true"] {
+    background: #444;
 }
 
 ads--CDockWidgetTitleBar QLabel {
     background: transparent;
 }
 
-ads--CDockWidget
-{
-    border-color: #333;
+ads--CDockWidget {
+    border-color: #444;
     border-style: solid;
     border-width: 2px 0 0 0;
 }
 
-QPushButton#closeButton,
-QPushButton#tabsMenuButton
-{
-	padding: 2px;
+QPushButton#closeButton, QPushButton#tabsMenuButton {
+    padding: 2px;
+    background: transparent;
+    border: none;
+}
+
+QPushButton#closeButton:hover, QPushButton#tabsMenuButton:hover {
+    background: #444;
+}
+
+QPushButton#closeButton:pressed, QPushButton#tabsMenuButton:pressed {
+    background: #444;
 }

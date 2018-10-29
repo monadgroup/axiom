@@ -262,7 +262,7 @@ namespace ads {
         TabsMenuButton = new QPushButton();
         TabsMenuButton->setObjectName("tabsMenuButton");
         TabsMenuButton->setFlat(true);
-        TabsMenuButton->setIcon(_this->style()->standardIcon(QStyle::SP_TitleBarUnshadeButton));
+        TabsMenuButton->setIcon(QIcon(":/icons/dock-menu.png"));
         TabsMenuButton->setMaximumWidth(TabsMenuButton->iconSize().width());
         TabsMenuButton->setMenu(new QMenu(TabsMenuButton));
         TopLayout->addWidget(TabsMenuButton, 0);
@@ -272,7 +272,7 @@ namespace ads {
         CloseButton = new QPushButton();
         CloseButton->setObjectName("closeButton");
         CloseButton->setFlat(true);
-        CloseButton->setIcon(_this->style()->standardIcon(QStyle::SP_TitleBarCloseButton));
+        CloseButton->setIcon(QIcon(":/icons/dock-close.png"));
         CloseButton->setToolTip(_this->tr("Close"));
         CloseButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         TopLayout->addWidget(CloseButton, 0);
