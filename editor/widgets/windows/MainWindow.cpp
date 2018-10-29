@@ -426,14 +426,8 @@ void MainWindow::saveProjectTo(const QString &path) {
     _project->setLinkedFile(path);
 }
 
-void MainWindow::openProject() {
-    if (!checkCloseProject()) return;
-
-    auto selectedFile = QFileDialog::getOpenFileName(this, "Open Project", QString(),
-                                                     tr("Axiom Project Files (*.axp);;All Files (*.*)"));
-    if (selectedFile.isNull()) return;
-
-    QFile file(selectedFile);
+void MainWindow::openProjectFrom(const QString &path) {
+    QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         QMessageBox(QMessageBox::Critical, "Failed to open project", "The file you selected couldn't be opened.",
                     QMessageBox::Ok)
@@ -446,7 +440,7 @@ void MainWindow::openProject() {
     auto newProject = AxiomModel::ProjectSerializer::deserialize(
         stream, &readVersion,
         [this](AxiomModel::Library *importLibrary) { doInteractiveLibraryImport(library(), importLibrary); },
-        [selectedFile](QDataStream &, uint32_t) { return selectedFile; });
+        [path](QDataStream &, uint32_t) { return path; });
     file.close();
 
     if (!newProject) {
@@ -469,6 +463,15 @@ void MainWindow::openProject() {
     } else {
         setProject(std::move(newProject));
     }
+}
+
+void MainWindow::openProject() {
+    if (!checkCloseProject()) return;
+
+    auto selectedFile = QFileDialog::getOpenFileName(this, "Open Project", QString(),
+                                                     tr("Axiom Project Files (*.axp);;All Files (*.*)"));
+    if (selectedFile.isNull()) return;
+    openProjectFrom(selectedFile);
 }
 
 void MainWindow::exportProject() {

@@ -51,6 +51,8 @@ namespace AxiomGui {
 
         void unlockGlobalLibrary();
 
+        void openProjectFrom(const QString &path);
+
     public slots:
 
         NodeSurfacePanel *showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split,

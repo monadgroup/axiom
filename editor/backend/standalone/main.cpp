@@ -129,6 +129,12 @@ int main(int argc, char *argv[]) {
     StandaloneAudioBackend backend;
     std::cout << "Starting editor" << std::endl;
     AxiomEditor editor(&application, &backend);
+
+    // if there's an argument provided, load it as a project file
+    if (argc >= 2) {
+        editor.openProjectFile(argv[1]);
+    }
+
     std::cout << "Starting audio" << std::endl;
     backend.startupAudio();
     std::cout << "Opening editor" << std::endl;

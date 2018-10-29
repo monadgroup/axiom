@@ -26,6 +26,9 @@ public:
     // Runs the editor window's event loop.
     void idle();
 
+    // Tries to open the specified file in the editor.
+    void openProjectFile(const char *path);
+
     // Used internally. Not stable APIs.
     AxiomGui::MainWindow *window() { return &_window; }
 

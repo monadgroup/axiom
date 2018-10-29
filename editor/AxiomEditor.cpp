@@ -26,3 +26,7 @@ void AxiomEditor::idle() {
     QApplication::processEvents();
     QApplication::sendPostedEvents(&_window);
 }
+
+void AxiomEditor::openProjectFile(const char *path) {
+    _window.openProjectFrom(path);
+}
