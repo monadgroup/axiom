@@ -98,9 +98,10 @@ QString AxiomUtil::formatChannelFull(float val, AxiomModel::FormType form) {
     return static_cast<QString>(formatFloatForm(val, form) % " " % getFormUnit(val, form)).trimmed();
 }
 
-QString AxiomUtil::formatNumForm(AxiomModel::NumValue value, bool includeForm) {
+QString AxiomUtil::formatNumForm(AxiomModel::NumValue value, bool includeForm, int *outNumLength) {
     if (fabsf(value.left - value.right) < 0.01f) {
         auto formattedNum = formatFloatForm(value.left, value.form);
+        if (outNumLength) *outNumLength = formattedNum.size();
         return includeForm ? static_cast<QString>(formattedNum % " " % getFormUnit(value.left, value.form))
                            : formattedNum;
     } else {
@@ -111,10 +112,16 @@ QString AxiomUtil::formatNumForm(AxiomModel::NumValue value, bool includeForm) {
         auto leftUnit = getFormUnit(value.left, value.form);
         auto rightUnit = getFormUnit(value.right, value.form);
 
-        if (leftUnit == rightUnit)
-            return formattedLeft % " / " % formattedRight % " " % leftUnit;
-        else
-            return formattedLeft % " " % leftUnit % " / " % formattedRight % " " % rightUnit;
+        if (leftUnit == rightUnit) {
+            auto leftSide = static_cast<QString>(formattedLeft % " / " % formattedRight);
+            if (outNumLength) *outNumLength = leftSide.size();
+            return leftSide % " " % leftUnit;
+        } else {
+            auto resultStr =
+                static_cast<QString>(formattedLeft % " " % leftUnit % " / " % formattedRight % " " % rightUnit);
+            if (outNumLength) *outNumLength = resultStr.size();
+            return resultStr;
+        }
     }
 }
 

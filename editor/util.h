@@ -33,7 +33,7 @@ namespace AxiomUtil {
 
     QString formatChannelFull(float val, AxiomModel::FormType form);
 
-    QString formatNumForm(AxiomModel::NumValue value, bool includeForm);
+    QString formatNumForm(AxiomModel::NumValue value, bool includeForm, int *outNumLength = nullptr);
 
     QRect makeRect(QPoint p1, QPoint p2);
 

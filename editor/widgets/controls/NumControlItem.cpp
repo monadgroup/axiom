@@ -322,7 +322,9 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto selectedAction = menu.exec(event->screenPos());
 
     if (selectedAction == setValAction) {
-        auto editor = new FloatingValueEditor(AxiomUtil::formatNumForm(control->value(), true), event->scenePos());
+        int formatNumLength;
+        auto formatNumString = AxiomUtil::formatNumForm(control->value(), true, &formatNumLength);
+        auto editor = new FloatingValueEditor(std::move(formatNumString), event->scenePos(), 0, formatNumLength);
         scene()->addItem(editor);
         connect(editor, &FloatingValueEditor::valueSubmitted, this, &NumControlItem::setStringValue);
     } else if (selectedAction == copyValAction) {
