@@ -132,18 +132,18 @@ QMenu QLineEdit:focus {
 
 /* tab styling */
 QTabBar {
-    border-bottom: solid 2px #222;
+    border-bottom: solid 2px #333;
 }
 
 QTabBar::tab {
     background: transparent;
     border: none;
-    border-bottom: 2px solid #222;
+    border-bottom: 2px solid #333;
     padding: 5px 10px;
 }
 
 QTabBar::tab:hover, QTabBar::tab:selected {
-    background: #222;
+    background: #333;
 }
 
 QTabBar::tab:selected {

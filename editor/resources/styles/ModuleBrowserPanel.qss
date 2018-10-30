@@ -1,8 +1,21 @@
 QTabBar::tab {
-    border-top: 1px solid #111;
-    padding: 10px 15px;
+    padding: 8px 12px;
 }
 
 QTabBar::tab:selected {
     border-bottom-color: #3498DB;
+}
+
+QLineEdit {
+    margin: 5px;
+    background: #191919;
+    border-color: #191919;
+}
+
+QLineEdit:focus {
+    border-color: #444;
+}
+
+#filterBar, QTabBar {
+    background: #222;
 }
