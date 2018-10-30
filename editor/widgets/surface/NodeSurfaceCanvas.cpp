@@ -114,6 +114,10 @@ void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
     connectionWire->removed.connect(this, [this]() { connectionWire.reset(); });
 }
 
+static bool canConnectTo(IConnectable *connectable, ConnectionWire *connectionWire, Control *sourceControl) {
+    return connectable->sink()->wireType() == connectionWire->wireType() && connectable->sink() != sourceControl;
+}
+
 void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     if (!connectionWire) return;
 
@@ -121,8 +125,7 @@ void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     bool foundHoverItem = false;
     for (const auto &hoverItem : hoverItems) {
         if (auto connectable = dynamic_cast<IConnectable *>(hoverItem);
-            connectable && connectable->sink()->wireType() == connectionWire->wireType() &&
-            connectable->sink() != sourceControl) {
+            connectable && canConnectTo(connectable, connectionWire.get(), sourceControl)) {
             connectionWire->setEndPos(connectable->sink()->worldPos());
             foundHoverItem = true;
             break;
@@ -142,7 +145,7 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
 
     for (const auto &hoverItem : hoverItems) {
         if (auto connectable = dynamic_cast<IConnectable *>(hoverItem);
-            connectable && connectable->sink()->wireType() == sourceControl->wireType()) {
+            connectable && canConnectTo(connectable, connectionWire.get(), sourceControl)) {
             // if the sinks are already connected, remove the connection
             auto otherUuid = connectable->sink()->uuid();
             auto connectors =
