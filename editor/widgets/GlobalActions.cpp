@@ -40,6 +40,7 @@ void GlobalActions::setupActions() {
     fileSave = makeAction("&Save", QKeySequence::Save);
     fileSaveAs = makeAction("&Save As...", QKeySequence::SaveAs);
     fileExport = makeAction("&Export...");
+    fileExport->setEnabled(false);
     fileQuit = makeAction("&Quit", QKeySequence::Quit);
 
     editUndo = makeAction("&Undo", QKeySequence::Undo);
@@ -50,6 +51,7 @@ void GlobalActions::setupActions() {
     editDelete = makeAction("&Delete", QKeySequence::Delete);
     editSelectAll = makeAction("&Select All", QKeySequence::SelectAll);
     editPreferences = makeAction("Pr&eferences...", QKeySequence::Preferences);
+    editPreferences->setEnabled(false);
 
     helpAbout = makeAction("&About", QKeySequence::HelpContents);
 }
