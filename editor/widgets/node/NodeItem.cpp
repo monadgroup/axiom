@@ -315,6 +315,13 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             ModelObjectSerializer::deserializeChunk(deserializeStream, ProjectSerializer::schemaVersion,
                                                     newEntry->root(), newEntry->rootSurface()->uuid(), &ref, false);
 
+            // deselect all root nodes in the new entry
+            auto entryRoot = newEntry->rootSurface();
+            auto entryRootNodes = entryRoot->nodes().sequence();
+            for (const auto &node : entryRootNodes) {
+                node->deselect();
+            }
+
             mainWindow->library()->addEntry(std::move(newEntry));
         }
     } else if (selectedAction == deleteAction) {
