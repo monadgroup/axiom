@@ -33,4 +33,11 @@ set_target_properties(axiom_standalone PROPERTIES
 
 target_link_libraries(axiom_standalone ${AXIOM_LINK_FLAGS} axiom_editor ${PORTAUDIO_LIBRARIES})
 
-install(TARGETS axiom_standalone DESTINATION .)
+install(TARGETS axiom_standalone
+        DESTINATION .
+        COMPONENT standalone)
+
+if (AXIOM_PACK)
+    add_custom_command(TARGET axiom_standalone POST_BUILD
+                       COMMAND upx -9 --force "$<TARGET_FILE:axiom_standalone>")
+endif ()

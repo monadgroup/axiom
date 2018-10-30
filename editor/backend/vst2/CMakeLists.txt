@@ -21,7 +21,7 @@ add_library(axiom_vst2_instrument MODULE ${VST2_BACKEND_SOURCES})
 target_compile_definitions(axiom_vst2_instrument PRIVATE AXIOM_VST2_IS_SYNTH)
 set_target_properties(axiom_vst2_instrument PROPERTIES
         PREFIX ""
-        OUTPUT_NAME "AxiomVSTInstrument"
+        OUTPUT_NAME "Axiom VST2 Instrument"
 
         BUNDLE true
         BUNDLE_EXTENSION "vst"
@@ -30,13 +30,15 @@ set_target_properties(axiom_vst2_instrument PROPERTIES
         MACOSX_BUNDLE_INFO_STRING "Axiom VST2 Instrument ${AXIOM_VERSION}"
         MACOSX_BUNDLE_NAME "Axiom VST2 Instrument")
 target_link_libraries(axiom_vst2_instrument ${AXIOM_LINK_FLAGS} axiom_editor)
-install(TARGETS axiom_vst2_instrument DESTINATION .)
+install(TARGETS axiom_vst2_instrument
+        DESTINATION .
+        COMPONENT vstinstrument)
 
 # VST2 Effect
 add_library(axiom_vst2_effect MODULE ${VST2_BACKEND_SOURCES})
 set_target_properties(axiom_vst2_effect PROPERTIES
         PREFIX ""
-        OUTPUT_NAME "AxiomVSTEffect"
+        OUTPUT_NAME "Axiom VST2 Effect"
 
         BUNDLE true
         BUNDLE_EXTENSION "vst"
@@ -45,4 +47,13 @@ set_target_properties(axiom_vst2_effect PROPERTIES
         MACOSX_BUNDLE_INFO_STRING "Axiom VST2 Effect ${AXIOM_VERSION}"
         MACOSX_BUNDLE_NAME "Axiom VST2 Effect")
 target_link_libraries(axiom_vst2_effect ${AXIOM_LINK_FLAGS} axiom_editor)
-install(TARGETS axiom_vst2_effect DESTINATION .)
+install(TARGETS axiom_vst2_effect
+        DESTINATION .
+        COMPONENT vsteffect)
+
+if (AXIOM_PACK)
+    add_custom_command(TARGET axiom_vst2_instrument POST_BUILD
+                       COMMAND upx -9 --force "$<TARGET_FILE:axiom_vst2_instrument>")
+    add_custom_command(TARGET axiom_vst2_effect POST_BUILD
+                       COMMAND upx -9 --force "$<TARGET_FILE:axiom_vst2_effect>")
+endif ()
