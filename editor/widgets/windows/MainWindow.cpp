@@ -233,6 +233,12 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     // cleanup old project state
+    if (_project) {
+        _openPanels[_project->rootSurface()]->toggleView(false);
+        removeSurface(_project->rootSurface());
+    }
+    _project = std::move(project);
+
     _openPanels.clear();
     if (_historyPanel) {
         _historyPanel->close();
@@ -240,8 +246,6 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     if (_modulePanel) {
         _modulePanel->close();
     }
-
-    _project = std::move(project);
 
     // attach the backend and our runtime
     _project->attachBackend(_backend);
