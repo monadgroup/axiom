@@ -24,7 +24,7 @@ char **argv = new char *[1];
 
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     setApplicationName("Axiom");
-    setApplicationVersion(VER_FILEVERSION_STR);
+    setApplicationVersion(AXIOM_VERSION);
 
     MaximFrontend::maxim_initialize();
     AxiomGui::GlobalActions::setupActions();

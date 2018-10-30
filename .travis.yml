@@ -40,7 +40,7 @@ deploy:
   api_key:
     secure: idqj1GyxQ+FdbevjLT3DwcjiFwn+lGZ2GWUgIbi9gZuVncKMtAuvYikfnXxg68Y2JrMPzjbxjjD+fPzmODCviMWING32CntzHm26ydbnsdcg0gyAtlGZpHg7/FhUA8uBN1xMfSK1exBXxmsYj9UVfSwSezKBYIJwx0eSazzI57gZ0IHkRjV0VmoIMmprhMxf3ieSnF/OOm2nRFAEHOZQJyVe+CqWAI57Qh5x7K3yvvvt52Sr/8r0c6662rusWH3MdWvsuG4GREkMIuCEDm1XVOq//gmze4N0wvfCW01uKL+hjrxZjhZP6K1204EmAH3/SbQ4XqrfymQqbubv2TYIXqPo/BNueRFzgEbA1y2oard+YzoLeY0GdlJjqSSVpb4kAUCa0XTOMqhxJrI3cBV8D1Ue8DKjrFqs1Ng/Ei7rFNeiwChmW3m4CYncYAR83oePH7JaqFgINkZafgjerxwyzNMqYhpnuQo4eEkp0TCs4s/WJeagGC65Du217ECdmLT9TxaPxGthZylUD+CPxykTWvGKrL2gJJiUMYnijNSDMlamg36NVQimfxXeWcDQtW+9QPXACgJ0nWOSTEHI87iHPXYu1hRRSrZ5JMAFR1OGPYe4Qab544voxVjBmmiYUJtdaNgJ2jM/3QTNawdN3ksEghJk2Ua1Sy+2yifUZCvnBUY=
   file:
-    - "$TRAVIS_BUILD_DIR/build/Axiom-0.4.0-rc1-Darwin.dmg"
+    - "$TRAVIS_BUILD_DIR/build/Axiom-${AXIOM_VERSION}-Darwin.dmg"
   skip_cleanup: true
   on:
     repo: monadgroup/axiom

@@ -16,7 +16,7 @@
 
 using namespace AxiomBackend;
 
-const char *AxiomBackend::PRODUCT_VERSION = VER_PRODUCTVERSION_STR;
+const char *AxiomBackend::PRODUCT_VERSION = AXIOM_VERSION;
 const char *AxiomBackend::COMPANY_NAME = VER_COMPANYNAME_STR;
 const char *AxiomBackend::FILE_DESCRIPTION = VER_FILEDESCRIPTION_STR;
 const char *AxiomBackend::INTERNAL_NAME = VER_INTERNALNAME_STR;

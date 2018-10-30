@@ -14,6 +14,12 @@ include_directories(../ ${Qt5Widgets_INCLUDE_DIRS})
 
 set(RES_DIR "${CMAKE_SOURCE_DIR}/editor/resources")
 
+# build RC file
+configure_file("${RES_DIR}/axiom.rc.in" "${CMAKE_CURRENT_BINARY_DIR}/axiom.rc" @ONLY)
+
+# common settings for Windows executables
+set(RC_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/axiom.rc")
+
 # common settings for Mac bundles
 set(ICON_PATH "${RES_DIR}/axiom.icns")
 
@@ -22,7 +28,7 @@ add_subdirectory(model)
 add_subdirectory(widgets)
 add_subdirectory(compiler)
 add_library(axiom_editor
-        "${RES_DIR}/axiom.rc" "${RES_DIR}/res.qrc"
+        "${RES_DIR}/res.qrc"
         util.h util.cpp
         AxiomApplication.h AxiomApplication.cpp
         AxiomEditor.h AxiomEditor.cpp
@@ -35,7 +41,7 @@ add_subdirectory(backend)
 
 if (DEPLOY)
     set(CPACK_PACKAGE_NAME Axiom)
-    set(CPACK_PACKAGE_VERSION 0.4.0-rc1)
+    set(CPACK_PACKAGE_VERSION ${AXIOM_VERSION})
     set(CPACK_PACKAGE_VENDOR MONAD)
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Axiom: node-based synth")
 
