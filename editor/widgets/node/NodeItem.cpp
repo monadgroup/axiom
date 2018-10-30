@@ -84,10 +84,10 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime
             connect(resizer, &ItemResizer::changed, this, &NodeItem::resizerChanged);
             connect(resizer, &ItemResizer::endDrag, this, &NodeItem::resizerEndDrag);
 
-            node->controls().then([resizer](ControlSurface *surface) {
+            node->controls().then([this, resizer](ControlSurface *surface) {
                 resizer->setVisible(!surface->grid().hasSelection());
                 surface->grid().hasSelectionChanged.connect(
-                    [resizer](bool hasSelection) { resizer->setVisible(!hasSelection); });
+                    this, [resizer](bool hasSelection) { resizer->setVisible(!hasSelection); });
             });
 
             resizer->setParentItem(this);
