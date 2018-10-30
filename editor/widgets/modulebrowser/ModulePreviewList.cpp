@@ -40,5 +40,5 @@ bool ModulePreviewList::Sorter::aAfterB(QLayoutItem *a, QLayoutItem *b) {
     auto aPreviewButton = static_cast<ModulePreviewButton *>(a->widget());
     auto bPreviewButton = static_cast<ModulePreviewButton *>(b->widget());
 
-    return aPreviewButton->entry()->name() > bPreviewButton->entry()->name();
+    return aPreviewButton->entry()->name().compare(bPreviewButton->entry()->name(), Qt::CaseInsensitive) > 0;
 }
