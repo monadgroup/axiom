@@ -296,6 +296,12 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         });
     } else if (selectedAction == saveModuleAction) {
         ModulePropertiesWindow saveWindow(mainWindow->library());
+
+        // if there's only one node selected, use the node name as the default module name
+        if (node->surface()->grid().selectedItems().sequence().size() == 1) {
+            saveWindow.setEnteredName(node->name());
+        }
+
         if (saveWindow.exec() == QDialog::Accepted) {
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();
