@@ -21,7 +21,7 @@ ads--CDockAreaWidget #tabsMenuButton::menu-indicator {
 
 ads--CDockWidgetTitleBar {
     background: transparent;
-    padding: 8px 10px;
+    padding: 0 10px;
 }
 
 ads--CDockWidgetTitleBar:hover, ads--CDockWidgetTitleBar[activeTab="true"] {
