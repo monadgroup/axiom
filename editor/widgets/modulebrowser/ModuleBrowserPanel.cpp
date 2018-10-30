@@ -54,6 +54,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
     library->tagAdded.connect(this, &ModuleBrowserPanel::addTag);
     library->tagRemoved.connect(this, &ModuleBrowserPanel::removeTag);
     connect(filterTabs, &QTabBar::currentChanged, this, &ModuleBrowserPanel::changeTag);
+    connect(searchBox, &QLineEdit::textChanged, this, &ModuleBrowserPanel::changeSearch);
 }
 
 void ModuleBrowserPanel::addTag(const QString &tag) {
