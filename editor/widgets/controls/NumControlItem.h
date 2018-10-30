@@ -13,6 +13,10 @@ namespace AxiomModel {
     class NumControl;
 }
 
+namespace MaximCompiler {
+    class Runtime;
+}
+
 namespace AxiomGui {
 
     class NodeItem;
@@ -21,7 +25,9 @@ namespace AxiomGui {
     public:
         AxiomModel::NumControl *control;
 
-        NumControlItem(AxiomModel::NumControl *control, NodeSurfaceCanvas *canvas);
+        MaximCompiler::Runtime *runtime;
+
+        NumControlItem(AxiomModel::NumControl *control, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime);
 
         static bool unformatString(const QString &str, float *valOut, AxiomModel::FormType *formOut);
 

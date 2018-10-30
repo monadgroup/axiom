@@ -14,6 +14,9 @@
 #include "../CommonColors.h"
 #include "../FloatingValueEditor.h"
 #include "../node/NodeItem.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "../surface/NodeSurfacePanel.h"
+#include "../windows/MainWindow.h"
 #include "editor/compiler/interface/Runtime.h"
 #include "editor/model/ModelRoot.h"
 #include "editor/model/Project.h"
@@ -34,8 +37,8 @@ static std::vector<std::pair<QString, NumControl::DisplayMode>> modes = {
     std::make_pair("&Vertical Slider", NumControl::DisplayMode::SLIDER_V),
     std::make_pair("&Toggle Button", NumControl::DisplayMode::TOGGLE)};
 
-NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas)
-    : ControlItem(control, canvas), control(control), _plugImage(":/icons/num-plug.png") {
+NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime)
+    : ControlItem(control, canvas), control(control), runtime(runtime), _plugImage(":/icons/num-plug.png") {
     control->valueChanged.connect(this, &NumControlItem::controlValueChanged);
     control->displayModeChanged.connect(this, &NumControlItem::triggerUpdate);
     control->rangeChanged.connect(this, &NumControlItem::triggerUpdate);
@@ -397,11 +400,7 @@ AxiomModel::NumValue NumControlItem::clampValue(AxiomModel::NumValue value) {
 }
 
 AxiomModel::NumValue NumControlItem::getNormalizedValue() {
-    auto val = control->value();
-    if (control->root()->runtime()) {
-        val = control->root()->runtime()->convertNum(FormType::CONTROL, val);
-    }
-    return val;
+    return runtime->convertNum(FormType::CONTROL, control->value());
 }
 
 void NumControlItem::setNormalizedValue(AxiomModel::NumValue val) {
@@ -413,11 +412,7 @@ void NumControlItem::setNormalizedValue(AxiomModel::NumValue val) {
     }
 
     auto currentForm = control->value().form;
-    if (control->root()->runtime()) {
-        val = control->root()->runtime()->convertNum(currentForm, val);
-    }
-
-    control->setValue(val);
+    control->setValue(runtime->convertNum(currentForm, val));
 }
 
 QString NumControlItem::getLabelText() const {
@@ -432,9 +427,7 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
     // convert the min/max values to whatever form we current have
     AxiomModel::NumValue currentMinMax = {control->minValue(), control->maxValue(), AxiomModel::FormType::CONTROL};
     auto originalForm = control->value().form;
-    if (control->root()->runtime()) {
-        currentMinMax = control->root()->runtime()->convertNum(originalForm, currentMinMax);
-    }
+    currentMinMax = runtime->convertNum(originalForm, currentMinMax);
 
     auto minMaxDefaultStr =
         static_cast<QString>(AxiomUtil::formatChannelFull(currentMinMax.left, currentMinMax.form) % " - " %
@@ -484,9 +477,7 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
 
             // convert back to CONTROL space
             AxiomModel::NumValue newMinMax = {minValue, maxValue, minForm};
-            if (control->root()->runtime()) {
-                newMinMax = control->root()->runtime()->convertNum(AxiomModel::FormType::CONTROL, newMinMax);
-            }
+            newMinMax = runtime->convertNum(AxiomModel::FormType::CONTROL, newMinMax);
 
             // swap values if necessary
             if (newMinMax.left > newMinMax.right) {
@@ -511,11 +502,7 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
 
         if (newForm != control->value().form) {
             // convert the current value to the entered form and submit it
-            auto convertedVal = control->value();
-            if (control->root()->runtime()) {
-                convertedVal = control->root()->runtime()->convertNum(newForm, convertedVal);
-            }
-
+            auto convertedVal = runtime->convertNum(newForm, control->value());
             actions.push_back(
                 SetNumValueAction::create(control->uuid(), control->value(), convertedVal, control->root()));
         }

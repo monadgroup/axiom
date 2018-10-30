@@ -47,7 +47,8 @@ const qreal CONTROL_ZVALUE = 1;
 const qreal EDGE_RESIZE_ZVALUE = 2;
 const qreal CORNER_RESIZE_ZVALUE = 3;
 
-NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node(node) {
+NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime)
+    : canvas(canvas), runtime(runtime), node(node) {
     node->nameChanged.connect(this, &NodeItem::triggerUpdate);
     node->extractedChanged.connect(this, &NodeItem::triggerUpdate);
     node->posChanged.connect(this, &NodeItem::setPos);
@@ -340,7 +341,7 @@ void NodeItem::addControl(Control *control) {
     ControlItem *item = nullptr;
 
     if (auto numControl = dynamic_cast<NumControl *>(control)) {
-        item = new NumControlItem(numControl, canvas);
+        item = new NumControlItem(numControl, canvas, runtime);
     } else if (auto midiControl = dynamic_cast<MidiControl *>(control)) {
         item = new MidiControlItem(midiControl, canvas);
     } else if (auto extractControl = dynamic_cast<ExtractControl *>(control)) {

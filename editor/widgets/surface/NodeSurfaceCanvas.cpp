@@ -16,7 +16,9 @@
 #include "../IConnectable.h"
 #include "../connection/WireItem.h"
 #include "../node/NodeItem.h"
+#include "../windows/MainWindow.h"
 #include "AddNodeMenu.h"
+#include "NodeSurfacePanel.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/ModelRoot.h"
 #include "editor/model/PoolOperators.h"
@@ -166,7 +168,7 @@ void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
 }
 
 void NodeSurfaceCanvas::addNode(AxiomModel::Node *node) {
-    auto item = new NodeItem(node, this);
+    auto item = new NodeItem(node, this, panel->window->runtime());
     item->setZValue(nodeZVal);
     addItem(item);
 }

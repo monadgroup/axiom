@@ -10,6 +10,10 @@ namespace AxiomModel {
     class Control;
 }
 
+namespace MaximCompiler {
+    class Runtime;
+}
+
 namespace AxiomGui {
 
     class NodeSurfaceCanvas;
@@ -20,9 +24,11 @@ namespace AxiomGui {
     public:
         NodeSurfaceCanvas *canvas;
 
+        MaximCompiler::Runtime *runtime;
+
         AxiomModel::Node *node;
 
-        NodeItem(AxiomModel::Node *node, NodeSurfaceCanvas *canvas);
+        NodeItem(AxiomModel::Node *node, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime);
 
         QRectF boundingRect() const override;
 

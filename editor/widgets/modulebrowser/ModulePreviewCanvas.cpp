@@ -9,7 +9,7 @@
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface) {
+ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface, MaximCompiler::Runtime *runtime) : runtime(runtime) {
     // create items for all nodes and wires that already exist
     // todo: this could be refactored with NodeSurfaceCanvas
     for (const auto &node : surface->nodes().sequence()) {
@@ -22,7 +22,7 @@ ModulePreviewCanvas::ModulePreviewCanvas(NodeSurface *surface) {
 }
 
 void ModulePreviewCanvas::addNode(AxiomModel::Node *node) {
-    auto item = new NodeItem(node, nullptr);
+    auto item = new NodeItem(node, nullptr, runtime);
     item->setZValue(1);
     addItem(item);
 }

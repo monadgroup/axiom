@@ -173,7 +173,7 @@ void ModulePreviewButton::updateIsVisible() {
 }
 
 void ModulePreviewButton::updateImage() {
-    ModulePreviewCanvas canvas(_entry->rootSurface());
+    ModulePreviewCanvas canvas(_entry->rootSurface(), window->runtime());
     QGraphicsView view(&canvas);
     view.setInteractive(false);
     view.setRenderHint(QPainter::Antialiasing);
