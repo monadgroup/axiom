@@ -199,7 +199,7 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
 
         isDragging = true;
-        mouseStartPoint = event->screenPos();
+        mouseStartPoint = event->scenePos();
         node->startedDragging();
     }
 
@@ -209,7 +209,7 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
-    auto mouseDelta = event->screenPos() - mouseStartPoint;
+    auto mouseDelta = event->scenePos() - mouseStartPoint;
     node->draggedTo(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
                            qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())));
 

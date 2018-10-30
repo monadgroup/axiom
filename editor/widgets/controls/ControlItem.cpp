@@ -215,7 +215,7 @@ void ControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     } else if (!isEditable() && event->button() == Qt::LeftButton) {
         event->accept();
         isMoving = true;
-        mouseStartPoint = event->screenPos();
+        mouseStartPoint = event->scenePos();
         control->startedDragging();
     } else {
         event->setAccepted(control->isMovable());
@@ -231,7 +231,7 @@ void ControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     } else if (isMoving) {
         event->accept();
 
-        auto mouseDelta = event->screenPos() - mouseStartPoint;
+        auto mouseDelta = event->scenePos() - mouseStartPoint;
         control->draggedTo(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::controlGridSize.width()),
                                   qRound((float) mouseDelta.y() / NodeSurfaceCanvas::controlGridSize.height())));
     } else {

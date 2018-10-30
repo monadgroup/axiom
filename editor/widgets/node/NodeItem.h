@@ -79,7 +79,7 @@ namespace AxiomGui {
 
     private:
         bool isDragging = false;
-        QPoint mouseStartPoint;
+        QPointF mouseStartPoint;
 
         static const int textOffset = 15;
     };

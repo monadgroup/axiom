@@ -128,7 +128,7 @@ void ItemResizer::setDoPaint(bool newDoPaint) {
 
 void ItemResizer::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = true;
-    startMousePos = event->screenPos();
+    startMousePos = event->scenePos();
     startTopLeft = m_pos;
     startBottomRight = QPointF(m_pos.x() + m_size.width(), m_pos.y() + m_size.height());
     emit startDrag(m_pos, m_size);
@@ -141,7 +141,7 @@ void ItemResizer::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     auto bottomRight = QPointF(m_pos.x() + m_size.width(), m_pos.y() + m_size.height());
     auto startSize = startBottomRight - startTopLeft;
 
-    auto mouseDelta = event->screenPos() - startMousePos;
+    auto mouseDelta = event->scenePos() - startMousePos;
 
     if (dir & BOTTOM) {
         auto newHeight = qMax(startSize.y() + mouseDelta.y(), minSize.height());
