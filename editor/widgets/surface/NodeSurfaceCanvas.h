@@ -5,7 +5,7 @@
 #include <memory>
 #include <set>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 #include "editor/model/ConnectionWire.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/PortalControl.h"
@@ -26,7 +26,7 @@ namespace AxiomGui {
 
     class NodeSurfacePanel;
 
-    class NodeSurfaceCanvas : public QGraphicsScene, public AxiomCommon::Hookable {
+    class NodeSurfaceCanvas : public QGraphicsScene, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:
@@ -95,7 +95,7 @@ namespace AxiomGui {
         QVector<QPointF> selectionPoints;
         QGraphicsPathItem *selectionPath;
 
-        std::optional<AxiomModel::ConnectionWire> connectionWire;
+        std::unique_ptr<AxiomModel::ConnectionWire> connectionWire;
         AxiomModel::Control *sourceControl;
 
         void leftMousePressEvent(QGraphicsSceneMouseEvent *event);

@@ -2,8 +2,8 @@
 
 #include <QtCore/QUuid>
 
-#include "../Sequence.h"
 #include "Action.h"
+#include "common/Sequence.h"
 
 namespace AxiomModel {
 
@@ -18,9 +18,9 @@ namespace AxiomModel {
 
         static std::unique_ptr<DeleteObjectAction> create(const QUuid &uuid, AxiomModel::ModelRoot *root);
 
-        void forward(bool first, std::vector<QUuid> &compileItems) override;
+        void forward(bool first) override;
 
-        void backward(std::vector<QUuid> &compileItems) override;
+        void backward() override;
 
         const QUuid &uuid() const { return _uuid; }
 
@@ -30,8 +30,6 @@ namespace AxiomModel {
         QUuid _uuid;
         QByteArray _buffer;
 
-        Sequence<ModelObject *> getLinkedItems(const QUuid &seed) const;
-
-        Sequence<ModelObject *> getRemoveItems() const;
+        std::vector<ModelObject *> getLinkedItems(const QUuid &seed) const;
     };
 }

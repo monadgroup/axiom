@@ -21,8 +21,8 @@ std::unique_ptr<DeleteObjectAction> DeleteObjectAction::create(const QUuid &uuid
     return create(uuid, QByteArray(), root);
 }
 
-void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
-    auto sortedItems = collect(heapSort(getRemoveItems()));
+void DeleteObjectAction::forward(bool) {
+    auto sortedItems = heapSort(getLinkedItems(_uuid));
 
     QDataStream stream(&_buffer, QIODevice::WriteOnly);
     ModelObjectSerializer::serializeChunk(stream, QUuid(), sortedItems);
@@ -33,54 +33,40 @@ void DeleteObjectAction::forward(bool, std::vector<QUuid> &compileItems) {
     // until that's empty.
     // We'll also need a list of parent UUIDs to build transactions later, so we can do that here.
     QSet<QUuid> usedIds;
-    QSet<QUuid> compileIds;
     for (const auto &itm : sortedItems) {
         usedIds.insert(itm->uuid());
-        compileIds.remove(itm->uuid());
-
-        auto compileLinks = itm->compileLinks();
-        for (const auto &compileItem : compileLinks) {
-            compileIds.insert(compileItem);
-        }
     }
-    auto itemsToDelete = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), std::move(usedIds));
+    auto itemsToDelete =
+        findAll(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), usedIds);
 
     // remove all items
     while (!itemsToDelete.empty()) {
         (*itemsToDelete.begin())->remove();
     }
-
-    for (const auto &parent : compileIds) {
-        compileItems.push_back(parent);
-    }
 }
 
-void DeleteObjectAction::backward(std::vector<QUuid> &compileItems) {
+void DeleteObjectAction::backward() {
     QDataStream stream(&_buffer, QIODevice::ReadOnly);
     IdentityReferenceMapper ref;
     auto addedObjects =
-        ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), QUuid(), &ref);
+        ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), QUuid(), &ref, false);
     _buffer.clear();
-
-    for (const auto &obj : addedObjects) {
-        compileItems.push_back(obj->uuid());
-
-        auto compileLinks = obj->compileLinks();
-        for (const auto &compileItem : compileLinks) {
-            compileItems.push_back(compileItem);
-        }
-    }
 }
 
-Sequence<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &uuid) const {
-    auto dependents = findDependents(dynamicCast<ModelObject *>(root()->pool().sequence()), uuid);
-    auto links = flatten(map(dependents, std::function([](ModelObject *const &obj) { return obj->links(); })));
-    auto linkDependents =
-        flatten(map(links, std::function([this](ModelObject *const &obj) { return getLinkedItems(obj->uuid()); })));
+std::vector<ModelObject *> DeleteObjectAction::getLinkedItems(const QUuid &seed) const {
+    auto dependents = AxiomCommon::collect(
+        findDependents(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), seed));
+    auto links = AxiomCommon::flatten(
+        AxiomCommon::map(AxiomCommon::refSequence(&dependents), [](ModelObject *obj) { return obj->links(); }));
+    auto linkDependents = AxiomCommon::collect(AxiomCommon::flatten(
+        AxiomCommon::map(links, [this](ModelObject *obj) { return getLinkedItems(obj->uuid()); })));
 
-    return distinctByUuid(flatten(std::array<Sequence<ModelObject *>, 2>{dependents, linkDependents}));
-}
+    std::vector<ModelObject *> subSequences;
+    subSequences.reserve(links.size() + linkDependents.size());
 
-Sequence<ModelObject *> DeleteObjectAction::getRemoveItems() const {
-    return getLinkedItems(_uuid);
+    std::back_insert_iterator<std::vector<ModelObject *>> iter(subSequences);
+    std::copy(dependents.begin(), dependents.end(), iter);
+    std::copy(linkDependents.begin(), linkDependents.end(), iter);
+
+    return AxiomCommon::collect(distinctByUuid(std::move(subSequences)));
 }

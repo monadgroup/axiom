@@ -12,10 +12,18 @@ namespace AxiomModel {
     namespace LibrarySerializer {
         void serialize(Library *library, QDataStream &stream);
 
-        std::unique_ptr<Library> deserialize(QDataStream &stream, uint32_t version, Project *project);
+        std::unique_ptr<Library> deserialize(QDataStream &stream, uint32_t version);
 
         void serializeEntry(LibraryEntry *entry, QDataStream &stream);
 
-        std::unique_ptr<LibraryEntry> deserializeEntry(QDataStream &stream, uint32_t version, Project *project);
+        std::unique_ptr<LibraryEntry> deserializeEntry(QDataStream &stream, uint32_t version);
+
+        template<class Iterator>
+        void serializeEntries(uint32_t count, Iterator begin, Iterator end, QDataStream &stream) {
+            stream << count;
+            for (auto entryIter = begin; entryIter != end; entryIter++) {
+                serializeEntry(*entryIter, stream);
+            }
+        }
     }
 }

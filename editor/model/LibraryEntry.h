@@ -2,6 +2,7 @@
 
 #include <QtCore/QDateTime>
 #include <QtCore/QString>
+#include <set>
 
 #include "ModelRoot.h"
 #include "common/Event.h"
@@ -10,13 +11,14 @@ namespace AxiomModel {
 
     class Library;
 
-    class RootSurface;
+    class ModuleSurface;
 
-    class LibraryEntry : public AxiomCommon::Hookable {
+    class LibraryEntry : public AxiomCommon::TrackedObject {
     public:
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<const QString &> tagAdded;
         AxiomCommon::Event<const QString &> tagRemoved;
+        AxiomCommon::Event<> changed;
         AxiomCommon::Event<> removed;
         AxiomCommon::Event<> cleanup;
 
@@ -27,11 +29,13 @@ namespace AxiomModel {
                                                     const QDateTime &modificationDateTime, std::set<QString> tags,
                                                     std::unique_ptr<ModelRoot> root);
 
-        static std::unique_ptr<LibraryEntry> create(QString name, std::set<QString> tags, Project *project);
+        static std::unique_ptr<LibraryEntry> create(QString name, std::set<QString> tags);
 
         const QString &name() const { return _name; }
 
         void setName(const QString &newName);
+
+        void setBaseUuid(QUuid newUuid);
 
         const QUuid &baseUuid() const { return _baseUuid; }
 
@@ -47,7 +51,7 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root.get(); }
 
-        RootSurface *rootSurface() const { return _rootSurface; }
+        ModuleSurface *rootSurface() const { return _rootSurface; }
 
         void modified();
 
@@ -60,6 +64,6 @@ namespace AxiomModel {
         QDateTime _modificationDateTime;
         std::set<QString> _tags;
         std::unique_ptr<ModelRoot> _root;
-        RootSurface *_rootSurface;
+        ModuleSurface *_rootSurface;
     };
 }

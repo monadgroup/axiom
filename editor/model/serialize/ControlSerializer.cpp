@@ -1,13 +1,19 @@
 #include "ControlSerializer.h"
 
 #include "../../util.h"
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
 #include "../ReferenceMapper.h"
 #include "../objects/Control.h"
+#include "../objects/ControlSurface.h"
 #include "../objects/ExtractControl.h"
+#include "../objects/GraphControl.h"
+#include "../objects/GroupSurface.h"
 #include "../objects/MidiControl.h"
+#include "../objects/Node.h"
 #include "../objects/NumControl.h"
 #include "../objects/PortalControl.h"
-#include "../objects/ScopeControl.h"
+#include "../objects/RootSurface.h"
 #include "ValueSerializer.h"
 
 using namespace AxiomModel;
@@ -30,8 +36,8 @@ void ControlSerializer::serialize(AxiomModel::Control *control, QDataStream &str
         serializeNum(num, stream);
     else if (auto portal = dynamic_cast<PortalControl *>(control))
         serializePortal(portal, stream);
-    else if (auto scope = dynamic_cast<ScopeControl *>(control))
-        serializeScope(scope, stream);
+    else if (auto graph = dynamic_cast<GraphControl *>(control))
+        serializeGraph(graph, stream);
     else
         unreachable;
 }
@@ -57,9 +63,31 @@ std::unique_ptr<Control> ControlSerializer::deserialize(QDataStream &stream, uin
     bool showName;
     stream >> showName;
 
+    QUuid maybeExposerUuid;
+    stream >> maybeExposerUuid;
+
+    // The exposer should only be set if the actual control exists in this deserialization.
+    // Since the exposer control is normally after the exposed one (but it doesn't have to be!) we can't just
+    // check if its UUID is valid in the ReferenceMapper, instead we need to see if the node it would exist on is
+    // valid. We do that here by walking up trying to find a GroupNode, and then checking to see if it's a valid
+    // reference.
     QUuid exposerUuid;
-    stream >> exposerUuid;
-    exposerUuid = ref->mapUuid(exposerUuid);
+    if (ref->isValid(maybeExposerUuid)) {
+        // hot path if the exposer control happens to already exist
+        exposerUuid = ref->mapUuid(maybeExposerUuid);
+    } else if (!maybeExposerUuid.isNull()) {
+        auto controlSurface = root->controlSurfaces().sequence().find(parentUuid);
+        if (controlSurface) {
+            auto parentNode = root->nodes().sequence().find((*controlSurface)->parentUuid());
+            if (parentNode) {
+                auto groupSurface = AxiomCommon::dynamicCast<GroupSurface *>(root->nodeSurfaces().sequence())
+                                        .find((*parentNode)->parentUuid());
+                if (groupSurface && ref->isValid((*groupSurface)->parentUuid())) {
+                    exposerUuid = ref->mapUuid(maybeExposerUuid);
+                }
+            }
+        }
+    }
 
     QUuid exposingUuid;
     stream >> exposingUuid;
@@ -84,8 +112,8 @@ std::unique_ptr<Control> ControlSerializer::deserialize(QDataStream &stream, uin
     case Control::ControlType::MIDI_PORTAL:
         return deserializePortal(stream, version, uuid, parentUuid, pos, size, selected, std::move(name), showName,
                                  exposerUuid, exposingUuid, ConnectionWire::WireType::MIDI, ref, root);
-    case Control::ControlType::SCOPE:
-        return deserializeScope(stream, version, uuid, parentUuid, pos, size, selected, std::move(name), showName,
+    case Control::ControlType::GRAPH:
+        return deserializeGraph(stream, version, uuid, parentUuid, pos, size, selected, std::move(name), showName,
                                 exposerUuid, exposingUuid, ref, root);
     default:
         unreachable;
@@ -120,7 +148,9 @@ std::unique_ptr<MidiControl> ControlSerializer::deserializeMidi(QDataStream &str
 
 void ControlSerializer::serializeNum(AxiomModel::NumControl *control, QDataStream &stream) {
     stream << (uint8_t) control->displayMode();
-    stream << (uint8_t) control->channel();
+    stream << control->minValue();
+    stream << control->maxValue();
+    stream << control->step();
     ValueSerializer::serializeNum(control->value(), stream);
 }
 
@@ -132,16 +162,36 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
                                                               AxiomModel::ModelRoot *root) {
     uint8_t displayModeInt;
     stream >> displayModeInt;
-    uint8_t channelInt;
-    stream >> channelInt;
+
+    // Channel was removed in 0.4.0 (schema version 5)
+    if (version < 5) {
+        uint8_t channelDummy;
+        stream >> channelDummy;
+    }
+
+    // Control min/max/step was added in 0.4.0 (schema version 5). Previously controls would always be between 0 and 1,
+    // step would always be disabled (0).
+    float minValue, maxValue;
+    uint32_t step;
+    if (version >= 5) {
+        stream >> minValue;
+        stream >> maxValue;
+        stream >> step;
+    } else {
+        minValue = 0;
+        maxValue = 1;
+        step = 0;
+    }
+
     auto value = ValueSerializer::deserializeNum(stream, version);
     return NumControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                              exposingUuid, (NumControl::DisplayMode) displayModeInt, (NumControl::Channel) channelInt,
-                              value, root);
+                              exposingUuid, (NumControl::DisplayMode) displayModeInt, minValue, maxValue, step, value,
+                              root);
 }
 
 void ControlSerializer::serializePortal(AxiomModel::PortalControl *control, QDataStream &stream) {
     stream << (uint8_t) control->portalType();
+    stream << (quint64) control->portalId();
 }
 
 std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
@@ -150,18 +200,59 @@ std::unique_ptr<PortalControl> ControlSerializer::deserializePortal(
     AxiomModel::ConnectionWire::WireType wireType, AxiomModel::ReferenceMapper *ref, AxiomModel::ModelRoot *root) {
     uint8_t portalTypeInt;
     stream >> portalTypeInt;
+
+    // unique portal IDs were added in 0.4.0, corresponding to schema version 5
+    quint64 portalId;
+    if (version >= 5) {
+        stream >> portalId;
+    } else {
+        portalId =
+            (*takeAt(AxiomCommon::dynamicCast<RootSurface *>(findChildren(root->nodeSurfaces().sequence(), QUuid())),
+                     0))
+                ->takePortalId();
+    }
+
     return PortalControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                                 exposingUuid, wireType, (PortalControl::PortalType) portalTypeInt, root);
+                                 exposingUuid, wireType, (PortalControl::PortalType) portalTypeInt, portalId, root);
 }
 
-void ControlSerializer::serializeScope(AxiomModel::ScopeControl *control, QDataStream &stream) {}
+void ControlSerializer::serializeGraph(GraphControl *control, QDataStream &stream) {
+    auto savedState = control->getCurveState();
+    stream << (bool) savedState;
+    if (savedState) {
+        stream << savedState->curveCount;
+        stream << savedState->curveStartVals[0];
+        for (uint8_t i = 0; i < savedState->curveCount; i++) {
+            stream << savedState->curveStartVals[i + 1];
+            stream << savedState->curveEndPositions[i];
+            stream << savedState->curveTension[i];
+            stream << savedState->curveStates[i];
+        }
+    }
+}
 
-std::unique_ptr<ScopeControl> ControlSerializer::deserializeScope(QDataStream &stream, uint32_t version,
+std::unique_ptr<GraphControl> ControlSerializer::deserializeGraph(QDataStream &stream, uint32_t version,
                                                                   const QUuid &uuid, const QUuid &parentUuid,
                                                                   QPoint pos, QSize size, bool selected, QString name,
                                                                   bool showName, QUuid exposerUuid, QUuid exposingUuid,
                                                                   AxiomModel::ReferenceMapper *ref,
                                                                   AxiomModel::ModelRoot *root) {
-    return ScopeControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
-                                exposingUuid, root);
+    std::unique_ptr<GraphControlCurveState> savedState;
+    bool hasSavedState;
+    stream >> hasSavedState;
+
+    if (hasSavedState) {
+        savedState = std::make_unique<GraphControlCurveState>();
+        stream >> savedState->curveCount;
+        stream >> savedState->curveStartVals[0];
+        for (uint8_t i = 0; i < savedState->curveCount; i++) {
+            stream >> savedState->curveStartVals[i + 1];
+            stream >> savedState->curveEndPositions[i];
+            stream >> savedState->curveTension[i];
+            stream >> savedState->curveStates[i];
+        }
+    }
+
+    return GraphControl::create(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
+                                exposingUuid, std::move(savedState), root);
 }

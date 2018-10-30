@@ -14,11 +14,13 @@ fn gen_intrinsic_call(
     let result_form = NumValue::new(args[0]).get_form(func.ctx.b);
     result_num.set_form(func.ctx.b, &result_form);
 
-    let vec_values: Vec<_> = args.iter()
+    let vec_values: Vec<_> = args
+        .iter()
         .map(|ptr| NumValue::new(*ptr).get_vec(func.ctx.b))
         .collect();
     let basic_values: Vec<_> = vec_values.iter().map(|vec| vec as &BasicValue).collect();
-    let result_vec = func.ctx
+    let result_vec = func
+        .ctx
         .b
         .build_call(&intrinsic, &basic_values, "result", false)
         .left()

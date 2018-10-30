@@ -2,16 +2,15 @@
 
 #define _USE_MATH_DEFINES
 
-#include <math.h>
+#include <cmath>
 
-#include "editor/util.h"
 #include "editor/model/objects/NumControl.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
-void
-KnobPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, AxiomModel::NumValue cv,
-                   const QColor &baseColor, const QColor &activeColor) {
+void KnobPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float hoverState, AxiomModel::NumValue cv,
+                        const QColor &baseColor, const QColor &activeColor) {
     auto aspectWidth = aspectBoundingRect.width();
     auto scaledThickness = (0.06f + 0.04f * hoverState) * aspectWidth;
     auto outerBr = getBounds(aspectBoundingRect);
@@ -29,7 +28,7 @@ KnobPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float ho
 
     // draw background
     painter->setPen(Qt::NoPen);
-    painter->setBrush(QBrush(QColor(30, 30, 30)));
+    painter->setBrush(QBrush(QColor(40, 40, 40)));
     painter->drawEllipse(outerBr);
 
     // draw markers
@@ -50,10 +49,8 @@ KnobPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float ho
         painter->setPen(activeMarkerPen);
 
         auto markerAngle = startAngle / 2880. * M_PI + markerVal * completeAngle / 2880. * M_PI;
-        auto markerP = centerP + QPointF(
-            outerBr.width() / 2 * std::cos(markerAngle),
-            -outerBr.height() / 2 * std::sin(markerAngle)
-        );
+        auto markerP = centerP + QPointF(outerBr.width() / 2 * std::cos(markerAngle),
+                                         -outerBr.height() / 2 * std::sin(markerAngle));
         painter->drawLine((centerP + 2 * markerP) / 3, (centerP + 10 * markerP) / 11);
     }
 
@@ -63,14 +60,12 @@ KnobPainter::paint(QPainter *painter, const QRectF &aspectBoundingRect, float ho
     painter->setPen(pen);
     painter->setBrush(Qt::NoBrush);
 
-    painter->drawArc(ringBr, startAngle + completeAngle * maxVal,
-                     completeAngle - completeAngle * maxVal);
+    painter->drawArc(ringBr, startAngle + completeAngle * maxVal, completeAngle - completeAngle * maxVal);
 
     // draw max ring
     pen.setColor(darkerCurrent);
     painter->setPen(pen);
-    painter->drawArc(ringBr, startAngle + completeAngle * minVal,
-                     completeAngle * maxVal - completeAngle * minVal);
+    painter->drawArc(ringBr, startAngle + completeAngle * minVal, completeAngle * maxVal - completeAngle * minVal);
 
     // draw min ring
     pen.setColor(currentColor);

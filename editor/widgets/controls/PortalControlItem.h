@@ -16,23 +16,18 @@ namespace AxiomGui {
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-        QPainterPath shape() const override;
-
     protected:
-
         bool showLabelInCenter() const override { return true; }
 
         QRectF useBoundingRect() const override { return {}; }
 
-        QPainterPath controlPath() const override { return shape(); }
+        QPainterPath controlPath() const override;
 
         void paintControl(QPainter *painter) override {}
 
     private:
-
         QImage _image;
 
         static QString getImagePath(AxiomModel::PortalControl *control);
     };
-
 }

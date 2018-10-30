@@ -41,13 +41,17 @@ impl DelayFunction {
     ///     float resultVal;
     ///
     ///     if (*currentSize) {
-    ///         *buffer[*currentPos] = input;
+    ///         uint64_t loadedCurrentPos = *currentPos;
+    ///         *currentPos = (loadedCurrentPos + 1) % *currentSize;
     ///
-    ///         if (delaySamples > 0) {
-    ///             *currentPos = (*currentPos + 1) % delaySamples;
+    ///         if (delaySamples == 0) {
+    ///             resultVal = input;
+    ///         } else {
+    ///             auto readPosition = (loadedCurrentPos + *currentSize - delaySamples) % *currentSize;
+    ///             resultVal = (*buffer)[readPosition];
     ///         }
     ///
-    ///         resultVal = *buffer[*currentPos];
+    ///         (*buffer)[loadedCurrentPos] = input;
     ///     } else {
     ///         resultVal = input;
     ///     }
@@ -55,6 +59,8 @@ impl DelayFunction {
     ///     auto bufferSize = calculateNextPowerOfTwo(reserveSamples);
     ///     if (bufferSize != *currentSize) {
     ///         *buffer = realloc(*buffer, bufferSize * sizeof(float));
+    ///         if (bufferSize == 0) *buffer = nullptr;
+    ///         else memset(*buffer + *currentSize, 0, (bufferSize - *currentSize) * sizeof(float));
     ///         *currentSize = bufferSize;
     ///     }
     ///
@@ -65,8 +71,9 @@ impl DelayFunction {
         let func = DelayFunction::get_channel_update_func(module);
         build_context_function(module, func, target, &|ctx: BuilderContext| {
             let target_data = target.machine.get_data();
-            let ctlz_intrinsic = intrinsics::ctlz_i64(ctx.module);
+            let next_power_intrinsic = intrinsics::next_power_i64(ctx.module);
             let realloc_intrinsic = intrinsics::realloc(ctx.module, &target_data);
+            let memset_intrinsic = intrinsics::memset(ctx.module, &target_data);
 
             let current_pos_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
             let current_size_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
@@ -78,25 +85,46 @@ impl DelayFunction {
             let has_buffer_true_block = ctx.context.append_basic_block(&ctx.func, "hasbuffer.true");
             let has_samples_true_block =
                 ctx.context.append_basic_block(&ctx.func, "hassamples.true");
-            let has_samples_continue_block = ctx.context
+            let has_samples_false_block = ctx
+                .context
+                .append_basic_block(&ctx.func, "hassamples.false");
+            let has_samples_continue_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "hassamples.continue");
             let has_buffer_false_block =
                 ctx.context.append_basic_block(&ctx.func, "hasbuffer.false");
-            let has_buffer_continue_block = ctx.context
+            let has_buffer_continue_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "hasbuffer.continue");
-            let needs_realloc_true_block = ctx.context
+            let needs_realloc_true_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "needsrealloc.true");
-            let needs_realloc_continue_block = ctx.context
+            let size_zero_true_block = ctx.context.append_basic_block(&ctx.func, "sizezero.true");
+            let size_zero_false_block = ctx.context.append_basic_block(&ctx.func, "sizezero.false");
+            let size_increase_true_block = ctx
+                .context
+                .append_basic_block(&ctx.func, "sizeincrease.true");
+            let size_increase_continue_block = ctx
+                .context
+                .append_basic_block(&ctx.func, "sizeincrease.continue");
+            let size_zero_continue_block = ctx
+                .context
+                .append_basic_block(&ctx.func, "sizezero.continue");
+            let needs_realloc_continue_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "needsrealloc.continue");
 
-            let result_ptr = ctx.allocb
+            let result_ptr = ctx
+                .allocb
                 .build_alloca(&ctx.context.f32_type(), "resultval");
-            let buffer_ptr = ctx.b
+            let buffer_ptr = ctx
+                .b
                 .build_load(&buffer_ptr_ptr, "bufferptr")
                 .into_pointer_value();
 
             // if (*currentSize) {
-            let current_size = ctx.b
+            let current_size = ctx
+                .b
                 .build_load(&current_size_ptr, "currentsize")
                 .into_int_value();
             let has_buffer = ctx.b.build_int_compare(
@@ -113,19 +141,27 @@ impl DelayFunction {
 
             ctx.b.position_at_end(&has_buffer_true_block);
 
-            // *buffer[*currentPos] = input;
-            let current_pos = ctx.b
+            // uint64_t loadedCurrentPos = *currentPos;
+            let current_pos = ctx
+                .b
                 .build_load(&current_pos_ptr, "currentpos")
                 .into_int_value();
-            let sample_ptr = unsafe {
-                ctx.b
-                    .build_in_bounds_gep(&buffer_ptr, &[current_pos], "sampleptr")
-            };
-            ctx.b.build_store(&sample_ptr, &input_num);
 
-            // if (delaySamples > 0) {
+            // *currentPos = (loadedCurrentPos + 1) % *currentSize;
+            let new_pos = ctx.b.build_int_unsigned_rem(
+                ctx.b.build_int_nuw_add(
+                    current_pos,
+                    ctx.context.i64_type().const_int(1, false),
+                    "newpos.unbounded",
+                ),
+                current_size,
+                "newpos",
+            );
+            ctx.b.build_store(&current_pos_ptr, &new_pos);
+
+            // if (delaySamples == 0) {
             let has_samples = ctx.b.build_int_compare(
-                IntPredicate::UGT,
+                IntPredicate::NE,
                 delay_samples,
                 ctx.context.i64_type().const_int(0, false),
                 "hassamples",
@@ -133,41 +169,55 @@ impl DelayFunction {
             ctx.b.build_conditional_branch(
                 &has_samples,
                 &has_samples_true_block,
-                &has_samples_continue_block,
+                &has_samples_false_block,
             );
 
             ctx.b.position_at_end(&has_samples_true_block);
 
-            // *currentPos = (*currentPos + 1) % delaySamples;
-            let new_pos = ctx.b.build_int_unsigned_rem(
-                ctx.b.build_int_add(
-                    current_pos,
-                    ctx.context.i64_type().const_int(1, false),
-                    "newpos.unbounded",
+            // auto readPosition = (loadedCurrentPos + *currentSize - delaySamples) % delaySamples;
+            let read_position = ctx.b.build_int_unsigned_rem(
+                ctx.b.build_int_sub(
+                    ctx.b.build_int_add(current_pos, current_size, ""),
+                    delay_samples,
+                    "",
                 ),
-                delay_samples,
-                "newpos",
+                current_size,
+                "readposition",
             );
-            ctx.b.build_store(&current_pos_ptr, &new_pos);
-            ctx.b
-                .build_unconditional_branch(&has_samples_continue_block);
 
-            ctx.b.position_at_end(&has_samples_continue_block);
-
-            // resultVal = *buffer[*currentPos];
-            let current_pos = ctx.b
-                .build_load(&current_pos_ptr, "currentpos")
-                .into_int_value();
-            let result_val = ctx.b
+            // resultVal = (*buffer)[readPosition];
+            let result_val = ctx
+                .b
                 .build_load(
                     &unsafe {
                         ctx.b
-                            .build_in_bounds_gep(&buffer_ptr, &[current_pos], "result.ptr")
+                            .build_in_bounds_gep(&buffer_ptr, &[read_position], "result.ptr")
                     },
                     "result",
-                )
-                .into_float_value();
+                ).into_float_value();
             ctx.b.build_store(&result_ptr, &result_val);
+            ctx.b
+                .build_unconditional_branch(&has_samples_continue_block);
+
+            // } else {
+            ctx.b.position_at_end(&has_samples_false_block);
+
+            // resultVal = input;
+            ctx.b.build_store(&result_ptr, &input_num);
+            ctx.b
+                .build_unconditional_branch(&has_samples_continue_block);
+
+            // }
+            ctx.b.position_at_end(&has_samples_continue_block);
+
+            // (*buffer)[loadedCurrentPos] = input;
+            ctx.b.build_store(
+                &unsafe {
+                    ctx.b
+                        .build_in_bounds_gep(&buffer_ptr, &[current_pos], "write.ptr")
+                },
+                &input_num,
+            );
             ctx.b.build_unconditional_branch(&has_buffer_continue_block);
 
             ctx.b.position_at_end(&has_buffer_false_block);
@@ -179,31 +229,16 @@ impl DelayFunction {
             ctx.b.position_at_end(&has_buffer_continue_block);
 
             // auto bufferSize = calculateNextPowerOfTwo(reserveSamples);
-            let new_buffer_size = ctx.b.build_left_shift(
-                ctx.context.i64_type().const_int(1, false),
-                ctx.b.build_int_sub(
-                    ctx.context.i64_type().const_int(64, false),
-                    ctx.b
-                        .build_call(
-                            &ctlz_intrinsic,
-                            &[
-                                &ctx.b.build_int_sub(
-                                    reserve_samples,
-                                    ctx.context.i64_type().const_int(1, false),
-                                    "",
-                                ),
-                                &ctx.context.bool_type().const_int(0, false),
-                            ],
-                            "",
-                            false,
-                        )
-                        .left()
-                        .unwrap()
-                        .into_int_value(),
-                    "",
-                ),
-                "newbuffersize",
-            );
+            let new_buffer_size = ctx
+                .b
+                .build_call(
+                    &next_power_intrinsic,
+                    &[&reserve_samples],
+                    "newbuffersize",
+                    false,
+                ).left()
+                .unwrap()
+                .into_int_value();
 
             // if (bufferSize != *currentSize) {
             let needs_realloc = ctx.b.build_int_compare(
@@ -222,15 +257,18 @@ impl DelayFunction {
 
             // *buffer = realloc(*buffer, bufferSize * sizeof(float));
             let size_type = target_data.int_ptr_type_in_context(ctx.context);
+            let float_size = ctx
+                .context
+                .f32_type()
+                .size_of()
+                .const_cast(&size_type, false);
             let realloc_size = ctx.b.build_int_mul(
                 ctx.b.build_int_cast(new_buffer_size, size_type, ""),
-                ctx.context
-                    .f32_type()
-                    .size_of()
-                    .const_cast(&size_type, false),
+                float_size,
                 "",
             );
-            let realloc_ptr = ctx.b
+            let realloc_ptr = ctx
+                .b
                 .build_call(
                     &realloc_intrinsic,
                     &[
@@ -243,16 +281,77 @@ impl DelayFunction {
                     ],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_pointer_value();
-            let new_buffer_ptr = ctx.b.build_pointer_cast(
-                realloc_ptr,
-                ctx.context.f32_type().ptr_type(AddressSpace::Generic),
-                "newbufferptr",
+
+            // if (bufferSize == 0) *buffer = nullptr;
+            let size_is_zero = ctx.b.build_int_compare(
+                IntPredicate::EQ,
+                realloc_size,
+                size_type.const_int(0, false),
+                "sizezero",
             );
-            ctx.b.build_store(&buffer_ptr_ptr, &new_buffer_ptr);
+            ctx.b.build_conditional_branch(
+                &size_is_zero,
+                &size_zero_true_block,
+                &size_zero_false_block,
+            );
+
+            let buffer_ptr_type = ctx.context.f32_type().ptr_type(AddressSpace::Generic);
+
+            ctx.b.position_at_end(&size_zero_true_block);
+            ctx.b
+                .build_store(&buffer_ptr_ptr, &buffer_ptr_type.const_null());
+            ctx.b.build_unconditional_branch(&size_zero_continue_block);
+
+            // else if (bufferSize > *currentSize) memset(*buffer + *currentSize, 0, (bufferSize - *currentSize) * sizeof(float));
+            ctx.b.position_at_end(&size_zero_false_block);
+            let size_increase = ctx.b.build_int_compare(
+                IntPredicate::UGT,
+                new_buffer_size,
+                current_size,
+                "sizeincrease",
+            );
+            ctx.b.build_conditional_branch(
+                &size_increase,
+                &size_increase_true_block,
+                &size_increase_continue_block,
+            );
+
+            ctx.b.position_at_end(&size_increase_true_block);
+            let current_size_bytes = ctx.b.build_int_mul(
+                ctx.b.build_int_cast(current_size, size_type, ""),
+                float_size,
+                "currentsizebytes",
+            );
+            ctx.b.build_call(
+                &memset_intrinsic,
+                &[
+                    &unsafe {
+                        ctx.b
+                            .build_in_bounds_gep(&realloc_ptr, &[current_size_bytes], "offsetptr")
+                    },
+                    &ctx.context.i8_type().const_int(0, false),
+                    &ctx.b.build_int_sub(realloc_size, current_size_bytes, ""),
+                    &ctx.context.i32_type().const_int(0, false),
+                    &ctx.context.bool_type().const_int(0, false),
+                ],
+                "",
+                false,
+            );
+            ctx.b
+                .build_unconditional_branch(&size_increase_continue_block);
+
+            ctx.b.position_at_end(&size_increase_continue_block);
+            ctx.b.build_store(
+                &buffer_ptr_ptr,
+                &ctx.b
+                    .build_pointer_cast(realloc_ptr, buffer_ptr_type, "newbufferptr"),
+            );
+            ctx.b.build_unconditional_branch(&size_zero_continue_block);
+
+            ctx.b.position_at_end(&size_zero_continue_block);
 
             // *currentSize = bufferSize;
             ctx.b.build_store(&current_size_ptr, &new_buffer_size);
@@ -344,17 +443,18 @@ impl Function for DelayFunction {
         let reserve_num = NumValue::new(args[2]);
         let result_num = NumValue::new(result);
 
-        let sample_rate = func.ctx
+        let sample_rate = func
+            .ctx
             .b
             .build_load(
                 &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                 "samplerate",
-            )
-            .into_vector_value();
+            ).into_vector_value();
 
         // determine reserve samples
         let reserve_vec = reserve_num.get_vec(func.ctx.b);
-        let reserve_samples_float = func.ctx
+        let reserve_samples_float = func
+            .ctx
             .b
             .build_call(
                 &max_intrinsic,
@@ -368,8 +468,7 @@ impl Function for DelayFunction {
                 ],
                 "reservesamples.clamped",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
         let reserve_samples = func.ctx.b.build_float_to_unsigned_int(
@@ -380,28 +479,28 @@ impl Function for DelayFunction {
 
         // saturate delayVal so it can't be out of bounds
         let delay_vec = delay_num.get_vec(func.ctx.b);
-        let delay_val_clamped = func.ctx
+        let delay_val_clamped = func
+            .ctx
             .b
             .build_call(
                 &max_intrinsic,
                 &[
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_call(
                             &min_intrinsic,
                             &[&delay_vec, &util::get_vec_spread(func.ctx.context, 1.)],
                             "delayval.clamped",
                             false,
-                        )
-                        .left()
+                        ).left()
                         .unwrap()
                         .into_vector_value(),
                     &util::get_vec_spread(func.ctx.context, 0.),
                 ],
                 "delayval.clamped",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
         let delay_samples_float = func.ctx.b.build_float_mul(
@@ -418,74 +517,80 @@ impl Function for DelayFunction {
         // update the buffer
         let input_vec = input_num.get_vec(func.ctx.b);
         let left_element = func.ctx.context.i32_type().const_int(0, false);
-        let left_result = func.ctx
+        let left_result = func
+            .ctx
             .b
             .build_call(
                 &channel_update_func,
                 &[
                     &left_pos_ptr,
                     &left_buffer_length_ptr,
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&delay_samples, &left_element, ""),
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&reserve_samples, &left_element, ""),
                     &left_buffer_ptr_ptr,
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&input_vec, &left_element, ""),
                 ],
                 "result.left",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_float_value();
 
         let right_element = func.ctx.context.i32_type().const_int(1, false);
-        let right_result = func.ctx
+        let right_result = func
+            .ctx
             .b
             .build_call(
                 &channel_update_func,
                 &[
                     &right_pos_ptr,
                     &right_buffer_length_ptr,
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&delay_samples, &right_element, ""),
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&reserve_samples, &right_element, ""),
                     &right_buffer_ptr_ptr,
-                    &func.ctx
+                    &func
+                        .ctx
                         .b
                         .build_extract_element(&input_vec, &right_element, ""),
                 ],
                 "result.right",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_float_value();
 
-        let result_vec = func.ctx
+        let result_vec = func
+            .ctx
             .b
             .build_insert_element(
-                &func.ctx
+                &func
+                    .ctx
                     .b
                     .build_insert_element(
                         &func.ctx.context.f32_type().vec_type(2).get_undef(),
                         &left_result,
                         &left_element,
                         "",
-                    )
-                    .into_vector_value(),
+                    ).into_vector_value(),
                 &right_result,
                 &right_element,
                 "",
-            )
-            .into_vector_value();
+            ).into_vector_value();
         result_num.set_vec(func.ctx.b, &result_vec);
 
         let input_form = input_num.get_form(func.ctx.b);
@@ -493,7 +598,8 @@ impl Function for DelayFunction {
     }
 
     fn gen_destruct(func: &mut FunctionContext) {
-        let left_buffer_ptr = func.ctx
+        let left_buffer_ptr = func
+            .ctx
             .b
             .build_load(
                 &unsafe {
@@ -502,9 +608,9 @@ impl Function for DelayFunction {
                         .build_struct_gep(&func.data_ptr, 4, "leftbuffer.ptr")
                 },
                 "leftbuffer",
-            )
-            .into_pointer_value();
-        let right_buffer_ptr = func.ctx
+            ).into_pointer_value();
+        let right_buffer_ptr = func
+            .ctx
             .b
             .build_load(
                 &unsafe {
@@ -513,8 +619,7 @@ impl Function for DelayFunction {
                         .build_struct_gep(&func.data_ptr, 5, "rightbuffer.ptr")
                 },
                 "rightbuffer",
-            )
-            .into_pointer_value();
+            ).into_pointer_value();
         func.ctx.b.build_free(&left_buffer_ptr);
         func.ctx.b.build_free(&right_buffer_ptr);
     }

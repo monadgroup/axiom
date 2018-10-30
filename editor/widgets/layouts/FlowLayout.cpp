@@ -4,13 +4,13 @@
 
 using namespace AxiomGui;
 
-FlowLayout::FlowLayout(QWidget *parent, int margin, int hSpacing, int vSpacing)
-    : QLayout(parent), m_hSpace(hSpacing), m_vSpace(vSpacing) {
+FlowLayout::FlowLayout(QWidget *parent, int margin, int hSpacing, int vSpacing, FlowLayoutSorter *sorter)
+    : QLayout(parent), m_hSpace(hSpacing), m_vSpace(vSpacing), sorter(sorter) {
     setContentsMargins(margin, margin, margin, margin);
 }
 
-FlowLayout::FlowLayout(int margin, int hSpacing, int vSpacing)
-    : m_hSpace(hSpacing), m_vSpace(vSpacing) {
+FlowLayout::FlowLayout(int margin, int hSpacing, int vSpacing, FlowLayoutSorter *sorter)
+    : m_hSpace(hSpacing), m_vSpace(vSpacing), sorter(sorter) {
     setContentsMargins(margin, margin, margin, margin);
 }
 
@@ -19,8 +19,28 @@ FlowLayout::~FlowLayout() {
     while ((item = takeAt(0))) delete item;
 }
 
+static void binaryTreeInsert(QList<QLayoutItem *> &itemList, FlowLayoutSorter *sorter, QLayoutItem *item,
+                             int startIndex, int endIndex) {
+    while (startIndex != endIndex) {
+        auto middleIndex = startIndex + (endIndex - startIndex) / 2;
+        auto goesAfterMiddle = sorter->aAfterB(item, itemList[middleIndex]);
+
+        if (goesAfterMiddle) {
+            startIndex = middleIndex + 1;
+        } else {
+            endIndex = middleIndex;
+        }
+    }
+
+    itemList.insert(startIndex, item);
+}
+
 void FlowLayout::addItem(QLayoutItem *item) {
-    itemList.append(item);
+    if (sorter) {
+        binaryTreeInsert(itemList, sorter, item, 0, itemList.size());
+    } else {
+        itemList.append(item);
+    }
 }
 
 int FlowLayout::horizontalSpacing() const {

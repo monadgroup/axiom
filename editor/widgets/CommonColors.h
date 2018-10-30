@@ -7,14 +7,19 @@ namespace AxiomGui {
     class CommonColors {
     public:
         static const QColor customNodeNormal;
-        static const QColor customNodeActive;
+        static const QColor customNodeSelected;
         static const QColor customNodeBorder;
 
+        static const QColor errorNodeNormal;
+        static const QColor errorNodeSelected;
         static const QColor errorNodeBorder;
 
         static const QColor groupNodeNormal;
-        static const QColor groupNodeActive;
+        static const QColor groupNodeSelected;
         static const QColor groupNodeBorder;
+
+        static const QColor disabledNormal;
+        static const QColor disabledActive;
 
         static const QColor numNormal;
         static const QColor numActive;

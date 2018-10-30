@@ -70,8 +70,7 @@ fn seconds_from_samples(
             .build_load(
                 &globals::get_sample_rate(module).as_pointer_value(),
                 "samplerate",
-            )
-            .into_vector_value(),
+            ).into_vector_value(),
         "",
     )
 }

@@ -16,12 +16,28 @@ endif ()
 
 set(AXIOM_STANDALONE_PROPERTIES)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(AXIOM_STANDALONE_PROPERTIES ${AXIOM_STANDALONE_PROPERTIES} WIN32)
+    set(AXIOM_STANDALONE_PROPERTIES ${AXIOM_STANDALONE_PROPERTIES} WIN32 MACOSX_BUNDLE)
 endif ()
-
 include_directories(${PORTAUDIO_INCLUDE_DIRS})
-add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} main.cpp)
-target_link_libraries(axiom_standalone ${AXIOM_LINK_FLAGS} axiom_editor ${PORTAUDIO_LIBRARIES})
+add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} main.cpp ${RC_FILE_PATH} ${ICON_PATH})
+set_source_files_properties(${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+
 set_target_properties(axiom_standalone PROPERTIES
-        PREFIX ""
-        OUTPUT_NAME "Axiom Standalone")
+    PREFIX ""
+    OUTPUT_NAME "Axiom Standalone"
+    
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_INFO_PLIST "${RES_DIR}/Info.plist.in"
+    MACOSX_BUNDLE_INFO_STRING "Axiom Standalone ${AXIOM_VERSION}"
+    MACOSX_BUNDLE_NAME "Axiom Standalone")
+
+target_link_libraries(axiom_standalone ${AXIOM_LINK_FLAGS} axiom_editor ${PORTAUDIO_LIBRARIES})
+
+install(TARGETS axiom_standalone
+        DESTINATION .
+        COMPONENT standalone)
+
+if (AXIOM_PACK)
+    add_custom_command(TARGET axiom_standalone POST_BUILD
+                       COMMAND upx -9 --force "$<TARGET_FILE:axiom_standalone>")
+endif ()

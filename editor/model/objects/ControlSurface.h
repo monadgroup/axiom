@@ -1,7 +1,11 @@
 #pragma once
 
+#include "../CachedSequence.h"
 #include "../ModelObject.h"
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
 #include "../grid/GridSurface.h"
+#include "common/WatchSequence.h"
 
 namespace AxiomModel {
 
@@ -11,7 +15,9 @@ namespace AxiomModel {
 
     class ControlSurface : public ModelObject {
     public:
-        using ChildCollection = WatchSequence<Control *>;
+        using ChildCollection = CachedSequence<FindChildrenWatchSequence<ModelRoot::ControlCollection>>;
+
+        AxiomCommon::Event<bool> controlsOnTopRowChanged;
 
         ControlSurface(const QUuid &uuid, const QUuid &parentUuid, AxiomModel::ModelRoot *root);
 
@@ -38,15 +44,17 @@ namespace AxiomModel {
 
         static QSizeF controlToNode(QSizeF p) { return {p.width() / 2., p.height() / 2.}; }
 
+        QString debugName() override;
+
         Node *node() const { return _node; }
 
         ChildCollection &controls() { return _controls; }
 
-        const ChildCollection &controls() const { return _controls; }
-
         GridSurface &grid() { return _grid; }
 
         const GridSurface &grid() const { return _grid; }
+
+        bool controlsOnTopRow() const { return _controlsOnTopRow; }
 
         void remove() override;
 
@@ -54,7 +62,9 @@ namespace AxiomModel {
         Node *_node;
         ChildCollection _controls;
         GridSurface _grid;
+        bool _controlsOnTopRow = false;
 
         void setSize(QSize size);
+        void updateControlsOnTopRow();
     };
 }

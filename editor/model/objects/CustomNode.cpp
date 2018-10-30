@@ -1,5 +1,7 @@
 #include "CustomNode.h"
 
+#include <iostream>
+
 #include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../actions/CompositeAction.h"
@@ -22,7 +24,7 @@ CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
     : Node(NodeType::CUSTOM_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
       _code(std::move(code)), _isPanelOpen(panelOpen), _panelHeight(panelHeight) {
     controls().then([this](ControlSurface *controls) {
-        controls->controls().itemAdded.connect(this, &CustomNode::surfaceControlAdded);
+        controls->controls().events().itemAdded().connect(this, &CustomNode::surfaceControlAdded);
     });
 }
 
@@ -33,39 +35,50 @@ std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &p
                                         panelOpen, panelHeight, root);
 }
 
+QString CustomNode::debugName() {
+    return "CustomNode '" + name() + "'";
+}
+
 void CustomNode::setCode(const QString &code) {
     if (_code != code) {
         _code = code;
-        codeChanged.trigger(code);
+        codeChanged(code);
+        buildCode();
+    }
+}
 
-        if (runtimeId) {
-            buildCode();
-        }
+void CustomNode::promoteStaging() {
+    if (_stagingBlock) {
+        _compiledBlock = std::move(_stagingBlock);
+        _stagingBlock = std::nullopt;
+        setDirty();
+        surface()->forceCompile();
+    } else {
+        setInErrorState(true);
     }
 }
 
 void CustomNode::doSetCodeAction(QString beforeCode, QString afterCode) {
-    std::vector<QUuid> compileItems;
     auto setCodeAction = SetCodeAction::create(uuid(), std::move(beforeCode), std::move(afterCode), {}, root());
-    setCodeAction->forward(true, compileItems);
+    setCodeAction->forward(true);
     updateControls(setCodeAction.get());
     root()->history().append(std::move(setCodeAction), false);
-    root()->applyCompile(compileItems);
+    root()->compileDirtyItems();
 }
 
 void CustomNode::setPanelOpen(bool panelOpen) {
     if (_isPanelOpen != panelOpen) {
         _isPanelOpen = panelOpen;
-        panelOpenChanged.trigger(panelOpen);
+        panelOpenChanged(panelOpen);
     }
 }
 
 void CustomNode::setPanelHeight(float panelHeight) {
     if (panelHeight < minPanelHeight) panelHeight = minPanelHeight;
     if (_panelHeight != panelHeight) {
-        beforePanelHeightChanged.trigger(panelHeight);
+        beforePanelHeightChanged(panelHeight);
         _panelHeight = panelHeight;
-        panelHeightChanged.trigger(panelHeight);
+        panelHeightChanged(panelHeight);
     }
 }
 
@@ -73,17 +86,20 @@ void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::T
     if (runtime) {
         runtimeId = runtime->nextId();
         buildCode();
+        promoteStaging();
     } else {
         runtimeId = 0;
     }
 
-    if (transaction) {
+    if (transaction && _compiledBlock) {
         build(transaction);
         updateControls(nullptr);
     }
 }
 
 void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
+    if (!_compiledBlock) return;
+
     Node::updateRuntimePointers(runtime, surfacePtr);
 
     auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
@@ -91,18 +107,14 @@ void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *su
     auto runtimeId = getRuntimeId();
 
     controls().then([blockPtr, runtime, runtimeId](ControlSurface *controlSurface) {
-        for (const auto &control : controlSurface->controls()) {
+        for (const auto &control : controlSurface->controls().sequence()) {
             control->setRuntimePointers(runtime->getControlPtrs(runtimeId, blockPtr, control->compileMeta()->index));
         }
     });
 }
 
-std::optional<MaximCompiler::Block> CustomNode::compiledBlock() const {
-    if (_compiledBlock) {
-        return std::optional(_compiledBlock->clone());
-    } else {
-        return std::nullopt;
-    }
+const std::optional<CustomNodeError> &CustomNode::compileError() const {
+    return _compileError;
 }
 
 void CustomNode::build(MaximCompiler::Transaction *transaction) {
@@ -124,7 +136,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
     std::vector<NewControl> newControls;
 
     QSet<QUuid> retainedControls;
-    auto controlList = collect((*controls().value())->controls());
+    auto controlList = collect((*controls().value())->controls().sequence());
     for (size_t controlIndex = 0; controlIndex < compiledControlCount; controlIndex++) {
         auto compiledControl = _compiledBlock->getControl(controlIndex);
         auto compiledModelType = MaximCompiler::toModelType(compiledControl.getType());
@@ -132,8 +144,6 @@ void CustomNode::updateControls(SetCodeAction *action) {
         ControlCompileMeta compileMeta(controlIndex, compiledControl.getIsWritten(), compiledControl.getIsRead());
 
         // find a control that matches name and type
-        // todo: after all name matches have been claimed, assign to an unnamed one
-        // (allows renaming in code to rename the actual control)
         auto foundControl = false;
         for (const auto &candidateControl : controlList) {
             if (candidateControl->name() == compiledName && candidateControl->controlType() == compiledModelType) {
@@ -172,8 +182,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
 
             auto renameAction = RenameControlAction::create(tryClaimControl->uuid(), tryClaimControl->name(),
                                                             std::move(newControl.name), tryClaimControl->root());
-            std::vector<QUuid> dummy;
-            renameAction->forward(true, dummy);
+            renameAction->forward(true);
 
             assert(action);
             action->controlActions().push_back(std::move(renameAction));
@@ -191,8 +200,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
     // remove any controls that weren't retained
     for (const auto &removedControl : removeControls) {
         auto deleteAction = DeleteObjectAction::create(removedControl->uuid(), root());
-        std::vector<QUuid> dummy;
-        deleteAction->forward(true, dummy);
+        deleteAction->forward(true);
 
         assert(action);
         action->controlActions().push_back(std::move(deleteAction));
@@ -203,9 +211,8 @@ void CustomNode::updateControls(SetCodeAction *action) {
     // can have the space cleared
     for (auto &newControl : unmatchedControls) {
         auto createAction = CreateControlAction::create((*controls().value())->uuid(), newControl.type,
-                                                        std::move(newControl.name), root());
-        std::vector<QUuid> dummy;
-        createAction->forward(true, dummy);
+                                                        std::move(newControl.name), newControl.meta.writtenTo, root());
+        createAction->forward(true);
 
         assert(action);
         action->controlActions().push_back(std::move(createAction));
@@ -232,17 +239,24 @@ void CustomNode::surfaceControlAdded(AxiomModel::Control *control) {
 }
 
 void CustomNode::buildCode() {
-    auto compileResult = MaximCompiler::Block::compile(getRuntimeId(), name(), code());
+    MaximCompiler::Block block;
+    MaximCompiler::Error error;
 
-    if (MaximCompiler::Error *err = std::get_if<MaximCompiler::Error>(&compileResult)) {
-        auto errorDescription = err->getDescription();
-        auto errorRange = err->getRange();
+    auto compileSuccess = MaximCompiler::Block::compile(getRuntimeId(), name(), code(), &block, &error);
+
+    if (compileSuccess) {
+        _stagingBlock = std::move(block);
+        _compileError.reset();
+        codeCompileSuccess();
+        setInErrorState(false);
+    } else {
+        auto errorDescription = error.getDescription();
+        auto errorRange = error.getRange();
         std::cerr << "Error at " << errorRange.front.line << ":" << errorRange.front.column << " -> "
                   << errorRange.back.line << ":" << errorRange.back.column << " : " << errorDescription.toStdString()
                   << std::endl;
-        codeCompileError.trigger(errorDescription, errorRange);
-    } else {
-        _compiledBlock = std::optional<MaximCompiler::Block>(std::move(std::get<MaximCompiler::Block>(compileResult)));
-        codeCompileSuccess.trigger();
+        _compileError = CustomNodeError(std::move(errorDescription), errorRange);
+        _stagingBlock.reset();
+        codeCompileError(*_compileError);
     }
 }

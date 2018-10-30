@@ -3,7 +3,7 @@
 #include <QtWidgets/QGraphicsObject>
 
 #include "../IConnectable.h"
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
     class Control;
@@ -13,22 +13,20 @@ namespace AxiomGui {
 
     class NodeSurfaceCanvas;
 
-    class ControlItem : public QGraphicsObject, public AxiomCommon::Hookable, public IConnectable {
-    Q_OBJECT
-        Q_PROPERTY(float hoverState
-                       READ
-                           hoverState
-                       WRITE
-                       setHoverState)
+    class ControlItem : public QGraphicsObject, public AxiomCommon::TrackedObject, public IConnectable {
+        Q_OBJECT
+        Q_PROPERTY(float hoverState READ hoverState WRITE setHoverState)
 
     public:
         AxiomModel::Control *control;
 
         NodeSurfaceCanvas *canvas;
 
-        explicit ControlItem(AxiomModel::Control *control, NodeSurfaceCanvas *canvas);
+        ControlItem(AxiomModel::Control *control, NodeSurfaceCanvas *canvas);
 
         QRectF boundingRect() const override;
+
+        QPainterPath shape() const override;
 
         QRectF aspectBoundingRect() const;
 
@@ -37,6 +35,8 @@ namespace AxiomGui {
         AxiomModel::Control *sink() override { return control; }
 
         float hoverState() const { return _hoverState; }
+
+        void triggerUpdate();
 
     public slots:
 
@@ -53,7 +53,6 @@ namespace AxiomGui {
         void mouseLeave();
 
     protected:
-
         virtual bool showLabelInCenter() const = 0;
 
         QRectF drawBoundingRect() const;
@@ -81,8 +80,6 @@ namespace AxiomGui {
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
         void triggerGeometryChange();
-
-        void triggerUpdate();
 
         void buildMenuStart(QMenu &menu);
 
@@ -115,5 +112,4 @@ namespace AxiomGui {
         float _hoverState = 0;
         QRect startDragRect;
     };
-
 }

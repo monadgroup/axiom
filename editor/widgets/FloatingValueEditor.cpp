@@ -5,17 +5,19 @@
 
 using namespace AxiomGui;
 
-FloatingValueEditor::FloatingValueEditor(QString initialValue, QPointF scenePos) {
+FloatingValueEditor::FloatingValueEditor(QString initialValue, QPointF scenePos, int selectStart, int selectEnd) {
     setFlag(QGraphicsItem::ItemIsFocusable, true);
 
     editor = new QLineEdit(initialValue);
     editor->installEventFilter(this);
     setWidget(editor);
 
-    // todo: handle ESC to stop editing
     connect(editor, &QLineEdit::editingFinished, this, &FloatingValueEditor::editingFinished);
 
-    editor->selectAll();
+    if (selectStart == 0 && selectEnd == 0)
+        editor->selectAll();
+    else
+        editor->setSelection(selectStart, selectEnd);
     editor->setFocus();
 
     setPos(QPointF(scenePos.x() + 30, scenePos.y()));

@@ -1,6 +1,7 @@
 #include "ModuleBrowserPanel.h"
 
 #include <QtWidgets/QGridLayout>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QTabBar>
 
@@ -11,36 +12,38 @@
 using namespace AxiomGui;
 
 ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *library, QWidget *parent)
-    : DockPanel("Modules", parent), library(library) {
+    : ads::CDockWidget("Modules", parent), library(library) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/ModuleBrowserPanel.qss"));
 
-    auto mainLayout = new QGridLayout(this);
     auto mainWidget = new QWidget(this);
     mainWidget->setObjectName("mainWidget");
-
+    auto mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setMargin(0);
+    mainWidget->setLayout(mainLayout);
 
-    mainLayout->setColumnStretch(0, 10);
-    mainLayout->setColumnStretch(1, 3);
-    mainLayout->setColumnMinimumWidth(1, 200);
-    mainLayout->setRowStretch(1, 1);
+    auto filterBarWidget = new QWidget(this);
+    filterBarWidget->setObjectName("filterBar");
+    auto filterBarLayout = new QHBoxLayout(this);
+    filterBarLayout->setContentsMargins(0, 0, 0, 0);
+    filterBarLayout->setMargin(0);
+    filterBarWidget->setLayout(filterBarLayout);
+
+    mainLayout->addWidget(filterBarWidget);
 
     filterTabs = new QTabBar(this);
-    mainLayout->addWidget(filterTabs, 0, 0, Qt::AlignLeft);
-
     filterTabs->addTab(tr("All"));
+    filterBarLayout->addWidget(filterTabs, 10, Qt::AlignLeft | Qt::AlignBottom);
 
     searchBox = new QLineEdit(this);
     searchBox->setObjectName("searchBox");
     searchBox->setPlaceholderText("Search modules...");
-    mainLayout->addWidget(searchBox, 0, 1);
-
-    connect(searchBox, &QLineEdit::textChanged, this, &ModuleBrowserPanel::changeSearch);
+    searchBox->setText(library->activeSearch());
+    filterBarLayout->addWidget(searchBox, 3);
 
     auto previewList = new ModulePreviewList(window, library, this);
-    mainLayout->addWidget(previewList, 1, 0, 1, 2);
+    mainLayout->addWidget(previewList, 1);
 
-    mainWidget->setLayout(mainLayout);
     setWidget(mainWidget);
 
     auto tags = library->tags();
@@ -51,6 +54,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
     library->tagAdded.connect(this, &ModuleBrowserPanel::addTag);
     library->tagRemoved.connect(this, &ModuleBrowserPanel::removeTag);
     connect(filterTabs, &QTabBar::currentChanged, this, &ModuleBrowserPanel::changeTag);
+    connect(searchBox, &QLineEdit::textChanged, this, &ModuleBrowserPanel::changeSearch);
 }
 
 void ModuleBrowserPanel::addTag(const QString &tag) {

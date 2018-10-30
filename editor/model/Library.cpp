@@ -15,12 +15,11 @@ Library::~Library() = default;
 
 Library::Library(QString activeTag, QString activeSearch,
                  std::vector<std::unique_ptr<AxiomModel::LibraryEntry>> entries)
-    : _entries(std::move(entries)), _activeTag(std::move(activeTag)), _activeSearch(std::move(activeSearch)) {
-    // add tags of all entries
-    for (const auto &entry : _entries) {
-        for (const auto &tag : entry->tags()) {
-            addTag(tag);
-        }
+    : _activeTag(std::move(activeTag)), _activeSearch(std::move(activeSearch)) {
+    // add all entries through the normal path, so we assign event handlers to them correctly
+    _entries.reserve(entries.size());
+    for (auto &entry : entries) {
+        addEntry(std::move(entry));
     }
 }
 
@@ -33,16 +32,19 @@ void Library::import(
         currentEntries.insert(entry->baseUuid(), entry.get());
     }
 
-    // merge, checking for duplicates
+    // build a list of merge actions, checking for duplicates
     // if we hit a duplicate, we have two possible actions:
     //   - if the modification UUID is the same as the local one, they're the same and we can just keep what we've got
     //   - if not, there's a desync, and we need to ask the user which one they want to keep
+    std::vector<std::unique_ptr<LibraryEntry>> addEntries;
+    std::vector<LibraryEntry *> removeEntries;
+    std::vector<std::pair<LibraryEntry *, LibraryEntry *>> conflictRenameEntries;
     for (auto &entry : library->_entries) {
         auto currentEntry = currentEntries.find(entry->baseUuid());
 
         if (currentEntry == currentEntries.end()) {
             // no conflict, just add the entry
-            addEntry(std::move(entry));
+            addEntries.push_back(std::move(entry));
         } else {
             auto curEntry = currentEntry.value();
             if (entry->modificationUuid() != curEntry->modificationUuid()) {
@@ -50,34 +52,58 @@ void Library::import(
                 auto resolution = resolveConflict(curEntry, entry.get());
 
                 switch (resolution) {
+                case ConflictResolution::CANCEL:
+                    // cancel everything by just exiting - since merging is transactional, this works fine
+                    return;
                 case ConflictResolution::KEEP_OLD:
                     // no action needed
                     break;
                 case ConflictResolution::KEEP_NEW:
-                    currentEntries.remove(curEntry->baseUuid());
-                    curEntry->remove();
-                    addEntry(std::move(entry));
+                    removeEntries.push_back(curEntry);
+                    addEntries.push_back(std::move(entry));
                     break;
                 case ConflictResolution::KEEP_BOTH:
-                    // todo
+                    conflictRenameEntries.emplace_back(curEntry, entry.get());
+                    addEntries.push_back(std::move(entry));
                     break;
                 }
             }
         }
+    }
+
+    // apply the transaction, making sure it's ordered so we don't have any duplicates or dangling references
+    for (const auto &conflict : conflictRenameEntries) {
+        auto originalEntry = conflict.first;
+        auto newEntry = conflict.second;
+        originalEntry->setName(originalEntry->name() + " (original)");
+        newEntry->setName(newEntry->name() + " (imported)");
+
+        // old entry becomes an entirely different entry, meaning if the library is imported in the future again,
+        // the conflict won't show up
+        originalEntry->setBaseUuid(QUuid());
+    }
+
+    for (const auto &removeEntry : removeEntries) {
+        currentEntries.remove(removeEntry->baseUuid());
+        removeEntry->remove();
+    }
+
+    for (auto &newEntry : addEntries) {
+        addEntry(std::move(newEntry));
     }
 }
 
 void Library::setActiveTag(const QString &activeTag) {
     if (activeTag != _activeTag) {
         _activeTag = activeTag;
-        activeTagChanged.trigger(activeTag);
+        activeTagChanged(activeTag);
     }
 }
 
 void Library::setActiveSearch(const QString &search) {
     if (search != _activeSearch) {
         _activeSearch = search;
-        activeSearchChanged.trigger(search);
+        activeSearchChanged(search);
     }
 }
 
@@ -87,7 +113,7 @@ std::vector<LibraryEntry *> Library::entries() const {
     for (const auto &entry : _entries) {
         result.push_back(entry.get());
     }
-    return std::move(result);
+    return result;
 }
 
 QStringList Library::tags() const {
@@ -95,20 +121,23 @@ QStringList Library::tags() const {
     for (const auto &pair : _tags) {
         result << pair.first;
     }
-    return std::move(result);
+    return result;
 }
 
 void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
     auto entryPtr = entry.get();
     _entries.push_back(std::move(entry));
-    entryAdded.trigger(entryPtr);
+    entryAdded(entryPtr);
 
     for (const auto &tag : entryPtr->tags()) {
         addTag(tag);
     }
     entryPtr->tagAdded.connect(this, &Library::addTag);
     entryPtr->tagRemoved.connect(this, &Library::removeTag);
+    entryPtr->changed.forward(&changed);
     entryPtr->cleanup.connect(this, [this, entryPtr]() { removeEntry(entryPtr); });
+
+    changed();
 }
 
 LibraryEntry *Library::findById(const QUuid &id) {
@@ -124,7 +153,7 @@ void Library::addTag(const QString &tag) {
         index->second++;
     } else {
         _tags.emplace(tag, 1);
-        tagAdded.trigger(tag);
+        tagAdded(tag);
     }
 }
 
@@ -135,7 +164,7 @@ void Library::removeTag(const QString &tag) {
     index->second--;
     if (!index->second) {
         _tags.erase(index);
-        tagRemoved.trigger(tag);
+        tagRemoved(tag);
     }
 }
 
@@ -147,8 +176,9 @@ void Library::removeEntry(AxiomModel::LibraryEntry *entry) {
     for (auto i = _entries.begin(); i != _entries.end(); i++) {
         if (i->get() == entry) {
             _entries.erase(i);
-            return;
+            break;
         }
     }
-    unreachable;
+
+    changed();
 }

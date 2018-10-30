@@ -63,16 +63,14 @@ impl Function for SvFilterFunction {
                                 .build_load(
                                     &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                                     "samplerate",
-                                )
-                                .into_vector_value(),
+                                ).into_vector_value(),
                             "",
                         ),
                         "fparam",
                     )],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_vector_value(),
             util::get_vec_spread(func.ctx.context, 2.),
@@ -111,8 +109,7 @@ impl Function for SvFilterFunction {
                         ],
                         "damppow",
                         false,
-                    )
-                    .left()
+                    ).left()
                     .unwrap()
                     .into_vector_value(),
                 "inversedamppow",
@@ -121,7 +118,8 @@ impl Function for SvFilterFunction {
             "dampval",
         );
 
-        let max_damp = func.ctx
+        let max_damp = func
+            .ctx
             .b
             .build_call(
                 &min_intrinsic,
@@ -143,18 +141,19 @@ impl Function for SvFilterFunction {
                 ],
                 "maxdamp",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value();
-        let damp = func.ctx
+        let damp = func
+            .ctx
             .b
             .build_call(&min_intrinsic, &[&damp_val, &max_damp], "damp", false)
             .left()
             .unwrap()
             .into_vector_value();
 
-        let loop_index_ptr = func.ctx
+        let loop_index_ptr = func
+            .ctx
             .allocb
             .build_alloca(&func.ctx.context.i8_type(), "index.ptr");
         func.ctx.b.build_store(
@@ -162,19 +161,23 @@ impl Function for SvFilterFunction {
             &func.ctx.context.i8_type().const_int(0, false),
         );
 
-        let loop_check_block = func.ctx
+        let loop_check_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loopcheck");
-        let loop_body_block = func.ctx
+        let loop_body_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loopbody");
-        let loop_end_block = func.ctx
+        let loop_end_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loopend");
         func.ctx.b.build_unconditional_branch(&loop_check_block);
 
         func.ctx.b.position_at_end(&loop_check_block);
-        let current_index = func.ctx
+        let current_index = func
+            .ctx
             .b
             .build_load(&loop_index_ptr, "index")
             .into_int_value();
@@ -195,10 +198,7 @@ impl Function for SvFilterFunction {
                 input_vec,
                 func.ctx.b.build_float_mul(
                     damp,
-                    func.ctx
-                        .b
-                        .build_load(&notch_ptr, "notch")
-                        .into_vector_value(),
+                    func.ctx.b.build_load(&band_ptr, "band").into_vector_value(),
                     "",
                 ),
                 "newnotch",
@@ -268,7 +268,8 @@ impl Function for SvFilterFunction {
         band_result_num.set_form(func.ctx.b, &input_form);
 
         let notch_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 3));
-        let notch_result_vec = func.ctx
+        let notch_result_vec = func
+            .ctx
             .b
             .build_load(&notch_ptr, "notch")
             .into_vector_value();

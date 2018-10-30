@@ -264,7 +264,8 @@ pub fn const_call(
         ),
         Function::Min => Some(
             consts_to_nums(args.iter().chain(varargs.iter()), range).and_then(|args| {
-                let (new_left, new_right) = args.iter()
+                let (new_left, new_right) = args
+                    .iter()
                     .skip(1)
                     .fold((args[0].left, args[0].right), |(acc_l, acc_r), num| {
                         (acc_l.min(num.left), acc_r.min(num.right))
@@ -275,7 +276,8 @@ pub fn const_call(
         ),
         Function::Max => Some(
             consts_to_nums(args.iter().chain(varargs.iter()), range).and_then(|args| {
-                let (new_left, new_right) = args.iter()
+                let (new_left, new_right) = args
+                    .iter()
                     .skip(1)
                     .fold((args[0].left, args[0].right), |(acc_l, acc_r), num| {
                         (acc_l.max(num.left), acc_r.max(num.right))

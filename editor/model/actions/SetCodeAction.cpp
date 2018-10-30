@@ -19,26 +19,22 @@ std::unique_ptr<SetCodeAction> SetCodeAction::create(const QUuid &uuid, QString 
                                            root);
 }
 
-void SetCodeAction::forward(bool first, std::vector<QUuid> &compileItems) {
-    auto node = find<CustomNode *>(root()->nodes(), _uuid);
+void SetCodeAction::forward(bool first) {
+    auto node = find(AxiomCommon::dynamicCast<CustomNode *>(root()->nodes().sequence()), _uuid);
     node->setCode(_newCode);
+    node->promoteStaging();
 
-    compileItems.push_back(node->uuid());
-    compileItems.push_back(node->surface()->uuid());
     for (const auto &action : _controlActions) {
-        action->forward(first, compileItems);
+        action->forward(first);
     }
 }
 
-void SetCodeAction::backward(std::vector<QUuid> &compileItems) {
-    auto node = find<CustomNode *>(root()->nodes(), _uuid);
+void SetCodeAction::backward() {
+    auto node = find(AxiomCommon::dynamicCast<CustomNode *>(root()->nodes().sequence()), _uuid);
     node->setCode(_oldCode);
+    node->promoteStaging();
 
-    compileItems.push_back(node->uuid());
-    compileItems.push_back(node->surface()->uuid());
-    if (!_controlActions.empty()) {
-        for (auto i = _controlActions.end() - 1; i >= _controlActions.begin(); i--) {
-            (*i)->backward(compileItems);
-        }
+    for (auto rit = _controlActions.rbegin(); rit < _controlActions.rend(); rit++) {
+        (*rit)->backward();
     }
 }

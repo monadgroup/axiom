@@ -29,7 +29,17 @@ pub fn remap_pointer_source(
             unsafe { initialized.const_in_bounds_gep(&gep_indices) }.into()
         }
         PointerSource::Scratch(path) => {
-            let gep_indices = get_gep_indices(context, path.iter().map(|itm| *itm as u64));
+            let gep_indices = get_gep_indices(
+                context,
+                iter::once(0).chain(path.iter().map(|itm| *itm as u64)),
+            );
+            unsafe { scratch.const_in_bounds_gep(&gep_indices) }.into()
+        }
+        PointerSource::Shared(path) => {
+            let gep_indices = get_gep_indices(
+                context,
+                iter::once(1).chain(path.iter().map(|itm| *itm as u64)),
+            );
             unsafe { scratch.const_in_bounds_gep(&gep_indices) }.into()
         }
         PointerSource::Socket(socket, path) => {
@@ -71,7 +81,7 @@ pub fn build_initialized_global(
     let layout = cache.surface_layout(surface).unwrap();
     let global = util::get_or_create_global(module, name, &layout.initialized_const.get_type());
     global.set_initializer(&layout.initialized_const);
-    global.set_section("maxim.initialized_data");
+    //global.set_section("maxim.init");
     global
 }
 
@@ -82,9 +92,12 @@ pub fn build_scratch_global(
     name: &str,
 ) -> GlobalValue {
     let layout = cache.surface_layout(surface).unwrap();
-    let global = util::get_or_create_global(module, name, &layout.scratch_struct);
-    global.set_initializer(&layout.scratch_struct.const_null());
-    global.set_section("maxim.scratch_data");
+    let virtual_scratch = module
+        .get_context()
+        .struct_type(&[&layout.scratch_struct, &layout.shared_struct], false);
+    let global = util::get_or_create_global(module, name, &virtual_scratch);
+    global.set_initializer(&virtual_scratch.const_null());
+    //global.set_section("maxim.scratch");
     global
 }
 
@@ -100,7 +113,8 @@ pub fn build_sockets_global(
     pointers_name: &str,
 ) -> SocketsGlobal {
     let context = module.get_context();
-    let struct_types: Vec<_> = root.sockets
+    let struct_types: Vec<_> = root
+        .sockets
         .iter()
         .map(|vartype| remap_type(&context, vartype))
         .collect();
@@ -108,7 +122,7 @@ pub fn build_sockets_global(
     let sockets_struct_type = context.struct_type(&sockets_type_refs, false);
     let sockets_global = util::get_or_create_global(module, sockets_name, &sockets_struct_type);
     sockets_global.set_initializer(&sockets_struct_type.const_null());
-    sockets_global.set_section("maxim.sockets");
+    //sockets_global.set_section("maxim.sockets");
 
     let void_ptr_ty = context.i8_type().ptr_type(AddressSpace::Generic);
     let array_itms: Vec<_> = (0..struct_types.len())
@@ -118,16 +132,14 @@ pub fn build_sockets_global(
                 .const_in_bounds_gep(&[
                     context.i64_type().const_int(0, false),
                     context.i32_type().const_int(index as u64, false),
-                ])
-                .const_cast(&void_ptr_ty)
-        })
-        .collect();
+                ]).const_cast(&void_ptr_ty)
+        }).collect();
     let pointers_arr = void_ptr_ty.const_array(&array_itms);
     let pointers_global =
         util::get_or_create_global(module, pointers_name, &pointers_arr.get_type());
     pointers_global.set_constant(true);
     pointers_global.set_initializer(&pointers_arr);
-    pointers_global.set_section("maxim.portals");
+    //pointers_global.set_section("maxim.portals");
 
     SocketsGlobal {
         sockets: sockets_global,
@@ -158,7 +170,7 @@ pub fn build_pointers_global(
     );
     global.set_constant(true);
     global.set_initializer(&const_val);
-    global.set_section("maxim.pointers_data");
+    //global.set_section("maxim.pointers");
     global
 }
 

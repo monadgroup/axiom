@@ -5,6 +5,7 @@
 #include "../CommonColors.h"
 #include "../ItemResizer.h"
 #include "../surface/NodeSurfaceCanvas.h"
+#include "SyntaxHighlighter.h"
 #include "editor/model/Project.h"
 #include "editor/model/grid/GridSurface.h"
 #include "editor/model/objects/CustomNode.h"
@@ -22,6 +23,9 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     node->beforePanelHeightChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
     node->panelHeightChanged.connect(this, &CustomNodePanel::updateSize);
     node->codeChanged.connect(this, &CustomNodePanel::codeChanged);
+    node->codeCompileError.connect(this, &CustomNodePanel::compileError);
+    node->codeCompileSuccess.connect(this, &CustomNodePanel::compileSuccess);
+    node->inErrorStateChanged.connect(this, &CustomNodePanel::triggerUpdate);
 
     auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, CustomNode::minPanelHeight));
     connect(this, &CustomNodePanel::resizerSizeChanged, resizer, &ItemResizer::setSize);
@@ -40,6 +44,9 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     textEditor->setPlainText(node->code());
     connect(textEditor, &QPlainTextEdit::textChanged, this, &CustomNodePanel::controlTextChanged);
 
+    // highlighter automatically attaches itself to the text editor and manages its own memory
+    highlighter = new SyntaxHighlighter(textEditor->document());
+
     codeChanged(node->code());
     setOpen(node->isPanelOpen());
     updateSize();
@@ -52,12 +59,12 @@ QRectF CustomNodePanel::boundingRect() const {
 
 void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     auto br = boundingRect();
-    // if (showingErrors) {
-    //    painter->setPen(QPen(CommonColors::errorNodeBorder, 1));
-    //} else {
-    //    painter->setPen(QPen(CommonColors::customNodeBorder, 1));
-    //}
-    painter->setPen(QPen(CommonColors::customNodeBorder, 1));
+    if (node->isInErrorState()) {
+        painter->setPen(QPen(CommonColors::errorNodeBorder, 1));
+    } else {
+        painter->setPen(QPen(CommonColors::customNodeBorder, 1));
+    }
+
     painter->setBrush(QBrush(CommonColors::customNodeNormal));
 
     painter->drawRoundedRect(br, 5, 5);
@@ -74,13 +81,6 @@ void CustomNodePanel::updateSize() {
 
 void CustomNodePanel::setOpen(bool open) {
     setVisible(open);
-}
-
-void CustomNodePanel::clearError() {
-    // hasErrors = false;
-    // showingErrors = false;
-    textEditor->setExtraSelections({});
-    update();
 }
 
 void CustomNodePanel::codeChanged(const QString &newCode) {
@@ -100,10 +100,6 @@ void CustomNodePanel::triggerGeometryChange() {
 void CustomNodePanel::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
     node->setPanelHeight((float) bottomRight.y() - nodeSize.height() - 5);
-}
-
-void CustomNodePanel::compileFinished() {
-    textEditor->setPlainText(node->code());
 }
 
 bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
@@ -130,4 +126,28 @@ bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
 
 void CustomNodePanel::controlTextChanged() {
     node->setCode(textEditor->toPlainText());
+}
+
+void CustomNodePanel::compileError(const AxiomModel::CustomNodeError &error) {
+    QTextCursor cursor(textEditor->document());
+    moveCursor(cursor, error.sourceRange.front, QTextCursor::MoveAnchor);
+    moveCursor(cursor, error.sourceRange.back, QTextCursor::KeepAnchor);
+
+    QTextCharFormat squigglyFormat;
+    squigglyFormat.setUnderlineColor(QColor::fromRgb(255, 0, 0));
+    squigglyFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+
+    QList<QTextEdit::ExtraSelection> selections;
+    selections.push_back({cursor, squigglyFormat});
+    textEditor->setExtraSelections(selections);
+}
+
+void CustomNodePanel::compileSuccess() {
+    textEditor->setExtraSelections({});
+}
+
+void CustomNodePanel::moveCursor(QTextCursor &cursor, MaximFrontend::SourcePos pos, QTextCursor::MoveMode mode) {
+    cursor.movePosition(QTextCursor::Start, mode);
+    cursor.movePosition(QTextCursor::Down, mode, pos.line);
+    cursor.movePosition(QTextCursor::Right, mode, pos.column);
 }

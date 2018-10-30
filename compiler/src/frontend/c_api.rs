@@ -51,8 +51,18 @@ pub unsafe extern "C" fn maxim_set_bpm(runtime: *mut Runtime, bpm: f32) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_get_bpm(runtime: *const Runtime) -> f32 {
+    (*runtime).get_bpm()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_set_sample_rate(runtime: *mut Runtime, sample_rate: f32) {
     (*runtime).set_sample_rate(sample_rate);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_sample_rate(runtime: *const Runtime) -> f32 {
+    (*runtime).get_sample_rate()
 }
 
 #[no_mangle]
@@ -101,6 +111,16 @@ pub unsafe extern "C" fn maxim_get_node_ptr(
     node: usize,
 ) -> *mut c_void {
     value_reader::get_node_ptr(&*runtime, surface, surface_ptr, node)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_extracted_bitmask_ptr(
+    runtime: *const Runtime,
+    surface: u64,
+    surface_ptr: *mut c_void,
+    node: usize,
+) -> *const u32 {
+    value_reader::get_node_active_bitmap_ptr(&*runtime, surface, surface_ptr, node)
 }
 
 #[no_mangle]
@@ -158,8 +178,7 @@ pub unsafe extern "C" fn maxim_vartype_tuple(
         .map(|index| {
             let boxed = Box::from_raw(*subtypes.offset(index as isize));
             *boxed
-        })
-        .collect();
+        }).collect();
     Box::into_raw(Box::new(mir::VarType::Tuple(subtypes_vec)))
 }
 
@@ -208,8 +227,7 @@ pub unsafe extern "C" fn maxim_constant_tuple(
         .map(|index| {
             let boxed = Box::from_raw(*items.offset(index as isize));
             *boxed
-        })
-        .collect();
+        }).collect();
     Box::into_raw(Box::new(mir::ConstantValue::Tuple(mir::ConstantTuple {
         items: items_vec,
     })))
@@ -445,4 +463,16 @@ pub unsafe extern "C" fn maxim_control_get_written(control: *const mir::block::C
 #[no_mangle]
 pub unsafe extern "C" fn maxim_control_get_read(control: *const mir::block::Control) -> bool {
     (*control).value_read
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_function_table_size() -> usize {
+    mir::FUNCTION_TABLE.len()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_function_table_entry(index: usize) -> *mut std::os::raw::c_char {
+    std::ffi::CString::new(mir::FUNCTION_TABLE[index])
+        .unwrap()
+        .into_raw()
 }

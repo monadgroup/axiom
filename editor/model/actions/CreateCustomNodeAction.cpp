@@ -25,17 +25,12 @@ std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUu
     return create(QUuid::createUuid(), parentUuid, pos, std::move(name), QUuid::createUuid(), root);
 }
 
-void CreateCustomNodeAction::forward(bool, std::vector<QUuid> &compileItems) {
+void CreateCustomNodeAction::forward(bool) {
     root()->pool().registerObj(CustomNode::create(_uuid, _parentUuid, _pos, QSize(3, 2), false, _name, _controlsUuid,
                                                   "", false, CustomNode::minPanelHeight, root()));
     root()->pool().registerObj(ControlSurface::create(_controlsUuid, _uuid, root()));
-
-    compileItems.push_back(_uuid);
-    compileItems.push_back(_parentUuid);
 }
 
-void CreateCustomNodeAction::backward(std::vector<QUuid> &compileItems) {
-    find(root()->nodes(), _uuid)->remove();
-
-    compileItems.push_back(_parentUuid);
+void CreateCustomNodeAction::backward() {
+    find(root()->nodes().sequence(), _uuid)->remove();
 }

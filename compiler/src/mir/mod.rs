@@ -9,7 +9,7 @@ mod value_group;
 mod value_socket;
 mod var_type;
 
-pub use self::block::{Block, BlockId, BlockRef};
+pub use self::block::{Block, BlockId, BlockRef, FUNCTION_TABLE};
 pub use self::constant_value::{ConstantNum, ConstantTuple, ConstantValue};
 pub use self::node::{Node, NodeData};
 pub use self::pool_id::IdAllocator;

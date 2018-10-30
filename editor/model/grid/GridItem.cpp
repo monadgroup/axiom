@@ -6,27 +6,16 @@
 
 using namespace AxiomModel;
 
-GridItem::GridItem(GridSurface *parent, QPoint pos, QSize size, bool selected)
-    : parentSurface(parent), m_pos(parent->grid().findNearestAvailable(pos, size)), m_size(size), m_selected(selected) {
+GridItem::GridItem(GridSurface *parent, QPoint pos, QSize size, QSize minSize, bool selected)
+    : parentSurface(parent), m_pos(parent->grid().findNearestAvailable(pos, size)), m_size(size), m_minSize(minSize),
+      m_selected(selected) {
     parentSurface->grid().setRect(m_pos, m_size, this);
-    parentSurface->flushGrid();
+    parentSurface->setDirty();
 }
 
 GridItem::~GridItem() {
     parentSurface->grid().setRect(m_pos, m_size, nullptr);
-    parentSurface->flushGrid();
-}
-
-void GridItem::deserialize(QDataStream &stream, QPoint &pos, QSize &size, bool &selected) {
-    stream >> pos;
-    stream >> size;
-    stream >> selected;
-}
-
-void GridItem::serialize(QDataStream &stream) const {
-    stream << pos();
-    stream << size();
-    stream << isSelected();
+    parentSurface->setDirty();
 }
 
 bool GridItem::isDragAvailable(QPoint delta) {
@@ -37,13 +26,16 @@ void GridItem::setSize(QSize size) {
     if (!isResizable()) return;
 
     if (size != m_size) {
-        if (size.width() < 1 || size.height() < 1 || !parentSurface->grid().isRectAvailable(m_pos, size, this)) return;
+        if (size.width() < m_minSize.width()) size.setWidth(m_minSize.width());
+        if (size.height() < m_minSize.height()) size.setHeight(m_minSize.height());
 
-        beforeSizeChanged.trigger(size);
+        if (!parentSurface->grid().isRectAvailable(m_pos, size, this)) return;
+
+        beforeSizeChanged(size);
         parentSurface->grid().moveRect(m_pos, m_size, m_pos, size, this);
-        parentSurface->flushGrid();
+        parentSurface->setDirty();
         m_size = size;
-        sizeChanged.trigger(size);
+        sizeChanged(size);
     }
 }
 
@@ -55,7 +47,8 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
     if (!isResizable()) return;
 
     auto newSize = QSize(bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y());
-    if (newSize.width() < 1 || newSize.height() < 1) return;
+    if (newSize.width() < m_minSize.width()) newSize.setWidth(m_minSize.width());
+    if (newSize.height() < m_minSize.height()) newSize.setHeight(m_minSize.height());
     if (topLeft == m_pos && newSize == m_size) return;
 
     if (!parentSurface->grid().isRectAvailable(topLeft, newSize, this)) {
@@ -70,33 +63,34 @@ void GridItem::setCorners(QPoint topLeft, QPoint bottomRight) {
         } else if (parentSurface->grid().isRectAvailable(vTopLeft, vSize, this)) {
             topLeft = vTopLeft;
             newSize = vSize;
-        } else return;
+        } else
+            return;
     }
 
     if (topLeft == m_pos && newSize == m_size) return;
     parentSurface->grid().moveRect(m_pos, m_size, topLeft, newSize, this);
-    parentSurface->flushGrid();
-    beforePosChanged.trigger(topLeft);
+    parentSurface->setDirty();
+    beforePosChanged(topLeft);
     m_pos = topLeft;
-    posChanged.trigger(m_pos);
-    beforeSizeChanged.trigger(newSize);
+    posChanged(m_pos);
+    beforeSizeChanged(newSize);
     m_size = newSize;
-    sizeChanged.trigger(m_size);
+    sizeChanged(m_size);
 }
 
 void GridItem::select(bool exclusive) {
     if (exclusive || !m_selected) {
         m_selected = true;
-        selectedChanged.trigger(m_selected);
-        selected.trigger(exclusive);
+        selectedChanged(m_selected);
+        selected(exclusive);
     }
 }
 
 void GridItem::deselect() {
     if (!m_selected) return;
     m_selected = false;
-    selectedChanged.trigger(m_selected);
-    deselected.trigger();
+    selectedChanged(m_selected);
+    deselected();
 }
 
 void GridItem::startDragging() {
@@ -107,8 +101,7 @@ void GridItem::dragTo(QPoint delta) {
     setPos(_dragStartPos + delta, false, false);
 }
 
-void GridItem::finishDragging() {
-}
+void GridItem::finishDragging() {}
 
 void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
     if (pos != m_pos) {
@@ -116,12 +109,12 @@ void GridItem::setPos(QPoint pos, bool updateGrid, bool checkPositions) {
 
         if (pos == m_pos) return;
 
-        beforePosChanged.trigger(pos);
+        beforePosChanged(pos);
         if (updateGrid) {
             parentSurface->grid().moveRect(m_pos, m_size, pos, m_size, this);
-            parentSurface->flushGrid();
+            parentSurface->setDirty();
         }
         m_pos = pos;
-        posChanged.trigger(pos);
+        posChanged(pos);
     }
 }

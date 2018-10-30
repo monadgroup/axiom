@@ -5,17 +5,24 @@ use codegen::{globals, intrinsics, util, BuilderContext};
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::{PointerValue, VectorValue};
+use inkwell::FloatPredicate;
 use mir::block;
 use std::f32::consts;
 
 fn gen_periodic_real_args(
     ctx: &mut BuilderContext,
     mut args: Vec<PointerValue>,
+    needs_pulse_width: bool,
 ) -> Vec<PointerValue> {
     if args.len() < 2 {
         let mut phase_offset_constant = NumValue::new_undef(ctx.context, ctx.allocb);
         phase_offset_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0., 0., 0));
         args.push(phase_offset_constant.val);
+    }
+    if needs_pulse_width && args.len() < 3 {
+        let mut pulse_width_constant = NumValue::new_undef(ctx.context, ctx.allocb);
+        pulse_width_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0.5, 0.5, 0));
+        args.push(pulse_width_constant.val);
     }
     args
 }
@@ -28,7 +35,7 @@ fn gen_periodic_call(
     func: &mut FunctionContext,
     args: &[PointerValue],
     result: PointerValue,
-    next_val: &Fn(&mut FunctionContext, VectorValue) -> VectorValue,
+    next_val: &Fn(&mut FunctionContext, VectorValue, &[PointerValue]) -> VectorValue,
 ) {
     let phase_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "phase.ptr") };
 
@@ -39,18 +46,20 @@ fn gen_periodic_call(
     let freq_vec = freq_num.get_vec(func.ctx.b);
 
     // offset phase and store new value
-    let phase = func.ctx
+    let phase = func
+        .ctx
         .b
         .build_load(&phase_ptr, "phase")
         .into_vector_value();
-    let samplerate = func.ctx
+    let samplerate = func
+        .ctx
         .b
         .build_load(
             &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
             "samplerate",
-        )
-        .into_vector_value();
-    let phase_offset = func.ctx
+        ).into_vector_value();
+    let phase_offset = func
+        .ctx
         .b
         .build_float_div(freq_vec, samplerate, "phaseoffset");
     let new_phase = func.ctx.b.build_float_add(phase, phase_offset, "newphase");
@@ -63,15 +72,18 @@ fn gen_periodic_call(
 
     // calculate result
     let phase_offset_vec = phase_offset_num.get_vec(func.ctx.b);
-    let input_phase = func.ctx
+    let input_phase = func
+        .ctx
         .b
         .build_float_add(phase_offset_vec, phase, "inputphase");
-    let result_vec = next_val(func, input_phase);
+
+    let result_vec = next_val(func, input_phase, &args[2..]);
 
     result_num.set_vec(func.ctx.b, &result_vec);
     result_num.set_form(
         func.ctx.b,
-        &func.ctx
+        &func
+            .ctx
             .context
             .i8_type()
             .const_int(FormType::Oscillator as u64, false),
@@ -79,12 +91,12 @@ fn gen_periodic_call(
 }
 
 macro_rules! define_periodic_func (
-    ($func_name:ident: $func_type:expr => $callback:expr) => (
+    ($func_name:ident: $func_type:expr, $needs_pulse_width:expr => $callback:expr) => (
         pub struct $func_name {}
         impl Function for $func_name {
             fn function_type() -> block::Function { $func_type }
             fn gen_real_args(ctx: &mut BuilderContext, args: Vec<PointerValue>) -> Vec<PointerValue> {
-                gen_periodic_real_args(ctx, args)
+                gen_periodic_real_args(ctx, args, $needs_pulse_width)
             }
             fn data_type(context: &Context) -> StructType {
                 periodic_data_type(context)
@@ -96,7 +108,11 @@ macro_rules! define_periodic_func (
     )
 );
 
-fn sin_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue {
+fn sin_next_value(
+    func: &mut FunctionContext,
+    phase: VectorValue,
+    _extra_args: &[PointerValue],
+) -> VectorValue {
     let sin_intrinsic = intrinsics::sin_v2f32(func.ctx.module);
     let sin_phase = func.ctx.b.build_float_mul(
         phase,
@@ -110,41 +126,43 @@ fn sin_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue
         .unwrap()
         .into_vector_value()
 }
-define_periodic_func!(SinOscFunction: block::Function::SinOsc => sin_next_value);
+define_periodic_func!(SinOscFunction: block::Function::SinOsc, false => sin_next_value);
 
-fn sqr_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue {
-    let floor_intrinsic = intrinsics::floor_v2f32(func.ctx.module);
+fn sqr_next_value(
+    func: &mut FunctionContext,
+    phase: VectorValue,
+    extra_args: &[PointerValue],
+) -> VectorValue {
+    let pulse_width = NumValue::new(extra_args[0]);
+    let pulse_width_vec = pulse_width.get_vec(func.ctx.b);
 
-    let normal_period = util::get_vec_spread(func.ctx.context, 2.);
-    func.ctx.b.build_float_sub(
-        func.ctx.b.build_float_mul(
-            func.ctx
-                .b
-                .build_call(
-                    &floor_intrinsic,
-                    &[&func.ctx.b.build_float_rem(
-                        func.ctx
-                            .b
-                            .build_float_mul(phase, normal_period, "input_val"),
-                        normal_period,
-                        "inputmod",
-                    )],
-                    "inputfloor",
-                    false,
-                )
-                .left()
-                .unwrap()
-                .into_vector_value(),
-            util::get_vec_spread(func.ctx.context, 2.),
-            "normalized",
+    let is_positive = func.ctx.b.build_float_compare(
+        FloatPredicate::OLT,
+        func.ctx.b.build_float_rem(
+            phase,
+            util::get_vec_spread(func.ctx.context, 1.),
+            "inputmod",
         ),
-        util::get_vec_spread(func.ctx.context, 1.),
-        "result",
-    )
-}
-define_periodic_func!(SqrOscFunction: block::Function::SqrOsc => sqr_next_value);
+        pulse_width_vec,
+        "isneg",
+    );
 
-fn saw_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue {
+    func.ctx
+        .b
+        .build_select(
+            is_positive,
+            util::get_vec_spread(func.ctx.context, 1.),
+            util::get_vec_spread(func.ctx.context, -1.),
+            "result",
+        ).into_vector_value()
+}
+define_periodic_func!(SqrOscFunction: block::Function::SqrOsc, true => sqr_next_value);
+
+fn saw_next_value(
+    func: &mut FunctionContext,
+    phase: VectorValue,
+    _extra_args: &[PointerValue],
+) -> VectorValue {
     let normal_period = util::get_vec_spread(func.ctx.context, 2.);
     func.ctx.b.build_float_sub(
         func.ctx.b.build_float_rem(
@@ -156,9 +174,13 @@ fn saw_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue
         "result",
     )
 }
-define_periodic_func!(SawOscFunction: block::Function::SawOsc => saw_next_value);
+define_periodic_func!(SawOscFunction: block::Function::SawOsc, false => saw_next_value);
 
-fn tri_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue {
+fn tri_next_value(
+    func: &mut FunctionContext,
+    phase: VectorValue,
+    _extra_args: &[PointerValue],
+) -> VectorValue {
     let abs_intrinsic = intrinsics::fabs_v2f32(func.ctx.module);
 
     let normal_period = util::get_vec_spread(func.ctx.context, 4.);
@@ -178,17 +200,20 @@ fn tri_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue
                 )],
                 "normalized",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value(),
         util::get_vec_spread(func.ctx.context, 1.),
         "result",
     )
 }
-define_periodic_func!(TriOscFunction: block::Function::TriOsc => tri_next_value);
+define_periodic_func!(TriOscFunction: block::Function::TriOsc, false => tri_next_value);
 
-fn rmp_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue {
+fn rmp_next_value(
+    func: &mut FunctionContext,
+    phase: VectorValue,
+    _extra_args: &[PointerValue],
+) -> VectorValue {
     let normal_period = util::get_vec_spread(func.ctx.context, 2.);
     func.ctx.b.build_float_sub(
         util::get_vec_spread(func.ctx.context, 1.),
@@ -200,4 +225,4 @@ fn rmp_next_value(func: &mut FunctionContext, phase: VectorValue) -> VectorValue
         "result",
     )
 }
-define_periodic_func!(RmpOscFunction: block::Function::RmpOsc => rmp_next_value);
+define_periodic_func!(RmpOscFunction: block::Function::RmpOsc, false => rmp_next_value);

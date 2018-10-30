@@ -19,8 +19,16 @@ void Runtime::setBpm(float bpm) {
     MaximFrontend::maxim_set_bpm(get(), bpm);
 }
 
+float Runtime::getBpm() {
+    return MaximFrontend::maxim_get_bpm(get());
+}
+
 void Runtime::setSampleRate(float sampleRate) {
     MaximFrontend::maxim_set_sample_rate(get(), sampleRate);
+}
+
+float Runtime::getSampleRate() {
+    return MaximFrontend::maxim_get_sample_rate(get());
 }
 
 void Runtime::commit(MaximCompiler::Transaction transaction) {
@@ -47,6 +55,10 @@ void *Runtime::getRootPtr() {
 
 void *Runtime::getNodePtr(uint64_t surface, void *surfacePtr, size_t node) {
     return MaximFrontend::maxim_get_node_ptr(get(), surface, surfacePtr, node);
+}
+
+uint32_t *Runtime::getExtractedBitmaskPtr(uint64_t surface, void *surfacePtr, size_t node) {
+    return MaximFrontend::maxim_get_extracted_bitmask_ptr(get(), surface, surfacePtr, node);
 }
 
 void *Runtime::getSurfacePtr(void *nodePtr) {

@@ -63,6 +63,18 @@ QString Action::typeToString(AxiomModel::Action::ActionType type) {
         return "Paste";
     case ActionType::UNEXPOSE_CONTROL:
         return "Unexpose Control";
+    case ActionType::ADD_GRAPH_POINT:
+        return "Add Graph Point";
+    case ActionType::DELETE_GRAPH_POINT:
+        return "Delete Graph Point";
+    case ActionType::MOVE_GRAPH_POINT:
+        return "Move Graph Point";
+    case ActionType::SET_GRAPH_TAG:
+        return "Set Graph Tag";
+    case ActionType::SET_GRAPH_TENSION:
+        return "Set Graph Tension";
+    case ActionType::SET_NUM_RANGE:
+        return "Set Num Range";
     }
 
     unreachable;

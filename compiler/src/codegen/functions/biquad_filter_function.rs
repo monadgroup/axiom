@@ -19,11 +19,13 @@ fn get_internal_biquad_func(module: &Module) -> FunctionValue {
         let func = float_vec.fn_type(
             &[
                 &float_vec,                                 // input
-                &float_vec,                                 // a0
                 &float_vec,                                 // a1
                 &float_vec,                                 // a2
+                &float_vec,                                 // b0
                 &float_vec,                                 // b1
                 &float_vec,                                 // b2
+                &float_vec.ptr_type(AddressSpace::Generic), // y1
+                &float_vec.ptr_type(AddressSpace::Generic), // y2
                 &float_vec.ptr_type(AddressSpace::Generic), // z1
                 &float_vec.ptr_type(AddressSpace::Generic), // z2
             ],
@@ -38,52 +40,83 @@ pub fn build_internal_biquad_func(module: &Module, target: &TargetProperties) {
     let func = get_internal_biquad_func(module);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
         let input_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
-        let a0_vec = ctx.func.get_nth_param(1).unwrap().into_vector_value();
-        let a1_vec = ctx.func.get_nth_param(2).unwrap().into_vector_value();
-        let a2_vec = ctx.func.get_nth_param(3).unwrap().into_vector_value();
+        let a1_vec = ctx.func.get_nth_param(1).unwrap().into_vector_value();
+        let a2_vec = ctx.func.get_nth_param(2).unwrap().into_vector_value();
+        let b0_vec = ctx.func.get_nth_param(3).unwrap().into_vector_value();
         let b1_vec = ctx.func.get_nth_param(4).unwrap().into_vector_value();
         let b2_vec = ctx.func.get_nth_param(5).unwrap().into_vector_value();
-        let z1_vec_ptr = ctx.func.get_nth_param(6).unwrap().into_pointer_value();
-        let z2_vec_ptr = ctx.func.get_nth_param(7).unwrap().into_pointer_value();
+        let y1_vec_ptr = ctx.func.get_nth_param(6).unwrap().into_pointer_value();
+        let y2_vec_ptr = ctx.func.get_nth_param(7).unwrap().into_pointer_value();
+        let z1_vec_ptr = ctx.func.get_nth_param(8).unwrap().into_pointer_value();
+        let z2_vec_ptr = ctx.func.get_nth_param(9).unwrap().into_pointer_value();
 
-        let out_vec = ctx.b.build_float_add(
-            ctx.b.build_float_mul(input_vec, a0_vec, ""),
-            ctx.b.build_load(&z1_vec_ptr, "z1").into_vector_value(),
+        // output = (b0 * in) + (b1 * y1) + (b2 * y2) - (a1 * z1) - (a2 * z2)
+        let out_1 = ctx.b.build_float_mul(b0_vec, input_vec, "");
+        let out_2 = ctx.b.build_float_mul(
+            b1_vec,
+            ctx.b.build_load(&y1_vec_ptr, "").into_vector_value(),
             "",
         );
-
-        let new_z1 = ctx.b.build_float_sub(
-            ctx.b.build_float_add(
-                ctx.b.build_float_mul(input_vec, a1_vec, ""),
-                ctx.b.build_load(&z2_vec_ptr, "z2").into_vector_value(),
+        let out_3 = ctx.b.build_float_mul(
+            b2_vec,
+            ctx.b.build_load(&y2_vec_ptr, "").into_vector_value(),
+            "",
+        );
+        let out_4 = ctx.b.build_float_mul(
+            a1_vec,
+            ctx.b.build_load(&z1_vec_ptr, "").into_vector_value(),
+            "",
+        );
+        let out_5 = ctx.b.build_float_mul(
+            a2_vec,
+            ctx.b.build_load(&z2_vec_ptr, "").into_vector_value(),
+            "",
+        );
+        let output_vec = ctx.b.build_float_sub(
+            ctx.b.build_float_sub(
+                ctx.b
+                    .build_float_add(ctx.b.build_float_add(out_1, out_2, ""), out_3, ""),
+                out_4,
                 "",
             ),
-            ctx.b.build_float_mul(b1_vec, out_vec, ""),
-            "newz1",
-        );
-        ctx.b.build_store(&z1_vec_ptr, &new_z1);
-
-        let new_z2 = ctx.b.build_float_sub(
-            ctx.b.build_float_mul(input_vec, a2_vec, ""),
-            ctx.b.build_float_mul(b2_vec, out_vec, ""),
+            out_5,
             "",
         );
-        ctx.b.build_store(&z2_vec_ptr, &new_z2);
 
-        ctx.b.build_return(Some(&out_vec));
+        // y2 = y1
+        ctx.b.build_store(
+            &y2_vec_ptr,
+            &ctx.b.build_load(&y1_vec_ptr, "").into_vector_value(),
+        );
+
+        // y1 = in
+        ctx.b.build_store(&y1_vec_ptr, &input_vec);
+
+        // z2 = z1
+        ctx.b.build_store(
+            &z2_vec_ptr,
+            &ctx.b.build_load(&z1_vec_ptr, "").into_vector_value(),
+        );
+
+        // z1 = out
+        ctx.b.build_store(&z1_vec_ptr, &output_vec);
+
+        ctx.b.build_return(Some(&output_vec));
     });
 }
 
 fn biquad_data_type(context: &Context, has_gain: bool) -> StructType {
     let vec_type = context.f32_type().vec_type(2);
     let mut field_types: Vec<&BasicType> = vec![
-        &vec_type, // a0
         &vec_type, // a1
         &vec_type, // a2
+        &vec_type, // b0
         &vec_type, // b1
         &vec_type, // b2
-        &vec_type, // z1
-        &vec_type, // z2
+        &vec_type, // y1 (previous input 1)
+        &vec_type, // y2 (previous input 2)
+        &vec_type, // z1 (previous output 1)
+        &vec_type, // z2 (previous output 2)
         &vec_type, // cached frequency
         &vec_type, // cached Q
     ];
@@ -94,18 +127,17 @@ fn biquad_data_type(context: &Context, has_gain: bool) -> StructType {
     context.struct_type(&field_types, false)
 }
 
-type GenerateCoefficientsFn = Fn(
-    &mut FunctionContext,
-    VectorValue,
-    VectorValue,
-    VectorValue,
-    Option<VectorValue>,
-    PointerValue,
-    PointerValue,
-    PointerValue,
-    PointerValue,
-    PointerValue,
-);
+struct Coefficients {
+    a0: VectorValue,
+    a1: VectorValue,
+    a2: VectorValue,
+    b0: VectorValue,
+    b1: VectorValue,
+    b2: VectorValue,
+}
+
+type GenerateCoefficientsFn =
+    Fn(&mut FunctionContext, VectorValue, VectorValue, Option<VectorValue>) -> Coefficients;
 
 fn gen_biquad_call(
     func: &mut FunctionContext,
@@ -115,39 +147,34 @@ fn gen_biquad_call(
     generate_coefficients: &GenerateCoefficientsFn,
 ) {
     let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
-    let tan_intrinsic = util::get_or_create_func(func.ctx.module, "tanf", false, &|| {
-        (
-            Linkage::ExternalLinkage,
-            func.ctx
-                .context
-                .f32_type()
-                .fn_type(&[&func.ctx.context.f32_type()], false),
-        )
-    });
+    let sin_intrinsic = intrinsics::sin_v2f32(func.ctx.module);
+    let cos_intrinsic = intrinsics::cos_v2f32(func.ctx.module);
     let internal_biquad_func = get_internal_biquad_func(func.ctx.module);
 
-    let a0_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "a0.ptr") };
-    let a1_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 1, "a1.ptr") };
-    let a2_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 2, "a2.ptr") };
+    let a1_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "a1.ptr") };
+    let a2_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 1, "a2.ptr") };
+    let b0_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 2, "b0.ptr") };
     let b1_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 3, "b1.ptr") };
     let b2_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 4, "b2.ptr") };
-    let z1_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 5, "z1.ptr") };
-    let z2_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 6, "z2.ptr") };
+    let y1_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 5, "y1.ptr") };
+    let y2_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 6, "y2.ptr") };
+    let z1_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 7, "z1.ptr") };
+    let z2_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 8, "z2.ptr") };
     let cached_freq_ptr = unsafe {
         func.ctx
             .b
-            .build_struct_gep(&func.data_ptr, 7, "cachedfreq.ptr")
+            .build_struct_gep(&func.data_ptr, 9, "cachedfreq.ptr")
     };
     let cached_q_ptr = unsafe {
         func.ctx
             .b
-            .build_struct_gep(&func.data_ptr, 8, "cachedq.ptr")
+            .build_struct_gep(&func.data_ptr, 10, "cachedq.ptr")
     };
     let cached_gain_ptr = if has_gain {
         Some(unsafe {
             func.ctx
                 .b
-                .build_struct_gep(&func.data_ptr, 9, "cachedgain.ptr")
+                .build_struct_gep(&func.data_ptr, 11, "cachedgain.ptr")
         })
     } else {
         None
@@ -167,7 +194,8 @@ fn gen_biquad_call(
     let freq_vec = freq_num.get_vec(func.ctx.b);
     let q_vec = q_num.get_vec(func.ctx.b);
 
-    let cached_freq = func.ctx
+    let cached_freq = func
+        .ctx
         .b
         .build_load(&cached_freq_ptr, "cachedfreq")
         .into_vector_value();
@@ -175,7 +203,8 @@ fn gen_biquad_call(
         func.ctx
             .b
             .build_float_compare(FloatPredicate::ONE, freq_vec, cached_freq, "freqchanged");
-    let cached_q = func.ctx
+    let cached_q = func
+        .ctx
         .b
         .build_load(&cached_q_ptr, "cachedq")
         .into_vector_value();
@@ -185,7 +214,8 @@ fn gen_biquad_call(
             .build_float_compare(FloatPredicate::ONE, q_vec, cached_q, "qchanged");
     let needs_regen_vec = func.ctx.b.build_or(freq_changed, q_changed, "needsregen");
     let needs_regen_vec = if let Some(cached_gain_ptr) = cached_gain_ptr {
-        let cached_gain = func.ctx
+        let cached_gain = func
+            .ctx
             .b
             .build_load(&cached_gain_ptr, "cachedgain")
             .into_vector_value();
@@ -216,10 +246,12 @@ fn gen_biquad_call(
         "",
     );
 
-    let needs_regen_true_block = func.ctx
+    let needs_regen_true_block = func
+        .ctx
         .context
         .append_basic_block(&func.ctx.func, "needsregen.true");
-    let needs_regen_continue_block = func.ctx
+    let needs_regen_continue_block = func
+        .ctx
         .context
         .append_basic_block(&func.ctx.func, "needsregen.continue");
     func.ctx.b.build_conditional_branch(
@@ -236,82 +268,107 @@ fn gen_biquad_call(
     }
 
     // ensure Q is 0.5 or above to avoid dividing by zero later on
-    let q_vec = func.ctx
+    let q_vec = func
+        .ctx
         .b
         .build_call(
             &max_intrinsic,
             &[&q_vec, &util::get_vec_spread(func.ctx.context, 0.5)],
             "",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_vector_value();
 
-    // calculate K value = tan(PI * freq / sampleRate)
-    let k_param = func.ctx.b.build_float_div(
-        func.ctx.b.build_float_mul(
-            util::get_vec_spread(func.ctx.context, consts::PI),
-            freq_vec,
+    // ensure the frequency is 0.01 or above to avoid filter problems around very low frequencies
+    let f0 = func
+        .ctx
+        .b
+        .build_call(
+            &max_intrinsic,
+            &[&freq_vec, &util::get_vec_spread(func.ctx.context, 0.01)],
             "",
-        ),
+            false,
+        ).left()
+        .unwrap()
+        .into_vector_value();
+
+    // w0 = 2 * PI * f0 / fs
+    let fs = func
+        .ctx
+        .b
+        .build_load(
+            &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
+            "samplerate",
+        ).into_vector_value();
+    let w0 = func.ctx.b.build_float_mul(
+        util::get_vec_spread(func.ctx.context, 2. * consts::PI),
+        func.ctx.b.build_float_div(f0, fs, ""),
+        "w0",
+    );
+
+    // alpha = sin(w0) / (2q)
+    let alpha = func.ctx.b.build_float_div(
         func.ctx
             .b
-            .build_load(
-                &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
-                "",
-            )
+            .build_call(&sin_intrinsic, &[&w0], "", false)
+            .left()
+            .unwrap()
             .into_vector_value(),
-        "",
+        func.ctx
+            .b
+            .build_float_mul(util::get_vec_spread(func.ctx.context, 2.), q_vec, ""),
+        "alpha",
     );
-    let left_k = func.ctx
-        .b
-        .build_call(
-            &tan_intrinsic,
-            &[&func.ctx
-                .b
-                .build_extract_element(&k_param, &left_element, "")],
-            "leftk",
-            false,
-        )
-        .left()
-        .unwrap()
-        .into_float_value();
-    let right_k = func.ctx
-        .b
-        .build_call(
-            &tan_intrinsic,
-            &[&func.ctx
-                .b
-                .build_extract_element(&k_param, &right_element, "")],
-            "rightk",
-            false,
-        )
-        .left()
-        .unwrap()
-        .into_float_value();
-    let k_value = func.ctx
-        .b
-        .build_insert_element(
-            &func.ctx
-                .b
-                .build_insert_element(
-                    &func.ctx.context.f32_type().vec_type(2).get_undef(),
-                    &left_k,
-                    &left_element,
-                    "",
-                )
-                .into_vector_value(),
-            &right_k,
-            &right_element,
-            "k",
-        )
-        .into_vector_value();
-    let k_squared = func.ctx.b.build_float_mul(k_value, k_value, "ksquared");
 
-    generate_coefficients(
-        func, q_vec, k_value, k_squared, gain_vec, a0_ptr, a1_ptr, a2_ptr, b1_ptr, b2_ptr,
+    // cos_w0 = cos(w0)
+    let cos_w0 = func
+        .ctx
+        .b
+        .build_call(&cos_intrinsic, &[&w0], "", false)
+        .left()
+        .unwrap()
+        .into_vector_value();
+
+    let coefficients = generate_coefficients(func, cos_w0, alpha, gain_vec);
+
+    // divide each value by a0 and store
+    func.ctx.b.build_store(
+        &a1_ptr,
+        &func
+            .ctx
+            .b
+            .build_float_div(coefficients.a1, coefficients.a0, ""),
     );
+    func.ctx.b.build_store(
+        &a2_ptr,
+        &func
+            .ctx
+            .b
+            .build_float_div(coefficients.a2, coefficients.a0, ""),
+    );
+    func.ctx.b.build_store(
+        &b0_ptr,
+        &func
+            .ctx
+            .b
+            .build_float_div(coefficients.b0, coefficients.a0, ""),
+    );
+    func.ctx.b.build_store(
+        &b1_ptr,
+        &func
+            .ctx
+            .b
+            .build_float_div(coefficients.b1, coefficients.a0, ""),
+    );
+    func.ctx.b.build_store(
+        &b2_ptr,
+        &func
+            .ctx
+            .b
+            .build_float_div(coefficients.b2, coefficients.a0, ""),
+    );
+
     func.ctx
         .b
         .build_unconditional_branch(&needs_regen_continue_block);
@@ -319,24 +376,26 @@ fn gen_biquad_call(
     func.ctx.b.position_at_end(&needs_regen_continue_block);
     let input_vec = input_num.get_vec(func.ctx.b);
     let input_form = input_num.get_form(func.ctx.b);
-    let result_vec = func.ctx
+    let result_vec = func
+        .ctx
         .b
         .build_call(
             &internal_biquad_func,
             &[
                 &input_vec,
-                &func.ctx.b.build_load(&a0_ptr, "a0").into_vector_value(),
                 &func.ctx.b.build_load(&a1_ptr, "a1").into_vector_value(),
                 &func.ctx.b.build_load(&a2_ptr, "a2").into_vector_value(),
+                &func.ctx.b.build_load(&b0_ptr, "b0").into_vector_value(),
                 &func.ctx.b.build_load(&b1_ptr, "b1").into_vector_value(),
                 &func.ctx.b.build_load(&b2_ptr, "b2").into_vector_value(),
+                &y1_ptr,
+                &y2_ptr,
                 &z1_ptr,
                 &z2_ptr,
             ],
             "resultvec",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_vector_value();
     result_num.set_vec(func.ctx.b, &result_vec);
@@ -360,447 +419,318 @@ macro_rules! define_biquad_func (
 
 fn low_filter_generate_coefficients(
     func: &mut FunctionContext,
-    q_vec: VectorValue,
-    k_value: VectorValue,
-    k_squared: VectorValue,
+    cos_w0: VectorValue,
+    alpha: VectorValue,
     _gain_vec: Option<VectorValue>,
-    a0_ptr: PointerValue,
-    a1_ptr: PointerValue,
-    a2_ptr: PointerValue,
-    b1_ptr: PointerValue,
-    b2_ptr: PointerValue,
-) {
-    // norm = 1 / (1 + K / q + K * K)
-    let norm = func.ctx.b.build_float_div(
-        util::get_vec_spread(func.ctx.context, 1.),
-        func.ctx.b.build_float_add(
-            func.ctx.b.build_float_add(
-                util::get_vec_spread(func.ctx.context, 1.),
-                func.ctx.b.build_float_div(k_value, q_vec, ""),
-                "",
-            ),
-            k_squared,
-            "",
-        ),
-        "",
+) -> Coefficients {
+    let one_minus_cos_w0 =
+        func.ctx
+            .b
+            .build_float_sub(util::get_vec_spread(func.ctx.context, 1.), cos_w0, "");
+
+    // b0 = (1 - cos_w0) / 2
+    let b0 = func.ctx.b.build_float_div(
+        one_minus_cos_w0,
+        util::get_vec_spread(func.ctx.context, 2.),
+        "b0",
     );
 
-    // a0 = K * K * norm
-    let a0 = func.ctx.b.build_float_mul(k_squared, norm, "");
-    func.ctx.b.build_store(&a0_ptr, &a0);
+    // b1 = 1 - cos_w0
+    let b1 = one_minus_cos_w0;
 
-    // a1 = 2 * a0
-    let a1 = func.ctx
+    // b2 = (1 - cos_w0) / 2
+    let b2 = b0;
+
+    // a0 = 1 + alpha
+    let a0 = func
+        .ctx
         .b
-        .build_float_mul(util::get_vec_spread(func.ctx.context, 2.), a0, "");
-    func.ctx.b.build_store(&a1_ptr, &a1);
+        .build_float_add(util::get_vec_spread(func.ctx.context, 1.), alpha, "a0");
 
-    // a2 = a0
-    let a2 = a0;
-    func.ctx.b.build_store(&a2_ptr, &a2);
+    // a1 = -2 * cos_w0
+    let a1 = func
+        .ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), cos_w0, "a1");
 
-    // b1 = 2 * (K * K - 1) * norm
-    let b1 = func.ctx.b.build_float_mul(
-        func.ctx.b.build_float_mul(
-            util::get_vec_spread(func.ctx.context, 2.),
-            func.ctx
-                .b
-                .build_float_sub(k_squared, util::get_vec_spread(func.ctx.context, 1.), ""),
-            "",
-        ),
-        norm,
-        "",
-    );
-    func.ctx.b.build_store(&b1_ptr, &b1);
+    // a2 = 1 - alpha
+    let a2 = func
+        .ctx
+        .b
+        .build_float_sub(util::get_vec_spread(func.ctx.context, 1.), alpha, "a2");
 
-    // b2 = (1 - K / q + K * K) * norm
-    let b2 = func.ctx.b.build_float_mul(
-        func.ctx.b.build_float_add(
-            func.ctx.b.build_float_sub(
-                util::get_vec_spread(func.ctx.context, 1.),
-                func.ctx.b.build_float_div(k_value, q_vec, ""),
-                "",
-            ),
-            k_squared,
-            "",
-        ),
-        norm,
-        "",
-    );
-    func.ctx.b.build_store(&b2_ptr, &b2);
+    Coefficients {
+        b0,
+        b1,
+        b2,
+        a0,
+        a1,
+        a2,
+    }
 }
 define_biquad_func!(LowBqFilterFunction: block::Function::LowBqFilter => false, low_filter_generate_coefficients);
 
 fn high_filter_generate_coefficients(
     func: &mut FunctionContext,
-    q_vec: VectorValue,
-    k_value: VectorValue,
-    k_squared: VectorValue,
+    cos_w0: VectorValue,
+    alpha: VectorValue,
     _gain_vec: Option<VectorValue>,
-    a0_ptr: PointerValue,
-    a1_ptr: PointerValue,
-    a2_ptr: PointerValue,
-    b1_ptr: PointerValue,
-    b2_ptr: PointerValue,
-) {
-    // norm = 1 / (1 + K / q + K * K)
-    let norm = func.ctx.b.build_float_div(
-        util::get_vec_spread(func.ctx.context, 1.),
-        func.ctx.b.build_float_add(
-            func.ctx.b.build_float_add(
-                util::get_vec_spread(func.ctx.context, 1.),
-                func.ctx.b.build_float_div(k_value, q_vec, ""),
-                "",
-            ),
-            k_squared,
-            "",
-        ),
-        "",
+) -> Coefficients {
+    let one_plus_cos_w0 =
+        func.ctx
+            .b
+            .build_float_add(util::get_vec_spread(func.ctx.context, 1.), cos_w0, "");
+
+    // b0 = (1 + cos_w0) / 2
+    let b0 = func.ctx.b.build_float_div(
+        one_plus_cos_w0,
+        util::get_vec_spread(func.ctx.context, 2.),
+        "b0",
     );
 
-    // a0 = norm
-    let a0 = norm;
-    func.ctx.b.build_store(&a0_ptr, &a0);
+    // b1 = -(1 + cos_w0)
+    let b1 = func.ctx.b.build_float_neg(&one_plus_cos_w0, "b1");
 
-    // a1 = -2 * a0
-    let a1 = func.ctx
+    // b2 = (1 + cos_w0) / 2
+    let b2 = b0;
+
+    // a0 = 1 + alpha
+    let a0 = func
+        .ctx
         .b
-        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), a0, "");
-    func.ctx.b.build_store(&a1_ptr, &a1);
+        .build_float_add(util::get_vec_spread(func.ctx.context, 1.), alpha, "a0");
 
-    // a2 = a0
-    let a2 = a0;
-    func.ctx.b.build_store(&a2_ptr, &a2);
+    // a1 = -2 * cos_w0
+    let a1 = func
+        .ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), cos_w0, "a1");
 
-    // b1 = 2 * (K * K - 1) * norm
-    let b1 = func.ctx.b.build_float_mul(
-        func.ctx.b.build_float_mul(
-            util::get_vec_spread(func.ctx.context, 2.),
-            func.ctx
-                .b
-                .build_float_sub(k_squared, util::get_vec_spread(func.ctx.context, 1.), ""),
-            "",
-        ),
-        norm,
-        "",
-    );
-    func.ctx.b.build_store(&b1_ptr, &b1);
+    // a2 = 1 - alpha
+    let a2 = func
+        .ctx
+        .b
+        .build_float_sub(util::get_vec_spread(func.ctx.context, 1.), alpha, "a2");
 
-    // b2 = (1 - K / q + K * K) * norm
-    let b2 = func.ctx.b.build_float_mul(
-        func.ctx.b.build_float_add(
-            func.ctx.b.build_float_sub(
-                util::get_vec_spread(func.ctx.context, 1.),
-                func.ctx.b.build_float_div(k_value, q_vec, ""),
-                "",
-            ),
-            k_squared,
-            "",
-        ),
-        norm,
-        "",
-    );
-    func.ctx.b.build_store(&b2_ptr, &b2);
+    Coefficients {
+        b0,
+        b1,
+        b2,
+        a0,
+        a1,
+        a2,
+    }
 }
 define_biquad_func!(HighBqFilterFunction: block::Function::HighBqFilter => false, high_filter_generate_coefficients);
 
+fn band_filter_generate_coefficients(
+    func: &mut FunctionContext,
+    cos_w0: VectorValue,
+    alpha: VectorValue,
+    _gain_vec: Option<VectorValue>,
+) -> Coefficients {
+    // b0 = alpha
+    let b0 = alpha;
+
+    // b1 = 0
+    let b1 = util::get_vec_spread(func.ctx.context, 0.);
+
+    // b2 = -alpha
+    let b2 = func.ctx.b.build_float_neg(&alpha, "b2");
+
+    // a0 = 1 + alpha
+    let a0 = func
+        .ctx
+        .b
+        .build_float_add(util::get_vec_spread(func.ctx.context, 1.), alpha, "a0");
+
+    // a1 = -2 * cos_w0
+    let a1 = func
+        .ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), cos_w0, "a1");
+
+    // a2 = 1 - alpha
+    let a2 = func
+        .ctx
+        .b
+        .build_float_sub(util::get_vec_spread(func.ctx.context, 1.), alpha, "a2");
+
+    Coefficients {
+        b0,
+        b1,
+        b2,
+        a0,
+        a1,
+        a2,
+    }
+}
+define_biquad_func!(BandBqFilterFunction: block::Function::BandBqFilter => false, band_filter_generate_coefficients);
+
+fn notch_filter_generate_coefficients(
+    func: &mut FunctionContext,
+    cos_w0: VectorValue,
+    alpha: VectorValue,
+    _gain_vec: Option<VectorValue>,
+) -> Coefficients {
+    // b0 = 1
+    let b0 = util::get_vec_spread(func.ctx.context, 1.);
+
+    // b1 = -2 * cos_w0
+    let b1 = func
+        .ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), cos_w0, "b1");
+
+    // b2 = 1
+    let b2 = util::get_vec_spread(func.ctx.context, 1.);
+
+    // a0 = 1 + alpha
+    let a0 = func
+        .ctx
+        .b
+        .build_float_add(util::get_vec_spread(func.ctx.context, 1.), alpha, "a0");
+
+    // a1 = -2 * cos_w0
+    let a1 = func
+        .ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), cos_w0, "a1");
+
+    // a2 = 1 - alpha
+    let a2 = func
+        .ctx
+        .b
+        .build_float_sub(util::get_vec_spread(func.ctx.context, 1.), alpha, "a2");
+
+    Coefficients {
+        b0,
+        b1,
+        b2,
+        a0,
+        a1,
+        a2,
+    }
+}
+define_biquad_func!(NotchBqFilterFunction: block::Function::NotchBqFilter => false, notch_filter_generate_coefficients);
+
+fn all_filter_generate_coefficients(
+    func: &mut FunctionContext,
+    cos_w0: VectorValue,
+    alpha: VectorValue,
+    _gain_vec: Option<VectorValue>,
+) -> Coefficients {
+    // b0 = 1 - alpha
+    let b0 = func
+        .ctx
+        .b
+        .build_float_sub(util::get_vec_spread(func.ctx.context, 1.), alpha, "b0");
+
+    // b1 = -2 * cos_w0
+    let b1 = func
+        .ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), cos_w0, "b1");
+
+    // b2 = 1 + alpha
+    let b2 = func
+        .ctx
+        .b
+        .build_float_add(util::get_vec_spread(func.ctx.context, 1.), alpha, "b2");
+
+    // a0 = 1 + alpha
+    let a0 = b2;
+
+    // a1 = -2 * cos_w0
+    let a1 = b1;
+
+    // a2 = 1 - alpha
+    let a2 = b0;
+
+    Coefficients {
+        b0,
+        b1,
+        b2,
+        a0,
+        a1,
+        a2,
+    }
+}
+define_biquad_func!(AllBqFilterFunction: block::Function::AllBqFilter => false, all_filter_generate_coefficients);
+
 fn peak_filter_generate_coefficients(
     func: &mut FunctionContext,
-    q_vec: VectorValue,
-    k_value: VectorValue,
-    k_squared: VectorValue,
+    cos_w0: VectorValue,
+    alpha: VectorValue,
     gain_vec: Option<VectorValue>,
-    a0_ptr: PointerValue,
-    a1_ptr: PointerValue,
-    a2_ptr: PointerValue,
-    b1_ptr: PointerValue,
-    b2_ptr: PointerValue,
-) {
-    let pow_intrinsic = intrinsics::pow_v2f32(func.ctx.module);
-    let abs_intrinsic = intrinsics::fabs_v2f32(func.ctx.module);
+) -> Coefficients {
+    let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
 
     let gain_vec = gain_vec.unwrap();
-    let v = func.ctx
+
+    // clamp gain a bit so we don't get a 0 value
+    let clamped_gain = func
+        .ctx
         .b
         .build_call(
-            &pow_intrinsic,
-            &[
-                &util::get_vec_spread(func.ctx.context, 10.),
-                &func.ctx.b.build_float_div(
-                    func.ctx
-                        .b
-                        .build_call(&abs_intrinsic, &[&gain_vec], "", false)
-                        .left()
-                        .unwrap()
-                        .into_vector_value(),
-                    util::get_vec_spread(func.ctx.context, 20.),
-                    "",
-                ),
-            ],
+            &max_intrinsic,
+            &[&gain_vec, &util::get_vec_spread(func.ctx.context, 0.001)],
             "",
             false,
-        )
-        .left()
+        ).left()
         .unwrap()
         .into_vector_value();
 
-    let is_gain_positive_vec = func.ctx.b.build_float_compare(
-        FloatPredicate::OGE,
-        gain_vec,
-        util::get_vec_spread(func.ctx.context, 0.),
-        "isgainpositive.vec",
-    );
-    let left_element = func.ctx.context.i32_type().const_int(0, false);
-    let right_element = func.ctx.context.i32_type().const_int(1, false);
-    let is_gain_positive = func.ctx.b.build_or(
-        func.ctx
-            .b
-            .build_extract_element(&is_gain_positive_vec, &left_element, "")
-            .into_int_value(),
-        func.ctx
-            .b
-            .build_extract_element(&is_gain_positive_vec, &right_element, "")
-            .into_int_value(),
-        "",
+    let alpha_mul_gain = func.ctx.b.build_float_mul(alpha, clamped_gain, "");
+    let alpha_div_gain = func.ctx.b.build_float_div(alpha, clamped_gain, "");
+
+    // b0 = 1 + alpha * gain
+    let b0 = func.ctx.b.build_float_add(
+        util::get_vec_spread(func.ctx.context, 1.),
+        alpha_mul_gain,
+        "b0",
     );
 
-    let positive_gain_block = func.ctx
-        .context
-        .append_basic_block(&func.ctx.func, "positivegain");
-    let negative_gain_block = func.ctx
-        .context
-        .append_basic_block(&func.ctx.func, "negativegain");
-    let continue_block = func.ctx
-        .context
-        .append_basic_block(&func.ctx.func, "continue");
-    func.ctx.b.build_conditional_branch(
-        &is_gain_positive,
-        &positive_gain_block,
-        &negative_gain_block,
+    // b1 = -2 * cos_w0
+    let b1 = func
+        .ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), cos_w0, "b1");
+
+    // b2 = 1 - alpha * gain
+    let b2 = func.ctx.b.build_float_sub(
+        util::get_vec_spread(func.ctx.context, 1.),
+        alpha_mul_gain,
+        "b2",
     );
 
-    func.ctx.b.position_at_end(&positive_gain_block);
-    {
-        // norm = 1 / (1 + 1 / q * K + K * K)
-        let norm = func.ctx.b.build_float_div(
-            util::get_vec_spread(func.ctx.context, 1.),
-            func.ctx.b.build_float_add(
-                func.ctx.b.build_float_add(
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    func.ctx.b.build_float_mul(
-                        func.ctx.b.build_float_div(
-                            util::get_vec_spread(func.ctx.context, 1.),
-                            q_vec,
-                            "",
-                        ),
-                        k_value,
-                        "",
-                    ),
-                    "",
-                ),
-                k_squared,
-                "",
-            ),
-            "",
-        );
+    // a0 = 1 + alpha / gain
+    let a0 = func.ctx.b.build_float_add(
+        util::get_vec_spread(func.ctx.context, 1.),
+        alpha_div_gain,
+        "a0",
+    );
 
-        // a0 = (1 + V / q * K + K * K) * norm
-        let a0 = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_add(
-                func.ctx.b.build_float_add(
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    func.ctx.b.build_float_mul(
-                        func.ctx.b.build_float_div(v, q_vec, ""),
-                        k_value,
-                        "",
-                    ),
-                    "",
-                ),
-                k_squared,
-                "",
-            ),
-            norm,
-            "",
-        );
-        func.ctx.b.build_store(&a0_ptr, &a0);
+    // a1 = -2 * cos_w0
+    let a1 = func
+        .ctx
+        .b
+        .build_float_mul(util::get_vec_spread(func.ctx.context, -2.), cos_w0, "a1");
 
-        // a1 = 2 * (K * K - 1) * norm
-        let a1 = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_mul(
-                util::get_vec_spread(func.ctx.context, 2.),
-                func.ctx.b.build_float_sub(
-                    k_squared,
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    "",
-                ),
-                "",
-            ),
-            norm,
-            "",
-        );
-        func.ctx.b.build_store(&a1_ptr, &a1);
+    // a2 = 1 - alpha / gain
+    let a2 = func.ctx.b.build_float_sub(
+        util::get_vec_spread(func.ctx.context, 1.),
+        alpha_div_gain,
+        "a2",
+    );
 
-        // a2 = (1 - V / q * K + K * K) * norm
-        let a2 = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_add(
-                func.ctx.b.build_float_sub(
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    func.ctx.b.build_float_mul(
-                        func.ctx.b.build_float_div(v, q_vec, ""),
-                        k_value,
-                        "",
-                    ),
-                    "",
-                ),
-                k_squared,
-                "",
-            ),
-            norm,
-            "",
-        );
-        func.ctx.b.build_store(&a2_ptr, &a2);
-
-        // b1 = a1
-        let b1 = a1;
-        func.ctx.b.build_store(&b1_ptr, &b1);
-
-        // b2 = (1 - 1 / q * K + K * K) * norm
-        let b2 = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_add(
-                func.ctx.b.build_float_sub(
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    func.ctx.b.build_float_mul(
-                        func.ctx.b.build_float_div(
-                            util::get_vec_spread(func.ctx.context, 1.),
-                            q_vec,
-                            "",
-                        ),
-                        k_value,
-                        "",
-                    ),
-                    "",
-                ),
-                k_squared,
-                "",
-            ),
-            norm,
-            "",
-        );
-        func.ctx.b.build_store(&b2_ptr, &b2);
-        func.ctx.b.build_unconditional_branch(&continue_block);
+    Coefficients {
+        b0,
+        b1,
+        b2,
+        a0,
+        a1,
+        a2,
     }
-
-    func.ctx.b.position_at_end(&negative_gain_block);
-    {
-        // norm = 1 / (1 + V / q * K + K * K)
-        let norm = func.ctx.b.build_float_div(
-            util::get_vec_spread(func.ctx.context, 1.),
-            func.ctx.b.build_float_add(
-                func.ctx.b.build_float_add(
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    func.ctx.b.build_float_mul(
-                        func.ctx.b.build_float_div(v, q_vec, ""),
-                        k_value,
-                        "",
-                    ),
-                    "",
-                ),
-                k_squared,
-                "",
-            ),
-            "",
-        );
-
-        // a0 = (1 + 1 / q * K + K * K) * norm
-        let a0 = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_add(
-                func.ctx.b.build_float_add(
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    func.ctx.b.build_float_mul(
-                        func.ctx.b.build_float_div(
-                            util::get_vec_spread(func.ctx.context, 1.),
-                            q_vec,
-                            "",
-                        ),
-                        k_value,
-                        "",
-                    ),
-                    "",
-                ),
-                k_squared,
-                "",
-            ),
-            norm,
-            "",
-        );
-        func.ctx.b.build_store(&a0_ptr, &a0);
-
-        // a1 = 2 * (K * K - 1) * norm
-        let a1 = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_mul(
-                util::get_vec_spread(func.ctx.context, 2.),
-                func.ctx.b.build_float_sub(
-                    k_squared,
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    "",
-                ),
-                "",
-            ),
-            norm,
-            "",
-        );
-        func.ctx.b.build_store(&a1_ptr, &a1);
-
-        // a2 = (1 - 1 / q * K + K * K) * norm
-        let a2 = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_add(
-                func.ctx.b.build_float_sub(
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    func.ctx.b.build_float_mul(
-                        func.ctx.b.build_float_div(
-                            util::get_vec_spread(func.ctx.context, 1.),
-                            q_vec,
-                            "",
-                        ),
-                        k_value,
-                        "",
-                    ),
-                    "",
-                ),
-                k_squared,
-                "",
-            ),
-            norm,
-            "",
-        );
-        func.ctx.b.build_store(&a2_ptr, &a2);
-
-        // b1 = a1
-        let b1 = a1;
-        func.ctx.b.build_store(&b1_ptr, &b1);
-
-        // b2 = (1 - V / q * K + K * K) * norm
-        let b2 = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_add(
-                func.ctx.b.build_float_sub(
-                    util::get_vec_spread(func.ctx.context, 1.),
-                    func.ctx.b.build_float_mul(
-                        func.ctx.b.build_float_div(v, q_vec, ""),
-                        k_value,
-                        "",
-                    ),
-                    "",
-                ),
-                k_squared,
-                "",
-            ),
-            norm,
-            "",
-        );
-        func.ctx.b.build_store(&b2_ptr, &b2);
-        func.ctx.b.build_unconditional_branch(&continue_block);
-    }
-
-    func.ctx.b.position_at_end(&continue_block);
 }
 define_biquad_func!(PeakBqFilterFunction: block::Function::PeakBqFilter => true, peak_filter_generate_coefficients);

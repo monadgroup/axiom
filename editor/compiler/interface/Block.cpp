@@ -2,15 +2,23 @@
 
 using namespace MaximCompiler;
 
+Block::Block() : OwnedObject(nullptr, &MaximFrontend::maxim_destroy_block) {}
+
 Block::Block(void *handle) : OwnedObject(handle, &MaximFrontend::maxim_destroy_block) {}
 
-std::variant<Block, Error> Block::compile(uint64_t id, const QString &name, const QString &code) {
+bool Block::compile(uint64_t id, const QString &name, const QString &code, MaximCompiler::Block *blockOut,
+                    MaximCompiler::Error *errorOut) {
     void *out = nullptr;
-    if (MaximFrontend::maxim_compile_block(id, name.toUtf8().constData(), code.toUtf8().constData(), &out, &out)) {
-        return Block(out);
+    auto compileSuccess =
+        MaximFrontend::maxim_compile_block(id, name.toUtf8().constData(), code.toUtf8().constData(), &out, &out);
+
+    if (compileSuccess) {
+        *blockOut = Block(out);
     } else {
-        return Error(out);
+        *errorOut = Error(out);
     }
+
+    return compileSuccess;
 }
 
 size_t Block::controlCount() const {

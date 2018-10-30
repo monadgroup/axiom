@@ -44,18 +44,42 @@ const DESTRUCT_FUNC_NAME: &str = "maxim.runtime.destruct";
 const CONVERT_NUM_FUNC_NAME: &str = "maxim.editor.convert_num";
 
 #[derive(Debug)]
+struct LibraryPointers {
+    samplerate_ptr: *mut c_void,
+    bpm_ptr: *mut c_void,
+    convert_num: unsafe extern "C" fn(*mut c_void, i8, *const c_void),
+}
+
+impl LibraryPointers {
+    pub fn new(jit: &Jit) -> Self {
+        let samplerate_ptr_address =
+            jit.get_symbol_address(globals::SAMPLERATE_GLOBAL_NAME) as usize;
+        assert_ne!(samplerate_ptr_address, 0);
+
+        let bpm_ptr_address = jit.get_symbol_address(globals::BPM_GLOBAL_NAME) as usize;
+        assert_ne!(bpm_ptr_address, 0);
+
+        let convert_num_address = jit.get_symbol_address(CONVERT_NUM_FUNC_NAME) as usize;
+        assert_ne!(convert_num_address, 0);
+
+        LibraryPointers {
+            samplerate_ptr: samplerate_ptr_address as *mut c_void,
+            bpm_ptr: bpm_ptr_address as *mut c_void,
+            convert_num: unsafe { mem::transmute(convert_num_address) },
+        }
+    }
+}
+
+#[derive(Debug)]
 struct RuntimePointers {
     initialized_ptr: *mut c_void,
     scratch_ptr: *mut c_void,
     sockets_ptr: *mut c_void,
     portals_ptr: *mut c_void,
     pointers_ptr: *mut c_void,
-    samplerate_ptr: *mut c_void,
-    bpm_ptr: *mut c_void,
     construct: unsafe extern "C" fn(),
     update: unsafe extern "C" fn(),
     destruct: unsafe extern "C" fn(),
-    convert_num: unsafe extern "C" fn(*mut c_void, i8, *const c_void),
 }
 
 impl RuntimePointers {
@@ -68,16 +92,6 @@ impl RuntimePointers {
 
         let destruct_address = jit.get_symbol_address(DESTRUCT_FUNC_NAME) as usize;
         assert_ne!(destruct_address, 0);
-
-        let convert_num_address = jit.get_symbol_address(CONVERT_NUM_FUNC_NAME) as usize;
-        assert_ne!(convert_num_address, 0);
-
-        let samplerate_ptr_address =
-            jit.get_symbol_address(globals::SAMPLERATE_GLOBAL_NAME) as usize;
-        assert_ne!(samplerate_ptr_address, 0);
-
-        let bpm_ptr_address = jit.get_symbol_address(globals::BPM_GLOBAL_NAME) as usize;
-        assert_ne!(bpm_ptr_address, 0);
 
         // pointers can be null when they're pointing to empty data
         let initialized_ptr_address = jit.get_symbol_address(INITIALIZED_GLOBAL_NAME) as usize;
@@ -92,12 +106,9 @@ impl RuntimePointers {
             sockets_ptr: sockets_ptr_address as *mut c_void,
             portals_ptr: portals_ptr_address as *mut c_void,
             pointers_ptr: pointers_ptr_address as *mut c_void,
-            samplerate_ptr: samplerate_ptr_address as *mut c_void,
-            bpm_ptr: bpm_ptr_address as *mut c_void,
             construct: unsafe { mem::transmute(construct_address) },
             update: unsafe { mem::transmute(update_address) },
             destruct: unsafe { mem::transmute(destruct_address) },
-            convert_num: unsafe { mem::transmute(convert_num_address) },
         }
     }
 }
@@ -117,7 +128,8 @@ pub struct Runtime {
     block_modules: HashMap<BlockRef, RuntimeModule>,
     graph: DependencyGraph,
     jit: Jit,
-    pointers: Option<RuntimePointers>,
+    library_pointers: LibraryPointers,
+    runtime_pointers: Option<RuntimePointers>,
     bpm: f32,
     sample_rate: f32,
 }
@@ -133,6 +145,7 @@ impl Runtime {
         let library_module = Runtime::codegen_lib(&context, &target);
         optimizer.optimize_module(&library_module);
         jit.deploy(&library_module);
+        let library_pointers = LibraryPointers::new(&jit);
 
         Runtime {
             next_id: 1,
@@ -148,7 +161,8 @@ impl Runtime {
             block_modules: HashMap::new(),
             graph: DependencyGraph::new(),
             jit,
-            pointers: None,
+            library_pointers,
+            runtime_pointers: None,
             bpm: 60.,
             sample_rate: 44100.,
         }
@@ -261,12 +275,10 @@ impl Runtime {
                 let new_surfaces = pass::group_extracted(&mut surface, self);
                 pass::remove_dead_groups(&mut surface);
                 new_surfaces.into_iter().chain(iter::once(surface))
-            })
-            .map(|mut surface| {
+            }).map(|mut surface| {
                 pass::order_nodes(&mut surface);
                 surface
-            })
-            .collect()
+            }).collect()
     }
 
     fn patch_in_blocks(&mut self, blocks: Vec<Block>) {
@@ -431,7 +443,7 @@ impl Runtime {
         }
 
         Runtime::deploy_module(&self.jit, &mut self.root.1);
-        self.pointers = Some(RuntimePointers::new(&self.jit));
+        self.runtime_pointers = Some(RuntimePointers::new(&self.jit));
     }
 
     pub fn commit(&mut self, transaction: Transaction) {
@@ -444,7 +456,7 @@ impl Runtime {
         }
 
         // run destructors on old data before beginning
-        if let Some(ref pointers) = self.pointers {
+        if let Some(ref pointers) = self.runtime_pointers {
             unsafe {
                 (pointers.destruct)();
             }
@@ -471,11 +483,11 @@ impl Runtime {
             precise_duration_seconds(&deploy_start.elapsed())
         );
 
-        if let Some(ref pointers) = self.pointers {
-            // reset the BPM and sample rate
-            Runtime::set_vector(pointers.bpm_ptr, self.bpm);
-            Runtime::set_vector(pointers.samplerate_ptr, self.sample_rate);
+        // reset the BPM and sample rate
+        Runtime::set_vector(self.library_pointers.bpm_ptr, self.bpm);
+        Runtime::set_vector(self.library_pointers.samplerate_ptr, self.sample_rate);
 
+        if let Some(ref pointers) = self.runtime_pointers {
             // run the new constructor
             unsafe {
                 (pointers.construct)();
@@ -516,13 +528,13 @@ impl Runtime {
     }
 
     pub unsafe fn run_update(&self) {
-        if let Some(ref pointers) = self.pointers {
+        if let Some(ref pointers) = self.runtime_pointers {
             (pointers.update)();
         }
     }
 
     pub fn get_root_ptr(&self) -> *mut c_void {
-        if let Some(ref pointers) = self.pointers {
+        if let Some(ref pointers) = self.runtime_pointers {
             pointers.pointers_ptr
         } else {
             ptr::null_mut()
@@ -530,7 +542,7 @@ impl Runtime {
     }
 
     pub unsafe fn get_portal_ptr(&self, portal_index: usize) -> *mut c_void {
-        if let Some(ref pointers) = self.pointers {
+        if let Some(ref pointers) = self.runtime_pointers {
             let portals_array = pointers.portals_ptr as *mut *mut c_void;
             *portals_array.offset(portal_index as isize)
         } else {
@@ -548,16 +560,20 @@ impl Runtime {
 
     pub fn set_bpm(&mut self, bpm: f32) {
         self.bpm = bpm;
-        if let Some(ref pointers) = self.pointers {
-            Runtime::set_vector(pointers.bpm_ptr, bpm);
-        }
+        Runtime::set_vector(self.library_pointers.bpm_ptr, bpm);
+    }
+
+    pub fn get_bpm(&self) -> f32 {
+        self.bpm
     }
 
     pub fn set_sample_rate(&mut self, sample_rate: f32) {
         self.sample_rate = sample_rate;
-        if let Some(ref pointers) = self.pointers {
-            Runtime::set_vector(pointers.samplerate_ptr, sample_rate);
-        }
+        Runtime::set_vector(self.library_pointers.samplerate_ptr, sample_rate);
+    }
+
+    pub fn get_sample_rate(&self) -> f32 {
+        self.sample_rate
     }
 
     pub fn is_node_extracted(&self, surface: SurfaceRef, node: usize) -> bool {
@@ -572,9 +588,7 @@ impl Runtime {
     }
 
     pub fn convert_num(&self, result: *mut c_void, target_form: i8, num: *const c_void) {
-        if let Some(ref pointers) = self.pointers {
-            unsafe { (pointers.convert_num)(result, target_form, num) }
-        }
+        unsafe { (self.library_pointers.convert_num)(result, target_form, num) }
     }
 
     pub fn print_mir(&self) {
@@ -638,7 +652,7 @@ impl IdAllocator for Runtime {
 
 impl Drop for Runtime {
     fn drop(&mut self) {
-        if let Some(ref pointers) = self.pointers {
+        if let Some(ref pointers) = self.runtime_pointers {
             unsafe {
                 (pointers.destruct)();
             }

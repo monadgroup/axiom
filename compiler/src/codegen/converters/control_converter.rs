@@ -46,8 +46,7 @@ fn control_from_db(
                 ],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value(),
         util::get_vec_spread(context, 2.),
@@ -70,8 +69,7 @@ fn control_from_frequency(
                 &[&builder.build_float_add(val, util::get_vec_spread(context, 1.), "")],
                 "",
                 false,
-            )
-            .left()
+            ).left()
             .unwrap()
             .into_vector_value(),
         util::get_vec_spread(context, (20000 as f32).log(consts::E)),
@@ -130,8 +128,7 @@ fn control_from_samples(
                     .build_load(
                         &globals::get_sample_rate(module).as_pointer_value(),
                         "samplerate",
-                    )
-                    .into_vector_value(),
+                    ).into_vector_value(),
                 "",
             ),
             "",

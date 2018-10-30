@@ -66,6 +66,8 @@ fn build_node_call(
                 unsafe { ctx.b.build_struct_gep(&pointers_ptr, 1, "sources.ptr") };
             let dest_socket_pointers =
                 unsafe { ctx.b.build_struct_gep(&pointers_ptr, 2, "dests.ptr") };
+            let bitmap_pointer =
+                unsafe { ctx.b.build_struct_gep(&pointers_ptr, 3, "bitmap.ptr.ptr") };
 
             // if this is the update lifecycle function and there are source groups, generate a
             // bitmap of which indices are valid
@@ -75,12 +77,11 @@ fn build_node_call(
                         .build_load(
                             &unsafe { ctx.b.build_struct_gep(&source_socket_pointers, 0, "") },
                             "",
-                        )
-                        .into_pointer_value(),
+                        ).into_pointer_value(),
                 );
                 let first_bitmap = first_array.get_bitmap(ctx.b);
 
-                Some(
+                let active_bitmap =
                     (1..source_sockets.len()).fold(first_bitmap, |acc, socket_index| {
                         let nth_array = values::ArrayValue::new(
                             ctx.b
@@ -93,25 +94,33 @@ fn build_node_call(
                                         )
                                     },
                                     "",
-                                )
-                                .into_pointer_value(),
+                                ).into_pointer_value(),
                         );
                         let nth_bitmap = nth_array.get_bitmap(ctx.b);
-                        ctx.b.build_or(acc, nth_bitmap, "")
-                    }),
-                )
+                        ctx.b.build_and(acc, nth_bitmap, "")
+                    });
+                ctx.b.build_store(
+                    &ctx.b
+                        .build_load(&bitmap_pointer, "bitmap.ptr")
+                        .into_pointer_value(),
+                    &active_bitmap,
+                );
+
+                Some(active_bitmap)
             } else {
                 None
             };
 
             // build a for loop to iterate over each instance
-            let index_ptr = ctx.allocb
+            let index_ptr = ctx
+                .allocb
                 .build_alloca(&ctx.context.i8_type(), "voiceindex.ptr");
             ctx.b
                 .build_store(&index_ptr, &ctx.context.i8_type().const_int(0, false));
 
             let check_block = ctx.context.append_basic_block(&ctx.func, "voice.check");
-            let check_active_block = ctx.context
+            let check_active_block = ctx
+                .context
                 .append_basic_block(&ctx.func, "voice.checkactive");
             let run_block = ctx.context.append_basic_block(&ctx.func, "voice.run");
             let end_block = ctx.context.append_basic_block(&ctx.func, "voice.end");
@@ -120,7 +129,8 @@ fn build_node_call(
             ctx.b.position_at_end(&check_block);
 
             let current_index = ctx.b.build_load(&index_ptr, "voiceindex").into_int_value();
-            let iter_limit = ctx.context
+            let iter_limit = ctx
+                .context
                 .i8_type()
                 .const_int(values::ARRAY_CAPACITY as u64, false);
             let can_continue_loop = ctx.b.build_int_compare(
@@ -142,7 +152,8 @@ fn build_node_call(
             );
             ctx.b.build_store(&index_ptr, &next_index);
 
-            let index_32 = ctx.b
+            let index_32 = ctx
+                .b
                 .build_int_z_extend(current_index, ctx.context.i32_type(), "");
             if let Some(active_bitmap) = valid_bitmap {
                 // check if this iteration is active according to the bitmap
@@ -194,8 +205,7 @@ fn build_node_call(
                                     )
                                 },
                                 "",
-                            )
-                            .into_pointer_value(),
+                            ).into_pointer_value(),
                     );
                     dest_array.set_bitmap(ctx.b, &active_bitmap);
                 }

@@ -1,6 +1,6 @@
 * {
     color: #EEEEEE;
-    background-color: #0A0A0A;
+    background-color: #111;
 }
 
 /* form control styling */
@@ -42,12 +42,8 @@ QScrollBar:vertical {
 QScrollBar::add-line, QScrollBar::sub-line {
     border: none;
     background: none;
-}
-
-QScrollBar::left-arrow, QScrollBar::right-arrow, QScrollBar::add-page, QScrollBar::sub-page {
-    border: none;
-    background: none;
-    color: none;
+    width: 0;
+    height: 0;
 }
 
 QScrollBar::add-page, QScrollBar::sub-page {
@@ -55,19 +51,19 @@ QScrollBar::add-page, QScrollBar::sub-page {
 }
 
 QScrollBar::handle {
-    background: #222;
-}
-
-QScrollBar::handle:pressed {
     background: #333;
 }
 
+QScrollBar::handle:pressed {
+    background: #444;
+}
+
 QScrollBar::handle:horizontal {
-    border-bottom: 2px solid #444;
+    border-bottom: 2px solid #555;
 }
 
 QScrollBar::handle:vertical {
-    border-right: 2px solid #444;
+    border-right: 2px solid #555;
 }
 
 QScrollBar::handle:horizontal:hover, QScrollBar::handle:horizontal:pressed {
@@ -80,7 +76,8 @@ QScrollBar::handle:vertical:hover, QScrollBar::handle:vertical:pressed {
 
 /* menu styling */
 QMenuBar {
-    background: #111;
+    background: #292929;
+    border-bottom: 1px solid #111;
 }
 
 QMenu {
@@ -135,18 +132,18 @@ QMenu QLineEdit:focus {
 
 /* tab styling */
 QTabBar {
-    border-bottom: solid 2px #222;
+    border-bottom: solid 2px #333;
 }
 
 QTabBar::tab {
     background: transparent;
     border: none;
-    border-bottom: 2px solid #222;
+    border-bottom: 2px solid #333;
     padding: 5px 10px;
 }
 
 QTabBar::tab:hover, QTabBar::tab:selected {
-    background: #222;
+    background: #333;
 }
 
 QTabBar::tab:selected {
@@ -155,15 +152,8 @@ QTabBar::tab:selected {
 
 /* dock panel styling */
 QMainWindow::separator {
-    background: #111;
-}
-
-QMainWindow::separator:horizontal {
-    width: 2px;
-}
-
-QMainWindow::separator:vertical {
-    height: 2px;
+    border-right: 1px solid #292929;
+    border-bottom: 1px solid #292929;
 }
 
 QDockWidget {
@@ -172,16 +162,16 @@ QDockWidget {
 
 QDockWidget::title {
     padding: 8px 10px;
-    background: #111;
+    background: #292929;
 }
 
 QDockWidget::close-button, QDockWidget::float-button {
-    background: #111;
+    background: #292929;
     border: none;
 }
 
 QDockWidget::close-button:hover, QDockWidget::float-button:hover {
-    background: #333;
+    background: #555;
 }
 
 QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {

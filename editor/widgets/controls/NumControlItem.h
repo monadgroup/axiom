@@ -13,6 +13,10 @@ namespace AxiomModel {
     class NumControl;
 }
 
+namespace MaximCompiler {
+    class Runtime;
+}
+
 namespace AxiomGui {
 
     class NodeItem;
@@ -21,11 +25,11 @@ namespace AxiomGui {
     public:
         AxiomModel::NumControl *control;
 
-        NumControlItem(AxiomModel::NumControl *control, NodeSurfaceCanvas *canvas);
+        MaximCompiler::Runtime *runtime;
 
-        static QString formatNumber(float val, AxiomModel::FormType form);
+        NumControlItem(AxiomModel::NumControl *control, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime);
 
-        QPainterPath shape() const override;
+        static bool unformatString(const QString &str, float *valOut, AxiomModel::FormType *formOut);
 
     protected:
         bool showLabelInCenter() const override;
@@ -66,8 +70,12 @@ namespace AxiomGui {
         bool isDragging = false;
         bool isShowingValue = false;
         bool displayNameOverride = false;
+        bool canReplaceHistoryOnScroll = false;
+        bool dragIsSpreading = false;
+        QImage _plugImage;
         QTimer showValueTimer;
         AxiomModel::NumValue beforeDragVal;
+        AxiomModel::NumValue beforeDragNormalizedVal;
         QPointF mouseStartPoint;
 
         KnobPainter knobPainter;
@@ -75,14 +83,14 @@ namespace AxiomGui {
         SliderPainter sliderPainter;
         TogglePainter togglePainter;
 
-        QString valueAsString(AxiomModel::NumValue num);
+        AxiomModel::NumValue clampValue(AxiomModel::NumValue value);
+
+        AxiomModel::NumValue getNormalizedValue();
+
+        void setNormalizedValue(AxiomModel::NumValue val);
 
         AxiomModel::NumValue stringAsValue(const QString &str, AxiomModel::NumValue oldNum);
 
-        static AxiomModel::NumValue clampVal(const AxiomModel::NumValue &val);
-
-        AxiomModel::NumValue getCVal() const;
-
-        void setCVal(AxiomModel::NumValue v) const;
+        void editNumRange(bool selectStep, QPointF pos);
     };
 }

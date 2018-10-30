@@ -62,13 +62,15 @@ impl Function for AmplitudeFunction {
         let result_num = NumValue::new(result);
 
         let param_vec = param_num.get_vec(func.ctx.b);
-        let abs_input = func.ctx
+        let abs_input = func
+            .ctx
             .b
             .build_call(&abs_intrinsic, &[&param_vec], "inputabs", false)
             .left()
             .unwrap()
             .into_vector_value();
-        let current_estimate = func.ctx
+        let current_estimate = func
+            .ctx
             .b
             .build_load(&current_estimate_ptr, "currentestimate")
             .into_vector_value();
@@ -89,16 +91,14 @@ impl Function for AmplitudeFunction {
                                 .build_load(
                                     &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                                     "samplerate",
-                                )
-                                .into_vector_value(),
+                                ).into_vector_value(),
                             "",
                         ),
                         "",
                     )],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_vector_value(),
             "",
@@ -117,7 +117,8 @@ impl Function for AmplitudeFunction {
         result_num.set_vec(func.ctx.b, &new_estimate);
         result_num.set_form(
             func.ctx.b,
-            &func.ctx
+            &func
+                .ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Amplitude as u64, false),
@@ -172,7 +173,8 @@ impl Function for HoldFunction {
             "gatebool",
         );
 
-        let last_gate = func.ctx
+        let last_gate = func
+            .ctx
             .b
             .build_load(&gate_ptr, "lastgate")
             .into_vector_value();
@@ -184,18 +186,21 @@ impl Function for HoldFunction {
                 .build_int_compare(IntPredicate::UGT, gate_bool, last_gate, "isrising");
 
         let current_vec = x_num.get_vec(func.ctx.b);
-        let last_vec = func.ctx
+        let last_vec = func
+            .ctx
             .b
             .build_load(&val_ptr, "lastval")
             .into_vector_value();
-        let new_value = func.ctx
+        let new_value = func
+            .ctx
             .b
             .build_select(is_rising, current_vec, last_vec, "newval")
             .into_vector_value();
         func.ctx.b.build_store(&val_ptr, &new_value);
 
         let else_vec = else_num.get_vec(func.ctx.b);
-        let result_vec = func.ctx
+        let result_vec = func
+            .ctx
             .b
             .build_select(gate_bool, new_value, else_vec, "resultvec")
             .into_vector_value();
@@ -238,7 +243,8 @@ impl Function for AccumFunction {
         let base_num = NumValue::new(args[2]);
         let result_num = NumValue::new(result);
 
-        let accum_vec = func.ctx
+        let accum_vec = func
+            .ctx
             .b
             .build_load(&accum_ptr, "accum")
             .into_vector_value();
@@ -254,7 +260,8 @@ impl Function for AccumFunction {
         );
 
         let base_vec = base_num.get_vec(func.ctx.b);
-        let new_accum = func.ctx
+        let new_accum = func
+            .ctx
             .b
             .build_select(gate_bool, incremented_vec, base_vec, "newaccum")
             .into_vector_value();

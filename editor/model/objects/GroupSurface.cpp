@@ -9,8 +9,9 @@ using namespace AxiomModel;
 
 GroupSurface::GroupSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
                            AxiomModel::ModelRoot *root)
-    : NodeSurface(uuid, parentUuid, pan, zoom, root), _node(find<GroupNode *>(root->nodes(), parentUuid)) {
-    _node->nameChanged.connect(&nameChanged);
+    : NodeSurface(uuid, parentUuid, pan, zoom, root),
+      _node(find(AxiomCommon::dynamicCast<GroupNode *>(root->nodes().sequence()), parentUuid)) {
+    _node->nameChanged.forward(&nameChanged);
 }
 
 std::unique_ptr<GroupSurface> GroupSurface::create(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,
@@ -20,6 +21,10 @@ std::unique_ptr<GroupSurface> GroupSurface::create(const QUuid &uuid, const QUui
 
 QString GroupSurface::name() {
     return _node->name();
+}
+
+QString GroupSurface::debugName() {
+    return "GroupSurface";
 }
 
 void GroupSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {

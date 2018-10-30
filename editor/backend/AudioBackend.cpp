@@ -1,5 +1,7 @@
 #include "AudioBackend.h"
 
+#include <QtCore/QFileInfo>
+#include <QtCore/QStandardPaths>
 #include <QtWidgets/QMessageBox>
 
 #include "../AxiomEditor.h"
@@ -8,11 +10,13 @@
 #include "../model/objects/RootSurface.h"
 #include "../model/serialize/ProjectSerializer.h"
 #include "../resources/resource.h"
+#include "../util.h"
+#include "../widgets/InteractiveImport.h"
 #include "../widgets/windows/MainWindow.h"
 
 using namespace AxiomBackend;
 
-const char *AxiomBackend::PRODUCT_VERSION = VER_PRODUCTVERSION_STR;
+const char *AxiomBackend::PRODUCT_VERSION = AXIOM_VERSION;
 const char *AxiomBackend::COMPANY_NAME = VER_COMPANYNAME_STR;
 const char *AxiomBackend::FILE_DESCRIPTION = VER_FILEDESCRIPTION_STR;
 const char *AxiomBackend::INTERNAL_NAME = VER_INTERNALNAME_STR;
@@ -30,44 +34,57 @@ MidiValue **AudioBackend::getMidiPortal(size_t portalId) const {
     return (MidiValue **) &portalValues[portalId];
 }
 
-const char *AudioBackend::formatNumForm(AxiomBackend::NumForm form) const {
-    switch (form) {
-    case AxiomModel::FormType::NONE:
-    case AxiomModel::FormType::CONTROL:
-    case AxiomModel::FormType::OSCILLATOR:
-    case AxiomModel::FormType::AMPLITUDE:
-    case AxiomModel::FormType::Q:
-    case AxiomModel::FormType::NOTE:
-    case AxiomModel::FormType::SAMPLES:
-    default:
-        return "";
-    case AxiomModel::FormType::FREQUENCY:
-        return " Hz";
-    case AxiomModel::FormType::BEATS:
-        return " beats";
-    case AxiomModel::FormType::SECONDS:
-        return " s";
-    case AxiomModel::FormType::DB:
-        return " dB";
-    }
+const char *AudioBackend::formatNumForm(float testValue, AxiomBackend::NumForm form) {
+    return AxiomUtil::getFormUnit(testValue, form);
 }
 
-std::string AudioBackend::formatNum(AxiomBackend::NumValue value, bool includeLabel) const {
-    // todo: refactor this with the code from NumControlItem
-    return "";
+std::string AudioBackend::formatNum(AxiomBackend::NumValue value, bool includeLabel) {
+    return AxiomUtil::formatNumForm(value, includeLabel).toStdString();
 }
 
-QByteArray AudioBackend::serialize() {
+std::string AudioBackend::findDataFile(const std::string &name) {
+    return QStandardPaths::locate(QStandardPaths::AppDataLocation, QString::fromStdString(name)).toStdString();
+}
+
+std::string AudioBackend::getDataPath() {
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
+}
+
+QByteArray AudioBackend::serialize(std::optional<std::function<void(QDataStream &)>> serializeCustomCallback) {
     QByteArray buffer;
     QDataStream stream(&buffer, QIODevice::WriteOnly);
-    AxiomModel::ProjectSerializer::serialize(_editor->window()->project(), stream);
-    return std::move(buffer);
+
+    auto project = _editor->window()->project();
+    AxiomModel::ProjectSerializer::serialize(project, stream,
+                                             [project](QDataStream &stream) { stream << project->linkedFile(); });
+    if (serializeCustomCallback) {
+        (*serializeCustomCallback)(stream);
+    }
+    return buffer;
 }
 
-void AudioBackend::deserialize(QByteArray *data) {
+void AudioBackend::deserialize(QByteArray *data,
+                               std::optional<std::function<void(QDataStream &, uint32_t)>> deserializeCustomCallback) {
     QDataStream stream(data, QIODevice::ReadOnly);
     uint32_t readVersion = 0;
-    auto newProject = AxiomModel::ProjectSerializer::deserialize(stream, &readVersion);
+    auto newProject = AxiomModel::ProjectSerializer::deserialize(
+        stream, &readVersion,
+        [this](AxiomModel::Library *importLibrary) {
+            AxiomGui::doInteractiveLibraryImport(_editor->window()->library(), importLibrary);
+        },
+        [](QDataStream &stream, uint32_t version) {
+            QString linkedFile;
+            if (version >= 5) {
+                stream >> linkedFile;
+
+                // only link to the file if it actually exists
+                QFileInfo linkedFileInfo(linkedFile);
+                if (!linkedFileInfo.exists() || !linkedFileInfo.isFile()) {
+                    linkedFile = "";
+                }
+            }
+            return linkedFile;
+        });
 
     if (!newProject) {
         if (readVersion) {
@@ -87,6 +104,9 @@ void AudioBackend::deserialize(QByteArray *data) {
                 .exec();
         }
     } else {
+        if (deserializeCustomCallback) {
+            (*deserializeCustomCallback)(stream, readVersion);
+        }
         _editor->window()->setProject(std::move(newProject));
     }
 }
@@ -144,9 +164,12 @@ void AudioBackend::generate() {
     _editor->window()->runtime()->runUpdate();
 }
 
-AudioConfiguration AudioBackend::createDefaultConfiguration() {
-    return AudioConfiguration({ConfigurationPortal(PortalType::INPUT, PortalValue::MIDI, "Keyboard"),
-                               ConfigurationPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
+void AudioBackend::previewEvent(AxiomBackend::MidiEvent event) {}
+
+void AudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumValue value) {}
+
+bool AudioBackend::canFiddleAutomation() const {
+    return false;
 }
 
 void AudioBackend::internalUpdateConfiguration() {
@@ -178,14 +201,16 @@ void AudioBackend::internalUpdateConfiguration() {
             break;
         }
 
-        newPortals.emplace_back(newType, newValue, surfacePortal.name.toStdString());
+        newPortals.emplace_back(surfacePortal.socketIndex, surfacePortal.id, newType, newValue,
+                                surfacePortal.name.toStdString());
     }
+    std::sort(newPortals.begin(), newPortals.end());
 
     // update the value pointers
     portalValues.clear();
     portalValues.reserve(newPortals.size());
-    for (size_t i = 0; i < newPortals.size(); i++) {
-        portalValues.push_back(_editor->window()->runtime()->getPortalPtr(i));
+    for (const auto &newPortal : newPortals) {
+        portalValues.push_back(_editor->window()->runtime()->getPortalPtr(newPortal._key));
     }
 
     // no point continuing if the portals are the same
@@ -198,4 +223,11 @@ void AudioBackend::internalUpdateConfiguration() {
 
     currentPortals = std::move(currentConfiguration.portals);
     hasCurrent = true;
+}
+
+size_t AudioBackend::internalRemapPortal(uint64_t id) {
+    for (size_t portalIndex = 0; portalIndex < currentPortals.size(); portalIndex++) {
+        if (currentPortals[portalIndex].id == id) return portalIndex;
+    }
+    unreachable;
 }

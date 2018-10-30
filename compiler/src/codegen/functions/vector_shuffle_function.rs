@@ -17,11 +17,13 @@ fn gen_shuffle_call(
 
     let input_vec = input_num.get_vec(func.ctx.b);
     let shuffle_vec = VectorType::const_vector(&[
-        &func.ctx
+        &func
+            .ctx
             .context
             .i32_type()
             .const_int(shuffle.0 as u64, false),
-        &func.ctx
+        &func
+            .ctx
             .context
             .i32_type()
             .const_int(shuffle.1 as u64, false),

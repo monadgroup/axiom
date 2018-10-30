@@ -21,9 +21,9 @@ namespace AxiomModel {
         static std::unique_ptr<PasteBufferAction> create(const QUuid &surfaceUuid, QByteArray buffer, QPoint center,
                                                          ModelRoot *root);
 
-        void forward(bool first, std::vector<QUuid> &compileItems) override;
+        void forward(bool first) override;
 
-        void backward(std::vector<QUuid> &compileItems) override;
+        void backward() override;
 
         const QUuid &surfaceUuid() const { return _surfaceUuid; }
 

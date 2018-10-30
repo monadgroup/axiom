@@ -15,6 +15,10 @@ QUuid CloneReferenceMapper::mapUuid(const QUuid &input) {
     return newUuid;
 }
 
+bool CloneReferenceMapper::isValid(const QUuid &input) {
+    return _values.contains(input);
+}
+
 QPoint CloneReferenceMapper::mapPos(const QUuid &parent, const QPoint &input) {
     auto iter = _pos.find(parent);
     if (iter == _pos.end())

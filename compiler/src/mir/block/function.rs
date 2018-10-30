@@ -13,7 +13,7 @@ macro_rules! func {
         FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )*], None)
     );
     (($($arg_type:expr),*, $(?$optional_arg_type:expr),*) -> $return_type:expr) => (
-        FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )* $( ParamType::new(true, $optional_arg_type) )*], None)
+        FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )* $( ParamType::new(true, $optional_arg_type), )*], None)
     );
     (($($arg_type:expr),* => $vararg_type:expr) -> $return_type:expr) => (
         FunctionData::new($return_type, vec![$( ParamType::new(false, $arg_type), )*], Some($vararg_type))
@@ -50,6 +50,8 @@ macro_rules! define_functions {
                 }
             }
         }
+
+        pub const FUNCTION_TABLE: [&str; 51] = [$($str_name, )*];
     );
 }
 
@@ -72,13 +74,14 @@ define_functions! {
     ToRad = "toRad" func![(Num) -> Num],
     ToDeg = "toDeg" func![(Num) -> Num],
     Clamp = "clamp" func![(Num, Num, Num) -> Num],
+    CopySign = "copysign" func![(Num, Num) -> Num],
     Pan = "pan" func![(Num, Num) -> Num],
     Left = "left" func![(Num) -> Num],
     Right = "right" func![(Num) -> Num],
     Swap = "swap" func![(Num) -> Num],
     Combine = "combine" func![(Num, Num) -> Num],
     Mix = "mix" func![(Num, Num, Num) -> Num],
-    Sequence = "sequence" func![(Num, Num => Num) -> Num],
+    Sequence = "sequence" func![(Num => Num) -> Num],
     Min = "min" func![(Num, Num) -> Num],
     Max = "max" func![(Num, Num) -> Num],
     Next = "next" func![(Num) -> Num],
@@ -90,16 +93,20 @@ define_functions! {
     SvFilter = "svFilter" func![(Num, Num, Num) -> Tuple(vec![Num, Num, Num, Num])],
     LowBqFilter = "lowBqFilter" func![(Num, Num, Num) -> Num],
     HighBqFilter = "highBqFilter" func![(Num, Num, Num) -> Num],
+    BandBqFilter = "bandBqFilter" func![(Num, Num, Num) -> Num],
+    NotchBqFilter = "notchBqFilter" func![(Num, Num, Num) -> Num],
+    AllBqFilter = "allBqFilter" func![(Num, Num, Num) -> Num],
     PeakBqFilter = "peakBqFilter" func![(Num, Num, Num, Num) -> Num],
     Noise = "noise" func![() -> Num],
     SinOsc = "sinOsc" func![(Num, ?Num) -> Num],
-    SqrOsc = "sqrOsc" func![(Num, ?Num) -> Num],
+    SqrOsc = "sqrOsc" func![(Num, ?Num, ?Num) -> Num],
     SawOsc = "sawOsc" func![(Num, ?Num) -> Num],
     TriOsc = "triOsc" func![(Num, ?Num) -> Num],
     RmpOsc = "rmpOsc" func![(Num, ?Num) -> Num],
     Note = "note" func![(Midi) -> Tuple(vec![Num, Num, Num, Num])],
     Voices = "voices" func![(Midi, VarType::new_array(Num)) -> VarType::new_array(Midi)],
-    Channel = "channel" func![(Midi, Num) -> Midi]
+    Channel = "channel" func![(Midi, Num) -> Midi],
+    Indexed = "indexed" func![(Num) -> VarType::new_array(Num)]
 }
 
 #[derive(Debug, Clone)]
@@ -147,9 +154,13 @@ impl Function {
     }
 
     pub fn arg_range(&self) -> FunctionArgRange {
-        let required_count = self.required_args().len();
+        let required_count = self
+            .arg_types()
+            .into_iter()
+            .filter(|param| !param.optional)
+            .count();
         if self.var_arg().is_some() {
-            FunctionArgRange::VarArg(required_count)
+            FunctionArgRange::VarArg(required_count + 1)
         } else if self.arg_types().len() == required_count {
             FunctionArgRange::Precise(required_count)
         } else {

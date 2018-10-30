@@ -64,7 +64,26 @@ impl<'a> AstLower<'a> {
 
     fn lower_assign_expr(&mut self, expr: &'a ast::AssignExpression) -> LowerResult {
         let rhs = self.lower_expression(&expr.right)?;
-        let right_values = self.get_expr_values(&expr.right.pos, rhs)?;
+        let expr_right_values = self.get_expr_values(&expr.right.pos, rhs)?;
+
+        let right_values = match expr.operator {
+            ast::OperatorType::Identity => expr_right_values,
+            _ => {
+                let left_vals = expr
+                    .left
+                    .data
+                    .assignments
+                    .iter()
+                    .map(|assignment| self.lower_assignable(assignment))
+                    .collect::<CompileResult<Vec<_>>>()?;
+                self.lower_math_op(
+                    &expr.left.pos,
+                    &left_vals,
+                    &expr_right_values,
+                    expr.operator,
+                )?
+            }
+        };
 
         match self.lower_assign(&expr.left, right_values) {
             Some(err) => Err(err),
@@ -82,8 +101,6 @@ impl<'a> AstLower<'a> {
         //  - if only the right is a tuple, assign the tuple to the item on the left
         //  - if only the left is a tuple, assign the item on the right to all items on the left
         // the return value is _always_ what was on the RHS!
-
-        // todo: this currently doesn't work with operators like += !
 
         if lvalue.data.assignments.len() == 1 {
             let tuple = self.squash_values(right_vals);
@@ -148,7 +165,7 @@ impl<'a> AstLower<'a> {
         // the arguments are valid if:
         //  - all non-optional parameters have a counterpart, AND EITHER
         //  - there is no vararg and the number of arguments is <= the number of parameters, OR
-        //  - there is a vararg (in this case, we need to collect them into a separate array
+        //  - there is a vararg (in this case, we need to collect them into a separate array)
         let mut args = Vec::new();
         let arg_types = func.arg_types();
         for (i, arg_type) in arg_types.iter().enumerate() {
@@ -169,6 +186,15 @@ impl<'a> AstLower<'a> {
 
         let mut varargs = Vec::new();
         if func.var_arg().is_some() {
+            // the first vararg is required
+            if expr.arguments.len() == args.len() {
+                return Err(CompileError::mismatched_arg_count(
+                    func.arg_range(),
+                    expr.arguments.len(),
+                    *pos,
+                ));
+            }
+
             for arg_expr in expr.arguments.iter().skip(args.len()) {
                 varargs.push(self.lower_expression(arg_expr)?);
             }
@@ -198,8 +224,7 @@ impl<'a> AstLower<'a> {
                     extract_index.and_then(|index| {
                         self.lower_cast(pos, index, expr.target.form_type, expr.is_convert)
                     })
-                })
-                .collect();
+                }).collect();
 
             match converted_indices {
                 Ok(indices) => Ok(self.add_combine_op(indices)),
@@ -291,14 +316,17 @@ impl<'a> AstLower<'a> {
                 .collect()
         } else {
             // only one side is a tuple
-            let iter_count = left_items.len().max(right_items.len());
+            let iter_count = if left_items.len() == 1 {
+                right_items.len()
+            } else {
+                left_items.len()
+            };
             (0..iter_count)
                 .map(|index| {
                     let left_index = if index >= left_items.len() { 0 } else { index };
                     let right_index = if index >= right_items.len() { 0 } else { index };
                     self.add_num_math_op(pos, op, left_items[left_index], right_items[right_index])
-                })
-                .collect()
+                }).collect()
         }
     }
 
@@ -327,7 +355,8 @@ impl<'a> AstLower<'a> {
         pos: &ast::SourceRange,
         expr: &'a ast::PostfixExpression,
     ) -> LowerResult {
-        let vals = expr.left
+        let vals = expr
+            .left
             .data
             .assignments
             .iter()
@@ -355,7 +384,8 @@ impl<'a> AstLower<'a> {
         expr: &'a ast::UnaryExpression,
     ) -> LowerResult {
         let value = self.lower_expression(expr.expr.as_ref())?;
-        let results = self.get_expr_values(pos, value)?
+        let results = self
+            .get_expr_values(pos, value)?
             .iter()
             .map(|value| self.add_num_unary_op(pos, expr.operation, *value))
             .collect::<CompileResult<Vec<_>>>()?;
@@ -363,7 +393,8 @@ impl<'a> AstLower<'a> {
     }
 
     fn lower_tuple_expr(&mut self, expr: &'a ast::TupleExpression) -> LowerResult {
-        let values: CompileResult<Vec<_>> = expr.expressions
+        let values: CompileResult<Vec<_>> = expr
+            .expressions
             .iter()
             .map(|expression| self.lower_expression(expression))
             .collect();
@@ -614,7 +645,8 @@ impl<'a> AstLower<'a> {
         // if all arguments are constant, we can try to constant-fold
         // todo: might be good to only actually try this if we know the function can be constant
         // folded
-        let const_args: Option<Vec<_>> = args.iter()
+        let const_args: Option<Vec<_>> = args
+            .iter()
             .map(|index| self.get_constant(*index).cloned())
             .collect();
         if let Some(const_args) = const_args {

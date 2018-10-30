@@ -38,8 +38,7 @@ fn note_from_frequency(
                     &[&builder.build_float_div(val, util::get_vec_spread(context, 440.), "")],
                     "",
                     false,
-                )
-                .left()
+                ).left()
                 .unwrap()
                 .into_vector_value(),
             "",

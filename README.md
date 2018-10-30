@@ -1,10 +1,10 @@
-# Axiom
+# Axiom [![Build Status](https://travis-ci.org/monadgroup/axiom.svg?branch=master)](https://travis-ci.org/monadgroup/axiom)
 
-![A basic sine-wave synth](axiom.png)
+![Picture of a synth built in Axiom](axiom.png)
 
 > A synth built in the current version of Axiom
 
-Axiom is a node-based realtime synthesizer, designed for size-constrained environments such as PC intros in the demoscene. It is currently developed by MONAD, but is entirely open source -- feel free to use and contribute!
+Axiom is an extremely flexible node-based realtime audio synthesizer. It was originally designed for size-constrained environments such as PC intros in the demoscene, but is entirely open source and is becoming an excellent free tool for any musician.
 
 Features:
 
@@ -13,23 +13,21 @@ Features:
  - Export to replayer with no dependencies (not even the standard library)
  - Use any DAW with VSTi support for note editing and automation
 
-There are currently pre-packaged versions available for Windows on [the Releases page](https://github.com/monadgroup/axiom/releases). Stay tuned for macOS and Linux builds!
+There are currently pre-packaged versions available for Windows and macOS (alpha, let us know of any issues) on [the Releases page](https://github.com/monadgroup/axiom/releases). Stay tuned for Linux builds!
+
+**[Usage Guide](https://github.com/monadgroup/axiom/wiki/Usage-Guide) · [Example Projects](https://github.com/monadgroup/axiom/tree/master/examples) · [Release Notes](https://github.com/monadgroup/axiom/wiki/0.4.0-Changelog)**
 
 ## Backends
 
 Axiom currently supports the following audio backends:
 
- - Standalone with PortAudio - doesn't require a DAW or host, allowing experimentation with the editor. MIDI input is not currently supported.
- - VST2 - runs in a VST host as an instrument, currently with one MIDI input and one audio output.
+ - Standalone with PortAudio - doesn't require a DAW or host, allowing experimentation with the editor. MIDI input can be entered with a regular computer keyboard (no actual MIDI support yet).
+ - VST2 - runs in a VST host as an instrument or effect, with support for side-chaining and multiple inputs/outputs.
  - _Other backends such as VST3 are planned_
-
-## Usage Guide
-
-*Coming soon! For now, see the [Readme](https://github.com/monadgroup/axiom/wiki/0.3.0-Readme) or check out the [example projects](https://github.com/monadgroup/axiom/tree/master/examples).*
 
 ## Building
 
-Axiom is built with CMake. The build process depends on Cargo, Qt 5.10, LLVM 5.0.1, and the VST 2 SDK (for the VST2 backend), so make sure those are installed and setup correctly.
+Axiom is built with CMake. The build process depends on Cargo, Qt 5.10 or 5.11, LLVM 6, and the VST 2 SDK (for the VST2 backend), so make sure those are installed and setup correctly.
 
 Once Cargo, Qt, LLVM, and the VST SDK are installed, go to the directory where you'd like to build Axiom to. Then run the following command:
 
@@ -45,10 +43,10 @@ cmake ../path/to/source -DAXIOM_STATIC_LINK=ON -DVST2_SDK_ROOT=/path/to/vst/sdk
 
 CMake will setup files necessary for building. If this fails, make sure you've got Cargo, Qt, LLVM, and the VST SDK installed correctly. Once complete, you can choose which backend to build:
 
-To build the VST2 backend, use the following command. You will need to specify a path to the VST2 SDK.
+To build the VST2 instrument backend, use the following command. You will need to specify a path to the VST2 SDK. You can also build the VST2 effect with the `axiom_vst2_effect` target.
 
 ```
-cmake --build ./ --target axiom_vst2
+cmake --build ./ --target axiom_vst2_instrument
 ```
 
 To build the standalone version as an executable, use the following command. In order to enable audio output in this version, the PortAudio library must be installed. You can still use the standalone editor without it, the graph just won't be simulated.

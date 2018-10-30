@@ -1,26 +1,37 @@
 #include "HistorySerializer.h"
 
+#include <iostream>
+
 #include "../../util.h"
 #include "../HistoryList.h"
+#include "../ModelRoot.h"
+#include "../PoolOperators.h"
 #include "../actions/Action.h"
+#include "../actions/AddGraphPointAction.h"
 #include "../actions/CompositeAction.h"
 #include "../actions/CreateConnectionAction.h"
 #include "../actions/CreateControlAction.h"
 #include "../actions/CreateCustomNodeAction.h"
 #include "../actions/CreateGroupNodeAction.h"
 #include "../actions/CreatePortalNodeAction.h"
+#include "../actions/DeleteGraphPointAction.h"
 #include "../actions/DeleteObjectAction.h"
 #include "../actions/ExposeControlAction.h"
 #include "../actions/GridItemMoveAction.h"
 #include "../actions/GridItemSizeAction.h"
+#include "../actions/MoveGraphPointAction.h"
 #include "../actions/PasteBufferAction.h"
 #include "../actions/RenameControlAction.h"
 #include "../actions/RenameNodeAction.h"
 #include "../actions/SetCodeAction.h"
+#include "../actions/SetGraphTagAction.h"
+#include "../actions/SetGraphTensionAction.h"
 #include "../actions/SetNumModeAction.h"
+#include "../actions/SetNumRangeAction.h"
 #include "../actions/SetNumValueAction.h"
 #include "../actions/SetShowNameAction.h"
 #include "../actions/UnexposeControlAction.h"
+#include "../objects/RootSurface.h"
 #include "ValueSerializer.h"
 
 using namespace AxiomModel;
@@ -36,8 +47,7 @@ void HistorySerializer::serialize(const AxiomModel::HistoryList &history, QDataS
     }
 }
 
-HistoryList HistorySerializer::deserialize(QDataStream &stream, uint32_t version, ModelRoot *root,
-                                           HistoryList::CompileApplyer applyer) {
+HistoryList HistorySerializer::deserialize(QDataStream &stream, uint32_t version, ModelRoot *root) {
     uint32_t stackPos;
     stream >> stackPos;
     uint32_t stackSize;
@@ -52,7 +62,7 @@ HistoryList HistorySerializer::deserialize(QDataStream &stream, uint32_t version
         stack.push_back(deserializeAction(actionStream, version, root));
     }
 
-    return HistoryList(stackPos, std::move(stack), std::move(applyer));
+    return HistoryList(stackPos, std::move(stack));
 }
 
 void HistorySerializer::serializeAction(AxiomModel::Action *action, QDataStream &stream) {
@@ -94,6 +104,18 @@ void HistorySerializer::serializeAction(AxiomModel::Action *action, QDataStream 
         serializePasteBufferAction(pasteBuffer, stream);
     else if (auto unexposeControl = dynamic_cast<UnexposeControlAction *>(action))
         serializeUnexposeControlAction(unexposeControl, stream);
+    else if (auto addGraphPoint = dynamic_cast<AddGraphPointAction *>(action))
+        serializeAddGraphPointAction(addGraphPoint, stream);
+    else if (auto deleteGraphPoint = dynamic_cast<DeleteGraphPointAction *>(action))
+        serializeDeleteGraphPointAction(deleteGraphPoint, stream);
+    else if (auto moveGraphPoint = dynamic_cast<MoveGraphPointAction *>(action))
+        serializeMoveGraphPointAction(moveGraphPoint, stream);
+    else if (auto setGraphTag = dynamic_cast<SetGraphTagAction *>(action))
+        serializeSetGraphTagAction(setGraphTag, stream);
+    else if (auto setGraphTension = dynamic_cast<SetGraphTensionAction *>(action))
+        serializeSetGraphTensionAction(setGraphTension, stream);
+    else if (auto setNumRange = dynamic_cast<SetNumRangeAction *>(action))
+        serializeSetNumRangeAction(setNumRange, stream);
     else
         unreachable;
 }
@@ -104,6 +126,8 @@ std::unique_ptr<Action> HistorySerializer::deserializeAction(QDataStream &stream
     stream >> actionTypeInt;
 
     switch ((Action::ActionType) actionTypeInt) {
+    case Action::ActionType::NONE:
+        unreachable;
     case Action::ActionType::COMPOSITE:
         return deserializeCompositeAction(stream, version, root);
     case Action::ActionType::DELETE_OBJECT:
@@ -140,9 +164,21 @@ std::unique_ptr<Action> HistorySerializer::deserializeAction(QDataStream &stream
         return deserializePasteBufferAction(stream, version, root);
     case Action::ActionType::UNEXPOSE_CONTROL:
         return deserializeUnexposeControlAction(stream, version, root);
-    default:
-        unreachable;
+    case Action::ActionType::ADD_GRAPH_POINT:
+        return deserializeAddGraphPointAction(stream, version, root);
+    case Action::ActionType::DELETE_GRAPH_POINT:
+        return deserializeDeleteGraphPointAction(stream, version, root);
+    case Action::ActionType::MOVE_GRAPH_POINT:
+        return deserializeMoveGraphPointAction(stream, version, root);
+    case Action::ActionType::SET_GRAPH_TAG:
+        return deserializeSetGraphTagAction(stream, version, root);
+    case Action::ActionType::SET_GRAPH_TENSION:
+        return deserializeSetGraphTensionAction(stream, version, root);
+    case Action::ActionType::SET_NUM_RANGE:
+        return deserializeSetNumRangeAction(stream, version, root);
     }
+
+    unreachable;
 }
 
 void HistorySerializer::serializeCompositeAction(AxiomModel::CompositeAction *action, QDataStream &stream) {
@@ -261,6 +297,7 @@ void HistorySerializer::serializeCreatePortalNodeAction(AxiomModel::CreatePortal
     stream << (uint8_t) action->wireType();
     stream << (uint8_t) action->portalType();
     stream << action->controlUuid();
+    stream << (quint64) action->portalId();
 }
 
 std::unique_ptr<CreatePortalNodeAction>
@@ -283,9 +320,20 @@ std::unique_ptr<CreatePortalNodeAction>
     QUuid controlUuid;
     stream >> controlUuid;
 
+    // unique portal IDs were added in 0.4.0, corresponding to schema version 5
+    quint64 nextPortalId;
+    if (version >= 5) {
+        stream >> nextPortalId;
+    } else {
+        nextPortalId =
+            (*takeAt(AxiomCommon::dynamicCast<RootSurface *>(findChildren(root->nodeSurfaces().sequence(), QUuid())),
+                     0))
+                ->takePortalId();
+    }
+
     return CreatePortalNodeAction::create(uuid, parentUuid, pos, std::move(name), controlsUuid,
                                           (ConnectionWire::WireType) wireTypeInt,
-                                          (PortalControl::PortalType) portalTypeInt, controlUuid, root);
+                                          (PortalControl::PortalType) portalTypeInt, nextPortalId, controlUuid, root);
 }
 
 void HistorySerializer::serializeCreateConnectionAction(AxiomModel::CreateConnectionAction *action,
@@ -427,6 +475,9 @@ void HistorySerializer::serializeCreateControlAction(AxiomModel::CreateControlAc
     stream << action->parentUuid();
     stream << (uint8_t) action->type();
     stream << action->name();
+    stream << action->pos();
+    stream << action->size();
+    stream << action->isWrittenTo();
 }
 
 std::unique_ptr<CreateControlAction> HistorySerializer::deserializeCreateControlAction(QDataStream &stream,
@@ -441,7 +492,29 @@ std::unique_ptr<CreateControlAction> HistorySerializer::deserializeCreateControl
     QString name;
     stream >> name;
 
-    return CreateControlAction::create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), root);
+    QPoint pos;
+    QSize size;
+
+    // Position/size was added in 0.4.0 (schema version 5) for the enhanced control placement feature. The previous
+    // default was simply to place controls at (0, 0) with a size of (2, 2)
+    if (version >= 5) {
+        stream >> pos;
+        stream >> size;
+    } else {
+        pos = QPoint(0, 0);
+        size = QSize(2, 2);
+    }
+
+    // Control written to state was added in 0.4.0 (schema version 5). The previous default was false
+    bool isWrittenTo;
+    if (version >= 5) {
+        stream >> isWrittenTo;
+    } else {
+        isWrittenTo = false;
+    }
+
+    return CreateControlAction::create(uuid, parentUuid, (Control::ControlType) typeInt, std::move(name), pos, size,
+                                       isWrittenTo, root);
 }
 
 void HistorySerializer::serializeSetNumModeAction(AxiomModel::SetNumModeAction *action, QDataStream &stream) {
@@ -502,6 +575,8 @@ std::unique_ptr<SetShowNameAction> HistorySerializer::deserializeSetShowNameActi
 void HistorySerializer::serializeExposeControlAction(AxiomModel::ExposeControlAction *action, QDataStream &stream) {
     stream << action->controlUuid();
     stream << action->exposeUuid();
+    stream << action->pos();
+    stream << action->size();
 }
 
 std::unique_ptr<ExposeControlAction> HistorySerializer::deserializeExposeControlAction(QDataStream &stream,
@@ -511,8 +586,12 @@ std::unique_ptr<ExposeControlAction> HistorySerializer::deserializeExposeControl
     stream >> controlUuid;
     QUuid exposeUuid;
     stream >> exposeUuid;
+    QPoint pos;
+    stream >> pos;
+    QSize size;
+    stream >> size;
 
-    return ExposeControlAction::create(controlUuid, exposeUuid, root);
+    return ExposeControlAction::create(controlUuid, exposeUuid, pos, size, root);
 }
 
 void HistorySerializer::serializePasteBufferAction(AxiomModel::PasteBufferAction *action, QDataStream &stream) {
@@ -554,4 +633,158 @@ std::unique_ptr<UnexposeControlAction>
 
     auto deleteObjectAction = deserializeDeleteObjectAction(stream, version, root);
     return UnexposeControlAction::create(controlUuid, std::move(deleteObjectAction), root);
+}
+
+void HistorySerializer::serializeAddGraphPointAction(AxiomModel::AddGraphPointAction *action, QDataStream &stream) {
+    stream << action->controlUuid();
+    stream << action->index();
+    stream << action->time();
+    stream << action->val();
+}
+
+std::unique_ptr<AddGraphPointAction> HistorySerializer::deserializeAddGraphPointAction(QDataStream &stream,
+                                                                                       uint32_t version,
+                                                                                       AxiomModel::ModelRoot *root) {
+    QUuid controlUuid;
+    stream >> controlUuid;
+    uint8_t index;
+    stream >> index;
+    float time;
+    stream >> time;
+    float val;
+    stream >> val;
+
+    return AddGraphPointAction::create(controlUuid, index, time, val, root);
+}
+
+void HistorySerializer::serializeDeleteGraphPointAction(AxiomModel::DeleteGraphPointAction *action,
+                                                        QDataStream &stream) {
+    stream << action->controlUuid();
+    stream << action->index();
+    stream << action->time();
+    stream << action->val();
+    stream << action->tension();
+    stream << action->state();
+}
+
+std::unique_ptr<DeleteGraphPointAction>
+    HistorySerializer::deserializeDeleteGraphPointAction(QDataStream &stream, uint32_t version,
+                                                         AxiomModel::ModelRoot *root) {
+    QUuid controlUuid;
+    stream >> controlUuid;
+    uint8_t index;
+    stream >> index;
+    float time;
+    stream >> time;
+    float val;
+    stream >> val;
+    float tension;
+    stream >> tension;
+    uint8_t state;
+    stream >> state;
+
+    return DeleteGraphPointAction::create(controlUuid, index, time, val, tension, state, root);
+}
+
+void HistorySerializer::serializeMoveGraphPointAction(AxiomModel::MoveGraphPointAction *action, QDataStream &stream) {
+    stream << action->controlUuid();
+    stream << action->index();
+    stream << action->oldTime();
+    stream << action->oldValue();
+    stream << action->newTime();
+    stream << action->newValue();
+}
+
+std::unique_ptr<MoveGraphPointAction> HistorySerializer::deserializeMoveGraphPointAction(QDataStream &stream,
+                                                                                         uint32_t version,
+                                                                                         AxiomModel::ModelRoot *root) {
+    QUuid controlUuid;
+    stream >> controlUuid;
+    uint8_t index;
+    stream >> index;
+    float oldTime;
+    stream >> oldTime;
+    float oldValue;
+    stream >> oldValue;
+    float newTime;
+    stream >> newTime;
+    float newValue;
+    stream >> newValue;
+
+    return MoveGraphPointAction::create(controlUuid, index, oldTime, oldValue, newTime, newValue, root);
+}
+
+void HistorySerializer::serializeSetGraphTagAction(AxiomModel::SetGraphTagAction *action, QDataStream &stream) {
+    stream << action->controlUuid();
+    stream << action->index();
+    stream << action->oldTag();
+    stream << action->newTag();
+}
+
+std::unique_ptr<SetGraphTagAction> HistorySerializer::deserializeSetGraphTagAction(QDataStream &stream,
+                                                                                   uint32_t version,
+                                                                                   AxiomModel::ModelRoot *root) {
+    QUuid controlUuid;
+    stream >> controlUuid;
+    uint8_t index;
+    stream >> index;
+    uint8_t oldTag;
+    stream >> oldTag;
+    uint8_t newTag;
+    stream >> newTag;
+
+    return SetGraphTagAction::create(controlUuid, index, oldTag, newTag, root);
+}
+
+void HistorySerializer::serializeSetGraphTensionAction(AxiomModel::SetGraphTensionAction *action, QDataStream &stream) {
+    stream << action->controlUuid();
+    stream << action->index();
+    stream << action->oldTension();
+    stream << action->newTension();
+}
+
+std::unique_ptr<SetGraphTensionAction>
+    HistorySerializer::deserializeSetGraphTensionAction(QDataStream &stream, uint32_t version,
+                                                        AxiomModel::ModelRoot *root) {
+    QUuid controlUuid;
+    stream >> controlUuid;
+    uint8_t index;
+    stream >> index;
+    float oldTension;
+    stream >> oldTension;
+    float newTension;
+    stream >> newTension;
+
+    return SetGraphTensionAction::create(controlUuid, index, oldTension, newTension, root);
+}
+
+void HistorySerializer::serializeSetNumRangeAction(AxiomModel::SetNumRangeAction *action, QDataStream &stream) {
+    stream << action->uuid();
+    stream << action->beforeMin();
+    stream << action->beforeMax();
+    stream << action->beforeStep();
+    stream << action->afterMin();
+    stream << action->afterMax();
+    stream << action->afterStep();
+}
+
+std::unique_ptr<SetNumRangeAction> HistorySerializer::deserializeSetNumRangeAction(QDataStream &stream,
+                                                                                   uint32_t version,
+                                                                                   AxiomModel::ModelRoot *root) {
+    QUuid uuid;
+    stream >> uuid;
+    float beforeMin;
+    stream >> beforeMin;
+    float beforeMax;
+    stream >> beforeMax;
+    uint32_t beforeStep;
+    stream >> beforeStep;
+    float afterMin;
+    stream >> afterMin;
+    float afterMax;
+    stream >> afterMax;
+    uint32_t afterStep;
+    stream >> afterStep;
+
+    return SetNumRangeAction::create(uuid, beforeMin, beforeMax, beforeStep, afterMin, afterMax, afterStep, root);
 }

@@ -4,7 +4,8 @@
 #include <QtWidgets/QGraphicsPathItem>
 #include <deque>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
+#include "editor/model/WireGrid.h"
 
 namespace AxiomModel {
     class ConnectionWire;
@@ -12,22 +13,24 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class WireItem : public QObject, public QGraphicsPathItem, public AxiomCommon::Hookable {
-    Q_OBJECT
+    class WireItem : public QObject, public QGraphicsPathItem, public AxiomCommon::TrackedObject {
+        Q_OBJECT
 
     public:
         AxiomModel::ConnectionWire *wire;
 
-        explicit WireItem(QObject *parent, AxiomModel::ConnectionWire *wire);
+        WireItem(QObject *parent, AxiomModel::ConnectionWire *wire);
+
+        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
     private slots:
 
-        void updateRoute(const std::deque<QPoint> &route);
+        void triggerUpdate();
+
+        void updateRoute(const std::deque<QPoint> &route, const std::vector<AxiomModel::LineIndex> &lineIndices);
 
         void setIsActive(bool active);
 
         void remove();
-
     };
-
 }

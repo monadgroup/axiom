@@ -29,7 +29,7 @@ std::unique_ptr<PasteBufferAction> PasteBufferAction::create(const QUuid &surfac
     return create(surfaceUuid, false, std::move(buffer), QVector<QUuid>(), center, root);
 }
 
-void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
+void PasteBufferAction::forward(bool) {
     assert(!_buffer.isEmpty());
     assert(_usedUuids.isEmpty());
 
@@ -38,19 +38,19 @@ void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
     stream >> objectCenter;
 
     // deselect all nodes so we can just select the new ones
-    find(root()->nodeSurfaces(), _surfaceUuid)->grid().deselectAll();
+    find(root()->nodeSurfaces().sequence(), _surfaceUuid)->grid().deselectAll();
 
     std::vector<ModelObject *> used;
     if (_isBufferFormatted) {
         IdentityReferenceMapper ref;
         used = ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), _surfaceUuid,
-                                                       &ref);
+                                                       &ref, false);
     } else {
         CloneReferenceMapper ref;
         ref.setUuid(_surfaceUuid, _surfaceUuid);
         ref.setPos(_surfaceUuid, _center - objectCenter);
         used = ModelObjectSerializer::deserializeChunk(stream, ProjectSerializer::schemaVersion, root(), _surfaceUuid,
-                                                       &ref);
+                                                       &ref, false);
     }
 
     _isBufferFormatted = true;
@@ -62,14 +62,9 @@ void PasteBufferAction::forward(bool, std::vector<QUuid> &compileItems) {
         }
         _usedUuids.push_back(obj->uuid());
     }
-
-    for (const auto &obj : used) {
-        compileItems.push_back(obj->uuid());
-        compileItems.push_back(obj->parentUuid());
-    }
 }
 
-void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
+void PasteBufferAction::backward() {
     assert(_buffer.isEmpty());
     assert(!_usedUuids.isEmpty());
 
@@ -79,7 +74,7 @@ void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
         usedSet.insert(uuid);
     }
 
-    auto objs = findAll(dynamicCast<ModelObject *>(root()->pool().sequence()), usedSet);
+    auto objs = findAll(AxiomCommon::dynamicCast<ModelObject *>(root()->pool().sequence().sequence()), usedSet);
     auto collected = collect(objs);
 
     QSet<QUuid> parentIds;
@@ -95,9 +90,5 @@ void PasteBufferAction::backward(std::vector<QUuid> &compileItems) {
 
     while (!objs.empty()) {
         (*objs.begin())->remove();
-    }
-
-    for (const auto &id : parentIds) {
-        compileItems.push_back(id);
     }
 }

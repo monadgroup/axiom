@@ -12,7 +12,8 @@ pub fn gen_num_cast_statement(
     let new_num = NumValue::new_copy(node.ctx.module, node.ctx.allocb, node.ctx.b, &base_num);
     new_num.set_form(
         node.ctx.b,
-        &node.ctx
+        &node
+            .ctx
             .context
             .i8_type()
             .const_int(*target_form as u64, false),

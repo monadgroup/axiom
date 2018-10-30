@@ -16,7 +16,7 @@ void TogglePainter::paint(QPainter *painter, const QRectF &boundingRect, float h
     auto baseColor = QColor(45, 45, 45);
     auto activeColor = QColor(60, 60, 60);
 
-    auto brightness = (cv.left + cv.right) / 2;
+    auto brightness = (fabsf(cv.left) + fabsf(cv.right)) / 2;
 
     // draw background
     /*if (!control->sink()->connections().empty()) {
@@ -40,8 +40,7 @@ void TogglePainter::paint(QPainter *painter, const QRectF &boundingRect, float h
     auto glowRadius = lightRadius * 2;
     QRadialGradient gradient(lightPos, glowRadius);
     gradient.setColorAt(0, activeAlpha);
-    gradient.setColorAt(1, QColor(activeAlpha.red(), activeAlpha.green(),
-                                  activeAlpha.blue(), 0));
+    gradient.setColorAt(1, QColor(activeAlpha.red(), activeAlpha.green(), activeAlpha.blue(), 0));
     painter->setBrush(gradient);
     painter->drawEllipse(lightPos, glowRadius, glowRadius);
 

@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QGraphicsScene>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
     class NodeSurface;
@@ -12,18 +12,17 @@ namespace AxiomModel {
     class ConnectionWire;
 }
 
+namespace MaximCompiler {
+    class Runtime;
+}
+
 namespace AxiomGui {
 
-    class ModulePreviewCanvas : public QGraphicsScene, public AxiomCommon::Hookable {
-    Q_OBJECT
+    class ModulePreviewCanvas : public QGraphicsScene, public AxiomCommon::TrackedObject {
+        Q_OBJECT
 
     public:
-
-        explicit ModulePreviewCanvas(AxiomModel::NodeSurface *surface);
-
-    signals:
-
-        void contentChanged();
+        ModulePreviewCanvas(AxiomModel::NodeSurface *surface, MaximCompiler::Runtime *runtime);
 
     private slots:
 
@@ -31,6 +30,7 @@ namespace AxiomGui {
 
         void addWire(AxiomModel::ConnectionWire *wire);
 
+    private:
+        MaximCompiler::Runtime *runtime;
     };
-
 }

@@ -19,6 +19,7 @@ pub fn gen_store_control_statement(
         *field,
         ptrs.value,
         ptrs.data,
+        ptrs.shared,
         store_val,
     );
 

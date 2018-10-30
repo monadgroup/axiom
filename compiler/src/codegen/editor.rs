@@ -55,7 +55,8 @@ pub fn build_convert_num_func(module: &Module, target: &TargetProperties, name: 
         // build a switch based on the target form
         let mut switch_cases = Vec::new();
         for &form_type in FORM_TYPES.iter() {
-            let form_block = ctx.context
+            let form_block = ctx
+                .context
                 .append_basic_block(&ctx.func, &format!("form.{}", form_type));
             case_builder.position_at_end(&form_block);
 

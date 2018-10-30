@@ -23,25 +23,32 @@
 #include "editor/model/objects/ControlSurface.h"
 #include "editor/model/objects/CustomNode.h"
 #include "editor/model/objects/ExtractControl.h"
+#include "editor/model/objects/GraphControl.h"
 #include "editor/model/objects/GroupNode.h"
 #include "editor/model/objects/MidiControl.h"
+#include "editor/model/objects/ModuleSurface.h"
 #include "editor/model/objects/Node.h"
 #include "editor/model/objects/NumControl.h"
 #include "editor/model/objects/PortalControl.h"
+#include "editor/model/objects/PortalNode.h"
 #include "editor/model/objects/RootSurface.h"
-#include "editor/model/objects/ScopeControl.h"
 #include "editor/model/serialize/ModelObjectSerializer.h"
 #include "editor/model/serialize/ProjectSerializer.h"
 #include "editor/widgets/controls/ExtractControlItem.h"
+#include "editor/widgets/controls/GraphControlItem.h"
 #include "editor/widgets/controls/MidiControlItem.h"
 #include "editor/widgets/controls/NumControlItem.h"
 #include "editor/widgets/controls/PortalControlItem.h"
-#include "editor/widgets/controls/ScopeControlItem.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
 
-NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node(node) {
+const qreal CONTROL_ZVALUE = 1;
+const qreal EDGE_RESIZE_ZVALUE = 2;
+const qreal CORNER_RESIZE_ZVALUE = 3;
+
+NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime)
+    : canvas(canvas), runtime(runtime), node(node) {
     node->nameChanged.connect(this, &NodeItem::triggerUpdate);
     node->extractedChanged.connect(this, &NodeItem::triggerUpdate);
     node->posChanged.connect(this, &NodeItem::setPos);
@@ -49,9 +56,11 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
     node->sizeChanged.connect(this, &NodeItem::setSize);
     node->selectedChanged.connect(this, &NodeItem::setIsSelected);
     node->deselected.connect(this, &NodeItem::triggerUpdate);
+    node->inErrorStateChanged.connect(this, &NodeItem::triggerUpdate);
     node->removed.connect(this, &NodeItem::remove);
 
     node->controls().then([this](ControlSurface *surface) {
+        surface->controlsOnTopRowChanged.connect(this, &NodeItem::triggerUpdate);
         surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
     });
 
@@ -61,10 +70,12 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
             ItemResizer::TOP,       ItemResizer::RIGHT,    ItemResizer::BOTTOM,       ItemResizer::LEFT,
             ItemResizer::TOP_RIGHT, ItemResizer::TOP_LEFT, ItemResizer::BOTTOM_RIGHT, ItemResizer::BOTTOM_LEFT};
         for (auto i = 0; i < 8; i++) {
-            auto resizer = new ItemResizer(directions[i], NodeSurfaceCanvas::nodeGridSize);
+            auto resizer = new ItemResizer(directions[i],
+                                           QSize(NodeSurfaceCanvas::nodeGridSize.width() * node->minSize().width(),
+                                                 NodeSurfaceCanvas::nodeGridSize.height() * node->minSize().height()));
 
             // ensure corners are on top of edges
-            resizer->setZValue(i > 3 ? 2 : 1);
+            resizer->setZValue(i > 3 ? CORNER_RESIZE_ZVALUE : EDGE_RESIZE_ZVALUE);
 
             connect(this, &NodeItem::resizerPosChanged, resizer, &ItemResizer::setPos);
             connect(this, &NodeItem::resizerSizeChanged, resizer, &ItemResizer::setSize);
@@ -73,10 +84,10 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
             connect(resizer, &ItemResizer::changed, this, &NodeItem::resizerChanged);
             connect(resizer, &ItemResizer::endDrag, this, &NodeItem::resizerEndDrag);
 
-            node->controls().then([resizer](ControlSurface *surface) {
+            node->controls().then([this, resizer](ControlSurface *surface) {
                 resizer->setVisible(!surface->grid().hasSelection());
                 surface->grid().hasSelectionChanged.connect(
-                    [resizer](bool hasSelection) { resizer->setVisible(!hasSelection); });
+                    this, [resizer](bool hasSelection) { resizer->setVisible(!hasSelection); });
             });
 
             resizer->setParentItem(this);
@@ -96,11 +107,11 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas) : canvas(canvas), node
 
     // create items for all controls that already exist
     node->controls().then([this](ControlSurface *surface) {
-        for (const auto &control : surface->controls()) {
+        for (const auto &control : surface->controls().sequence()) {
             addControl(control);
         }
 
-        surface->controls().itemAdded.connect(this, &NodeItem::addControl);
+        surface->controls().events().itemAdded().connect(this, &NodeItem::addControl);
         surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
     });
 }
@@ -122,14 +133,19 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     case Node::NodeType::PORTAL_NODE:
     case Node::NodeType::CUSTOM_NODE:
         darkColor = CommonColors::customNodeNormal;
-        lightColor = CommonColors::customNodeActive;
+        lightColor = CommonColors::customNodeSelected;
         outlineColor = CommonColors::customNodeBorder;
         break;
     case Node::NodeType::GROUP_NODE:
         darkColor = CommonColors::groupNodeNormal;
-        lightColor = CommonColors::groupNodeActive;
+        lightColor = CommonColors::groupNodeSelected;
         outlineColor = CommonColors::groupNodeBorder;
         break;
+    }
+
+    if (node->isInErrorState()) {
+        darkColor = CommonColors::errorNodeNormal;
+        outlineColor = CommonColors::errorNodeBorder;
     }
 
     painter->setPen(QPen(outlineColor, node->isExtracted() ? 3 : 1));
@@ -152,10 +168,22 @@ void NodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         }
     }
 
-    painter->setPen(QPen(QColor(100, 100, 100)));
-    auto br = boundingRect();
-    auto textBound = QRectF(br.topLeft(), QSizeF(br.width(), textOffset));
-    painter->drawText(textBound, Qt::AlignLeft | Qt::AlignTop, node->name());
+    if ((*node->controls().value())->controlsOnTopRow()) {
+        painter->setPen(QPen(QColor(100, 100, 100)));
+        auto br = boundingRect();
+        auto textBound = QRectF(br.topLeft(), QSizeF(br.width(), textOffset));
+        painter->drawText(textBound, Qt::AlignLeft | Qt::AlignTop, node->name());
+    } else {
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(node->isSelected() ? outlineColor : lightColor);
+        auto headerBr = drawBoundingRect();
+        headerBr.setHeight(NodeSurfaceCanvas::controlGridSize.height());
+        headerBr.setTopLeft(headerBr.topLeft() + QPointF(1, 1));
+        painter->drawRect(headerBr);
+        painter->setPen(QColor(200, 200, 200));
+        headerBr.setLeft(headerBr.left() + 8);
+        painter->drawText(headerBr, Qt::AlignLeft | Qt::AlignVCenter, node->name());
+    }
 }
 
 QPainterPath NodeItem::shape() const {
@@ -170,10 +198,9 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         if (!node->isSelected()) node->select(!(event->modifiers() & Qt::ShiftModifier));
 
-        // todo: clean up how drag works
         isDragging = true;
-        mouseStartPoint = event->screenPos();
-        node->startedDragging.trigger();
+        mouseStartPoint = event->scenePos();
+        node->startedDragging();
     }
 
     event->accept();
@@ -182,9 +209,9 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
 
-    auto mouseDelta = event->screenPos() - mouseStartPoint;
-    node->draggedTo.trigger(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
-                                   qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())));
+    auto mouseDelta = event->scenePos() - mouseStartPoint;
+    node->draggedTo(QPoint(qRound((float) mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width()),
+                           qRound((float) mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height())));
 
     event->accept();
 }
@@ -192,10 +219,10 @@ void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (!isDragging) return;
     isDragging = false;
-    node->finishedDragging.trigger();
+    node->finishedDragging();
 
     std::vector<std::unique_ptr<Action>> dragEvents;
-    auto selectedNodes = staticCast<Node *>(node->parentSurface->selectedItems().sequence());
+    auto selectedNodes = AxiomCommon::staticCast<Node *>(node->parentSurface->selectedItems().sequence());
     for (const auto &selectedNode : selectedNodes) {
         auto beforePos = selectedNode->dragStartPos();
         auto afterPos = selectedNode->pos();
@@ -215,7 +242,7 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 void NodeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     if (auto groupNode = dynamic_cast<GroupNode *>(node); groupNode && groupNode->nodes().value()) {
         event->accept();
-        canvas->panel->window->showSurface(canvas->panel, *groupNode->nodes().value(), false);
+        canvas->panel->window->showSurface(canvas->panel, *groupNode->nodes().value(), true, false);
     } else if (auto customNode = dynamic_cast<CustomNode *>(node)) {
         event->accept();
         customNode->setPanelOpen(!customNode->isPanelOpen());
@@ -228,19 +255,33 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 
     auto copyableItems =
-        AxiomModel::filter(AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()),
-                           [](Node *const &node) { return node->isCopyable(); });
+        AxiomCommon::filter(AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()),
+                            [](Node *const &node) { return node->isCopyable(); });
 
     QMenu menu;
 
     auto renameAction = menu.addAction(tr("&Rename..."));
-    renameAction->setVisible(node->parentSurface->selectedItems().size() == 1);
+    renameAction->setVisible(node->parentSurface->selectedItems().sequence().size() == 1);
     menu.addSeparator();
     auto groupAction = menu.addAction(tr("&Group..."));
     groupAction->setEnabled(!copyableItems.empty());
     auto saveModuleAction = menu.addAction(tr("&Save as Module..."));
     saveModuleAction->setEnabled(!copyableItems.empty());
     menu.addSeparator();
+
+    QAction *fiddleAction = nullptr;
+    auto rootSurface = dynamic_cast<RootSurface *>(node->surface());
+    auto mainWindow = canvas->panel->window;
+    PortalControl *portalControl = nullptr;
+    if (auto portalNode = dynamic_cast<PortalNode *>(node); portalNode && rootSurface && rootSurface->compileMeta() &&
+                                                            mainWindow->project()->backend()->canFiddleAutomation()) {
+        portalControl = *AxiomCommon::takeAt(
+            AxiomCommon::dynamicCast<PortalControl *>((*portalNode->controls().value())->controls().sequence()), 0);
+        if (portalControl->portalType() == PortalControl::PortalType::AUTOMATION) {
+            fiddleAction = menu.addAction(tr("&Fiddle"));
+            menu.addSeparator();
+        }
+    }
 
     auto deleteAction = menu.addAction(tr("&Delete"));
     deleteAction->setEnabled(node->isDeletable());
@@ -254,15 +295,20 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             node->root()->history().append(RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
         });
     } else if (selectedAction == saveModuleAction) {
-        ModulePropertiesWindow saveWindow(&node->root()->project()->library());
+        ModulePropertiesWindow saveWindow(mainWindow->library());
+
+        // if there's only one node selected, use the node name as the default module name
+        if (node->surface()->grid().selectedItems().sequence().size() == 1) {
+            saveWindow.setEnteredName(node->name());
+        }
+
         if (saveWindow.exec() == QDialog::Accepted) {
             auto enteredName = saveWindow.enteredName();
             auto enteredTags = saveWindow.enteredTags();
 
             auto newEntry =
-                LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()),
-                                     node->root()->project());
-            auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems());
+                LibraryEntry::create(std::move(enteredName), std::set<QString>(enteredTags.begin(), enteredTags.end()));
+            auto centerPos = AxiomModel::GridSurface::findCenter(node->surface()->grid().selectedItems().sequence());
             QByteArray serializeArray;
             QDataStream serializeStream(&serializeArray, QIODevice::WriteOnly);
             ModelObjectSerializer::serializeChunk(serializeStream, node->surface()->uuid(),
@@ -273,12 +319,24 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             ref.setUuid(newEntry->rootSurface()->uuid(), newEntry->rootSurface()->uuid());
             ref.setPos(newEntry->rootSurface()->uuid(), -centerPos);
             ModelObjectSerializer::deserializeChunk(deserializeStream, ProjectSerializer::schemaVersion,
-                                                    newEntry->root(), newEntry->rootSurface()->uuid(), &ref);
+                                                    newEntry->root(), newEntry->rootSurface()->uuid(), &ref, false);
 
-            node->root()->project()->library().addEntry(std::move(newEntry));
+            // deselect all root nodes in the new entry
+            auto entryRoot = newEntry->rootSurface();
+            auto entryRootNodes = entryRoot->nodes().sequence();
+            for (const auto &node : entryRootNodes) {
+                node->deselect();
+            }
+
+            mainWindow->library()->addEntry(std::move(newEntry));
         }
     } else if (selectedAction == deleteAction) {
         node->root()->history().append(DeleteObjectAction::create(node->uuid(), node->root()));
+    } else if (selectedAction == fiddleAction && portalControl) {
+        auto backend = mainWindow->project()->backend();
+        auto remappedIndex = backend->internalRemapPortal(portalControl->portalId());
+        auto currentPortalValue = **backend->getAudioPortal(remappedIndex);
+        backend->automationValueChanged(remappedIndex, currentPortalValue);
     }
 }
 
@@ -296,19 +354,19 @@ void NodeItem::addControl(Control *control) {
     ControlItem *item = nullptr;
 
     if (auto numControl = dynamic_cast<NumControl *>(control)) {
-        item = new NumControlItem(numControl, canvas);
+        item = new NumControlItem(numControl, canvas, runtime);
     } else if (auto midiControl = dynamic_cast<MidiControl *>(control)) {
         item = new MidiControlItem(midiControl, canvas);
     } else if (auto extractControl = dynamic_cast<ExtractControl *>(control)) {
         item = new ExtractControlItem(extractControl, canvas);
     } else if (auto outputControl = dynamic_cast<PortalControl *>(control)) {
         item = new PortalControlItem(outputControl, canvas);
-    } else if (auto scopeControl = dynamic_cast<ScopeControl *>(control)) {
-        item = new ScopeControlItem(scopeControl, canvas);
+    } else if (auto graphControl = dynamic_cast<GraphControl *>(control)) {
+        item = new GraphControlItem(graphControl, canvas);
     }
 
     assert(item);
-    item->setZValue(2);
+    item->setZValue(CONTROL_ZVALUE);
     item->setParentItem(this);
 }
 

@@ -1,4 +1,5 @@
 #include "PortalControl.h"
+
 #include "../../util.h"
 
 using namespace AxiomModel;
@@ -16,17 +17,35 @@ static Control::ControlType typeFromWireType(ConnectionWire::WireType wireType) 
 PortalControl::PortalControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
                              QString name, bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
                              AxiomModel::ConnectionWire::WireType wireType,
-                             AxiomModel::PortalControl::PortalType portalType, AxiomModel::ModelRoot *root)
-    : Control(typeFromWireType(wireType), wireType, uuid, parentUuid, pos, size, selected, std::move(name), showName,
-              exposerUuid, exposingUuid, root),
-      _portalType(portalType) {}
+                             AxiomModel::PortalControl::PortalType portalType, uint64_t portalId,
+                             AxiomModel::ModelRoot *root)
+    : Control(typeFromWireType(wireType), wireType, QSize(1, 1), uuid, parentUuid, pos, size, selected, std::move(name),
+              showName, exposerUuid, exposingUuid, root),
+      _portalType(portalType), _portalId(portalId) {}
 
 std::unique_ptr<PortalControl> PortalControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                      bool selected, QString name, bool showName,
                                                      const QUuid &exposerUuid, const QUuid &exposingUuid,
                                                      AxiomModel::ConnectionWire::WireType wireType,
                                                      AxiomModel::PortalControl::PortalType portalType,
-                                                     AxiomModel::ModelRoot *root) {
+                                                     uint64_t portalId, AxiomModel::ModelRoot *root) {
     return std::make_unique<PortalControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName,
-                                           exposerUuid, exposingUuid, wireType, portalType, root);
+                                           exposerUuid, exposingUuid, wireType, portalType, portalId, root);
+}
+
+QString PortalControl::debugName() {
+    return "PortalControl '" + name() + "'";
+}
+
+void PortalControl::restoreState() {
+    _needsLabelUpdate = true;
+    labelWillChange();
+}
+
+void PortalControl::setPortalLabel(QString portalLabel) {
+    _needsLabelUpdate = false;
+    if (portalLabel != _portalLabel) {
+        _portalLabel = portalLabel;
+        labelChanged(portalLabel);
+    }
 }

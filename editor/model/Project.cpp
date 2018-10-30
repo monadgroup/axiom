@@ -1,7 +1,7 @@
 #include "Project.h"
 
+#include "../backend/AudioBackend.h"
 #include "../backend/AudioConfiguration.h"
-#include "Library.h"
 #include "ModelRoot.h"
 #include "PoolOperators.h"
 #include "actions/CreatePortalNodeAction.h"
@@ -10,12 +10,14 @@
 
 using namespace AxiomModel;
 
-Project::Project(const AxiomBackend::AudioConfiguration &defaultConfiguration)
-    : _mainRoot(std::make_unique<ModelRoot>(this)), _library(std::make_unique<Library>()) {
+Project::Project(const AxiomBackend::DefaultConfiguration &defaultConfiguration)
+    : _mainRoot(std::make_unique<ModelRoot>()) {
+    addRootListeners();
+
     // setup default project
     //  1. create default surface
     auto rootId = QUuid::createUuid();
-    auto rootSurface = std::make_unique<RootSurface>(rootId, QPointF(0, 0), 0, &mainRoot());
+    auto rootSurface = std::make_unique<RootSurface>(rootId, QPointF(0, 0), 0, 0, &mainRoot());
     _rootSurface = rootSurface.get();
     mainRoot().pool().registerObj(std::move(rootSurface));
 
@@ -53,38 +55,63 @@ Project::Project(const AxiomBackend::AudioConfiguration &defaultConfiguration)
             break;
         }
 
-        std::vector<QUuid> dummyItems;
         switch (portal.type) {
         case AxiomBackend::PortalType::INPUT:
             CreatePortalNodeAction::create(rootId, QPoint(-3, inputOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::INPUT, &mainRoot())
-                ->forward(true, dummyItems);
+                ->forward(true);
             inputOffset += portalSpacing;
             break;
         case AxiomBackend::PortalType::OUTPUT:
             CreatePortalNodeAction::create(rootId, QPoint(3, outputOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::OUTPUT, &mainRoot())
-                ->forward(true, dummyItems);
+                ->forward(true);
             outputOffset += portalSpacing;
             break;
         case AxiomBackend::PortalType::AUTOMATION:
             CreatePortalNodeAction::create(rootId, QPoint(0, automationOffset), QString::fromStdString(portal.name),
                                            wireType, PortalControl::PortalType::AUTOMATION, &mainRoot())
-                ->forward(true, dummyItems);
+                ->forward(true);
             automationOffset += portalSpacing;
             break;
         }
     }
 }
 
-Project::Project() = default;
-
-void Project::init(std::unique_ptr<AxiomModel::ModelRoot> mainRoot, std::unique_ptr<AxiomModel::Library> library) {
-    _mainRoot = std::move(mainRoot);
-    _library = std::move(library);
-    _rootSurface = _mainRoot->rootSurface();
+Project::Project(QString linkedFile, std::unique_ptr<AxiomModel::ModelRoot> mainRoot)
+    : _mainRoot(std::move(mainRoot)), _linkedFile(std::move(linkedFile)), _rootSurface(_mainRoot->rootSurface()) {
+    addRootListeners();
 }
 
 Project::~Project() {
     _mainRoot->destroy();
+}
+
+void Project::setLinkedFile(QString linkedFile) {
+    if (linkedFile != _linkedFile) {
+        _linkedFile = std::move(linkedFile);
+        linkedFileChanged(_linkedFile);
+    }
+}
+
+void Project::setIsDirty(bool isDirty) {
+    if (isDirty != _isDirty) {
+        _isDirty = isDirty;
+        isDirtyChanged(isDirty);
+    }
+}
+
+void Project::addRootListeners() {
+    _mainRoot->modified.connect(this, &Project::rootModified);
+    _mainRoot->configurationChanged.connect(this, &Project::rootConfigurationChanged);
+}
+
+void Project::rootModified() {
+    if (!linkedFile().isEmpty() || !backend()->doesSaveInternally()) {
+        setIsDirty(true);
+    }
+}
+
+void Project::rootConfigurationChanged() {
+    backend()->internalUpdateConfiguration();
 }

@@ -1,183 +1,93 @@
 #pragma once
 
-#include <cassert>
-#include <functional>
 #include <memory>
-#include <optional>
-#include <set>
-#include <tuple>
-#include <utility>
+#include <unordered_map>
 #include <vector>
 
-#include "SharedHookable.h"
+#include "SlotMap.h"
+#include "TrackedObject.h"
 
 namespace AxiomCommon {
 
     template<class... Args>
-    class Event : public SharedHookable {
+    class Event {
     public:
-        using func_type = std::function<void(Args...)>;
+        using FuncType = std::function<void(Args...)>;
+        using EventId = typename SlotMap<FuncType>::key;
 
     private:
-        struct SharedEvent;
+        struct EventRef {
+            Event *event;
 
-        using shared_event = std::shared_ptr<SharedEvent>;
+            explicit EventRef(Event *event) : event(event) {}
 
-        class SharedEvent : public Hookable, public HookNotifiable {
-        public:
-            std::optional<func_type> callback;
-            std::vector<shared_event> children;
-            std::weak_ptr<SharedEvent> parent;
-            std::set<HookContext *> following;
+            void operator()(const Args &... params) { (*event)(std::forward<const Args &>(params)...); }
+        };
 
-            SharedEvent() {}
+        struct EventData : public TrackedObject {
+            SlotMap<FuncType> connections;
 
-            ~SharedEvent() { removeHooks(); }
-
-            explicit SharedEvent(func_type callback) : callback(callback) {}
-
-            void trigger(const Args &... params) const {
-                if (callback) {
-                    (*callback)(params...);
-                }
-
-                for (const auto &child : children) {
-                    if (child) {
-                        child->trigger(params...);
-                    }
+            void dispatch(const Args &... params) {
+                for (const auto &connection : connections) {
+                    connection.value(params...);
                 }
             }
 
-            void disconnect(SharedEvent *other) {
-                for (auto i = children.begin(); i != children.end(); i++) {
-                    if (i->get() != other) continue;
+            void disconnect(EventId event) { connections.erase(event); }
 
-                    other->parent.reset();
-                    children.erase(i);
-                    return;
-                }
-                assert(false);
-            }
-
-            void follow(HookContext *hookable) {
-                hookable->addDestructHook(this);
-                following.emplace(hookable);
-            }
-
-            void unfollow(HookContext *hookable) {
-                hookable->removeDestructHook(this);
-                following.erase(hookable);
-            }
-
-            void hookableDestroyed(HookContext *context) override {
-                following.erase(context);
-                detach();
-            }
-
-            void detach() {
-                callback.reset();
-                children.clear();
-                removeHooks();
-                following.clear();
-
-                if (!parent.expired()) {
-                    parent.lock()->disconnect(this);
-                }
-            }
-
-            void removeHooks() {
-                for (const auto &follow : following) {
-                    follow->removeDestructHook(this);
-                }
-            }
+            void trackedObjectNotifyRemove(TrackedObject *, EventId eventId) override { disconnect(eventId); }
         };
 
     public:
-        Event() : impl(std::make_shared<SharedEvent>()) {}
+        Event() : data(std::make_unique<EventData>()) {}
 
-        explicit Event(func_type callback) : impl(std::make_shared<SharedEvent>(callback)) {}
+        void operator()(const Args &... params) { data->dispatch(params...); }
 
-        bool operator==(const Event &other) const { return impl == other.impl; }
+        // call the provided function when the event is triggered
+        EventId connect(FuncType listener) { return data->connections.insert(std::move(listener)); }
 
-        bool operator!=(const Event &other) const { return impl != other.impl; }
-
-        void trigger(const Args &... params) const { impl->trigger(params...); }
-
-        Event connect(Event listener) {
-            impl->children.push_back(listener.impl);
-            listener.impl->parent = impl;
-            return listener;
+        // call the provided function when the event is triggered, automatically disconnecting when the
+        // provided object is destructed
+        EventId connect(TrackedObject *obj, FuncType listener) {
+            auto eventId = connect(std::move(listener));
+            obj->trackedObjectListenForRemove(data.get(), eventId);
+            return eventId;
         }
 
-        Event connect(Event *other) {
-            auto evt = connect(
-                Event(std::function([other](Args &&... params) { other->trigger(std::forward<Args>(params)...); })));
-            evt.follow(other);
-            return evt;
-        }
-
-        Event connect(func_type listener) { return connect(Event(listener)); }
-
-        Event connect(AbstractHookable *follow, Event *listener) {
-            auto link = connect(listener);
-            link.follow(follow);
-            return link;
-        }
-
-        Event connect(AbstractHookable *follow, Event listener) {
-            auto link = connect(std::move(listener));
-            link.follow(follow);
-            return link;
-        }
-
-        Event connect(AbstractHookable *follow, func_type listener) { return connect(follow, Event(listener)); }
-
-        template<class TR, class... TA>
-        Event connect(AbstractHookable *follow, std::function<TR(TA...)> listener) {
-            return connect(follow, Event(std::function([listener](Args &&... params) {
-                               applyFunc<sizeof...(TA)>(listener, std::forward<Args>(params)...);
-                           })));
+        // call the provided method, automatically disconnecting when the base object is destructed
+        template<class TB, class TFB, class TR, class... TA>
+        EventId connect(TB *follow, TR (TFB::*listener)(TA...)) {
+            return connect(follow, [follow, listener](Args... params) {
+                auto wrapper = std::mem_fn(listener);
+                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+            });
         }
 
         template<class TB, class TFB, class TR, class... TA>
-        Event connect(TB *follow, TR (TFB::*listener)(TA...)) {
-            auto wrapper = std::mem_fn(listener);
-            return connect(follow, Event(std::function([follow, wrapper](Args &&... params) {
-                               applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-                           })));
+        EventId connect(TB *follow, TR (TFB::*listener)(TA...) const) {
+            return connect(follow, [follow, listener](Args... params) {
+                auto wrapper = std::mem_fn(listener);
+                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+            });
         }
 
-        template<class TB, class TFB, class TR, class... TA>
-        Event connect(TB *follow, TR (TFB::*listener)(TA...) const) {
-            auto wrapper = std::mem_fn(listener);
-            return connect(follow, Event(std::function([follow, wrapper](Args &&... params) {
-                               applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-                           })));
-        };
-
-        template<class TB, class TFB, class TR, class... TA>
-        Event forward(TB *object, TR (TFB::*listener)(TA...)) {
-            auto wrapper = std::mem_fn(listener);
-            return connect(Event(std::function([object, wrapper](Args &&... params) {
-                applyFunc<sizeof...(TA) + 1>(wrapper, object, std::forward<Args>(params)...);
-            })));
+        // trigger the provided event when this event is triggered
+        EventId forward(Event *event) {
+            // data is guaranteed to not move
+            auto dataPtr = event->data.get();
+            return connect(dataPtr, [dataPtr](Args... params) { dataPtr->dispatch(params...); });
         }
 
-        void disconnect(Event other) { impl->disconnect(other.impl.get()); }
+        void disconnect(EventId event) { data->disconnect(event); }
 
-        void follow(AbstractHookable *hookable) { impl->follow(hookable->getContext()); }
-
-        void unfollow(AbstractHookable *hookable) { impl->unfollow(hookable->getContext()); }
-
-        void detach() { impl->detach(); }
-
-        bool empty() const { return impl->children.empty(); }
-
-        size_t size() const { return impl->children.size(); }
+        void disconnectAll() { data->connections.clear(); }
 
     private:
-        shared_event impl;
+        std::unique_ptr<EventData> data;
 
+        // Utilities that allow us to call a function with more arguments than it needs
+        // e.g. calling void myFunc(int) as myFunc(5, "hello", 2.6);
+        // Useful for events, since often the event user doesn't care about some arguments.
         template<class Func, size_t... I, class... PassArgs>
         static void applyFuncIndexed(const Func &func, std::index_sequence<I...>, PassArgs &&... params) {
             func(std::get<I>(std::make_tuple(std::forward<PassArgs>(params)...))...);

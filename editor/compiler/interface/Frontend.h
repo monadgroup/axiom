@@ -41,6 +41,7 @@ namespace MaximFrontend {
     struct ControlPointers {
         void *value;
         void *data;
+        void *shared;
         void *ui;
     };
 
@@ -53,13 +54,17 @@ namespace MaximFrontend {
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
     void maxim_run_update(MaximRuntimeRef *runtime);
     void maxim_set_bpm(MaximRuntimeRef *runtime, float bpm);
+    float maxim_get_bpm(MaximRuntimeRef *runtime);
     void maxim_set_sample_rate(MaximRuntimeRef *runtime, float sample_rate);
+    float maxim_get_sample_rate(MaximRuntimeRef *runtime);
     bool maxim_is_node_extracted(MaximRuntimeRef *runtime, uint64_t surface, size_t node);
     void maxim_convert_num(MaximRuntimeRef *runtime, void *result, uint8_t targetForm, const void *input);
 
     void *maxim_get_portal_ptr(MaximRuntimeRef *runtime, size_t portal);
     void *maxim_get_root_ptr(MaximRuntimeRef *runtime);
     void *maxim_get_node_ptr(MaximRuntimeRef *runtime, uint64_t surface, void *surface_ptr, size_t node);
+    uint32_t *maxim_get_extracted_bitmask_ptr(MaximRuntimeRef *runtime, uint64_t surface, void *surface_ptr,
+                                              size_t node);
     void *maxim_get_surface_ptr(void *node_ptr);
     void *maxim_get_block_ptr(void *block_ptr);
     ControlPointers maxim_get_control_ptrs(MaximRuntimeRef *runtime, uint64_t block, void *block_ptr, size_t control);
@@ -118,5 +123,8 @@ namespace MaximFrontend {
     bool maxim_control_get_read(MaximBlockControlRef *control);
 
     void maxim_commit(MaximRuntimeRef *runtime, MaximTransaction *transaction);
+
+    size_t maxim_get_function_table_size();
+    const char *maxim_get_function_table_entry(size_t index);
     }
 }

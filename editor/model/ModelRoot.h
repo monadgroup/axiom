@@ -1,20 +1,15 @@
 #pragma once
 
-#include <QDataStream>
 #include <memory>
 #include <mutex>
 
 #include "HistoryList.h"
 #include "Pool.h"
-#include "WatchSequence.h"
+#include "common/WatchSequence.h"
 #include "editor/compiler/interface/Transaction.h"
 
 namespace MaximCompiler {
     class Runtime;
-}
-
-namespace AxiomBackend {
-    class AudioBackend;
 }
 
 namespace AxiomModel {
@@ -37,19 +32,23 @@ namespace AxiomModel {
 
     class RootSurface;
 
-    class ModelRoot {
+    class ModelRoot : public AxiomCommon::TrackedObject {
     public:
-        using NodeSurfaceCollection = WatchSequence<NodeSurface *>;
-        using NodeCollection = WatchSequence<Node *>;
-        using ControlSurfaceCollection = WatchSequence<ControlSurface *>;
-        using ControlCollection = WatchSequence<Control *>;
-        using ConnectionCollection = WatchSequence<Connection *>;
+        template<class CollectionType>
+        using ModelRootCollection = AxiomCommon::CastWatchSequence<CollectionType, Pool::Sequence>;
 
-        explicit ModelRoot(Project *project);
+        using NodeSurfaceCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<NodeSurface *>>;
+        using NodeCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<Node *>>;
+        using ControlSurfaceCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<ControlSurface *>>;
+        using ControlCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<Control *>>;
+        using ConnectionCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<Connection *>>;
 
-        Project *project() const { return _project; }
+        AxiomCommon::Event<> modified;
+        AxiomCommon::Event<> configurationChanged;
 
-        RootSurface *rootSurface() const;
+        ModelRoot();
+
+        RootSurface *rootSurface();
 
         Pool &pool() { return _pool; }
 
@@ -59,27 +58,15 @@ namespace AxiomModel {
 
         const HistoryList &history() const { return _history; }
 
-        NodeSurfaceCollection &nodeSurfaces() { return _nodeSurfaces; }
+        NodeSurfaceCollection nodeSurfaces() { return AxiomCommon::refWatchSequence(&_nodeSurfaces); }
 
-        const NodeSurfaceCollection &nodeSurfaces() const { return _nodeSurfaces; }
+        NodeCollection nodes() { return AxiomCommon::refWatchSequence(&_nodes); }
 
-        NodeCollection &nodes() { return _nodes; }
+        ControlSurfaceCollection controlSurfaces() { return AxiomCommon::refWatchSequence(&_controlSurfaces); }
 
-        const NodeCollection &nodes() const { return _nodes; }
+        ControlCollection controls() { return AxiomCommon::refWatchSequence(&_controls); }
 
-        ControlSurfaceCollection &controlSurfaces() { return _controlSurfaces; }
-
-        const ControlSurfaceCollection &controlSurfaces() const { return _controlSurfaces; }
-
-        ControlCollection &controls() { return _controls; }
-
-        const ControlCollection &controls() const { return _controls; }
-
-        ConnectionCollection &connections() { return _connections; }
-
-        const ConnectionCollection &connections() const { return _connections; }
-
-        void attachBackend(AxiomBackend::AudioBackend *backend);
+        ConnectionCollection connections() { return AxiomCommon::refWatchSequence(&_connections); }
 
         void attachRuntime(MaximCompiler::Runtime *runtime);
 
@@ -87,26 +74,26 @@ namespace AxiomModel {
 
         std::lock_guard<std::mutex> lockRuntime();
 
-        void applyItemsTo(const std::vector<QUuid> &items, MaximCompiler::Transaction *transaction);
+        void setHistory(HistoryList history);
 
-        void applyCompile(const std::vector<QUuid> &items);
+        void applyDirtyItemsTo(MaximCompiler::Transaction *transaction);
+
+        void compileDirtyItems();
 
         void applyTransaction(MaximCompiler::Transaction transaction);
 
         void destroy();
 
     private:
-        Project *_project;
         Pool _pool;
         HistoryList _history;
-        NodeSurfaceCollection _nodeSurfaces;
-        NodeCollection _nodes;
-        ControlSurfaceCollection _controlSurfaces;
-        ControlCollection _controls;
-        ConnectionCollection _connections;
+        ModelRootCollection<NodeSurface *> _nodeSurfaces;
+        ModelRootCollection<Node *> _nodes;
+        ModelRootCollection<ControlSurface *> _controlSurfaces;
+        ModelRootCollection<Control *> _controls;
+        ModelRootCollection<Connection *> _connections;
 
         std::mutex _runtimeLock;
-        AxiomBackend::AudioBackend *_backend = nullptr;
         MaximCompiler::Runtime *_runtime = nullptr;
     };
 }

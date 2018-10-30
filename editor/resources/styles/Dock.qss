@@ -1,0 +1,53 @@
+ads--CDockContainerWidget {
+    background: #292929;
+}
+
+ads--CDockContainerWidget QSplitter::handle {
+    border-right: 2px solid #292929;
+    border-bottom: 2px solid #292929;
+}
+
+ads--CDockAreaWidget {
+    background: #292929;
+}
+
+ads--CDockAreaWidget #tabsContainerWidget, ads--CDockAreaWidget #dockAreaTitleBar {
+    background: #292929;
+}
+
+ads--CDockAreaWidget #tabsMenuButton::menu-indicator {
+    image: none;
+}
+
+ads--CDockWidgetTitleBar {
+    background: transparent;
+    padding: 0 10px;
+}
+
+ads--CDockWidgetTitleBar:hover, ads--CDockWidgetTitleBar[activeTab="true"] {
+    background: #444;
+}
+
+ads--CDockWidgetTitleBar QLabel {
+    background: transparent;
+}
+
+ads--CDockWidget {
+    border-color: #444;
+    border-style: solid;
+    border-width: 2px 0 0 0;
+}
+
+QPushButton#closeButton, QPushButton#tabsMenuButton {
+    padding: 2px;
+    background: transparent;
+    border: none;
+}
+
+QPushButton#closeButton:hover, QPushButton#tabsMenuButton:hover {
+    background: #444;
+}
+
+QPushButton#closeButton:pressed, QPushButton#tabsMenuButton:pressed {
+    background: #444;
+}

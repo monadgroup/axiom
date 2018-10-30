@@ -12,12 +12,20 @@ namespace AxiomModel {
 
     class SetCodeAction;
 
+    struct CustomNodeError {
+        QString message;
+        MaximFrontend::SourceRange sourceRange;
+
+        CustomNodeError(QString message, MaximFrontend::SourceRange sourceRange)
+            : message(std::move(message)), sourceRange(sourceRange) {}
+    };
+
     class CustomNode : public Node {
     public:
         static constexpr float minPanelHeight = 40;
 
         AxiomCommon::Event<const QString &> codeChanged;
-        AxiomCommon::Event<const QString &, MaximFrontend::SourceRange> codeCompileError;
+        AxiomCommon::Event<const CustomNodeError &> codeCompileError;
         AxiomCommon::Event<> codeCompileSuccess;
         AxiomCommon::Event<bool> panelOpenChanged;
         AxiomCommon::Event<float> beforePanelHeightChanged;
@@ -32,7 +40,11 @@ namespace AxiomModel {
 
         const QString &code() const { return _code; }
 
+        QString debugName() override;
+
         void setCode(const QString &code);
+
+        void promoteStaging();
 
         void doSetCodeAction(QString beforeCode, QString afterCode);
 
@@ -50,7 +62,9 @@ namespace AxiomModel {
 
         void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) override;
 
-        std::optional<MaximCompiler::Block> compiledBlock() const;
+        bool hasValidBlock() const { return static_cast<bool>(_compiledBlock); }
+
+        const std::optional<CustomNodeError> &compileError() const;
 
         void build(MaximCompiler::Transaction *transaction) override;
 
@@ -59,7 +73,12 @@ namespace AxiomModel {
         bool _isPanelOpen;
         float _panelHeight;
         uint64_t runtimeId = 0;
+
+        // "compiledBlock" is what's currently being used, "stagingBlock" is the one being typed in, and could be NULL
+        // to signify a compile error (in which case we can't promote it to compiled)
         std::optional<MaximCompiler::Block> _compiledBlock;
+        std::optional<MaximCompiler::Block> _stagingBlock;
+        std::optional<CustomNodeError> _compileError;
 
         void updateControls(SetCodeAction *action);
 

@@ -8,9 +8,9 @@ set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/painters/TogglePainter.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ControlItem.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ExtractControlItem.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/GraphControlItem.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/PortalControlItem.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/MidiControlItem.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/NumControlItem.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/ScopeControlItem.cpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/NumControlItem.cpp")
 
 target_sources(axiom_widgets PRIVATE ${SOURCE_FILES})

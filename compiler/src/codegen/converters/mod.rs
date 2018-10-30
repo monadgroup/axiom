@@ -37,7 +37,8 @@ struct PrivateGenerator<'a> {
 
 impl<'a> ConvertGenerator for PrivateGenerator<'a> {
     fn generate(&mut self, form: FormType, cb: &ConvertGeneratorCb) {
-        let new_block = self.context
+        let new_block = self
+            .context
             .append_basic_block(self.func, &format!("to.{}", form));
         let mut builder = self.context.create_builder();
         builder.set_fast_math_all();

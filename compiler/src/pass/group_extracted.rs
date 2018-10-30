@@ -294,6 +294,19 @@ impl<'a> GroupExtractor<'a> {
                     node_extracts.insert(connected_node_index, extract_group_index);
 
                     for socket in &connected_node.sockets {
+                        // If we've found a sibling extractor control, we don't want to walk onto
+                        // it. This happens when there's an extractor output on a node that's
+                        // already extracted, and while this is technically an invalid state we
+                        // handle it as a split between two extract groups. The value group needs
+                        // to exist in the extract group list for the extract_group pass to work,
+                        // but other than that we need to stop here to avoid invalid output.
+                        if socket.is_extractor {
+                            extract_groups[extract_group_index]
+                                .value_groups
+                                .push(socket.group_id);
+                            continue;
+                        }
+
                         if let Some(&side_value_group_extract) =
                             value_group_extracts.get(&socket.group_id)
                         {

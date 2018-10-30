@@ -15,10 +15,10 @@ std::unique_ptr<GridItemMoveAction> GridItemMoveAction::create(const QUuid &uuid
     return std::make_unique<GridItemMoveAction>(uuid, beforePos, afterPos, root);
 }
 
-void GridItemMoveAction::forward(bool, std::vector<QUuid> &) {
-    find<GridItem *>(root()->pool().sequence(), _uuid)->setPos(_afterPos);
+void GridItemMoveAction::forward(bool) {
+    find(AxiomCommon::dynamicCast<GridItem *>(root()->pool().sequence().sequence()), _uuid)->setPos(_afterPos);
 }
 
-void GridItemMoveAction::backward(std::vector<QUuid> &) {
-    find<GridItem *>(root()->pool().sequence(), _uuid)->setPos(_beforePos);
+void GridItemMoveAction::backward() {
+    find(AxiomCommon::dynamicCast<GridItem *>(root()->pool().sequence().sequence()), _uuid)->setPos(_beforePos);
 }

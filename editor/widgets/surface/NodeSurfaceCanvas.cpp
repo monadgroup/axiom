@@ -16,7 +16,9 @@
 #include "../IConnectable.h"
 #include "../connection/WireItem.h"
 #include "../node/NodeItem.h"
+#include "../windows/MainWindow.h"
 #include "AddNodeMenu.h"
+#include "NodeSurfacePanel.h"
 #include "editor/AxiomApplication.h"
 #include "editor/model/ModelRoot.h"
 #include "editor/model/PoolOperators.h"
@@ -54,20 +56,19 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     selectionPath->setZValue(selectionZVal);
 
     // create items for all nodes & wires that already exist
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
         addNode(node);
     }
 
-    for (const auto &connection : surface->connections()) {
-        connection->wire().then(this, [this](ConnectionWire &wire) { addWire(&wire); });
+    for (const auto &connection : surface->connections().sequence()) {
+        connection->wire().then(this, [this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     }
 
     // connect to model
-    surface->nodes().itemAdded.connect(this, &NodeSurfaceCanvas::addNode);
-    surface->connections().itemAdded.connect(this, std::function([this](Connection *connection) {
-                                                 connection->wire().then(
-                                                     [this](ConnectionWire &wire) { addWire(&wire); });
-                                             }));
+    surface->nodes().events().itemAdded().connect(this, &NodeSurfaceCanvas::addNode);
+    surface->connections().events().itemAdded().connect(this, [this](Connection *connection) {
+        connection->wire().then([this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
+    });
 
     // start update timer
     auto timer = new QTimer(this);
@@ -105,59 +106,72 @@ void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
 
     sourceControl = control->sink();
     auto startPos = sourceControl->worldPos();
-    connectionWire = ConnectionWire(&surface->grid(), sourceControl->wireType(), startPos, startPos);
+    connectionWire = std::make_unique<ConnectionWire>(&surface->grid(), &surface->wireGrid(), sourceControl->wireType(),
+                                                      startPos, startPos);
     connectionWire->setStartActive(true);
     addWire(&*connectionWire);
 
-    connectionWire->removed.connect(this, std::function([this]() { connectionWire.reset(); }));
+    connectionWire->removed.connect(this, [this]() { connectionWire.reset(); });
+}
+
+static bool canConnectTo(IConnectable *connectable, ConnectionWire *connectionWire, Control *sourceControl) {
+    return connectable->sink()->wireType() == connectionWire->wireType() && connectable->sink() != sourceControl;
 }
 
 void NodeSurfaceCanvas::updateConnecting(QPointF mousePos) {
     if (!connectionWire) return;
 
-    auto currentItem = itemAt(mousePos, QTransform());
+    auto hoverItems = items(mousePos);
+    bool foundHoverItem = false;
+    for (const auto &hoverItem : hoverItems) {
+        if (auto connectable = dynamic_cast<IConnectable *>(hoverItem);
+            connectable && canConnectTo(connectable, connectionWire.get(), sourceControl)) {
+            connectionWire->setEndPos(connectable->sink()->worldPos());
+            foundHoverItem = true;
+            break;
+        }
+    }
 
-    // snap to the connectable if it's not the one we started with, and it has the same type
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem);
-        connectable && connectable->sink()->wireType() == connectionWire->wireType() &&
-        connectable->sink() != sourceControl) {
-        connectionWire->setEndPos(connectable->sink()->worldPos());
-    } else {
-        connectionWire->setEndPos(QPointF(mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width() - 0.5,
-                                          mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height() - 0.5));
+    if (!foundHoverItem) {
+        connectionWire->setEndPos(QPointF(mousePos.x() / NodeSurfaceCanvas::nodeGridSize.width(),
+                                          mousePos.y() / NodeSurfaceCanvas::nodeGridSize.height()));
     }
 }
 
 void NodeSurfaceCanvas::endConnecting(QPointF mousePos) {
     if (!connectionWire) return;
 
-    auto currentItem = itemAt(mousePos, QTransform());
+    auto hoverItems = items(mousePos);
 
-    if (auto connectable = dynamic_cast<IConnectable *>(currentItem);
-        connectable && connectable->sink()->wireType() == sourceControl->wireType()) {
-        // if the sinks are already connected, remove the connection
-        auto otherUuid = connectable->sink()->uuid();
-        auto connectors = filter(sourceControl->connections(), [otherUuid](Connection *const &connection) {
-            return connection->controlAUuid() == otherUuid || connection->controlBUuid() == otherUuid;
-        });
-        auto firstConnector = connectors.begin();
-        if (firstConnector == connectors.end()) {
-            // there isn't currently a connection, create a new one
-            surface->root()->history().append(CreateConnectionAction::create(
-                surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(), surface->root()));
-        } else {
-            // there is a connection, remove it
-            surface->root()->history().append(DeleteObjectAction::create((*firstConnector)->uuid(), surface->root()));
+    for (const auto &hoverItem : hoverItems) {
+        if (auto connectable = dynamic_cast<IConnectable *>(hoverItem);
+            connectable && canConnectTo(connectable, connectionWire.get(), sourceControl)) {
+            // if the sinks are already connected, remove the connection
+            auto otherUuid = connectable->sink()->uuid();
+            auto connectors =
+                filter(sourceControl->connections().sequence(), [otherUuid](Connection *const &connection) {
+                    return connection->controlAUuid() == otherUuid || connection->controlBUuid() == otherUuid;
+                });
+            auto firstConnector = connectors.begin();
+            if (firstConnector == connectors.end()) {
+                // there isn't currently a connection, create a new one
+                surface->root()->history().append(CreateConnectionAction::create(
+                    surface->uuid(), sourceControl->uuid(), connectable->sink()->uuid(), surface->root()));
+            } else {
+                // there is a connection, remove it
+                surface->root()->history().append(
+                    DeleteObjectAction::create((*firstConnector)->uuid(), surface->root()));
+            }
+
+            break;
         }
-    } else {
-        // todo: do something?
     }
 
     connectionWire->remove();
 }
 
 void NodeSurfaceCanvas::addNode(AxiomModel::Node *node) {
-    auto item = new NodeItem(node, this);
+    auto item = new NodeItem(node, this, panel->window->runtime());
     item->setZValue(nodeZVal);
     addItem(item);
 }
@@ -195,7 +209,7 @@ void NodeSurfaceCanvas::doRuntimeUpdate() {
 }
 
 void NodeSurfaceCanvas::drawBackground(QPainter *painter, const QRectF &rect) {
-    drawGrid(painter, rect, nodeGridSize, QColor::fromRgb(34, 34, 34), 2);
+    drawGrid(painter, rect, nodeGridSize, QColor::fromRgb(60, 60, 60), 2);
 }
 
 void NodeSurfaceCanvas::mousePressEvent(QGraphicsSceneMouseEvent *event) {

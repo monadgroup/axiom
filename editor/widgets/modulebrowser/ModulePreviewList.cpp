@@ -13,7 +13,7 @@ ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *li
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/ModulePreviewList.qss"));
 
     auto widget = new QWidget(this);
-    layout = new FlowLayout(this, 0, 0, 0);
+    layout = new FlowLayout(this, 0, 0, 0, &sorter);
 
     for (const auto &entry : library->entries()) {
         addEntry(entry);
@@ -34,4 +34,11 @@ void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
         layout->removeWidget(widget);
         delete widget;
     });
+}
+
+bool ModulePreviewList::Sorter::aAfterB(QLayoutItem *a, QLayoutItem *b) {
+    auto aPreviewButton = static_cast<ModulePreviewButton *>(a->widget());
+    auto bPreviewButton = static_cast<ModulePreviewButton *>(b->widget());
+
+    return aPreviewButton->entry()->name().compare(bPreviewButton->entry()->name(), Qt::CaseInsensitive) > 0;
 }

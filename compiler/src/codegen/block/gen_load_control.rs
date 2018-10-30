@@ -20,6 +20,7 @@ pub fn gen_load_control_statement(
         *field,
         ptrs.value,
         ptrs.data,
+        ptrs.shared,
         result_ptr,
     );
     result_ptr

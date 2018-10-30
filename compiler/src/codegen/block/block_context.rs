@@ -12,6 +12,7 @@ pub struct BlockContext<'a> {
 pub struct ControlPointers {
     pub value: PointerValue,
     pub data: PointerValue,
+    pub shared: PointerValue,
     pub ui: Option<PointerValue>,
 }
 
@@ -45,7 +46,8 @@ impl<'a> BlockContext<'a> {
                 .build_struct_gep(&self.pointers_ptr, layout_index as u32, "ctx.control")
         };
         ControlPointers {
-            value: self.ctx
+            value: self
+                .ctx
                 .b
                 .build_load(
                     &unsafe {
@@ -54,9 +56,9 @@ impl<'a> BlockContext<'a> {
                             .build_struct_gep(&base_ptr, 0, "ctx.control.value.ptr")
                     },
                     "ctx.control.value",
-                )
-                .into_pointer_value(),
-            data: self.ctx
+                ).into_pointer_value(),
+            data: self
+                .ctx
                 .b
                 .build_load(
                     &unsafe {
@@ -65,8 +67,18 @@ impl<'a> BlockContext<'a> {
                             .build_struct_gep(&base_ptr, 1, "ctx.control.data.ptr")
                     },
                     "ctx.control.data",
-                )
-                .into_pointer_value(),
+                ).into_pointer_value(),
+            shared: self
+                .ctx
+                .b
+                .build_load(
+                    &unsafe {
+                        self.ctx
+                            .b
+                            .build_struct_gep(&base_ptr, 2, "ctx.control.shared.ptr")
+                    },
+                    "ctx.control.shared",
+                ).into_pointer_value(),
             ui: if include_ui {
                 Some(
                     self.ctx
@@ -75,11 +87,10 @@ impl<'a> BlockContext<'a> {
                             &unsafe {
                                 self.ctx
                                     .b
-                                    .build_struct_gep(&base_ptr, 2, "ctx.control.ui.ptr")
+                                    .build_struct_gep(&base_ptr, 3, "ctx.control.ui.ptr")
                             },
                             "ctx.control.ui",
-                        )
-                        .into_pointer_value(),
+                        ).into_pointer_value(),
                 )
             } else {
                 None
@@ -99,7 +110,6 @@ impl<'a> BlockContext<'a> {
                     )
                 },
                 "ctx.function",
-            )
-            .into_pointer_value()
+            ).into_pointer_value()
     }
 }

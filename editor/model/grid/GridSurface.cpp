@@ -1,31 +1,44 @@
 #include "GridSurface.h"
 
 #include "GridItem.h"
-#include "../WatchSequenceOperators.h"
+#include "common/WatchSequenceOperators.h"
 
 using namespace AxiomModel;
 
-GridSurface::GridSurface(ItemCollection view, QPoint minRect, QPoint maxRect)
+GridSurface::GridSurface(BoxedItemCollection view, bool deferDirty, QPoint minRect, QPoint maxRect)
     : _grid(minRect, maxRect), _items(std::move(view)),
-      _selectedItems(filterWatch(_items, std::function([](GridItem *const &itm) { return itm->isSelected(); }))) {
-    _items.itemAdded.connect(this, &GridSurface::handleItemAdded);
+      _selectedItems(AxiomCommon::boxWatchSequence(AxiomCommon::filterWatch(
+          AxiomCommon::refWatchSequence(&_items), [](GridItem *itm) { return itm->isSelected(); }))),
+      _deferDirty(deferDirty) {
+    _items.events().itemAdded().connect(this, &GridSurface::handleItemAdded);
+}
+
+GridSurface::ItemCollection GridSurface::items() {
+    return AxiomCommon::refWatchSequence(&_items);
+}
+
+GridSurface::ItemCollection GridSurface::selectedItems() {
+    return AxiomCommon::refWatchSequence(&_selectedItems);
 }
 
 void GridSurface::selectAll() {
-    for (const auto &item : items()) {
+    auto itms = items();
+    for (const auto &item : itms.sequence()) {
         item->select(false);
     }
 }
 
 void GridSurface::deselectAll() {
-    for (const auto &item : items()) {
+    auto itms = items();
+    for (const auto &item : itms.sequence()) {
         item->deselect();
     }
 }
 
 void GridSurface::startDragging() {
     lastDragDelta = QPoint(0, 0);
-    for (auto &item : selectedItems()) {
+    auto selectedItms = selectedItems();
+    for (auto &item : selectedItms.sequence()) {
         item->startDragging();
     }
 }
@@ -33,34 +46,49 @@ void GridSurface::startDragging() {
 void GridSurface::dragTo(QPoint delta) {
     if (delta == lastDragDelta) return;
 
-    for (auto &item : selectedItems()) {
+    auto selectedItms = selectedItems();
+    for (auto &item : selectedItms.sequence()) {
         _grid.setRect(item->pos(), item->size(), nullptr);
     }
 
     auto availableDelta = findAvailableDelta(delta);
     lastDragDelta = availableDelta;
-    for (auto &item : selectedItems()) {
+    for (auto &item : selectedItms.sequence()) {
         item->dragTo(availableDelta);
     }
 
-    for (auto &item : selectedItems()) {
+    for (auto &item : selectedItms.sequence()) {
         _grid.setRect(item->pos(), item->size(), item);
     }
-    flushGrid();
+    setDirty();
 }
 
 void GridSurface::finishDragging() {
-    for (auto &item : selectedItems()) {
+    auto selectedItms = selectedItems();
+    for (auto &item : selectedItms.sequence()) {
         item->finishDragging();
     }
 }
 
-void GridSurface::flushGrid() {
-    gridChanged.trigger();
+void GridSurface::setDirty() {
+    if (_deferDirty) {
+        _isDirty = true;
+    } else {
+        gridChanged();
+        _isDirty = false;
+    }
+}
+
+void GridSurface::tryFlush() {
+    if (_isDirty) {
+        gridChanged();
+        _isDirty = false;
+    }
 }
 
 bool GridSurface::isAllDragAvailable(QPoint delta) {
-    for (auto &item : selectedItems()) {
+    auto selectedItms = selectedItems();
+    for (auto &item : selectedItms.sequence()) {
         if (!item->isDragAvailable(delta)) return false;
     }
     return true;
@@ -79,7 +107,7 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
     item->startedDragging.connect(this, &GridSurface::startDragging);
     item->draggedTo.connect(this, &GridSurface::dragTo);
     item->finishedDragging.connect(this, &GridSurface::finishDragging);
-    item->selected.connect(this, std::function([this, item](bool exclusive) {
+    item->selected.connect(this, [this, item](bool exclusive) {
         if (exclusive) {
             // get sequence of selected items that aren't this item
             auto clearItems = filter(_selectedItems.sequence(),
@@ -88,13 +116,13 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
                 (*clearItems.begin())->deselect();
             }
         }
-        if (_selectedItems.size() == 1) {
-            hasSelectionChanged.trigger(true);
+        if (_selectedItems.sequence().size() == 1) {
+            hasSelectionChanged(true);
         }
-    }));
-    item->deselected.connect(this, std::function([this]() {
-        if (_selectedItems.empty()) {
-            hasSelectionChanged.trigger(false);
+    });
+    item->deselected.connect(this, [this]() {
+        if (_selectedItems.sequence().empty()) {
+            hasSelectionChanged(false);
         }
-    }));
+    });
 }

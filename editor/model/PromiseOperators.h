@@ -15,44 +15,53 @@ namespace AxiomModel {
     AxiomCommon::Promise<Type> from(Type val) {
         AxiomCommon::Promise<Type> promise;
         promise.resolve(std::move(val));
-        return std::move(promise);
+        return promise;
     }
 
     template<class OutputType, class InputType>
-    AxiomCommon::Promise<OutputType> chain(AxiomCommon::Promise<InputType> input,
-                                           std::function<AxiomCommon::Promise<OutputType>(InputType &)> callback) {
-        AxiomCommon::Promise<OutputType> output;
+    std::shared_ptr<AxiomCommon::Promise<OutputType>>
+        chain(AxiomCommon::Promise<InputType> *input,
+              std::function<std::shared_ptr<AxiomCommon::Promise<OutputType>>(InputType &)> callback) {
+        auto output = std::make_shared<AxiomCommon::Promise<OutputType>>();
 
-        input.then([output, callback](InputType &input) mutable {
-            callback(input).then([output](OutputType &result) mutable { output.resolve(result); });
+        input->then([output, callback](InputType &input) mutable {
+            callback(input)->then([output](OutputType &result) mutable { output->resolve(result); });
         });
 
-        return std::move(output);
+        return output;
     };
 
     template<class OutputType, class InputType>
-    AxiomCommon::Promise<OutputType> chain(AxiomCommon::Promise<InputType> input,
-                                           std::function<OutputType(InputType &)> callback) {
-        return chain(std::move(input), std::function([callback](InputType &v) { return from(callback(v)); }));
+    std::shared_ptr<AxiomCommon::Promise<OutputType>> chain(AxiomCommon::Promise<InputType> *input,
+                                                            std::function<OutputType(InputType &)> callback) {
+        return chain(input, std::function<std::shared_ptr<AxiomCommon::Promise<OutputType>>(InputType &)>(
+                                [callback](InputType &v) {
+                                    return std::make_shared<AxiomCommon::Promise<OutputType>>(from(callback(v)));
+                                }));
     };
 
     template<class FirstPromise>
-    AxiomCommon::Promise<std::tuple<FirstPromise>> all(AxiomCommon::Promise<FirstPromise> firstPromise) {
-        return chain(std::move(firstPromise), std::function([](FirstPromise &val) {
+    std::shared_ptr<AxiomCommon::Promise<std::tuple<FirstPromise>>>
+        all(std::shared_ptr<AxiomCommon::Promise<FirstPromise>> firstPromise) {
+        return chain(firstPromise.get(), std::function<std::tuple<FirstPromise>(FirstPromise &)>([](FirstPromise &val) {
                          FirstPromise v = val;
                          return std::make_tuple<FirstPromise>(std::move(v));
                      }));
     }
 
     template<class FirstPromise, class... PromiseArgs>
-    AxiomCommon::Promise<std::tuple<FirstPromise, PromiseArgs...>> all(AxiomCommon::Promise<FirstPromise> firstPromise,
-                                                                       AxiomCommon::Promise<PromiseArgs>... promises) {
-        return chain(std::move(firstPromise), std::function([promises...](FirstPromise &val) {
-                         return chain(all(std::move(promises)...),
-                                      std::function([val](std::tuple<PromiseArgs...> &otherVals) mutable {
-                                          return std::tuple_cat(std::make_tuple<FirstPromise>(std::move(val)),
-                                                                otherVals);
-                                      }));
+    std::shared_ptr<AxiomCommon::Promise<std::tuple<FirstPromise, PromiseArgs...>>>
+        all(std::shared_ptr<AxiomCommon::Promise<FirstPromise>> firstPromise,
+            std::shared_ptr<AxiomCommon::Promise<PromiseArgs>>... promises) {
+        return chain(firstPromise.get(),
+                     std::function<std::shared_ptr<AxiomCommon::Promise<std::tuple<FirstPromise, PromiseArgs...>>>(
+                         FirstPromise &)>([promises...](FirstPromise &val) {
+                         return chain(
+                             all(promises...).get(),
+                             std::function<std::tuple<FirstPromise, PromiseArgs...>(std::tuple<PromiseArgs...> &)>(
+                                 [val](std::tuple<PromiseArgs...> &otherVals) mutable {
+                                     return std::tuple_cat(std::make_tuple<FirstPromise>(std::move(val)), otherVals);
+                                 }));
                      }));
     }
 }

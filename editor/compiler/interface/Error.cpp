@@ -2,6 +2,8 @@
 
 using namespace MaximCompiler;
 
+Error::Error() : OwnedObject(nullptr, &MaximFrontend::maxim_destroy_error) {}
+
 Error::Error(void *handle) : OwnedObject(handle, &MaximFrontend::maxim_destroy_error) {}
 
 QString Error::getDescription() const {

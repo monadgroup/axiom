@@ -6,11 +6,11 @@
     margin: 5px 0 5px 10px;
 }
 
-QGraphicsView {
+#image {
     border: 2px solid #222;
     border-radius: 5px;
 }
 
-QGraphicsView:hover {
+#image:hover {
     border-color: #444;
 }

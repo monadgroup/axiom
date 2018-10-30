@@ -6,10 +6,10 @@
 
 #include "../ConnectionWire.h"
 #include "../ModelObject.h"
-#include "../WatchSequence.h"
 #include "../grid/GridItem.h"
 #include "common/Event.h"
 #include "common/Promise.h"
+#include "common/WatchSequence.h"
 #include "editor/compiler/interface/Frontend.h"
 
 namespace MaximCompiler {
@@ -22,6 +22,8 @@ namespace AxiomModel {
 
     class Connection;
 
+    class CompositeAction;
+
     struct ControlCompileMeta {
         size_t index;
         bool writtenTo;
@@ -31,28 +33,45 @@ namespace AxiomModel {
             : index(index), writtenTo(writtenTo), readFrom(readFrom) {}
     };
 
+    struct ControlPrepare {
+        QPoint pos;
+        QSize size;
+        std::unique_ptr<CompositeAction> preActions;
+    };
+
     class Control : public GridItem, public ModelObject {
     public:
-        enum class ControlType { NUM_SCALAR, MIDI_SCALAR, NUM_EXTRACT, MIDI_EXTRACT, NUM_PORTAL, MIDI_PORTAL, SCOPE };
+        enum class ControlType { NUM_SCALAR, MIDI_SCALAR, NUM_EXTRACT, MIDI_EXTRACT, NUM_PORTAL, MIDI_PORTAL, GRAPH };
 
         AxiomCommon::Event<const QString &> nameChanged;
         AxiomCommon::Event<bool> showNameChanged;
         AxiomCommon::Event<QPointF> worldPosChanged;
         AxiomCommon::Event<bool> isActiveChanged;
         AxiomCommon::Event<QUuid> exposerUuidChanged;
+        AxiomCommon::Event<bool> isEnabledChanged;
 
-        Control(ControlType controlType, ConnectionWire::WireType wireType, QUuid uuid, const QUuid &parentUuid,
-                QPoint pos, QSize size, bool selected, QString name, bool showName, const QUuid &exposerUuid,
-                const QUuid &exposingUuid, ModelRoot *root);
+        Control(ControlType controlType, ConnectionWire::WireType wireType, QSize minSize, QUuid uuid,
+                const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name, bool showName,
+                const QUuid &exposerUuid, const QUuid &exposingUuid, ModelRoot *root);
+
+        static QSize getDefaultSize(ControlType controlType);
 
         static std::unique_ptr<Control> createDefault(ControlType type, const QUuid &uuid, const QUuid &parentUuid,
-                                                      const QString &name, const QUuid &exposingUuid, ModelRoot *root);
+                                                      const QString &name, const QUuid &exposingUuid, QPoint pos,
+                                                      QSize size, bool isWrittenTo, ModelRoot *root);
+
+        static std::unique_ptr<Control> createExposed(Control *base, const QUuid &uuid, const QUuid &parentUuid,
+                                                      QPoint pos, QSize size);
+
+        static ControlPrepare buildControlPrepareAction(ControlType type, const QUuid &parentUuid, ModelRoot *root);
 
         ControlSurface *surface() const { return _surface; }
 
         ControlType controlType() const { return _controlType; }
 
         ConnectionWire::WireType wireType() const { return _wireType; }
+
+        bool isEnabled() const;
 
         bool isMovable() const override { return true; }
 
@@ -80,19 +99,17 @@ namespace AxiomModel {
 
         void setIsActive(bool isActive);
 
-        WatchSequence<Connection *> &connections() { return _connections; }
+        AxiomCommon::BoxedWatchSequence<Connection *> &connections() { return _connections; }
 
-        const WatchSequence<Connection *> &connections() const { return _connections; }
+        const AxiomCommon::BoxedWatchSequence<Connection *> &connections() const { return _connections; }
 
-        WatchSequence<QUuid> &connectedControls() { return _connectedControls; }
+        AxiomCommon::BoxedWatchSequence<QUuid> &connectedControls() { return _connectedControls; }
 
-        const WatchSequence<QUuid> &connectedControls() const { return _connectedControls; }
+        const AxiomCommon::BoxedWatchSequence<QUuid> &connectedControls() const { return _connectedControls; }
 
         QPointF worldPos() const;
 
-        Sequence<ModelObject *> links() override;
-
-        Sequence<QUuid> compileLinks() override;
+        AxiomCommon::BoxedSequence<ModelObject *> links() override;
 
         const std::optional<ControlCompileMeta> &compileMeta() const;
 
@@ -102,11 +119,9 @@ namespace AxiomModel {
 
         void setRuntimePointers(std::optional<MaximFrontend::ControlPointers> runtimePointers) {
             _runtimePointers = std::move(runtimePointers);
+
+            restoreState();
         }
-
-        virtual void doRuntimeUpdate() = 0;
-
-        void remove() override;
 
     private:
         ControlSurface *_surface;
@@ -120,11 +135,13 @@ namespace AxiomModel {
         std::optional<ControlCompileMeta> _compileMeta;
         std::optional<MaximFrontend::ControlPointers> _runtimePointers;
 
-        WatchSequence<Connection *> _connections;
-        WatchSequence<QUuid> _connectedControls;
+        AxiomCommon::BoxedWatchSequence<Connection *> _connections;
+        AxiomCommon::BoxedWatchSequence<QUuid> _connectedControls;
 
         void updateSinkPos();
 
         void updateExposerRemoved();
+
+        void updateExposingName(Control *exposingControl);
     };
 }

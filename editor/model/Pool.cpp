@@ -4,40 +4,40 @@
 
 using namespace AxiomModel;
 
-Pool::Pool() : _sequence(wrap(_objects)) {}
+static PoolObject *deref(std::unique_ptr<PoolObject> *obj) {
+    return obj->get();
+}
+
+Pool::Pool()
+    : _sequence(BaseSequence(indexSequence(AxiomCommon::map(AxiomCommon::iter(&_objects), deref), &index),
+                             AxiomCommon::BaseWatchEvents<PoolObject *>())) {}
 
 Pool::~Pool() {
     destroy();
 }
 
 PoolObject *Pool::registerObj(std::unique_ptr<AxiomModel::PoolObject> obj) {
-    _ownedObjects.push_back(std::move(obj));
-    auto ptr = _ownedObjects.back().get();
-    registerObj(ptr);
+    _objects.push_back(std::move(obj));
+    auto ptr = _objects.back().get();
+    index.insert(ptr->uuid(), ptr);
+    _sequence.events().itemAdded()(ptr);
     return ptr;
 }
 
-void Pool::registerObj(AxiomModel::PoolObject *obj) {
-    _objects.push_back(obj);
-    _sequence.itemAdded.trigger(obj);
-}
-
 std::unique_ptr<PoolObject> Pool::removeObj(AxiomModel::PoolObject *obj) {
-    auto index = std::find(_objects.begin(), _objects.end(), obj);
-    assert(index != _objects.end());
-    _objects.erase(index);
+    // find and remove the object from the owned pool
+    auto ownedIndex = AxiomUtil::findUnique(_objects.begin(), _objects.end(), obj);
+    assert(ownedIndex != _objects.end());
 
-    // trigger itemRemoved before removing from owner pool, so it's still a valid reference
-    _sequence.itemRemoved.trigger(obj);
+    // move the object out of the array
+    auto ownedObj = std::move(*ownedIndex);
+    _objects.erase(ownedIndex);
+    index.remove(ownedObj->uuid());
 
-    auto ownedIndex = AxiomUtil::findUnique(_ownedObjects.begin(), _ownedObjects.end(), obj);
-    if (ownedIndex != _ownedObjects.end()) {
-        auto ownedObj = std::move(*ownedIndex);
-        _ownedObjects.erase(ownedIndex);
-        return std::move(ownedObj);
-    } else {
-        return nullptr;
-    }
+    // trigger itemRemoved after removing from the pool, so it can't be iterated over
+    _sequence.events().itemRemoved()(ownedObj.get());
+
+    return ownedObj;
 }
 
 void Pool::destroy() {

@@ -16,7 +16,11 @@ namespace MaximCompiler {
 
         void setBpm(float bpm);
 
+        float getBpm();
+
         void setSampleRate(float sampleRate);
+
+        float getSampleRate();
 
         void commit(Transaction transaction);
 
@@ -29,6 +33,8 @@ namespace MaximCompiler {
         void *getRootPtr();
 
         void *getNodePtr(uint64_t surface, void *surfacePtr, size_t node);
+
+        uint32_t *getExtractedBitmaskPtr(uint64_t surface, void *surfacePtr, size_t node);
 
         void *getSurfacePtr(void *nodePtr);
 

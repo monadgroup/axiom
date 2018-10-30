@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "../../AxiomApplication.h"
 #include "../../AxiomEditor.h"
 #include "../AudioBackend.h"
@@ -10,22 +12,47 @@ using namespace AxiomBackend;
 
 class StandaloneAudioBackend : public AudioBackend {
 public:
+    ssize_t midiInputPortal = -1;
+    ssize_t audioOutputPortal = -1;
     NumValue **outputPortal = nullptr;
 
     void handleConfigurationChange(const AudioConfiguration &configuration) override {
-        // we only care about the first number output portal
+        // we only care about the first MIDI input and first number output portal
+        midiInputPortal = -1;
+        audioOutputPortal = -1;
         outputPortal = nullptr;
         for (size_t i = 0; i < configuration.portals.size(); i++) {
             const auto &portal = configuration.portals[i];
-            if (portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
+            if (outputPortal == nullptr && portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
+                audioOutputPortal = i;
                 outputPortal = getAudioPortal(i);
+            } else if (midiInputPortal == -1 && portal.type == PortalType::INPUT && portal.value == PortalValue::MIDI) {
+                midiInputPortal = (ssize_t) i;
+            }
+
+            if (outputPortal != nullptr && midiInputPortal != -1) {
                 break;
             }
         }
     }
 
-    AudioConfiguration createDefaultConfiguration() override {
-        return AudioConfiguration({ConfigurationPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
+    DefaultConfiguration createDefaultConfiguration() override {
+        return DefaultConfiguration({DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
+    }
+
+    bool doesSaveInternally() const override { return false; }
+
+    std::string getPortalLabel(size_t portalIndex) const override {
+        if ((ssize_t) portalIndex == midiInputPortal || (ssize_t) portalIndex == audioOutputPortal) {
+            return "1";
+        }
+        return "?";
+    }
+
+    void previewEvent(AxiomBackend::MidiEvent event) override {
+        if (midiInputPortal == -1) return;
+        auto lock = lockRuntime();
+        queueMidiEvent(0, (size_t) midiInputPortal, event);
     }
 
 #ifdef PORTAUDIO
@@ -59,6 +86,10 @@ public:
                     auto outputNum = **backend->outputPortal;
                     *outputNums++ = outputNum.left;
                     *outputNums++ = outputNum.right;
+                }
+
+                if (backend->midiInputPortal != -1 && i == processPos) {
+                    backend->clearMidi((size_t) backend->midiInputPortal);
                 }
             }
 
@@ -98,6 +129,12 @@ int main(int argc, char *argv[]) {
     StandaloneAudioBackend backend;
     std::cout << "Starting editor" << std::endl;
     AxiomEditor editor(&application, &backend);
+
+    // if there's an argument provided, load it as a project file
+    if (argc >= 2) {
+        editor.openProjectFile(argv[1]);
+    }
+
     std::cout << "Starting audio" << std::endl;
     backend.startupAudio();
     std::cout << "Opening editor" << std::endl;

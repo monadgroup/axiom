@@ -4,6 +4,7 @@
 #include <QtCore/QUuid>
 #include <functional>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "common/Event.h"
@@ -14,15 +15,16 @@ namespace AxiomModel {
 
     class Project;
 
-    class Library : public AxiomCommon::Hookable {
+    class Library : public AxiomCommon::TrackedObject {
     public:
-        enum class ConflictResolution { KEEP_OLD, KEEP_NEW, KEEP_BOTH };
+        enum class ConflictResolution { CANCEL, KEEP_OLD, KEEP_NEW, KEEP_BOTH };
 
         AxiomCommon::Event<LibraryEntry *> entryAdded;
         AxiomCommon::Event<const QString &> activeTagChanged;
         AxiomCommon::Event<const QString &> activeSearchChanged;
         AxiomCommon::Event<const QString &> tagAdded;
         AxiomCommon::Event<const QString &> tagRemoved;
+        AxiomCommon::Event<> changed;
 
         Library();
 

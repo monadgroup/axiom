@@ -1,5 +1,6 @@
 #include "ModulePropertiesWindow.h"
 
+#include <QtCore/QRegularExpression>
 #include <QtGui/QIcon>
 #include <QtWidgets/QCompleter>
 #include <QtWidgets/QDialogButtonBox>
@@ -71,7 +72,7 @@ QStringList ModulePropertiesWindow::enteredTags() const {
     if (trimmedInput.isEmpty())
         return {};
     else
-        return trimmedInput.split(QRegExp("(\\s?,\\s?)|(\\s+)"));
+        return trimmedInput.split(QRegularExpression("(\\s?,\\s?)|(\\s+)"));
 }
 
 void ModulePropertiesWindow::setEnteredName(const QString &name) {

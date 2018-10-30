@@ -1,4 +1,5 @@
 use super::BlockContext;
+use ast::FormType;
 use codegen::globals;
 use codegen::values::NumValue;
 use inkwell::values::PointerValue;
@@ -10,10 +11,19 @@ pub fn gen_global_statement(global: &Global, node: &mut BlockContext) -> Pointer
         Global::SampleRate => globals::get_sample_rate(node.ctx.module).as_pointer_value(),
         Global::BPM => globals::get_bpm(node.ctx.module).as_pointer_value(),
     };
-    let vec_val = node.ctx
+    let vec_val = node
+        .ctx
         .b
         .build_load(&vec_ptr, "global.vec")
         .into_vector_value();
+    num_val.set_form(
+        node.ctx.b,
+        &node
+            .ctx
+            .context
+            .i8_type()
+            .const_int(FormType::None as u64, false),
+    );
     num_val.set_vec(node.ctx.b, &vec_val);
     num_val.val
 }

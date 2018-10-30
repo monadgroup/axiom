@@ -36,7 +36,7 @@ AboutWindow::AboutWindow()
     auto versionLabel = new QLabel(tr("Version:"), this);
     versionLabel->setObjectName("about-label");
     mainLayout->addWidget(versionLabel, 2, 0);
-    mainLayout->addWidget(new QLabel(tr(VER_FILEVERSION_STR) + ", built " + __DATE__ " " __TIME__, this), 2, 1);
+    mainLayout->addWidget(new QLabel(tr(AXIOM_VERSION) + ", built " + __DATE__ " " __TIME__, this), 2, 1);
 
     auto authLabel = new QLabel(tr("Author:"), this);
     authLabel->setObjectName("about-label");

@@ -1,7 +1,9 @@
 set(SOURCE_FILES
+        CachedSequence.h
         CloneReferenceMapper.cpp
         ConnectionWire.cpp
         HistoryList.cpp
+        IndexedSequence.h
         Library.cpp
         LibraryEntry.cpp
         ModelObject.cpp
@@ -9,6 +11,7 @@ set(SOURCE_FILES
         Pool.cpp
         PoolObject.cpp
         Project.cpp
+        WireGrid.cpp
         Value.h)
 
 include_directories(${QT5_INCLUDE_DIRS})

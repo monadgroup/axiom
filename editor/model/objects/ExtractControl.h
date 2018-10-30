@@ -21,6 +21,8 @@ namespace AxiomModel {
                                                       ConnectionWire::WireType wireType, ActiveSlotFlags activeSlots,
                                                       ModelRoot *root);
 
+        QString debugName() override;
+
         ActiveSlotFlags activeSlots() const { return _activeSlots; }
 
         void setActiveSlots(ActiveSlotFlags activeSlots);

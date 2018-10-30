@@ -4,8 +4,8 @@
 #include <memory>
 
 #include "PoolObject.h"
-#include "Sequence.h"
 #include "common/Event.h"
+#include "common/Sequence.h"
 
 namespace MaximCompiler {
     class Transaction;
@@ -25,22 +25,34 @@ namespace AxiomModel {
 
         ModelObject(ModelType modelType, const QUuid &uuid, const QUuid &parentUuid, ModelRoot *root);
 
-        virtual bool buildOnRemove() const { return false; }
-
         ModelType modelType() const { return _modelType; }
 
         ModelRoot *root() const { return _root; }
 
-        virtual Sequence<ModelObject *> links();
+        virtual QString debugName() = 0;
 
-        virtual Sequence<QUuid> compileLinks();
+        bool isDirty() const { return _isDirty; }
+
+        void clearDirty() { _isDirty = false; }
+
+        virtual void saveState() {}
+
+        virtual void restoreState() {}
+
+        virtual void doRuntimeUpdate() {}
+
+        virtual AxiomCommon::BoxedSequence<ModelObject *> links();
 
         virtual void build(MaximCompiler::Transaction *transaction) {}
 
         void remove() override;
 
+    protected:
+        void setDirty() { _isDirty = true; }
+
     private:
         ModelType _modelType;
         ModelRoot *_root;
+        bool _isDirty = true;
     };
 }

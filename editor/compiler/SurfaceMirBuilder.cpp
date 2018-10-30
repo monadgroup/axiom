@@ -54,21 +54,32 @@ AxiomModel::Control::ControlType getGroupType(const std::vector<AxiomModel::Cont
 }
 
 struct PortalTemp {
-    AxiomModel::PortalControl *control;
+    std::vector<AxiomModel::PortalControl *> controls;
     VarType vartype;
+
+    PortalTemp(std::vector<AxiomModel::PortalControl *> controls, VarType vartype)
+        : controls(std::move(controls)), vartype(std::move(vartype)) {}
 };
 
 void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomModel::NodeSurface *surface) {
+    if (!surface->root()->runtime()) return;
+
     auto mir = transaction->buildSurface(surface->getRuntimeId(), surface->name());
 
     // build control groups
     std::unordered_map<ValueGroup *, std::unique_ptr<ValueGroup>> groups;
     QHash<QUuid, ValueGroup *> controlGroups;
 
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
+        // skip if the node is a custom node and couldn't be compiled to avoid making empty groups later on
+        if (auto customNode = dynamic_cast<AxiomModel::CustomNode *>(node);
+            customNode && !customNode->hasValidBlock()) {
+            continue;
+        }
+
         auto controlsContainer = *node->controls().value();
-        for (const auto &control : controlsContainer->controls()) {
-            if (control->connectedControls().empty()) {
+        for (const auto &control : controlsContainer->controls().sequence()) {
+            if (control->connectedControls().sequence().empty()) {
                 // assign the control a single group
                 auto newGroup = std::make_unique<ValueGroup>();
                 newGroup->controls.push_back(control->uuid());
@@ -87,7 +98,8 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
                     myGroup = myGroupIndex.value();
                 }
 
-                for (const auto &connectedControl : control->connectedControls()) {
+                for (const auto &connectedControl : control->connectedControls().sequence()) {
+                    // skip the control if it's on a CustomNode that can't be compiled
                     auto connectedGroupIndex = controlGroups.find(connectedControl);
                     if (connectedGroupIndex == controlGroups.end()) {
                         // add the control to our group
@@ -112,7 +124,7 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
     }
 
     // merge control groups for controls that are merged internally
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
         auto groupNode = dynamic_cast<AxiomModel::GroupNode *>(node);
         if (!groupNode) continue;
 
@@ -152,20 +164,35 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
     std::unordered_map<ValueGroup *, size_t> valueGroupIndices;
     std::vector<size_t> sockets;
     size_t index = 0;
-    for (const auto &pair : groups) {
+    for (auto &pair : groups) {
         auto currentIndex = index++;
         valueGroupIndices.emplace(pair.first, currentIndex);
         valueGroups.push_back(pair.first);
-        auto controlPointers =
-            AxiomModel::collect(AxiomModel::findMap(pair.first->controls, surface->root()->controls()));
+        auto controlPointers = AxiomCommon::collect(AxiomCommon::filter(
+            AxiomModel::findMap<std::vector<QUuid>>(pair.first->controls, surface->root()->controls().sequence()),
+            [](AxiomModel::Control *control) {
+                // if the control is on a CustomNode that can't be compiled, we need to skip it
+                auto customNode = dynamic_cast<AxiomModel::CustomNode *>(control->surface()->node());
+                return !customNode || customNode->hasValidBlock();
+            }));
 
         auto groupType = getGroupType(controlPointers);
         auto vartype = VarType::ofControl(fromModelType(groupType));
 
         if (rootSurface) {
-            if (auto portal = findPortal(controlPointers)) {
+            std::vector<AxiomModel::PortalControl *> portalControls;
+            for (const auto &control : controlPointers) {
+                if (control->controlType() == AxiomModel::Control::ControlType::NUM_PORTAL ||
+                    control->controlType() == AxiomModel::Control::ControlType::MIDI_PORTAL) {
+                    auto portalControl = dynamic_cast<AxiomModel::PortalControl *>(control);
+                    assert(portalControl);
+                    portalControls.push_back(portalControl);
+                }
+            }
+
+            if (!portalControls.empty()) {
                 auto socketIndex = sockets.size();
-                rootPortals.push_back({portal, vartype.clone()});
+                rootPortals.emplace_back(std::move(portalControls), vartype.clone());
                 sockets.push_back(currentIndex);
                 mir.addValueGroup(std::move(vartype), ValueGroupSource::socket(socketIndex));
                 continue;
@@ -208,13 +235,18 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
 
     // build nodes
     size_t nodeIndex = 0;
-    for (const auto &node : surface->nodes()) {
+    for (const auto &node : surface->nodes().sequence()) {
         if (auto customNode = dynamic_cast<AxiomModel::CustomNode *>(node)) {
+            // ignore the node if it's not compiled yet
+            if (!customNode->hasValidBlock()) {
+                continue;
+            }
+
             customNode->setCompileMeta(AxiomModel::NodeCompileMeta(nodeIndex));
             auto mirNode = mir.addCustomNode(customNode->getRuntimeId());
 
             // we need a sorted list of controls
-            auto sortedControls = AxiomModel::collect((*customNode->controls().value())->controls());
+            auto sortedControls = AxiomCommon::collect((*customNode->controls().value())->controls().sequence());
             std::sort(sortedControls.begin(), sortedControls.end(), [](AxiomModel::Control *a, AxiomModel::Control *b) {
                 return a->compileMeta()->index < b->compileMeta()->index;
             });
@@ -256,9 +288,15 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
         auto mirRoot = transaction->buildRoot();
         std::vector<AxiomModel::RootSurfacePortal> portals;
 
-        for (auto &portal : rootPortals) {
+        for (size_t i = 0; i < rootPortals.size(); i++) {
+            auto &portal = rootPortals[i];
+
             mirRoot.addSocket(std::move(portal.vartype));
-            portals.emplace_back(portal.control->portalType(), portal.control->wireType(), portal.control->name());
+
+            for (const auto &control : portal.controls) {
+                portals.emplace_back(control->portalId(), i, control->portalType(), control->wireType(),
+                                     control->surface()->node()->name());
+            }
         }
 
         rootSurface->setCompileMeta(AxiomModel::RootSurfaceCompileMeta(std::move(portals)));
@@ -278,10 +316,9 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
 
             auto valueGroup = valueGroups[socketGroup];
             auto controlPointers =
-                AxiomModel::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls()));
+                AxiomCommon::collect(AxiomModel::findMap(valueGroup->controls, surface->root()->controls().sequence()));
             for (const auto &control : controlPointers) {
                 if (!control->exposerUuid().isNull()) {
-                    // todo: set compile meta on exposed control
                     externalControls.push_back(control->exposerUuid());
                 }
 

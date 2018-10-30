@@ -3,7 +3,7 @@
 #include <QtCore/QDataStream>
 #include <memory>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
 
 namespace MaximCompiler {
     class Transaction;
@@ -13,7 +13,7 @@ namespace AxiomModel {
 
     class ModelRoot;
 
-    class Action : public AxiomCommon::Hookable {
+    class Action : public AxiomCommon::TrackedObject {
     public:
         enum class ActionType {
             NONE,
@@ -35,6 +35,12 @@ namespace AxiomModel {
             PASTE_BUFFER,
             UNEXPOSE_CONTROL,
             RENAME_CONTROL,
+            ADD_GRAPH_POINT,
+            DELETE_GRAPH_POINT,
+            MOVE_GRAPH_POINT,
+            SET_GRAPH_TAG,
+            SET_GRAPH_TENSION,
+            SET_NUM_RANGE
         };
 
         Action(ActionType actionType, ModelRoot *root);
@@ -45,9 +51,9 @@ namespace AxiomModel {
 
         ModelRoot *root() const { return _root; }
 
-        virtual void forward(bool first, std::vector<QUuid> &compileItems) = 0;
+        virtual void forward(bool first) = 0;
 
-        virtual void backward(std::vector<QUuid> &compileItems) = 0;
+        virtual void backward() = 0;
 
     private:
         ActionType _actionType;

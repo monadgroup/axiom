@@ -10,38 +10,48 @@ namespace AxiomModel {
     public:
         enum class DisplayMode { PLUG, KNOB, SLIDER_H, SLIDER_V, TOGGLE };
 
-        enum class Channel { LEFT = 1 << 0, RIGHT = 1 << 1, BOTH = LEFT | RIGHT };
-
         AxiomCommon::Event<DisplayMode> displayModeChanged;
-        AxiomCommon::Event<Channel> channelChanged;
+        AxiomCommon::Event<float, float, uint32_t> rangeChanged;
         AxiomCommon::Event<const NumValue &> valueChanged;
 
         NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                    bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, DisplayMode displayMode,
-                   Channel channel, NumValue value, ModelRoot *root);
+                   float minValue, float maxValue, uint32_t step, NumValue value, ModelRoot *root);
 
         static std::unique_ptr<NumControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                   bool selected, QString name, bool showName, const QUuid &exposerUuid,
-                                                  const QUuid &exposingUuid, DisplayMode displayMode, Channel channel,
-                                                  NumValue value, ModelRoot *root);
+                                                  const QUuid &exposingUuid, DisplayMode displayMode, float minValue,
+                                                  float maxValue, uint32_t step, NumValue value, ModelRoot *root);
+
+        QString debugName() override;
 
         DisplayMode displayMode() const { return _displayMode; }
 
         void setDisplayMode(DisplayMode displayMode);
 
-        Channel channel() const { return _channel; }
+        float minValue() const { return _minValue; }
 
-        void setChannel(Channel channel);
+        float maxValue() const { return _maxValue; }
+
+        uint32_t step() const { return _step; }
+
+        void setRange(float minValue, float maxValue, uint32_t step);
 
         const NumValue &value() const { return _value; }
 
         void doRuntimeUpdate() override;
 
+        void saveState() override;
+
+        void restoreState() override;
+
         void setValue(NumValue value);
 
     private:
         DisplayMode _displayMode;
-        Channel _channel;
+        float _minValue;
+        float _maxValue;
+        uint32_t _step;
         NumValue _value;
 
         void setInternalValue(NumValue value);

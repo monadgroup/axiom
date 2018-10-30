@@ -9,12 +9,15 @@
 namespace AxiomModel {
 
     struct RootSurfacePortal {
+        uint64_t id;
+        size_t socketIndex;
         PortalControl::PortalType portalType;
         ConnectionWire::WireType valueType;
         QString name;
 
-        RootSurfacePortal(PortalControl::PortalType portalType, ConnectionWire::WireType valueType, QString name)
-            : portalType(portalType), valueType(valueType), name(std::move(name)) {}
+        RootSurfacePortal(uint64_t id, size_t socketIndex, PortalControl::PortalType portalType,
+                          ConnectionWire::WireType valueType, QString name)
+            : id(id), socketIndex(socketIndex), portalType(portalType), valueType(valueType), name(std::move(name)) {}
     };
 
     struct RootSurfaceCompileMeta {
@@ -25,9 +28,11 @@ namespace AxiomModel {
 
     class RootSurface : public NodeSurface {
     public:
-        RootSurface(const QUuid &uuid, QPointF pan, float zoom, AxiomModel::ModelRoot *root);
+        RootSurface(const QUuid &uuid, QPointF pan, float zoom, size_t nextPortalId, AxiomModel::ModelRoot *root);
 
         QString name() override { return "Root"; }
+
+        QString debugName() override;
 
         bool canExposeControl() const override { return false; }
 
@@ -41,7 +46,12 @@ namespace AxiomModel {
             _compileMeta = std::move(compileMeta);
         }
 
+        uint64_t nextPortalId() const { return _nextPortalId; }
+
+        uint64_t takePortalId() { return _nextPortalId++; }
+
     private:
         std::optional<RootSurfaceCompileMeta> _compileMeta;
+        uint64_t _nextPortalId;
     };
 }

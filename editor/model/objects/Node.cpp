@@ -17,39 +17,52 @@ using namespace AxiomModel;
 
 Node::Node(NodeType nodeType, const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected,
            QString name, const QUuid &controlsUuid, AxiomModel::ModelRoot *root)
-    : GridItem(&find(root->nodeSurfaces(), parentUuid)->grid(), pos, size, selected),
-      ModelObject(ModelType::NODE, uuid, parentUuid, root), _surface(find(root->nodeSurfaces(), parentUuid)),
-      _nodeType(nodeType), _name(std::move(name)),
-      _controls(findLater<ControlSurface *>(root->controlSurfaces(), controlsUuid)) {}
+    : GridItem(&find(root->nodeSurfaces().sequence(), parentUuid)->grid(), pos, size, QSize(1, 1), selected),
+      ModelObject(ModelType::NODE, uuid, parentUuid, root), _surface(find(root->nodeSurfaces().sequence(), parentUuid)),
+      _nodeType(nodeType), _name(std::move(name)), _controls(findLater(root->controlSurfaces(), controlsUuid)) {}
 
 void Node::setName(const QString &name) {
     if (name != _name) {
         _name = name;
-        nameChanged.trigger(name);
+        nameChanged(name);
     }
 }
 
 void Node::setExtracted(bool extracted) {
     if (extracted != _isExtracted) {
         _isExtracted = extracted;
-        extractedChanged.trigger(extracted);
+        extractedChanged(extracted);
+    }
+}
+
+void Node::setActive(bool active) {
+    if (active != _isActive) {
+        _isActive = active;
+        activeChanged(active);
+    }
+}
+
+void Node::setInErrorState(bool inErrorState) {
+    if (inErrorState != _isInErrorState) {
+        _isInErrorState = inErrorState;
+        inErrorStateChanged(inErrorState);
     }
 }
 
 void Node::startSize() {
     sizeStartRect = rect();
-    if (_controls.value()) {
-        for (const auto &control : (*_controls.value())->controls()) {
+    if (controls().value()) {
+        for (const auto &control : (*controls().value())->controls().sequence()) {
             control->startDragging();
         }
     }
 }
 
 void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
-    if (!_controls.value()) {
+    if (!controls().value()) {
         return GridItem::setCorners(topLeft, bottomRight);
     }
-    auto controlSurface = *_controls.value();
+    auto controlSurface = *controls().value();
 
     auto initialPos = pos();
     auto initialBottomRight = initialPos + QPoint(size().width(), size().height());
@@ -57,7 +70,7 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
     // calculate controls bounding region
     auto controlsTopLeft = pos() + QPoint(size().width(), size().height());
     auto controlsBottomRight = pos();
-    for (auto &item : controlSurface->controls()) {
+    for (auto &item : controlSurface->controls().sequence()) {
         auto itemTopLeft = pos() + ControlSurface::controlToNodeFloor(item->pos());
         auto itemBottomRight = pos() + ControlSurface::controlToNodeCeil(
                                            item->pos() + QPoint(item->size().width(), item->size().height()));
@@ -90,23 +103,23 @@ void Node::setCorners(QPoint topLeft, QPoint bottomRight) {
         QPoint(qMax(0, topLeft.x() - controlsTopLeft.x()) + qMin(0, bottomRight.x() - controlsBottomRight.x()),
                qMax(0, topLeft.y() - controlsTopLeft.y()) + qMin(0, bottomRight.y() - controlsBottomRight.y()));
     auto delta = ControlSurface::nodeToControl(initialPos - pos() + controlsShift);
-    for (auto &item : controlSurface->controls()) {
+    for (auto &item : controlSurface->controls().sequence()) {
         controlSurface->grid().grid().setRect(item->pos(), item->size(), nullptr);
     }
-    for (auto &item : controlSurface->controls()) {
+    for (auto &item : controlSurface->controls().sequence()) {
         item->setPos(item->pos() + delta, false, false);
     }
-    for (auto &item : controlSurface->controls()) {
+    for (auto &item : controlSurface->controls().sequence()) {
         controlSurface->grid().grid().setRect(item->pos(), item->size(), item);
     }
-    controlSurface->grid().flushGrid();
+    controlSurface->grid().setDirty();
 }
 
 void Node::doSizeAction() {
     std::vector<std::unique_ptr<Action>> actions;
 
-    if (_controls.value()) {
-        for (const auto &control : (*_controls.value())->controls()) {
+    if (controls().value()) {
+        for (const auto &control : (*controls().value())->controls().sequence()) {
             auto startSurfacePos = sizeStartRect.topLeft() * 2 + control->dragStartPos();
             auto endSurfacePos = pos() * 2 + control->pos();
 
@@ -126,13 +139,21 @@ void Node::doSizeAction() {
     }
 }
 
-void Node::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *) {
+void Node::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {
     if (compileMeta()) {
         setExtracted(runtime->isNodeExtracted(surface()->getRuntimeId(), compileMeta()->mirIndex));
+        _activeBitmap = runtime->getExtractedBitmaskPtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
     }
 }
 
+void Node::doRuntimeUpdate() {
+    if (_activeBitmap) {
+        setActive(static_cast<bool>(*_activeBitmap & 1));
+    } else
+        setActive(true);
+}
+
 void Node::remove() {
-    if (_controls.value()) (*_controls.value())->remove();
+    if (controls().value()) (*controls().value())->remove();
     ModelObject::remove();
 }

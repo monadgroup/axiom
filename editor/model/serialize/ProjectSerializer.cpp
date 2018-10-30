@@ -24,13 +24,16 @@ bool ProjectSerializer::readHeader(QDataStream &stream, uint64_t expectedMagic, 
     return version >= minSchemaVersion && version <= schemaVersion;
 }
 
-void ProjectSerializer::serialize(AxiomModel::Project *project, QDataStream &stream) {
+void ProjectSerializer::serialize(AxiomModel::Project *project, QDataStream &stream,
+                                  std::function<void(QDataStream &)> writeLinkedFile) {
     writeHeader(stream, projectSchemaMagic);
-    ModelObjectSerializer::serializeRoot(&project->mainRoot(), stream);
-    LibrarySerializer::serialize(&project->library(), stream);
+    writeLinkedFile(stream);
+    ModelObjectSerializer::serializeRoot(&project->mainRoot(), true, stream);
 }
 
-std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uint32_t *versionOut) {
+std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uint32_t *versionOut,
+                                                        std::function<void(Library *)> importLibrary,
+                                                        std::function<QString(QDataStream &, uint32_t)> getLinkedFile) {
     uint32_t version;
     if (!readHeader(stream, projectSchemaMagic, &version)) {
         if (versionOut) *versionOut = version;
@@ -38,9 +41,16 @@ std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uin
     }
     if (versionOut) *versionOut = version;
 
-    auto project = std::make_unique<Project>();
-    auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, version, project.get());
-    auto library = LibrarySerializer::deserialize(stream, version, project.get());
-    project->init(std::move(modelRoot), std::move(library));
+    auto linkedFile = getLinkedFile(stream, version);
+    auto modelRoot = ModelObjectSerializer::deserializeRoot(stream, true, false, version);
+    auto project = std::make_unique<Project>(linkedFile, std::move(modelRoot));
+
+    // Before schema version 5, the module library was included in the project file. To ensure modules aren't lost,
+    // merge the library in.
+    if (version < 5) {
+        auto library = LibrarySerializer::deserialize(stream, version);
+        importLibrary(library.get());
+    }
+
     return project;
 }

@@ -19,6 +19,7 @@ QAction *GlobalActions::fileImportLibrary;
 QAction *GlobalActions::fileExportLibrary;
 QAction *GlobalActions::fileOpen;
 QAction *GlobalActions::fileSave;
+QAction *GlobalActions::fileSaveAs;
 QAction *GlobalActions::fileExport;
 QAction *GlobalActions::fileQuit;
 QAction *GlobalActions::editUndo;
@@ -36,8 +37,10 @@ void GlobalActions::setupActions() {
     fileImportLibrary = makeAction("&Import Library...");
     fileExportLibrary = makeAction("E&xport Library...");
     fileOpen = makeAction("&Open...", QKeySequence::Open);
-    fileSave = makeAction("&Save As...", QKeySequence::Save);
+    fileSave = makeAction("&Save", QKeySequence::Save);
+    fileSaveAs = makeAction("&Save As...", QKeySequence::SaveAs);
     fileExport = makeAction("&Export...");
+    fileExport->setEnabled(false);
     fileQuit = makeAction("&Quit", QKeySequence::Quit);
 
     editUndo = makeAction("&Undo", QKeySequence::Undo);
@@ -48,6 +51,7 @@ void GlobalActions::setupActions() {
     editDelete = makeAction("&Delete", QKeySequence::Delete);
     editSelectAll = makeAction("&Select All", QKeySequence::SelectAll);
     editPreferences = makeAction("Pr&eferences...", QKeySequence::Preferences);
+    editPreferences->setEnabled(false);
 
     helpAbout = makeAction("&About", QKeySequence::HelpContents);
 }

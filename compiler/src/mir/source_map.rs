@@ -51,7 +51,8 @@ impl SourceMap {
     }
 
     pub fn map_to_external(&self, internal: usize) -> Vec<usize> {
-        let mut mapped_items: Vec<_> = self.map
+        let mut mapped_items: Vec<_> = self
+            .map
             .iter()
             .filter(move |&(_, internal_ref)| internal_ref.node() == internal)
             .map(|(&external, _)| external)
@@ -64,8 +65,7 @@ impl SourceMap {
             .filter_map(|val| match val {
                 ExternalNodeRef::Direct(v) => Some(v),
                 ExternalNodeRef::Deleted(_) => None,
-            })
-            .collect()
+            }).collect()
     }
 
     pub fn move_to(&mut self, movements: impl IntoIterator<Item = (usize, usize)>) {
@@ -101,8 +101,7 @@ impl SourceMap {
                 // review: does this work in all cases? is there anything else we need to do here?
                 SourceMap::insert(&mut self.map, ExternalNodeRef::Direct(external), internal);
                 removed
-            })
-            .collect();
+            }).collect();
 
         let next_deleted_index = self.deleted_index;
         self.deleted_index += 1;

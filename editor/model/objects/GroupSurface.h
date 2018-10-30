@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NodeSurface.h"
+#include "common/Sequence.h"
 
 namespace AxiomModel {
 
@@ -31,6 +32,8 @@ namespace AxiomModel {
                                                     AxiomModel::ModelRoot *root);
 
         QString name() override;
+
+        QString debugName() override;
 
         bool canExposeControl() const override { return true; }
 

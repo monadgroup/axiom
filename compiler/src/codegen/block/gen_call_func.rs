@@ -17,7 +17,8 @@ pub fn gen_call_func_statement(
     let return_type = functions::get_return_type(node.ctx.context, *function);
     let return_ptr = node.ctx.allocb.build_alloca(&return_type, "func.return");
 
-    let arg_ptrs: Vec<_> = args.iter()
+    let arg_ptrs: Vec<_> = args
+        .iter()
         .map(|index| node.get_statement(*index))
         .collect();
     let vararg_ptrs: Vec<_> = varargs

@@ -2,7 +2,8 @@
 
 #include <QtWidgets/QScrollArea>
 
-#include "common/Hookable.h"
+#include "../layouts/FlowLayout.h"
+#include "common/TrackedObject.h"
 
 namespace AxiomModel {
     class Library;
@@ -12,12 +13,10 @@ namespace AxiomModel {
 
 namespace AxiomGui {
 
-    class FlowLayout;
-
     class MainWindow;
 
-    class ModulePreviewList : public QScrollArea, public AxiomCommon::Hookable {
-    Q_OBJECT
+    class ModulePreviewList : public QScrollArea, public AxiomCommon::TrackedObject {
+        Q_OBJECT
 
     public:
         explicit ModulePreviewList(MainWindow *window, AxiomModel::Library *library, QWidget *parent = nullptr);
@@ -27,10 +26,14 @@ namespace AxiomGui {
         void addEntry(AxiomModel::LibraryEntry *entry);
 
     private:
+        class Sorter : public FlowLayoutSorter {
+        public:
+            bool aAfterB(QLayoutItem *a, QLayoutItem *b) override;
+        };
 
+        Sorter sorter;
         MainWindow *window;
         AxiomModel::Library *library;
         FlowLayout *layout;
     };
-
 }

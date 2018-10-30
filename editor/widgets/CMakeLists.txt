@@ -4,6 +4,7 @@ set(SOURCE_FILES
         CommonColors.cpp
         FloatingValueEditor.cpp
         GlobalActions.cpp
+        InteractiveImport.cpp
         ItemResizer.cpp
         SpaceCompleter.cpp)
 
@@ -13,7 +14,7 @@ add_library(axiom_widgets ${SOURCE_FILES})
 
 add_subdirectory(connection)
 add_subdirectory(controls)
-add_subdirectory(dock)
+add_subdirectory(../../vendor/dock dock)
 add_subdirectory(history)
 add_subdirectory(layouts)
 add_subdirectory(modulebrowser)

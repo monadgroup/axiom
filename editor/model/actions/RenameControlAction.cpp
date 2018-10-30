@@ -16,10 +16,10 @@ std::unique_ptr<RenameControlAction> RenameControlAction::create(const QUuid &uu
     return std::make_unique<RenameControlAction>(uuid, std::move(oldName), std::move(newName), root);
 }
 
-void RenameControlAction::forward(bool, std::vector<QUuid> &compileItems) {
-    find(root()->controls(), _uuid)->setName(_newName);
+void RenameControlAction::forward(bool) {
+    find(root()->controls().sequence(), _uuid)->setName(_newName);
 }
 
-void RenameControlAction::backward(std::vector<QUuid> &compileItems) {
-    find(root()->controls(), _uuid)->setName(_oldName);
+void RenameControlAction::backward() {
+    find(root()->controls().sequence(), _uuid)->setName(_oldName);
 }

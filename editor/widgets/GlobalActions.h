@@ -10,6 +10,7 @@ namespace AxiomGui {
         extern QAction *fileExportLibrary;
         extern QAction *fileOpen;
         extern QAction *fileSave;
+        extern QAction *fileSaveAs;
         extern QAction *fileExport;
         extern QAction *fileQuit;
         extern QAction *editUndo;

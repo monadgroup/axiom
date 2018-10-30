@@ -3,18 +3,22 @@
 #include <QtWidgets/QGraphicsObject>
 #include <QtWidgets/QPlainTextEdit>
 
-#include "common/Hookable.h"
+#include "common/TrackedObject.h"
+#include "editor/compiler/interface/Frontend.h"
 
 class QGraphicsProxyWidget;
 
 namespace AxiomModel {
+    struct CustomNodeError;
 
     class CustomNode;
 }
 
 namespace AxiomGui {
 
-    class CustomNodePanel : public QGraphicsObject, public AxiomCommon::Hookable {
+    class SyntaxHighlighter;
+
+    class CustomNodePanel : public QGraphicsObject, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
     public:
@@ -35,8 +39,6 @@ namespace AxiomGui {
 
         void setOpen(bool open);
 
-        void clearError();
-
         void codeChanged(const QString &newCode);
 
         void triggerUpdate();
@@ -45,8 +47,6 @@ namespace AxiomGui {
 
         void resizerChanged(QPointF topLeft, QPointF bottomRight);
 
-        void compileFinished();
-
     signals:
 
         void resizerSizeChanged(QSizeF newSize);
@@ -54,10 +54,15 @@ namespace AxiomGui {
     private:
         QGraphicsProxyWidget *textProxy;
         QPlainTextEdit *textEditor;
+        SyntaxHighlighter *highlighter;
         QString beforeCode;
-        // bool hasErrors = false;
-        // bool showingErrors = false;
 
         void controlTextChanged();
+
+        void compileError(const AxiomModel::CustomNodeError &error);
+
+        void compileSuccess();
+
+        static void moveCursor(QTextCursor &cursor, MaximFrontend::SourcePos pos, QTextCursor::MoveMode mode);
     };
 }

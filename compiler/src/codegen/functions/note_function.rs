@@ -63,20 +63,24 @@ impl Function for NoteFunction {
         let result_tuple = TupleValue::new(result);
 
         let iter_count = in_midi.get_count(func.ctx.b);
-        let index_ptr = func.ctx
+        let index_ptr = func
+            .ctx
             .allocb
             .build_alloca(&func.ctx.context.i8_type(), "index.ptr");
         func.ctx
             .b
             .build_store(&index_ptr, &func.ctx.context.i8_type().const_int(0, false));
 
-        let loop_check_block = func.ctx
+        let loop_check_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loop.check");
-        let loop_run_block = func.ctx
+        let loop_run_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loop.run");
-        let loop_end_block = func.ctx
+        let loop_end_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "loop.end");
         func.ctx.b.build_unconditional_branch(&loop_check_block);
@@ -110,7 +114,8 @@ impl Function for NoteFunction {
         //  - set last_note to event note
         //  - set last_velocity to normalized event velocity (stored in param)
         //  - increment active_count
-        let note_on_block = func.ctx
+        let note_on_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteon");
         func.ctx.b.position_at_end(&note_on_block);
@@ -147,12 +152,35 @@ impl Function for NoteFunction {
         func.ctx.b.build_unconditional_branch(&loop_check_block);
 
         // Note off event:
-        //  - decrement active_count
-        // Todo: handle underflow?
-        let note_off_block = func.ctx
+        //  - decrement active_count if it's > 0
+        let note_off_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "noteoff");
         func.ctx.b.position_at_end(&note_off_block);
+
+        let current_active_count = func
+            .ctx
+            .b
+            .build_load(&active_count_ptr, "activecount")
+            .into_int_value();
+        let is_active_count_natural = func.ctx.b.build_int_compare(
+            IntPredicate::UGT,
+            current_active_count,
+            func.ctx.context.i8_type().const_int(0, false),
+            "activecount.natural",
+        );
+        let active_count_natural_block = func
+            .ctx
+            .context
+            .append_basic_block(&func.ctx.func, "activecount.natural.true");
+        func.ctx.b.build_conditional_branch(
+            &is_active_count_natural,
+            &active_count_natural_block,
+            &loop_check_block,
+        );
+
+        func.ctx.b.position_at_end(&active_count_natural_block);
         let decremented_active = func.ctx.b.build_int_sub(
             func.ctx
                 .b
@@ -168,7 +196,8 @@ impl Function for NoteFunction {
 
         // Pitch wheel event:
         //  - set last_pitch_wheel to normalized pitch wheel
-        let pitch_wheel_block = func.ctx
+        let pitch_wheel_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "pitchwheel");
         func.ctx.b.position_at_end(&pitch_wheel_block);
@@ -196,7 +225,8 @@ impl Function for NoteFunction {
 
         // Aftertouch event:
         //  - set last_aftertouch to normalized aftertouch
-        let aftertouch_block = func.ctx
+        let aftertouch_block = func
+            .ctx
             .context
             .append_basic_block(&func.ctx.func, "aftertouch");
         func.ctx.b.position_at_end(&aftertouch_block);
@@ -270,11 +300,13 @@ impl Function for NoteFunction {
                 .into_float_value(),
             "notenum",
         );
-        let velocity_num = func.ctx
+        let velocity_num = func
+            .ctx
             .b
             .build_load(&last_velocity_ptr, "velocity")
             .into_float_value();
-        let aftertouch_num = func.ctx
+        let aftertouch_num = func
+            .ctx
             .b
             .build_load(&last_aftertouch_ptr, "aftertouch")
             .into_float_value();
@@ -284,7 +316,8 @@ impl Function for NoteFunction {
         result_gate_num.set_vec(func.ctx.b, &active_vector);
         result_gate_num.set_form(
             func.ctx.b,
-            &func.ctx
+            &func
+                .ctx
                 .context
                 .i8_type()
                 .const_int(FormType::None as u64, false),
@@ -295,7 +328,8 @@ impl Function for NoteFunction {
         result_note_num.set_vec(func.ctx.b, &note_vector);
         result_note_num.set_form(
             func.ctx.b,
-            &func.ctx
+            &func
+                .ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Note as u64, false),
@@ -306,7 +340,8 @@ impl Function for NoteFunction {
         result_velocity_num.set_vec(func.ctx.b, &velocity_vector);
         result_velocity_num.set_form(
             func.ctx.b,
-            &func.ctx
+            &func
+                .ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Amplitude as u64, false),
@@ -317,7 +352,8 @@ impl Function for NoteFunction {
         result_aftertouch_num.set_vec(func.ctx.b, &aftertouch_vector);
         result_aftertouch_num.set_form(
             func.ctx.b,
-            &func.ctx
+            &func
+                .ctx
                 .context
                 .i8_type()
                 .const_int(FormType::None as u64, false),

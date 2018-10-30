@@ -127,11 +127,7 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
     auto data = event->mimeData()->data("application/axiom-partial-surface");
     auto action = PasteBufferAction::create(surface->uuid(), std::move(data), nodePos, surface->root());
 
-    std::vector<QUuid> compileItems;
-    action->forward(true, compileItems);
-    MaximCompiler::Transaction transaction;
-    surface->root()->applyItemsTo(compileItems, &transaction);
-    dragAndDropTransaction = std::move(transaction);
+    action->forward(true);
 
     std::vector<std::unique_ptr<Action>> actions;
     actions.push_back(std::move(action));
@@ -149,15 +145,14 @@ void NodeSurfaceView::dragMoveEvent(QDragMoveEvent *event) {
 
 void NodeSurfaceView::dragLeaveEvent(QDragLeaveEvent *event) {
     surface->grid().finishDragging();
-    std::vector<QUuid> dummy;
-    dragAndDropAction->backward(dummy);
+    dragAndDropAction->backward();
     dragAndDropAction.reset();
 }
 
 void NodeSurfaceView::dropEvent(QDropEvent *event) {
     surface->grid().finishDragging();
 
-    auto selectedNodes = staticCast<Node *>(surface->grid().selectedItems().sequence());
+    auto selectedNodes = AxiomCommon::staticCast<Node *>(surface->grid().selectedItems().sequence());
     for (const auto &selectedNode : selectedNodes) {
         auto beforePos = selectedNode->dragStartPos();
         auto afterPos = selectedNode->pos();
@@ -169,8 +164,7 @@ void NodeSurfaceView::dropEvent(QDropEvent *event) {
     }
 
     surface->root()->history().append(std::move(dragAndDropAction), false);
-    surface->root()->applyTransaction(std::move(*dragAndDropTransaction));
-    dragAndDropTransaction = std::nullopt;
+    setFocus(Qt::OtherFocusReason);
 }
 
 void NodeSurfaceView::focusInEvent(QFocusEvent *event) {
@@ -219,9 +213,9 @@ void NodeSurfaceView::cutSelected() {
 }
 
 void NodeSurfaceView::copySelected() {
-    if (!hasFocus() || surface->grid().selectedItems().empty()) return;
+    if (!hasFocus() || surface->grid().selectedItems().sequence().empty()) return;
 
-    auto centerPos = AxiomModel::GridSurface::findCenter(surface->grid().selectedItems());
+    auto centerPos = AxiomModel::GridSurface::findCenter(surface->grid().selectedItems().sequence());
     QByteArray serializeArray;
     QDataStream stream(&serializeArray, QIODevice::WriteOnly);
     stream << centerPos;

@@ -5,6 +5,7 @@
 
 #include "actions/Action.h"
 #include "common/Event.h"
+#include "common/TrackedObject.h"
 
 namespace MaximCompiler {
     class Transaction;
@@ -16,17 +17,15 @@ namespace AxiomModel {
 
     class Action;
 
-    class HistoryList : public AxiomCommon::Hookable {
+    class HistoryList {
     public:
         AxiomCommon::Event<> stackChanged;
 
         size_t maxActions = 256;
 
-        using CompileApplyer = std::function<void(std::vector<QUuid>)>;
+        HistoryList() = default;
 
-        explicit HistoryList(CompileApplyer applyer);
-
-        HistoryList(size_t stackPos, std::vector<std::unique_ptr<Action>> stack, CompileApplyer applyer);
+        HistoryList(size_t stackPos, std::vector<std::unique_ptr<Action>> stack);
 
         const std::vector<std::unique_ptr<Action>> &stack() const { return _stack; }
 
@@ -46,11 +45,8 @@ namespace AxiomModel {
 
         void redo();
 
-        CompileApplyer &applyer() { return applyCompile; }
-
     private:
         size_t _stackPos = 0;
         std::vector<std::unique_ptr<Action>> _stack;
-        CompileApplyer applyCompile;
     };
 }
