@@ -68,6 +68,7 @@ namespace AxiomGui {
         QImage _plugImage;
         QTimer showValueTimer;
         AxiomModel::NumValue beforeDragVal;
+        AxiomModel::NumValue beforeDragNormalizedVal;
         QPointF mouseStartPoint;
 
         KnobPainter knobPainter;

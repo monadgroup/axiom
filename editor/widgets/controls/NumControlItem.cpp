@@ -17,6 +17,7 @@
 #include "editor/compiler/interface/Runtime.h"
 #include "editor/model/ModelRoot.h"
 #include "editor/model/Project.h"
+#include "editor/model/actions/CompositeAction.h"
 #include "editor/model/actions/SetNumModeAction.h"
 #include "editor/model/actions/SetNumRangeAction.h"
 #include "editor/model/actions/SetNumValueAction.h"
@@ -199,7 +200,8 @@ void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             SetNumValueAction::create(control->uuid(), cv, control->value(), control->root()));
     } else if (!isDragging) {
         isDragging = true;
-        beforeDragVal = clampValue(getNormalizedValue());
+        beforeDragVal = control->value();
+        beforeDragNormalizedVal = clampValue(getNormalizedValue());
         mouseStartPoint = event->pos();
     }
 
@@ -226,7 +228,8 @@ void NumControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
     auto delta = (float) (motionDelta / accuracy * (control->maxValue() - control->minValue()));
-    setNormalizedValue(clampValue(beforeDragVal.withLR(beforeDragVal.left - delta, beforeDragVal.right - delta)));
+    setNormalizedValue(clampValue(
+        beforeDragNormalizedVal.withLR(beforeDragNormalizedVal.left - delta, beforeDragNormalizedVal.right - delta)));
 }
 
 void NumControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
@@ -382,9 +385,8 @@ NumValue NumControlItem::stringAsValue(const QString &str, NumValue oldNum) {
     unformatString(leftStr, &leftNum, &leftForm);
     unformatString(rightStr, &rightNum, &rightForm);
 
-    // if no form was provided, default to the current one
+    // if no form was provided for the left, use the one on the right (allowing something like "5 / 10 Hz")
     if (leftForm == FormType::NONE) leftForm = rightForm;
-    if (leftForm == FormType::NONE) leftForm = oldNum.form;
 
     return {leftNum, rightNum, leftForm};
 }
@@ -464,6 +466,7 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
         }
 
         auto minMaxSeparatorIndex = rangeStr.trimmed().indexOf('-', 1);
+        auto newForm = control->value().form;
         auto newMin = control->minValue();
         auto newMax = control->maxValue();
         if (minMaxSeparatorIndex > 0) {
@@ -475,6 +478,9 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
 
             if (!unformatString(minStr, &minValue, &minForm)) return;
             if (!unformatString(maxStr, &maxValue, &maxForm)) return;
+
+            // if no min form was provided, use the max form (to allow e.g. "1-2 Hz")
+            if (minForm == AxiomModel::FormType::NONE) minForm = maxForm;
 
             // convert back to CONTROL space
             AxiomModel::NumValue newMinMax = {minValue, maxValue, minForm};
@@ -489,16 +495,31 @@ void NumControlItem::editNumRange(bool selectStep, QPointF pos) {
 
             newMin = newMinMax.left;
             newMax = newMinMax.right;
+            newForm = minForm;
         }
 
         bool stepValid;
         uint32_t newStep = (uint32_t) stepStr.trimmed().toUInt(&stepValid);
         if (!stepValid) newStep = control->step();
 
+        std::vector<std::unique_ptr<Action>> actions;
+
         if (newMin != control->minValue() || newMax != control->maxValue() || newStep != control->step()) {
-            control->root()->history().append(SetNumRangeAction::create(control->uuid(), control->minValue(),
-                                                                        control->maxValue(), control->step(), newMin,
-                                                                        newMax, newStep, control->root()));
+            actions.push_back(SetNumRangeAction::create(control->uuid(), control->minValue(), control->maxValue(),
+                                                        control->step(), newMin, newMax, newStep, control->root()));
         }
+
+        if (newForm != control->value().form) {
+            // convert the current value to the entered form and submit it
+            auto convertedVal = control->value();
+            if (control->root()->runtime()) {
+                convertedVal = control->root()->runtime()->convertNum(newForm, convertedVal);
+            }
+
+            actions.push_back(
+                SetNumValueAction::create(control->uuid(), control->value(), convertedVal, control->root()));
+        }
+
+        control->root()->history().append(CompositeAction::create(std::move(actions), control->root()));
     });
 }
