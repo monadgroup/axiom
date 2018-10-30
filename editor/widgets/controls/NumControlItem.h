@@ -71,6 +71,7 @@ namespace AxiomGui {
         bool isShowingValue = false;
         bool displayNameOverride = false;
         bool canReplaceHistoryOnScroll = false;
+        bool dragIsSpreading = false;
         QImage _plugImage;
         QTimer showValueTimer;
         AxiomModel::NumValue beforeDragVal;

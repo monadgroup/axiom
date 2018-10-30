@@ -206,6 +206,7 @@ void NumControlItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         beforeDragVal = control->value();
         beforeDragNormalizedVal = clampValue(getNormalizedValue());
         mouseStartPoint = event->pos();
+        dragIsSpreading = event->modifiers().testFlag(Qt::ShiftModifier);
     }
 
     canReplaceHistoryOnScroll = false;
@@ -216,6 +217,13 @@ void NumControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (event->isAccepted() || !isDragging) return;
 
     event->accept();
+
+    auto newDragIsSpreading = event->modifiers().testFlag(Qt::ShiftModifier);
+    if (newDragIsSpreading != dragIsSpreading) {
+        beforeDragNormalizedVal = clampValue(getNormalizedValue());
+        mouseStartPoint = event->pos();
+    }
+    dragIsSpreading = newDragIsSpreading;
 
     auto mouseDelta = event->pos() - mouseStartPoint;
 
@@ -231,8 +239,15 @@ void NumControlItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto accuracy = scaleFactor * 2 + (float) std::abs(accuracyDelta) * 100 / scaleFactor;
     auto delta = (float) (motionDelta / accuracy * (control->maxValue() - control->minValue()));
-    setNormalizedValue(clampValue(
-        beforeDragNormalizedVal.withLR(beforeDragNormalizedVal.left - delta, beforeDragNormalizedVal.right - delta)));
+
+    auto leftDelta = delta, rightDelta = delta;
+    if (dragIsSpreading) {
+        leftDelta = -delta / 2;
+        rightDelta = delta / 2;
+    }
+
+    setNormalizedValue(clampValue(beforeDragNormalizedVal.withLR(beforeDragNormalizedVal.left - leftDelta,
+                                                                 beforeDragNormalizedVal.right - rightDelta)));
 }
 
 void NumControlItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
