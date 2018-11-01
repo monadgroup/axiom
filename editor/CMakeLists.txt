@@ -53,8 +53,11 @@ if (DEPLOY)
     set(CPACK_COMPONENT_VSTEFFECT_DESCRIPTION "The VST2 effect, which runs in a DAW or host as an effect with audio input and output.")
     set(CPACK_COMPONENT_VSTINSTRUMENT_DISPLAY_NAME "VST2 Instrument")
     set(CPACK_COMPONENT_VSTINSTRUMENT_DESCRIPTION "The VST2 instrument, which runs in a DAW or host as an instrument with MIDI input and audio output.")
+    set(CPACK_COMPONENT_EXAMPLES_DISPLAY_NAME "Example Projects")
+    set(CPACK_COMPONENT_EXAMPLES_DESCRIPTION "Various example projects to demonstrate the basics and advanced features.")
 
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE ${RES_DIR}/installer/README.txt DESTINATION .)
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../examples DESTINATION . COMPONENT examples)
 
     if (APPLE)
         set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
