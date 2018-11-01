@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QtWidgets/QGraphicsProxyWidget>
-
-class QLineEdit;
+#include <QtWidgets/QLineEdit>
+#include <memory>
 
 namespace AxiomGui {
 
@@ -11,6 +11,8 @@ namespace AxiomGui {
 
     public:
         FloatingValueEditor(QString initialValue, QPointF scenePos, int selectStart = 0, int selectEnd = 0);
+
+        ~FloatingValueEditor();
 
     protected:
         bool eventFilter(QObject *object, QEvent *event) override;

@@ -367,6 +367,7 @@ void NodeItem::addControl(Control *control) {
 
     assert(item);
     item->setZValue(CONTROL_ZVALUE);
+    item->setParent(this);
     item->setParentItem(this);
 }
 
