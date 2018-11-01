@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QtWidgets/QGraphicsProxyWidget>
-
-class QLineEdit;
+#include <QtWidgets/QLineEdit>
+#include <memory>
 
 namespace AxiomGui {
 

@@ -9,10 +9,10 @@
 using namespace AxiomUtil;
 
 QString AxiomUtil::loadStylesheet(const char *path) {
-    auto file = new QFile(path);
-    auto couldOpen = file->open(QIODevice::ReadOnly | QIODevice::Text);
+    QFile file(path);
+    auto couldOpen = file.open(QIODevice::ReadOnly | QIODevice::Text);
     assert(couldOpen);
-    return QLatin1String(file->readAll());
+    return QLatin1String(file.readAll());
 }
 
 QPoint AxiomUtil::clampP(QPoint p, QPoint min, QPoint max) {
