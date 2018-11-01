@@ -9,7 +9,6 @@ use inkwell::context::Context;
 use inkwell::module::Module;
 use mir::{Block, BlockRef, IdAllocator, InternalNodeRef, Root, Surface, SurfaceRef};
 use pass;
-use std::cmp::Ordering;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::iter;
@@ -187,22 +186,6 @@ impl Runtime {
         module
     }
 
-    fn sort_surfaces(surfaces: &mut [SurfaceRef], graph: &DependencyGraph) {
-        surfaces.sort_unstable_by(|&a, &b| {
-            // if A is in B's depended_by list, A goes before
-            // if A is in B's depends_on list, A goes after
-            // otherwise, we don't know, so return equal
-
-            if graph.is_ancestor_of_surface(b, a) {
-                Ordering::Greater
-            } else if graph.is_descendent_of_surface(b, a) {
-                Ordering::Less
-            } else {
-                Ordering::Equal
-            }
-        });
-    }
-
     fn get_affected_surfaces(
         graph: &DependencyGraph,
         blocks: &[BlockRef],
@@ -328,12 +311,18 @@ impl Runtime {
         // Build a list of affected surfaces (i.e surfaces whose layouts may have changed) to
         // recalculate layouts. This list must be sorted in dependency order, since layout
         // calculation depends on layouts of surfaces inside.
-        let mut affected_surfaces =
-            Runtime::get_affected_surfaces(&self.graph, &new_block_ids, &new_surface_ids);
-        Runtime::sort_surfaces(&mut affected_surfaces, &self.graph);
+        let affected_surfaces = HashSet::from_iter(Runtime::get_affected_surfaces(
+            &self.graph,
+            &new_block_ids,
+            &new_surface_ids,
+        ));
+        let mut sorted_surfaces = self.graph.get_sorted_surfaces(&affected_surfaces);
+
+        // `sorted_surfaces` goes from the root surface down - we need to process them in reverse
+        sorted_surfaces.reverse();
 
         self.patch_in_blocks(blocks);
-        self.patch_in_surfaces(surfaces, &affected_surfaces);
+        self.patch_in_surfaces(surfaces, &sorted_surfaces);
         if let Some(new_root) = transaction.root {
             self.root.0 = new_root;
         }
@@ -341,7 +330,7 @@ impl Runtime {
         // remove orphaned objects
         self.garbage_collect();
 
-        (new_block_ids, affected_surfaces)
+        (new_block_ids, sorted_surfaces)
     }
 
     fn codegen_blocks(&mut self, block_ids: &[BlockRef]) {
