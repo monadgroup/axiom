@@ -88,7 +88,7 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
     auto mouseEnterTransition = unhoveredState->addTransition(this, &ControlItem::mouseEnter, hoveredState);
     auto mouseLeaveTransition = hoveredState->addTransition(this, &ControlItem::mouseLeave, unhoveredState);
 
-    auto anim = new QPropertyAnimation(this, "hoverState");
+    auto anim = new QPropertyAnimation(this, "hoverState", this);
     anim->setDuration(100);
     mouseEnterTransition->addAnimation(anim);
     mouseLeaveTransition->addAnimation(anim);

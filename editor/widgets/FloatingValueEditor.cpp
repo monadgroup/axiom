@@ -1,7 +1,6 @@
 #include "FloatingValueEditor.h"
 
 #include <QtWidgets/QGraphicsScene>
-#include <QtWidgets/QLineEdit>
 
 using namespace AxiomGui;
 
@@ -42,4 +41,5 @@ void FloatingValueEditor::editingFinished() {
     }
 
     scene()->removeItem(this);
+    deleteLater();
 }
