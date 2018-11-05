@@ -9,7 +9,7 @@
         <string>axiom.icns</string>
 
         <key>CFBundlePackageType</key>
-        <string>APPL</string>
+        <string>${MACOSX_BUNDLE_PACKAGE_TYPE}</string>
 
         <key>CFBundleGetInfoString</key>
         <string>${MACOSX_BUNDLE_INFO_STRING}</string>
