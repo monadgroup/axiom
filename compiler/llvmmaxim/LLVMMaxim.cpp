@@ -78,6 +78,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
 
 #ifdef APPLE
     jit->addBuiltin("__sincosf_stret", (uint64_t) & ::__sincosf_stret);
+    jit->addBuiltin("__bzero", (uint64_t) & ::bzero);
 #endif
 
     return jit;
