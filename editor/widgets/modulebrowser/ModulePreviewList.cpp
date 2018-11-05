@@ -19,7 +19,7 @@ ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *li
         addEntry(entry);
     }
 
-    library->entryAdded.connect(this, &ModulePreviewList::addEntry);
+    library->entryAdded.connectTo(this, &ModulePreviewList::addEntry);
 
     widget->setLayout(layout);
     setWidgetResizable(true);
@@ -30,7 +30,7 @@ void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
     auto widget = new ModulePreviewButton(window, library, entry, this);
     widget->setObjectName("preview-button");
     layout->addWidget(widget);
-    entry->removed.connect(this, [this, widget]() {
+    entry->removed.connectTo(this, [this, widget]() {
         layout->removeWidget(widget);
         delete widget;
     });

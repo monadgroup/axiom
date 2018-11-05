@@ -65,8 +65,8 @@ NodeSurfaceCanvas::NodeSurfaceCanvas(NodeSurfacePanel *panel, NodeSurface *surfa
     }
 
     // connect to model
-    surface->nodes().events().itemAdded().connect(this, &NodeSurfaceCanvas::addNode);
-    surface->connections().events().itemAdded().connect(this, [this](Connection *connection) {
+    surface->nodes().events().itemAdded().connectTo(this, &NodeSurfaceCanvas::addNode);
+    surface->connections().events().itemAdded().connectTo(this, [this](Connection *connection) {
         connection->wire().then([this](std::unique_ptr<ConnectionWire> &wire) { addWire(wire.get()); });
     });
 
@@ -111,7 +111,7 @@ void NodeSurfaceCanvas::startConnecting(IConnectable *control) {
     connectionWire->setStartActive(true);
     addWire(&*connectionWire);
 
-    connectionWire->removed.connect(this, [this]() { connectionWire.reset(); });
+    connectionWire->removed.connectTo(this, [this]() { connectionWire.reset(); });
 }
 
 static bool canConnectTo(IConnectable *connectable, ConnectionWire *connectionWire, Control *sourceControl) {

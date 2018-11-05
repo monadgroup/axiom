@@ -46,13 +46,13 @@ ModulePreviewButton::ModulePreviewButton(MainWindow *window, AxiomModel::Library
 
     setLayout(mainLayout);
 
-    entry->nameChanged.connect(this, &ModulePreviewButton::setName);
+    entry->nameChanged.connectTo(this, &ModulePreviewButton::setName);
     setName(entry->name());
 
-    library->activeTagChanged.connect(this, &ModulePreviewButton::updateIsVisible);
-    library->activeSearchChanged.connect(this, &ModulePreviewButton::updateIsVisible);
+    library->activeTagChanged.connectTo(this, &ModulePreviewButton::updateIsVisible);
+    library->activeSearchChanged.connectTo(this, &ModulePreviewButton::updateIsVisible);
 
-    entry->root()->history().stackChanged.connect(this, &ModulePreviewButton::updateImage);
+    entry->root()->history().stackChanged.connectTo(this, &ModulePreviewButton::updateImage);
 
     updateImage();
     updateIsVisible();

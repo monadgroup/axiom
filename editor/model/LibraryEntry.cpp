@@ -16,7 +16,7 @@ LibraryEntry::LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &mod
     assert(_rootSurface);
     _rootSurface->setEntry(this);
 
-    _root->history().stackChanged.connect(this, &LibraryEntry::modified);
+    _root->history().stackChanged.connectTo(this, &LibraryEntry::modified);
 }
 
 std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,

@@ -67,22 +67,9 @@ namespace AxiomCommon {
             return result;
         }
 
-        struct HandlerSharedData {
-            Sequence input;
-            typename Sequence::Events::ItemEvent::EventId eventId;
-
-            explicit HandlerSharedData(Sequence input) : input(std::move(input)) {}
-        };
-
-        // put the input sequence on the heap so we can keep it around until the event has fired
-        auto sharedData = std::make_shared<HandlerSharedData>(std::move(input));
-        sharedData->eventId =
-            sharedData->input.events().itemAdded().connect([result, sharedData](ValueType item) mutable {
-                result->resolve(std::move(item));
-
-                // remove this event handler, which will in turn clear the shared data
-                sharedData->input.events().itemAdded().disconnect(sharedData->eventId);
-            });
+        auto heapSequence = std::make_shared<Sequence>(std::move(input));
+        heapSequence->events().itemAdded().once(Sequence::Events::ItemEvent::to(
+            [heapSequence, result](ValueType item) { result->resolve(std::move(item)); }));
 
         return result;
     }

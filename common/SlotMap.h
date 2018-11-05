@@ -82,21 +82,17 @@ namespace AxiomCommon {
         size_t size() const { return _size; }
 
         key insert(Item item) {
-            // insert the item or increase the size of the vector
             auto insertPosition = _nextIndex;
-            if (values.size() <= insertPosition) {
-                values.emplace_back(std::move(item));
-            } else {
-                values[insertPosition] = std::move(item);
-            }
+            insertAt(insertPosition, std::move(item));
+            return insertPosition;
+        }
 
-            // increment size since we've added something
-            _size++;
-
-            // increment nextIndex to the next available position
-            _nextIndex = findNextFree(insertPosition + 1);
-
-            return {insertPosition};
+        template<class Func>
+        key insertWith(Func func) {
+            auto insertPosition = _nextIndex;
+            auto insertValue = func(insertPosition);
+            insertAt(insertPosition, std::move(insertValue));
+            return insertPosition;
         }
 
         bool erase(key key) {
@@ -136,5 +132,21 @@ namespace AxiomCommon {
         }
 
         reference operator[](key key) { return *values[key]; }
+
+    private:
+        void insertAt(size_t position, Item value) {
+            // insert the item or increase the size of the vector
+            if (values.size() <= position) {
+                values.emplace_back(std::move(value));
+            } else {
+                values[position] = std::move(value);
+            }
+
+            // increment size since we've added something
+            _size++;
+
+            // increment nextIndex to the next available position
+            _nextIndex = findNextFree(position + 1);
+        }
     };
 }

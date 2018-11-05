@@ -22,7 +22,7 @@ namespace AxiomCommon {
             if (_value) {
                 func(*_value);
             } else {
-                event.connect(std::move(func));
+                event.connectTo(std::move(func));
             }
         }
 
@@ -30,7 +30,7 @@ namespace AxiomCommon {
             if (_value) {
                 func(*_value);
             } else {
-                event.connect(obj, std::move(func));
+                event.connectTo(obj, std::move(func));
             }
         }
 

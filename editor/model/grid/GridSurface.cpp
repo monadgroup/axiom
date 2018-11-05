@@ -10,7 +10,7 @@ GridSurface::GridSurface(BoxedItemCollection view, bool deferDirty, QPoint minRe
       _selectedItems(AxiomCommon::boxWatchSequence(AxiomCommon::filterWatch(
           AxiomCommon::refWatchSequence(&_items), [](GridItem *itm) { return itm->isSelected(); }))),
       _deferDirty(deferDirty) {
-    _items.events().itemAdded().connect(this, &GridSurface::handleItemAdded);
+    _items.events().itemAdded().connectTo(this, &GridSurface::handleItemAdded);
 }
 
 GridSurface::ItemCollection GridSurface::items() {
@@ -104,10 +104,10 @@ QPoint GridSurface::findAvailableDelta(QPoint delta) {
 }
 
 void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
-    item->startedDragging.connect(this, &GridSurface::startDragging);
-    item->draggedTo.connect(this, &GridSurface::dragTo);
-    item->finishedDragging.connect(this, &GridSurface::finishDragging);
-    item->selected.connect(this, [this, item](bool exclusive) {
+    item->startedDragging.connectTo(this, &GridSurface::startDragging);
+    item->draggedTo.connectTo(this, &GridSurface::dragTo);
+    item->finishedDragging.connectTo(this, &GridSurface::finishDragging);
+    item->selected.connectTo(this, [this, item](bool exclusive) {
         if (exclusive) {
             // get sequence of selected items that aren't this item
             auto clearItems = filter(_selectedItems.sequence(),
@@ -120,7 +120,7 @@ void GridSurface::handleItemAdded(AxiomModel::GridItem *const &item) {
             hasSelectionChanged(true);
         }
     });
-    item->deselected.connect(this, [this]() {
+    item->deselected.connectTo(this, [this]() {
         if (_selectedItems.sequence().empty()) {
             hasSelectionChanged(false);
         }

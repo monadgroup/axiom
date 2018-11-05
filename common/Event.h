@@ -26,10 +26,26 @@ namespace AxiomCommon {
 
         struct EventData : public TrackedObject {
             SlotMap<FuncType> connections;
+            bool isDispatching = false;
+            std::unique_ptr<EventData> queuedDestroy;
+
+            void handleDestroy(std::unique_ptr<EventData> ownership) {
+                if (isDispatching) {
+                    queuedDestroy = std::move(ownership);
+                }
+            }
 
             void dispatch(const Args &... params) {
+                isDispatching = true;
                 for (const auto &connection : connections) {
                     connection.value(params...);
+                }
+                isDispatching = false;
+
+                // if the event was destroyed during the dispatch, destroy it now
+                // note: this destroys `this`!
+                if (queuedDestroy) {
+                    queuedDestroy.reset();
                 }
             }
 
@@ -39,43 +55,93 @@ namespace AxiomCommon {
         };
 
     public:
+        struct EventTarget {
+            TrackedObject *bindObj;
+            FuncType listener;
+
+            EventTarget(TrackedObject *bindObj, FuncType listener) : bindObj(bindObj), listener(std::move(listener)) {}
+        };
+
         Event() : data(std::make_unique<EventData>()) {}
+
+        Event(Event &&a) noexcept = default;
+
+        ~Event() {
+            if (data) {
+                auto dataPtr = data.get();
+                dataPtr->handleDestroy(std::move(data));
+            }
+        }
+
+        Event &operator=(Event &&a) noexcept = default;
 
         void operator()(const Args &... params) { data->dispatch(params...); }
 
-        // call the provided function when the event is triggered
-        EventId connect(FuncType listener) { return data->connections.insert(std::move(listener)); }
+        static EventTarget to(FuncType listener) { return EventTarget(nullptr, std::move(listener)); }
 
-        // call the provided function when the event is triggered, automatically disconnecting when the
-        // provided object is destructed
-        EventId connect(TrackedObject *obj, FuncType listener) {
-            auto eventId = connect(std::move(listener));
-            obj->trackedObjectListenForRemove(data.get(), eventId);
+        static EventTarget to(TrackedObject *obj, FuncType listener) { return EventTarget(obj, std::move(listener)); }
+
+        template<class TB, class TFB, class TR, class... TA>
+        static EventTarget to(TB *follow, TR (TFB::*listener)(TA...)) {
+            return to(follow, [follow, listener](Args... params) {
+                auto wrapper = std::mem_fn(listener);
+                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+            });
+        }
+
+        template<class TB, class TFB, class TR, class... TA>
+        static EventTarget to(TB *follow, TR (TFB::*listener)(TA...) const) {
+            return to(follow, [follow, listener](Args... params) {
+                auto wrapper = std::mem_fn(listener);
+                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+            });
+        }
+
+        static EventTarget to(Event *event) {
+            // data is guaranteed to not move
+            auto dataPtr = event->data.get();
+            return to(dataPtr, [dataPtr](Args... params) { dataPtr->dispatch(params...); });
+        }
+
+        EventId connect(EventTarget target) {
+            auto eventId = data->connections.insert(std::move(target.listener));
+            if (target.bindObj) {
+                target.bindObj->trackedObjectListenForRemove(data.get(), eventId);
+            }
             return eventId;
         }
 
-        // call the provided method, automatically disconnecting when the base object is destructed
-        template<class TB, class TFB, class TR, class... TA>
-        EventId connect(TB *follow, TR (TFB::*listener)(TA...)) {
-            return connect(follow, [follow, listener](Args... params) {
-                auto wrapper = std::mem_fn(listener);
-                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
+        template<class... ToArgs>
+        EventId connectTo(ToArgs &&... args) {
+            return connect(to(std::forward<ToArgs>(args)...));
+        }
+
+        template<class Func>
+        EventId connectWith(Func func) {
+            return data->connections.insertWith([this, func](EventId eventId) {
+                auto target = func(eventId);
+                if (target.bindObj) {
+                    target.bindObj->trackedObjectListenForRemove(data.get(), eventId);
+                }
+                return std::move(target.listener);
             });
         }
 
-        template<class TB, class TFB, class TR, class... TA>
-        EventId connect(TB *follow, TR (TFB::*listener)(TA...) const) {
-            return connect(follow, [follow, listener](Args... params) {
-                auto wrapper = std::mem_fn(listener);
-                applyFunc<sizeof...(TA) + 1>(wrapper, follow, std::forward<Args>(params)...);
-            });
-        }
+        EventId once(EventTarget target) {
+            auto dataPtr = data.get();
+            return connectWith([dataPtr, target](EventId eventId) {
+                auto targetListener = std::move(target.listener);
+                return EventTarget(target.bindObj, [dataPtr, eventId, targetListener](Args... params) {
+                    // move everything out of the closure context, since it might be destroyed by the end
+                    // of the function.
+                    auto data = dataPtr;
+                    auto event = eventId;
+                    auto listener = std::move(targetListener);
 
-        // trigger the provided event when this event is triggered
-        EventId forward(Event *event) {
-            // data is guaranteed to not move
-            auto dataPtr = event->data.get();
-            return connect(dataPtr, [dataPtr](Args... params) { dataPtr->dispatch(params...); });
+                    listener(std::forward<Args>(params)...);
+                    data->disconnect(event);
+                });
+            });
         }
 
         void disconnect(EventId event) { data->disconnect(event); }
@@ -95,7 +161,7 @@ namespace AxiomCommon {
 
         template<size_t ArgCount, class Func, class... PassArgs>
         static void applyFunc(const Func &func, PassArgs &&... params) {
-            applyFuncIndexed(func, std::make_index_sequence<ArgCount>{}, std::forward<PassArgs>(params)...);
+            applyFuncIndexed(func, std::make_index_sequence<ArgCount> {}, std::forward<PassArgs>(params)...);
         }
     };
 }

@@ -11,8 +11,8 @@ NodeSurfacePanel::NodeSurfacePanel(MainWindow *window, AxiomModel::NodeSurface *
     : ads::CDockWidget(surface->name()), window(window) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/SchematicPanel.qss"));
 
-    surface->nameChanged.connect(this, &NodeSurfacePanel::setWindowTitle);
-    surface->removed.connect(this, &NodeSurfacePanel::cleanup);
+    surface->nameChanged.connectTo(this, &NodeSurfacePanel::setWindowTitle);
+    surface->removed.connectTo(this, &NodeSurfacePanel::cleanup);
 
     setWidget(new NodeSurfaceView(this, surface));
     widget()->setParent(this);

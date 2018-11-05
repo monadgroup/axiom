@@ -67,7 +67,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
     std::cout << "Loading module library took " << duration.count() / 1000000000. << "s" << std::endl;
 
-    _library->changed.connect(this, &MainWindow::triggerLibraryChanged);
+    _library->changed.connectTo(this, &MainWindow::triggerLibraryChanged);
 
     saveDebounceTimer.setSingleShot(true);
     saveDebounceTimer.setInterval(500);
@@ -267,9 +267,9 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     _viewMenu->addAction(_historyPanel->toggleViewAction());
 
     updateWindowTitle(_project->linkedFile(), _project->isDirty());
-    _project->linkedFileChanged.connect(
+    _project->linkedFileChanged.connectTo(
         [this](const QString &newName) { updateWindowTitle(newName, _project->isDirty()); });
-    _project->isDirtyChanged.connect([this](bool isDirty) { updateWindowTitle(_project->linkedFile(), isDirty); });
+    _project->isDirtyChanged.connectTo([this](bool isDirty) { updateWindowTitle(_project->linkedFile(), isDirty); });
 }
 
 QString MainWindow::globalLibraryLockPath() {

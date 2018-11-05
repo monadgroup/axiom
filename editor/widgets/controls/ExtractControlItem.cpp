@@ -21,9 +21,9 @@ static QString getPlugImagePath(ExtractControl *control) {
 
 ExtractControlItem::ExtractControlItem(ExtractControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control), _plugImage(getPlugImagePath(control)) {
-    control->activeSlotsChanged.connect(this, &ExtractControlItem::triggerUpdate);
-    control->connections().events().itemAdded().connect(this, &ExtractControlItem::triggerUpdate);
-    control->connections().events().itemRemoved().connect(this, &ExtractControlItem::triggerUpdate);
+    control->activeSlotsChanged.connectTo(this, &ExtractControlItem::triggerUpdate);
+    control->connections().events().itemAdded().connectTo(this, &ExtractControlItem::triggerUpdate);
+    control->connections().events().itemRemoved().connectTo(this, &ExtractControlItem::triggerUpdate);
 }
 
 void ExtractControlItem::paintControl(QPainter *painter) {

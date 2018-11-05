@@ -39,11 +39,11 @@ static std::vector<std::pair<QString, NumControl::DisplayMode>> modes = {
 
 NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime)
     : ControlItem(control, canvas), control(control), runtime(runtime), _plugImage(":/icons/num-plug.png") {
-    control->valueChanged.connect(this, &NumControlItem::controlValueChanged);
-    control->displayModeChanged.connect(this, &NumControlItem::triggerUpdate);
-    control->rangeChanged.connect(this, &NumControlItem::triggerUpdate);
-    control->connections().events().itemAdded().connect(this, &NumControlItem::triggerUpdate);
-    control->connections().events().itemRemoved().connect(this, &NumControlItem::triggerUpdate);
+    control->valueChanged.connectTo(this, &NumControlItem::controlValueChanged);
+    control->displayModeChanged.connectTo(this, &NumControlItem::triggerUpdate);
+    control->rangeChanged.connectTo(this, &NumControlItem::triggerUpdate);
+    control->connections().events().itemAdded().connectTo(this, &NumControlItem::triggerUpdate);
+    control->connections().events().itemRemoved().connectTo(this, &NumControlItem::triggerUpdate);
 
     connect(&showValueTimer, &QTimer::timeout, this, &NumControlItem::showValueExpired);
 }

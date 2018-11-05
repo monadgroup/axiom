@@ -59,8 +59,8 @@ namespace AxiomCommon {
     public:
         WatchEvents(Sequence sequence, InputEvents inputEvents)
             : data(std::make_unique<WatchEventsData>(std::move(sequence), std::move(inputEvents))) {
-            data->inputEvents.itemAdded().connect(data.get(), &WatchEventsData::parentItemAdded);
-            data->inputEvents.itemRemoved().connect(data.get(), &WatchEventsData::parentItemRemoved);
+            data->inputEvents.itemAdded().connectTo(data.get(), &WatchEventsData::parentItemAdded);
+            data->inputEvents.itemRemoved().connectTo(data.get(), &WatchEventsData::parentItemRemoved);
         }
 
         Event<OutputItem> &itemAdded() { return data->itemAdded; }

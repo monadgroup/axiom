@@ -14,18 +14,18 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
-    node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
-    node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
+    node->beforeSizeChanged.connectTo(this, &CustomNodePanel::triggerGeometryChange);
+    node->sizeChanged.connectTo(this, &CustomNodePanel::updateSize);
 
-    node->beforeSizeChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
-    node->sizeChanged.connect(this, &CustomNodePanel::updateSize);
-    node->panelOpenChanged.connect(this, &CustomNodePanel::setOpen);
-    node->beforePanelHeightChanged.connect(this, &CustomNodePanel::triggerGeometryChange);
-    node->panelHeightChanged.connect(this, &CustomNodePanel::updateSize);
-    node->codeChanged.connect(this, &CustomNodePanel::codeChanged);
-    node->codeCompileError.connect(this, &CustomNodePanel::compileError);
-    node->codeCompileSuccess.connect(this, &CustomNodePanel::compileSuccess);
-    node->inErrorStateChanged.connect(this, &CustomNodePanel::triggerUpdate);
+    node->beforeSizeChanged.connectTo(this, &CustomNodePanel::triggerGeometryChange);
+    node->sizeChanged.connectTo(this, &CustomNodePanel::updateSize);
+    node->panelOpenChanged.connectTo(this, &CustomNodePanel::setOpen);
+    node->beforePanelHeightChanged.connectTo(this, &CustomNodePanel::triggerGeometryChange);
+    node->panelHeightChanged.connectTo(this, &CustomNodePanel::updateSize);
+    node->codeChanged.connectTo(this, &CustomNodePanel::codeChanged);
+    node->codeCompileError.connectTo(this, &CustomNodePanel::compileError);
+    node->codeCompileSuccess.connectTo(this, &CustomNodePanel::compileSuccess);
+    node->inErrorStateChanged.connectTo(this, &CustomNodePanel::triggerUpdate);
 
     auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, CustomNode::minPanelHeight));
     connect(this, &CustomNodePanel::resizerSizeChanged, resizer, &ItemResizer::setSize);

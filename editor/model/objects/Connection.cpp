@@ -23,16 +23,16 @@ Connection::Connection(const QUuid &uuid, const QUuid &parentUuid, const QUuid &
                                                            controlA->wireType(), controlA->worldPos(),
                                                            controlB->worldPos()));
             auto &wire = *_wire.value();
-            controlA->worldPosChanged.connect(wire.get(), &ConnectionWire::setStartPos);
-            controlB->worldPosChanged.connect(wire.get(), &ConnectionWire::setEndPos);
-            controlA->isActiveChanged.connect(wire.get(), &ConnectionWire::setStartActive);
-            controlB->isActiveChanged.connect(wire.get(), &ConnectionWire::setEndActive);
-            controlA->isEnabledChanged.connect(wire.get(), &ConnectionWire::setStartEnabled);
-            controlB->isEnabledChanged.connect(wire.get(), &ConnectionWire::setEndEnabled);
-            wire->activeChanged.connect(controlA, &Control::setIsActive);
-            wire->activeChanged.connect(controlB, &Control::setIsActive);
-            controlA->removed.connect(this, &Connection::remove);
-            controlB->removed.connect(this, &Connection::remove);
+            controlA->worldPosChanged.connectTo(wire.get(), &ConnectionWire::setStartPos);
+            controlB->worldPosChanged.connectTo(wire.get(), &ConnectionWire::setEndPos);
+            controlA->isActiveChanged.connectTo(wire.get(), &ConnectionWire::setStartActive);
+            controlB->isActiveChanged.connectTo(wire.get(), &ConnectionWire::setEndActive);
+            controlA->isEnabledChanged.connectTo(wire.get(), &ConnectionWire::setStartEnabled);
+            controlB->isEnabledChanged.connectTo(wire.get(), &ConnectionWire::setEndEnabled);
+            wire->activeChanged.connectTo(controlA, &Control::setIsActive);
+            wire->activeChanged.connectTo(controlB, &Control::setIsActive);
+            controlA->removed.connectTo(this, &Connection::remove);
+            controlB->removed.connectTo(this, &Connection::remove);
 
             wire->setStartPos(controlA->worldPos());
             wire->setEndPos(controlB->worldPos());

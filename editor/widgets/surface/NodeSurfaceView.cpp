@@ -29,8 +29,8 @@ NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
     // setViewport(new QOpenGLWidget());
     setAcceptDrops(true);
 
-    surface->panChanged.connect(this, &NodeSurfaceView::pan);
-    surface->zoomChanged.connect(this, &NodeSurfaceView::zoom);
+    surface->panChanged.connectTo(this, &NodeSurfaceView::pan);
+    surface->zoomChanged.connectTo(this, &NodeSurfaceView::zoom);
 
     // set properties
     setDragMode(QGraphicsView::NoDrag);
@@ -53,7 +53,7 @@ NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
     connect(GlobalActions::editPaste, &QAction::triggered, this, &NodeSurfaceView::pasteBuffer);
 
     // connect to update history
-    surface->root()->history().stackChanged.connect(this, &NodeSurfaceView::updateHistoryState);
+    surface->root()->history().stackChanged.connectTo(this, &NodeSurfaceView::updateHistoryState);
 }
 
 void NodeSurfaceView::mousePressEvent(QMouseEvent *event) {
