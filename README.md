@@ -9,7 +9,7 @@ Axiom is an extremely flexible node-based realtime audio synthesizer. It was ori
 Features:
 
  - Musician-friendly (ie knobs and sliders) interface
- - Highly customizable and flexible through a node editor and custom scripting language, named Maxim
+ - Highly customizable and flexible through a node editor and Maxim, a custom scripting language
  - Export to replayer with no dependencies (not even the standard library)
  - Use any DAW with VSTi support for note editing and automation
 
@@ -43,13 +43,21 @@ cmake ../path/to/source -DAXIOM_STATIC_LINK=ON -DVST2_SDK_ROOT=/path/to/vst/sdk
 
 CMake will setup files necessary for building. If this fails, make sure you've got Cargo, Qt, LLVM, and the VST SDK installed correctly. Once complete, you can choose which backend to build:
 
-To build the VST2 instrument backend, use the following command. You will need to specify a path to the VST2 SDK. You can also build the VST2 effect with the `axiom_vst2_effect` target.
+### VST2 Instrument & VST2 Effect
 
+* To build the VST2 instrument backend, use the following command. You will need to specify a path to the VST2 SDK. 
 ```
 cmake --build ./ --target axiom_vst2_instrument
 ```
 
-To build the standalone version as an executable, use the following command. In order to enable audio output in this version, the PortAudio library must be installed. You can still use the standalone editor without it, the graph just won't be simulated.
+* You can also build the VST2 effect with the `axiom_vst2_effect` target.
+```
+cmake --build ./ --target axiom_vst2_effect
+```
+
+### Standalone
+
+* To build the standalone version as an executable, use the following command. In order to enable audio output in this version, the PortAudio library must be installed. You can still use the standalone editor without it, the graph just won't be simulated.
 
 ```
 cmake --build ./ --target axiom_standalone
