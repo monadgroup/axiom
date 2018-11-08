@@ -16,9 +16,11 @@ AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
     : AudioEffectX(audioMaster, 1, 255), appRef(application.get()), backend(this), editor(&*appRef, &backend) {
 #ifdef AXIOM_VST2_IS_SYNTH
     isSynth();
+    setUniqueID(0x41584F53);
+#else
+    setUniqueID(0x41584F45);
 #endif
 
-    setUniqueID(0x41584F4D); // 'AXOM'
     programsAreChunks();
     canProcessReplacing();
 
