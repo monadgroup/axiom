@@ -31,6 +31,13 @@ pub fn remap_type(context: &Context, mir_type: &VarType) -> StructType {
     }
 }
 
+pub fn pass_type_by_val(mir_type: &VarType) -> bool {
+    match mir_type {
+        VarType::Num => true,
+        _ => false,
+    }
+}
+
 pub fn remap_constant(context: &Context, value: &ConstantValue) -> BasicValueEnum {
     match value {
         ConstantValue::Num(num) => {

@@ -60,11 +60,12 @@ impl fmt::Display for FunctionLifecycleFunc {
 
 pub struct VarArgs {
     param: StructValue,
+    is_by_value: bool,
 }
 
 impl VarArgs {
-    pub fn new(param: StructValue) -> Self {
-        VarArgs { param }
+    pub fn new(param: StructValue, is_by_value: bool) -> Self {
+        VarArgs { param, is_by_value }
     }
 
     fn len(&self, builder: &Builder) -> IntValue {
@@ -78,9 +79,13 @@ impl VarArgs {
             .build_extract_value(self.param, 1, "vararg.arr")
             .into_pointer_value();
         let item_ptr_ptr = unsafe { builder.build_gep(&arr_ptr, &[index], "vararg.item.ptr") };
-        builder
-            .build_load(&item_ptr_ptr, "vararg.item")
-            .into_pointer_value()
+        if self.is_by_value {
+            item_ptr_ptr
+        } else {
+            builder
+                .build_load(&item_ptr_ptr, "vararg.item")
+                .into_pointer_value()
+        }
     }
 }
 
@@ -190,31 +195,43 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
             get_data_type(&context, function)
                 .ptr_type(AddressSpace::Generic)
                 .into(),
-            get_return_type(&context, function)
-                .ptr_type(AddressSpace::Generic)
-                .into(),
         ];
+
+        let mir_return_type = VarType::of_function(&function);
+        let pass_return_by_val = values::pass_type_by_val(&mir_return_type);
+        if !pass_return_by_val {
+            arg_types.push(
+                values::remap_type(&context, &mir_return_type)
+                    .ptr_type(AddressSpace::Generic)
+                    .into(),
+            );
+        }
 
         // add all argument types
         arg_types.extend(function.arg_types().iter().map(|param| -> BasicTypeEnum {
-            values::remap_type(&context, &param.value_type)
-                .ptr_type(AddressSpace::Generic)
-                .into()
+            let base_type = values::remap_type(&context, &param.value_type);
+            if values::pass_type_by_val(&param.value_type) {
+                base_type.into()
+            } else {
+                base_type.ptr_type(AddressSpace::Generic).into()
+            }
         }));
 
         // add the vararg if it exists
         if let Some(vararg_type) = function.var_arg() {
+            let base_type = values::remap_type(&context, &vararg_type);
+            let array_type_ptr = if values::pass_type_by_val(&vararg_type) {
+                base_type.ptr_type(AddressSpace::Generic)
+            } else {
+                base_type
+                    .ptr_type(AddressSpace::Generic)
+                    .ptr_type(AddressSpace::Generic)
+            };
+
             arg_types.push(
                 context
-                    .struct_type(
-                        &[
-                            &context.i8_type(),
-                            &values::remap_type(&context, &vararg_type)
-                                .ptr_type(AddressSpace::Generic)
-                                .ptr_type(AddressSpace::Generic),
-                        ],
-                        false,
-                    ).into(),
+                    .struct_type(&[&context.i8_type(), &array_type_ptr], false)
+                    .into(),
             )
         }
 
@@ -224,13 +241,19 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
             .collect();
         (
             Linkage::ExternalLinkage,
-            context.void_type().fn_type(&arg_refs, false),
+            if pass_return_by_val {
+                values::remap_type(&context, &mir_return_type).fn_type(&arg_refs, false)
+            } else {
+                context.void_type().fn_type(&arg_refs, false)
+            },
         )
     });
-    func.add_param_attribute(
-        1,
-        module.get_context().get_enum_attr(AttrKind::StructRet, 1),
-    );
+    if !values::pass_type_by_val(&VarType::of_function(&function)) {
+        func.add_param_attribute(
+            1,
+            module.get_context().get_enum_attr(AttrKind::StructRet, 1),
+        );
+    }
     func
 }
 
@@ -259,31 +282,62 @@ fn build_update_func(
 ) {
     let func = get_update_func(module, function);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
-        let data_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let return_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
-        let has_vararg = function.var_arg().is_some();
-        let arg_pointers: Vec<_> = ctx
-            .func
-            .params()
-            .take(if has_vararg {
-                ctx.func.count_params() - 1
-            } else {
-                ctx.func.count_params()
-            } as usize).skip(2)
-            .map(|val| val.into_pointer_value())
-            .collect();
+        let mut params_iter = ctx.func.params();
+        let data_ptr = params_iter.next().unwrap().into_pointer_value();
+        let return_type = VarType::of_function(&function);
+        let pass_return_by_val = values::pass_type_by_val(&return_type);
 
-        let vararg = if has_vararg {
+        let (param_offset_count, return_ptr) = if pass_return_by_val {
+            (
+                1,
+                ctx.allocb
+                    .build_alloca(&values::remap_type(ctx.context, &return_type), "ret.ptr"),
+            )
+        } else {
+            (2, params_iter.next().unwrap().into_pointer_value())
+        };
+
+        let func_vararg = function.var_arg();
+        let func_arg_types = function.arg_types();
+        let arg_pointers: Vec<_> = params_iter
+            .take(
+                ctx.func.count_params() as usize
+                    - param_offset_count
+                    - if func_vararg.is_some() { 1 } else { 0 },
+            ).zip(func_arg_types)
+            .enumerate()
+            .map(|(index, (val, param_type))| {
+                if values::pass_type_by_val(&param_type.value_type) {
+                    // build an alloca and store the passed value in it
+                    let param_alloca = ctx.allocb.build_alloca(
+                        &values::remap_type(ctx.context, &param_type.value_type),
+                        &format!("param.{}.ptr", index),
+                    );
+                    ctx.b.build_store(&param_alloca, &val);
+                    param_alloca
+                } else {
+                    val.into_pointer_value()
+                }
+            }).collect();
+
+        let vararg = if let Some(vararg_type) = func_vararg {
             Some(VarArgs::new(
                 ctx.func.get_last_param().unwrap().into_struct_value(),
+                values::pass_type_by_val(&vararg_type),
             ))
         } else {
             None
         };
+
         let mut function_context = FunctionContext { ctx, data_ptr };
         builder(&mut function_context, &arg_pointers, vararg, return_ptr);
 
-        function_context.ctx.b.build_return(None);
+        if pass_return_by_val {
+            let return_val = function_context.ctx.b.build_load(&return_ptr, "ret");
+            function_context.ctx.b.build_return(Some(&return_val));
+        } else {
+            function_context.ctx.b.build_return(None);
+        }
     })
 }
 
@@ -307,32 +361,53 @@ pub fn build_call(
     out_val: PointerValue,
 ) {
     let func = get_update_func(ctx.module, function);
-    let mut pass_args: Vec<BasicValueEnum> = vec![data_ptr.into(), out_val.into()];
+    let mut pass_args: Vec<BasicValueEnum> = vec![data_ptr.into()];
+    let pass_return_by_val = values::pass_type_by_val(&function.return_type());
+    if !pass_return_by_val {
+        pass_args.push(out_val.into());
+    }
+
+    let func_arg_types = function.arg_types();
     pass_args.extend(
         map_real_args(function, ctx, args)
             .into_iter()
-            .map(|ptr| -> BasicValueEnum { ptr.into() }),
+            .zip(func_arg_types.into_iter())
+            .enumerate()
+            .map(|(index, (ptr, param_type))| -> BasicValueEnum {
+                if values::pass_type_by_val(&param_type.value_type) {
+                    ctx.b.build_load(&ptr, &format!("param.{}", index)).into()
+                } else {
+                    ptr.into()
+                }
+            }),
     );
 
     // build the vararg struct
     if let Some(vararg_type) = function.var_arg() {
-        let ll_vararg_type =
-            values::remap_type(&ctx.context, &vararg_type).ptr_type(AddressSpace::Generic);
-        let va_struct_type = ctx.context.struct_type(
-            &[
-                &ctx.context.i8_type(),
-                &ll_vararg_type.ptr_type(AddressSpace::Generic),
-            ],
-            false,
-        );
-        let va_array_type = ll_vararg_type.array_type(varargs.len() as u32);
-        let va_array = ctx.allocb.build_alloca(&va_array_type, "va.arr");
+        let base_ll_vararg_type = values::remap_type(&ctx.context, &vararg_type);
+        let is_by_value = values::pass_type_by_val(&vararg_type);
+        let (ll_vararg_ptr_type, ll_vararg_arr_type) = if is_by_value {
+            (
+                base_ll_vararg_type.ptr_type(AddressSpace::Generic),
+                base_ll_vararg_type.array_type(varargs.len() as u32),
+            )
+        } else {
+            let ptr_type = base_ll_vararg_type.ptr_type(AddressSpace::Generic);
+            (
+                ptr_type.ptr_type(AddressSpace::Generic),
+                ptr_type.array_type(varargs.len() as u32),
+            )
+        };
+        let va_struct_type = ctx
+            .context
+            .struct_type(&[&ctx.context.i8_type(), &ll_vararg_ptr_type], false);
+        let va_array = ctx.allocb.build_alloca(&ll_vararg_arr_type, "va.arr");
 
         // the struct accepts a pointer to a pointer, which we can get by bitcasting
         let va_array_ptr = ctx.b.build_cast(
             InstructionOpcode::BitCast,
             &va_array,
-            &ll_vararg_type.ptr_type(AddressSpace::Generic),
+            &ll_vararg_ptr_type,
             "",
         );
 
@@ -351,14 +426,21 @@ pub fn build_call(
                 ctx.b
                     .build_struct_gep(&va_array, vararg_index as u32, "va.arr.itemptr")
             };
-            ctx.b.build_store(&store_pos, vararg_ptr);
+            if is_by_value {
+                util::copy_ptr(ctx.b, ctx.module, *vararg_ptr, store_pos);
+            } else {
+                ctx.b.build_store(&store_pos, vararg_ptr);
+            }
         }
 
         pass_args.push(va_struct.into());
     }
 
     let pass_arg_refs: Vec<_> = pass_args.iter().map(|arg| arg as &BasicValue).collect();
-    ctx.b.build_call(&func, &pass_arg_refs, "", true);
+    let ret_val = ctx.b.build_call(&func, &pass_arg_refs, "", true);
+    if pass_return_by_val {
+        ctx.b.build_store(&out_val, &ret_val.left().unwrap());
+    }
 }
 
 pub trait Function {
