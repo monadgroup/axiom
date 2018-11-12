@@ -489,7 +489,7 @@ impl Control for GraphControl {
                 &tension_graph_func,
                 &[&curve_function_x, &current_tension],
                 "curve.y",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_float_value();

@@ -254,5 +254,5 @@ pub fn build_lifecycle_call(
     pointer_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, cache, surface, lifecycle);
-    builder.build_call(&func, &[&pointer_ptr], "", false);
+    builder.build_call(&func, &[&pointer_ptr], "", true);
 }

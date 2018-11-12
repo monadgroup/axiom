@@ -26,7 +26,7 @@ namespace MaximCompiler {
 
         bool isNodeExtracted(uint64_t surface, size_t node);
 
-        AxiomModel::NumValue convertNum(AxiomModel::FormType targetForm, const AxiomModel::NumValue &value);
+        AxiomModel::NumValue convertNum(AxiomModel::FormType targetForm, AxiomModel::NumValue value);
 
         void *getPortalPtr(size_t portal);
 

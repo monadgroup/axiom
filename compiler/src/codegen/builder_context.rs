@@ -23,14 +23,21 @@ pub fn build_context_function(
     let context = module.get_context();
 
     // assign some useful attributes to the function
-    function.add_attribute(context.get_string_attr("less-precise-fpmad", "true"));
+    function
+        .add_attribute(context.get_string_attr("correctly-rounded-divide-sqrt-fp-math", "false"));
+    function.add_attribute(context.get_string_attr("disable-tail-calls", "false"));
+    function.add_attribute(context.get_string_attr("less-precise-fpmad", "false"));
+    function.add_attribute(context.get_string_attr("no-frame-pointer-elim", "false"));
     function.add_attribute(context.get_string_attr("no-infs-fp-math", "true"));
+    function.add_attribute(context.get_string_attr("no-jump-tables", "false"));
     function.add_attribute(context.get_string_attr("no-nans-fp-math", "true"));
     function.add_attribute(context.get_string_attr("no-signed-zeros-fp-math", "true"));
     function.add_attribute(context.get_string_attr("no-trapping-math", "true"));
-    function.add_attribute(context.get_string_attr("unsafe-fp-math", "true"));
-    function.add_attribute(context.get_string_attr("denorms-are-zero", "true"));
     function.add_attribute(context.get_string_attr("denormal-fp-math", "positive-zero"));
+    function.add_attribute(context.get_string_attr("target-cpu", "pentium4"));
+    function.add_attribute(context.get_string_attr("target-features", "+mmx,+sse,+sse2"));
+    function.add_attribute(context.get_string_attr("unsafe-fp-math", "true"));
+    function.add_attribute(context.get_string_attr("use-soft-float", "false"));
 
     function.add_attribute(context.get_enum_attr(AttrKind::NoRecurse, 0));
     function.add_attribute(context.get_enum_attr(AttrKind::NoUnwind, 0));

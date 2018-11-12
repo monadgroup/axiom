@@ -235,7 +235,7 @@ impl DelayFunction {
                     &next_power_intrinsic,
                     &[&reserve_samples],
                     "newbuffersize",
-                    false,
+                    true,
                 ).left()
                 .unwrap()
                 .into_int_value();
@@ -540,7 +540,7 @@ impl Function for DelayFunction {
                         .build_extract_element(&input_vec, &left_element, ""),
                 ],
                 "result.left",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_float_value();
@@ -569,7 +569,7 @@ impl Function for DelayFunction {
                         .build_extract_element(&input_vec, &right_element, ""),
                 ],
                 "result.right",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_float_value();

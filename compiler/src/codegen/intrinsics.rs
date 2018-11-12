@@ -1,4 +1,4 @@
-use codegen::util;
+use codegen::{build_context_function, util, BuilderContext, TargetProperties};
 use inkwell::module::{Linkage, Module};
 use inkwell::targets::TargetData;
 use inkwell::types::{BasicType, VectorType};
@@ -292,86 +292,95 @@ pub fn next_power_i64(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn build_intrinsics(module: &Module) {
-    build_eucrem_v2i32(module);
-    build_next_power_i64(module);
+pub fn build_intrinsics(module: &Module, target: &TargetProperties) {
+    build_eucrem_v2i32(module, target);
+    build_next_power_i64(module, target);
 }
 
-fn build_eucrem_v2i32(module: &Module) {
-    let func = eucrem_v2i32(module);
-    let context = module.get_context();
-    let entry_block = context.append_basic_block(&func, "entry");
-    let builder = context.create_builder();
-    builder.set_fast_math_all();
-    builder.position_at_end(&entry_block);
+fn build_eucrem_v2i32(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        eucrem_v2i32(module),
+        target,
+        &|ctx: BuilderContext| {
+            let x_val = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+            let y_val = ctx.func.get_nth_param(1).unwrap().into_vector_value();
 
-    let x_val = func.get_nth_param(0).unwrap().into_vector_value();
-    let y_val = func.get_nth_param(1).unwrap().into_vector_value();
+            // if we assume y is always positive (which we do here), this is equal to
+            // x % y when x is positive, otherwise x % y + y
+            let rem_val = ctx.b.build_int_signed_rem(x_val, y_val, "rem");
+            let const_zero = VectorType::const_vector(&[
+                &ctx.context.i32_type().const_int(0, false),
+                &ctx.context.i32_type().const_int(0, false),
+            ]);
+            let lt_zero = ctx
+                .b
+                .build_int_compare(IntPredicate::SLT, x_val, const_zero, "");
+            let shift_amt = ctx.b.build_int_mul(
+                y_val,
+                ctx.b.build_int_z_extend(lt_zero, y_val.get_type(), ""),
+                "",
+            );
 
-    // if we assume y is always positive (which we do here), this is equal to
-    // x % y when x is positive, otherwise x % y + y
-    let rem_val = builder.build_int_signed_rem(x_val, y_val, "rem");
-    let const_zero = VectorType::const_vector(&[
-        &context.i32_type().const_int(0, false),
-        &context.i32_type().const_int(0, false),
-    ]);
-    let lt_zero = builder.build_int_compare(IntPredicate::SLT, x_val, const_zero, "");
-    let shift_amt = builder.build_int_mul(
-        y_val,
-        builder.build_int_z_extend(lt_zero, y_val.get_type(), ""),
-        "",
+            let result_val = ctx.b.build_int_add(rem_val, shift_amt, "");
+            ctx.b.build_return(Some(&result_val));
+        },
     );
-
-    let result_val = builder.build_int_add(rem_val, shift_amt, "");
-    builder.build_return(Some(&result_val));
 }
 
-fn build_next_power_i64(module: &Module) {
-    let ctlz_intrinsic = ctlz_i64(module);
+fn build_next_power_i64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        next_power_i64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let ctlz_intrinsic = ctlz_i64(ctx.module);
 
-    let func = next_power_i64(module);
-    let context = module.get_context();
-    let entry_block = context.append_basic_block(&func, "entry");
-    let zero_true_block = context.append_basic_block(&func, "zero.true");
-    let zero_false_block = context.append_basic_block(&func, "zero.false");
-    let builder = context.create_builder();
-    builder.set_fast_math_all();
-    builder.position_at_end(&entry_block);
+            let zero_true_block = ctx.context.append_basic_block(&ctx.func, "zero.true");
+            let zero_false_block = ctx.context.append_basic_block(&ctx.func, "zero.false");
 
-    let in_val = func.get_nth_param(0).unwrap().into_int_value();
+            let in_val = ctx.func.get_nth_param(0).unwrap().into_int_value();
 
-    // we need special behavior for 0 since this results in 64 << 64, undefined behavior in LLVM
-    let is_zero = builder.build_int_compare(
-        IntPredicate::EQ,
-        in_val,
-        context.i64_type().const_int(0, false),
-        "zero",
-    );
-    builder.build_conditional_branch(&is_zero, &zero_true_block, &zero_false_block);
+            // we need special behavior for 0 since this results in 64 << 64, undefined behavior in LLVM
+            let is_zero = ctx.b.build_int_compare(
+                IntPredicate::EQ,
+                in_val,
+                ctx.context.i64_type().const_int(0, false),
+                "zero",
+            );
+            ctx.b
+                .build_conditional_branch(&is_zero, &zero_true_block, &zero_false_block);
 
-    builder.position_at_end(&zero_true_block);
-    builder.build_return(Some(&context.i64_type().const_int(0, false)));
+            ctx.b.position_at_end(&zero_true_block);
+            ctx.b
+                .build_return(Some(&ctx.context.i64_type().const_int(0, false)));
 
-    builder.position_at_end(&zero_false_block);
-    let next_pow_val = builder.build_left_shift(
-        context.i64_type().const_int(1, false),
-        builder.build_int_sub(
-            context.i64_type().const_int(64, false),
-            builder
-                .build_call(
-                    &ctlz_intrinsic,
-                    &[
-                        &builder.build_int_sub(in_val, context.i64_type().const_int(1, false), ""),
-                        &context.bool_type().const_int(0, false),
-                    ],
+            ctx.b.position_at_end(&zero_false_block);
+            let next_pow_val = ctx.b.build_left_shift(
+                ctx.context.i64_type().const_int(1, false),
+                ctx.b.build_int_sub(
+                    ctx.context.i64_type().const_int(64, false),
+                    ctx.b
+                        .build_call(
+                            &ctlz_intrinsic,
+                            &[
+                                &ctx.b.build_int_sub(
+                                    in_val,
+                                    ctx.context.i64_type().const_int(1, false),
+                                    "",
+                                ),
+                                &ctx.context.bool_type().const_int(0, false),
+                            ],
+                            "",
+                            false,
+                        ).left()
+                        .unwrap()
+                        .into_int_value(),
                     "",
-                    false,
-                ).left()
-                .unwrap()
-                .into_int_value(),
-            "",
-        ),
-        "result",
+                ),
+                "result",
+            );
+            ctx.b.build_return(Some(&next_pow_val));
+        },
     );
-    builder.build_return(Some(&next_pow_val));
 }

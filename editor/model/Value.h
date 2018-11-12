@@ -25,9 +25,12 @@ namespace AxiomModel {
     };
 
     struct NumValue {
-        float left = 0;
-        float right = 0;
-        FormType form = FormType::NONE;
+        float left;
+        float right;
+        FormType form;
+
+        NumValue() : left(0), right(0), form(FormType::NONE) {}
+        NumValue(float left, float right, FormType form) : left(left), right(right), form(form) {}
 
         bool operator==(const NumValue &other) const {
             return left == other.left && right == other.right && form == other.form;

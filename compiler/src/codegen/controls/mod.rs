@@ -219,7 +219,7 @@ pub fn build_field_get(
         &func,
         &[&out_val, &group_ptr, &data_ptr, &shared_ptr],
         "field.get",
-        false,
+        true,
     );
 }
 
@@ -237,7 +237,7 @@ pub fn build_field_set(
         &func,
         &[&in_val, &group_ptr, &data_ptr, &shared_ptr],
         "",
-        false,
+        true,
     );
 }
 
@@ -251,7 +251,7 @@ pub fn build_lifecycle_call(
     shared_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, control_type, lifecycle);
-    builder.build_call(&func, &[&group_ptr, &data_ptr, &shared_ptr], "", false);
+    builder.build_call(&func, &[&group_ptr, &data_ptr, &shared_ptr], "", true);
 }
 
 pub fn build_ui_lifecycle_call(
@@ -269,7 +269,7 @@ pub fn build_ui_lifecycle_call(
         &func,
         &[&group_ptr, &data_ptr, &shared_ptr, &ui_ptr],
         "",
-        false,
+        true,
     );
 }
 

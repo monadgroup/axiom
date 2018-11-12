@@ -295,7 +295,7 @@ pub fn build_lifecycle_call(
     data_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, function, lifecycle);
-    builder.build_call(&func, &[&data_ptr], "", false);
+    builder.build_call(&func, &[&data_ptr], "", true);
 }
 
 pub fn build_call(
@@ -358,7 +358,7 @@ pub fn build_call(
     }
 
     let pass_arg_refs: Vec<_> = pass_args.iter().map(|arg| arg as &BasicValue).collect();
-    ctx.b.build_call(&func, &pass_arg_refs, "", false);
+    ctx.b.build_call(&func, &pass_arg_refs, "", true);
 }
 
 pub trait Function {

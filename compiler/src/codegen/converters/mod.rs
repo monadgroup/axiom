@@ -10,8 +10,8 @@ mod samples_converter;
 mod seconds_converter;
 
 use ast::FormType;
-use codegen::util;
 use codegen::values::NumValue;
+use codegen::{build_context_function, util, BuilderContext, TargetProperties};
 use inkwell::basic_block::BasicBlock;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -66,74 +66,102 @@ pub fn get_convert_func(module: &Module, target_form: FormType) -> FunctionValue
 
 pub fn build_convert_func(
     module: &Module,
+    target: &TargetProperties,
     target_form: FormType,
     build_func: &Fn(&mut ConvertGenerator),
 ) {
-    let context = &module.get_context();
     let func = get_convert_func(module, target_form);
-    let block = context.append_basic_block(&func, "main");
-    let mut builder = context.create_builder();
-    builder.set_fast_math_all();
-    builder.position_at_end(&block);
+    build_context_function(module, func, target, &|ctx: BuilderContext| {
+        let input_num = NumValue::new(func.get_nth_param(0).unwrap().into_pointer_value());
+        let result_num = NumValue::new_undef(ctx.context, ctx.allocb);
+        let input_form = input_num.get_form(ctx.b);
+        let input_vec = input_num.get_vec(ctx.b);
 
-    let input_num = NumValue::new(func.get_nth_param(0).unwrap().into_pointer_value());
-    let result_num = NumValue::new_undef(context, &mut builder);
-    let input_form = input_num.get_form(&mut builder);
-    let input_vec = input_num.get_vec(&mut builder);
+        result_num.set_form(
+            ctx.b,
+            &ctx.context.i8_type().const_int(target_form as u64, false),
+        );
 
-    result_num.set_form(
-        &mut builder,
-        &context.i8_type().const_int(target_form as u64, false),
-    );
+        // build up each switch block
+        let end_block = ctx.context.append_basic_block(&ctx.func, "end");
+        let default_block = ctx.context.append_basic_block(&ctx.func, "default");
 
-    // build up each switch block
-    let end_block = context.append_basic_block(&func, "end");
+        let mut converter = PrivateGenerator {
+            func: &ctx.func,
+            input_vec: &input_vec,
+            result_num: &result_num,
+            end_block: &end_block,
+            context: ctx.context,
+            module,
+            branches: Vec::new(),
+        };
+        build_func(&mut converter);
 
-    let default_block = context.append_basic_block(&func, "default");
-    builder.position_at_end(&default_block);
-    result_num.set_vec(&mut builder, &input_vec);
-    builder.build_unconditional_branch(&end_block);
+        let switch_cases: Vec<_> = converter
+            .branches
+            .iter()
+            .map(|&(ref form_type, ref block)| (form_type, block))
+            .collect();
+        ctx.b
+            .build_switch(&input_form, &default_block, &switch_cases);
 
-    let mut converter = PrivateGenerator {
-        func: &func,
-        input_vec: &input_vec,
-        result_num: &result_num,
-        end_block: &end_block,
-        context,
-        module,
-        branches: Vec::new(),
-    };
-    build_func(&mut converter);
+        ctx.b.position_at_end(&default_block);
+        result_num.set_vec(ctx.b, &input_vec);
+        ctx.b.build_unconditional_branch(&end_block);
 
-    let switch_cases: Vec<_> = converter
-        .branches
-        .iter()
-        .map(|&(ref form_type, ref block)| (form_type, block))
-        .collect();
-    builder.position_at_end(&block);
-    builder.build_switch(&input_form, &default_block, &switch_cases);
-
-    builder.position_at_end(&end_block);
-    let return_val = result_num.load(&mut builder);
-    builder.build_return(Some(&return_val));
+        ctx.b.position_at_end(&end_block);
+        let return_val = result_num.load(ctx.b);
+        ctx.b.build_return(Some(&return_val));
+    });
 }
 
-pub fn build_funcs(module: &Module) {
-    build_convert_func(module, FormType::None, &|_: &mut ConvertGenerator| {});
-    build_convert_func(module, FormType::Amplitude, &amplitude_converter::amplitude);
-    build_convert_func(module, FormType::Beats, &beats_converter::beats);
-    build_convert_func(module, FormType::Control, &control_converter::control);
-    build_convert_func(module, FormType::Db, &db_converter::db);
-    build_convert_func(module, FormType::Frequency, &frequency_converter::frequency);
-    build_convert_func(module, FormType::Note, &note_converter::note);
+pub fn build_funcs(module: &Module, target: &TargetProperties) {
     build_convert_func(
         module,
+        target,
+        FormType::None,
+        &|_: &mut ConvertGenerator| {},
+    );
+    build_convert_func(
+        module,
+        target,
+        FormType::Amplitude,
+        &amplitude_converter::amplitude,
+    );
+    build_convert_func(module, target, FormType::Beats, &beats_converter::beats);
+    build_convert_func(
+        module,
+        target,
+        FormType::Control,
+        &control_converter::control,
+    );
+    build_convert_func(module, target, FormType::Db, &db_converter::db);
+    build_convert_func(
+        module,
+        target,
+        FormType::Frequency,
+        &frequency_converter::frequency,
+    );
+    build_convert_func(module, target, FormType::Note, &note_converter::note);
+    build_convert_func(
+        module,
+        target,
         FormType::Oscillator,
         &oscillator_converter::oscillator,
     );
-    build_convert_func(module, FormType::Q, &q_converter::q);
-    build_convert_func(module, FormType::Samples, &samples_converter::samples);
-    build_convert_func(module, FormType::Seconds, &seconds_converter::seconds);
+    build_convert_func(module, target, FormType::Q, &q_converter::q);
+    build_convert_func(
+        module,
+        target,
+        FormType::Samples,
+        &samples_converter::samples,
+    );
+    build_convert_func(
+        module,
+        target,
+        FormType::Seconds,
+        &seconds_converter::seconds,
+    );
 }
 
 pub fn build_convert_direct(
@@ -144,7 +172,7 @@ pub fn build_convert_direct(
 ) -> StructValue {
     let convert_func = get_convert_func(module, target_form);
     builder
-        .build_call(&convert_func, &[&source.val], "num.converted", false)
+        .build_call(&convert_func, &[&source.val], "num.converted", true)
         .left()
         .unwrap()
         .into_struct_value()

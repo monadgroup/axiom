@@ -76,7 +76,7 @@ pub fn get_constant_array(t: &BasicTypeEnum, items: &[BasicValueEnum]) -> ArrayV
 pub fn get_or_create_func(
     module: &Module,
     name: &str,
-    _is_internal: bool,
+    is_internal: bool,
     cb: &Fn() -> (Linkage, FunctionType),
 ) -> FunctionValue {
     if let Some(func) = module.get_function(name) {
@@ -85,10 +85,10 @@ pub fn get_or_create_func(
         let (linkage, func_type) = cb();
         let func = module.add_function(name, &func_type, Some(&linkage));
 
-        /*if is_internal {
+        if is_internal {
             // fastcc is 8 according to http://llvm.org/doxygen/namespacellvm_1_1CallingConv.html
             func.set_call_conventions(8);
-        }*/
+        }
 
         func
     }

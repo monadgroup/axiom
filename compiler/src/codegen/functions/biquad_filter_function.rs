@@ -394,7 +394,7 @@ fn gen_biquad_call(
                 &z2_ptr,
             ],
             "resultvec",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_vector_value();

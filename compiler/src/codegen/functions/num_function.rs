@@ -414,7 +414,7 @@ impl Function for SequenceFunction {
                 &eucrem_intrinsic,
                 &[&index_int_vec, &vararg_count_vec],
                 "",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_vector_value();

@@ -3,6 +3,8 @@
 #include <QtCore/QDir>
 #include <QtCore/QtCore>
 #include <iostream>
+#include <pmmintrin.h>
+#include <xmmintrin.h>
 
 #include "compiler/interface/Frontend.h"
 #include "editor/resources/resource.h"
@@ -25,6 +27,10 @@ char **argv = new char *[1];
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     setApplicationName("Axiom");
     setApplicationVersion(AXIOM_VERSION);
+
+    // disable denormals
+    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
 
     MaximFrontend::maxim_initialize();
     AxiomGui::GlobalActions::setupActions();

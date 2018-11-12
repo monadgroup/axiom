@@ -16,10 +16,14 @@ DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TargetMachine, LLVMTargetMachineRef)
 #endif
 
 extern "C" {
-int __umoddi3(int a, int b);
+long __moddi3(long a, long b);
+unsigned long __umoddi3(unsigned long a, unsigned long b);
 
 LLVMTargetMachineRef LLVMAxiomSelectTarget() {
-    return wrap(llvm::EngineBuilder().selectTarget());
+    auto target = llvm::EngineBuilder().selectTarget();
+    target->Options.AllowFPOpFusion = llvm::FPOpFusion::Fast;
+    target->Options.FPDenormalMode = llvm::FPDenormal::PositiveZero;
+    return wrap(target);
 }
 
 // Builder utilities
@@ -74,6 +78,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("realloc", (uint64_t) & ::realloc);
     jit->addBuiltin("free", (uint64_t) & ::free);
     jit->addBuiltin("memset", (uint64_t) & ::memset);
+    jit->addBuiltin("__moddi3", (uint64_t) & ::__moddi3);
     jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
 
 #ifdef APPLE

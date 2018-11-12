@@ -18,7 +18,6 @@ use std::os::raw::c_void;
 use std::ptr;
 use std::time::{Duration, Instant};
 
-#[derive(Debug)]
 struct RuntimeModule {
     module: Module,
     key: Option<JitKey>,
@@ -42,11 +41,10 @@ const DESTRUCT_FUNC_NAME: &str = "maxim.runtime.destruct";
 
 const CONVERT_NUM_FUNC_NAME: &str = "maxim.editor.convert_num";
 
-#[derive(Debug)]
 struct LibraryPointers {
     samplerate_ptr: *mut c_void,
     bpm_ptr: *mut c_void,
-    convert_num: unsafe extern "C" fn(*mut c_void, i8, *const c_void),
+    convert_num: unsafe extern "fastcall" fn(*mut c_void, i8, *const c_void),
 }
 
 impl LibraryPointers {
@@ -69,16 +67,15 @@ impl LibraryPointers {
     }
 }
 
-#[derive(Debug)]
 struct RuntimePointers {
     initialized_ptr: *mut c_void,
     scratch_ptr: *mut c_void,
     sockets_ptr: *mut c_void,
     portals_ptr: *mut c_void,
     pointers_ptr: *mut c_void,
-    construct: unsafe extern "C" fn(),
-    update: unsafe extern "C" fn(),
-    destruct: unsafe extern "C" fn(),
+    construct: unsafe extern "fastcall" fn(),
+    update: unsafe extern "fastcall" fn(),
+    destruct: unsafe extern "fastcall" fn(),
 }
 
 impl RuntimePointers {
@@ -112,7 +109,6 @@ impl RuntimePointers {
     }
 }
 
-#[derive(Debug)]
 pub struct Runtime {
     next_id: u64,
     context: Context,
@@ -143,6 +139,7 @@ impl Runtime {
         // deploy the library to the JIT
         let library_module = Runtime::codegen_lib(&context, &target);
         optimizer.optimize_module(&library_module);
+        library_module.print_to_stderr();
         jit.deploy(&library_module);
         let library_pointers = LibraryPointers::new(&jit);
 
@@ -177,11 +174,11 @@ impl Runtime {
     fn codegen_lib(context: &Context, target: &TargetProperties) -> Module {
         let module = Runtime::create_module(context, target, "lib");
         controls::build_funcs(&module, target);
-        converters::build_funcs(&module);
+        converters::build_funcs(&module, &target);
         functions::build_funcs(&module, &target);
-        intrinsics::build_intrinsics(&module);
+        intrinsics::build_intrinsics(&module, &target);
         globals::build_globals(&module);
-        values::MidiValue::initialize(&module, context);
+        values::MidiValue::initialize(&module, &target);
         editor::build_convert_num_func(&module, &target, CONVERT_NUM_FUNC_NAME);
         module
     }
@@ -236,6 +233,7 @@ impl Runtime {
         }
         let key = jit.deploy(&module.module);
         module.key = Some(key);
+        module.module.print_to_stderr();
     }
 
     fn remove_module(jit: &Jit, module: &mut RuntimeModule) {
