@@ -17,7 +17,6 @@ use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, IntValue, StructValue, VectorValue};
-use inkwell::AddressSpace;
 
 pub type ConvertGeneratorCb = Fn(&Context, &Module, &mut Builder, VectorValue) -> VectorValue;
 
@@ -59,7 +58,7 @@ pub fn get_convert_func(module: &Module, target_form: FormType) -> FunctionValue
         let num_type = NumValue::get_type(&module.get_context());
         (
             Linkage::ExternalLinkage,
-            num_type.fn_type(&[&num_type.ptr_type(AddressSpace::Generic)], false),
+            num_type.fn_type(&[&num_type], false),
         )
     })
 }
@@ -72,8 +71,13 @@ pub fn build_convert_func(
 ) {
     let func = get_convert_func(module, target_form);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
-        let input_num = NumValue::new(func.get_nth_param(0).unwrap().into_pointer_value());
+        let input_val = func.get_nth_param(0).unwrap().into_struct_value();
         let result_num = NumValue::new_undef(ctx.context, ctx.allocb);
+
+        let input_ptr = ctx.allocb.build_alloca(&input_val.get_type(), "in.ptr");
+        ctx.b.build_store(&input_ptr, &input_val);
+        let input_num = NumValue::new(input_ptr);
+
         let input_form = input_num.get_form(ctx.b);
         let input_vec = input_num.get_vec(ctx.b);
 
@@ -171,8 +175,9 @@ pub fn build_convert_direct(
     target_form: FormType,
 ) -> StructValue {
     let convert_func = get_convert_func(module, target_form);
+    let loaded_val = builder.build_load(&source.val, "in").into_struct_value();
     builder
-        .build_call(&convert_func, &[&source.val], "num.converted", true)
+        .build_call(&convert_func, &[&loaded_val], "num.converted", true)
         .left()
         .unwrap()
         .into_struct_value()
