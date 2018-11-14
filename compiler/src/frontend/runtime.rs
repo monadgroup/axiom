@@ -44,7 +44,7 @@ const CONVERT_NUM_FUNC_NAME: &str = "maxim.editor.convert_num";
 struct LibraryPointers {
     samplerate_ptr: *mut c_void,
     bpm_ptr: *mut c_void,
-    convert_num: unsafe extern "fastcall" fn(*mut c_void, i8, *const c_void),
+    convert_num: unsafe extern "C" fn(*mut c_void, i8, *const c_void),
 }
 
 impl LibraryPointers {
@@ -73,9 +73,9 @@ struct RuntimePointers {
     sockets_ptr: *mut c_void,
     portals_ptr: *mut c_void,
     pointers_ptr: *mut c_void,
-    construct: unsafe extern "fastcall" fn(),
-    update: unsafe extern "fastcall" fn(),
-    destruct: unsafe extern "fastcall" fn(),
+    construct: unsafe extern "C" fn(),
+    update: unsafe extern "C" fn(),
+    destruct: unsafe extern "C" fn(),
 }
 
 impl RuntimePointers {

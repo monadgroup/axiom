@@ -182,7 +182,7 @@ pub fn build_lifecycle_func(
     lifecycle: LifecycleFunc,
     pointers: PointerValue,
 ) {
-    let func = util::get_or_create_func(module, name, true, &|| {
+    let func = util::get_or_create_func(module, name, false, &|| {
         (
             Linkage::ExternalLinkage,
             module.get_context().void_type().fn_type(&[], false),
