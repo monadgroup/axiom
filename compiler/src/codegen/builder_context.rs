@@ -34,7 +34,10 @@ pub fn build_context_function(
     function.add_attribute(context.get_string_attr("no-signed-zeros-fp-math", "true"));
     function.add_attribute(context.get_string_attr("no-trapping-math", "true"));
     function.add_attribute(context.get_string_attr("denormal-fp-math", "positive-zero"));
-    function.add_attribute(context.get_string_attr("target-features", "+mmx,+sse,+sse2,+x87"));
+    function.add_attribute(context.get_string_attr(
+        "target-features",
+        "+x87,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+avx,+avx2",
+    ));
     function.add_attribute(context.get_string_attr("unsafe-fp-math", "true"));
     function.add_attribute(context.get_string_attr("use-soft-float", "false"));
 

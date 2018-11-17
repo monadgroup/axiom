@@ -34,7 +34,7 @@ fn control_from_db(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let pow_intrinsic = intrinsics::pow_v2f32(module);
+    let pow_intrinsic = intrinsics::pow_v4f32(module);
 
     builder.build_float_div(
         builder
@@ -60,7 +60,7 @@ fn control_from_frequency(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let log_intrinsic = intrinsics::log_v2f32(module);
+    let log_intrinsic = intrinsics::log_v4f32(module);
 
     builder.build_float_div(
         builder

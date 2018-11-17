@@ -15,7 +15,7 @@ impl Function for SvFilterFunction {
     }
 
     fn data_type(context: &Context) -> StructType {
-        let float_vec = context.f32_type().vec_type(2);
+        let float_vec = context.f32_type().vec_type(4);
         context.struct_type(
             &[
                 &float_vec, // notch
@@ -33,9 +33,9 @@ impl Function for SvFilterFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let sin_intrinsic = intrinsics::sin_v2f32(func.ctx.module);
-        let min_intrinsic = intrinsics::minnum_v2f32(func.ctx.module);
-        let pow_intrinsic = intrinsics::pow_v2f32(func.ctx.module);
+        let sin_intrinsic = intrinsics::sin_v4f32(func.ctx.module);
+        let min_intrinsic = intrinsics::minnum_v4f32(func.ctx.module);
+        let pow_intrinsic = intrinsics::pow_v4f32(func.ctx.module);
 
         let notch_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "notch.ptr") };
         let low_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 1, "low.ptr") };

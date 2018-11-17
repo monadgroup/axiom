@@ -347,13 +347,6 @@ fn build_update_func(
         let mut function_context = FunctionContext { ctx, data_ptr };
         builder(&mut function_context, &arg_pointers, vararg, return_ptr);
 
-        /*if pass_return_by_val {
-            let return_val = function_context.ctx.b.build_load(&return_ptr, "ret");
-            function_context.ctx.b.build_return(Some(&return_val));
-        } else {
-            function_context.ctx.b.build_return(None);
-        }*/
-
         let return_val = if pass_return_by_val {
             Some(function_context.ctx.b.build_load(&return_ptr, "ret"))
         } else {

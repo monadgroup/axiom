@@ -12,7 +12,7 @@ pub fn get_sample_rate(module: &Module) -> GlobalValue {
     util::get_or_create_global(
         module,
         SAMPLERATE_GLOBAL_NAME,
-        &module.get_context().f32_type().vec_type(2),
+        &module.get_context().f32_type().vec_type(4),
     )
 }
 
@@ -20,7 +20,7 @@ pub fn get_bpm(module: &Module) -> GlobalValue {
     util::get_or_create_global(
         module,
         BPM_GLOBAL_NAME,
-        &module.get_context().f32_type().vec_type(2),
+        &module.get_context().f32_type().vec_type(4),
     )
 }
 

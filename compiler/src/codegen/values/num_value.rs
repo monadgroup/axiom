@@ -14,7 +14,7 @@ pub struct NumValue {
 impl NumValue {
     pub fn get_type(context: &Context) -> StructType {
         context.struct_type(
-            &[&context.f32_type().vec_type(2), &context.i8_type()],
+            &[&context.f32_type().vec_type(4), &context.i8_type()],
             false,
         )
     }

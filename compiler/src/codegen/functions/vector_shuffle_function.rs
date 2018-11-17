@@ -27,6 +27,8 @@ fn gen_shuffle_call(
             .context
             .i32_type()
             .const_int(shuffle.1 as u64, false),
+        &func.ctx.context.i32_type().get_undef(),
+        &func.ctx.context.i32_type().get_undef(),
     ]);
     let shuffled_vec = func.ctx.b.build_shuffle_vector(
         &input_vec,

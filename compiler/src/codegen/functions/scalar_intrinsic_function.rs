@@ -71,7 +71,7 @@ fn gen_scalar_call(
         .ctx
         .b
         .build_insert_element(
-            &func.ctx.context.f32_type().vec_type(2).get_undef(),
+            &func.ctx.context.f32_type().vec_type(4).get_undef(),
             &left_result,
             &const_left_index,
             "vec.withleft",

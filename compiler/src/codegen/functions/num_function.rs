@@ -69,8 +69,8 @@ impl Function for ClampFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_v2f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
+        let min_intrinsic = intrinsics::minnum_v4f32(func.ctx.module);
+        let max_intrinsic = intrinsics::maxnum_v4f32(func.ctx.module);
 
         let x_num = NumValue::new(args[0]);
         let min_vec = NumValue::new(args[1]).get_vec(func.ctx.b);
@@ -111,7 +111,7 @@ impl Function for CopySignFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let copysign_intrinsic = intrinsics::copysign_v2f32(func.ctx.module);
+        let copysign_intrinsic = intrinsics::copysign_v4f32(func.ctx.module);
 
         let mag_num = NumValue::new(args[0]);
         let sign_num = NumValue::new(args[1]);
@@ -145,9 +145,9 @@ impl Function for PanFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_v2f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
-        let sqrt_intrinsic = intrinsics::sqrt_v2f32(func.ctx.module);
+        let min_intrinsic = intrinsics::minnum_v4f32(func.ctx.module);
+        let max_intrinsic = intrinsics::maxnum_v4f32(func.ctx.module);
+        let sqrt_intrinsic = intrinsics::sqrt_v4f32(func.ctx.module);
         let cos_intrinsic = intrinsics::cos_f32(func.ctx.module);
         let sin_intrinsic = intrinsics::sin_f32(func.ctx.module);
 
@@ -255,7 +255,7 @@ impl Function for PanFunction {
             .ctx
             .b
             .build_insert_element(
-                &func.ctx.context.f32_type().vec_type(2).get_undef(),
+                &func.ctx.context.f32_type().vec_type(4).get_undef(),
                 &left_base,
                 &left_index,
                 "",
@@ -309,6 +309,8 @@ impl Function for CombineFunction {
         let shuffle_vec = VectorType::const_vector(&[
             &func.ctx.context.i32_type().const_int(0, false),
             &func.ctx.context.i32_type().const_int(3, false),
+            &func.ctx.context.i32_type().get_undef(),
+            &func.ctx.context.i32_type().get_undef(),
         ]);
         let shuffled_vec = func
             .ctx
@@ -364,7 +366,7 @@ impl Function for SequenceFunction {
         varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let eucrem_intrinsic = intrinsics::eucrem_v2i32(func.ctx.module);
+        let eucrem_intrinsic = intrinsics::eucrem_v4i32(func.ctx.module);
 
         let varargs = varargs.unwrap();
 
@@ -386,7 +388,7 @@ impl Function for SequenceFunction {
             .ctx
             .b
             .build_insert_element(
-                &func.ctx.context.i32_type().vec_type(2).get_undef(),
+                &func.ctx.context.i32_type().vec_type(4).get_undef(),
                 &vararg_count,
                 &func.ctx.context.i32_type().const_int(0, false),
                 "",
@@ -404,7 +406,7 @@ impl Function for SequenceFunction {
         let index_vec = index_num.get_vec(func.ctx.b);
         let index_int_vec = func.ctx.b.build_float_to_signed_int(
             index_vec,
-            func.ctx.context.i32_type().vec_type(2),
+            func.ctx.context.i32_type().vec_type(4),
             "",
         );
         let safe_index = func
@@ -442,6 +444,8 @@ impl Function for SequenceFunction {
         let shuffle_vec = VectorType::const_vector(&[
             &func.ctx.context.i32_type().const_int(0, false),
             &func.ctx.context.i32_type().const_int(3, false),
+            &func.ctx.context.i32_type().get_undef(),
+            &func.ctx.context.i32_type().get_undef(),
         ]);
         let result_vec = func
             .ctx
@@ -495,7 +499,7 @@ impl Function for MixdownFunction {
         let result_vec = func
             .ctx
             .allocb
-            .build_alloca(&func.ctx.context.f32_type().vec_type(2), "resultvec.ptr");
+            .build_alloca(&func.ctx.context.f32_type().vec_type(4), "resultvec.ptr");
         func.ctx
             .b
             .build_store(&result_vec, &util::get_vec_spread(func.ctx.context, 0.));
@@ -602,7 +606,7 @@ impl Function for NoiseFunction {
             .ctx
             .b
             .build_insert_element(
-                &func.ctx.context.i32_type().vec_type(2).get_undef(),
+                &func.ctx.context.i32_type().vec_type(4).get_undef(),
                 &left_rand,
                 &func.ctx.context.i32_type().const_int(0, false),
                 "rand",
@@ -618,7 +622,7 @@ impl Function for NoiseFunction {
             ).into_vector_value();
         let rand_vec_float = func.ctx.b.build_signed_int_to_float(
             rand_vec,
-            func.ctx.context.f32_type().vec_type(2),
+            func.ctx.context.f32_type().vec_type(4),
             "rand.float",
         );
 

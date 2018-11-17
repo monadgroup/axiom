@@ -12,7 +12,7 @@ pub fn gen_math_op_statement(
     rhs: usize,
     node: &mut BlockContext,
 ) -> PointerValue {
-    let pow_intrinsic = intrinsics::pow_v2f32(node.ctx.module);
+    let pow_intrinsic = intrinsics::pow_v4f32(node.ctx.module);
     let left_num = NumValue::new(node.get_statement(lhs));
     let right_num = NumValue::new(node.get_statement(rhs));
     let result_num = NumValue::new_undef(node.ctx.context, node.ctx.allocb);
@@ -153,13 +153,13 @@ fn apply_int_op(
     if signed_result {
         node.ctx.b.build_signed_int_to_float(
             result_int,
-            node.ctx.context.f32_type().vec_type(2),
+            node.ctx.context.f32_type().vec_type(4),
             "num.vec.float",
         )
     } else {
         node.ctx.b.build_unsigned_int_to_float(
             result_int,
-            node.ctx.context.f32_type().vec_type(2),
+            node.ctx.context.f32_type().vec_type(4),
             "num.vec.float",
         )
     }
@@ -168,13 +168,13 @@ fn apply_int_op(
 fn float_vec_to_int(node: &BlockContext, vec: VectorValue, num_type: IntType) -> VectorValue {
     node.ctx
         .b
-        .build_float_to_signed_int(vec, num_type.vec_type(2), "num.vec.int")
+        .build_float_to_signed_int(vec, num_type.vec_type(4), "num.vec.int")
 }
 
 fn unsigned_int_to_float_vec(node: &BlockContext, int: VectorValue) -> VectorValue {
     node.ctx.b.build_unsigned_int_to_float(
         int,
-        node.ctx.context.f32_type().vec_type(2),
+        node.ctx.context.f32_type().vec_type(4),
         "num.vec.float",
     )
 }

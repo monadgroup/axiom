@@ -28,7 +28,7 @@ fn gen_periodic_real_args(
 }
 
 fn periodic_data_type(context: &Context) -> StructType {
-    context.struct_type(&[&context.f32_type().vec_type(2)], false)
+    context.struct_type(&[&context.f32_type().vec_type(4)], false)
 }
 
 fn gen_periodic_call(
@@ -113,7 +113,7 @@ fn sin_next_value(
     phase: VectorValue,
     _extra_args: &[PointerValue],
 ) -> VectorValue {
-    let sin_intrinsic = intrinsics::sin_v2f32(func.ctx.module);
+    let sin_intrinsic = intrinsics::sin_v4f32(func.ctx.module);
     let sin_phase = func.ctx.b.build_float_mul(
         phase,
         util::get_vec_spread(func.ctx.context, consts::PI * 2.),
@@ -181,7 +181,7 @@ fn tri_next_value(
     phase: VectorValue,
     _extra_args: &[PointerValue],
 ) -> VectorValue {
-    let abs_intrinsic = intrinsics::fabs_v2f32(func.ctx.module);
+    let abs_intrinsic = intrinsics::fabs_v4f32(func.ctx.module);
 
     let normal_period = util::get_vec_spread(func.ctx.context, 4.);
     func.ctx.b.build_float_sub(

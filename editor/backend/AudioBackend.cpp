@@ -5,6 +5,8 @@
 #include <QtWidgets/QMessageBox>
 #include <ctime>
 #include <iostream>
+#include <pmmintrin.h>
+#include <xmmintrin.h>
 
 #include "../AxiomEditor.h"
 #include "../model/ModelRoot.h"
@@ -246,10 +248,12 @@ void AudioBackend::pollAndPrintProfileTimes() {
         totalValue += profileTimes[i];
     }
 
+    std::cout << (float) totalValue / generatedSamples << "\t";
+
     // now print each time
     for (size_t i = 0; i < profileTimesCount; i++) {
         auto percentTime = totalValue == 0 ? 0.f : (float) profileTimes[i] / totalValue;
-        std::cout << MaximFrontend::maxim_get_function_table_entry(i) << " " << percentTime * 100 << "%\t";
+        std::cout << percentTime * 100 << "%\t";
     }
     std::cout << std::endl;
 

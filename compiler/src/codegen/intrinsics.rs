@@ -67,13 +67,13 @@ pub fn memset(module: &Module, target: &TargetData) -> FunctionValue {
     })
 }
 
-pub fn pow_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.pow.v2f32", false, &|| {
+pub fn pow_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.pow.v4f32", false, &|| {
         let context = module.get_context();
-        let v2f32_type = context.f32_type().vec_type(2);
+        let v4f32_type = context.f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type, &v4f32_type], false),
         )
     })
 }
@@ -89,55 +89,55 @@ pub fn pow_f32(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn exp_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.exp.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn exp_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.exp.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
 
-pub fn log_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log.v2f32", false, &|| {
+pub fn log_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.log.v4f32", false, &|| {
         let context = module.get_context();
-        let v2f32_type = context.f32_type().vec_type(2);
+        let v4f32_type = context.f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
 
-pub fn log10_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log10.v2f32", false, &|| {
+pub fn log10_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.log10.v4f32", false, &|| {
         let context = module.get_context();
-        let v2f32_type = context.f32_type().vec_type(2);
+        let v4f32_type = context.f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
 
-pub fn log2_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log2.v2f32", false, &|| {
+pub fn log2_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.log2.v4f32", false, &|| {
         let context = module.get_context();
-        let v2f32_type = context.f32_type().vec_type(2);
+        let v4f32_type = context.f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
 
-pub fn cos_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.cos.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn cos_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.cos.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
@@ -152,12 +152,12 @@ pub fn cos_f32(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn sin_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sin.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn sin_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.sin.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
@@ -172,52 +172,52 @@ pub fn sin_f32(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn sqrt_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sqrt.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn sqrt_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.sqrt.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
 
-pub fn ceil_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.ceil.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn ceil_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.ceil.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
 
-pub fn floor_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.floor.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn floor_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.floor.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
 
-pub fn fabs_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.fabs.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn fabs_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.fabs.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type], false),
         )
     })
 }
 
-pub fn minnum_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.minnum.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn minnum_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.minnum.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type, &v4f32_type], false),
         )
     })
 }
@@ -232,12 +232,12 @@ pub fn minnum_f32(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn maxnum_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.maxnum.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn maxnum_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.maxnum.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type, &v4f32_type], false),
         )
     })
 }
@@ -262,22 +262,22 @@ pub fn ctlz_i64(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn copysign_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.copysign.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
+pub fn copysign_v4f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.copysign.v4f32", false, &|| {
+        let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+            v4f32_type.fn_type(&[&v4f32_type, &v4f32_type], false),
         )
     })
 }
 
-pub fn eucrem_v2i32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.eucrem.v2i32", true, &|| {
-        let v2i32_type = module.get_context().i32_type().vec_type(2);
+pub fn eucrem_v4i32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.eucrem.v4i32", true, &|| {
+        let v4i32_type = module.get_context().i32_type().vec_type(4);
         (
             Linkage::ExternalLinkage,
-            v2i32_type.fn_type(&[&v2i32_type, &v2i32_type], false),
+            v4i32_type.fn_type(&[&v4i32_type, &v4i32_type], false),
         )
     })
 }
@@ -300,14 +300,14 @@ pub fn profile_timestamp_i64(module: &Module) -> FunctionValue {
 }
 
 pub fn build_intrinsics(module: &Module, target: &TargetProperties) {
-    build_eucrem_v2i32(module, target);
+    build_eucrem_v4i32(module, target);
     build_next_power_i64(module, target);
 }
 
-fn build_eucrem_v2i32(module: &Module, target: &TargetProperties) {
+fn build_eucrem_v4i32(module: &Module, target: &TargetProperties) {
     build_context_function(
         module,
-        eucrem_v2i32(module),
+        eucrem_v4i32(module),
         target,
         &|ctx: BuilderContext| {
             let x_val = ctx.func.get_nth_param(0).unwrap().into_vector_value();
@@ -319,6 +319,8 @@ fn build_eucrem_v2i32(module: &Module, target: &TargetProperties) {
             let const_zero = VectorType::const_vector(&[
                 &ctx.context.i32_type().const_int(0, false),
                 &ctx.context.i32_type().const_int(0, false),
+                &ctx.context.i32_type().get_undef(),
+                &ctx.context.i32_type().get_undef(),
             ]);
             let lt_zero = ctx
                 .b

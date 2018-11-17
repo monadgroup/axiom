@@ -106,6 +106,8 @@ pub fn get_const_vec(context: &Context, left: f32, right: f32) -> VectorValue {
     VectorType::const_vector(&[
         &context.f32_type().const_float(left as f64),
         &context.f32_type().const_float(right as f64),
+        &context.f32_type().get_undef(),
+        &context.f32_type().get_undef(),
     ])
 }
 
@@ -119,7 +121,7 @@ pub fn splat_vector(builder: &Builder, val: FloatValue, name: &str) -> VectorVal
         .build_insert_element(
             &builder
                 .build_insert_element(
-                    &context.f32_type().vec_type(2).get_undef(),
+                    &context.f32_type().vec_type(4).get_undef(),
                     &val,
                     &context.i32_type().const_int(0, false),
                     name,

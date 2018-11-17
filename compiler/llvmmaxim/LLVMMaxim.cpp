@@ -23,7 +23,7 @@ unsigned long __umoddi3(unsigned long a, unsigned long b);
 LLVMTargetMachineRef LLVMAxiomSelectTarget() {
     auto target = llvm::EngineBuilder().selectTarget();
     target->Options.AllowFPOpFusion = llvm::FPOpFusion::Fast;
-    target->Options.FPDenormalMode = llvm::FPDenormal::PositiveZero;
+    // target->Options.FPDenormalMode = llvm::FPDenormal::PositiveZero;
     return wrap(target);
 }
 

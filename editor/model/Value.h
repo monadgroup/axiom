@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore/QDataStream>
+#include <emmintrin.h>
 
 namespace AxiomModel {
 
@@ -25,8 +26,13 @@ namespace AxiomModel {
     };
 
     struct NumValue {
-        float left;
-        float right;
+        union {
+            struct {
+                float left;
+                float right;
+            };
+            __m128 value;
+        };
         FormType form;
 
         NumValue() : left(0), right(0), form(FormType::NONE) {}

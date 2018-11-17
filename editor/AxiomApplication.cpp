@@ -3,6 +3,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QtCore>
 #include <iostream>
+#include <math.h>
 #include <pmmintrin.h>
 #include <xmmintrin.h>
 

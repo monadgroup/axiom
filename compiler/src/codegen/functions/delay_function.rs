@@ -401,8 +401,8 @@ impl Function for DelayFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_v2f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
+        let min_intrinsic = intrinsics::minnum_v4f32(func.ctx.module);
+        let max_intrinsic = intrinsics::maxnum_v4f32(func.ctx.module);
 
         DelayFunction::build_channel_update_func(func.ctx.module, func.ctx.target);
         let channel_update_func = DelayFunction::get_channel_update_func(func.ctx.module);
@@ -473,7 +473,7 @@ impl Function for DelayFunction {
             .into_vector_value();
         let reserve_samples = func.ctx.b.build_float_to_unsigned_int(
             reserve_samples_float,
-            func.ctx.context.i64_type().vec_type(2),
+            func.ctx.context.i64_type().vec_type(4),
             "reservesamples.int",
         );
 
@@ -510,7 +510,7 @@ impl Function for DelayFunction {
         );
         let delay_samples = func.ctx.b.build_float_to_unsigned_int(
             delay_samples_float,
-            func.ctx.context.i64_type().vec_type(2),
+            func.ctx.context.i64_type().vec_type(4),
             "delaysamples.int",
         );
 
@@ -582,7 +582,7 @@ impl Function for DelayFunction {
                     .ctx
                     .b
                     .build_insert_element(
-                        &func.ctx.context.f32_type().vec_type(2).get_undef(),
+                        &func.ctx.context.f32_type().vec_type(4).get_undef(),
                         &left_result,
                         &left_element,
                         "",
