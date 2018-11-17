@@ -13,7 +13,9 @@ mod vector_intrinsic_function;
 mod vector_shuffle_function;
 mod voices_function;
 
-use codegen::{build_context_function, util, values, BuilderContext, TargetProperties};
+use codegen::{
+    build_context_function, globals, intrinsics, util, values, BuilderContext, TargetProperties,
+};
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -104,7 +106,10 @@ macro_rules! map_functions {
         pub fn build_funcs(module: &Module, target: &TargetProperties) {
             build_internal_biquad_func(module, target);
 
-            $( $class_name::build_lifecycle_funcs(module, target); )*
+            let func_builders = [$( $class_name::build_lifecycle_funcs, )*];
+            for (profile_id, func_builder) in func_builders.into_iter().enumerate() {
+                func_builder(module, target, profile_id as u32);
+            }
         }
 
         fn map_real_args(function_type: block::Function, ctx: &mut BuilderContext, args: Vec<PointerValue>) -> Vec<PointerValue> {
@@ -151,18 +156,18 @@ map_functions! {
     Accum => AccumFunction,
     Mixdown => MixdownFunction,
     SvFilter => SvFilterFunction,
-    Noise => NoiseFunction,
-    SinOsc => SinOscFunction,
-    SqrOsc => SqrOscFunction,
-    SawOsc => SawOscFunction,
-    TriOsc => TriOscFunction,
-    RmpOsc => RmpOscFunction,
     LowBqFilter => LowBqFilterFunction,
     HighBqFilter => HighBqFilterFunction,
     BandBqFilter => BandBqFilterFunction,
     NotchBqFilter => NotchBqFilterFunction,
     AllBqFilter => AllBqFilterFunction,
     PeakBqFilter => PeakBqFilterFunction,
+    Noise => NoiseFunction,
+    SinOsc => SinOscFunction,
+    SqrOsc => SqrOscFunction,
+    SawOsc => SawOscFunction,
+    TriOsc => TriOscFunction,
+    RmpOsc => RmpOscFunction,
     Note => NoteFunction,
     Voices => VoicesFunction,
     Channel => ChannelFunction,
@@ -278,10 +283,20 @@ fn build_update_func(
     module: &Module,
     function: block::Function,
     target: &TargetProperties,
+    profile_id: u32,
     builder: &Fn(&mut FunctionContext, &[PointerValue], Option<VarArgs>, PointerValue),
 ) {
     let func = get_update_func(module, function);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
+        let profile_timestamp_intrinsic = intrinsics::profile_timestamp_i64(ctx.module);
+
+        let profile_time_start = ctx
+            .b
+            .build_call(&profile_timestamp_intrinsic, &[], "profilestart", false)
+            .left()
+            .unwrap()
+            .into_int_value();
+
         let mut params_iter = ctx.func.params();
         let data_ptr = params_iter.next().unwrap().into_pointer_value();
         let return_type = VarType::of_function(&function);
@@ -332,12 +347,58 @@ fn build_update_func(
         let mut function_context = FunctionContext { ctx, data_ptr };
         builder(&mut function_context, &arg_pointers, vararg, return_ptr);
 
-        if pass_return_by_val {
+        /*if pass_return_by_val {
             let return_val = function_context.ctx.b.build_load(&return_ptr, "ret");
             function_context.ctx.b.build_return(Some(&return_val));
         } else {
             function_context.ctx.b.build_return(None);
-        }
+        }*/
+
+        let return_val = if pass_return_by_val {
+            Some(function_context.ctx.b.build_load(&return_ptr, "ret"))
+        } else {
+            None
+        };
+
+        let profile_time_end = function_context
+            .ctx
+            .b
+            .build_call(&profile_timestamp_intrinsic, &[], "profileend", false)
+            .left()
+            .unwrap()
+            .into_int_value();
+        let profile_duration = function_context.ctx.b.build_int_nuw_sub(
+            profile_time_end,
+            profile_time_start,
+            "profiletime",
+        );
+        let profile_time_global =
+            globals::get_profile_time(function_context.ctx.module).as_pointer_value();
+        let profile_time_slot = unsafe {
+            function_context.ctx.b.build_struct_gep(
+                &profile_time_global,
+                profile_id,
+                "profiletime.ptr",
+            )
+        };
+        let incremented_time = function_context.ctx.b.build_int_nuw_add(
+            function_context
+                .ctx
+                .b
+                .build_load(&profile_time_slot, "profiletimebefore")
+                .into_int_value(),
+            profile_duration,
+            "profiletimeafter",
+        );
+        function_context
+            .ctx
+            .b
+            .build_store(&profile_time_slot, &incremented_time);
+
+        function_context
+            .ctx
+            .b
+            .build_return(return_val.as_ref().map(|v| v as &BasicValue));
     })
 }
 
@@ -465,7 +526,7 @@ pub trait Function {
 
     fn gen_destruct(_func: &mut FunctionContext) {}
 
-    fn build_lifecycle_funcs(module: &Module, target: &TargetProperties) {
+    fn build_lifecycle_funcs(module: &Module, target: &TargetProperties, profile_id: u32) {
         build_lifecycle_func(
             module,
             Self::function_type(),
@@ -473,7 +534,13 @@ pub trait Function {
             FunctionLifecycleFunc::Construct,
             &Self::gen_construct,
         );
-        build_update_func(module, Self::function_type(), target, &Self::gen_call);
+        build_update_func(
+            module,
+            Self::function_type(),
+            target,
+            profile_id,
+            &Self::gen_call,
+        );
         build_lifecycle_func(
             module,
             Self::function_type(),

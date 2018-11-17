@@ -130,5 +130,7 @@ namespace AxiomBackend {
         // todo: use a circular buffer instead of a deque here
         std::deque<QueuedEvent> queuedEvents;
         size_t generatedSamples = 0;
+
+        void pollAndPrintProfileTimes();
     };
 }

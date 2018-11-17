@@ -3,6 +3,8 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QStandardPaths>
 #include <QtWidgets/QMessageBox>
+#include <ctime>
+#include <iostream>
 
 #include "../AxiomEditor.h"
 #include "../model/ModelRoot.h"
@@ -134,6 +136,8 @@ std::lock_guard<std::mutex> AudioBackend::lockRuntime() {
 }
 
 uint64_t AudioBackend::beginGenerate() {
+    pollAndPrintProfileTimes();
+
     // decrement all deltaFrames from last time
     for (auto &event : queuedEvents) {
         if (event.deltaFrames > generatedSamples) {
@@ -230,4 +234,24 @@ size_t AudioBackend::internalRemapPortal(uint64_t id) {
         if (currentPortals[portalIndex].id == id) return portalIndex;
     }
     unreachable;
+}
+
+void AudioBackend::pollAndPrintProfileTimes() {
+    auto profileTimesCount = MaximFrontend::maxim_get_function_table_size();
+    auto profileTimes = _editor->window()->runtime()->getProfileTimesPtr();
+
+    // first count up the total values
+    uint64_t totalValue = 0;
+    for (size_t i = 0; i < profileTimesCount; i++) {
+        totalValue += profileTimes[i];
+    }
+
+    // now print each time
+    for (size_t i = 0; i < profileTimesCount; i++) {
+        auto percentTime = totalValue == 0 ? 0.f : (float) profileTimes[i] / totalValue;
+        std::cout << MaximFrontend::maxim_get_function_table_entry(i) << " " << percentTime * 100 << "%\t";
+    }
+    std::cout << std::endl;
+
+    memset(profileTimes, 0, sizeof(*profileTimes) * profileTimesCount);
 }

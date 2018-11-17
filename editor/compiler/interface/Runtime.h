@@ -22,6 +22,8 @@ namespace MaximCompiler {
 
         float getSampleRate();
 
+        uint64_t *getProfileTimesPtr();
+
         void commit(Transaction transaction);
 
         bool isNodeExtracted(uint64_t surface, size_t node);

@@ -31,6 +31,10 @@ float Runtime::getSampleRate() {
     return MaximFrontend::maxim_get_sample_rate(get());
 }
 
+uint64_t *Runtime::getProfileTimesPtr() {
+    return MaximFrontend::maxim_get_profile_times_ptr(get());
+}
+
 void Runtime::commit(MaximCompiler::Transaction transaction) {
     MaximFrontend::maxim_commit(get(), transaction.release());
 }

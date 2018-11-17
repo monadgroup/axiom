@@ -292,6 +292,13 @@ pub fn next_power_i64(module: &Module) -> FunctionValue {
     })
 }
 
+pub fn profile_timestamp_i64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "profile_timestamp", true, &|| {
+        let i64_type = module.get_context().i64_type();
+        (Linkage::ExternalLinkage, i64_type.fn_type(&[], false))
+    })
+}
+
 pub fn build_intrinsics(module: &Module, target: &TargetProperties) {
     build_eucrem_v2i32(module, target);
     build_next_power_i64(module, target);

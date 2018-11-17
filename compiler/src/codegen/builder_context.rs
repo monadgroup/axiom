@@ -34,8 +34,7 @@ pub fn build_context_function(
     function.add_attribute(context.get_string_attr("no-signed-zeros-fp-math", "true"));
     function.add_attribute(context.get_string_attr("no-trapping-math", "true"));
     function.add_attribute(context.get_string_attr("denormal-fp-math", "positive-zero"));
-    function.add_attribute(context.get_string_attr("target-cpu", "pentium4"));
-    function.add_attribute(context.get_string_attr("target-features", "+mmx,+sse,+sse2"));
+    function.add_attribute(context.get_string_attr("target-features", "+mmx,+sse,+sse2,+x87"));
     function.add_attribute(context.get_string_attr("unsafe-fp-math", "true"));
     function.add_attribute(context.get_string_attr("use-soft-float", "false"));
 

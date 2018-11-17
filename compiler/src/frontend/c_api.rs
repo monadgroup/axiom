@@ -66,6 +66,11 @@ pub unsafe extern "C" fn maxim_get_sample_rate(runtime: *const Runtime) -> f32 {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_get_profile_times_ptr(runtime: *const Runtime) -> *mut u64 {
+    (*runtime).get_profile_times_ptr()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_commit(runtime: *mut Runtime, transaction: *mut Transaction) {
     let owned_transaction = Box::from_raw(transaction);
     (*runtime).commit(*owned_transaction)

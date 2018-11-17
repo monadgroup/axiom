@@ -44,6 +44,7 @@ const CONVERT_NUM_FUNC_NAME: &str = "maxim.editor.convert_num";
 struct LibraryPointers {
     samplerate_ptr: *mut c_void,
     bpm_ptr: *mut c_void,
+    profile_times_ptr: *mut c_void,
     convert_num: unsafe extern "C" fn(*mut c_void, i8, *const c_void),
 }
 
@@ -56,12 +57,17 @@ impl LibraryPointers {
         let bpm_ptr_address = jit.get_symbol_address(globals::BPM_GLOBAL_NAME) as usize;
         assert_ne!(bpm_ptr_address, 0);
 
+        let profile_times_address =
+            jit.get_symbol_address(globals::PROFILE_TIME_GLOBAL_NAME) as usize;
+        assert_ne!(profile_times_address, 0);
+
         let convert_num_address = jit.get_symbol_address(CONVERT_NUM_FUNC_NAME) as usize;
         assert_ne!(convert_num_address, 0);
 
         LibraryPointers {
             samplerate_ptr: samplerate_ptr_address as *mut c_void,
             bpm_ptr: bpm_ptr_address as *mut c_void,
+            profile_times_ptr: profile_times_address as *mut c_void,
             convert_num: unsafe { mem::transmute(convert_num_address) },
         }
     }
@@ -233,7 +239,6 @@ impl Runtime {
         }
         let key = jit.deploy(&module.module);
         module.key = Some(key);
-        module.module.print_to_stderr();
     }
 
     fn remove_module(jit: &Jit, module: &mut RuntimeModule) {
@@ -561,6 +566,10 @@ impl Runtime {
 
     pub fn get_sample_rate(&self) -> f32 {
         self.sample_rate
+    }
+
+    pub fn get_profile_times_ptr(&self) -> *mut u64 {
+        self.library_pointers.profile_times_ptr as *mut u64
     }
 
     pub fn is_node_extracted(&self, surface: SurfaceRef, node: usize) -> bool {

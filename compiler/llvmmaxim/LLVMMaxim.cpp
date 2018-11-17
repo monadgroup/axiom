@@ -1,3 +1,4 @@
+#include <ctime>
 #include <llvm-c/Core.h>
 #include <llvm-c/OrcBindings.h>
 #include <llvm-c/TargetMachine.h>
@@ -47,6 +48,10 @@ void LLVMAxiomSetAllFastMathFlags(LLVMBuilderRef builder) {
     llvm::unwrap(builder)->setFastMathFlags(flags);
 }
 
+uint64_t profileTimestamp() {
+    return clock();
+}
+
 // JIT functions
 OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     auto jit = new OrcJit(*unwrap(targetMachine));
@@ -80,6 +85,8 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("memset", (uint64_t) & ::memset);
     jit->addBuiltin("__moddi3", (uint64_t) & ::__moddi3);
     jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
+
+    jit->addBuiltin("profile_timestamp", (uint64_t) & ::profileTimestamp);
 
 #ifdef APPLE
     jit->addBuiltin("__sincosf_stret", (uint64_t) & ::__sincosf_stret);
