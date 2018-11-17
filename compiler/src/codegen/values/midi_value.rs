@@ -124,7 +124,7 @@ impl MidiValue {
 
                 let current_event = current_midi.get_event(ctx.b, current_count);
                 push_evt.copy_to(ctx.b, module, &current_event);
-                let new_count = ctx.b.build_int_add(
+                let new_count = ctx.b.build_int_nuw_add(
                     current_count,
                     ctx.context.i8_type().const_int(1, false),
                     "newcount",

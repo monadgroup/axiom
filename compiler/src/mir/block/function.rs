@@ -51,7 +51,7 @@ macro_rules! define_functions {
             }
         }
 
-        pub const FUNCTION_TABLE: [&str; 51] = [$($str_name, )*];
+        pub const FUNCTION_TABLE: [&str; 52] = [$($str_name, )*];
     );
 }
 
@@ -64,6 +64,7 @@ define_functions! {
     Sqrt = "sqrt" func![(Num) -> Num],
     Ceil = "ceil" func![(Num) -> Num],
     Floor = "floor" func![(Num) -> Num],
+    Fract = "fract" func![(Num) -> Num],
     Abs = "abs" func![(Num) -> Num],
     Tan = "tan" func![(Num) -> Num],
     Acos = "acos" func![(Num) -> Num],

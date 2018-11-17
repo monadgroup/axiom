@@ -37,6 +37,8 @@ fn gen_periodic_call(
     result: PointerValue,
     next_val: &Fn(&mut FunctionContext, VectorValue, &[PointerValue]) -> VectorValue,
 ) {
+    let fract_intrinsic = intrinsics::fract_v4f32(func.ctx.module);
+
     let phase_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "phase.ptr") };
 
     let freq_num = NumValue::new(args[0]);
@@ -63,11 +65,13 @@ fn gen_periodic_call(
         .b
         .build_float_div(freq_vec, samplerate, "phaseoffset");
     let new_phase = func.ctx.b.build_float_add(phase, phase_offset, "newphase");
-    let mod_phase = func.ctx.b.build_float_rem(
-        new_phase,
-        util::get_vec_spread(func.ctx.context, 2.),
-        "modphase",
-    );
+    let mod_phase = func
+        .ctx
+        .b
+        .build_call(&fract_intrinsic, &[&new_phase], "modphase", true)
+        .left()
+        .unwrap()
+        .into_vector_value();
     func.ctx.b.build_store(&phase_ptr, &mod_phase);
 
     // calculate result
@@ -75,7 +79,17 @@ fn gen_periodic_call(
     let input_phase = func
         .ctx
         .b
-        .build_float_add(phase_offset_vec, phase, "inputphase");
+        .build_call(
+            &fract_intrinsic,
+            &[&func
+                .ctx
+                .b
+                .build_float_add(phase_offset_vec, phase, "inputphase")],
+            "inputphasemod",
+            true,
+        ).left()
+        .unwrap()
+        .into_vector_value();
 
     let result_vec = next_val(func, input_phase, &args[2..]);
 
@@ -136,16 +150,10 @@ fn sqr_next_value(
     let pulse_width = NumValue::new(extra_args[0]);
     let pulse_width_vec = pulse_width.get_vec(func.ctx.b);
 
-    let is_positive = func.ctx.b.build_float_compare(
-        FloatPredicate::OLT,
-        func.ctx.b.build_float_rem(
-            phase,
-            util::get_vec_spread(func.ctx.context, 1.),
-            "inputmod",
-        ),
-        pulse_width_vec,
-        "isneg",
-    );
+    let is_positive =
+        func.ctx
+            .b
+            .build_float_compare(FloatPredicate::OLT, phase, pulse_width_vec, "isneg");
 
     func.ctx
         .b
@@ -163,12 +171,11 @@ fn saw_next_value(
     phase: VectorValue,
     _extra_args: &[PointerValue],
 ) -> VectorValue {
-    let normal_period = util::get_vec_spread(func.ctx.context, 2.);
     func.ctx.b.build_float_sub(
-        func.ctx.b.build_float_rem(
-            func.ctx.b.build_float_mul(phase, normal_period, "inputval"),
-            normal_period,
-            "inputmod",
+        func.ctx.b.build_float_mul(
+            phase,
+            util::get_vec_spread(func.ctx.context, 2.),
+            "inputval",
         ),
         util::get_vec_spread(func.ctx.context, 1.),
         "result",
@@ -183,27 +190,26 @@ fn tri_next_value(
 ) -> VectorValue {
     let abs_intrinsic = intrinsics::fabs_v4f32(func.ctx.module);
 
-    let normal_period = util::get_vec_spread(func.ctx.context, 4.);
     func.ctx.b.build_float_sub(
+        util::get_vec_spread(func.ctx.context, 1.),
         func.ctx
             .b
             .build_call(
                 &abs_intrinsic,
                 &[&func.ctx.b.build_float_sub(
-                    func.ctx.b.build_float_rem(
-                        func.ctx.b.build_float_mul(phase, normal_period, "inputval"),
-                        normal_period,
-                        "inputmod",
+                    func.ctx.b.build_float_mul(
+                        phase,
+                        util::get_vec_spread(func.ctx.context, 4.),
+                        "",
                     ),
                     util::get_vec_spread(func.ctx.context, 2.),
-                    "inputsub",
+                    "",
                 )],
                 "normalized",
                 false,
             ).left()
             .unwrap()
             .into_vector_value(),
-        util::get_vec_spread(func.ctx.context, 1.),
         "result",
     )
 }
@@ -214,13 +220,12 @@ fn rmp_next_value(
     phase: VectorValue,
     _extra_args: &[PointerValue],
 ) -> VectorValue {
-    let normal_period = util::get_vec_spread(func.ctx.context, 2.);
     func.ctx.b.build_float_sub(
         util::get_vec_spread(func.ctx.context, 1.),
-        func.ctx.b.build_float_rem(
-            func.ctx.b.build_float_mul(phase, normal_period, "inputval"),
-            normal_period,
-            "inputmod",
+        func.ctx.b.build_float_mul(
+            phase,
+            util::get_vec_spread(func.ctx.context, 2.),
+            "inputval",
         ),
         "result",
     )

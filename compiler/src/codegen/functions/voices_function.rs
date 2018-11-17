@@ -144,7 +144,7 @@ impl Function for VoicesFunction {
             );
 
             func.ctx.b.position_at_end(&init_loop_run_block);
-            let incremented_init_index = func.ctx.b.build_int_add(
+            let incremented_init_index = func.ctx.b.build_int_nuw_add(
                 current_init_index,
                 func.ctx.context.i8_type().const_int(1, false),
                 "nextinitindex",
@@ -209,7 +209,7 @@ impl Function for VoicesFunction {
             );
 
             func.ctx.b.position_at_end(&event_loop_run_block);
-            let incremented_event_index = func.ctx.b.build_int_add(
+            let incremented_event_index = func.ctx.b.build_int_nuw_add(
                 current_event_index,
                 func.ctx.context.i8_type().const_int(1, false),
                 "nexteventindex",
@@ -256,7 +256,7 @@ impl Function for VoicesFunction {
                 );
 
                 func.ctx.b.position_at_end(&note_on_loop_run_block);
-                let incremented_active_index = func.ctx.b.build_int_add(
+                let incremented_active_index = func.ctx.b.build_int_nuw_add(
                     current_active_index,
                     func.ctx.context.i8_type().const_int(1, false),
                     "nextactiveindex",
@@ -323,7 +323,7 @@ impl Function for VoicesFunction {
                 );
 
                 func.ctx.b.position_at_end(&note_else_loop_run_block);
-                let incremented_note_index = func.ctx.b.build_int_add(
+                let incremented_note_index = func.ctx.b.build_int_nuw_add(
                     current_note_index,
                     func.ctx.context.i8_type().const_int(1, false),
                     "noteindex",

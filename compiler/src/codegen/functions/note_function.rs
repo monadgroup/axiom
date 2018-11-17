@@ -98,7 +98,7 @@ impl Function for NoteFunction {
             .build_conditional_branch(&branch_cond, &loop_run_block, &loop_end_block);
 
         func.ctx.b.position_at_end(&loop_run_block);
-        let incr_index = func.ctx.b.build_int_add(
+        let incr_index = func.ctx.b.build_int_nuw_add(
             current_index,
             func.ctx.context.i8_type().const_int(1, false),
             "index.increment",
@@ -138,7 +138,7 @@ impl Function for NoteFunction {
         func.ctx
             .b
             .build_store(&last_velocity_ptr, &normalized_velocity);
-        let incremented_active = func.ctx.b.build_int_add(
+        let incremented_active = func.ctx.b.build_int_nuw_add(
             func.ctx
                 .b
                 .build_load(&active_count_ptr, "activecount")
@@ -181,7 +181,7 @@ impl Function for NoteFunction {
         );
 
         func.ctx.b.position_at_end(&active_count_natural_block);
-        let decremented_active = func.ctx.b.build_int_sub(
+        let decremented_active = func.ctx.b.build_int_nuw_sub(
             func.ctx
                 .b
                 .build_load(&active_count_ptr, "activecount")

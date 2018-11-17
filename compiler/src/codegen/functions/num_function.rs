@@ -416,7 +416,7 @@ impl Function for SequenceFunction {
                 &eucrem_intrinsic,
                 &[&index_int_vec, &vararg_count_vec],
                 "",
-                true,
+                false,
             ).left()
             .unwrap()
             .into_vector_value();
@@ -529,7 +529,7 @@ impl Function for MixdownFunction {
             .build_conditional_branch(&index_cond, &loop_run_block, &loop_continue_block);
 
         func.ctx.b.position_at_end(&loop_run_block);
-        let next_index = func.ctx.b.build_int_add(
+        let next_index = func.ctx.b.build_int_nuw_add(
             current_index,
             func.ctx.context.i32_type().const_int(1, false),
             "nextindex",

@@ -129,6 +129,7 @@ map_functions! {
     Sqrt => SqrtFunction,
     Ceil => CeilFunction,
     Floor => FloorFunction,
+    Fract => FractFunction,
     Abs => AbsFunction,
     Tan => TanFunction,
     Acos => AcosFunction,
@@ -288,14 +289,14 @@ fn build_update_func(
 ) {
     let func = get_update_func(module, function);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
-        let profile_timestamp_intrinsic = intrinsics::profile_timestamp_i64(ctx.module);
+        /*let profile_timestamp_intrinsic = intrinsics::profile_timestamp_i64(ctx.module);
 
         let profile_time_start = ctx
             .b
             .build_call(&profile_timestamp_intrinsic, &[], "profilestart", false)
             .left()
             .unwrap()
-            .into_int_value();
+            .into_int_value();*/
 
         let mut params_iter = ctx.func.params();
         let data_ptr = params_iter.next().unwrap().into_pointer_value();
@@ -353,7 +354,7 @@ fn build_update_func(
             None
         };
 
-        let profile_time_end = function_context
+        /*let profile_time_end = function_context
             .ctx
             .b
             .build_call(&profile_timestamp_intrinsic, &[], "profileend", false)
@@ -386,7 +387,7 @@ fn build_update_func(
         function_context
             .ctx
             .b
-            .build_store(&profile_time_slot, &incremented_time);
+            .build_store(&profile_time_slot, &incremented_time);*/
 
         function_context
             .ctx

@@ -302,7 +302,7 @@ impl Control for GraphControl {
             .build_conditional_branch(&continue_cond, &loop_body_block, &loop_end_block);
 
         control.ctx.b.position_at_end(&loop_body_block);
-        let next_loop_index = control.ctx.b.build_int_add(
+        let next_loop_index = control.ctx.b.build_int_nuw_add(
             current_loop_index,
             control.ctx.context.i8_type().const_int(1, false),
             "",
@@ -383,7 +383,7 @@ impl Control for GraphControl {
             control.ctx.b.build_int_compare(
                 IntPredicate::NE,
                 curve_state,
-                control.ctx.b.build_int_add(
+                control.ctx.b.build_int_nuw_add(
                     current_state,
                     control.ctx.context.i8_type().const_int(1, false),
                     "",
@@ -409,16 +409,16 @@ impl Control for GraphControl {
         control.ctx.b.position_at_end(&curve_active_true_block);
 
         // calculate current output in this graph
-        let sample_offset = control.ctx.b.build_int_sub(
+        let sample_offset = control.ctx.b.build_int_nuw_sub(
             current_time_samples,
             last_curve_end_samples,
             "sampleoffset",
         );
-        let curve_duration_int =
-            control
-                .ctx
-                .b
-                .build_int_sub(curve_end_samples, last_curve_end_samples, "curveduration");
+        let curve_duration_int = control.ctx.b.build_int_nuw_sub(
+            curve_end_samples,
+            last_curve_end_samples,
+            "curveduration",
+        );
         let curve_min_value = control
             .ctx
             .b
@@ -569,7 +569,7 @@ impl Control for GraphControl {
         );
 
         control.ctx.b.position_at_end(&increment_sample_true_block);
-        let new_samples_count = control.ctx.b.build_int_add(
+        let new_samples_count = control.ctx.b.build_int_nuw_add(
             current_time_samples,
             control.ctx.context.i32_type().const_int(1, false),
             "newsamples",

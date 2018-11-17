@@ -176,8 +176,8 @@ impl DelayFunction {
 
             // auto readPosition = (loadedCurrentPos + *currentSize - delaySamples) % delaySamples;
             let read_position = ctx.b.build_int_unsigned_rem(
-                ctx.b.build_int_sub(
-                    ctx.b.build_int_add(current_pos, current_size, ""),
+                ctx.b.build_int_nuw_sub(
+                    ctx.b.build_int_nuw_add(current_pos, current_size, ""),
                     delay_samples,
                     "",
                 ),
@@ -235,7 +235,7 @@ impl DelayFunction {
                     &next_power_intrinsic,
                     &[&reserve_samples],
                     "newbuffersize",
-                    true,
+                    false,
                 ).left()
                 .unwrap()
                 .into_int_value();
@@ -262,7 +262,7 @@ impl DelayFunction {
                 .f32_type()
                 .size_of()
                 .const_cast(&size_type, false);
-            let realloc_size = ctx.b.build_int_mul(
+            let realloc_size = ctx.b.build_int_nuw_mul(
                 ctx.b.build_int_cast(new_buffer_size, size_type, ""),
                 float_size,
                 "",
@@ -320,7 +320,7 @@ impl DelayFunction {
             );
 
             ctx.b.position_at_end(&size_increase_true_block);
-            let current_size_bytes = ctx.b.build_int_mul(
+            let current_size_bytes = ctx.b.build_int_nuw_mul(
                 ctx.b.build_int_cast(current_size, size_type, ""),
                 float_size,
                 "currentsizebytes",
@@ -333,7 +333,8 @@ impl DelayFunction {
                             .build_in_bounds_gep(&realloc_ptr, &[current_size_bytes], "offsetptr")
                     },
                     &ctx.context.i8_type().const_int(0, false),
-                    &ctx.b.build_int_sub(realloc_size, current_size_bytes, ""),
+                    &ctx.b
+                        .build_int_nuw_sub(realloc_size, current_size_bytes, ""),
                     &ctx.context.i32_type().const_int(0, false),
                     &ctx.context.bool_type().const_int(0, false),
                 ],

@@ -4,6 +4,7 @@
 #include <llvm-c/TargetMachine.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/Target/TargetIntrinsicInfo.h>
 
 #include "OrcJit.h"
 

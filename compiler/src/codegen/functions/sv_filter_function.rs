@@ -240,7 +240,7 @@ impl Function for SvFilterFunction {
             ),
         );
 
-        let next_index = func.ctx.b.build_int_add(
+        let next_index = func.ctx.b.build_int_nuw_add(
             current_index,
             func.ctx.context.i8_type().const_int(1, false),
             "nextindex",

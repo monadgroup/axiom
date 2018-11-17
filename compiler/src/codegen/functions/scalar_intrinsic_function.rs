@@ -96,7 +96,6 @@ macro_rules! define_scalar_intrinsic (
     )
 );
 
-define_scalar_intrinsic!(TanFunction: block::Function::Tan => "tanf");
 define_scalar_intrinsic!(AcosFunction: block::Function::Acos => "acosf");
 define_scalar_intrinsic!(AsinFunction: block::Function::Asin => "asinf");
 define_scalar_intrinsic!(AtanFunction: block::Function::Atan => "atanf");

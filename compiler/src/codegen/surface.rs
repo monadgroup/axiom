@@ -145,7 +145,7 @@ fn build_node_call(
             ctx.b.position_at_end(&check_active_block);
 
             // increment the stored value
-            let next_index = ctx.b.build_int_add(
+            let next_index = ctx.b.build_int_nuw_add(
                 current_index,
                 ctx.context.i8_type().const_int(1, false),
                 "nextindex",

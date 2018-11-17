@@ -107,7 +107,7 @@ impl Function for ChannelFunction {
             .build_conditional_branch(&index_cond, &loop_run_block, &loop_end_block);
 
         func.ctx.b.position_at_end(&loop_run_block);
-        let next_index = func.ctx.b.build_int_add(
+        let next_index = func.ctx.b.build_int_nuw_add(
             current_index,
             func.ctx.context.i8_type().const_int(1, false),
             "nextindex",
