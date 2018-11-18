@@ -84,14 +84,14 @@ pub fn pow_f32(module: &Module) -> FunctionValue {
         let context = module.get_context();
         let f32_type = context.f32_type();
         (
-            Linkage::PrivateLinkage,
+            Linkage::ExternalLinkage,
             f32_type.fn_type(&[&f32_type, &f32_type], false),
         )
     })
 }
 
 pub fn exp_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.exp.v4f32", false, &|| {
+    util::get_or_create_func(module, "maxim.exp.v4f32", false, &|| {
         let v4f32_type = module.get_context().f32_type().vec_type(4);
         (
             Linkage::PrivateLinkage,
@@ -342,8 +342,8 @@ pub fn profile_timestamp_i64(module: &Module) -> FunctionValue {
 }
 
 pub fn build_intrinsics(module: &Module, target: &TargetProperties) {
-    build_pow_v4f32(module, target);
-    build_pow_f32(module, target);
+    //build_pow_v4f32(module, target);
+    //build_pow_f32(module, target);
     build_exp_v4f32(module, target);
     build_log_v4f32(module, target);
     build_log10_v4f32(module, target);

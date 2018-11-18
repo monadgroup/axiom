@@ -239,7 +239,7 @@ size_t AudioBackend::internalRemapPortal(uint64_t id) {
 }
 
 void AudioBackend::pollAndPrintProfileTimes() {
-    auto profileTimesCount = MaximFrontend::maxim_get_function_table_size();
+    /*auto profileTimesCount = MaximFrontend::maxim_get_function_table_size();
     auto profileTimes = _editor->window()->runtime()->getProfileTimesPtr();
 
     // first count up the total values
@@ -257,5 +257,5 @@ void AudioBackend::pollAndPrintProfileTimes() {
     }
     std::cout << std::endl;
 
-    memset(profileTimes, 0, sizeof(*profileTimes) * profileTimesCount);
+    memset(profileTimes, 0, sizeof(*profileTimes) * profileTimesCount);*/
 }
