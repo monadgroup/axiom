@@ -101,13 +101,25 @@ fn control_from_oscillator(
 
 fn control_from_q(
     context: &Context,
-    _module: &Module,
+    module: &Module,
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
+    // ensure Q is above 0.5 to avoid dividing by zero
+    let max_intrinsic = intrinsics::maxnum_v4f32(module);
+    let clamped_q = builder
+        .build_call(
+            &max_intrinsic,
+            &[&val, &util::get_vec_spread(context, 0.5)],
+            "",
+            false,
+        ).left()
+        .unwrap()
+        .into_vector_value();
+
     builder.build_float_div(
-        builder.build_float_sub(val, util::get_vec_spread(context, 0.5), ""),
-        builder.build_float_mul(val, util::get_vec_spread(context, 0.999), ""),
+        builder.build_float_sub(clamped_q, util::get_vec_spread(context, 0.5), ""),
+        builder.build_float_mul(clamped_q, util::get_vec_spread(context, 0.999), ""),
         "",
     )
 }
