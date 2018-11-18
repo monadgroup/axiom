@@ -126,6 +126,8 @@ map_functions! {
     Atan => AtanFunction,
     Atan2 => Atan2Function,
     Hypot => HypotFunction,
+    Exp => ExpFunction,
+    Exp2 => Exp2Function,
     ToRad => ToRadFunction,
     ToDeg => ToDegFunction,
     Clamp => ClampFunction,

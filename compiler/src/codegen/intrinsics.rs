@@ -99,6 +99,16 @@ pub fn exp_v2f32(module: &Module) -> FunctionValue {
     })
 }
 
+pub fn exp2_v2f32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.exp2.v2f32", false, &|| {
+        let v2f32_type = module.get_context().f32_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f32_type.fn_type(&[&v2f32_type], false),
+        )
+    })
+}
+
 pub fn log_v2f32(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "llvm.log.v2f32", false, &|| {
         let context = module.get_context();
