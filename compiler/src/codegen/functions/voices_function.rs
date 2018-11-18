@@ -144,7 +144,7 @@ impl Function for VoicesFunction {
             );
 
             func.ctx.b.position_at_end(&init_loop_run_block);
-            let incremented_init_index = func.ctx.b.build_int_nuw_add(
+            let incremented_init_index = func.ctx.b.build_int_add(
                 current_init_index,
                 func.ctx.context.i8_type().const_int(1, false),
                 "nextinitindex",
