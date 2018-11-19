@@ -57,8 +57,29 @@ uint64_t profileTimestamp() {
 OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     auto jit = new OrcJit(*unwrap(targetMachine));
 
+    // utilities
+    jit->addBuiltin("profile_timestamp", (uint64_t) & ::profileTimestamp);
+
+    // libc memory functions
     jit->addBuiltin("memcpy", (uint64_t) & ::memcpy);
-    jit->addBuiltin("powf", (uint64_t) & ::powf);
+    jit->addBuiltin("memset", (uint64_t) & ::memset);
+    jit->addBuiltin("realloc", (uint64_t) & ::realloc);
+    jit->addBuiltin("free", (uint64_t) & ::free);
+
+    // math functions
+    // todo: replace all of these with our own SSE-based intrinsics
+    jit->addBuiltin("rand", (uint64_t) & ::rand);
+    jit->addBuiltin("atan", (uint64_t) & ::atan);
+    jit->addBuiltin("atan2", (uint64_t) & ::atan2);
+    jit->addBuiltin("acos", (uint64_t) & ::acos);
+    jit->addBuiltin("asin", (uint64_t) & ::asin);
+    jit->addBuiltin("hypot", (uint64_t) static_cast<double (*)(double, double)>(&::hypot));
+    jit->addBuiltin("pow", (uint64_t) & ::pow);
+    jit->addBuiltin("exp2", (uint64_t) & ::exp2);
+    jit->addBuiltin("__moddi3", (uint64_t) & ::__moddi3);
+    jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
+
+    /*jit->addBuiltin("powf", (uint64_t) & ::powf);
     jit->addBuiltin("logf", (uint64_t) & ::logf);
     jit->addBuiltin("log10f", (uint64_t) & ::log10f);
     jit->addBuiltin("log2f", (uint64_t) & ::log2f);
@@ -85,9 +106,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("free", (uint64_t) & ::free);
     jit->addBuiltin("memset", (uint64_t) & ::memset);
     jit->addBuiltin("__moddi3", (uint64_t) & ::__moddi3);
-    jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
-
-    jit->addBuiltin("profile_timestamp", (uint64_t) & ::profileTimestamp);
+    jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);*/
 
 #ifdef APPLE
     jit->addBuiltin("__sincosf_stret", (uint64_t) & ::__sincosf_stret);

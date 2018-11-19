@@ -36,8 +36,8 @@ fn frequency_from_control(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let pow_intrinsic = intrinsics::pow_v4f32(module);
-    let min_intrinsic = intrinsics::minnum_v4f32(module);
+    let pow_intrinsic = intrinsics::pow_v2f64(module);
+    let min_intrinsic = intrinsics::minnum_v2f64(module);
 
     builder.build_float_sub(
         builder
@@ -71,7 +71,7 @@ fn frequency_from_note(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let pow_intrinsic = intrinsics::pow_v4f32(module);
+    let pow_intrinsic = intrinsics::pow_v2f64(module);
 
     builder.build_float_mul(
         util::get_vec_spread(context, 440.),

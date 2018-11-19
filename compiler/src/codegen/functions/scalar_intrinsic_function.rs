@@ -14,13 +14,13 @@ fn gen_scalar_call(
     name: &str,
 ) {
     let call_func = util::get_or_create_func(func.ctx.module, name, true, &|| {
-        let f32_type = func.ctx.context.f32_type();
-        let param_types: Vec<_> = iter::repeat(&f32_type as &BasicType)
+        let f64_type = func.ctx.context.f64_type();
+        let param_types: Vec<_> = iter::repeat(&f64_type as &BasicType)
             .take(args.len())
             .collect();
         (
             Linkage::ExternalLinkage,
-            func.ctx.context.f32_type().fn_type(&param_types, false),
+            func.ctx.context.f64_type().fn_type(&param_types, false),
         )
     });
 
@@ -71,7 +71,7 @@ fn gen_scalar_call(
         .ctx
         .b
         .build_insert_element(
-            &func.ctx.context.f32_type().vec_type(4).get_undef(),
+            &func.ctx.context.f64_type().vec_type(2).get_undef(),
             &left_result,
             &const_left_index,
             "vec.withleft",
@@ -96,8 +96,8 @@ macro_rules! define_scalar_intrinsic (
     )
 );
 
-define_scalar_intrinsic!(AcosFunction: block::Function::Acos => "acosf");
-define_scalar_intrinsic!(AsinFunction: block::Function::Asin => "asinf");
-define_scalar_intrinsic!(AtanFunction: block::Function::Atan => "atanf");
-define_scalar_intrinsic!(Atan2Function: block::Function::Atan2 => "atan2f");
+define_scalar_intrinsic!(AcosFunction: block::Function::Acos => "acos");
+define_scalar_intrinsic!(AsinFunction: block::Function::Asin => "asin");
+define_scalar_intrinsic!(AtanFunction: block::Function::Atan => "atan");
+define_scalar_intrinsic!(Atan2Function: block::Function::Atan2 => "atan2");
 define_scalar_intrinsic!(HypotFunction: block::Function::Hypot => "hypot");

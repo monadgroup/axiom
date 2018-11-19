@@ -17,10 +17,10 @@ impl Function for NoteFunction {
     fn data_type(context: &Context) -> StructType {
         context.struct_type(
             &[
-                &context.f32_type(), // last note
-                &context.f32_type(), // last pitch
-                &context.f32_type(), // last velocity
-                &context.f32_type(), // last aftertouch
+                &context.f64_type(), // last note
+                &context.f64_type(), // last pitch
+                &context.f64_type(), // last velocity
+                &context.f64_type(), // last aftertouch
                 &context.i8_type(),  // active count
             ],
             false,
@@ -121,18 +121,18 @@ impl Function for NoteFunction {
         func.ctx.b.position_at_end(&note_on_block);
         let float_note = func.ctx.b.build_unsigned_int_to_float(
             event_note,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "note.float",
         );
         func.ctx.b.build_store(&last_note_ptr, &float_note);
         let float_velocity = func.ctx.b.build_unsigned_int_to_float(
             event_param,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "note.velocity",
         );
         let normalized_velocity = func.ctx.b.build_float_div(
             float_velocity,
-            func.ctx.context.f32_type().const_float(255.),
+            func.ctx.context.f64_type().const_float(255.),
             "velocity.normalized",
         );
         func.ctx
@@ -203,7 +203,7 @@ impl Function for NoteFunction {
         func.ctx.b.position_at_end(&pitch_wheel_block);
         let pitch_float = func.ctx.b.build_unsigned_int_to_float(
             event_param,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "pitch",
         );
         // remap the pitch from {0,255} to {-6,6}
@@ -211,13 +211,13 @@ impl Function for NoteFunction {
             func.ctx.b.build_float_sub(
                 func.ctx.b.build_float_div(
                     pitch_float,
-                    func.ctx.context.f32_type().const_float(127.5),
+                    func.ctx.context.f64_type().const_float(127.5),
                     "",
                 ),
-                func.ctx.context.f32_type().const_float(1.),
+                func.ctx.context.f64_type().const_float(1.),
                 "",
             ),
-            func.ctx.context.f32_type().const_float(6.),
+            func.ctx.context.f64_type().const_float(6.),
             "pitch.normalized",
         );
         func.ctx.b.build_store(&last_pitch_ptr, &normalized_pitch);
@@ -232,12 +232,12 @@ impl Function for NoteFunction {
         func.ctx.b.position_at_end(&aftertouch_block);
         let aftertouch_float = func.ctx.b.build_unsigned_int_to_float(
             event_param,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "aftertouch",
         );
         let normalized_aftertouch = func.ctx.b.build_float_div(
             aftertouch_float,
-            func.ctx.context.f32_type().const_float(255.),
+            func.ctx.context.f64_type().const_float(255.),
             "aftertouch.normalized",
         );
         func.ctx
@@ -286,7 +286,7 @@ impl Function for NoteFunction {
                 func.ctx.context.i8_type().const_int(0, false),
                 "active",
             ),
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "activefloat",
         );
         let note_num = func.ctx.b.build_float_add(

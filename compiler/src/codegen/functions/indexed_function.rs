@@ -18,8 +18,8 @@ impl Function for IndexedFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_f32(func.ctx.module);
+        let min_intrinsic = intrinsics::minnum_f64(func.ctx.module);
+        let max_intrinsic = intrinsics::maxnum_f64(func.ctx.module);
 
         let input_num = NumValue::new(args[0]);
         let result_array = ArrayValue::new(result);
@@ -46,7 +46,7 @@ impl Function for IndexedFunction {
                             &max_intrinsic,
                             &[
                                 &input_count_float,
-                                &func.ctx.context.f32_type().const_float(0.),
+                                &func.ctx.context.f64_type().const_float(0.),
                             ],
                             "",
                             false,
@@ -56,7 +56,7 @@ impl Function for IndexedFunction {
                     &func
                         .ctx
                         .context
-                        .f32_type()
+                        .f64_type()
                         .const_float(ARRAY_CAPACITY as f64),
                 ],
                 "",
@@ -151,7 +151,7 @@ impl Function for IndexedFunction {
         let index_num = NumValue::new(result_array.get_item_ptr(&mut func.ctx.b, current_index));
         let index_float = func.ctx.b.build_unsigned_int_to_float(
             current_index,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "index.float",
         );
         let index_vec = util::splat_vector(func.ctx.b, index_float, "index.vec");

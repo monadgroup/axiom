@@ -17,8 +17,8 @@ impl Function for ChannelFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_f32(func.ctx.module);
+        let min_intrinsic = intrinsics::minnum_f64(func.ctx.module);
+        let max_intrinsic = intrinsics::maxnum_f64(func.ctx.module);
 
         let input_midi = MidiValue::new(args[0]);
         let channel_num = NumValue::new(args[1]);
@@ -46,14 +46,14 @@ impl Function for ChannelFunction {
                                     &func.ctx.context.i32_type().const_int(0, false),
                                     "",
                                 ),
-                                &func.ctx.context.f32_type().const_float(0.),
+                                &func.ctx.context.f64_type().const_float(0.),
                             ],
                             "",
                             false,
                         ).left()
                         .unwrap()
                         .into_float_value(),
-                    &func.ctx.context.f32_type().const_float(16.),
+                    &func.ctx.context.f64_type().const_float(16.),
                 ],
                 "",
                 false,

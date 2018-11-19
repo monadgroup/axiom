@@ -40,7 +40,7 @@ impl Function for AmplitudeFunction {
     }
 
     fn data_type(context: &Context) -> StructType {
-        context.struct_type(&[&context.f32_type().vec_type(4)], false)
+        context.struct_type(&[&context.f64_type().vec_type(2)], false)
     }
 
     fn gen_call(
@@ -49,8 +49,8 @@ impl Function for AmplitudeFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let abs_intrinsic = intrinsics::fabs_v4f32(func.ctx.module);
-        let exp_intrinsic = intrinsics::exp_v4f32(func.ctx.module);
+        let abs_intrinsic = intrinsics::fabs_v2f64(func.ctx.module);
+        let exp_intrinsic = intrinsics::exp_v2f64(func.ctx.module);
 
         let current_estimate_ptr = unsafe {
             func.ctx
@@ -135,8 +135,8 @@ impl Function for HoldFunction {
     fn data_type(context: &Context) -> StructType {
         context.struct_type(
             &[
-                &context.f32_type().vec_type(4),  // stored value
-                &context.bool_type().vec_type(4), // last gate value
+                &context.f64_type().vec_type(2),  // stored value
+                &context.bool_type().vec_type(2), // last gate value
             ],
             false,
         )
@@ -218,7 +218,7 @@ impl Function for AccumFunction {
     }
 
     fn data_type(context: &Context) -> StructType {
-        context.struct_type(&[&context.f32_type().vec_type(4)], false)
+        context.struct_type(&[&context.f64_type().vec_type(2)], false)
     }
 
     fn gen_real_args(ctx: &mut BuilderContext, mut args: Vec<PointerValue>) -> Vec<PointerValue> {

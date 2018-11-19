@@ -28,15 +28,15 @@ namespace AxiomModel {
     struct NumValue {
         union {
             struct {
-                float left;
-                float right;
+                double left;
+                double right;
             };
             __m128 value;
         };
         FormType form;
 
         NumValue() : left(0), right(0), form(FormType::NONE) {}
-        NumValue(float left, float right, FormType form) : left(left), right(right), form(form) {}
+        NumValue(double left, double right, FormType form) : left(left), right(right), form(form) {}
 
         bool operator==(const NumValue &other) const {
             return left == other.left && right == other.right && form == other.form;
@@ -44,11 +44,11 @@ namespace AxiomModel {
 
         bool operator!=(const NumValue &other) const { return !(*this == other); }
 
-        NumValue withLR(float l, float r) const { return {l, r, form}; }
+        NumValue withLR(double l, double r) const { return {l, r, form}; }
 
-        NumValue withL(float l) const { return {l, right, form}; }
+        NumValue withL(double l) const { return {l, right, form}; }
 
-        NumValue withR(float r) const { return {left, r, form}; }
+        NumValue withR(double r) const { return {left, r, form}; }
 
         NumValue withForm(FormType form) const { return {left, right, form}; }
     };

@@ -273,7 +273,7 @@ impl Parser {
 
     fn parse_number_token_expr(stream: &mut TokenStream) -> ExprResult {
         let num_token = Parser::expect_token(TokenType::Number, stream.next())?;
-        let base_num_val = num_token.content.parse::<f32>().unwrap();
+        let base_num_val = num_token.content.parse::<f64>().unwrap();
 
         // Attempt to find a postfix after the number to set a magnitude or form.
         // Postfixes are always in the following format: 0.5[magnitude][form], where both

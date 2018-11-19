@@ -14,7 +14,7 @@ pub struct NumValue {
 impl NumValue {
     pub fn get_type(context: &Context) -> StructType {
         context.struct_type(
-            &[&context.f32_type().vec_type(4), &context.i8_type()],
+            &[&context.f64_type().vec_type(2), &context.i8_type()],
             false,
         )
     }
@@ -39,7 +39,7 @@ impl NumValue {
         result
     }
 
-    pub fn get_const(context: &Context, left: f32, right: f32, form: u8) -> StructValue {
+    pub fn get_const(context: &Context, left: f64, right: f64, form: u8) -> StructValue {
         NumValue::get_type(context).const_named_struct(&[
             &util::get_const_vec(context, left, right),
             &context.i8_type().const_int(form as u64, false),

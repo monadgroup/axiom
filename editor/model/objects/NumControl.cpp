@@ -7,7 +7,7 @@ using namespace AxiomModel;
 
 NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                        bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, DisplayMode displayMode,
-                       float minValue, float maxValue, uint32_t step, NumValue value, ModelRoot *root)
+                       double minValue, double maxValue, uint32_t step, NumValue value, ModelRoot *root)
     : Control(ControlType::NUM_SCALAR, ConnectionWire::WireType::NUM, QSize(1, 1), uuid, parentUuid, pos, size,
               selected, std::move(name), showName, exposerUuid, exposingUuid, root),
       _displayMode(displayMode), _minValue(minValue), _maxValue(maxValue), _step(step), _value(value) {
@@ -23,8 +23,8 @@ NumControl::NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
 std::unique_ptr<NumControl> NumControl::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                bool selected, QString name, bool showName, const QUuid &exposerUuid,
                                                const QUuid &exposingUuid,
-                                               AxiomModel::NumControl::DisplayMode displayMode, float minValue,
-                                               float maxValue, uint32_t step, NumValue value,
+                                               AxiomModel::NumControl::DisplayMode displayMode, double minValue,
+                                               double maxValue, uint32_t step, NumValue value,
                                                AxiomModel::ModelRoot *root) {
     return std::make_unique<NumControl>(uuid, parentUuid, pos, size, selected, std::move(name), showName, exposerUuid,
                                         exposingUuid, displayMode, minValue, maxValue, step, value, root);
@@ -48,7 +48,7 @@ void NumControl::setDisplayMode(AxiomModel::NumControl::DisplayMode displayMode)
     }
 }
 
-void NumControl::setRange(float minValue, float maxValue, uint32_t step) {
+void NumControl::setRange(double minValue, double maxValue, uint32_t step) {
     // if we're exposing, set it on the underlying control
     if (!exposingUuid().isNull()) {
         auto exposingControl = dynamic_cast<NumControl *>(find(root()->controls().sequence(), exposingUuid()));

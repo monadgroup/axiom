@@ -26,7 +26,7 @@ fn note_from_frequency(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let log2_intrinsic = intrinsics::log2_v4f32(module);
+    let log2_intrinsic = intrinsics::log2_v2f64(module);
 
     builder.build_float_add(
         util::get_vec_spread(context, 69.),

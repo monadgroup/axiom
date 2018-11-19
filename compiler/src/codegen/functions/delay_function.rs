@@ -17,17 +17,17 @@ impl DelayFunction {
             let context = &module.get_context();
             (
                 Linkage::PrivateLinkage,
-                context.f32_type().fn_type(
+                context.f64_type().fn_type(
                     &[
                         &context.i64_type().ptr_type(AddressSpace::Generic), // current position pointer
                         &context.i64_type().ptr_type(AddressSpace::Generic), // current size pointer
                         &context.i64_type(),                                 // delay sample count
                         &context.i64_type(),                                 // reserve sample count
                         &context
-                            .f32_type()
+                            .f64_type()
                             .ptr_type(AddressSpace::Generic)
                             .ptr_type(AddressSpace::Generic), // samples pointer pointer
-                        &context.f32_type(),                                 // input value
+                        &context.f64_type(),                                 // input value
                     ],
                     false,
                 ),
@@ -116,7 +116,7 @@ impl DelayFunction {
 
             let result_ptr = ctx
                 .allocb
-                .build_alloca(&ctx.context.f32_type(), "resultval");
+                .build_alloca(&ctx.context.f64_type(), "resultval");
             let buffer_ptr = ctx
                 .b
                 .build_load(&buffer_ptr_ptr, "bufferptr")
@@ -259,7 +259,7 @@ impl DelayFunction {
             let size_type = target_data.int_ptr_type_in_context(ctx.context);
             let float_size = ctx
                 .context
-                .f32_type()
+                .f64_type()
                 .size_of()
                 .const_cast(&size_type, false);
             let realloc_size = ctx.b.build_int_nuw_mul(
@@ -298,7 +298,7 @@ impl DelayFunction {
                 &size_zero_false_block,
             );
 
-            let buffer_ptr_type = ctx.context.f32_type().ptr_type(AddressSpace::Generic);
+            let buffer_ptr_type = ctx.context.f64_type().ptr_type(AddressSpace::Generic);
 
             ctx.b.position_at_end(&size_zero_true_block);
             ctx.b
@@ -372,7 +372,7 @@ impl Function for DelayFunction {
 
     fn data_type(context: &Context) -> StructType {
         let size_type = context.i64_type();
-        let channel_type = context.f32_type();
+        let channel_type = context.f64_type();
 
         context.struct_type(
             &[
@@ -402,8 +402,8 @@ impl Function for DelayFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_v4f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_v4f32(func.ctx.module);
+        let min_intrinsic = intrinsics::minnum_v2f64(func.ctx.module);
+        let max_intrinsic = intrinsics::maxnum_v2f64(func.ctx.module);
 
         DelayFunction::build_channel_update_func(func.ctx.module, func.ctx.target);
         let channel_update_func = DelayFunction::get_channel_update_func(func.ctx.module);
@@ -474,7 +474,7 @@ impl Function for DelayFunction {
             .into_vector_value();
         let reserve_samples = func.ctx.b.build_float_to_unsigned_int(
             reserve_samples_float,
-            func.ctx.context.i64_type().vec_type(4),
+            func.ctx.context.i64_type().vec_type(2),
             "reservesamples.int",
         );
 
@@ -511,7 +511,7 @@ impl Function for DelayFunction {
         );
         let delay_samples = func.ctx.b.build_float_to_unsigned_int(
             delay_samples_float,
-            func.ctx.context.i64_type().vec_type(4),
+            func.ctx.context.i64_type().vec_type(2),
             "delaysamples.int",
         );
 
@@ -583,7 +583,7 @@ impl Function for DelayFunction {
                     .ctx
                     .b
                     .build_insert_element(
-                        &func.ctx.context.f32_type().vec_type(4).get_undef(),
+                        &func.ctx.context.f64_type().vec_type(2).get_undef(),
                         &left_result,
                         &left_element,
                         "",

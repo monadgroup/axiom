@@ -16,7 +16,7 @@ fn amplitude_from_db(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let pow_intrinsic = intrinsics::pow_v4f32(module);
+    let pow_intrinsic = intrinsics::pow_v2f64(module);
     builder
         .build_call(
             &pow_intrinsic,

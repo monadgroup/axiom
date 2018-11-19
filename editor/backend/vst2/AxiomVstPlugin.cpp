@@ -74,8 +74,8 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
 
                 if (output) {
                     auto outputNum = **output->value;
-                    outputs[leftIndex][i] = outputNum.left;
-                    outputs[rightIndex][i] = outputNum.right;
+                    outputs[leftIndex][i] = (float) outputNum.left;
+                    outputs[rightIndex][i] = (float) outputNum.right;
                 } else {
                     outputs[leftIndex][i] = 0;
                     outputs[rightIndex][i] = 0;

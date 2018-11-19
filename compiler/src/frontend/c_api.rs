@@ -46,22 +46,22 @@ pub unsafe extern "C" fn maxim_run_update(runtime: *const Runtime) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_set_bpm(runtime: *mut Runtime, bpm: f32) {
+pub unsafe extern "C" fn maxim_set_bpm(runtime: *mut Runtime, bpm: f64) {
     (*runtime).set_bpm(bpm);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_get_bpm(runtime: *const Runtime) -> f32 {
+pub unsafe extern "C" fn maxim_get_bpm(runtime: *const Runtime) -> f64 {
     (*runtime).get_bpm()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_set_sample_rate(runtime: *mut Runtime, sample_rate: f32) {
+pub unsafe extern "C" fn maxim_set_sample_rate(runtime: *mut Runtime, sample_rate: f64) {
     (*runtime).set_sample_rate(sample_rate);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_get_sample_rate(runtime: *const Runtime) -> f32 {
+pub unsafe extern "C" fn maxim_get_sample_rate(runtime: *const Runtime) -> f64 {
     (*runtime).get_sample_rate()
 }
 
@@ -212,8 +212,8 @@ pub unsafe extern "C" fn maxim_destroy_vartype(val: *mut mir::VarType) {
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_constant_num(
-    left: f32,
-    right: f32,
+    left: f64,
+    right: f64,
     form: u8,
 ) -> *mut mir::ConstantValue {
     Box::into_raw(Box::new(mir::ConstantValue::new_num(

@@ -53,7 +53,7 @@ pub struct NoteExpression {
 
 #[derive(Debug)]
 pub struct NumberExpression {
-    pub value: f32,
+    pub value: f64,
     pub form: Form,
 }
 
@@ -183,7 +183,7 @@ impl Expression {
         Expression::new(pos, ExpressionData::Note(NoteExpression { note }))
     }
 
-    pub fn new_number(pos: SourceRange, value: f32, form: Form) -> Expression {
+    pub fn new_number(pos: SourceRange, value: f64, form: Form) -> Expression {
         Expression::new(
             pos,
             ExpressionData::Number(NumberExpression { value, form }),

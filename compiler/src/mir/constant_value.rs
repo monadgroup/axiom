@@ -4,8 +4,8 @@ use std::hash;
 
 #[derive(Debug, Clone)]
 pub struct ConstantNum {
-    pub left: f32,
-    pub right: f32,
+    pub left: f64,
+    pub right: f64,
     pub form: FormType,
 }
 
@@ -21,11 +21,11 @@ pub enum ConstantValue {
 }
 
 impl ConstantNum {
-    pub fn new(left: f32, right: f32, form: FormType) -> ConstantNum {
+    pub fn new(left: f64, right: f64, form: FormType) -> ConstantNum {
         ConstantNum { left, right, form }
     }
 
-    pub fn with_left(&self, left: f32) -> ConstantNum {
+    pub fn with_left(&self, left: f64) -> ConstantNum {
         ConstantNum {
             left,
             right: self.right,
@@ -33,7 +33,7 @@ impl ConstantNum {
         }
     }
 
-    pub fn with_right(&self, right: f32) -> ConstantNum {
+    pub fn with_right(&self, right: f64) -> ConstantNum {
         ConstantNum {
             left: self.left,
             right,
@@ -69,7 +69,7 @@ impl PartialEq for ConstantNum {
 impl Eq for ConstantNum {}
 
 impl ConstantValue {
-    pub fn new_num(left: f32, right: f32, form: FormType) -> ConstantValue {
+    pub fn new_num(left: f64, right: f64, form: FormType) -> ConstantValue {
         ConstantValue::Num(ConstantNum::new(left, right, form))
     }
 

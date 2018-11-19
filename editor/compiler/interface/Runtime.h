@@ -14,13 +14,13 @@ namespace MaximCompiler {
 
         void runUpdate();
 
-        void setBpm(float bpm);
+        void setBpm(double bpm);
 
-        float getBpm();
+        double getBpm();
 
-        void setSampleRate(float sampleRate);
+        void setSampleRate(double sampleRate);
 
-        float getSampleRate();
+        double getSampleRate();
 
         uint64_t *getProfileTimesPtr();
 

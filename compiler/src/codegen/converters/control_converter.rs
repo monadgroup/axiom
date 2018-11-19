@@ -6,7 +6,7 @@ use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::values::VectorValue;
-use std::f32::consts;
+use std::f64::consts;
 
 pub fn control(generator: &mut ConvertGenerator) {
     generator.generate(FormType::Beats, &control_from_beats);
@@ -34,7 +34,7 @@ fn control_from_db(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let pow_intrinsic = intrinsics::pow_v4f32(module);
+    let pow_intrinsic = intrinsics::pow_v2f64(module);
 
     builder.build_float_div(
         builder
@@ -60,7 +60,7 @@ fn control_from_frequency(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let log_intrinsic = intrinsics::log_v4f32(module);
+    let log_intrinsic = intrinsics::log_v2f64(module);
 
     builder.build_float_div(
         builder
@@ -72,7 +72,7 @@ fn control_from_frequency(
             ).left()
             .unwrap()
             .into_vector_value(),
-        util::get_vec_spread(context, (20000 as f32).log(consts::E)),
+        util::get_vec_spread(context, (20000 as f64).log(consts::E)),
         "",
     )
 }
@@ -106,7 +106,7 @@ fn control_from_q(
     val: VectorValue,
 ) -> VectorValue {
     // ensure Q is above 0.5 to avoid dividing by zero
-    let max_intrinsic = intrinsics::maxnum_v4f32(module);
+    let max_intrinsic = intrinsics::maxnum_v2f64(module);
     let clamped_q = builder
         .build_call(
             &max_intrinsic,

@@ -7,7 +7,7 @@ use inkwell::types::StructType;
 use inkwell::values::{PointerValue, VectorValue};
 use inkwell::FloatPredicate;
 use mir::block;
-use std::f32::consts;
+use std::f64::consts;
 
 fn gen_periodic_real_args(
     ctx: &mut BuilderContext,
@@ -28,7 +28,7 @@ fn gen_periodic_real_args(
 }
 
 fn periodic_data_type(context: &Context) -> StructType {
-    context.struct_type(&[&context.f32_type().vec_type(4)], false)
+    context.struct_type(&[&context.f64_type().vec_type(2)], false)
 }
 
 fn gen_periodic_call(
@@ -37,7 +37,7 @@ fn gen_periodic_call(
     result: PointerValue,
     next_val: &Fn(&mut FunctionContext, VectorValue, &[PointerValue]) -> VectorValue,
 ) {
-    let fract_intrinsic = intrinsics::fract_v4f32(func.ctx.module);
+    let fract_intrinsic = intrinsics::fract_v2f64(func.ctx.module);
 
     let phase_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "phase.ptr") };
 
@@ -127,7 +127,7 @@ fn sin_next_value(
     phase: VectorValue,
     _extra_args: &[PointerValue],
 ) -> VectorValue {
-    let sin_intrinsic = intrinsics::sin_v4f32(func.ctx.module);
+    let sin_intrinsic = intrinsics::sin_v2f64(func.ctx.module);
     let sin_phase = func.ctx.b.build_float_mul(
         phase,
         util::get_vec_spread(func.ctx.context, consts::PI * 2.),
@@ -188,7 +188,7 @@ fn tri_next_value(
     phase: VectorValue,
     _extra_args: &[PointerValue],
 ) -> VectorValue {
-    let abs_intrinsic = intrinsics::fabs_v4f32(func.ctx.module);
+    let abs_intrinsic = intrinsics::fabs_v2f64(func.ctx.module);
 
     func.ctx.b.build_float_sub(
         util::get_vec_spread(func.ctx.context, 1.),

@@ -68,53 +68,53 @@ pub fn memset(module: &Module, target: &TargetData) -> FunctionValue {
     })
 }
 
-pub fn pow_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.pow.v4f32", false, &|| {
+pub fn pow_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.pow.v2f64", false, &|| {
         let context = module.get_context();
-        let v4f32_type = context.f32_type().vec_type(4);
+        let v2f64_type = context.f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v4f32_type.fn_type(&[&v4f32_type, &v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
         )
     })
 }
 
-pub fn pow_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.pow.f32", false, &|| {
+pub fn pow_f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.pow.f64", false, &|| {
         let context = module.get_context();
-        let f32_type = context.f32_type();
+        let f64_type = context.f64_type();
         (
             Linkage::ExternalLinkage,
-            f32_type.fn_type(&[&f32_type, &f32_type], false),
+            f64_type.fn_type(&[&f64_type, &f64_type], false),
         )
     })
 }
 
-pub fn exp_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.exp.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn exp_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.exp.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn exp_f32(module: &Module) -> FunctionValue {
+pub fn exp_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(module, "fldl2e; fmulp; fld %st; frndint; fsubr %st, %st(1); fxch; f2xm1; fld1; faddp; fscale; fstp %st(1)", "={st},0,~{dirflag},~{fpsr},~{flags}")
 }
 
-pub fn log_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.log.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn log_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.log.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn log_f32(module: &Module) -> FunctionValue {
+pub fn log_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(
         module,
         "fldln2; fxch; fyl2x",
@@ -122,17 +122,17 @@ pub fn log_f32(module: &Module) -> FunctionValue {
     )
 }
 
-pub fn log10_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.log10.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn log10_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.log10.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn log10_f32(module: &Module) -> FunctionValue {
+pub fn log10_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(
         module,
         "fldlg2; fxch; fyl2x",
@@ -140,17 +140,17 @@ pub fn log10_f32(module: &Module) -> FunctionValue {
     )
 }
 
-pub fn log2_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.log2.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn log2_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.log2.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn log2_f32(module: &Module) -> FunctionValue {
+pub fn log2_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(
         module,
         "fld1; fxch; fyl2x",
@@ -158,45 +158,45 @@ pub fn log2_f32(module: &Module) -> FunctionValue {
     )
 }
 
-pub fn cos_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.cos.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn cos_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.cos.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn cos_f32(module: &Module) -> FunctionValue {
+pub fn cos_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(module, "fcos", "={st},0,~{dirflag},~{fpsr},~{flags}")
 }
 
-pub fn sin_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.sin.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn sin_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.sin.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn sin_f32(module: &Module) -> FunctionValue {
+pub fn sin_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(module, "fsin", "={st},0,~{dirflag},~{fpsr},~{flags}")
 }
 
-pub fn tan_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.tan.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn tan_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.tan.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn tan_f32(module: &Module) -> FunctionValue {
+pub fn tan_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(
         module,
         "fptan; fstp $0",
@@ -204,82 +204,82 @@ pub fn tan_f32(module: &Module) -> FunctionValue {
     )
 }
 
-pub fn sqrt_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sqrt.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn sqrt_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.sqrt.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn ceil_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.ceil.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn ceil_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.ceil.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn floor_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.floor.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn floor_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.floor.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn fabs_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.fabs.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn fabs_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.fabs.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-pub fn minnum_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.minnum.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn minnum_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.minnum.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v4f32_type.fn_type(&[&v4f32_type, &v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
         )
     })
 }
 
-pub fn minnum_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.minnum.f32", false, &|| {
-        let f32_type = module.get_context().f32_type();
+pub fn minnum_f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.minnum.f64", false, &|| {
+        let f64_type = module.get_context().f64_type();
         (
             Linkage::ExternalLinkage,
-            f32_type.fn_type(&[&f32_type, &f32_type], false),
+            f64_type.fn_type(&[&f64_type, &f64_type], false),
         )
     })
 }
 
-pub fn maxnum_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.maxnum.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn maxnum_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.maxnum.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v4f32_type.fn_type(&[&v4f32_type, &v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
         )
     })
 }
 
-pub fn maxnum_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.maxnum.f32", false, &|| {
-        let f32_type = module.get_context().f32_type();
+pub fn maxnum_f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.maxnum.f64", false, &|| {
+        let f64_type = module.get_context().f64_type();
         (
             Linkage::ExternalLinkage,
-            f32_type.fn_type(&[&f32_type, &f32_type], false),
+            f64_type.fn_type(&[&f64_type, &f64_type], false),
         )
     })
 }
@@ -294,32 +294,32 @@ pub fn ctlz_i64(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn copysign_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.copysign.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn copysign_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.copysign.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v4f32_type.fn_type(&[&v4f32_type, &v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
         )
     })
 }
 
-pub fn eucrem_v4i32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.eucrem.v4i32", false, &|| {
-        let v4i32_type = module.get_context().i32_type().vec_type(4);
+pub fn eucrem_v2i32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.eucrem.v2i32", false, &|| {
+        let v2i32_type = module.get_context().i32_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4i32_type.fn_type(&[&v4i32_type, &v4i32_type], false),
+            v2i32_type.fn_type(&[&v2i32_type, &v2i32_type], false),
         )
     })
 }
 
-pub fn fract_v4f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.fract.v4f32", false, &|| {
-        let v4f32_type = module.get_context().f32_type().vec_type(4);
+pub fn fract_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.fract.v2f64", false, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v4f32_type.fn_type(&[&v4f32_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
@@ -342,17 +342,17 @@ pub fn profile_timestamp_i64(module: &Module) -> FunctionValue {
 }
 
 pub fn build_intrinsics(module: &Module, target: &TargetProperties) {
-    //build_pow_v4f32(module, target);
-    //build_pow_f32(module, target);
-    build_exp_v4f32(module, target);
-    build_log_v4f32(module, target);
-    build_log10_v4f32(module, target);
-    build_log2_v4f32(module, target);
-    build_sin_v4f32(module, target);
-    build_cos_v4f32(module, target);
-    build_tan_v4f32(module, target);
-    build_eucrem_v4i32(module, target);
-    build_fract_v4f32(module, target);
+    //build_pow_v2f64(module, target);
+    //build_pow_f64(module, target);
+    build_exp_v2f64(module, target);
+    build_log_v2f64(module, target);
+    build_log10_v2f64(module, target);
+    build_log2_v2f64(module, target);
+    build_sin_v2f64(module, target);
+    build_cos_v2f64(module, target);
+    build_tan_v2f64(module, target);
+    build_eucrem_v2i32(module, target);
+    build_fract_v2f64(module, target);
     build_next_power_i64(module, target);
 }
 
@@ -393,7 +393,7 @@ fn build_float_splat_function(
             .build_insert_element(
                 &ctx.b
                     .build_insert_element(
-                        &ctx.context.f32_type().vec_type(4).get_undef(),
+                        &ctx.context.f64_type().vec_type(2).get_undef(),
                         &sin1_val,
                         &index1,
                         "out.combine1",
@@ -409,20 +409,20 @@ fn build_float_splat_function(
 
 fn get_float_asm_func(module: &Module, asm: &str, constraints: &str) -> FunctionValue {
     let context = module.get_context();
-    let fn_type = context.f32_type().fn_type(&[&context.f32_type()], false);
+    let fn_type = context.f64_type().fn_type(&[&context.f64_type()], false);
     let asm_val = fn_type.as_asm(asm, constraints, false, false);
     //asm_val.add_attribute(context.get_enum_attr(AttrKind::NoUnwind, 1));
     //asm_val.add_attribute(context.get_enum_attr(AttrKind::ReadNone, 1));
     asm_val
 }
 
-fn build_pow_v4f32(module: &Module, target: &TargetProperties) {
-    build_context_function(module, pow_v4f32(module), target, &|ctx: BuilderContext| {
-        let exp_intrinsic = exp_v4f32(module);
-        let log_intrinsic = log_v4f32(module);
-        let abs_intrinsic = fabs_v4f32(module);
-        let floor_intrinsic = floor_v4f32(module);
-        let copysign_intrinsic = copysign_v4f32(module);
+fn build_pow_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(module, pow_v2f64(module), target, &|ctx: BuilderContext| {
+        let exp_intrinsic = exp_v2f64(module);
+        let log_intrinsic = log_v2f64(module);
+        let abs_intrinsic = fabs_v2f64(module);
+        let floor_intrinsic = floor_v2f64(module);
+        let copysign_intrinsic = copysign_v2f64(module);
 
         let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
         let y_vec = ctx.func.get_nth_param(1).unwrap().into_vector_value();
@@ -517,9 +517,9 @@ fn build_pow_v4f32(module: &Module, target: &TargetProperties) {
     });
 }
 
-fn build_pow_f32(module: &Module, target: &TargetProperties) {
-    build_context_function(module, pow_f32(module), target, &|ctx: BuilderContext| {
-        let pow_intrinsic = pow_v4f32(module);
+fn build_pow_f64(module: &Module, target: &TargetProperties) {
+    build_context_function(module, pow_f64(module), target, &|ctx: BuilderContext| {
+        let pow_intrinsic = pow_v2f64(module);
 
         let x_float = ctx.func.get_nth_param(0).unwrap().into_float_value();
         let y_float = ctx.func.get_nth_param(1).unwrap().into_float_value();
@@ -529,7 +529,7 @@ fn build_pow_f32(module: &Module, target: &TargetProperties) {
         let x_vec = ctx
             .b
             .build_insert_element(
-                &ctx.context.f32_type().vec_type(4).get_undef(),
+                &ctx.context.f64_type().vec_type(2).get_undef(),
                 &x_float,
                 &index_0,
                 "xvec",
@@ -537,7 +537,7 @@ fn build_pow_f32(module: &Module, target: &TargetProperties) {
         let y_vec = ctx
             .b
             .build_insert_element(
-                &ctx.context.f32_type().vec_type(4).get_undef(),
+                &ctx.context.f64_type().vec_type(2).get_undef(),
                 &y_float,
                 &index_0,
                 "yvec",
@@ -558,38 +558,38 @@ fn build_pow_f32(module: &Module, target: &TargetProperties) {
     });
 }
 
-fn build_exp_v4f32(module: &Module, target: &TargetProperties) {
-    build_float_splat_function(module, target, exp_v4f32(module), exp_f32(module));
+fn build_exp_v2f64(module: &Module, target: &TargetProperties) {
+    build_float_splat_function(module, target, exp_v2f64(module), exp_f64(module));
 }
 
-fn build_log_v4f32(module: &Module, target: &TargetProperties) {
-    build_float_splat_function(module, target, log_v4f32(module), log_f32(module));
+fn build_log_v2f64(module: &Module, target: &TargetProperties) {
+    build_float_splat_function(module, target, log_v2f64(module), log_f64(module));
 }
 
-fn build_log10_v4f32(module: &Module, target: &TargetProperties) {
-    build_float_splat_function(module, target, log10_v4f32(module), log10_f32(module));
+fn build_log10_v2f64(module: &Module, target: &TargetProperties) {
+    build_float_splat_function(module, target, log10_v2f64(module), log10_f64(module));
 }
 
-fn build_log2_v4f32(module: &Module, target: &TargetProperties) {
-    build_float_splat_function(module, target, log2_v4f32(module), log2_f32(module));
+fn build_log2_v2f64(module: &Module, target: &TargetProperties) {
+    build_float_splat_function(module, target, log2_v2f64(module), log2_f64(module));
 }
 
-fn build_sin_v4f32(module: &Module, target: &TargetProperties) {
-    build_float_splat_function(module, target, sin_v4f32(module), sin_f32(module));
+fn build_sin_v2f64(module: &Module, target: &TargetProperties) {
+    build_float_splat_function(module, target, sin_v2f64(module), sin_f64(module));
 }
 
-fn build_cos_v4f32(module: &Module, target: &TargetProperties) {
-    build_float_splat_function(module, target, cos_v4f32(module), cos_f32(module));
+fn build_cos_v2f64(module: &Module, target: &TargetProperties) {
+    build_float_splat_function(module, target, cos_v2f64(module), cos_f64(module));
 }
 
-fn build_tan_v4f32(module: &Module, target: &TargetProperties) {
-    build_float_splat_function(module, target, tan_v4f32(module), tan_f32(module));
+fn build_tan_v2f64(module: &Module, target: &TargetProperties) {
+    build_float_splat_function(module, target, tan_v2f64(module), tan_f64(module));
 }
 
-fn build_eucrem_v4i32(module: &Module, target: &TargetProperties) {
+fn build_eucrem_v2i32(module: &Module, target: &TargetProperties) {
     build_context_function(
         module,
-        eucrem_v4i32(module),
+        eucrem_v2i32(module),
         target,
         &|ctx: BuilderContext| {
             let x_val = ctx.func.get_nth_param(0).unwrap().into_vector_value();
@@ -601,8 +601,6 @@ fn build_eucrem_v4i32(module: &Module, target: &TargetProperties) {
             let const_zero = VectorType::const_vector(&[
                 &ctx.context.i32_type().const_int(0, false),
                 &ctx.context.i32_type().const_int(0, false),
-                &ctx.context.i32_type().get_undef(),
-                &ctx.context.i32_type().get_undef(),
             ]);
             let lt_zero = ctx
                 .b
@@ -619,13 +617,13 @@ fn build_eucrem_v4i32(module: &Module, target: &TargetProperties) {
     );
 }
 
-fn build_fract_v4f32(module: &Module, target: &TargetProperties) {
+fn build_fract_v2f64(module: &Module, target: &TargetProperties) {
     build_context_function(
         module,
-        fract_v4f32(module),
+        fract_v2f64(module),
         target,
         &|ctx: BuilderContext| {
-            let floor_intrinsic = floor_v4f32(ctx.module);
+            let floor_intrinsic = floor_v2f64(ctx.module);
             let x_val = ctx.func.get_nth_param(0).unwrap().into_vector_value();
 
             let x_floored = ctx

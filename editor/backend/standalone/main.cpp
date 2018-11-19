@@ -84,8 +84,8 @@ public:
 
                 if (backend->outputPortal) {
                     auto outputNum = **backend->outputPortal;
-                    *outputNums++ = outputNum.left;
-                    *outputNums++ = outputNum.right;
+                    *outputNums++ = (float) outputNum.left;
+                    *outputNums++ = (float) outputNum.right;
                 }
 
                 if (backend->midiInputPortal != -1 && i == processPos) {

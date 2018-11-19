@@ -131,8 +131,8 @@ pub struct Runtime {
     jit: Jit,
     library_pointers: LibraryPointers,
     runtime_pointers: Option<RuntimePointers>,
-    bpm: f32,
-    sample_rate: f32,
+    bpm: f64,
+    sample_rate: f64,
 }
 
 impl Runtime {
@@ -542,29 +542,29 @@ impl Runtime {
         }
     }
 
-    fn set_vector(ptr: *mut c_void, value: f32) {
-        let vec_ptr = ptr as *mut (f32, f32);
+    fn set_vector(ptr: *mut c_void, value: f64) {
+        let vec_ptr = ptr as *mut (f64, f64);
         unsafe {
             (*vec_ptr).0 = value;
             (*vec_ptr).1 = value;
         }
     }
 
-    pub fn set_bpm(&mut self, bpm: f32) {
+    pub fn set_bpm(&mut self, bpm: f64) {
         self.bpm = bpm;
         Runtime::set_vector(self.library_pointers.bpm_ptr, bpm);
     }
 
-    pub fn get_bpm(&self) -> f32 {
+    pub fn get_bpm(&self) -> f64 {
         self.bpm
     }
 
-    pub fn set_sample_rate(&mut self, sample_rate: f32) {
+    pub fn set_sample_rate(&mut self, sample_rate: f64) {
         self.sample_rate = sample_rate;
         Runtime::set_vector(self.library_pointers.samplerate_ptr, sample_rate);
     }
 
-    pub fn get_sample_rate(&self) -> f32 {
+    pub fn get_sample_rate(&self) -> f64 {
         self.sample_rate
     }
 

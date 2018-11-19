@@ -18,7 +18,7 @@ fn db_from_amplitude(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let log10_intrinsic = intrinsics::log10_v4f32(module);
+    let log10_intrinsic = intrinsics::log10_v2f64(module);
 
     builder.build_float_mul(
         builder
@@ -37,7 +37,7 @@ fn db_from_control(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let log10_intrinsic = intrinsics::log10_v4f32(module);
+    let log10_intrinsic = intrinsics::log10_v2f64(module);
 
     builder.build_float_mul(
         builder
