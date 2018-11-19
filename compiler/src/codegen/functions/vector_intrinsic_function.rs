@@ -44,7 +44,6 @@ macro_rules! define_vector_intrinsic (
 
 define_vector_intrinsic!(CosFunction: block::Function::Cos => intrinsics::cos_v2f64);
 define_vector_intrinsic!(SinFunction: block::Function::Sin => intrinsics::sin_v2f64);
-define_vector_intrinsic!(TanFunction: block::Function::Tan => intrinsics::tan_v2f64);
 define_vector_intrinsic!(LogFunction: block::Function::Log => intrinsics::log_v2f64);
 define_vector_intrinsic!(Log2Function: block::Function::Log2 => intrinsics::log2_v2f64);
 define_vector_intrinsic!(Log10Function: block::Function::Log10 => intrinsics::log10_v2f64);
