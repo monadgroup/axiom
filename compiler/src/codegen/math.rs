@@ -27,6 +27,8 @@ fn get_i32_spread(context: &Context, val: u64) -> VectorValue {
     VectorType::const_vector(&[
         &context.i32_type().const_int(val, false),
         &context.i32_type().const_int(val, false),
+        &context.i32_type().const_int(val, false),
+        &context.i32_type().const_int(val, false),
     ])
 }
 
@@ -35,6 +37,7 @@ pub fn build_math_functions(module: &Module, target: &TargetProperties) {
     build_sin_v2f64(module, target);
     build_cos_v2f64(module, target);
     build_mod_v2f64(module, target);
+    build_frac_v2f64(module, target);
     build_pow_v2f64(module, target);
     build_exp_v2f64(module, target);
     build_exp2_v2f64(module, target);
@@ -69,7 +72,7 @@ pub fn sin_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.sin.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::ExternalLinkage,
+            Linkage::PrivateLinkage,
             v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
@@ -176,7 +179,26 @@ pub fn cos_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_cos_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(module, cos_v2f64(module), target, &|ctx: BuilderContext| {
+        let sin_intrinsic = sin_v2f64(module);
+
+        let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+        // cos(x) = sin(x + pi/2)
+        let x_offset = ctx.b.build_float_add(
+            x_vec,
+            util::get_vec_spread(ctx.context, consts::PI / 2.),
+            "x.offset",
+        );
+        let res = ctx
+            .b
+            .build_call(&sin_intrinsic, &[&x_offset], "", true)
+            .left()
+            .unwrap()
+            .into_vector_value();
+
+        ctx.b.build_return(Some(&res));
+    })
 }
 
 pub fn cos_slow_f64(module: &Module) -> FunctionValue {
@@ -320,6 +342,42 @@ fn build_mod_v2f64(module: &Module, target: &TargetProperties) {
     });
 }
 
+// frac
+pub fn frac_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.frac.v2f64", true, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
+        (
+            Linkage::PrivateLinkage,
+            v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
+        )
+    })
+}
+
+fn build_frac_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        frac_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let floor_intrinsic = floor_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+            let res_vec = ctx.b.build_float_sub(
+                x_vec,
+                ctx.b
+                    .build_call(&floor_intrinsic, &[&x_vec], "", true)
+                    .left()
+                    .unwrap()
+                    .into_vector_value(),
+                "",
+            );
+
+            ctx.b.build_return(Some(&res_vec));
+        },
+    )
+}
+
 // pow
 pub fn pow_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.pow.v2f64", true, &|| {
@@ -347,7 +405,26 @@ pub fn exp_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_exp_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(module, exp_v2f64(module), target, &|ctx: BuilderContext| {
+        let exp2_intrinsic = exp2_v2f64(module);
+
+        let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+        // exp(x) = exp2(x * log_2(e))
+        let x_offset = ctx.b.build_float_mul(
+            x_vec,
+            util::get_vec_spread(ctx.context, consts::LOG2_E),
+            "x.offset",
+        );
+        let res = ctx
+            .b
+            .build_call(&exp2_intrinsic, &[&x_offset], "", true)
+            .left()
+            .unwrap()
+            .into_vector_value();
+
+        ctx.b.build_return(Some(&res));
+    });
 }
 
 // exp2
@@ -362,7 +439,97 @@ pub fn exp2_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_exp2_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        exp2_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let cvtpd_intrinsic =
+                util::get_or_create_func(module, "llvm.x86.sse2.cvtpd2dq", true, &|| {
+                    (
+                        Linkage::ExternalLinkage,
+                        ctx.context
+                            .i32_type()
+                            .vec_type(4)
+                            .fn_type(&[&ctx.context.f64_type().vec_type(2)], false),
+                    )
+                });
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+            let x_int_vec = ctx
+                .b
+                .build_call(&cvtpd_intrinsic, &[&x_vec], "", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+            let x_int_two_vec = ctx.b.build_shuffle_vector(
+                &x_int_vec,
+                &ctx.context.i32_type().vec_type(4).get_undef(),
+                &VectorType::const_vector(&[
+                    &ctx.context.i32_type().const_int(0, false),
+                    &ctx.context.i32_type().const_int(1, false),
+                ]),
+                "",
+            );
+            let x_frac = ctx.b.build_float_sub(
+                x_vec,
+                ctx.b.build_signed_int_to_float(
+                    x_int_two_vec,
+                    ctx.context.f64_type().vec_type(2),
+                    "",
+                ),
+                "x.frac",
+            );
+
+            let mad = |r: VectorValue, exp: f64| {
+                ctx.b.build_float_add(
+                    ctx.b.build_float_mul(r, x_frac, ""),
+                    util::get_vec_spread(ctx.context, exp),
+                    "",
+                )
+            };
+
+            let r = util::get_vec_spread(ctx.context, 0.00015465324084118492); // const 0
+            let r = mad(r, 0.0013395291543787380); // const 1
+            let r = mad(r, 0.0096180399117429261); // const 2
+            let r = mad(r, 0.055503406540083233); // const 3
+            let r = mad(r, 0.24022651101404335); // const 4
+            let r = mad(r, 0.69314720007241704); // const 5
+            let r = mad(r, 0.99999999997089617); // const 6
+
+            let k = ctx
+                .b
+                .build_int_add(x_int_vec, get_i32_spread(ctx.context, 1023), "");
+            let k = ctx
+                .b
+                .build_left_shift(k, get_i32_spread(ctx.context, 20), "");
+            let k = ctx.b.build_shuffle_vector(
+                &k,
+                &ctx.context.i32_type().vec_type(4).get_undef(),
+                &VectorType::const_vector(&[
+                    &ctx.context.i32_type().const_int(2, false),
+                    &ctx.context.i32_type().const_int(0, false),
+                    &ctx.context.i32_type().const_int(3, false),
+                    &ctx.context.i32_type().const_int(1, false),
+                ]),
+                "",
+            );
+            let res = ctx.b.build_float_mul(
+                r,
+                ctx.b
+                    .build_cast(
+                        InstructionOpcode::BitCast,
+                        &k,
+                        &ctx.context.f64_type().vec_type(2),
+                        "k.float",
+                    ).into_vector_value(),
+                "",
+            );
+
+            ctx.b.build_return(Some(&res));
+        },
+    )
 }
 
 // exp10
@@ -377,7 +544,31 @@ pub fn exp10_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_exp10_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        exp10_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let exp2_intrinsic = exp2_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+            // exp10(x) = exp2(x * log_2(10))
+            let x_offset = ctx.b.build_float_mul(
+                x_vec,
+                util::get_vec_spread(ctx.context, 10_f64.log2()),
+                "x.offset",
+            );
+            let res = ctx
+                .b
+                .build_call(&exp2_intrinsic, &[&x_offset], "", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+
+            ctx.b.build_return(Some(&res));
+        },
+    );
 }
 
 // log

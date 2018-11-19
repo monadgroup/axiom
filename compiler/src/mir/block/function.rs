@@ -51,7 +51,7 @@ macro_rules! define_functions {
             }
         }
 
-        pub const FUNCTION_TABLE: [&str; 52] = [$($str_name, )*];
+        pub const FUNCTION_TABLE: [&str; 53] = [$($str_name, )*];
     );
 }
 
@@ -71,6 +71,7 @@ define_functions! {
     Asin = "asin" func![(Num) -> Num],
     Atan = "atan" func![(Num) -> Num],
     Atan2 = "atan2" func![(Num, Num) -> Num],
+    Exp2 = "exp2" func![(Num) -> Num],
     Hypot = "hypot" func![(Num, Num) -> Num],
     ToRad = "toRad" func![(Num) -> Num],
     ToDeg = "toDeg" func![(Num) -> Num],

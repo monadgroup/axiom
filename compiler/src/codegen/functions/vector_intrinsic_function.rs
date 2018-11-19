@@ -54,3 +54,4 @@ define_vector_intrinsic!(FractFunction: block::Function::Fract => intrinsics::fr
 define_vector_intrinsic!(AbsFunction: block::Function::Abs => intrinsics::fabs_v2f64);
 define_vector_intrinsic!(MinFunction: block::Function::Min => intrinsics::minnum_v2f64);
 define_vector_intrinsic!(MaxFunction: block::Function::Max => intrinsics::maxnum_v2f64);
+define_vector_intrinsic!(Exp2Function: block::Function::Exp2 => math::exp2_v2f64);
