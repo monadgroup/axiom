@@ -1,6 +1,6 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::intrinsics;
 use codegen::values::NumValue;
+use codegen::{intrinsics, math};
 use inkwell::values::{BasicValue, FunctionValue, PointerValue};
 use mir::block;
 
@@ -22,7 +22,7 @@ fn gen_intrinsic_call(
     let result_vec = func
         .ctx
         .b
-        .build_call(&intrinsic, &basic_values, "result", false)
+        .build_call(&intrinsic, &basic_values, "result", true)
         .left()
         .unwrap()
         .into_vector_value();
@@ -43,7 +43,7 @@ macro_rules! define_vector_intrinsic (
 );
 
 define_vector_intrinsic!(CosFunction: block::Function::Cos => intrinsics::cos_v2f64);
-define_vector_intrinsic!(SinFunction: block::Function::Sin => intrinsics::sin_v2f64);
+define_vector_intrinsic!(SinFunction: block::Function::Sin => math::sin_v2f64);
 define_vector_intrinsic!(LogFunction: block::Function::Log => intrinsics::log_v2f64);
 define_vector_intrinsic!(Log2Function: block::Function::Log2 => intrinsics::log2_v2f64);
 define_vector_intrinsic!(Log10Function: block::Function::Log10 => intrinsics::log10_v2f64);

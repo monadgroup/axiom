@@ -11,6 +11,7 @@ use mir::{Block, BlockRef, IdAllocator, InternalNodeRef, Root, Surface, SurfaceR
 use pass;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::f64::consts;
 use std::iter;
 use std::iter::FromIterator;
 use std::mem;

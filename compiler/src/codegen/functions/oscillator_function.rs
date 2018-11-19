@@ -1,7 +1,7 @@
 use super::{Function, FunctionContext, VarArgs};
 use ast::FormType;
 use codegen::values::NumValue;
-use codegen::{globals, intrinsics, util, BuilderContext};
+use codegen::{globals, intrinsics, math, util, BuilderContext};
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::{PointerValue, VectorValue};
@@ -127,7 +127,7 @@ fn sin_next_value(
     phase: VectorValue,
     _extra_args: &[PointerValue],
 ) -> VectorValue {
-    let sin_intrinsic = intrinsics::sin_v2f64(func.ctx.module);
+    let sin_intrinsic = math::sin_v2f64(func.ctx.module);
     let sin_phase = func.ctx.b.build_float_mul(
         phase,
         util::get_vec_spread(func.ctx.context, consts::PI * 2.),
@@ -135,7 +135,7 @@ fn sin_next_value(
     );
     func.ctx
         .b
-        .build_call(&sin_intrinsic, &[&sin_phase], "result", false)
+        .build_call(&sin_intrinsic, &[&sin_phase], "result", true)
         .left()
         .unwrap()
         .into_vector_value()

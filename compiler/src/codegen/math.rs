@@ -1,10 +1,11 @@
-use codegen::{build_context_function, globals, util, BuilderContext, TargetProperties};
+use codegen::{build_context_function, util, BuilderContext, TargetProperties};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::targets::TargetData;
 use inkwell::types::{BasicType, VectorType};
 use inkwell::values::InstructionOpcode;
 use inkwell::values::{FunctionValue, VectorValue};
+use inkwell::FloatPredicate;
 use std::f64::consts;
 
 // utils
@@ -30,7 +31,25 @@ fn get_i32_spread(context: &Context, val: u64) -> VectorValue {
 }
 
 pub fn build_math_functions(module: &Module, target: &TargetProperties) {
+    build_rand_v2f64(module, target);
     build_sin_v2f64(module, target);
+    build_cos_v2f64(module, target);
+    build_mod_v2f64(module, target);
+    build_pow_v2f64(module, target);
+    build_exp_v2f64(module, target);
+    build_exp2_v2f64(module, target);
+    build_exp10_v2f64(module, target);
+    build_log_v2f64(module, target);
+    build_log2_v2f64(module, target);
+    build_log10_v2f64(module, target);
+    build_asin_v2f64(module, target);
+    build_acos_v2f64(module, target);
+    build_atan_v2f64(module, target);
+    build_atan2_v2f64(module, target);
+    build_sinh_v2f64(module, target);
+    build_cosh_v2f64(module, target);
+    build_tanh_v2f64(module, target);
+    build_hypot_v2f64(module, target);
 }
 
 // rand
@@ -41,7 +60,7 @@ pub fn rand_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_rand_v2f64(module: &Module) {
+fn build_rand_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -58,166 +77,86 @@ pub fn sin_v2f64(module: &Module) -> FunctionValue {
 
 fn build_sin_v2f64(module: &Module, target: &TargetProperties) {
     build_context_function(module, sin_v2f64(module), target, &|ctx: BuilderContext| {
+        let mod_intrinsic = mod_v2f64(module);
         let abs_intrinsic = abs_v2f64(module);
-
-        let sine_table_ptr = globals::get_sine_table(ctx.module).as_pointer_value();
 
         let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
 
-        // sine is symmetrical around zero, so we can get rid of negatives
-        let positive_x_vec = ctx
+        // keep in the range 0..2pi
+        let ranged_x = ctx
             .b
-            .build_call(&abs_intrinsic, &[&x_vec], "x.positive", true)
-            .left()
+            .build_call(
+                &mod_intrinsic,
+                &[&x_vec, &util::get_vec_spread(ctx.context, consts::PI * 2.)],
+                "x.ranged",
+                true,
+            ).left()
             .unwrap()
             .into_vector_value();
 
-        // normalize range from 0 -> 2PI to 1 -> 2
-        let normalized_x = ctx.b.build_float_add(
+        let wrapped_x = ctx
+            .b
+            .build_select(
+                ctx.b.build_float_compare(
+                    FloatPredicate::OGT,
+                    ranged_x,
+                    util::get_vec_spread(ctx.context, consts::PI),
+                    "",
+                ),
+                ctx.b.build_float_sub(
+                    ranged_x,
+                    util::get_vec_spread(ctx.context, consts::PI * 2.),
+                    "",
+                ),
+                ranged_x,
+                "x.wrapped",
+            ).into_vector_value();
+
+        let y_val = ctx.b.build_float_add(
             ctx.b.build_float_mul(
-                positive_x_vec,
-                util::get_vec_spread(ctx.context, 1. / (2. * consts::PI)),
+                util::get_vec_spread(ctx.context, 1.2732395447237650),
+                wrapped_x,
                 "",
             ),
-            util::get_vec_spread(ctx.context, 1.),
-            "x.normalized",
-        );
-
-        // read the values as integers to calculate approximate indices
-        let x_int = ctx
-            .b
-            .build_cast(
-                InstructionOpcode::BitCast,
-                &normalized_x,
-                &ctx.context.i64_type().vec_type(2),
-                "x.int",
-            ).into_vector_value();
-        let exponent = ctx.b.build_int_sub(
-            ctx.b
-                .build_right_shift(x_int, get_i64_spread(ctx.context, 52), false, ""),
-            get_i64_spread(ctx.context, 1023),
-            "exponent",
-        );
-
-        let fract_bits = 32 - globals::SINE_TABLE_LOG2_SIZE;
-        let fract_scale = 1 << fract_bits;
-        let fract_mask = fract_scale - 1;
-
-        let significand = ctx.b.build_int_truncate(
-            ctx.b.build_right_shift(
-                ctx.b.build_left_shift(x_int, exponent, ""),
-                get_i64_spread(ctx.context, 20),
-                false,
+            ctx.b.build_float_mul(
+                ctx.b.build_float_mul(
+                    util::get_vec_spread(ctx.context, -0.40528473456652137),
+                    wrapped_x,
+                    "",
+                ),
+                ctx.b
+                    .build_call(&abs_intrinsic, &[&wrapped_x], "", true)
+                    .left()
+                    .unwrap()
+                    .into_vector_value(),
                 "",
             ),
-            ctx.context.i32_type().vec_type(2),
-            "significand",
+            "y",
         );
 
-        let a_index = ctx.b.build_right_shift(
-            significand,
-            get_i32_spread(ctx.context, fract_bits as u64),
-            false,
-            "a.index",
-        );
-        let fract = ctx.b.build_and(
-            significand,
-            get_i32_spread(ctx.context, fract_mask as u64),
-            "fract",
-        );
-
-        let left_index = ctx.context.i32_type().const_int(0, false);
-        let right_index = ctx.context.i32_type().const_int(1, false);
-
-        let a_ptr = unsafe {
-            ctx.b.build_gep(
-                &sine_table_ptr,
-                &[get_i32_spread(ctx.context, 0), a_index],
-                "a.ptr",
-            )
-        };
-
-        let a_left_ptr = ctx
-            .b
-            .build_extract_element(&a_ptr, &left_index, "a.left.ptr")
-            .into_pointer_value();
-        let a_right_ptr = ctx
-            .b
-            .build_extract_element(&a_ptr, &right_index, "a.right.ptr")
-            .into_pointer_value();
-
-        let a_left_val = ctx.b.build_load(&a_left_ptr, "a.left").into_float_value();
-        let a_right_val = ctx.b.build_load(&a_right_ptr, "a.right").into_float_value();
-        let a_val = ctx
-            .b
-            .build_insert_element(
-                &ctx.b
-                    .build_insert_element(
-                        &ctx.context.f64_type().vec_type(2).get_undef(),
-                        &a_left_val,
-                        &left_index,
+        let result = ctx.b.build_float_add(
+            ctx.b.build_float_mul(
+                util::get_vec_spread(ctx.context, 0.22499990463256836),
+                ctx.b.build_float_sub(
+                    ctx.b.build_float_mul(
+                        y_val,
+                        ctx.b
+                            .build_call(&abs_intrinsic, &[&y_val], "", true)
+                            .left()
+                            .unwrap()
+                            .into_vector_value(),
                         "",
-                    ).into_vector_value(),
-                &a_right_val,
-                &right_index,
-                "a",
-            ).into_vector_value();
-
-        let b_index = ctx
-            .b
-            .build_int_add(a_index, get_i32_spread(ctx.context, 1), "b.index");
-        let b_ptr = unsafe {
-            ctx.b.build_gep(
-                &sine_table_ptr,
-                &[get_i32_spread(ctx.context, 0), b_index],
-                "b.ptr",
-            )
-        };
-
-        let b_left_ptr = ctx
-            .b
-            .build_extract_element(&b_ptr, &left_index, "b.left.ptr")
-            .into_pointer_value();
-        let b_right_ptr = ctx
-            .b
-            .build_extract_element(&b_ptr, &right_index, "b.right.ptr")
-            .into_pointer_value();
-
-        let b_left_val = ctx.b.build_load(&b_left_ptr, "b.left").into_float_value();
-        let b_right_val = ctx.b.build_load(&b_right_ptr, "b.right").into_float_value();
-        let b_val = ctx
-            .b
-            .build_insert_element(
-                &ctx.b
-                    .build_insert_element(
-                        &ctx.context.f64_type().vec_type(2).get_undef(),
-                        &b_left_val,
-                        &left_index,
-                        "",
-                    ).into_vector_value(),
-                &b_right_val,
-                &right_index,
-                "b",
-            ).into_vector_value();
-
-        let fract_double = ctx.b.build_signed_int_to_float(
-            fract,
-            ctx.context.f64_type().vec_type(2),
-            "fract.float",
-        );
-        let fract_mix = ctx.b.build_float_mul(
-            fract_double,
-            util::get_vec_spread(ctx.context, 1. / fract_scale as f64),
-            "fract.mix",
+                    ),
+                    y_val,
+                    "",
+                ),
+                "",
+            ),
+            y_val,
+            "res",
         );
 
-        let result_vec = ctx.b.build_float_add(
-            a_val,
-            ctx.b
-                .build_float_mul(ctx.b.build_float_sub(b_val, a_val, ""), fract_mix, ""),
-            "",
-        );
-        ctx.b.build_return(Some(&result_vec));
+        ctx.b.build_return(Some(&result));
     })
 }
 
@@ -236,7 +175,7 @@ pub fn cos_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_cos_v2f64(module: &Module) {
+fn build_cos_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -352,8 +291,33 @@ pub fn mod_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_mod_v2f64(module: &Module) {
-    // todo
+fn build_mod_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(module, mod_v2f64(module), target, &|ctx: BuilderContext| {
+        let floor_intrinsic = floor_v2f64(module);
+
+        let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+        let m_vec = ctx.func.get_nth_param(1).unwrap().into_vector_value();
+
+        let res_vec = ctx.b.build_float_sub(
+            x_vec,
+            ctx.b.build_float_mul(
+                ctx.b
+                    .build_call(
+                        &floor_intrinsic,
+                        &[&ctx.b.build_float_div(x_vec, m_vec, "")],
+                        "",
+                        true,
+                    ).left()
+                    .unwrap()
+                    .into_vector_value(),
+                m_vec,
+                "",
+            ),
+            "",
+        );
+
+        ctx.b.build_return(Some(&res_vec));
+    });
 }
 
 // pow
@@ -367,7 +331,7 @@ pub fn pow_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_pow_v2f64(module: &Module) {
+fn build_pow_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -382,7 +346,7 @@ pub fn exp_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_exp_v2f64(module: &Module) {
+fn build_exp_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -397,7 +361,7 @@ pub fn exp2_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_exp2_v2f64(module: &Module) {
+fn build_exp2_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -412,7 +376,7 @@ pub fn exp10_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_exp10_v2f64(module: &Module) {
+fn build_exp10_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -427,7 +391,7 @@ pub fn log_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_log_v2f64(module: &Module) {
+fn build_log_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -442,7 +406,7 @@ pub fn log2_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_log2_v2f64(module: &Module) {
+fn build_log2_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -457,7 +421,7 @@ pub fn log10_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_log10_v2f64(module: &Module) {
+fn build_log10_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -472,7 +436,7 @@ pub fn asin_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_asin_v2f64(module: &Module) {
+fn build_asin_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -487,7 +451,7 @@ pub fn acos_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_acos_v2f64(module: &Module) {
+fn build_acos_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -502,7 +466,7 @@ pub fn atan_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_atan_v2f64(module: &Module) {
+fn build_atan_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -517,7 +481,7 @@ pub fn atan2_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_atan2_v2f64(module: &Module) {
+fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -532,7 +496,7 @@ pub fn sinh_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_sinh_v2f64(module: &Module) {
+fn build_sinh_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -547,7 +511,7 @@ pub fn cosh_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_cosh_v2f64(module: &Module) {
+fn build_cosh_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -562,7 +526,7 @@ pub fn tanh_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_tanh_v2f64(module: &Module) {
+fn build_tanh_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
 
@@ -577,6 +541,6 @@ pub fn hypot_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_hypot_v2f64(module: &Module) {
+fn build_hypot_v2f64(module: &Module, target: &TargetProperties) {
     // todo
 }
