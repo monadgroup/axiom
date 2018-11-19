@@ -2,7 +2,7 @@ use super::dependency_graph::DependencyGraph;
 use super::jit::{Jit, JitKey};
 use super::Transaction;
 use codegen::{
-    block, controls, converters, data_analyzer, editor, functions, globals, intrinsics, root,
+    block, controls, converters, data_analyzer, editor, functions, globals, intrinsics, math, root,
     surface, values, ObjectCache, Optimizer, TargetProperties,
 };
 use inkwell::context::Context;
@@ -183,6 +183,7 @@ impl Runtime {
         converters::build_funcs(&module, &target);
         functions::build_funcs(&module, &target);
         intrinsics::build_intrinsics(&module, &target);
+        math::build_math_functions(&module, &target);
         globals::build_globals(&module);
         values::MidiValue::initialize(&module, &target);
         editor::build_convert_num_func(&module, &target, CONVERT_NUM_FUNC_NAME);

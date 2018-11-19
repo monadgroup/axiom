@@ -7,6 +7,7 @@ pub mod editor;
 pub mod functions;
 pub mod globals;
 pub mod intrinsics;
+pub mod math;
 mod object_cache;
 mod optimizer;
 pub mod root;
