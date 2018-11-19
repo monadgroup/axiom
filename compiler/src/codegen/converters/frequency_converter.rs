@@ -71,21 +71,18 @@ fn frequency_from_note(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let pow_intrinsic = intrinsics::pow_v2f64(module);
+    let exp2_intrinsic = intrinsics::exp2_v2f64(module);
 
     builder.build_float_mul(
         util::get_vec_spread(context, 440.),
         builder
             .build_call(
-                &pow_intrinsic,
-                &[
-                    &util::get_vec_spread(context, 2.),
-                    &builder.build_float_div(
-                        builder.build_float_sub(val, util::get_vec_spread(context, 69.), ""),
-                        util::get_vec_spread(context, 12.),
-                        "",
-                    ),
-                ],
+                &exp2_intrinsic,
+                &[&builder.build_float_div(
+                    builder.build_float_sub(val, util::get_vec_spread(context, 69.), ""),
+                    util::get_vec_spread(context, 12.),
+                    "",
+                )],
                 "",
                 false,
             ).left()
