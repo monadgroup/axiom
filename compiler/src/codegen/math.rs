@@ -1352,7 +1352,39 @@ pub fn sinh_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_sinh_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        sinh_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let exp_intrinsic = exp_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+            let res = ctx.b.build_float_mul(
+                ctx.b.build_float_sub(
+                    ctx.b
+                        .build_call(&exp_intrinsic, &[&x_vec], "", true)
+                        .left()
+                        .unwrap()
+                        .into_vector_value(),
+                    ctx.b
+                        .build_call(
+                            &exp_intrinsic,
+                            &[&ctx.b.build_float_neg(&x_vec, "")],
+                            "",
+                            true,
+                        ).left()
+                        .unwrap()
+                        .into_vector_value(),
+                    "",
+                ),
+                util::get_vec_spread(ctx.context, 0.5),
+                "",
+            );
+            ctx.b.build_return(Some(&res));
+        },
+    )
 }
 
 // cosh
@@ -1367,7 +1399,39 @@ pub fn cosh_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_cosh_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        cosh_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let exp_intrinsic = exp_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+            let res = ctx.b.build_float_mul(
+                ctx.b.build_float_add(
+                    ctx.b
+                        .build_call(&exp_intrinsic, &[&x_vec], "", true)
+                        .left()
+                        .unwrap()
+                        .into_vector_value(),
+                    ctx.b
+                        .build_call(
+                            &exp_intrinsic,
+                            &[&ctx.b.build_float_neg(&x_vec, "")],
+                            "",
+                            true,
+                        ).left()
+                        .unwrap()
+                        .into_vector_value(),
+                    "",
+                ),
+                util::get_vec_spread(ctx.context, 0.5),
+                "",
+            );
+            ctx.b.build_return(Some(&res));
+        },
+    )
 }
 
 // tanh
@@ -1382,7 +1446,32 @@ pub fn tanh_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_tanh_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        tanh_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let sinh_intrinsic = sinh_v2f64(module);
+            let cosh_intrinsic = cosh_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+            let res = ctx.b.build_float_div(
+                ctx.b
+                    .build_call(&sinh_intrinsic, &[&x_vec], "x.sinh", true)
+                    .left()
+                    .unwrap()
+                    .into_vector_value(),
+                ctx.b
+                    .build_call(&cosh_intrinsic, &[&x_vec], "x.cosh", true)
+                    .left()
+                    .unwrap()
+                    .into_vector_value(),
+                "",
+            );
+            ctx.b.build_return(Some(&res));
+        },
+    )
 }
 
 // hypot
@@ -1397,5 +1486,27 @@ pub fn hypot_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_hypot_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        hypot_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let sqrt_intrinsic = sqrt_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+            let y_vec = ctx.func.get_nth_param(1).unwrap().into_vector_value();
+
+            let x2_vec = ctx.b.build_float_mul(x_vec, x_vec, "x.2");
+            let y2_vec = ctx.b.build_float_mul(y_vec, y_vec, "y.2");
+            let sum_vec = ctx.b.build_float_add(x2_vec, y2_vec, "xy");
+
+            let sqrt_vec = ctx
+                .b
+                .build_call(&sqrt_intrinsic, &[&sum_vec], "", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+            ctx.b.build_return(Some(&sqrt_vec));
+        },
+    )
 }
