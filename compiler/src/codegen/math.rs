@@ -46,6 +46,7 @@ pub fn build_math_functions(module: &Module, target: &TargetProperties) {
     build_log_v2f64(module, target);
     build_log2_v2f64(module, target);
     build_log10_v2f64(module, target);
+    build_atan2k_v2f64(module, target);
     build_asin_v2f64(module, target);
     build_acos_v2f64(module, target);
     build_atan_v2f64(module, target);
@@ -873,54 +874,9 @@ fn build_log10_v2f64(module: &Module, target: &TargetProperties) {
     )
 }
 
-// asin
-pub fn asin_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.asin.v2f64", true, &|| {
-        let v2f64_type = module.get_context().f64_type().vec_type(2);
-        (
-            Linkage::PrivateLinkage,
-            v2f64_type.fn_type(&[&v2f64_type], false),
-        )
-    })
-}
-
-fn build_asin_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
-}
-
-// acos
-pub fn acos_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.acos.v2f64", true, &|| {
-        let v2f64_type = module.get_context().f64_type().vec_type(2);
-        (
-            Linkage::PrivateLinkage,
-            v2f64_type.fn_type(&[&v2f64_type], false),
-        )
-    })
-}
-
-fn build_acos_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
-}
-
-// atan
-pub fn atan_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.atan.v2f64", true, &|| {
-        let v2f64_type = module.get_context().f64_type().vec_type(2);
-        (
-            Linkage::PrivateLinkage,
-            v2f64_type.fn_type(&[&v2f64_type], false),
-        )
-    })
-}
-
-fn build_atan_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
-}
-
-// atan2
-pub fn atan2_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.atan2.v2f64", true, &|| {
+// an internal function to support the various a* trig functions
+fn atan2k_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.atan2k_v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
@@ -929,10 +885,10 @@ pub fn atan2_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
+fn build_atan2k_v2f64(module: &Module, target: &TargetProperties) {
     build_context_function(
         module,
-        atan2_v2f64(module),
+        atan2k_v2f64(module),
         target,
         &|ctx: BuilderContext| {
             let abs_intrinsic = abs_v2f64(module);
@@ -1012,12 +968,374 @@ fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
             );
             let t = ctx.b.build_float_add(
                 ctx.b
-                    .build_float_mul(q, util::get_vec_spread(ctx.context, consts::PI * 2.), ""),
+                    .build_float_mul(q, util::get_vec_spread(ctx.context, consts::FRAC_PI_2), ""),
                 t,
                 "",
             );
 
             ctx.b.build_return(Some(&t));
+        },
+    )
+}
+
+// asin
+pub fn asin_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.asin.v2f64", true, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
+        (
+            Linkage::PrivateLinkage,
+            v2f64_type.fn_type(&[&v2f64_type], false),
+        )
+    })
+}
+
+fn build_asin_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        asin_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let abs_intrinsic = abs_v2f64(module);
+            let sqrt_intrinsic = sqrt_v2f64(module);
+            let atan2k_intrinsic = atan2k_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+            let x_positive = ctx
+                .b
+                .build_call(&abs_intrinsic, &[&x_vec], "x.positive", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+
+            let atan_x = ctx
+                .b
+                .build_call(
+                    &sqrt_intrinsic,
+                    &[&ctx.b.build_float_mul(
+                        ctx.b
+                            .build_float_add(util::get_vec_spread(ctx.context, 1.), x_vec, ""),
+                        ctx.b
+                            .build_float_sub(util::get_vec_spread(ctx.context, 1.), x_vec, ""),
+                        "",
+                    )],
+                    "x.atan",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            let atan_val = ctx
+                .b
+                .build_call(&atan2k_intrinsic, &[&x_positive, &atan_x], "atan", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+
+            // if x < 0, multiply atan by -1
+            let x_is_negative = ctx.b.build_float_compare(
+                FloatPredicate::OLT,
+                x_vec,
+                util::get_vec_spread(ctx.context, 0.),
+                "x.negative",
+            );
+            let atan_mul = ctx
+                .b
+                .build_select(
+                    x_is_negative,
+                    util::get_vec_spread(ctx.context, -1.),
+                    util::get_vec_spread(ctx.context, 1.),
+                    "atan.mul",
+                ).into_vector_value();
+            let res = ctx.b.build_float_mul(atan_val, atan_mul, "");
+            ctx.b.build_return(Some(&res));
+        },
+    )
+}
+
+// acos
+pub fn acos_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.acos.v2f64", true, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
+        (
+            Linkage::PrivateLinkage,
+            v2f64_type.fn_type(&[&v2f64_type], false),
+        )
+    })
+}
+
+fn build_acos_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        acos_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let abs_intrinsic = abs_v2f64(module);
+            let sqrt_intrinsic = sqrt_v2f64(module);
+            let atan2k_intrinsic = atan2k_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+            let x_positive = ctx
+                .b
+                .build_call(&abs_intrinsic, &[&x_vec], "x.positive", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+
+            let atan_x = ctx
+                .b
+                .build_call(
+                    &sqrt_intrinsic,
+                    &[&ctx.b.build_float_mul(
+                        ctx.b
+                            .build_float_add(util::get_vec_spread(ctx.context, 1.), x_vec, ""),
+                        ctx.b
+                            .build_float_sub(util::get_vec_spread(ctx.context, 1.), x_vec, ""),
+                        "",
+                    )],
+                    "x.atan",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            let atan_val = ctx
+                .b
+                .build_call(&atan2k_intrinsic, &[&atan_x, &x_positive], "atan", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+
+            // if x < 0, multiply atan by -1
+            let x_is_negative = ctx.b.build_float_compare(
+                FloatPredicate::OLT,
+                x_vec,
+                util::get_vec_spread(ctx.context, 0.),
+                "x.negative",
+            );
+            let atan_mul = ctx
+                .b
+                .build_select(
+                    x_is_negative,
+                    util::get_vec_spread(ctx.context, -1.),
+                    util::get_vec_spread(ctx.context, 1.),
+                    "atan.mul",
+                ).into_vector_value();
+            let res = ctx.b.build_float_mul(atan_val, atan_mul, "");
+            let res = ctx.b.build_float_add(
+                res,
+                ctx.b
+                    .build_select(
+                        x_is_negative,
+                        util::get_vec_spread(ctx.context, consts::PI),
+                        util::get_vec_spread(ctx.context, 0.),
+                        "",
+                    ).into_vector_value(),
+                "",
+            );
+            ctx.b.build_return(Some(&res));
+        },
+    )
+}
+
+// atan
+pub fn atan_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.atan.v2f64", true, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
+        (
+            Linkage::PrivateLinkage,
+            v2f64_type.fn_type(&[&v2f64_type], false),
+        )
+    })
+}
+
+fn build_atan_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        atan_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let abs_intrinsic = abs_v2f64(module);
+            let copysign_intrinsic = copysign_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+            let s = ctx
+                .b
+                .build_call(&abs_intrinsic, &[&x_vec], "x.abs", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+            let q0 = ctx.b.build_float_compare(
+                FloatPredicate::OGT,
+                s,
+                util::get_vec_spread(ctx.context, 1.),
+                "q0",
+            );
+            let s = ctx
+                .b
+                .build_select(
+                    q0,
+                    ctx.b
+                        .build_float_div(util::get_vec_spread(ctx.context, 1.), s, ""),
+                    s,
+                    "",
+                ).into_vector_value();
+            let t = ctx.b.build_float_mul(s, s, "");
+
+            let mad = |r: VectorValue, exp: f64| {
+                ctx.b.build_float_add(
+                    ctx.b.build_float_mul(r, t, ""),
+                    util::get_vec_spread(ctx.context, exp),
+                    "",
+                )
+            };
+
+            let r = util::get_vec_spread(ctx.context, 0.00282363896258175373077393); // const 0
+            let r = mad(r, -0.0159569028764963150024414); // const 1
+            let r = mad(r, 0.0425049886107444763183594); // const 2
+            let r = mad(r, -0.0748900920152664184570312); // const 3
+            let r = mad(r, 0.106347933411598205566406); // const 4
+            let r = mad(r, -0.142027363181114196777344); // const 5
+            let r = mad(r, 0.199926957488059997558594); // const 6
+            let r = mad(r, -0.333331018686294555664062); // const 7
+
+            let t = ctx.b.build_float_add(
+                s,
+                ctx.b
+                    .build_float_mul(s, ctx.b.build_float_mul(t, r, ""), ""),
+                "",
+            );
+            let t = ctx
+                .b
+                .build_select(
+                    q0,
+                    ctx.b.build_float_sub(
+                        util::get_vec_spread(ctx.context, consts::FRAC_PI_2),
+                        t,
+                        "",
+                    ),
+                    t,
+                    "",
+                ).into_vector_value();
+            let res = ctx
+                .b
+                .build_call(&copysign_intrinsic, &[&t, &x_vec], "", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+
+            ctx.b.build_return(Some(&res));
+        },
+    )
+}
+
+// atan2
+pub fn atan2_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.atan2.v2f64", true, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
+        )
+    })
+}
+
+fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        atan2_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let abs_intrinsic = abs_v2f64(module);
+            let atan2k_intrinsic = atan2k_v2f64(module);
+
+            let y_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+            let x_vec = ctx.func.get_nth_param(1).unwrap().into_vector_value();
+
+            let abs_y = ctx
+                .b
+                .build_call(&abs_intrinsic, &[&y_vec], "y.abs", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+
+            let r = ctx
+                .b
+                .build_call(&atan2k_intrinsic, &[&abs_y, &x_vec], "r", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+
+            // multiply r by -1 if x < 0
+            let x_is_negative = ctx.b.build_float_compare(
+                FloatPredicate::OLT,
+                x_vec,
+                util::get_vec_spread(ctx.context, 0.),
+                "x.negative",
+            );
+            let r_mult = ctx
+                .b
+                .build_select(
+                    x_is_negative,
+                    util::get_vec_spread(ctx.context, -1.),
+                    util::get_vec_spread(ctx.context, 1.),
+                    "r.mult",
+                ).into_vector_value();
+            let r = ctx.b.build_float_mul(r, r_mult, "r");
+
+            // note: we ignore the case where X or Y are infinite
+            let x_is_zero = ctx.b.build_float_compare(
+                FloatPredicate::OEQ,
+                x_vec,
+                util::get_vec_spread(ctx.context, 0.),
+                "x.zero",
+            );
+            let y_is_zero = ctx.b.build_float_compare(
+                FloatPredicate::OEQ,
+                y_vec,
+                util::get_vec_spread(ctx.context, 0.),
+                "y.zero",
+            );
+
+            let r = ctx
+                .b
+                .build_select(
+                    x_is_zero,
+                    util::get_vec_spread(ctx.context, consts::FRAC_PI_2),
+                    r,
+                    "r",
+                ).into_vector_value();
+            let r = ctx
+                .b
+                .build_select(
+                    y_is_zero,
+                    ctx.b
+                        .build_select(
+                            x_is_negative,
+                            util::get_vec_spread(ctx.context, consts::PI),
+                            util::get_vec_spread(ctx.context, 0.),
+                            "",
+                        ).into_vector_value(),
+                    r,
+                    "",
+                ).into_vector_value();
+
+            // multiply r by -1 if y < 0
+            let y_is_negative = ctx.b.build_float_compare(
+                FloatPredicate::OLT,
+                y_vec,
+                util::get_vec_spread(ctx.context, 0.),
+                "y.negative",
+            );
+            let r_mult = ctx
+                .b
+                .build_select(
+                    y_is_negative,
+                    util::get_vec_spread(ctx.context, -1.),
+                    util::get_vec_spread(ctx.context, 1.),
+                    "r.mult",
+                ).into_vector_value();
+            let r = ctx.b.build_float_mul(r, r_mult, "");
+
+            ctx.b.build_return(Some(&r));
         },
     )
 }

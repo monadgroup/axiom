@@ -55,3 +55,7 @@ define_vector_intrinsic!(AbsFunction: block::Function::Abs => intrinsics::fabs_v
 define_vector_intrinsic!(MinFunction: block::Function::Min => intrinsics::minnum_v2f64);
 define_vector_intrinsic!(MaxFunction: block::Function::Max => intrinsics::maxnum_v2f64);
 define_vector_intrinsic!(Exp2Function: block::Function::Exp2 => math::exp2_v2f64);
+define_vector_intrinsic!(Atan2Function: block::Function::Atan2 => math::atan2_v2f64);
+define_vector_intrinsic!(AsinFunction: block::Function::Asin => math::asin_v2f64);
+define_vector_intrinsic!(AcosFunction: block::Function::Acos => math::acos_v2f64);
+define_vector_intrinsic!(AtanFunction: block::Function::Atan => math::atan_v2f64);
