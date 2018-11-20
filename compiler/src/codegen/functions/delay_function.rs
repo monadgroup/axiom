@@ -19,10 +19,10 @@ impl DelayFunction {
                 Linkage::PrivateLinkage,
                 context.f64_type().fn_type(
                     &[
-                        &context.i64_type().ptr_type(AddressSpace::Generic), // current position pointer
-                        &context.i64_type().ptr_type(AddressSpace::Generic), // current size pointer
-                        &context.i64_type(),                                 // delay sample count
-                        &context.i64_type(),                                 // reserve sample count
+                        &context.i32_type().ptr_type(AddressSpace::Generic), // current position pointer
+                        &context.i32_type().ptr_type(AddressSpace::Generic), // current size pointer
+                        &context.i32_type(),                                 // delay sample count
+                        &context.i32_type(),                                 // reserve sample count
                         &context
                             .f64_type()
                             .ptr_type(AddressSpace::Generic)
@@ -71,7 +71,7 @@ impl DelayFunction {
         let func = DelayFunction::get_channel_update_func(module);
         build_context_function(module, func, target, &|ctx: BuilderContext| {
             let target_data = target.machine.get_data();
-            let next_power_intrinsic = intrinsics::next_power_i64(ctx.module);
+            let next_power_intrinsic = intrinsics::next_power_i32(ctx.module);
             let realloc_intrinsic = intrinsics::realloc(ctx.module, &target_data);
             let memset_intrinsic = intrinsics::memset(ctx.module, &target_data);
 
@@ -130,7 +130,7 @@ impl DelayFunction {
             let has_buffer = ctx.b.build_int_compare(
                 IntPredicate::UGT,
                 current_size,
-                ctx.context.i64_type().const_int(0, false),
+                ctx.context.i32_type().const_int(0, false),
                 "hasbuffer",
             );
             ctx.b.build_conditional_branch(
@@ -151,7 +151,7 @@ impl DelayFunction {
             let new_pos = ctx.b.build_int_unsigned_rem(
                 ctx.b.build_int_nuw_add(
                     current_pos,
-                    ctx.context.i64_type().const_int(1, false),
+                    ctx.context.i32_type().const_int(1, false),
                     "newpos.unbounded",
                 ),
                 current_size,
@@ -163,7 +163,7 @@ impl DelayFunction {
             let has_samples = ctx.b.build_int_compare(
                 IntPredicate::NE,
                 delay_samples,
-                ctx.context.i64_type().const_int(0, false),
+                ctx.context.i32_type().const_int(0, false),
                 "hassamples",
             );
             ctx.b.build_conditional_branch(
@@ -371,7 +371,7 @@ impl Function for DelayFunction {
     }
 
     fn data_type(context: &Context) -> StructType {
-        let size_type = context.i64_type();
+        let size_type = context.i32_type();
         let channel_type = context.f64_type();
 
         context.struct_type(
@@ -474,7 +474,7 @@ impl Function for DelayFunction {
             .into_vector_value();
         let reserve_samples = func.ctx.b.build_float_to_unsigned_int(
             reserve_samples_float,
-            func.ctx.context.i64_type().vec_type(2),
+            func.ctx.context.i32_type().vec_type(2),
             "reservesamples.int",
         );
 
@@ -511,7 +511,7 @@ impl Function for DelayFunction {
         );
         let delay_samples = func.ctx.b.build_float_to_unsigned_int(
             delay_samples_float,
-            func.ctx.context.i64_type().vec_type(2),
+            func.ctx.context.i32_type().vec_type(2),
             "delaysamples.int",
         );
 
