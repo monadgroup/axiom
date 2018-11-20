@@ -44,17 +44,6 @@ bool Runtime::isNodeExtracted(uint64_t surface, size_t node) {
 }
 
 AxiomModel::NumValue Runtime::convertNum(AxiomModel::FormType targetForm, AxiomModel::NumValue value) {
-    // note: both input and output values need to be aligned correctly for SSE internally
-    // AlignedNum result;
-    // AlignedNum input {value};
-    // MaximFrontend::maxim_convert_num(get(), &result, (uint8_t) targetForm, &input);
-    // return result.val;
-
-    /*ConvertNum result;
-    ConvertNum input {value.left, value.right, (uint8_t) value.form};
-    MaximFrontend::maxim_convert_num(get(), &result, (uint8_t) targetForm, &input);
-    return {result.left, result.right, (AxiomModel::FormType) result.form};*/
-
     AxiomModel::NumValue result;
     MaximFrontend::maxim_convert_num(get(), &result, (uint8_t) targetForm, &value);
     return result;
