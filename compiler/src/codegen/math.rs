@@ -1,4 +1,4 @@
-use codegen::{build_context_function, util, BuilderContext, TargetProperties};
+use codegen::{build_context_function, globals, util, BuilderContext, TargetProperties};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::targets::TargetData;
@@ -61,12 +61,84 @@ pub fn build_math_functions(module: &Module, target: &TargetProperties) {
 pub fn rand_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.rand.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
-        (Linkage::PrivateLinkage, v2f64_type.fn_type(&[], false))
+        (Linkage::ExternalLinkage, v2f64_type.fn_type(&[], false))
     })
 }
 
 fn build_rand_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        rand_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let mul_pd_intrinsic =
+                util::get_or_create_func(module, "llvm.x86.sse41.pmuldq", true, &|| {
+                    (
+                        Linkage::ExternalLinkage,
+                        ctx.context.i64_type().vec_type(2).fn_type(
+                            &[
+                                &ctx.context.i32_type().vec_type(4),
+                                &ctx.context.i32_type().vec_type(4),
+                            ],
+                            false,
+                        ),
+                    )
+                });
+            let seed_ptr = globals::get_rand_seed(ctx.module).as_pointer_value();
+
+            let current_seed = ctx.b.build_load(&seed_ptr, "seed").into_vector_value();
+            let new_seed = ctx
+                .b
+                .build_call(
+                    &mul_pd_intrinsic,
+                    &[
+                        &ctx.b.build_cast(
+                            InstructionOpcode::BitCast,
+                            &current_seed,
+                            &ctx.context.i32_type().vec_type(4),
+                            "",
+                        ),
+                        &VectorType::const_vector(&[
+                            &ctx.context.i32_type().const_int(16007, false),
+                            &ctx.context.i32_type().get_undef(),
+                            &ctx.context.i32_type().const_int(16007, false),
+                            &ctx.context.i32_type().get_undef(),
+                        ]),
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            ctx.b.build_store(&seed_ptr, &new_seed);
+
+            let shuffled = ctx.b.build_signed_int_to_float(
+                ctx.b.build_shuffle_vector(
+                    &ctx.b
+                        .build_cast(
+                            InstructionOpcode::BitCast,
+                            &new_seed,
+                            &ctx.context.i32_type().vec_type(4),
+                            "",
+                        ).into_vector_value(),
+                    &ctx.context.i32_type().vec_type(4).get_undef(),
+                    &VectorType::const_vector(&[
+                        &ctx.context.i32_type().const_int(2, false),
+                        &ctx.context.i32_type().const_int(0, false),
+                    ]),
+                    "",
+                ),
+                ctx.context.f64_type().vec_type(2),
+                "",
+            );
+            let normalized = ctx.b.build_float_mul(
+                shuffled,
+                util::get_vec_spread(ctx.context, 1. / (65536. * 32768.)),
+                "",
+            );
+            ctx.b.build_return(Some(&normalized));
+        },
+    )
 }
 
 // sin + sin_slow
