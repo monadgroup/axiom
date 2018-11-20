@@ -36,6 +36,7 @@ pub fn build_math_functions(module: &Module, target: &TargetProperties) {
     build_rand_v2f64(module, target);
     build_sin_v2f64(module, target);
     build_cos_v2f64(module, target);
+    build_tan_v2f64(module, target);
     build_mod_v2f64(module, target);
     build_frac_v2f64(module, target);
     build_pow_v2f64(module, target);
@@ -205,8 +206,44 @@ pub fn cos_slow_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(module, "fcos", "={st},0,~{dirflag},~{fpsr},~{flags}")
 }
 
-// tan
-pub fn tan_f64(module: &Module) -> FunctionValue {
+// tan + tan_slow
+pub fn tan_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.tan.v2f64", true, &|| {
+        let v2f64_type = module.get_context().f64_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f64_type.fn_type(&[&v2f64_type], false),
+        )
+    })
+}
+
+pub fn build_tan_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(module, tan_v2f64(module), target, &|ctx: BuilderContext| {
+        let sin_intrinsic = sin_v2f64(module);
+        let cos_intrinsic = cos_v2f64(module);
+
+        let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+        // tan(x) = sin(x) / cos(x)
+        let sin_x = ctx
+            .b
+            .build_call(&sin_intrinsic, &[&x_vec], "x.sin", true)
+            .left()
+            .unwrap()
+            .into_vector_value();
+        let cos_x = ctx
+            .b
+            .build_call(&cos_intrinsic, &[&x_vec], "x.cos", true)
+            .left()
+            .unwrap()
+            .into_vector_value();
+
+        let res = ctx.b.build_float_div(sin_x, cos_x, "x.tan");
+        ctx.b.build_return(Some(&res));
+    })
+}
+
+pub fn tan_slow_f64(module: &Module) -> FunctionValue {
     get_float_asm_func(
         module,
         "fptan; fstp $0",
@@ -893,7 +930,96 @@ pub fn atan2_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        atan2_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let abs_intrinsic = abs_v2f64(module);
+
+            let y_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+            let x_vec = ctx.func.get_nth_param(1).unwrap().into_vector_value();
+
+            let is_x_negative = ctx.b.build_float_compare(
+                FloatPredicate::OLT,
+                x_vec,
+                util::get_vec_spread(ctx.context, 0.),
+                "x.negative",
+            );
+            let q = ctx
+                .b
+                .build_select(
+                    is_x_negative,
+                    util::get_vec_spread(ctx.context, -2.),
+                    util::get_vec_spread(ctx.context, 0.),
+                    "q",
+                ).into_vector_value();
+            let x_vec = ctx
+                .b
+                .build_call(&abs_intrinsic, &[&x_vec], "x.abs", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+            let cond = ctx
+                .b
+                .build_float_compare(FloatPredicate::OGT, y_vec, x_vec, "cond");
+
+            let rx = ctx
+                .b
+                .build_select(cond, y_vec, x_vec, "rx")
+                .into_vector_value();
+            let ry = ctx
+                .b
+                .build_select(cond, ctx.b.build_float_neg(&x_vec, ""), y_vec, "ry")
+                .into_vector_value();
+            let q = ctx.b.build_float_add(
+                q,
+                ctx.b
+                    .build_select(
+                        cond,
+                        util::get_vec_spread(ctx.context, 1.),
+                        util::get_vec_spread(ctx.context, 0.),
+                        "",
+                    ).into_vector_value(),
+                "q",
+            );
+
+            let s = ctx.b.build_float_div(ry, rx, "s");
+            let t = ctx.b.build_float_mul(s, s, "t");
+
+            let mad = |r: VectorValue, exp: f64| {
+                ctx.b.build_float_add(
+                    ctx.b.build_float_mul(r, t, ""),
+                    util::get_vec_spread(ctx.context, exp),
+                    "",
+                )
+            };
+
+            let r = util::get_vec_spread(ctx.context, 0.00282363896258175373077393); // const 0
+            let r = mad(r, -0.0159569028764963150024414); // const 1
+            let r = mad(r, 0.0425049886107444763183594); // const 2
+            let r = mad(r, -0.0748900920152664184570312); // const 3
+            let r = mad(r, 0.106347933411598205566406); // const 4
+            let r = mad(r, -0.142027363181114196777344); // const 5
+            let r = mad(r, 0.199926957488059997558594); // const 6
+            let r = mad(r, -0.333331018686294555664062); // const 7
+
+            let t = ctx.b.build_float_add(
+                ctx.b
+                    .build_float_mul(r, ctx.b.build_float_mul(t, s, ""), ""),
+                s,
+                "",
+            );
+            let t = ctx.b.build_float_add(
+                ctx.b
+                    .build_float_mul(q, util::get_vec_spread(ctx.context, consts::PI * 2.), ""),
+                t,
+                "",
+            );
+
+            ctx.b.build_return(Some(&t));
+        },
+    )
 }
 
 // sinh
