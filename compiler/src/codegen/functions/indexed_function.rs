@@ -1,7 +1,7 @@
 use super::{Function, FunctionContext, VarArgs};
 use ast::FormType;
 use codegen::values::{ArrayValue, NumValue, ARRAY_CAPACITY};
-use codegen::{intrinsics, util};
+use codegen::{math, util};
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
 use mir::block;
@@ -18,8 +18,8 @@ impl Function for IndexedFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_f64(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_f64(func.ctx.module);
+        let min_intrinsic = math::min_f64(func.ctx.module);
+        let max_intrinsic = math::max_f64(func.ctx.module);
 
         let input_num = NumValue::new(args[0]);
         let result_array = ArrayValue::new(result);
@@ -49,7 +49,7 @@ impl Function for IndexedFunction {
                                 &func.ctx.context.f64_type().const_float(0.),
                             ],
                             "",
-                            false,
+                            true,
                         ).left()
                         .unwrap()
                         .into_float_value(),
@@ -60,7 +60,7 @@ impl Function for IndexedFunction {
                         .const_float(ARRAY_CAPACITY as f64),
                 ],
                 "",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_float_value();

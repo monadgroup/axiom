@@ -1,7 +1,7 @@
 use super::{Function, FunctionContext, VarArgs};
 use ast::FormType;
 use codegen::values::NumValue;
-use codegen::{globals, intrinsics, util, BuilderContext};
+use codegen::{globals, math, util, BuilderContext};
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
@@ -49,8 +49,8 @@ impl Function for AmplitudeFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let abs_intrinsic = intrinsics::fabs_v2f64(func.ctx.module);
-        let exp_intrinsic = intrinsics::exp_v2f64(func.ctx.module);
+        let abs_intrinsic = math::abs_v2f64(func.ctx.module);
+        let exp_intrinsic = math::exp_v2f64(func.ctx.module);
 
         let current_estimate_ptr = unsafe {
             func.ctx
@@ -65,7 +65,7 @@ impl Function for AmplitudeFunction {
         let abs_input = func
             .ctx
             .b
-            .build_call(&abs_intrinsic, &[&param_vec], "inputabs", false)
+            .build_call(&abs_intrinsic, &[&param_vec], "inputabs", true)
             .left()
             .unwrap()
             .into_vector_value();
@@ -97,7 +97,7 @@ impl Function for AmplitudeFunction {
                         "",
                     )],
                     "",
-                    false,
+                    true,
                 ).left()
                 .unwrap()
                 .into_vector_value(),

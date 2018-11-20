@@ -7,7 +7,6 @@ mod indexed_function;
 mod note_function;
 mod num_function;
 mod oscillator_function;
-mod scalar_intrinsic_function;
 mod sv_filter_function;
 mod vector_intrinsic_function;
 mod vector_shuffle_function;
@@ -39,7 +38,6 @@ pub use self::indexed_function::*;
 pub use self::note_function::*;
 pub use self::num_function::*;
 pub use self::oscillator_function::*;
-pub use self::scalar_intrinsic_function::*;
 pub use self::sv_filter_function::*;
 pub use self::vector_intrinsic_function::*;
 pub use self::vector_shuffle_function::*;
@@ -121,26 +119,35 @@ macro_rules! map_functions {
 }
 
 map_functions! {
-    Cos => CosFunction,
     Sin => SinFunction,
+    Cos => CosFunction,
+    Tan => TanFunction,
+    Min => MinFunction,
+    Max => MaxFunction,
+    Sqrt => SqrtFunction,
+    Floor => FloorFunction,
+    Ceil => CeilFunction,
+    Round => RoundFunction,
+    Abs => AbsFunction,
+    CopySign => CopySignFunction,
+    Fract => FractFunction,
+    Exp => ExpFunction,
+    Exp2 => Exp2Function,
+    Exp10 => Exp10Function,
     Log => LogFunction,
     Log2 => Log2Function,
     Log10 => Log10Function,
-    Sqrt => SqrtFunction,
-    Ceil => CeilFunction,
-    Floor => FloorFunction,
-    Fract => FractFunction,
-    Abs => AbsFunction,
-    Tan => TanFunction,
-    Acos => AcosFunction,
     Asin => AsinFunction,
+    Acos => AcosFunction,
     Atan => AtanFunction,
     Atan2 => Atan2Function,
+    Sinh => SinhFunction,
+    Cosh => CoshFunction,
+    Tanh => TanhFunction,
     Hypot => HypotFunction,
     ToRad => ToRadFunction,
     ToDeg => ToDegFunction,
     Clamp => ClampFunction,
-    CopySign => CopySignFunction,
     Pan => PanFunction,
     Left => LeftFunction,
     Right => RightFunction,
@@ -148,8 +155,6 @@ map_functions! {
     Combine => CombineFunction,
     Mix => MixFunction,
     Sequence => SequenceFunction,
-    Min => MinFunction,
-    Max => MaxFunction,
     Next => NextFunction,
     Delay => DelayFunction,
     Amplitude => AmplitudeFunction,

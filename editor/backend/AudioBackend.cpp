@@ -248,14 +248,7 @@ void AudioBackend::pollAndPrintProfileTimes() {
         totalValue += profileTimes[i];
     }
 
-    std::cout << (float) totalValue / generatedSamples << "\t";
-
-    // now print each time
-    for (size_t i = 0; i < profileTimesCount; i++) {
-        auto percentTime = totalValue == 0 ? 0.f : (float) profileTimes[i] / totalValue;
-        std::cout << percentTime * 100 << "%\t";
-    }
-    std::cout << std::endl;
+    std::cout << (float) totalValue / generatedSamples << std::endl;
 
     memset(profileTimes, 0, sizeof(*profileTimes) * profileTimesCount);*/
 }

@@ -1,6 +1,6 @@
 use super::{Function, FunctionContext, VarArgs};
 use codegen::values::{NumValue, TupleValue};
-use codegen::{globals, intrinsics, util};
+use codegen::{globals, math, util};
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
@@ -33,9 +33,9 @@ impl Function for SvFilterFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let sin_intrinsic = intrinsics::sin_v2f64(func.ctx.module);
-        let min_intrinsic = intrinsics::minnum_v2f64(func.ctx.module);
-        let pow_intrinsic = intrinsics::pow_v2f64(func.ctx.module);
+        let sin_intrinsic = math::sin_v2f64(func.ctx.module);
+        let min_intrinsic = math::min_v2f64(func.ctx.module);
+        let pow_intrinsic = math::pow_v2f64(func.ctx.module);
 
         let notch_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "notch.ptr") };
         let low_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 1, "low.ptr") };
@@ -69,7 +69,7 @@ impl Function for SvFilterFunction {
                         "fparam",
                     )],
                     "",
-                    false,
+                    true,
                 ).left()
                 .unwrap()
                 .into_vector_value(),
@@ -108,7 +108,7 @@ impl Function for SvFilterFunction {
                             &util::get_vec_spread(func.ctx.context, 0.25),
                         ],
                         "damppow",
-                        false,
+                        true,
                     ).left()
                     .unwrap()
                     .into_vector_value(),
@@ -140,7 +140,7 @@ impl Function for SvFilterFunction {
                     ),
                 ],
                 "maxdamp",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_vector_value();

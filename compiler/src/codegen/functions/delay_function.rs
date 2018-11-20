@@ -1,7 +1,7 @@
 use super::{Function, FunctionContext, VarArgs};
 use codegen::values::NumValue;
 use codegen::{
-    build_context_function, globals, intrinsics, util, BuilderContext, TargetProperties,
+    build_context_function, globals, intrinsics, math, util, BuilderContext, TargetProperties,
 };
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -235,7 +235,7 @@ impl DelayFunction {
                     &next_power_intrinsic,
                     &[&reserve_samples],
                     "newbuffersize",
-                    false,
+                    true,
                 ).left()
                 .unwrap()
                 .into_int_value();
@@ -402,8 +402,8 @@ impl Function for DelayFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_v2f64(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_v2f64(func.ctx.module);
+        let min_intrinsic = math::min_v2f64(func.ctx.module);
+        let max_intrinsic = math::max_v2f64(func.ctx.module);
 
         DelayFunction::build_channel_update_func(func.ctx.module, func.ctx.target);
         let channel_update_func = DelayFunction::get_channel_update_func(func.ctx.module);
@@ -493,14 +493,14 @@ impl Function for DelayFunction {
                             &min_intrinsic,
                             &[&delay_vec, &util::get_vec_spread(func.ctx.context, 1.)],
                             "delayval.clamped",
-                            false,
+                            true,
                         ).left()
                         .unwrap()
                         .into_vector_value(),
                     &util::get_vec_spread(func.ctx.context, 0.),
                 ],
                 "delayval.clamped",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_vector_value();

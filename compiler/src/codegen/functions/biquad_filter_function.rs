@@ -1,8 +1,6 @@
 use super::{Function, FunctionContext, VarArgs};
 use codegen::values::NumValue;
-use codegen::{
-    build_context_function, globals, intrinsics, util, BuilderContext, TargetProperties,
-};
+use codegen::{build_context_function, globals, math, util, BuilderContext, TargetProperties};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::{BasicType, StructType};
@@ -146,9 +144,9 @@ fn gen_biquad_call(
     has_gain: bool,
     generate_coefficients: &GenerateCoefficientsFn,
 ) {
-    let max_intrinsic = intrinsics::maxnum_v2f64(func.ctx.module);
-    let sin_intrinsic = intrinsics::sin_v2f64(func.ctx.module);
-    let cos_intrinsic = intrinsics::cos_v2f64(func.ctx.module);
+    let max_intrinsic = math::max_v2f64(func.ctx.module);
+    let sin_intrinsic = math::sin_v2f64(func.ctx.module);
+    let cos_intrinsic = math::cos_v2f64(func.ctx.module);
     let internal_biquad_func = get_internal_biquad_func(func.ctx.module);
 
     let a1_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "a1.ptr") };
@@ -275,7 +273,7 @@ fn gen_biquad_call(
             &max_intrinsic,
             &[&q_vec, &util::get_vec_spread(func.ctx.context, 0.5)],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_vector_value();
@@ -288,7 +286,7 @@ fn gen_biquad_call(
             &max_intrinsic,
             &[&freq_vec, &util::get_vec_spread(func.ctx.context, 0.01)],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_vector_value();
@@ -311,7 +309,7 @@ fn gen_biquad_call(
     let alpha = func.ctx.b.build_float_div(
         func.ctx
             .b
-            .build_call(&sin_intrinsic, &[&w0], "", false)
+            .build_call(&sin_intrinsic, &[&w0], "", true)
             .left()
             .unwrap()
             .into_vector_value(),
@@ -325,7 +323,7 @@ fn gen_biquad_call(
     let cos_w0 = func
         .ctx
         .b
-        .build_call(&cos_intrinsic, &[&w0], "", false)
+        .build_call(&cos_intrinsic, &[&w0], "", true)
         .left()
         .unwrap()
         .into_vector_value();
@@ -664,7 +662,7 @@ fn peak_filter_generate_coefficients(
     alpha: VectorValue,
     gain_vec: Option<VectorValue>,
 ) -> Coefficients {
-    let max_intrinsic = intrinsics::maxnum_v2f64(func.ctx.module);
+    let max_intrinsic = math::max_v2f64(func.ctx.module);
 
     let gain_vec = gain_vec.unwrap();
 
@@ -676,7 +674,7 @@ fn peak_filter_generate_coefficients(
             &max_intrinsic,
             &[&gain_vec, &util::get_vec_spread(func.ctx.context, 0.001)],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_vector_value();

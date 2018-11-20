@@ -2,9 +2,7 @@ use super::ControlContext;
 use super::{default_copy_getter, default_copy_setter, Control, ControlFieldGenerator};
 use ast::{ControlField, ControlType, FormType, GraphField};
 use codegen::values::NumValue;
-use codegen::{
-    build_context_function, globals, intrinsics, util, BuilderContext, TargetProperties,
-};
+use codegen::{build_context_function, globals, math, util, BuilderContext, TargetProperties};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
@@ -39,7 +37,7 @@ impl GraphControl {
     fn build_tension_graph_func(module: &Module, target: &TargetProperties) {
         let func = GraphControl::get_tension_graph_func(module);
         build_context_function(module, func, target, &|ctx: BuilderContext| {
-            let pow_intrinsic = intrinsics::pow_f64(ctx.module);
+            let pow_intrinsic = math::pow_v2f64(ctx.module);
 
             let q_value = ctx.context.f64_type().const_float(20.);
 
@@ -66,49 +64,87 @@ impl GraphControl {
             );
 
             ctx.b.position_at_end(&tension_positive_true_block);
+            let undef_vec = ctx.context.f64_type().vec_type(2).get_undef();
+            let zero_index = ctx.context.i32_type().const_int(0, false);
+            let first_pow = ctx
+                .b
+                .build_call(
+                    &pow_intrinsic,
+                    &[
+                        &ctx.b
+                            .build_insert_element(&undef_vec, &q_value, &zero_index, ""),
+                        &ctx.b
+                            .build_insert_element(&undef_vec, &tension, &zero_index, ""),
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            let second_pow = ctx
+                .b
+                .build_call(
+                    &pow_intrinsic,
+                    &[
+                        &ctx.b.build_insert_element(&undef_vec, &x, &zero_index, ""),
+                        &first_pow,
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+
             ctx.b.build_return(Some(
                 &ctx.b
-                    .build_call(
-                        &pow_intrinsic,
-                        &[
-                            &x,
-                            &ctx.b
-                                .build_call(&pow_intrinsic, &[&q_value, &tension], "", false)
-                                .left()
-                                .unwrap()
-                                .into_float_value(),
-                        ],
-                        "",
-                        false,
-                    ).left()
-                    .unwrap()
+                    .build_extract_element(&second_pow, &zero_index, "")
                     .into_float_value(),
             ));
 
             ctx.b.position_at_end(&tension_positive_false_block);
             let one_const = ctx.context.f64_type().const_float(1.);
+            let first_pow = ctx
+                .b
+                .build_call(
+                    &pow_intrinsic,
+                    &[
+                        &ctx.b
+                            .build_insert_element(&undef_vec, &q_value, &zero_index, ""),
+                        &ctx.b.build_insert_element(
+                            &undef_vec,
+                            &ctx.b.build_float_neg(&tension, ""),
+                            &zero_index,
+                            "",
+                        ),
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            let second_pow = ctx
+                .b
+                .build_call(
+                    &pow_intrinsic,
+                    &[
+                        &ctx.b.build_insert_element(
+                            &undef_vec,
+                            &ctx.b.build_float_sub(one_const, x, ""),
+                            &zero_index,
+                            "",
+                        ),
+                        &first_pow,
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
             ctx.b.build_return(Some(
                 &ctx.b.build_float_sub(
                     one_const,
                     ctx.b
-                        .build_call(
-                            &pow_intrinsic,
-                            &[
-                                &ctx.b.build_float_sub(one_const, x, ""),
-                                &ctx.b
-                                    .build_call(
-                                        &pow_intrinsic,
-                                        &[&q_value, &ctx.b.build_float_neg(&tension, "")],
-                                        "",
-                                        false,
-                                    ).left()
-                                    .unwrap()
-                                    .into_float_value(),
-                            ],
-                            "",
-                            false,
-                        ).left()
-                        .unwrap()
+                        .build_extract_element(&second_pow, &zero_index, "")
                         .into_float_value(),
                     "",
                 ),
@@ -649,8 +685,8 @@ fn state_field_getter(control: &mut ControlContext, out_val: PointerValue) {
 }
 
 fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
-    let min_intrinsic = intrinsics::minnum_f64(control.ctx.module);
-    let max_intrinsic = intrinsics::maxnum_f64(control.ctx.module);
+    let min_intrinsic = math::min_f64(control.ctx.module);
+    let max_intrinsic = math::max_f64(control.ctx.module);
 
     let in_num = NumValue::new(in_val);
 
@@ -685,13 +721,13 @@ fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
                             &left_float,
                         ],
                         "",
-                        false,
+                        true,
                     ).left()
                     .unwrap()
                     .into_float_value(),
             ],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_float_value();
@@ -776,7 +812,7 @@ fn time_field_getter(control: &mut ControlContext, out_val: PointerValue) {
 }
 
 fn time_field_setter(control: &mut ControlContext, in_val: PointerValue) {
-    let max_intrinsic = intrinsics::maxnum_f64(control.ctx.module);
+    let max_intrinsic = math::max_f64(control.ctx.module);
 
     let in_num = NumValue::new(in_val);
     let in_vec = in_num.get_vec(control.ctx.b);
@@ -798,7 +834,7 @@ fn time_field_setter(control: &mut ControlContext, in_val: PointerValue) {
                 &control.ctx.context.f64_type().const_float(0.),
             ],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_float_value();

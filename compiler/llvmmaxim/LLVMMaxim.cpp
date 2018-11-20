@@ -68,7 +68,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
 
     // math functions
     // todo: replace all of these with our own SSE-based intrinsics
-    jit->addBuiltin("rand", (uint64_t) & ::rand);
+    /*jit->addBuiltin("rand", (uint64_t) & ::rand);
     jit->addBuiltin("cos", (uint64_t) & ::cos);
     jit->addBuiltin("sin", (uint64_t) & ::sin);
     jit->addBuiltin("sincos", (uint64_t) &SINCOS);
@@ -85,12 +85,7 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("log2", (uint64_t) & ::log2);
     jit->addBuiltin("log10", (uint64_t) & ::log10);
     jit->addBuiltin("__moddi3", (uint64_t) & ::__moddi3);
-    jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);
-
-#ifdef APPLE
-    jit->addBuiltin("__sincosf_stret", (uint64_t) & ::__sincosf_stret);
-    jit->addBuiltin("__bzero", (uint64_t) & ::bzero);
-#endif
+    jit->addBuiltin("__umoddi3", (uint64_t) & ::__umoddi3);*/
 
     return jit;
 }

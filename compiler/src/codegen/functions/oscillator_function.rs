@@ -1,7 +1,7 @@
 use super::{Function, FunctionContext, VarArgs};
 use ast::FormType;
 use codegen::values::NumValue;
-use codegen::{globals, intrinsics, math, util, BuilderContext};
+use codegen::{globals, math, util, BuilderContext};
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::{PointerValue, VectorValue};
@@ -37,7 +37,7 @@ fn gen_periodic_call(
     result: PointerValue,
     next_val: &Fn(&mut FunctionContext, VectorValue, &[PointerValue]) -> VectorValue,
 ) {
-    let fract_intrinsic = intrinsics::fract_v2f64(func.ctx.module);
+    let fract_intrinsic = math::fract_v2f64(func.ctx.module);
 
     let phase_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "phase.ptr") };
 
@@ -188,7 +188,7 @@ fn tri_next_value(
     phase: VectorValue,
     _extra_args: &[PointerValue],
 ) -> VectorValue {
-    let abs_intrinsic = intrinsics::fabs_v2f64(func.ctx.module);
+    let abs_intrinsic = math::abs_v2f64(func.ctx.module);
 
     func.ctx.b.build_float_sub(
         util::get_vec_spread(func.ctx.context, 1.),
@@ -206,7 +206,7 @@ fn tri_next_value(
                     "",
                 )],
                 "normalized",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_vector_value(),

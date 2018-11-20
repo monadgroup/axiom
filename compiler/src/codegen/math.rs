@@ -1,7 +1,6 @@
 use codegen::{build_context_function, globals, util, BuilderContext, TargetProperties};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
-use inkwell::targets::TargetData;
 use inkwell::types::{BasicType, VectorType};
 use inkwell::values::InstructionOpcode;
 use inkwell::values::{FunctionValue, VectorValue};
@@ -37,8 +36,11 @@ pub fn build_math_functions(module: &Module, target: &TargetProperties) {
     build_sin_v2f64(module, target);
     build_cos_v2f64(module, target);
     build_tan_v2f64(module, target);
+    build_floor_v2f64(module, target);
+    build_ceil_v2f64(module, target);
+    build_round_v2f64(module, target);
     build_mod_v2f64(module, target);
-    build_frac_v2f64(module, target);
+    build_fract_v2f64(module, target);
     build_pow_v2f64(module, target);
     build_exp_v2f64(module, target);
     build_exp2_v2f64(module, target);
@@ -61,7 +63,7 @@ pub fn build_math_functions(module: &Module, target: &TargetProperties) {
 pub fn rand_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.rand.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
-        (Linkage::ExternalLinkage, v2f64_type.fn_type(&[], false))
+        (Linkage::PrivateLinkage, v2f64_type.fn_type(&[], false))
     })
 }
 
@@ -284,7 +286,7 @@ pub fn tan_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.tan.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::ExternalLinkage,
+            Linkage::PrivateLinkage,
             v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
@@ -326,18 +328,28 @@ pub fn tan_slow_f64(module: &Module) -> FunctionValue {
 
 // min
 pub fn min_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.minnum.v2f64", true, &|| {
+    util::get_or_create_func(module, "llvm.x86.sse2.min.pd", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
             v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
+        )
+    })
+}
+
+pub fn min_f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.minnum.f64", true, &|| {
+        let f64_type = module.get_context().f64_type();
+        (
+            Linkage::ExternalLinkage,
+            f64_type.fn_type(&[&f64_type, &f64_type], false),
         )
     })
 }
 
 // max
 pub fn max_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.maxnum.v2f64", true, &|| {
+    util::get_or_create_func(module, "llvm.x86.sse2.max.pd", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
@@ -346,48 +358,145 @@ pub fn max_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
+pub fn max_f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.maxnum.f64", true, &|| {
+        let f64_type = module.get_context().f64_type();
+        (
+            Linkage::ExternalLinkage,
+            f64_type.fn_type(&[&f64_type, &f64_type], false),
+        )
+    })
+}
+
 // sqrt
 pub fn sqrt_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sqrt.v2f64", true, &|| {
+    util::get_or_create_func(module, "llvm.x86.sse2.sqrt.pd", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
             v2f64_type.fn_type(&[&v2f64_type], false),
+        )
+    })
+}
+
+// internal LLVM intrinsic used for rounding
+fn sse_round_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.x86.sse41.round.pd", true, &|| {
+        let context = module.get_context();
+        let v2f64_type = context.f64_type().vec_type(2);
+        (
+            Linkage::ExternalLinkage,
+            v2f64_type.fn_type(&[&v2f64_type, &context.i32_type()], false),
         )
     })
 }
 
 // floor
 pub fn floor_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.floor.v2f64", true, &|| {
+    util::get_or_create_func(module, "maxim.floor.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::ExternalLinkage,
+            Linkage::PrivateLinkage,
             v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
+}
+
+fn build_floor_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        floor_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let sse_round_intrinsic = sse_round_v2f64(ctx.module);
+            let res = ctx
+                .b
+                .build_call(
+                    &sse_round_intrinsic,
+                    &[
+                        &ctx.func.get_nth_param(0).unwrap().into_vector_value(),
+                        &ctx.context.i32_type().const_int(1, false), // 1 = floor
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            ctx.b.build_return(Some(&res));
+        },
+    );
 }
 
 // ceil
 pub fn ceil_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.ceil.v2f64", true, &|| {
+    util::get_or_create_func(module, "maxim.ceil.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::ExternalLinkage,
+            Linkage::PrivateLinkage,
             v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
+fn build_ceil_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        ceil_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let sse_round_intrinsic = sse_round_v2f64(ctx.module);
+            let res = ctx
+                .b
+                .build_call(
+                    &sse_round_intrinsic,
+                    &[
+                        &ctx.func.get_nth_param(0).unwrap().into_vector_value(),
+                        &ctx.context.i32_type().const_int(2, false), // 2 = ceil
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            ctx.b.build_return(Some(&res));
+        },
+    );
+}
+
 // round
 pub fn round_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.round.v2f64", true, &|| {
+    util::get_or_create_func(module, "maxim.round.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::ExternalLinkage,
+            Linkage::PrivateLinkage,
             v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
+}
+
+fn build_round_v2f64(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        round_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let sse_round_intrinsic = sse_round_v2f64(ctx.module);
+            let res = ctx
+                .b
+                .build_call(
+                    &sse_round_intrinsic,
+                    &[
+                        &ctx.func.get_nth_param(0).unwrap().into_vector_value(),
+                        &ctx.context.i32_type().const_int(0, false), // 0 = round
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            ctx.b.build_return(Some(&res));
+        },
+    );
 }
 
 // abs
@@ -407,17 +516,19 @@ pub fn copysign_v2f64(module: &Module) -> FunctionValue {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::ExternalLinkage,
-            v2f64_type.fn_type(&[&v2f64_type], false),
+            v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
         )
     })
 }
 
 // mod
+// note: this must usage external linkage since blocks can generate code that uses this
+// (see gen_math_op.rs)
 pub fn mod_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.mod.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::PrivateLinkage,
+            Linkage::ExternalLinkage,
             v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
         )
     })
@@ -452,21 +563,21 @@ fn build_mod_v2f64(module: &Module, target: &TargetProperties) {
     });
 }
 
-// frac
-pub fn frac_v2f64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.frac.v2f64", true, &|| {
+// fract
+pub fn fract_v2f64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.fract.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
             Linkage::PrivateLinkage,
-            v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
+            v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
-fn build_frac_v2f64(module: &Module, target: &TargetProperties) {
+fn build_fract_v2f64(module: &Module, target: &TargetProperties) {
     build_context_function(
         module,
-        frac_v2f64(module),
+        fract_v2f64(module),
         target,
         &|ctx: BuilderContext| {
             let floor_intrinsic = floor_v2f64(module);
@@ -489,6 +600,8 @@ fn build_frac_v2f64(module: &Module, target: &TargetProperties) {
 }
 
 // pow
+// note: this must usage external linkage since blocks can generate code that uses this
+// (see gen_math_op.rs)
 pub fn pow_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.pow.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
@@ -505,7 +618,6 @@ fn build_pow_v2f64(module: &Module, target: &TargetProperties) {
         let log2_intrinsic = log2_v2f64(module);
         let abs_intrinsic = abs_v2f64(module);
         let mod_intrinsic = mod_v2f64(module);
-        let floor_intrinsic = floor_v2f64(module);
         let copysign_intrinsic = copysign_v2f64(module);
 
         let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
@@ -807,7 +919,7 @@ pub fn log2_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.log2.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::ExternalLinkage,
+            Linkage::PrivateLinkage,
             v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
@@ -1304,7 +1416,7 @@ pub fn atan2_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.atan2.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::ExternalLinkage,
+            Linkage::PrivateLinkage,
             v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
         )
     })
