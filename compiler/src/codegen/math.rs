@@ -383,14 +383,101 @@ pub fn pow_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.pow.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::PrivateLinkage,
+            Linkage::ExternalLinkage,
             v2f64_type.fn_type(&[&v2f64_type, &v2f64_type], false),
         )
     })
 }
 
 fn build_pow_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(module, pow_v2f64(module), target, &|ctx: BuilderContext| {
+        let exp2_intrinsic = exp2_v2f64(module);
+        let log2_intrinsic = log2_v2f64(module);
+        let abs_intrinsic = abs_v2f64(module);
+        let mod_intrinsic = mod_v2f64(module);
+        let floor_intrinsic = floor_v2f64(module);
+        let copysign_intrinsic = copysign_v2f64(module);
+
+        let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+        let y_vec = ctx.func.get_nth_param(1).unwrap().into_vector_value();
+
+        let x_is_zero = ctx.b.build_float_compare(
+            FloatPredicate::OEQ,
+            x_vec,
+            util::get_vec_spread(ctx.context, 0.),
+            "iszero",
+        );
+        let norm_x = ctx
+            .b
+            .build_select(
+                x_is_zero,
+                util::get_vec_spread(ctx.context, 1.),
+                x_vec,
+                "normx",
+            ).into_vector_value();
+        let r = ctx
+            .b
+            .build_call(
+                &exp2_intrinsic,
+                &[&ctx.b.build_float_mul(
+                    ctx.b
+                        .build_call(&log2_intrinsic, &[&norm_x], "", true)
+                        .left()
+                        .unwrap()
+                        .into_vector_value(),
+                    y_vec,
+                    "",
+                )],
+                "r",
+                true,
+            ).left()
+            .unwrap()
+            .into_vector_value();
+
+        // the result is negative if x < 0 and if y is integer and odd
+        let abs_y = ctx
+            .b
+            .build_call(&abs_intrinsic, &[&y_vec], "", true)
+            .left()
+            .unwrap()
+            .into_vector_value();
+        let mod_y = ctx
+            .b
+            .build_call(
+                &mod_intrinsic,
+                &[&abs_y, &util::get_vec_spread(ctx.context, 2.)],
+                "mody",
+                true,
+            ).left()
+            .unwrap()
+            .into_vector_value();
+        let sign = ctx.b.build_float_add(
+            ctx.b
+                .build_call(&copysign_intrinsic, &[&mod_y, &norm_x], "", true)
+                .left()
+                .unwrap()
+                .into_vector_value(),
+            util::get_vec_spread(ctx.context, 0.5),
+            "sign",
+        );
+        let norm_r = ctx
+            .b
+            .build_call(&copysign_intrinsic, &[&r, &sign], "normr", true)
+            .left()
+            .unwrap()
+            .into_vector_value();
+
+        // handle zero
+        let res = ctx
+            .b
+            .build_select(
+                x_is_zero,
+                util::get_vec_spread(ctx.context, 0.),
+                norm_r,
+                "res",
+            ).into_vector_value();
+        ctx.b.build_return(Some(&res));
+    })
 }
 
 // exp
@@ -583,7 +670,26 @@ pub fn log_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_log_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(module, log_v2f64(module), target, &|ctx: BuilderContext| {
+        let log2_intrinsic = log2_v2f64(module);
+
+        let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+        // log(x) = log2(x) / log2(e)
+        let log2_x = ctx
+            .b
+            .build_call(&log2_intrinsic, &[&x_vec], "", true)
+            .left()
+            .unwrap()
+            .into_vector_value();
+        let res = ctx.b.build_float_div(
+            log2_x,
+            util::get_vec_spread(ctx.context, consts::LOG2_E),
+            "",
+        );
+
+        ctx.b.build_return(Some(&res));
+    })
 }
 
 // log2
@@ -591,14 +697,106 @@ pub fn log2_v2f64(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.log2.v2f64", true, &|| {
         let v2f64_type = module.get_context().f64_type().vec_type(2);
         (
-            Linkage::PrivateLinkage,
+            Linkage::ExternalLinkage,
             v2f64_type.fn_type(&[&v2f64_type], false),
         )
     })
 }
 
 fn build_log2_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        log2_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+            let x_int_vec = ctx
+                .b
+                .build_cast(
+                    InstructionOpcode::BitCast,
+                    &x_vec,
+                    &ctx.context.i64_type().vec_type(2),
+                    "x.int",
+                ).into_vector_value();
+
+            let min_exp = 1023;
+            let exp_o = min_exp << 52;
+            let all_bits = u64::max_value();
+            let exp_a = all_bits >> 12;
+
+            let min_exp_vec = get_i64_spread(ctx.context, min_exp);
+
+            let ilogb_x = ctx.b.build_shuffle_vector(
+                &ctx.b
+                    .build_cast(
+                        InstructionOpcode::BitCast,
+                        &ctx.b.build_int_sub(
+                            ctx.b.build_right_shift(
+                                x_int_vec,
+                                get_i64_spread(ctx.context, 52),
+                                false,
+                                "",
+                            ),
+                            min_exp_vec,
+                            "",
+                        ),
+                        &ctx.context.i32_type().vec_type(4),
+                        "",
+                    ).into_vector_value(),
+                &ctx.context.i32_type().vec_type(4).get_undef(),
+                &VectorType::const_vector(&[
+                    &ctx.context.i32_type().const_int(0, false),
+                    &ctx.context.i32_type().const_int(2, false),
+                ]),
+                "x.ilogb",
+            );
+
+            let p_int = ctx.b.build_or(
+                ctx.b
+                    .build_and(x_int_vec, get_i64_spread(ctx.context, exp_a), ""),
+                get_i64_spread(ctx.context, exp_o),
+                "p.int",
+            );
+            let p_float = ctx
+                .b
+                .build_cast(
+                    InstructionOpcode::BitCast,
+                    &p_int,
+                    &ctx.context.f64_type().vec_type(2),
+                    "p.float",
+                ).into_vector_value();
+            let y = ctx.b.build_float_div(
+                ctx.b
+                    .build_float_sub(p_float, util::get_vec_spread(ctx.context, 1.), ""),
+                ctx.b
+                    .build_float_add(p_float, util::get_vec_spread(ctx.context, 1.), ""),
+                "y",
+            );
+            let y2 = ctx.b.build_float_mul(y, y, "y2");
+
+            let mad = |r: VectorValue, exp: f64| {
+                ctx.b.build_float_add(
+                    ctx.b.build_float_mul(r, y2, ""),
+                    util::get_vec_spread(ctx.context, exp),
+                    "",
+                )
+            };
+
+            let r = util::get_vec_spread(ctx.context, 0.41098153827988426); // const 0
+            let r = mad(r, 0.40215548317064531); // const 1
+            let r = mad(r, 0.57755014627036871); // const 2
+            let r = mad(r, 0.96178780600166647); // const 3
+            let r = mad(r, 2.8853901278343983); // const 4
+
+            let r = ctx.b.build_float_mul(r, y, "");
+            let ilogb_float =
+                ctx.b
+                    .build_signed_int_to_float(ilogb_x, ctx.context.f64_type().vec_type(2), "");
+            let r = ctx.b.build_float_add(r, ilogb_float, "");
+
+            ctx.b.build_return(Some(&r));
+        },
+    );
 }
 
 // log10
@@ -613,7 +811,29 @@ pub fn log10_v2f64(module: &Module) -> FunctionValue {
 }
 
 fn build_log10_v2f64(module: &Module, target: &TargetProperties) {
-    // todo
+    build_context_function(
+        module,
+        log10_v2f64(module),
+        target,
+        &|ctx: BuilderContext| {
+            let log2_intrinsic = log2_v2f64(module);
+
+            let x_vec = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+
+            // log10(x) = log2(x) / log2(10)
+            let log2_x = ctx
+                .b
+                .build_call(&log2_intrinsic, &[&x_vec], "", true)
+                .left()
+                .unwrap()
+                .into_vector_value();
+            let res =
+                ctx.b
+                    .build_float_div(log2_x, util::get_vec_spread(ctx.context, 10_f64.log2()), "");
+
+            ctx.b.build_return(Some(&res));
+        },
+    )
 }
 
 // asin
