@@ -28,6 +28,23 @@ const char *AxiomBackend::LEGAL_COPYRIGHT = VER_LEGALCOPYRIGHT_STR;
 const char *AxiomBackend::LEGAL_TRADEMARKS = VER_LEGALTRADEMARKS1_STR;
 const char *AxiomBackend::PRODUCT_NAME = VER_PRODUCTNAME_STR;
 
+GenerateContext::GenerateContext(uint64_t count, AudioBackend *backend)
+    : backend(backend), _maxGenerateCount(count),
+      runtimeLock(backend->_editor->window()->project()->mainRoot().lockRuntime()) {
+    beforeFpuState = _mm_getcsr();
+    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+}
+
+GenerateContext::~GenerateContext() {
+    _mm_setcsr(beforeFpuState);
+}
+
+void GenerateContext::generate() {
+    backend->generatedSamples++;
+    backend->_editor->window()->runtime()->runUpdate();
+}
+
 NumValue **AudioBackend::getAudioPortal(size_t portalId) const {
     if (portalId >= portalValues.size()) return nullptr;
     return (NumValue **) &portalValues[portalId];
@@ -131,15 +148,11 @@ void AudioBackend::clearMidi(size_t portalId) {
     (*getMidiPortal(portalId))->count = 0;
 }
 
-void AudioBackend::clearNotes(size_t portalId) {}
-
-std::lock_guard<std::mutex> AudioBackend::lockRuntime() {
-    return _editor->window()->project()->mainRoot().lockRuntime();
+void AudioBackend::clearNotes(size_t portalId) {
+    // todo
 }
 
-uint64_t AudioBackend::beginGenerate() {
-    pollAndPrintProfileTimes();
-
+GenerateContext AudioBackend::beginGenerate() {
     // decrement all deltaFrames from last time
     for (auto &event : queuedEvents) {
         if (event.deltaFrames > generatedSamples) {
@@ -157,17 +170,11 @@ uint64_t AudioBackend::beginGenerate() {
     }
     generatedSamples = 0;
 
-    // return number of samples to next event
     if (queuedEvents.empty()) {
-        return UINT64_MAX;
+        return GenerateContext(UINT64_MAX, this);
     } else {
-        return queuedEvents[0].deltaFrames;
+        return GenerateContext(queuedEvents[0].deltaFrames, this);
     }
-}
-
-void AudioBackend::generate() {
-    generatedSamples++;
-    _editor->window()->runtime()->runUpdate();
 }
 
 void AudioBackend::previewEvent(AxiomBackend::MidiEvent event) {}
@@ -236,19 +243,4 @@ size_t AudioBackend::internalRemapPortal(uint64_t id) {
         if (currentPortals[portalIndex].id == id) return portalIndex;
     }
     unreachable;
-}
-
-void AudioBackend::pollAndPrintProfileTimes() {
-    /*auto profileTimesCount = MaximFrontend::maxim_get_function_table_size();
-    auto profileTimes = _editor->window()->runtime()->getProfileTimesPtr();
-
-    // first count up the total values
-    uint64_t totalValue = 0;
-    for (size_t i = 0; i < profileTimesCount; i++) {
-        totalValue += profileTimes[i];
-    }
-
-    std::cout << (float) totalValue / generatedSamples << std::endl;
-
-    memset(profileTimes, 0, sizeof(*profileTimes) * profileTimesCount);*/
 }

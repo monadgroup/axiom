@@ -51,7 +51,6 @@ public:
 
     void previewEvent(AxiomBackend::MidiEvent event) override {
         if (midiInputPortal == -1) return;
-        auto lock = lockRuntime();
         queueMidiEvent(0, (size_t) midiInputPortal, event);
     }
 
@@ -74,13 +73,12 @@ public:
 
         auto sampleFrames64 = (uint64_t) framesPerBuffer;
         while (processPos < sampleFrames64) {
-            auto lock = backend->lockRuntime();
-            auto sampleAmount = backend->beginGenerate();
-            auto endProcessPos = processPos + sampleAmount;
+            auto context = backend->beginGenerate();
+            auto endProcessPos = processPos + context.maxGenerateCount();
             if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;
 
             for (auto i = processPos; i < endProcessPos; i++) {
-                backend->generate();
+                context.generate();
 
                 if (backend->outputPortal) {
                     auto outputNum = **backend->outputPortal;

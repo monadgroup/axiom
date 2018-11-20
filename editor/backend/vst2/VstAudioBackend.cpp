@@ -64,7 +64,6 @@ std::string VstAudioBackend::getPortalLabel(size_t portalIndex) const {
 
 void VstAudioBackend::previewEvent(AxiomBackend::MidiEvent event) {
     if (midiInputPortal == -1) return;
-    auto lock = lockRuntime();
     queueMidiEvent(0, (size_t) midiInputPortal, event);
 }
 

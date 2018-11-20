@@ -33,6 +33,7 @@ pub fn build_context_function(
     function.add_attribute(context.get_string_attr("no-nans-fp-math", "true"));
     function.add_attribute(context.get_string_attr("no-signed-zeros-fp-math", "true"));
     function.add_attribute(context.get_string_attr("no-trapping-math", "true"));
+    function.add_attribute(context.get_string_attr("denorms-are-zero", "true"));
     function.add_attribute(context.get_string_attr("denormal-fp-math", "positive-zero"));
     function.add_attribute(context.get_string_attr(
         "target-features",

@@ -49,9 +49,8 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
     auto sampleFrames64 = (uint64_t) sampleFrames;
     uint64_t processPos = 0;
     while (processPos < sampleFrames64) {
-        auto lock = backend.lockRuntime();
-        auto sampleAmount = backend.beginGenerate();
-        auto endProcessPos = processPos + sampleAmount;
+        auto context = backend.beginGenerate();
+        auto endProcessPos = processPos + context.maxGenerateCount();
         if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;
 
         for (auto i = processPos; i < endProcessPos; i++) {
@@ -65,7 +64,7 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
                 }
             }
 
-            backend.generate();
+            context.generate();
 
             for (size_t outputIndex = 0; outputIndex < expectedOutputCount; outputIndex++) {
                 const auto &output = backend.audioOutputs[outputIndex];

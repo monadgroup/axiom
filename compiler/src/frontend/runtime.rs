@@ -73,6 +73,7 @@ impl LibraryPointers {
     }
 }
 
+#[allow(dead_code)]
 struct RuntimePointers {
     initialized_ptr: *mut c_void,
     scratch_ptr: *mut c_void,

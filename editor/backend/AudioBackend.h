@@ -26,7 +26,42 @@ namespace AxiomBackend {
     extern const char *LEGAL_TRADEMARKS;
     extern const char *PRODUCT_NAME;
 
+    class AudioBackend;
+
+    // An RAII handler for generating samples into a buffer.
+    // While this object is alive, the runtime is guaranteed to be locked, and the FPU state will be correct.
+    // You shouldn't call `generate` more times than `maxGenerateCount`. Once the count has expired, delete this object
+    // and request a new one with `beginGenerate` on the audio backend.
+    // ONLY call `generate` from the thread you requested the context from!
+    class GenerateContext {
+        friend class AudioBackend;
+
+    private:
+        GenerateContext(uint64_t count, AudioBackend *backend);
+
+    public:
+        ~GenerateContext();
+
+        // The max number of samples (i.e `generate` calls) until you should request a new context. This is used, for
+        // example, for the internal queueing of MIDI events.
+        // Note: the return value of this function will _always_ be greater than 0. This value will not change after
+        // the class has been created.
+        uint64_t maxGenerateCount() const { return _maxGenerateCount; }
+
+        // Simulates the internal graph once. Inputs will be read as per their state before this call, and outputs will
+        // be written to.
+        void generate();
+
+    private:
+        AudioBackend *backend;
+        uint64_t _maxGenerateCount;
+        std::lock_guard<std::mutex> runtimeLock;
+        unsigned int beforeFpuState;
+    };
+
     class AudioBackend {
+        friend class GenerateContext;
+
     public:
         // Accessors for audio inputs and outputs
         // Note: the pointer returned is always valid as long as the portal ID is, however the target pointer may change
@@ -64,19 +99,9 @@ namespace AxiomBackend {
         // Clears all pressed MIDI keys. Should be called from the audio thread.
         void clearNotes(size_t portalId);
 
-        // Locks the runtime. The runtime should always be locked when `generate` is called. May block if the runtime
-        // is being rebuilt.
-        std::lock_guard<std::mutex> lockRuntime();
-
-        // Signals that you're about to start a batch of `generate` calls. The value returned signals the max number of
-        // samples (i.e `generate` calls) until you should call `beginGenerate` again. This is used, for example, for
-        // the internal queuing of MIDI events. Should be called from the audio thread.
-        // Note: the return value of this function will _always_ be greater than 0.
-        uint64_t beginGenerate();
-
-        // Simulates the internal graph once. Inputs will be read as per their state before this call, and outputs will
-        // be written to. Should be called from the audio thread. Make sure the runtime is locked when calling!
-        void generate();
+        // Signals that you're about to start a batch of `generate` calls. May block if the runtime is being rebuilt,
+        // but as long as the returned value exists, generation calls are safe.
+        GenerateContext beginGenerate();
 
         // To be implemented by the audio backend, called from the UI thread when the IO configuration changes.
         // Note that this is not always called when the runtime is rebuilt, only if the rebuild results in a change in
@@ -130,7 +155,5 @@ namespace AxiomBackend {
         // todo: use a circular buffer instead of a deque here
         std::deque<QueuedEvent> queuedEvents;
         size_t generatedSamples = 0;
-
-        void pollAndPrintProfileTimes();
     };
 }
