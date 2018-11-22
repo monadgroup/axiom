@@ -47,11 +47,11 @@ impl Optimizer {
             // threshold for -Oz, see http://llvm.org/doxygen/InlineCost_8h_source.html
             builder.set_inliner_with_threshold(5);
         } else {
-            builder.set_optimization_level(OptimizationLevel::Aggressive);
+            builder.set_optimization_level(OptimizationLevel::Default);
             builder.set_size_level(0);
 
-            // threshold for -O3, see http://llvm.org/doxygen/InlineCost_8h_source.html
-            builder.set_inliner_with_threshold(250);
+            // threshold for -Os, see http://llvm.org/doxygen/InlineCost_8h_source.html
+            builder.set_inliner_with_threshold(50);
         }
 
         let module_pass = PassManager::create_for_module();

@@ -1,8 +1,6 @@
 use super::{Function, FunctionContext, VarArgs};
 use codegen::values::NumValue;
-use codegen::{
-    build_context_function, globals, intrinsics, util, BuilderContext, TargetProperties,
-};
+use codegen::{build_context_function, globals, math, util, BuilderContext, TargetProperties};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::{BasicType, StructType};
@@ -10,12 +8,12 @@ use inkwell::values::{FunctionValue, PointerValue, VectorValue};
 use inkwell::AddressSpace;
 use inkwell::FloatPredicate;
 use mir::block;
-use std::f32::consts;
+use std::f64::consts;
 
 fn get_internal_biquad_func(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.util.biquad.biquadFilter", true, &|| {
         let context = &module.get_context();
-        let float_vec = context.f32_type().vec_type(2);
+        let float_vec = context.f64_type().vec_type(2);
         let func = float_vec.fn_type(
             &[
                 &float_vec,                                 // input
@@ -106,7 +104,7 @@ pub fn build_internal_biquad_func(module: &Module, target: &TargetProperties) {
 }
 
 fn biquad_data_type(context: &Context, has_gain: bool) -> StructType {
-    let vec_type = context.f32_type().vec_type(2);
+    let vec_type = context.f64_type().vec_type(2);
     let mut field_types: Vec<&BasicType> = vec![
         &vec_type, // a1
         &vec_type, // a2
@@ -146,9 +144,9 @@ fn gen_biquad_call(
     has_gain: bool,
     generate_coefficients: &GenerateCoefficientsFn,
 ) {
-    let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
-    let sin_intrinsic = intrinsics::sin_v2f32(func.ctx.module);
-    let cos_intrinsic = intrinsics::cos_v2f32(func.ctx.module);
+    let max_intrinsic = math::max_v2f64(func.ctx.module);
+    let sin_intrinsic = math::sin_v2f64(func.ctx.module);
+    let cos_intrinsic = math::cos_v2f64(func.ctx.module);
     let internal_biquad_func = get_internal_biquad_func(func.ctx.module);
 
     let a1_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "a1.ptr") };
@@ -275,7 +273,7 @@ fn gen_biquad_call(
             &max_intrinsic,
             &[&q_vec, &util::get_vec_spread(func.ctx.context, 0.5)],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_vector_value();
@@ -288,7 +286,7 @@ fn gen_biquad_call(
             &max_intrinsic,
             &[&freq_vec, &util::get_vec_spread(func.ctx.context, 0.01)],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_vector_value();
@@ -311,7 +309,7 @@ fn gen_biquad_call(
     let alpha = func.ctx.b.build_float_div(
         func.ctx
             .b
-            .build_call(&sin_intrinsic, &[&w0], "", false)
+            .build_call(&sin_intrinsic, &[&w0], "", true)
             .left()
             .unwrap()
             .into_vector_value(),
@@ -325,7 +323,7 @@ fn gen_biquad_call(
     let cos_w0 = func
         .ctx
         .b
-        .build_call(&cos_intrinsic, &[&w0], "", false)
+        .build_call(&cos_intrinsic, &[&w0], "", true)
         .left()
         .unwrap()
         .into_vector_value();
@@ -394,7 +392,7 @@ fn gen_biquad_call(
                 &z2_ptr,
             ],
             "resultvec",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_vector_value();
@@ -664,7 +662,7 @@ fn peak_filter_generate_coefficients(
     alpha: VectorValue,
     gain_vec: Option<VectorValue>,
 ) -> Coefficients {
-    let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
+    let max_intrinsic = math::max_v2f64(func.ctx.module);
 
     let gain_vec = gain_vec.unwrap();
 
@@ -676,7 +674,7 @@ fn peak_filter_generate_coefficients(
             &max_intrinsic,
             &[&gain_vec, &util::get_vec_spread(func.ctx.context, 0.001)],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_vector_value();

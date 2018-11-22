@@ -1,5 +1,5 @@
 use super::MidiEventValue;
-use codegen::util;
+use codegen::{build_context_function, util, BuilderContext, TargetProperties};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -7,7 +7,6 @@ use inkwell::types::StructType;
 use inkwell::values::{FunctionValue, IntValue, PointerValue};
 use inkwell::AddressSpace;
 use inkwell::IntPredicate;
-use std::borrow::Borrow;
 
 pub const MIDI_EVENT_COUNT: u8 = 16;
 
@@ -76,18 +75,19 @@ impl MidiValue {
     }
 
     pub fn push_event(&self, builder: &mut Builder, module: &Module, event: &MidiEventValue) {
-        let push_func = MidiValue::get_push_event_func(module, module.get_context().borrow());
-        builder.build_call(&push_func, &[&self.val, &event.val], "", false);
+        let push_func = MidiValue::get_push_event_func(module);
+        builder.build_call(&push_func, &[&self.val, &event.val], "", true);
     }
 
-    fn get_push_event_func(module: &Module, context: &Context) -> FunctionValue {
+    fn get_push_event_func(module: &Module) -> FunctionValue {
         util::get_or_create_func(module, "maxim.midi.pushEvent", true, &|| {
+            let context = module.get_context();
             (
                 Linkage::ExternalLinkage,
                 context.void_type().fn_type(
                     &[
-                        &MidiValue::get_type(context).ptr_type(AddressSpace::Generic),
-                        &MidiEventValue::get_type(context).ptr_type(AddressSpace::Generic),
+                        &MidiValue::get_type(&context).ptr_type(AddressSpace::Generic),
+                        &MidiEventValue::get_type(&context).ptr_type(AddressSpace::Generic),
                     ],
                     false,
                 ),
@@ -95,39 +95,45 @@ impl MidiValue {
         })
     }
 
-    pub fn initialize(module: &Module, context: &Context) {
-        let func = MidiValue::get_push_event_func(module, context);
-        let entry_block = func.append_basic_block("entry");
-        let can_push_block = func.append_basic_block("canpush");
-        let end_block = func.append_basic_block("end");
+    pub fn initialize(module: &Module, target: &TargetProperties) {
+        build_context_function(
+            module,
+            MidiValue::get_push_event_func(module),
+            target,
+            &|ctx: BuilderContext| {
+                let can_push_block = ctx.func.append_basic_block("canpush");
+                let end_block = ctx.func.append_basic_block("end");
 
-        let mut builder = context.create_builder();
-        builder.set_fast_math_all();
-        builder.position_at_end(&entry_block);
+                let current_midi =
+                    MidiValue::new(ctx.func.get_nth_param(0).unwrap().into_pointer_value());
+                let push_evt =
+                    MidiEventValue::new(ctx.func.get_nth_param(1).unwrap().into_pointer_value());
 
-        let current_midi = MidiValue::new(func.get_nth_param(0).unwrap().into_pointer_value());
-        let push_evt = MidiEventValue::new(func.get_nth_param(1).unwrap().into_pointer_value());
+                let current_count = current_midi.get_count(ctx.b);
+                let can_push_cond = ctx.b.build_int_compare(
+                    IntPredicate::ULT,
+                    current_count,
+                    ctx.context
+                        .i8_type()
+                        .const_int(MIDI_EVENT_COUNT as u64, false),
+                    "canpushcond",
+                );
+                ctx.b
+                    .build_conditional_branch(&can_push_cond, &can_push_block, &end_block);
+                ctx.b.position_at_end(&can_push_block);
 
-        let current_count = current_midi.get_count(&mut builder);
-        let can_push_cond = builder.build_int_compare(
-            IntPredicate::ULT,
-            current_count,
-            context.i8_type().const_int(MIDI_EVENT_COUNT as u64, false),
-            "canpushcond",
+                let current_event = current_midi.get_event(ctx.b, current_count);
+                push_evt.copy_to(ctx.b, module, &current_event);
+                let new_count = ctx.b.build_int_nuw_add(
+                    current_count,
+                    ctx.context.i8_type().const_int(1, false),
+                    "newcount",
+                );
+                current_midi.set_count(ctx.b, &new_count);
+                ctx.b.build_unconditional_branch(&end_block);
+                ctx.b.position_at_end(&end_block);
+                ctx.b.build_return(None);
+            },
         );
-        builder.build_conditional_branch(&can_push_cond, &can_push_block, &end_block);
-        builder.position_at_end(&can_push_block);
-
-        let current_event = current_midi.get_event(&mut builder, current_count);
-        push_evt.copy_to(&mut builder, module, &current_event);
-        let new_count = builder.build_int_add(
-            current_count,
-            context.i8_type().const_int(1, false),
-            "newcount",
-        );
-        current_midi.set_count(&mut builder, &new_count);
-        builder.build_unconditional_branch(&end_block);
-        builder.position_at_end(&end_block);
-        builder.build_return(None);
     }
 }

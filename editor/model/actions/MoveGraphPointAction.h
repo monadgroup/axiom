@@ -8,11 +8,11 @@ namespace AxiomModel {
 
     class MoveGraphPointAction : public Action {
     public:
-        MoveGraphPointAction(const QUuid &controlUuid, uint8_t index, float oldTime, float oldValue, float newTime,
-                             float newValue, ModelRoot *root);
+        MoveGraphPointAction(const QUuid &controlUuid, uint8_t index, double oldTime, double oldValue, double newTime,
+                             double newValue, ModelRoot *root);
 
-        static std::unique_ptr<MoveGraphPointAction> create(const QUuid &controlUuid, uint8_t index, float oldTime,
-                                                            float oldValue, float newTime, float newValue,
+        static std::unique_ptr<MoveGraphPointAction> create(const QUuid &controlUuid, uint8_t index, double oldTime,
+                                                            double oldValue, double newTime, double newValue,
                                                             ModelRoot *root);
 
         void forward(bool first) override;
@@ -23,20 +23,20 @@ namespace AxiomModel {
 
         uint8_t index() const { return _index; }
 
-        float oldTime() const { return _oldTime; }
+        double oldTime() const { return _oldTime; }
 
-        float oldValue() const { return _oldValue; }
+        double oldValue() const { return _oldValue; }
 
-        float newTime() const { return _newTime; }
+        double newTime() const { return _newTime; }
 
-        float newValue() const { return _newValue; }
+        double newValue() const { return _newValue; }
 
     private:
         QUuid _controlUuid;
         uint8_t _index;
-        float _oldTime;
-        float _oldValue;
-        float _newTime;
-        float _newValue;
+        double _oldTime;
+        double _oldValue;
+        double _newTime;
+        double _newValue;
     };
 }

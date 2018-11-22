@@ -14,19 +14,21 @@ namespace MaximCompiler {
 
         void runUpdate();
 
-        void setBpm(float bpm);
+        void setBpm(double bpm);
 
-        float getBpm();
+        double getBpm();
 
-        void setSampleRate(float sampleRate);
+        void setSampleRate(double sampleRate);
 
-        float getSampleRate();
+        double getSampleRate();
+
+        uint64_t *getProfileTimesPtr();
 
         void commit(Transaction transaction);
 
         bool isNodeExtracted(uint64_t surface, size_t node);
 
-        AxiomModel::NumValue convertNum(AxiomModel::FormType targetForm, const AxiomModel::NumValue &value);
+        AxiomModel::NumValue convertNum(AxiomModel::FormType targetForm, AxiomModel::NumValue value);
 
         void *getPortalPtr(size_t portal);
 

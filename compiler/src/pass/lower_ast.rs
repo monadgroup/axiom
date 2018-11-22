@@ -1,7 +1,7 @@
 use ast;
 use mir;
 use std::collections::HashMap;
-use std::f32::consts;
+use std::f64::consts;
 use util::constant_propagate;
 use {CompileError, CompileResult};
 
@@ -333,8 +333,8 @@ impl<'a> AstLower<'a> {
     fn lower_note_expr(&mut self, expr: &'a ast::NoteExpression) -> LowerResult {
         Ok(
             self.add_statement(mir::block::Statement::new_const_num(mir::ConstantNum::new(
-                expr.note as f32,
-                expr.note as f32,
+                expr.note as f64,
+                expr.note as f64,
                 ast::FormType::Note,
             ))),
         )

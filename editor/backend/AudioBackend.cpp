@@ -3,6 +3,10 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QStandardPaths>
 #include <QtWidgets/QMessageBox>
+#include <ctime>
+#include <iostream>
+#include <pmmintrin.h>
+#include <xmmintrin.h>
 
 #include "../AxiomEditor.h"
 #include "../model/ModelRoot.h"
@@ -23,6 +27,23 @@ const char *AxiomBackend::INTERNAL_NAME = VER_INTERNALNAME_STR;
 const char *AxiomBackend::LEGAL_COPYRIGHT = VER_LEGALCOPYRIGHT_STR;
 const char *AxiomBackend::LEGAL_TRADEMARKS = VER_LEGALTRADEMARKS1_STR;
 const char *AxiomBackend::PRODUCT_NAME = VER_PRODUCTNAME_STR;
+
+GenerateContext::GenerateContext(uint64_t count, AudioBackend *backend)
+    : backend(backend), _maxGenerateCount(count),
+      runtimeLock(backend->_editor->window()->project()->mainRoot().lockRuntime()) {
+    beforeFpuState = _mm_getcsr();
+    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+}
+
+GenerateContext::~GenerateContext() {
+    _mm_setcsr(beforeFpuState);
+}
+
+void GenerateContext::generate() {
+    backend->generatedSamples++;
+    backend->_editor->window()->runtime()->runUpdate();
+}
 
 NumValue **AudioBackend::getAudioPortal(size_t portalId) const {
     if (portalId >= portalValues.size()) return nullptr;
@@ -127,13 +148,11 @@ void AudioBackend::clearMidi(size_t portalId) {
     (*getMidiPortal(portalId))->count = 0;
 }
 
-void AudioBackend::clearNotes(size_t portalId) {}
-
-std::lock_guard<std::mutex> AudioBackend::lockRuntime() {
-    return _editor->window()->project()->mainRoot().lockRuntime();
+void AudioBackend::clearNotes(size_t portalId) {
+    // todo
 }
 
-uint64_t AudioBackend::beginGenerate() {
+GenerateContext AudioBackend::beginGenerate() {
     // decrement all deltaFrames from last time
     for (auto &event : queuedEvents) {
         if (event.deltaFrames > generatedSamples) {
@@ -151,17 +170,11 @@ uint64_t AudioBackend::beginGenerate() {
     }
     generatedSamples = 0;
 
-    // return number of samples to next event
     if (queuedEvents.empty()) {
-        return UINT64_MAX;
+        return GenerateContext(UINT64_MAX, this);
     } else {
-        return queuedEvents[0].deltaFrames;
+        return GenerateContext(queuedEvents[0].deltaFrames, this);
     }
-}
-
-void AudioBackend::generate() {
-    generatedSamples++;
-    _editor->window()->runtime()->runUpdate();
 }
 
 void AudioBackend::previewEvent(AxiomBackend::MidiEvent event) {}

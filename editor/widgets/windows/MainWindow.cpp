@@ -35,7 +35,7 @@
 using namespace AxiomGui;
 
 MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
-    : _backend(backend), _runtime(true, true), libraryLock(globalLibraryLockPath()) {
+    : _backend(backend), _runtime(true, false), libraryLock(globalLibraryLockPath()) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));

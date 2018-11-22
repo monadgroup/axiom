@@ -30,7 +30,7 @@ pub fn gen_unary_op_statement(
             );
             let float_not = node.ctx.b.build_unsigned_int_to_float(
                 int_not,
-                node.ctx.context.f32_type().vec_type(2),
+                node.ctx.context.f64_type().vec_type(2),
                 "num.vec.not",
             );
             new_num.set_vec(node.ctx.b, &float_not);

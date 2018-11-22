@@ -1,12 +1,11 @@
 use super::ConvertGenerator;
 use ast::FormType;
-use codegen::intrinsics;
-use codegen::{globals, util};
+use codegen::{globals, math, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::values::VectorValue;
-use std::f32::consts;
+use std::f64::consts;
 
 pub fn control(generator: &mut ConvertGenerator) {
     generator.generate(FormType::Beats, &control_from_beats);
@@ -34,18 +33,15 @@ fn control_from_db(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let pow_intrinsic = intrinsics::pow_v2f32(module);
+    let exp10_intrinsic = math::exp10_v2f64(module);
 
     builder.build_float_div(
         builder
             .build_call(
-                &pow_intrinsic,
-                &[
-                    &util::get_vec_spread(context, 10.),
-                    &builder.build_float_div(val, util::get_vec_spread(context, 20.), ""),
-                ],
+                &exp10_intrinsic,
+                &[&builder.build_float_div(val, util::get_vec_spread(context, 20.), "")],
                 "",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_vector_value(),
@@ -60,7 +56,7 @@ fn control_from_frequency(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let log_intrinsic = intrinsics::log_v2f32(module);
+    let log_intrinsic = math::log_v2f64(module);
 
     builder.build_float_div(
         builder
@@ -68,11 +64,11 @@ fn control_from_frequency(
                 &log_intrinsic,
                 &[&builder.build_float_add(val, util::get_vec_spread(context, 1.), "")],
                 "",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_vector_value(),
-        util::get_vec_spread(context, (20000 as f32).log(consts::E)),
+        util::get_vec_spread(context, (20000 as f64).log(consts::E)),
         "",
     )
 }
@@ -101,13 +97,25 @@ fn control_from_oscillator(
 
 fn control_from_q(
     context: &Context,
-    _module: &Module,
+    module: &Module,
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
+    // ensure Q is above 0.5 to avoid dividing by zero
+    let max_intrinsic = math::max_v2f64(module);
+    let clamped_q = builder
+        .build_call(
+            &max_intrinsic,
+            &[&val, &util::get_vec_spread(context, 0.5)],
+            "",
+            true,
+        ).left()
+        .unwrap()
+        .into_vector_value();
+
     builder.build_float_div(
-        builder.build_float_sub(val, util::get_vec_spread(context, 0.5), ""),
-        builder.build_float_mul(val, util::get_vec_spread(context, 0.999), ""),
+        builder.build_float_sub(clamped_q, util::get_vec_spread(context, 0.5), ""),
+        builder.build_float_mul(clamped_q, util::get_vec_spread(context, 0.999), ""),
         "",
     )
 }

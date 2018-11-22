@@ -2,7 +2,7 @@ use super::dependency_graph::DependencyGraph;
 use super::jit::{Jit, JitKey};
 use super::Transaction;
 use codegen::{
-    block, controls, converters, data_analyzer, editor, functions, globals, intrinsics, root,
+    block, controls, converters, data_analyzer, editor, functions, globals, intrinsics, math, root,
     surface, values, ObjectCache, Optimizer, TargetProperties,
 };
 use inkwell::context::Context;
@@ -18,7 +18,6 @@ use std::os::raw::c_void;
 use std::ptr;
 use std::time::{Duration, Instant};
 
-#[derive(Debug)]
 struct RuntimeModule {
     module: Module,
     key: Option<JitKey>,
@@ -42,10 +41,10 @@ const DESTRUCT_FUNC_NAME: &str = "maxim.runtime.destruct";
 
 const CONVERT_NUM_FUNC_NAME: &str = "maxim.editor.convert_num";
 
-#[derive(Debug)]
 struct LibraryPointers {
     samplerate_ptr: *mut c_void,
     bpm_ptr: *mut c_void,
+    profile_times_ptr: *mut c_void,
     convert_num: unsafe extern "C" fn(*mut c_void, i8, *const c_void),
 }
 
@@ -58,18 +57,23 @@ impl LibraryPointers {
         let bpm_ptr_address = jit.get_symbol_address(globals::BPM_GLOBAL_NAME) as usize;
         assert_ne!(bpm_ptr_address, 0);
 
+        let profile_times_address =
+            jit.get_symbol_address(globals::PROFILE_TIME_GLOBAL_NAME) as usize;
+        assert_ne!(profile_times_address, 0);
+
         let convert_num_address = jit.get_symbol_address(CONVERT_NUM_FUNC_NAME) as usize;
         assert_ne!(convert_num_address, 0);
 
         LibraryPointers {
             samplerate_ptr: samplerate_ptr_address as *mut c_void,
             bpm_ptr: bpm_ptr_address as *mut c_void,
+            profile_times_ptr: profile_times_address as *mut c_void,
             convert_num: unsafe { mem::transmute(convert_num_address) },
         }
     }
 }
 
-#[derive(Debug)]
+#[allow(dead_code)]
 struct RuntimePointers {
     initialized_ptr: *mut c_void,
     scratch_ptr: *mut c_void,
@@ -112,7 +116,6 @@ impl RuntimePointers {
     }
 }
 
-#[derive(Debug)]
 pub struct Runtime {
     next_id: u64,
     context: Context,
@@ -129,8 +132,8 @@ pub struct Runtime {
     jit: Jit,
     library_pointers: LibraryPointers,
     runtime_pointers: Option<RuntimePointers>,
-    bpm: f32,
-    sample_rate: f32,
+    bpm: f64,
+    sample_rate: f64,
 }
 
 impl Runtime {
@@ -177,11 +180,12 @@ impl Runtime {
     fn codegen_lib(context: &Context, target: &TargetProperties) -> Module {
         let module = Runtime::create_module(context, target, "lib");
         controls::build_funcs(&module, target);
-        converters::build_funcs(&module);
+        converters::build_funcs(&module, &target);
         functions::build_funcs(&module, &target);
-        intrinsics::build_intrinsics(&module);
+        intrinsics::build_intrinsics(&module, &target);
+        math::build_math_functions(&module, &target);
         globals::build_globals(&module);
-        values::MidiValue::initialize(&module, context);
+        values::MidiValue::initialize(&module, &target);
         editor::build_convert_num_func(&module, &target, CONVERT_NUM_FUNC_NAME);
         module
     }
@@ -539,30 +543,34 @@ impl Runtime {
         }
     }
 
-    fn set_vector(ptr: *mut c_void, value: f32) {
-        let vec_ptr = ptr as *mut (f32, f32);
+    fn set_vector(ptr: *mut c_void, value: f64) {
+        let vec_ptr = ptr as *mut (f64, f64);
         unsafe {
             (*vec_ptr).0 = value;
             (*vec_ptr).1 = value;
         }
     }
 
-    pub fn set_bpm(&mut self, bpm: f32) {
+    pub fn set_bpm(&mut self, bpm: f64) {
         self.bpm = bpm;
         Runtime::set_vector(self.library_pointers.bpm_ptr, bpm);
     }
 
-    pub fn get_bpm(&self) -> f32 {
+    pub fn get_bpm(&self) -> f64 {
         self.bpm
     }
 
-    pub fn set_sample_rate(&mut self, sample_rate: f32) {
+    pub fn set_sample_rate(&mut self, sample_rate: f64) {
         self.sample_rate = sample_rate;
         Runtime::set_vector(self.library_pointers.samplerate_ptr, sample_rate);
     }
 
-    pub fn get_sample_rate(&self) -> f32 {
+    pub fn get_sample_rate(&self) -> f64 {
         self.sample_rate
+    }
+
+    pub fn get_profile_times_ptr(&self) -> *mut u64 {
+        self.library_pointers.profile_times_ptr as *mut u64
     }
 
     pub fn is_node_extracted(&self, surface: SurfaceRef, node: usize) -> bool {

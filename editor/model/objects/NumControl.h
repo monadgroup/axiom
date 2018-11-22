@@ -16,12 +16,12 @@ namespace AxiomModel {
 
         NumControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                    bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid, DisplayMode displayMode,
-                   float minValue, float maxValue, uint32_t step, NumValue value, ModelRoot *root);
+                   double minValue, double maxValue, uint32_t step, NumValue value, ModelRoot *root);
 
         static std::unique_ptr<NumControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                   bool selected, QString name, bool showName, const QUuid &exposerUuid,
-                                                  const QUuid &exposingUuid, DisplayMode displayMode, float minValue,
-                                                  float maxValue, uint32_t step, NumValue value, ModelRoot *root);
+                                                  const QUuid &exposingUuid, DisplayMode displayMode, double minValue,
+                                                  double maxValue, uint32_t step, NumValue value, ModelRoot *root);
 
         QString debugName() override;
 
@@ -29,13 +29,13 @@ namespace AxiomModel {
 
         void setDisplayMode(DisplayMode displayMode);
 
-        float minValue() const { return _minValue; }
+        double minValue() const { return _minValue; }
 
-        float maxValue() const { return _maxValue; }
+        double maxValue() const { return _maxValue; }
 
         uint32_t step() const { return _step; }
 
-        void setRange(float minValue, float maxValue, uint32_t step);
+        void setRange(double minValue, double maxValue, uint32_t step);
 
         const NumValue &value() const { return _value; }
 
@@ -49,8 +49,8 @@ namespace AxiomModel {
 
     private:
         DisplayMode _displayMode;
-        float _minValue;
-        float _maxValue;
+        double _minValue;
+        double _maxValue;
         uint32_t _step;
         NumValue _value;
 

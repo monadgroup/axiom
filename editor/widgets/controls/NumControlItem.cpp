@@ -111,7 +111,7 @@ void NumControlItem::paintControl(QPainter *painter) {
                              (normalizedVal.right - control->minValue()) / (control->maxValue() - control->minValue()));
 
     auto clampedVal =
-        normalizedVal.withLR(std::clamp(unclampedVal.left, 0.f, 1.f), std::clamp(unclampedVal.right, 0.f, 1.f));
+        normalizedVal.withLR(std::clamp(unclampedVal.left, 0., 1.), std::clamp(unclampedVal.right, 0., 1.));
 
     auto controlEnabled = control->isEnabled();
     auto normalColor = controlEnabled ? CommonColors::numNormal : CommonColors::disabledNormal;

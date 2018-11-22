@@ -2,9 +2,7 @@ use super::ControlContext;
 use super::{default_copy_getter, default_copy_setter, Control, ControlFieldGenerator};
 use ast::{ControlField, ControlType, FormType, GraphField};
 use codegen::values::NumValue;
-use codegen::{
-    build_context_function, globals, intrinsics, util, BuilderContext, TargetProperties,
-};
+use codegen::{build_context_function, globals, math, util, BuilderContext, TargetProperties};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
@@ -19,8 +17,8 @@ impl GraphControl {
             (
                 Linkage::PrivateLinkage,
                 context
-                    .f32_type()
-                    .fn_type(&[&context.f32_type(), &context.f32_type()], false),
+                    .f64_type()
+                    .fn_type(&[&context.f64_type(), &context.f64_type()], false),
             )
         })
     }
@@ -39,9 +37,9 @@ impl GraphControl {
     fn build_tension_graph_func(module: &Module, target: &TargetProperties) {
         let func = GraphControl::get_tension_graph_func(module);
         build_context_function(module, func, target, &|ctx: BuilderContext| {
-            let pow_intrinsic = intrinsics::pow_f32(ctx.module);
+            let pow_intrinsic = math::pow_v2f64(ctx.module);
 
-            let q_value = ctx.context.f32_type().const_float(20.);
+            let q_value = ctx.context.f64_type().const_float(20.);
 
             let tension_positive_true_block = ctx
                 .context
@@ -56,7 +54,7 @@ impl GraphControl {
             let tension_positive = ctx.b.build_float_compare(
                 FloatPredicate::OGE,
                 tension,
-                ctx.context.f32_type().const_float(0.),
+                ctx.context.f64_type().const_float(0.),
                 "tensionpositive",
             );
             ctx.b.build_conditional_branch(
@@ -66,49 +64,87 @@ impl GraphControl {
             );
 
             ctx.b.position_at_end(&tension_positive_true_block);
+            let undef_vec = ctx.context.f64_type().vec_type(2).get_undef();
+            let zero_index = ctx.context.i32_type().const_int(0, false);
+            let first_pow = ctx
+                .b
+                .build_call(
+                    &pow_intrinsic,
+                    &[
+                        &ctx.b
+                            .build_insert_element(&undef_vec, &q_value, &zero_index, ""),
+                        &ctx.b
+                            .build_insert_element(&undef_vec, &tension, &zero_index, ""),
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            let second_pow = ctx
+                .b
+                .build_call(
+                    &pow_intrinsic,
+                    &[
+                        &ctx.b.build_insert_element(&undef_vec, &x, &zero_index, ""),
+                        &first_pow,
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+
             ctx.b.build_return(Some(
                 &ctx.b
-                    .build_call(
-                        &pow_intrinsic,
-                        &[
-                            &x,
-                            &ctx.b
-                                .build_call(&pow_intrinsic, &[&q_value, &tension], "", false)
-                                .left()
-                                .unwrap()
-                                .into_float_value(),
-                        ],
-                        "",
-                        false,
-                    ).left()
-                    .unwrap()
+                    .build_extract_element(&second_pow, &zero_index, "")
                     .into_float_value(),
             ));
 
             ctx.b.position_at_end(&tension_positive_false_block);
-            let one_const = ctx.context.f32_type().const_float(1.);
+            let one_const = ctx.context.f64_type().const_float(1.);
+            let first_pow = ctx
+                .b
+                .build_call(
+                    &pow_intrinsic,
+                    &[
+                        &ctx.b
+                            .build_insert_element(&undef_vec, &q_value, &zero_index, ""),
+                        &ctx.b.build_insert_element(
+                            &undef_vec,
+                            &ctx.b.build_float_neg(&tension, ""),
+                            &zero_index,
+                            "",
+                        ),
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
+            let second_pow = ctx
+                .b
+                .build_call(
+                    &pow_intrinsic,
+                    &[
+                        &ctx.b.build_insert_element(
+                            &undef_vec,
+                            &ctx.b.build_float_sub(one_const, x, ""),
+                            &zero_index,
+                            "",
+                        ),
+                        &first_pow,
+                    ],
+                    "",
+                    true,
+                ).left()
+                .unwrap()
+                .into_vector_value();
             ctx.b.build_return(Some(
                 &ctx.b.build_float_sub(
                     one_const,
                     ctx.b
-                        .build_call(
-                            &pow_intrinsic,
-                            &[
-                                &ctx.b.build_float_sub(one_const, x, ""),
-                                &ctx.b
-                                    .build_call(
-                                        &pow_intrinsic,
-                                        &[&q_value, &ctx.b.build_float_neg(&tension, "")],
-                                        "",
-                                        false,
-                                    ).left()
-                                    .unwrap()
-                                    .into_float_value(),
-                            ],
-                            "",
-                            false,
-                        ).left()
-                        .unwrap()
+                        .build_extract_element(&second_pow, &zero_index, "")
                         .into_float_value(),
                     "",
                 ),
@@ -137,9 +173,9 @@ impl Control for GraphControl {
         context.struct_type(
             &[
                 &context.i8_type(),                 // curve count
-                &context.f32_type().array_type(17), // start values
-                &context.f32_type().array_type(16), // end positions
-                &context.f32_type().array_type(16), // tension
+                &context.f64_type().array_type(17), // start values
+                &context.f64_type().array_type(16), // end positions
+                &context.f64_type().array_type(16), // tension
                 &context.i8_type().array_type(17),  // states
             ],
             false,
@@ -206,7 +242,7 @@ impl Control for GraphControl {
             ).into_float_value();
         let samplerate_beats = control.ctx.b.build_float_mul(
             samplerate,
-            control.ctx.context.f32_type().const_float(60.),
+            control.ctx.context.f64_type().const_float(60.),
             "",
         );
         let bpm = control
@@ -302,7 +338,7 @@ impl Control for GraphControl {
             .build_conditional_branch(&continue_cond, &loop_body_block, &loop_end_block);
 
         control.ctx.b.position_at_end(&loop_body_block);
-        let next_loop_index = control.ctx.b.build_int_add(
+        let next_loop_index = control.ctx.b.build_int_nuw_add(
             current_loop_index,
             control.ctx.context.i8_type().const_int(1, false),
             "",
@@ -383,7 +419,7 @@ impl Control for GraphControl {
             control.ctx.b.build_int_compare(
                 IntPredicate::NE,
                 curve_state,
-                control.ctx.b.build_int_add(
+                control.ctx.b.build_int_nuw_add(
                     current_state,
                     control.ctx.context.i8_type().const_int(1, false),
                     "",
@@ -409,16 +445,16 @@ impl Control for GraphControl {
         control.ctx.b.position_at_end(&curve_active_true_block);
 
         // calculate current output in this graph
-        let sample_offset = control.ctx.b.build_int_sub(
+        let sample_offset = control.ctx.b.build_int_nuw_sub(
             current_time_samples,
             last_curve_end_samples,
             "sampleoffset",
         );
-        let curve_duration_int =
-            control
-                .ctx
-                .b
-                .build_int_sub(curve_end_samples, last_curve_end_samples, "curveduration");
+        let curve_duration_int = control.ctx.b.build_int_nuw_sub(
+            curve_end_samples,
+            last_curve_end_samples,
+            "curveduration",
+        );
         let curve_min_value = control
             .ctx
             .b
@@ -450,18 +486,18 @@ impl Control for GraphControl {
         let output_float_ptr = control
             .ctx
             .allocb
-            .build_alloca(&control.ctx.context.f32_type(), "output.float.ptr");
+            .build_alloca(&control.ctx.context.f64_type(), "output.float.ptr");
 
         control.ctx.b.position_at_end(&curve_has_length_true_block);
         let curve_function_x = control.ctx.b.build_float_div(
             control.ctx.b.build_unsigned_int_to_float(
                 sample_offset,
-                control.ctx.context.f32_type(),
+                control.ctx.context.f64_type(),
                 "currenttime.float",
             ),
             control.ctx.b.build_unsigned_int_to_float(
                 curve_duration_int,
-                control.ctx.context.f32_type(),
+                control.ctx.context.f64_type(),
                 "curveduration.float",
             ),
             "curve.x",
@@ -489,7 +525,7 @@ impl Control for GraphControl {
                 &tension_graph_func,
                 &[&curve_function_x, &current_tension],
                 "curve.y",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_float_value();
@@ -569,7 +605,7 @@ impl Control for GraphControl {
         );
 
         control.ctx.b.position_at_end(&increment_sample_true_block);
-        let new_samples_count = control.ctx.b.build_int_add(
+        let new_samples_count = control.ctx.b.build_int_nuw_add(
             current_time_samples,
             control.ctx.context.i32_type().const_int(1, false),
             "newsamples",
@@ -633,7 +669,7 @@ fn state_field_getter(control: &mut ControlContext, out_val: PointerValue) {
         control
             .ctx
             .b
-            .build_unsigned_int_to_float(state_int, control.ctx.context.f32_type(), "");
+            .build_unsigned_int_to_float(state_int, control.ctx.context.f64_type(), "");
 
     let result_num = NumValue::new(out_val);
     let result_vector = util::splat_vector(control.ctx.b, state_float, "");
@@ -649,8 +685,8 @@ fn state_field_getter(control: &mut ControlContext, out_val: PointerValue) {
 }
 
 fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
-    let min_intrinsic = intrinsics::minnum_f32(control.ctx.module);
-    let max_intrinsic = intrinsics::maxnum_f32(control.ctx.module);
+    let min_intrinsic = math::min_f64(control.ctx.module);
+    let max_intrinsic = math::max_f64(control.ctx.module);
 
     let in_num = NumValue::new(in_val);
 
@@ -670,7 +706,7 @@ fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
         .build_call(
             &max_intrinsic,
             &[
-                &control.ctx.context.f32_type().const_float(0.),
+                &control.ctx.context.f64_type().const_float(0.),
                 &control
                     .ctx
                     .b
@@ -680,18 +716,18 @@ fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
                             &control
                                 .ctx
                                 .context
-                                .f32_type()
+                                .f64_type()
                                 .const_float(<u8>::max_value() as f64 - 1.),
                             &left_float,
                         ],
                         "",
-                        false,
+                        true,
                     ).left()
                     .unwrap()
                     .into_float_value(),
             ],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_float_value();
@@ -724,7 +760,7 @@ fn paused_field_getter(control: &mut ControlContext, out_val: PointerValue) {
         ).into_int_value();
     let is_paused_float = control.ctx.b.build_unsigned_int_to_float(
         is_paused_int,
-        control.ctx.context.f32_type(),
+        control.ctx.context.f64_type(),
         "paused.float",
     );
     let is_paused_spread = util::splat_vector(&control.ctx.b, is_paused_float, "paused.splat");
@@ -760,7 +796,7 @@ fn time_field_getter(control: &mut ControlContext, out_val: PointerValue) {
         ).into_int_value();
     let current_time_float = control.ctx.b.build_unsigned_int_to_float(
         current_time_int,
-        control.ctx.context.f32_type(),
+        control.ctx.context.f64_type(),
         "time.float",
     );
     let time_spread = util::splat_vector(&control.ctx.b, current_time_float, "time.splat");
@@ -776,7 +812,7 @@ fn time_field_getter(control: &mut ControlContext, out_val: PointerValue) {
 }
 
 fn time_field_setter(control: &mut ControlContext, in_val: PointerValue) {
-    let max_intrinsic = intrinsics::maxnum_f32(control.ctx.module);
+    let max_intrinsic = math::max_f64(control.ctx.module);
 
     let in_num = NumValue::new(in_val);
     let in_vec = in_num.get_vec(control.ctx.b);
@@ -795,10 +831,10 @@ fn time_field_setter(control: &mut ControlContext, in_val: PointerValue) {
             &max_intrinsic,
             &[
                 &new_time_float,
-                &control.ctx.context.f32_type().const_float(0.),
+                &control.ctx.context.f64_type().const_float(0.),
             ],
             "",
-            false,
+            true,
         ).left()
         .unwrap()
         .into_float_value();

@@ -1,13 +1,11 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
 use codegen::values::{ArrayValue, NumValue, ARRAY_CAPACITY};
-use codegen::{intrinsics, util};
-use inkwell::module::Linkage;
+use codegen::{intrinsics, math, util};
 use inkwell::types::VectorType;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
 use mir::block;
-use std::f32::consts;
+use std::f64::consts;
 
 pub struct ToRadFunction {}
 impl Function for ToRadFunction {
@@ -69,8 +67,8 @@ impl Function for ClampFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_v2f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
+        let min_intrinsic = math::min_v2f64(func.ctx.module);
+        let max_intrinsic = math::max_v2f64(func.ctx.module);
 
         let x_num = NumValue::new(args[0]);
         let min_vec = NumValue::new(args[1]).get_vec(func.ctx.b);
@@ -84,48 +82,14 @@ impl Function for ClampFunction {
         let result_vec = func
             .ctx
             .b
-            .build_call(&min_intrinsic, &[&result_vec, &max_vec], "mined", false)
+            .build_call(&min_intrinsic, &[&result_vec, &max_vec], "mined", true)
             .left()
             .unwrap()
             .into_vector_value();
         let result_vec = func
             .ctx
             .b
-            .build_call(&max_intrinsic, &[&result_vec, &min_vec], "clamped", false)
-            .left()
-            .unwrap()
-            .into_vector_value();
-        result_num.set_vec(func.ctx.b, &result_vec);
-    }
-}
-
-pub struct CopySignFunction {}
-impl Function for CopySignFunction {
-    fn function_type() -> block::Function {
-        block::Function::CopySign
-    }
-
-    fn gen_call(
-        func: &mut FunctionContext,
-        args: &[PointerValue],
-        _varargs: Option<VarArgs>,
-        result: PointerValue,
-    ) {
-        let copysign_intrinsic = intrinsics::copysign_v2f32(func.ctx.module);
-
-        let mag_num = NumValue::new(args[0]);
-        let sign_num = NumValue::new(args[1]);
-
-        let result_form = mag_num.get_form(func.ctx.b);
-        let result_num = NumValue::new(result);
-        result_num.set_form(func.ctx.b, &result_form);
-
-        let mag_vec = mag_num.get_vec(func.ctx.b);
-        let sign_vec = sign_num.get_vec(func.ctx.b);
-        let result_vec = func
-            .ctx
-            .b
-            .build_call(&copysign_intrinsic, &[&mag_vec, &sign_vec], "", false)
+            .build_call(&max_intrinsic, &[&result_vec, &min_vec], "clamped", true)
             .left()
             .unwrap()
             .into_vector_value();
@@ -145,11 +109,10 @@ impl Function for PanFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_v2f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_v2f32(func.ctx.module);
-        let sqrt_intrinsic = intrinsics::sqrt_v2f32(func.ctx.module);
-        let cos_intrinsic = intrinsics::cos_f32(func.ctx.module);
-        let sin_intrinsic = intrinsics::sin_f32(func.ctx.module);
+        let min_intrinsic = math::min_v2f64(func.ctx.module);
+        let max_intrinsic = math::max_v2f64(func.ctx.module);
+        let sqrt_intrinsic = math::sqrt_v2f64(func.ctx.module);
+        let sin_intrinsic = math::sin_v2f64(func.ctx.module);
 
         let x_num = NumValue::new(args[0]);
         let pan_num = NumValue::new(args[1]);
@@ -189,82 +152,59 @@ impl Function for PanFunction {
             .b
             .build_extract_element(&clamped_pan, &left_index, "pan.left")
             .into_float_value();
-        let left_base = func.ctx.b.build_float_mul(
-            func.ctx
-                .b
-                .build_float_sub(func.ctx.context.f32_type().const_float(1.), left_pan, ""),
-            func.ctx
-                .b
-                .build_call(
-                    &cos_intrinsic,
-                    &[&func.ctx.b.build_float_mul(
-                        func.ctx
-                            .context
-                            .f32_type()
-                            .const_float(consts::PI as f64 / 4.),
-                        func.ctx.b.build_float_add(
-                            left_pan,
-                            func.ctx.context.f32_type().const_float(1.),
-                            "",
-                        ),
-                        "",
-                    )],
-                    "",
-                    false,
-                ).left()
-                .unwrap()
-                .into_float_value(),
-            "",
-        );
-
         let right_index = func.ctx.context.i32_type().const_int(1, false);
         let right_pan = func
             .ctx
             .b
             .build_extract_element(&clamped_pan, &right_index, "pan.right")
             .into_float_value();
-        let right_base = func.ctx.b.build_float_mul(
-            func.ctx
-                .b
-                .build_float_add(func.ctx.context.f32_type().const_float(1.), right_pan, ""),
-            func.ctx
-                .b
-                .build_call(
-                    &sin_intrinsic,
-                    &[&func.ctx.b.build_float_mul(
-                        func.ctx
-                            .context
-                            .f32_type()
-                            .const_float(consts::PI as f64 / 4.),
-                        func.ctx.b.build_float_add(
-                            left_pan,
-                            func.ctx.context.f32_type().const_float(1.),
-                            "",
-                        ),
-                        "",
-                    )],
+
+        let base_param = func.ctx.b.build_float_add(
+            func.ctx.b.build_float_mul(
+                util::get_vec_spread(func.ctx.context, consts::FRAC_PI_4),
+                func.ctx.b.build_float_add(
+                    clamped_pan,
+                    util::get_vec_spread(func.ctx.context, 1.),
                     "",
-                    false,
-                ).left()
-                .unwrap()
-                .into_float_value(),
+                ),
+                "",
+            ),
+            util::get_const_vec(func.ctx.context, consts::FRAC_PI_2, 0.),
             "",
         );
-
-        let base_vec = func
+        let base_sin = func
+            .ctx
+            .b
+            .build_call(&sin_intrinsic, &[&base_param], "", true)
+            .left()
+            .unwrap()
+            .into_vector_value();
+        let base_mul = func
             .ctx
             .b
             .build_insert_element(
-                &func.ctx.context.f32_type().vec_type(2).get_undef(),
-                &left_base,
-                &left_index,
+                &func
+                    .ctx
+                    .b
+                    .build_insert_element(
+                        &func.ctx.context.f64_type().vec_type(2).get_undef(),
+                        &func.ctx.b.build_float_sub(
+                            func.ctx.context.f64_type().const_float(1.),
+                            left_pan,
+                            "",
+                        ),
+                        &left_index,
+                        "",
+                    ).into_vector_value(),
+                &func.ctx.b.build_float_add(
+                    func.ctx.context.f64_type().const_float(1.),
+                    right_pan,
+                    "",
+                ),
+                &right_index,
                 "",
             ).into_vector_value();
-        let base_vec = func
-            .ctx
-            .b
-            .build_insert_element(&base_vec, &right_base, &right_index, "")
-            .into_vector_value();
+        let base_vec = func.ctx.b.build_float_mul(base_mul, base_sin, "");
 
         let multiplier_vec = func
             .ctx
@@ -414,7 +354,7 @@ impl Function for SequenceFunction {
                 &eucrem_intrinsic,
                 &[&index_int_vec, &vararg_count_vec],
                 "",
-                false,
+                true,
             ).left()
             .unwrap()
             .into_vector_value();
@@ -495,7 +435,7 @@ impl Function for MixdownFunction {
         let result_vec = func
             .ctx
             .allocb
-            .build_alloca(&func.ctx.context.f32_type().vec_type(2), "resultvec.ptr");
+            .build_alloca(&func.ctx.context.f64_type().vec_type(2), "resultvec.ptr");
         func.ctx
             .b
             .build_store(&result_vec, &util::get_vec_spread(func.ctx.context, 0.));
@@ -525,7 +465,7 @@ impl Function for MixdownFunction {
             .build_conditional_branch(&index_cond, &loop_run_block, &loop_continue_block);
 
         func.ctx.b.position_at_end(&loop_run_block);
-        let next_index = func.ctx.b.build_int_add(
+        let next_index = func.ctx.b.build_int_nuw_add(
             current_index,
             func.ctx.context.i32_type().const_int(1, false),
             "nextindex",
@@ -561,90 +501,5 @@ impl Function for MixdownFunction {
             .build_load(&result_vec, "resultvec")
             .into_vector_value();
         result_num.set_vec(func.ctx.b, &result_vec);
-    }
-}
-
-pub struct NoiseFunction {}
-impl Function for NoiseFunction {
-    fn function_type() -> block::Function {
-        block::Function::Noise
-    }
-
-    fn gen_call(
-        func: &mut FunctionContext,
-        _args: &[PointerValue],
-        _varargs: Option<VarArgs>,
-        result: PointerValue,
-    ) {
-        let result_num = NumValue::new(result);
-        let noise_func = util::get_or_create_func(func.ctx.module, "rand", false, &|| {
-            (
-                Linkage::ExternalLinkage,
-                func.ctx.context.i32_type().fn_type(&[], false),
-            )
-        });
-
-        let left_rand = func
-            .ctx
-            .b
-            .build_call(&noise_func, &[], "rand.left", false)
-            .left()
-            .unwrap()
-            .into_int_value();
-        let right_rand = func
-            .ctx
-            .b
-            .build_call(&noise_func, &[], "rand.right", false)
-            .left()
-            .unwrap()
-            .into_int_value();
-        let rand_vec = func
-            .ctx
-            .b
-            .build_insert_element(
-                &func.ctx.context.i32_type().vec_type(2).get_undef(),
-                &left_rand,
-                &func.ctx.context.i32_type().const_int(0, false),
-                "rand",
-            ).into_vector_value();
-        let rand_vec = func
-            .ctx
-            .b
-            .build_insert_element(
-                &rand_vec,
-                &right_rand,
-                &func.ctx.context.i32_type().const_int(1, false),
-                "rand",
-            ).into_vector_value();
-        let rand_vec_float = func.ctx.b.build_signed_int_to_float(
-            rand_vec,
-            func.ctx.context.f32_type().vec_type(2),
-            "rand.float",
-        );
-
-        // todo: figure out a compiler-independent way to do this - this is the constant from GNU C headers
-        let double_rand_max_float = util::get_vec_spread(func.ctx.context, 32767. / 2.);
-
-        // get the random number between 0 and 2
-        let rand_normalized =
-            func.ctx
-                .b
-                .build_float_div(rand_vec_float, double_rand_max_float, "rand.normalized");
-
-        // now convert it to be between -1 and 1
-        let rand_val = func.ctx.b.build_float_sub(
-            rand_normalized,
-            util::get_vec_spread(func.ctx.context, 1.),
-            "rand.result",
-        );
-        result_num.set_vec(func.ctx.b, &rand_val);
-        result_num.set_form(
-            func.ctx.b,
-            &func
-                .ctx
-                .context
-                .i8_type()
-                .const_int(FormType::Oscillator as u64, false),
-        );
     }
 }

@@ -1,4 +1,4 @@
-use codegen::util;
+use codegen::{build_context_function, util, BuilderContext, TargetProperties};
 use inkwell::module::{Linkage, Module};
 use inkwell::targets::TargetData;
 use inkwell::types::{BasicType, VectorType};
@@ -6,7 +6,7 @@ use inkwell::values::FunctionValue;
 use inkwell::{AddressSpace, IntPredicate};
 
 pub fn memcpy(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.memcpy.p0i8.p0i8.i64", false, &|| {
+    util::get_or_create_func(module, "llvm.memcpy.p0i8.p0i8.i64", true, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -46,7 +46,7 @@ pub fn realloc(module: &Module, target: &TargetData) -> FunctionValue {
 pub fn memset(module: &Module, target: &TargetData) -> FunctionValue {
     let target_ptr_type = target.int_ptr_type_in_context(&module.get_context());
     let intrinsic_name = format!("llvm.memset.p0i8.i{}", target_ptr_type.get_bit_width());
-    util::get_or_create_func(module, &intrinsic_name, false, &|| {
+    util::get_or_create_func(module, &intrinsic_name, true, &|| {
         let ptr_type = module
             .get_context()
             .i8_type()
@@ -67,217 +67,12 @@ pub fn memset(module: &Module, target: &TargetData) -> FunctionValue {
     })
 }
 
-pub fn pow_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.pow.v2f32", false, &|| {
-        let context = module.get_context();
-        let v2f32_type = context.f32_type().vec_type(2);
+pub fn ctlz_i32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "llvm.ctlz.i32", true, &|| {
+        let i32_type = module.get_context().i32_type();
         (
             Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
-        )
-    })
-}
-
-pub fn pow_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.pow.f32", false, &|| {
-        let context = module.get_context();
-        let f32_type = context.f32_type();
-        (
-            Linkage::ExternalLinkage,
-            f32_type.fn_type(&[&f32_type, &f32_type], false),
-        )
-    })
-}
-
-pub fn exp_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.exp.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn exp2_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.exp2.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn log_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log.v2f32", false, &|| {
-        let context = module.get_context();
-        let v2f32_type = context.f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn log10_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log10.v2f32", false, &|| {
-        let context = module.get_context();
-        let v2f32_type = context.f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn log2_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.log2.v2f32", false, &|| {
-        let context = module.get_context();
-        let v2f32_type = context.f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn cos_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.cos.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn cos_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.cos.f32", false, &|| {
-        let f32_type = module.get_context().f32_type();
-        (
-            Linkage::ExternalLinkage,
-            f32_type.fn_type(&[&f32_type], false),
-        )
-    })
-}
-
-pub fn sin_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sin.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn sin_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sin.f32", false, &|| {
-        let f32_type = module.get_context().f32_type();
-        (
-            Linkage::ExternalLinkage,
-            f32_type.fn_type(&[&f32_type], false),
-        )
-    })
-}
-
-pub fn sqrt_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.sqrt.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn ceil_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.ceil.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn floor_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.floor.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn fabs_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.fabs.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type], false),
-        )
-    })
-}
-
-pub fn minnum_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.minnum.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
-        )
-    })
-}
-
-pub fn minnum_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.minnum.f32", false, &|| {
-        let f32_type = module.get_context().f32_type();
-        (
-            Linkage::ExternalLinkage,
-            f32_type.fn_type(&[&f32_type, &f32_type], false),
-        )
-    })
-}
-
-pub fn maxnum_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.maxnum.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
-        )
-    })
-}
-
-pub fn maxnum_f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.maxnum.f32", false, &|| {
-        let f32_type = module.get_context().f32_type();
-        (
-            Linkage::ExternalLinkage,
-            f32_type.fn_type(&[&f32_type, &f32_type], false),
-        )
-    })
-}
-
-pub fn ctlz_i64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.ctlz.i64", false, &|| {
-        let i64_type = module.get_context().i64_type();
-        (
-            Linkage::ExternalLinkage,
-            i64_type.fn_type(&[&i64_type, &module.get_context().bool_type()], false),
-        )
-    })
-}
-
-pub fn copysign_v2f32(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "llvm.copysign.v2f32", false, &|| {
-        let v2f32_type = module.get_context().f32_type().vec_type(2);
-        (
-            Linkage::ExternalLinkage,
-            v2f32_type.fn_type(&[&v2f32_type, &v2f32_type], false),
+            i32_type.fn_type(&[&i32_type, &module.get_context().bool_type()], false),
         )
     })
 }
@@ -292,96 +87,150 @@ pub fn eucrem_v2i32(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn next_power_i64(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.nextpower.i64", true, &|| {
-        let i64_type = module.get_context().i64_type();
+pub fn next_power_i32(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "maxim.nextpower.i32", true, &|| {
+        let i32_type = module.get_context().i32_type();
         (
-            Linkage::ExternalLinkage,
-            i64_type.fn_type(&[&i64_type], false),
+            Linkage::PrivateLinkage,
+            i32_type.fn_type(&[&i32_type], false),
         )
     })
 }
 
-pub fn build_intrinsics(module: &Module) {
-    build_eucrem_v2i32(module);
-    build_next_power_i64(module);
+pub fn profile_timestamp_i64(module: &Module) -> FunctionValue {
+    util::get_or_create_func(module, "profile_timestamp", false, &|| {
+        let i64_type = module.get_context().i64_type();
+        (Linkage::ExternalLinkage, i64_type.fn_type(&[], false))
+    })
 }
 
-fn build_eucrem_v2i32(module: &Module) {
-    let func = eucrem_v2i32(module);
-    let context = module.get_context();
-    let entry_block = context.append_basic_block(&func, "entry");
-    let builder = context.create_builder();
-    builder.set_fast_math_all();
-    builder.position_at_end(&entry_block);
-
-    let x_val = func.get_nth_param(0).unwrap().into_vector_value();
-    let y_val = func.get_nth_param(1).unwrap().into_vector_value();
-
-    // if we assume y is always positive (which we do here), this is equal to
-    // x % y when x is positive, otherwise x % y + y
-    let rem_val = builder.build_int_signed_rem(x_val, y_val, "rem");
-    let const_zero = VectorType::const_vector(&[
-        &context.i32_type().const_int(0, false),
-        &context.i32_type().const_int(0, false),
-    ]);
-    let lt_zero = builder.build_int_compare(IntPredicate::SLT, x_val, const_zero, "");
-    let shift_amt = builder.build_int_mul(
-        y_val,
-        builder.build_int_z_extend(lt_zero, y_val.get_type(), ""),
-        "",
-    );
-
-    let result_val = builder.build_int_add(rem_val, shift_amt, "");
-    builder.build_return(Some(&result_val));
+pub fn build_intrinsics(module: &Module, target: &TargetProperties) {
+    build_eucrem_v2i32(module, target);
+    build_next_power_i32(module, target);
 }
 
-fn build_next_power_i64(module: &Module) {
-    let ctlz_intrinsic = ctlz_i64(module);
+// Integer modulo (euclidian remainder)
+// This means the function returns a positive value when X is negative, as opposed to LLVM's
+// 'srem' instruction which is negative when X is negative.
+fn build_eucrem_v2i32(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        eucrem_v2i32(module),
+        target,
+        &|ctx: BuilderContext| {
+            let x_val = ctx.func.get_nth_param(0).unwrap().into_vector_value();
+            let y_val = ctx.func.get_nth_param(1).unwrap().into_vector_value();
 
-    let func = next_power_i64(module);
-    let context = module.get_context();
-    let entry_block = context.append_basic_block(&func, "entry");
-    let zero_true_block = context.append_basic_block(&func, "zero.true");
-    let zero_false_block = context.append_basic_block(&func, "zero.false");
-    let builder = context.create_builder();
-    builder.set_fast_math_all();
-    builder.position_at_end(&entry_block);
+            // note: we need to to the rem operation on each side separately, otherwise llvm on x86
+            // generates calls to an internal math function (which we don't want to depend on).
+            let left_index = ctx.context.i32_type().const_int(0, false);
+            let right_index = ctx.context.i32_type().const_int(1, false);
+            let left_rem_val = ctx.b.build_int_signed_rem(
+                ctx.b
+                    .build_extract_element(&x_val, &left_index, "")
+                    .into_int_value(),
+                ctx.b
+                    .build_extract_element(&y_val, &left_index, "")
+                    .into_int_value(),
+                "",
+            );
+            let right_rem_val = ctx.b.build_int_signed_rem(
+                ctx.b
+                    .build_extract_element(&x_val, &right_index, "")
+                    .into_int_value(),
+                ctx.b
+                    .build_extract_element(&y_val, &right_index, "")
+                    .into_int_value(),
+                "",
+            );
 
-    let in_val = func.get_nth_param(0).unwrap().into_int_value();
-
-    // we need special behavior for 0 since this results in 64 << 64, undefined behavior in LLVM
-    let is_zero = builder.build_int_compare(
-        IntPredicate::EQ,
-        in_val,
-        context.i64_type().const_int(0, false),
-        "zero",
-    );
-    builder.build_conditional_branch(&is_zero, &zero_true_block, &zero_false_block);
-
-    builder.position_at_end(&zero_true_block);
-    builder.build_return(Some(&context.i64_type().const_int(0, false)));
-
-    builder.position_at_end(&zero_false_block);
-    let next_pow_val = builder.build_left_shift(
-        context.i64_type().const_int(1, false),
-        builder.build_int_sub(
-            context.i64_type().const_int(64, false),
-            builder
-                .build_call(
-                    &ctlz_intrinsic,
-                    &[
-                        &builder.build_int_sub(in_val, context.i64_type().const_int(1, false), ""),
-                        &context.bool_type().const_int(0, false),
-                    ],
+            let rem_val = ctx
+                .b
+                .build_insert_element(
+                    &ctx.b
+                        .build_insert_element(
+                            &ctx.context.i32_type().vec_type(2).get_undef(),
+                            &left_rem_val,
+                            &left_index,
+                            "",
+                        ).into_vector_value(),
+                    &right_rem_val,
+                    &right_index,
                     "",
-                    false,
-                ).left()
-                .unwrap()
-                .into_int_value(),
-            "",
-        ),
-        "result",
+                ).into_vector_value();
+
+            let const_zero = VectorType::const_vector(&[
+                &ctx.context.i32_type().const_int(0, false),
+                &ctx.context.i32_type().const_int(0, false),
+            ]);
+            let lt_zero = ctx
+                .b
+                .build_int_compare(IntPredicate::SLT, x_val, const_zero, "");
+            let shift_amt = ctx.b.build_int_nuw_mul(
+                y_val,
+                ctx.b.build_int_z_extend(lt_zero, y_val.get_type(), ""),
+                "",
+            );
+
+            let result_val = ctx.b.build_int_nsw_add(rem_val, shift_amt, "");
+            ctx.b.build_return(Some(&result_val));
+        },
     );
-    builder.build_return(Some(&next_pow_val));
+}
+
+fn build_next_power_i32(module: &Module, target: &TargetProperties) {
+    build_context_function(
+        module,
+        next_power_i32(module),
+        target,
+        &|ctx: BuilderContext| {
+            let ctlz_intrinsic = ctlz_i32(ctx.module);
+
+            let zero_true_block = ctx.context.append_basic_block(&ctx.func, "zero.true");
+            let zero_false_block = ctx.context.append_basic_block(&ctx.func, "zero.false");
+
+            let in_val = ctx.func.get_nth_param(0).unwrap().into_int_value();
+
+            // we need special behavior for 0 since this results in 32 << 32, undefined behavior in LLVM
+            let is_zero = ctx.b.build_int_compare(
+                IntPredicate::EQ,
+                in_val,
+                ctx.context.i32_type().const_int(0, false),
+                "zero",
+            );
+            ctx.b
+                .build_conditional_branch(&is_zero, &zero_true_block, &zero_false_block);
+
+            ctx.b.position_at_end(&zero_true_block);
+            ctx.b
+                .build_return(Some(&ctx.context.i32_type().const_int(0, false)));
+
+            ctx.b.position_at_end(&zero_false_block);
+            let next_pow_val = ctx.b.build_left_shift(
+                ctx.context.i32_type().const_int(1, false),
+                ctx.b.build_int_nuw_sub(
+                    ctx.context.i32_type().const_int(32, false),
+                    ctx.b
+                        .build_call(
+                            &ctlz_intrinsic,
+                            &[
+                                &ctx.b.build_int_nuw_sub(
+                                    in_val,
+                                    ctx.context.i32_type().const_int(1, false),
+                                    "",
+                                ),
+                                &ctx.context.bool_type().const_int(0, false),
+                            ],
+                            "",
+                            false,
+                        ).left()
+                        .unwrap()
+                        .into_int_value(),
+                    "",
+                ),
+                "result",
+            );
+            ctx.b.build_return(Some(&next_pow_val));
+        },
+    );
 }
