@@ -1,7 +1,11 @@
 #pragma once
 
 #include <cstdint>
-#include <unistd.h>
+#if INTPTR_MAX == INT32_MAX
+typedef int ssize_t;
+#elif INTPTR_MAX == INT64_MAX
+typedef int64_t ssize_t;
+#endif
 
 namespace MaximFrontend {
     using MaximError = void;
