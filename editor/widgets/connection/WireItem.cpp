@@ -1,8 +1,8 @@
 #include "WireItem.h"
 
 #include <QtWidgets/QGraphicsScene>
-#include <editor/widgets/CommonColors.h>
 
+#include "../CommonColors.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "editor/model/ConnectionWire.h"
 #include "editor/model/WireGrid.h"

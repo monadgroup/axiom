@@ -2,8 +2,8 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QtCore>
+#include <cmath>
 #include <iostream>
-#include <math.h>
 
 #include "compiler/interface/Frontend.h"
 #include "editor/resources/resource.h"
