@@ -19,7 +19,7 @@ namespace AxiomModel {
     class NodeSurface;
 }
 
-namespace ads{
+namespace ads {
     class CDockManager;
 }
 
@@ -72,6 +72,10 @@ namespace AxiomGui {
         void keyReleaseEvent(QKeyEvent *event) override;
 
         void closeEvent(QCloseEvent *event) override;
+
+        void dragEnterEvent(QDragEnterEvent *event) override;
+
+        void dropEvent(QDropEvent *event) override;
 
     private slots:
 

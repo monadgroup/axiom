@@ -3,9 +3,11 @@
 #include <QIODevice>
 #include <QStandardPaths>
 #include <QtCore/QDateTime>
+#include <QtCore/QMimeData>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QStringBuilder>
 #include <QtCore/QTimer>
+#include <QtGui/QDragEnterEvent>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMenuBar>
@@ -39,6 +41,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
+    setAcceptDrops(true);
 
     resize(1440, 810);
 
@@ -229,6 +232,29 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     } else {
         event->ignore();
     }
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
+    if (!event->mimeData()->hasUrls()) return;
+
+    auto urlList = event->mimeData()->urls();
+    if (urlList.empty()) return;
+
+    // Cheap way to make sure it's a project file: just check the extension
+    // (maybe we should be checking magic number as well?)
+    QFileInfo fileInfo(urlList[0].toLocalFile());
+    if (fileInfo.suffix() != "axp") return;
+
+    event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *event) {
+    auto mimeData = event->mimeData();
+    assert(mimeData->hasUrls());
+
+    auto urlList = mimeData->urls();
+    if (urlList.empty() || !checkCloseProject()) return;
+    openProjectFrom(urlList[0].toLocalFile());
 }
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
