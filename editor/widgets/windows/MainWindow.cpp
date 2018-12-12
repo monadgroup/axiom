@@ -90,6 +90,10 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     _modulePanel = std::make_unique<ModuleBrowserPanel>(this, _library.get(), this);
     dockManager->addDockWidget(ads::BottomDockWidgetArea, _modulePanel.get());
 
+    _historyPanel = std::make_unique<HistoryPanel>(this);
+    dockManager->addDockWidget(ads::RightDockWidgetArea, _historyPanel.get());
+    _historyPanel->toggleView(false);
+
     // setup actions
     fileOpenAction.setShortcut(QKeySequence::Open);
     fileSaveAction.setShortcut(QKeySequence::Save);
@@ -146,6 +150,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
 
     _viewMenu = menuBar()->addMenu(tr("&View"));
     _viewMenu->addAction(_modulePanel->toggleViewAction());
+    _viewMenu->addAction(_historyPanel->toggleViewAction());
 
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(&helpAboutAction);
@@ -289,12 +294,6 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     _project = std::move(project);
 
     _openPanels.clear();
-    if (_historyPanel) {
-        _historyPanel->close();
-    }
-    if (_modulePanel) {
-        _modulePanel->close();
-    }
 
     // attach the backend and our runtime
     _project->attachBackend(_backend);
@@ -306,14 +305,9 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     assert(defaultSurface->value());
     auto surfacePanel = showSurface(nullptr, *defaultSurface->value(), false, true);
 
-    _modulePanel->show();
-
-    _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
-    dockManager->addDockWidget(ads::RightDockWidgetArea, _historyPanel.get());
-    _historyPanel->toggleView(false);
+    _historyPanel->setSource(&_project->mainRoot().history());
 
     _viewMenu->addAction(surfacePanel->toggleViewAction());
-    _viewMenu->addAction(_historyPanel->toggleViewAction());
 
     updateWindowTitle(_project->linkedFile(), _project->isDirty());
     _project->linkedFileChanged.connectTo(
