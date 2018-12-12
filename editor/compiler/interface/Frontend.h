@@ -1,10 +1,12 @@
 #pragma once
 
 #include <cstdint>
+#ifndef _SSIZE_T_DEFINED
 #if INTPTR_MAX == INT32_MAX
 typedef int ssize_t;
 #elif INTPTR_MAX == INT64_MAX
 typedef int64_t ssize_t;
+#endif
 #endif
 
 namespace MaximFrontend {
