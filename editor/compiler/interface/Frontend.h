@@ -1,13 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#ifndef _SSIZE_T_DEFINED
-#if INTPTR_MAX == INT32_MAX
-typedef int ssize_t;
-#elif INTPTR_MAX == INT64_MAX
-typedef int64_t ssize_t;
-#endif
-#endif
 
 namespace MaximFrontend {
     using MaximError = void;
@@ -35,8 +28,8 @@ namespace MaximFrontend {
     using MaximValueGroupSource = void;
 
     struct SourcePos {
-        ssize_t line;
-        ssize_t column;
+        ptrdiff_t line;
+        ptrdiff_t column;
     };
 
     struct SourceRange {
