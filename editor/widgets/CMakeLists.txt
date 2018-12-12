@@ -3,7 +3,6 @@ set(CMAKE_AUTOMOC ON)
 set(SOURCE_FILES
         CommonColors.cpp
         FloatingValueEditor.cpp
-        GlobalActions.cpp
         InteractiveImport.cpp
         ItemResizer.cpp
         SpaceCompleter.cpp)

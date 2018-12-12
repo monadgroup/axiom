@@ -12,7 +12,6 @@
 #include <cmath>
 
 #include "../FloatingValueEditor.h"
-#include "../GlobalActions.h"
 #include "../IConnectable.h"
 #include "../connection/WireItem.h"
 #include "../node/NodeItem.h"

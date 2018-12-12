@@ -13,12 +13,6 @@ pub enum ControlType {
     MidiExtract,
 }
 
-impl ControlType {
-    pub fn is_extract(self) -> bool {
-        self == ControlType::AudioExtract || self == ControlType::MidiExtract
-    }
-}
-
 impl From<ControlField> for ControlType {
     fn from(field: ControlField) -> Self {
         match field {

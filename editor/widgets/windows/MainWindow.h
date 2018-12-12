@@ -3,6 +3,7 @@
 #include <QtCore/QFileSystemWatcher>
 #include <QtCore/QLockFile>
 #include <QtCore/QTimer>
+#include <QtWidgets/QAction>
 #include <QtWidgets/QMainWindow>
 #include <memory>
 #include <unordered_map>
@@ -35,6 +36,26 @@ namespace AxiomGui {
         Q_OBJECT
 
     public:
+        QAction fileNewAction;
+        QAction fileImportLibraryAction;
+        QAction fileExportLibraryAction;
+        QAction fileOpenAction;
+        QAction fileSaveAction;
+        QAction fileSaveAsAction;
+        QAction fileExportAction;
+        QAction fileQuitAction;
+
+        QAction editUndoAction;
+        QAction editRedoAction;
+        QAction editCutAction;
+        QAction editCopyAction;
+        QAction editPasteAction;
+        QAction editDeleteAction;
+        QAction editSelectAllAction;
+        QAction editPreferencesAction;
+
+        QAction helpAboutAction;
+
         explicit MainWindow(AxiomBackend::AudioBackend *backend);
 
         ~MainWindow() override;

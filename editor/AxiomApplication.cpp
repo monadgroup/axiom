@@ -8,7 +8,6 @@
 #include "compiler/interface/Frontend.h"
 #include "editor/resources/resource.h"
 #include "util.h"
-#include "widgets/GlobalActions.h"
 
 #ifdef AXIOM_STATIC_BUILD
 #ifdef Q_OS_WIN
@@ -28,7 +27,6 @@ AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     setApplicationVersion(AXIOM_VERSION);
 
     MaximFrontend::maxim_initialize();
-    AxiomGui::GlobalActions::setupActions();
 
     Q_INIT_RESOURCE(res);
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));

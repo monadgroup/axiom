@@ -17,7 +17,6 @@
 #include <chrono>
 #include <iostream>
 
-#include "../GlobalActions.h"
 #include "../InteractiveImport.h"
 #include "../history/HistoryPanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
@@ -37,7 +36,12 @@
 using namespace AxiomGui;
 
 MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
-    : _backend(backend), _runtime(true, false), libraryLock(globalLibraryLockPath()) {
+    : fileNewAction("&New"), fileImportLibraryAction("&Import Library..."),
+      fileExportLibraryAction("E&xport Library..."), fileOpenAction("&Open..."), fileSaveAction("&Save"),
+      fileSaveAsAction("S&ave As..."), fileExportAction("&Export..."), fileQuitAction("&Quit"), editUndoAction("&Undo"),
+      editRedoAction("&Redo"), editCutAction("C&ut"), editCopyAction("&Copy"), editPasteAction("&Paste"),
+      editDeleteAction("&Delete"), editSelectAllAction("&Select All"), editPreferencesAction("Pr&eferences..."),
+      helpAboutAction("&About"), _backend(backend), _runtime(true, false), libraryLock(globalLibraryLockPath()) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -86,58 +90,77 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     _modulePanel = std::make_unique<ModuleBrowserPanel>(this, _library.get(), this);
     dockManager->addDockWidget(ads::BottomDockWidgetArea, _modulePanel.get());
 
+    // setup actions
+    fileOpenAction.setShortcut(QKeySequence::Open);
+    fileSaveAction.setShortcut(QKeySequence::Save);
+    fileSaveAsAction.setShortcut(QKeySequence::SaveAs);
+    fileExportAction.setEnabled(false);
+    fileQuitAction.setShortcut(QKeySequence::Quit);
+
+    editUndoAction.setShortcut(QKeySequence::Undo);
+    editRedoAction.setShortcut(QKeySequence::Redo);
+    editCutAction.setShortcut(QKeySequence::Cut);
+    editCopyAction.setShortcut(QKeySequence::Copy);
+    editPasteAction.setShortcut(QKeySequence::Paste);
+    editDeleteAction.setShortcut(QKeySequence::Delete);
+    editSelectAllAction.setShortcut(QKeySequence::SelectAll);
+    editPreferencesAction.setShortcut(QKeySequence::Preferences);
+    editPreferencesAction.setEnabled(false);
+
+    helpAboutAction.setShortcut(QKeySequence::HelpContents);
+
     // build menus
     auto fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(GlobalActions::fileNew);
+    fileMenu->addAction(&fileNewAction);
     fileMenu->addSeparator();
 
-    fileMenu->addAction(GlobalActions::fileImportLibrary);
-    fileMenu->addAction(GlobalActions::fileExportLibrary);
+    fileMenu->addAction(&fileImportLibraryAction);
+    fileMenu->addAction(&fileExportLibraryAction);
     fileMenu->addSeparator();
 
-    fileMenu->addAction(GlobalActions::fileOpen);
-    fileMenu->addAction(GlobalActions::fileSave);
-    fileMenu->addAction(GlobalActions::fileSaveAs);
+    fileMenu->addAction(&fileOpenAction);
+    fileMenu->addAction(&fileSaveAction);
+    fileMenu->addAction(&fileSaveAsAction);
     fileMenu->addSeparator();
 
-    fileMenu->addAction(GlobalActions::fileExport);
+    fileMenu->addAction(&fileExportAction);
     fileMenu->addSeparator();
 
-    fileMenu->addAction(GlobalActions::fileQuit);
+    fileMenu->addAction(&fileQuitAction);
 
     auto editMenu = menuBar()->addMenu(tr("&Edit"));
-    editMenu->addAction(GlobalActions::editUndo);
-    editMenu->addAction(GlobalActions::editRedo);
+    editMenu->addAction(&editUndoAction);
+    editMenu->addAction(&editRedoAction);
     editMenu->addSeparator();
 
-    editMenu->addAction(GlobalActions::editCut);
-    editMenu->addAction(GlobalActions::editCopy);
-    editMenu->addAction(GlobalActions::editPaste);
-    editMenu->addAction(GlobalActions::editDelete);
+    editMenu->addAction(&editCutAction);
+    editMenu->addAction(&editCopyAction);
+    editMenu->addAction(&editPasteAction);
+    editMenu->addAction(&editDeleteAction);
     editMenu->addSeparator();
 
-    editMenu->addAction(GlobalActions::editSelectAll);
+    editMenu->addAction(&editSelectAllAction);
     editMenu->addSeparator();
 
-    editMenu->addAction(GlobalActions::editPreferences);
+    editMenu->addAction(&editPreferencesAction);
 
     _viewMenu = menuBar()->addMenu(tr("&View"));
     _viewMenu->addAction(_modulePanel->toggleViewAction());
 
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
-    helpMenu->addAction(GlobalActions::helpAbout);
+    helpMenu->addAction(&helpAboutAction);
 
     // connect menu things
-    connect(GlobalActions::fileNew, &QAction::triggered, this, &MainWindow::newProject);
-    connect(GlobalActions::fileOpen, &QAction::triggered, this, &MainWindow::openProject);
-    connect(GlobalActions::fileSave, &QAction::triggered, this, &MainWindow::saveProject);
-    connect(GlobalActions::fileSaveAs, &QAction::triggered, this, &MainWindow::saveAsProject);
-    connect(GlobalActions::fileExport, &QAction::triggered, this, &MainWindow::exportProject);
-    connect(GlobalActions::fileQuit, &QAction::triggered, QApplication::quit);
-    connect(GlobalActions::fileImportLibrary, &QAction::triggered, this, &MainWindow::importLibrary);
-    connect(GlobalActions::fileExportLibrary, &QAction::triggered, this, &MainWindow::exportLibrary);
+    connect(&fileNewAction, &QAction::triggered, this, &MainWindow::newProject);
+    connect(&fileOpenAction, &QAction::triggered, this, &MainWindow::openProject);
+    connect(&fileSaveAction, &QAction::triggered, this, &MainWindow::saveProject);
+    connect(&fileSaveAsAction, &QAction::triggered, this, &MainWindow::saveAsProject);
+    connect(&fileExportAction, &QAction::triggered, this, &MainWindow::exportProject);
+    connect(&fileQuitAction, &QAction::triggered, QApplication::quit);
+    connect(&fileImportLibraryAction, &QAction::triggered, this, &MainWindow::importLibrary);
+    connect(&fileExportLibraryAction, &QAction::triggered, this, &MainWindow::exportLibrary);
 
-    connect(GlobalActions::helpAbout, &QAction::triggered, this, &MainWindow::showAbout);
+    connect(&helpAboutAction, &QAction::triggered, this, &MainWindow::showAbout);
 }
 
 MainWindow::~MainWindow() {

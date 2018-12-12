@@ -17,6 +17,8 @@ namespace AxiomGui {
 
     class NodeSurfaceCanvas;
 
+    class MainWindow;
+
     class NodeSurfaceView : public QGraphicsView, public AxiomCommon::TrackedObject {
         Q_OBJECT
 
@@ -65,6 +67,7 @@ namespace AxiomGui {
         void doRedo();
 
     private:
+        MainWindow *window;
         AxiomModel::NodeSurface *surface;
 
         bool isPanning = false;
