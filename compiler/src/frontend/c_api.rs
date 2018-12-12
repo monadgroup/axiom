@@ -181,7 +181,7 @@ pub unsafe extern "C" fn maxim_vartype_tuple(
 ) -> *mut mir::VarType {
     let subtypes_vec: Vec<_> = (0..subtype_count)
         .map(|index| {
-            let boxed = Box::from_raw(*subtypes.offset(index as isize));
+            let boxed = Box::from_raw(*subtypes.add(index));
             *boxed
         })
         .collect();
@@ -196,7 +196,7 @@ pub unsafe extern "C" fn maxim_vartype_array(subtype: *mut mir::VarType) -> *mut
 #[no_mangle]
 pub unsafe extern "C" fn maxim_vartype_of_control(control_type: u8) -> *mut mir::VarType {
     Box::into_raw(Box::new(mir::VarType::of_control_value(
-        &std::mem::transmute(control_type),
+        std::mem::transmute(control_type),
     )))
 }
 
@@ -231,7 +231,7 @@ pub unsafe extern "C" fn maxim_constant_tuple(
 ) -> *mut mir::ConstantValue {
     let items_vec: Vec<_> = (0..item_count)
         .map(|index| {
-            let boxed = Box::from_raw(*items.offset(index as isize));
+            let boxed = Box::from_raw(*items.add(index));
             *boxed
         })
         .collect();

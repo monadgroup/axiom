@@ -29,10 +29,10 @@ impl MidiEventValue {
 
     pub fn get_const(context: &Context, name: u8, channel: u8, note: u8, param: u8) -> StructValue {
         MidiEventValue::get_type(context).const_named_struct(&[
-            &context.i8_type().const_int(name as u64, false),
-            &context.i8_type().const_int(channel as u64, false),
-            &context.i8_type().const_int(note as u64, false),
-            &context.i8_type().const_int(param as u64, false),
+            &context.i8_type().const_int(u64::from(name), false),
+            &context.i8_type().const_int(u64::from(channel), false),
+            &context.i8_type().const_int(u64::from(note), false),
+            &context.i8_type().const_int(u64::from(param), false),
         ])
     }
 
@@ -46,8 +46,8 @@ impl MidiEventValue {
             .into_struct_value()
     }
 
-    pub fn store(&mut self, builder: &mut Builder, value: &StructValue) {
-        builder.build_store(&self.val, value);
+    pub fn store(&mut self, builder: &mut Builder, value: StructValue) {
+        builder.build_store(&self.val, &value);
     }
 
     pub fn get_name_ptr(&self, builder: &mut Builder) -> PointerValue {

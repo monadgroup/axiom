@@ -116,11 +116,10 @@ impl Function for AmplitudeFunction {
         );
         func.ctx.b.build_store(&current_estimate_ptr, &new_estimate);
 
-        result_num.set_vec(func.ctx.b, &new_estimate);
+        result_num.set_vec(func.ctx.b, new_estimate);
         result_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Amplitude as u64, false),
@@ -147,7 +146,7 @@ impl Function for HoldFunction {
     fn gen_real_args(ctx: &mut BuilderContext, mut args: Vec<PointerValue>) -> Vec<PointerValue> {
         if args.len() < 3 {
             let mut else_constant = NumValue::new_undef(ctx.context, ctx.allocb);
-            else_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0., 0., 0));
+            else_constant.store(ctx.b, NumValue::get_const(ctx.context, 0., 0., 0));
             args.push(else_constant.val);
         }
         args
@@ -208,8 +207,8 @@ impl Function for HoldFunction {
             .into_vector_value();
 
         let x_form = x_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &x_form);
-        result_num.set_vec(func.ctx.b, &result_vec);
+        result_num.set_form(func.ctx.b, x_form);
+        result_num.set_vec(func.ctx.b, result_vec);
     }
 }
 
@@ -226,7 +225,7 @@ impl Function for AccumFunction {
     fn gen_real_args(ctx: &mut BuilderContext, mut args: Vec<PointerValue>) -> Vec<PointerValue> {
         if args.len() < 3 {
             let mut base_constant = NumValue::new_undef(ctx.context, ctx.allocb);
-            base_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0., 0., 0));
+            base_constant.store(ctx.b, NumValue::get_const(ctx.context, 0., 0., 0));
             args.push(base_constant.val);
         }
         args
@@ -270,7 +269,7 @@ impl Function for AccumFunction {
         func.ctx.b.build_store(&accum_ptr, &new_accum);
 
         let x_form = x_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &x_form);
-        result_num.set_vec(func.ctx.b, &new_accum);
+        result_num.set_form(func.ctx.b, x_form);
+        result_num.set_vec(func.ctx.b, new_accum);
     }
 }

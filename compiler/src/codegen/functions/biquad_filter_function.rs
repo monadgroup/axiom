@@ -402,8 +402,8 @@ fn gen_biquad_call(
         .left()
         .unwrap()
         .into_vector_value();
-    result_num.set_vec(func.ctx.b, &result_vec);
-    result_num.set_form(func.ctx.b, &input_form);
+    result_num.set_vec(func.ctx.b, result_vec);
+    result_num.set_form(func.ctx.b, input_form);
 }
 
 macro_rules! define_biquad_func (

@@ -24,7 +24,7 @@ pub fn const_unary_op(constant: &ConstantNum, op: UnaryOperation) -> ConstantNum
 }
 
 #[allow(unknown_lints)]
-#[allow(float_cmp)]
+#[allow(clippy::float_cmp)]
 pub fn const_math_op(a: &ConstantNum, b: &ConstantNum, op: OperatorType) -> ConstantNum {
     match op {
         OperatorType::Identity => b.clone(),
@@ -35,58 +35,58 @@ pub fn const_math_op(a: &ConstantNum, b: &ConstantNum, op: OperatorType) -> Cons
         OperatorType::Modulo => ConstantNum::new(a.left % b.left, a.right % b.right, a.form),
         OperatorType::Power => ConstantNum::new(a.left.powf(b.left), a.right.powf(b.right), a.form),
         OperatorType::BitwiseAnd => ConstantNum::new(
-            (a.left as i32 & b.left as i32) as f64,
-            (a.right as i32 & b.right as i32) as f64,
+            f64::from(a.left as i32 & b.left as i32),
+            f64::from(a.right as i32 & b.right as i32),
             a.form,
         ),
         OperatorType::BitwiseOr => ConstantNum::new(
-            (a.left as i32 | b.left as i32) as f64,
-            (a.right as i32 | b.right as i32) as f64,
+            f64::from(a.left as i32 | b.left as i32),
+            f64::from(a.right as i32 | b.right as i32),
             a.form,
         ),
         OperatorType::BitwiseXor => ConstantNum::new(
-            (a.left as i32 ^ b.left as i32) as f64,
-            (a.right as i32 ^ b.right as i32) as f64,
+            f64::from(a.left as i32 ^ b.left as i32),
+            f64::from(a.right as i32 ^ b.right as i32),
             a.form,
         ),
         OperatorType::LogicalAnd => ConstantNum::new(
-            (a.left != 0. && b.left != 0.) as i8 as f64,
-            (a.right != 0. && b.right != 0.) as i8 as f64,
+            f64::from((a.left != 0. && b.left != 0.) as i8),
+            f64::from((a.right != 0. && b.right != 0.) as i8),
             a.form,
         ),
         OperatorType::LogicalOr => ConstantNum::new(
-            (a.left != 0. || b.left != 0.) as i8 as f64,
-            (a.right != 0. || b.right != 0.) as i8 as f64,
+            f64::from((a.left != 0. || b.left != 0.) as i8),
+            f64::from((a.right != 0. || b.right != 0.) as i8),
             a.form,
         ),
         OperatorType::LogicalEqual => ConstantNum::new(
-            (a.left == b.left) as i8 as f64,
-            (a.right == b.right) as i8 as f64,
+            f64::from((a.left == b.left) as i8),
+            f64::from((a.right == b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalNotEqual => ConstantNum::new(
-            (a.left != b.left) as i8 as f64,
-            (a.right != b.right) as i8 as f64,
+            f64::from((a.left != b.left) as i8),
+            f64::from((a.right != b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalGt => ConstantNum::new(
-            (a.left > b.left) as i8 as f64,
-            (a.right > b.right) as i8 as f64,
+            f64::from((a.left > b.left) as i8),
+            f64::from((a.right > b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalLt => ConstantNum::new(
-            (a.left < b.left) as i8 as f64,
-            (a.right < b.right) as i8 as f64,
+            f64::from((a.left < b.left) as i8),
+            f64::from((a.right < b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalGte => ConstantNum::new(
-            (a.left >= b.left) as i8 as f64,
-            (a.right >= b.right) as i8 as f64,
+            f64::from((a.left >= b.left) as i8),
+            f64::from((a.right >= b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalLte => ConstantNum::new(
-            (a.left <= b.left) as i8 as f64,
-            (a.right <= b.right) as i8 as f64,
+            f64::from((a.left <= b.left) as i8),
+            f64::from((a.right <= b.right) as i8),
             a.form,
         ),
     }
@@ -157,7 +157,7 @@ fn two_const_num_intrinsic(
 }
 
 pub fn const_call(
-    function: &Function,
+    function: Function,
     args: &[ConstantValue],
     varargs: &[ConstantValue],
     range: &SourceRange,

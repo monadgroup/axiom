@@ -15,7 +15,7 @@ pub struct BlockDeps {
     pub depended_by: Vec<SurfaceRef>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DependencyGraph {
     surfaces: HashMap<SurfaceRef, SurfaceDeps>,
     blocks: HashMap<BlockRef, BlockDeps>,
@@ -90,7 +90,7 @@ impl DependencyGraph {
             let surface_deps = self
                 .surfaces
                 .entry(*depended_surface)
-                .or_insert_with(|| SurfaceDeps::default());
+                .or_insert_with(SurfaceDeps::default);
             surface_deps.depended_by.push(surface.id.id);
             self.gc_surface_candidates.remove(depended_surface);
         }
@@ -98,7 +98,7 @@ impl DependencyGraph {
             let block_deps = self
                 .blocks
                 .entry(*depended_block)
-                .or_insert_with(|| BlockDeps::default());
+                .or_insert_with(BlockDeps::default);
             block_deps.depended_by.push(surface.id.id);
             self.gc_block_candidates.remove(depended_block);
         }

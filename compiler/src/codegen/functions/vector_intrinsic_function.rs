@@ -17,7 +17,7 @@ fn gen_intrinsic_call(
         Some(form) => func.ctx.context.i8_type().const_int(form as u64, false),
         None => NumValue::new(args[0]).get_form(func.ctx.b),
     };
-    result_num.set_form(func.ctx.b, &result_form);
+    result_num.set_form(func.ctx.b, result_form);
 
     let vec_values: Vec<_> = args
         .iter()
@@ -31,7 +31,7 @@ fn gen_intrinsic_call(
         .left()
         .unwrap()
         .into_vector_value();
-    result_num.set_vec(func.ctx.b, &result_vec);
+    result_num.set_vec(func.ctx.b, result_vec);
 }
 
 macro_rules! define_vector_intrinsic (

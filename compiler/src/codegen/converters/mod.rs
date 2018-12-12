@@ -44,7 +44,7 @@ impl<'a> ConvertGenerator for PrivateGenerator<'a> {
         builder.position_at_end(&new_block);
 
         let result_vec = cb(self.context, self.module, &mut builder, *self.input_vec);
-        self.result_num.set_vec(&mut builder, &result_vec);
+        self.result_num.set_vec(&mut builder, result_vec);
         builder.build_unconditional_branch(self.end_block);
 
         let form_num = self.context.i8_type().const_int(form as u64, false);
@@ -83,7 +83,7 @@ pub fn build_convert_func(
 
         result_num.set_form(
             ctx.b,
-            &ctx.context.i8_type().const_int(target_form as u64, false),
+            ctx.context.i8_type().const_int(target_form as u64, false),
         );
 
         // build up each switch block
@@ -110,7 +110,7 @@ pub fn build_convert_func(
             .build_switch(&input_form, &default_block, &switch_cases);
 
         ctx.b.position_at_end(&default_block);
-        result_num.set_vec(ctx.b, &input_vec);
+        result_num.set_vec(ctx.b, input_vec);
         ctx.b.build_unconditional_branch(&end_block);
 
         ctx.b.position_at_end(&end_block);

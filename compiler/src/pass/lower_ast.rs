@@ -335,8 +335,8 @@ impl<'a> AstLower<'a> {
     fn lower_note_expr(&mut self, expr: &'a ast::NoteExpression) -> LowerResult {
         Ok(
             self.add_statement(mir::block::Statement::new_const_num(mir::ConstantNum::new(
-                expr.note as f64,
-                expr.note as f64,
+                f64::from(expr.note),
+                f64::from(expr.note),
                 ast::FormType::Note,
             ))),
         )
@@ -658,11 +658,10 @@ impl<'a> AstLower<'a> {
                 .collect();
 
             if let Some(const_varargs) = const_varargs {
-                match constant_propagate::const_call(&function, &const_args, &const_varargs, pos) {
-                    Some(result) => {
-                        return Ok(self.add_statement(mir::block::Statement::Constant(result?)))
-                    }
-                    None => (),
+                if let Some(result) =
+                    constant_propagate::const_call(function, &const_args, &const_varargs, pos)
+                {
+                    return Ok(self.add_statement(mir::block::Statement::Constant(result?)));
                 }
             }
         }
@@ -682,7 +681,7 @@ impl<'a> AstLower<'a> {
         value: usize,
     ) -> LowerResult {
         if let Some(err) =
-            self.check_statement_type(pos, mir::VarType::of_control_field(&field), value)
+            self.check_statement_type(pos, mir::VarType::of_control_field(field), value)
         {
             return Err(err);
         }

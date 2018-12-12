@@ -13,7 +13,7 @@ fn gen_shuffle_call(
     let input_num = NumValue::new(args[0]);
     let result_num = NumValue::new(result);
     let result_form = input_num.get_form(func.ctx.b);
-    result_num.set_form(func.ctx.b, &result_form);
+    result_num.set_form(func.ctx.b, result_form);
 
     let input_vec = input_num.get_vec(func.ctx.b);
     let shuffle_vec = VectorType::const_vector(&[
@@ -34,7 +34,7 @@ fn gen_shuffle_call(
         &shuffle_vec,
         "",
     );
-    result_num.set_vec(func.ctx.b, &shuffled_vec);
+    result_num.set_vec(func.ctx.b, shuffled_vec);
 }
 
 macro_rules! define_vector_shuffle (

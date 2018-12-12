@@ -539,7 +539,7 @@ impl Runtime {
     pub unsafe fn get_portal_ptr(&self, portal_index: usize) -> *mut c_void {
         if let Some(ref pointers) = self.runtime_pointers {
             let portals_array = pointers.portals_ptr as *mut *mut c_void;
-            *portals_array.offset(portal_index as isize)
+            *portals_array.add(portal_index)
         } else {
             ptr::null_mut()
         }
@@ -586,8 +586,8 @@ impl Runtime {
         }
     }
 
-    pub fn convert_num(&self, result: *mut c_void, target_form: i8, num: *const c_void) {
-        unsafe { (self.library_pointers.convert_num)(result, target_form, num) }
+    pub unsafe fn convert_num(&self, result: *mut c_void, target_form: i8, num: *const c_void) {
+        (self.library_pointers.convert_num)(result, target_form, num)
     }
 
     pub fn print_mir(&self) {
@@ -660,5 +660,5 @@ impl Drop for Runtime {
 }
 
 fn precise_duration_seconds(duration: &Duration) -> f64 {
-    duration.as_secs() as f64 + duration.subsec_nanos() as f64 / 1_000_000_000.
+    duration.as_secs() as f64 + f64::from(duration.subsec_nanos()) / 1_000_000_000.
 }

@@ -134,7 +134,7 @@ fn build_node_call(
             let iter_limit = ctx
                 .context
                 .i8_type()
-                .const_int(values::ARRAY_CAPACITY as u64, false);
+                .const_int(u64::from(values::ARRAY_CAPACITY), false);
             let can_continue_loop = ctx.b.build_int_compare(
                 IntPredicate::ULT,
                 current_index,
@@ -210,7 +210,7 @@ fn build_node_call(
                             )
                             .into_pointer_value(),
                     );
-                    dest_array.set_bitmap(ctx.b, &active_bitmap);
+                    dest_array.set_bitmap(ctx.b, active_bitmap);
                 }
             }
         }

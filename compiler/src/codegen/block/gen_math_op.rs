@@ -7,7 +7,7 @@ use inkwell::values::{PointerValue, VectorValue};
 use inkwell::FloatPredicate;
 
 pub fn gen_math_op_statement(
-    op: &OperatorType,
+    op: OperatorType,
     lhs: usize,
     rhs: usize,
     node: &mut BlockContext,
@@ -19,7 +19,7 @@ pub fn gen_math_op_statement(
     let right_num = NumValue::new(node.get_statement(rhs));
     let result_num = NumValue::new_undef(node.ctx.context, node.ctx.allocb);
     let left_form = left_num.get_form(node.ctx.b);
-    result_num.set_form(node.ctx.b, &left_form);
+    result_num.set_form(node.ctx.b, left_form);
 
     let left_vec = left_num.get_vec(node.ctx.b);
     let right_vec = right_num.get_vec(node.ctx.b);
@@ -138,7 +138,7 @@ pub fn gen_math_op_statement(
                 .build_float_compare(FloatPredicate::OLE, left_vec, right_vec, "num.vec.lte"),
         ),
     };
-    result_num.set_vec(node.ctx.b, &result_vec);
+    result_num.set_vec(node.ctx.b, result_vec);
 
     result_num.val
 }

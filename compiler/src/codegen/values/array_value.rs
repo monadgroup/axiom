@@ -15,7 +15,7 @@ impl ArrayValue {
         context.struct_type(
             &[
                 &context.i32_type(),
-                &inner_type.array_type(ARRAY_CAPACITY as u32),
+                &inner_type.array_type(u32::from(ARRAY_CAPACITY)),
             ],
             false,
         )
@@ -34,9 +34,9 @@ impl ArrayValue {
         builder.build_load(&ptr, "array.bitmap").into_int_value()
     }
 
-    pub fn set_bitmap(&self, builder: &mut Builder, val: &IntValue) {
+    pub fn set_bitmap(&self, builder: &mut Builder, val: IntValue) {
         let ptr = self.get_bitmap_ptr(builder);
-        builder.build_store(&ptr, val);
+        builder.build_store(&ptr, &val);
     }
 
     pub fn get_items_ptr(&self, builder: &mut Builder) -> PointerValue {

@@ -11,8 +11,7 @@ use std::f64::consts;
 fn get_float_asm_func(module: &Module, asm: &str, constraints: &str) -> FunctionValue {
     let context = module.get_context();
     let fn_type = context.f32_type().fn_type(&[&context.f32_type()], false);
-    let asm_val = fn_type.as_asm(asm, constraints, false, false);
-    asm_val
+    fn_type.as_asm(asm, constraints, false, false)
 }
 
 fn get_i64_spread(context: &Context, val: u64) -> VectorValue {
@@ -197,13 +196,13 @@ fn build_sin_v2f64(module: &Module, target: &TargetProperties) {
 
         let y_val = ctx.b.build_float_add(
             ctx.b.build_float_mul(
-                util::get_vec_spread(ctx.context, 1.2732395447237650),
+                util::get_vec_spread(ctx.context, 1.273_239_544_723_765),
                 wrapped_x,
                 "",
             ),
             ctx.b.build_float_mul(
                 ctx.b.build_float_mul(
-                    util::get_vec_spread(ctx.context, -0.40528473456652137),
+                    util::get_vec_spread(ctx.context, -0.405_284_734_566_521_37),
                     wrapped_x,
                     "",
                 ),
@@ -219,7 +218,7 @@ fn build_sin_v2f64(module: &Module, target: &TargetProperties) {
 
         let result = ctx.b.build_float_add(
             ctx.b.build_float_mul(
-                util::get_vec_spread(ctx.context, 0.22499990463256836),
+                util::get_vec_spread(ctx.context, 0.224_999_904_632_568_36),
                 ctx.b.build_float_sub(
                     ctx.b.build_float_mul(
                         y_val,
@@ -811,13 +810,13 @@ fn build_exp2_v2f64(module: &Module, target: &TargetProperties) {
                 )
             };
 
-            let r = util::get_vec_spread(ctx.context, 0.00015465324084118492); // const 0
-            let r = mad(r, 0.0013395291543787380); // const 1
-            let r = mad(r, 0.0096180399117429261); // const 2
-            let r = mad(r, 0.055503406540083233); // const 3
-            let r = mad(r, 0.24022651101404335); // const 4
-            let r = mad(r, 0.69314720007241704); // const 5
-            let r = mad(r, 0.99999999997089617); // const 6
+            let r = util::get_vec_spread(ctx.context, 0.000_154_653_240_841_184_92); // const 0
+            let r = mad(r, 0.001_339_529_154_378_738); // const 1
+            let r = mad(r, 0.009_618_039_911_742_926); // const 2
+            let r = mad(r, 0.055_503_406_540_083_23); // const 3
+            let r = mad(r, 0.240_226_511_014_043_35); // const 4
+            let r = mad(r, 0.693_147_200_072_417); // const 5
+            let r = mad(r, 0.999_999_999_970_896_2); // const 6
 
             let k = ctx
                 .b
@@ -1020,11 +1019,11 @@ fn build_log2_v2f64(module: &Module, target: &TargetProperties) {
                 )
             };
 
-            let r = util::get_vec_spread(ctx.context, 0.41098153827988426); // const 0
-            let r = mad(r, 0.40215548317064531); // const 1
-            let r = mad(r, 0.57755014627036871); // const 2
-            let r = mad(r, 0.96178780600166647); // const 3
-            let r = mad(r, 2.8853901278343983); // const 4
+            let r = util::get_vec_spread(ctx.context, 0.410_981_538_279_884_26); // const 0
+            let r = mad(r, 0.402_155_483_170_645_3); // const 1
+            let r = mad(r, 0.577_550_146_270_368_7); // const 2
+            let r = mad(r, 0.961_787_806_001_666_5); // const 3
+            let r = mad(r, 2.885_390_127_834_398_3); // const 4
 
             let r = ctx.b.build_float_mul(r, y, "");
             let ilogb_float =
@@ -1153,14 +1152,14 @@ fn build_atan2k_v2f64(module: &Module, target: &TargetProperties) {
                 )
             };
 
-            let r = util::get_vec_spread(ctx.context, 0.00282363896258175373077393); // const 0
-            let r = mad(r, -0.0159569028764963150024414); // const 1
-            let r = mad(r, 0.0425049886107444763183594); // const 2
-            let r = mad(r, -0.0748900920152664184570312); // const 3
-            let r = mad(r, 0.106347933411598205566406); // const 4
-            let r = mad(r, -0.142027363181114196777344); // const 5
-            let r = mad(r, 0.199926957488059997558594); // const 6
-            let r = mad(r, -0.333331018686294555664062); // const 7
+            let r = util::get_vec_spread(ctx.context, 0.002_823_638_962_581_753_7); // const 0
+            let r = mad(r, -0.015_956_902_876_496_315); // const 1
+            let r = mad(r, 0.042_504_988_610_744_476); // const 2
+            let r = mad(r, -0.074_890_092_015_266_42); // const 3
+            let r = mad(r, 0.106_347_933_411_598_2); // const 4
+            let r = mad(r, -0.142_027_363_181_114_2); // const 5
+            let r = mad(r, 0.199_926_957_488_06); // const 6
+            let r = mad(r, -0.333_331_018_686_294_56); // const 7
 
             let t = ctx.b.build_float_add(
                 ctx.b
@@ -1396,14 +1395,14 @@ fn build_atan_v2f64(module: &Module, target: &TargetProperties) {
                 )
             };
 
-            let r = util::get_vec_spread(ctx.context, 0.00282363896258175373077393); // const 0
-            let r = mad(r, -0.0159569028764963150024414); // const 1
-            let r = mad(r, 0.0425049886107444763183594); // const 2
-            let r = mad(r, -0.0748900920152664184570312); // const 3
-            let r = mad(r, 0.106347933411598205566406); // const 4
-            let r = mad(r, -0.142027363181114196777344); // const 5
-            let r = mad(r, 0.199926957488059997558594); // const 6
-            let r = mad(r, -0.333331018686294555664062); // const 7
+            let r = util::get_vec_spread(ctx.context, 0.002_823_638_962_581_753_7); // const 0
+            let r = mad(r, -0.015_956_902_876_496_315); // const 1
+            let r = mad(r, 0.042_504_988_610_744_476); // const 2
+            let r = mad(r, -0.074_890_092_015_266_42); // const 3
+            let r = mad(r, 0.106_347_933_411_598_2); // const 4
+            let r = mad(r, -0.142_027_363_181_114_2); // const 5
+            let r = mad(r, 0.199_926_957_488_06); // const 6
+            let r = mad(r, -0.333_331_018_686_294_56); // const 7
 
             let t = ctx.b.build_float_add(
                 s,

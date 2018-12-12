@@ -70,7 +70,7 @@ fn control_from_frequency(
             .left()
             .unwrap()
             .into_vector_value(),
-        util::get_vec_spread(context, (20000 as f64).log(consts::E)),
+        util::get_vec_spread(context, 20000_f64.log(consts::E)),
         "",
     )
 }

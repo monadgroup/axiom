@@ -40,6 +40,13 @@ pub trait ControlFieldGenerator {
     );
 }
 
+#[derive(Clone, Copy)]
+pub struct ControlPointers {
+    pub group: PointerValue,
+    pub data: PointerValue,
+    pub shared: PointerValue,
+}
+
 struct PrivateGenerator<'a> {
     module: &'a Module,
     target: &'a TargetProperties,
@@ -73,11 +80,11 @@ impl<'a> ControlFieldGenerator for PrivateGenerator<'a> {
 }
 
 pub fn get_group_type(context: &Context, control_type: ControlType) -> StructType {
-    values::remap_type(context, &VarType::of_control_value(&control_type))
+    values::remap_type(context, &VarType::of_control_value(control_type))
 }
 
 pub fn get_field_type(context: &Context, field: ControlField) -> StructType {
-    values::remap_type(context, &VarType::of_control_field(&field))
+    values::remap_type(context, &VarType::of_control_field(field))
 }
 
 macro_rules! map_controls {
@@ -162,7 +169,7 @@ fn get_ui_lifecycle_func(
 }
 
 fn get_field_getter_func(module: &Module, field: ControlField) -> (FunctionValue, bool) {
-    let var_type = VarType::of_control_field(&field);
+    let var_type = VarType::of_control_field(field);
     let pass_by_val = values::pass_type_by_val(&var_type);
 
     let func = util::get_or_create_func(
@@ -207,7 +214,7 @@ fn get_field_getter_func(module: &Module, field: ControlField) -> (FunctionValue
 }
 
 fn get_field_setter_func(module: &Module, field: ControlField) -> (FunctionValue, bool) {
-    let var_type = VarType::of_control_field(&field);
+    let var_type = VarType::of_control_field(field);
     let pass_by_val = values::pass_type_by_val(&var_type);
 
     let func = util::get_or_create_func(
@@ -252,9 +259,7 @@ pub fn build_field_get(
     module: &Module,
     builder: &mut Builder,
     field: ControlField,
-    group_ptr: PointerValue,
-    data_ptr: PointerValue,
-    shared_ptr: PointerValue,
+    ptrs: ControlPointers,
     out_val: PointerValue,
 ) {
     let (func, pass_by_val) = get_field_getter_func(module, field);
@@ -263,7 +268,7 @@ pub fn build_field_get(
         let get_val = builder
             .build_call(
                 &func,
-                &[&group_ptr, &data_ptr, &shared_ptr],
+                &[&ptrs.group, &ptrs.data, &ptrs.shared],
                 "field.get",
                 true,
             )
@@ -273,7 +278,7 @@ pub fn build_field_get(
     } else {
         builder.build_call(
             &func,
-            &[&out_val, &group_ptr, &data_ptr, &shared_ptr],
+            &[&out_val, &ptrs.group, &ptrs.data, &ptrs.shared],
             "",
             true,
         );
@@ -284,9 +289,7 @@ pub fn build_field_set(
     module: &Module,
     builder: &mut Builder,
     field: ControlField,
-    group_ptr: PointerValue,
-    data_ptr: PointerValue,
-    shared_ptr: PointerValue,
+    ptrs: ControlPointers,
     in_val: PointerValue,
 ) {
     let (func, pass_by_val) = get_field_setter_func(module, field);
@@ -299,7 +302,7 @@ pub fn build_field_set(
 
     builder.build_call(
         &func,
-        &[&group_ptr, &data_ptr, &shared_ptr, &in_norm_val],
+        &[&ptrs.group, &ptrs.data, &ptrs.shared, &in_norm_val],
         "",
         true,
     );
@@ -310,12 +313,10 @@ pub fn build_lifecycle_call(
     builder: &mut Builder,
     control_type: ControlType,
     lifecycle: LifecycleFunc,
-    group_ptr: PointerValue,
-    data_ptr: PointerValue,
-    shared_ptr: PointerValue,
+    ptrs: ControlPointers,
 ) {
     let func = get_lifecycle_func(module, control_type, lifecycle);
-    builder.build_call(&func, &[&group_ptr, &data_ptr, &shared_ptr], "", true);
+    builder.build_call(&func, &[&ptrs.group, &ptrs.data, &ptrs.shared], "", true);
 }
 
 pub fn build_ui_lifecycle_call(
@@ -323,15 +324,13 @@ pub fn build_ui_lifecycle_call(
     builder: &mut Builder,
     control_type: ControlType,
     lifecycle: LifecycleFunc,
-    group_ptr: PointerValue,
-    data_ptr: PointerValue,
-    shared_ptr: PointerValue,
+    ptrs: ControlPointers,
     ui_ptr: PointerValue,
 ) {
     let func = get_ui_lifecycle_func(module, control_type, lifecycle);
     builder.build_call(
         &func,
-        &[&group_ptr, &data_ptr, &shared_ptr, &ui_ptr],
+        &[&ptrs.group, &ptrs.data, &ptrs.shared, &ui_ptr],
         "",
         true,
     );

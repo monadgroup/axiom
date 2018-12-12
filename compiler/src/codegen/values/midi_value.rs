@@ -21,7 +21,7 @@ impl MidiValue {
         context.struct_type(
             &[
                 &context.i8_type(),
-                &event_type.array_type(MIDI_EVENT_COUNT as u32),
+                &event_type.array_type(u32::from(MIDI_EVENT_COUNT)),
             ],
             false,
         )
@@ -49,9 +49,9 @@ impl MidiValue {
         builder.build_load(&ptr, "midi.count").into_int_value()
     }
 
-    pub fn set_count(&self, builder: &mut Builder, val: &IntValue) {
+    pub fn set_count(&self, builder: &mut Builder, val: IntValue) {
         let ptr = self.get_count_ptr(builder);
-        builder.build_store(&ptr, val);
+        builder.build_store(&ptr, &val);
     }
 
     pub fn get_events_ptr(&self, builder: &mut Builder) -> PointerValue {
@@ -115,7 +115,7 @@ impl MidiValue {
                     current_count,
                     ctx.context
                         .i8_type()
-                        .const_int(MIDI_EVENT_COUNT as u64, false),
+                        .const_int(u64::from(MIDI_EVENT_COUNT), false),
                     "canpushcond",
                 );
                 ctx.b
@@ -129,7 +129,7 @@ impl MidiValue {
                     ctx.context.i8_type().const_int(1, false),
                     "newcount",
                 );
-                current_midi.set_count(ctx.b, &new_count);
+                current_midi.set_count(ctx.b, new_count);
                 ctx.b.build_unconditional_branch(&end_block);
                 ctx.b.position_at_end(&end_block);
                 ctx.b.build_return(None);

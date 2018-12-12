@@ -14,8 +14,8 @@ pub enum ControlType {
 }
 
 impl ControlType {
-    pub fn is_extract(&self) -> bool {
-        *self == ControlType::AudioExtract || *self == ControlType::MidiExtract
+    pub fn is_extract(self) -> bool {
+        self == ControlType::AudioExtract || self == ControlType::MidiExtract
     }
 }
 

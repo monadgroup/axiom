@@ -16,12 +16,12 @@ fn gen_periodic_real_args(
 ) -> Vec<PointerValue> {
     if args.len() < 2 {
         let mut phase_offset_constant = NumValue::new_undef(ctx.context, ctx.allocb);
-        phase_offset_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0., 0., 0));
+        phase_offset_constant.store(ctx.b, NumValue::get_const(ctx.context, 0., 0., 0));
         args.push(phase_offset_constant.val);
     }
     if needs_pulse_width && args.len() < 3 {
         let mut pulse_width_constant = NumValue::new_undef(ctx.context, ctx.allocb);
-        pulse_width_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0.5, 0.5, 0));
+        pulse_width_constant.store(ctx.b, NumValue::get_const(ctx.context, 0.5, 0.5, 0));
         args.push(pulse_width_constant.val);
     }
     args
@@ -95,11 +95,10 @@ fn gen_periodic_call(
 
     let result_vec = next_val(func, input_phase, &args[2..]);
 
-    result_num.set_vec(func.ctx.b, &result_vec);
+    result_num.set_vec(func.ctx.b, result_vec);
     result_num.set_form(
         func.ctx.b,
-        &func
-            .ctx
+        func.ctx
             .context
             .i8_type()
             .const_int(FormType::Oscillator as u64, false),

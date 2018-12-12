@@ -604,10 +604,10 @@ impl Control for GraphControl {
             .into_float_value();
         let output_vec = util::splat_vector(control.ctx.b, output_float, "output.vec");
         let output_num = NumValue::new(control.val_ptr);
-        output_num.set_vec(control.ctx.b, &output_vec);
+        output_num.set_vec(control.ctx.b, output_vec);
         output_num.set_form(
             control.ctx.b,
-            &control
+            control
                 .ctx
                 .context
                 .i8_type()
@@ -692,10 +692,10 @@ fn state_field_getter(control: &mut ControlContext, out_val: PointerValue) {
 
     let result_num = NumValue::new(out_val);
     let result_vector = util::splat_vector(control.ctx.b, state_float, "");
-    result_num.set_vec(control.ctx.b, &result_vector);
+    result_num.set_vec(control.ctx.b, result_vector);
     result_num.set_form(
         control.ctx.b,
-        &control
+        control
             .ctx
             .context
             .i8_type()
@@ -737,7 +737,7 @@ fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
                                 .ctx
                                 .context
                                 .f64_type()
-                                .const_float(<u8>::max_value() as f64 - 1.),
+                                .const_float(f64::from(u8::max_value()) - 1.),
                             &left_float,
                         ],
                         "",
@@ -787,10 +787,10 @@ fn paused_field_getter(control: &mut ControlContext, out_val: PointerValue) {
         "paused.float",
     );
     let is_paused_spread = util::splat_vector(&control.ctx.b, is_paused_float, "paused.splat");
-    out_num.set_vec(control.ctx.b, &is_paused_spread);
+    out_num.set_vec(control.ctx.b, is_paused_spread);
     out_num.set_form(
         control.ctx.b,
-        &control
+        control
             .ctx
             .context
             .i8_type()
@@ -824,10 +824,10 @@ fn time_field_getter(control: &mut ControlContext, out_val: PointerValue) {
         "time.float",
     );
     let time_spread = util::splat_vector(&control.ctx.b, current_time_float, "time.splat");
-    out_num.set_vec(control.ctx.b, &time_spread);
+    out_num.set_vec(control.ctx.b, time_spread);
     out_num.set_form(
         control.ctx.b,
-        &control
+        control
             .ctx
             .context
             .i8_type()

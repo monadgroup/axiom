@@ -313,11 +313,10 @@ impl Function for NoteFunction {
 
         let result_gate_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 0));
         let active_vector = util::splat_vector(func.ctx.b, is_active, "active.vector");
-        result_gate_num.set_vec(func.ctx.b, &active_vector);
+        result_gate_num.set_vec(func.ctx.b, active_vector);
         result_gate_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::None as u64, false),
@@ -325,11 +324,10 @@ impl Function for NoteFunction {
 
         let result_note_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 1));
         let note_vector = util::splat_vector(func.ctx.b, note_num, "note.vector");
-        result_note_num.set_vec(func.ctx.b, &note_vector);
+        result_note_num.set_vec(func.ctx.b, note_vector);
         result_note_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Note as u64, false),
@@ -337,11 +335,10 @@ impl Function for NoteFunction {
 
         let result_velocity_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 2));
         let velocity_vector = util::splat_vector(func.ctx.b, velocity_num, "velocity.vector");
-        result_velocity_num.set_vec(func.ctx.b, &velocity_vector);
+        result_velocity_num.set_vec(func.ctx.b, velocity_vector);
         result_velocity_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Amplitude as u64, false),
@@ -349,11 +346,10 @@ impl Function for NoteFunction {
 
         let result_aftertouch_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 3));
         let aftertouch_vector = util::splat_vector(func.ctx.b, aftertouch_num, "aftertouch.vector");
-        result_aftertouch_num.set_vec(func.ctx.b, &aftertouch_vector);
+        result_aftertouch_num.set_vec(func.ctx.b, aftertouch_vector);
         result_aftertouch_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::None as u64, false),

@@ -24,7 +24,7 @@ impl Function for ChannelFunction {
         let channel_num = NumValue::new(args[1]);
         let result_midi = MidiValue::new(result);
 
-        result_midi.set_count(func.ctx.b, &func.ctx.context.i8_type().const_int(0, false));
+        result_midi.set_count(func.ctx.b, func.ctx.context.i8_type().const_int(0, false));
 
         let channel_vec = channel_num.get_vec(func.ctx.b);
 

@@ -42,7 +42,7 @@ impl NumValue {
     pub fn get_const(context: &Context, left: f64, right: f64, form: u8) -> StructValue {
         NumValue::get_type(context).const_named_struct(&[
             &util::get_const_vec(context, left, right),
-            &context.i8_type().const_int(form as u64, false),
+            &context.i8_type().const_int(u64::from(form), false),
         ])
     }
 
@@ -56,8 +56,8 @@ impl NumValue {
             .into_struct_value()
     }
 
-    pub fn store(&mut self, builder: &mut Builder, value: &StructValue) {
-        builder.build_store(&self.val, value);
+    pub fn store(&mut self, builder: &mut Builder, value: StructValue) {
+        builder.build_store(&self.val, &value);
     }
 
     pub fn get_vec_ptr(&self, builder: &mut Builder) -> PointerValue {
@@ -69,9 +69,9 @@ impl NumValue {
         builder.build_load(&vec, "num.vec").into_vector_value()
     }
 
-    pub fn set_vec(&self, builder: &mut Builder, value: &VectorValue) {
+    pub fn set_vec(&self, builder: &mut Builder, value: VectorValue) {
         let vec = self.get_vec_ptr(builder);
-        builder.build_store(&vec, value);
+        builder.build_store(&vec, &value);
     }
 
     pub fn get_form_ptr(&self, builder: &mut Builder) -> PointerValue {
@@ -83,8 +83,8 @@ impl NumValue {
         builder.build_load(&vec, "num.form").into_int_value()
     }
 
-    pub fn set_form(&self, builder: &mut Builder, value: &IntValue) {
+    pub fn set_form(&self, builder: &mut Builder, value: IntValue) {
         let vec = self.get_form_ptr(builder);
-        builder.build_store(&vec, value);
+        builder.build_store(&vec, &value);
     }
 }

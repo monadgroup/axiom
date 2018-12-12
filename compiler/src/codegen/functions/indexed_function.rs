@@ -59,7 +59,7 @@ impl Function for IndexedFunction {
                         .ctx
                         .context
                         .f64_type()
-                        .const_float(ARRAY_CAPACITY as f64),
+                        .const_float(f64::from(ARRAY_CAPACITY)),
                 ],
                 "",
                 true,
@@ -79,7 +79,7 @@ impl Function for IndexedFunction {
             func.ctx
                 .context
                 .i8_type()
-                .const_int(ARRAY_CAPACITY as u64, false),
+                .const_int(u64::from(ARRAY_CAPACITY), false),
             input_count_int,
             "shiftamount",
         );
@@ -87,7 +87,10 @@ impl Function for IndexedFunction {
         // LLVM defines shifting left by the same number of bits as the input as undefined (so we can't shift a 32-bit number 32 bits left).
         // Since this will happen when the input value is 0, we do the shifting as 64-bit integers and truncate the result to 32 bits.
         let bitmap = func.ctx.b.build_right_shift(
-            func.ctx.context.i64_type().const_int(!0u32 as u64, false),
+            func.ctx
+                .context
+                .i64_type()
+                .const_int(u64::from(!0u32), false),
             func.ctx.b.build_int_z_extend_or_bit_cast(
                 shift_amount,
                 func.ctx.context.i64_type(),
@@ -100,7 +103,7 @@ impl Function for IndexedFunction {
             func.ctx
                 .b
                 .build_int_truncate(bitmap, func.ctx.context.i32_type(), "");
-        result_array.set_bitmap(func.ctx.b, &truncated_bitmap);
+        result_array.set_bitmap(func.ctx.b, truncated_bitmap);
 
         // loop through the indices to build up the output array values
         let loop_index_ptr = func
@@ -158,11 +161,10 @@ impl Function for IndexedFunction {
             "index.float",
         );
         let index_vec = util::splat_vector(func.ctx.b, index_float, "index.vec");
-        index_num.set_vec(&mut func.ctx.b, &index_vec);
+        index_num.set_vec(&mut func.ctx.b, index_vec);
         index_num.set_form(
             &mut func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::None as u64, false),

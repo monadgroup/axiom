@@ -35,7 +35,7 @@ macro_rules! define_functions {
                 }
             }
 
-            pub fn data(&self) -> FunctionData {
+            pub fn data(self) -> FunctionData {
                 use crate::mir::VarType::*;
                 match self {
                     $( Function::$enum_name => $data, )*
@@ -142,26 +142,26 @@ impl fmt::Display for FunctionArgRange {
 }
 
 impl Function {
-    pub fn return_type(&self) -> VarType {
+    pub fn return_type(self) -> VarType {
         self.data().return_type
     }
 
-    pub fn arg_types(&self) -> Vec<ParamType> {
+    pub fn arg_types(self) -> Vec<ParamType> {
         self.data().arg_types
     }
 
-    pub fn var_arg(&self) -> Option<VarType> {
+    pub fn var_arg(self) -> Option<VarType> {
         self.data().var_arg
     }
 
-    pub fn required_args(&self) -> Vec<ParamType> {
+    pub fn required_args(self) -> Vec<ParamType> {
         self.arg_types()
             .into_iter()
             .filter(|param| !param.optional)
             .collect()
     }
 
-    pub fn arg_range(&self) -> FunctionArgRange {
+    pub fn arg_range(self) -> FunctionArgRange {
         let required_count = self
             .arg_types()
             .into_iter()

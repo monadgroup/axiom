@@ -258,18 +258,18 @@ impl Function for SvFilterFunction {
 
         let high_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 0));
         let high_result_vec = func.ctx.b.build_load(&high_ptr, "high").into_vector_value();
-        high_result_num.set_vec(func.ctx.b, &high_result_vec);
-        high_result_num.set_form(func.ctx.b, &input_form);
+        high_result_num.set_vec(func.ctx.b, high_result_vec);
+        high_result_num.set_form(func.ctx.b, input_form);
 
         let low_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 1));
         let low_result_vec = func.ctx.b.build_load(&low_ptr, "low").into_vector_value();
-        low_result_num.set_vec(func.ctx.b, &low_result_vec);
-        low_result_num.set_form(func.ctx.b, &input_form);
+        low_result_num.set_vec(func.ctx.b, low_result_vec);
+        low_result_num.set_form(func.ctx.b, input_form);
 
         let band_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 2));
         let band_result_vec = func.ctx.b.build_load(&band_ptr, "band").into_vector_value();
-        band_result_num.set_vec(func.ctx.b, &band_result_vec);
-        band_result_num.set_form(func.ctx.b, &input_form);
+        band_result_num.set_vec(func.ctx.b, band_result_vec);
+        band_result_num.set_form(func.ctx.b, input_form);
 
         let notch_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 3));
         let notch_result_vec = func
@@ -277,7 +277,7 @@ impl Function for SvFilterFunction {
             .b
             .build_load(&notch_ptr, "notch")
             .into_vector_value();
-        notch_result_num.set_vec(func.ctx.b, &notch_result_vec);
-        notch_result_num.set_form(func.ctx.b, &input_form);
+        notch_result_num.set_vec(func.ctx.b, notch_result_vec);
+        notch_result_num.set_form(func.ctx.b, input_form);
     }
 }

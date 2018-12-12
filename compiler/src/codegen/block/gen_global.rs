@@ -18,12 +18,11 @@ pub fn gen_global_statement(global: &Global, node: &mut BlockContext) -> Pointer
         .into_vector_value();
     num_val.set_form(
         node.ctx.b,
-        &node
-            .ctx
+        node.ctx
             .context
             .i8_type()
             .const_int(FormType::None as u64, false),
     );
-    num_val.set_vec(node.ctx.b, &vec_val);
+    num_val.set_vec(node.ctx.b, vec_val);
     num_val.val
 }

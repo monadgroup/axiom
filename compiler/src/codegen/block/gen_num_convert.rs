@@ -5,7 +5,7 @@ use crate::codegen::values::NumValue;
 use inkwell::values::PointerValue;
 
 pub fn gen_num_convert_statement(
-    target_form: &FormType,
+    target_form: FormType,
     input: usize,
     node: &mut BlockContext,
 ) -> PointerValue {
@@ -15,7 +15,7 @@ pub fn gen_num_convert_statement(
         node.ctx.b,
         node.ctx.module,
         &base_num,
-        *target_form,
+        target_form,
     )
     .val
 }

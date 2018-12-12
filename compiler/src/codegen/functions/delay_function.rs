@@ -393,7 +393,7 @@ impl Function for DelayFunction {
     fn gen_real_args(ctx: &mut BuilderContext, mut args: Vec<PointerValue>) -> Vec<PointerValue> {
         if args.len() < 3 {
             let mut delay_constant = NumValue::new_undef(ctx.context, ctx.allocb);
-            delay_constant.store(ctx.b, &NumValue::get_const(ctx.context, 1., 1., 0));
+            delay_constant.store(ctx.b, NumValue::get_const(ctx.context, 1., 1., 0));
             args.insert(1, delay_constant.val);
         }
         args
@@ -603,10 +603,10 @@ impl Function for DelayFunction {
                 "",
             )
             .into_vector_value();
-        result_num.set_vec(func.ctx.b, &result_vec);
+        result_num.set_vec(func.ctx.b, result_vec);
 
         let input_form = input_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &input_form);
+        result_num.set_form(func.ctx.b, input_form);
     }
 
     fn gen_destruct(func: &mut FunctionContext) {

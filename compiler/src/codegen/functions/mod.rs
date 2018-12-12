@@ -42,6 +42,7 @@ pub use self::vector_shuffle_function::*;
 pub use self::voices_function::*;
 pub use self::voices_function::*;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FunctionLifecycleFunc {
     Construct,
     Destruct,
@@ -88,7 +89,7 @@ impl VarArgs {
 }
 
 pub fn get_return_type(context: &Context, function: block::Function) -> StructType {
-    values::remap_type(context, &VarType::of_function(&function))
+    values::remap_type(context, &VarType::of_function(function))
 }
 
 macro_rules! map_functions {
@@ -201,7 +202,7 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
             .ptr_type(AddressSpace::Generic)
             .into()];
 
-        let mir_return_type = VarType::of_function(&function);
+        let mir_return_type = VarType::of_function(function);
         let pass_return_by_val = values::pass_type_by_val(&mir_return_type);
         if !pass_return_by_val {
             arg_types.push(
@@ -252,7 +253,7 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
             },
         )
     });
-    if !values::pass_type_by_val(&VarType::of_function(&function)) {
+    if !values::pass_type_by_val(&VarType::of_function(function)) {
         func.add_param_attribute(
             1,
             module.get_context().get_enum_attr(AttrKind::StructRet, 1),
@@ -288,7 +289,7 @@ fn build_update_func(
     build_context_function(module, func, target, &|ctx: BuilderContext| {
         let mut params_iter = ctx.func.params();
         let data_ptr = params_iter.next().unwrap().into_pointer_value();
-        let return_type = VarType::of_function(&function);
+        let return_type = VarType::of_function(function);
         let pass_return_by_val = values::pass_type_by_val(&return_type);
 
         let (param_offset_count, return_ptr) = if pass_return_by_val {
@@ -366,7 +367,7 @@ pub fn build_call(
     function: block::Function,
     data_ptr: PointerValue,
     args: Vec<PointerValue>,
-    varargs: Vec<PointerValue>,
+    varargs: &[PointerValue],
     out_val: PointerValue,
 ) {
     let func = get_update_func(ctx.module, function);
@@ -384,7 +385,7 @@ pub fn build_call(
             .enumerate()
             .map(|(index, (ptr, param_type))| -> BasicValueEnum {
                 if values::pass_type_by_val(&param_type.value_type) {
-                    ctx.b.build_load(&ptr, &format!("param.{}", index)).into()
+                    ctx.b.build_load(&ptr, &format!("param.{}", index))
                 } else {
                     ptr.into()
                 }

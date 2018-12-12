@@ -122,10 +122,7 @@ pub fn build_node_layout(
             );
 
             let new_pointer_sources = map_pointer_sources(
-                surface_layout
-                    .pointer_sources
-                    .iter()
-                    .map(|source| source.clone()),
+                surface_layout.pointer_sources.iter().cloned(),
                 PointerSource::Initialized,
                 |mut indices| {
                     indices.insert(0, 0);
@@ -241,7 +238,7 @@ pub fn build_node_layout(
                 &[
                     &surface_layout
                         .scratch_struct
-                        .array_type(values::ARRAY_CAPACITY as u32),
+                        .array_type(u32::from(values::ARRAY_CAPACITY)),
                     &context.i32_type(),
                 ],
                 false,
@@ -251,7 +248,7 @@ pub fn build_node_layout(
                 &[
                     &surface_layout
                         .pointer_struct
-                        .array_type(values::ARRAY_CAPACITY as u32)
+                        .array_type(u32::from(values::ARRAY_CAPACITY))
                         as &BasicType,
                     &context.struct_type(&source_type_refs, false) as &BasicType,
                     &context.struct_type(&dest_type_refs, false) as &BasicType,
@@ -489,7 +486,7 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
         let new_pointer_source = PointerSource::Aggregate(
             PointerSourceAggregateType::Struct,
             map_pointer_sources(
-                layout.pointer_sources.iter().map(|source| source.clone()),
+                layout.pointer_sources.iter().cloned(),
                 |mut indices| {
                     indices.insert(0, initialized_index);
                     PointerSource::Initialized(indices)
@@ -561,7 +558,7 @@ fn modify_pointer_source(
     }
 }
 
-fn map_pointer_sources<'a>(
+fn map_pointer_sources(
     sources: impl IntoIterator<Item = PointerSource>,
     initialized_modifier: impl Fn(Vec<usize>) -> PointerSource,
     scratch_modifier: impl Fn(Vec<usize>) -> PointerSource,
@@ -586,19 +583,19 @@ fn append_path_to_pointer_source(source: PointerSource, path: &[usize]) -> Point
     modify_pointer_source(
         source,
         &|mut indices| {
-            indices.extend(path.clone());
+            indices.extend(path);
             PointerSource::Initialized(indices)
         },
         &|mut indices| {
-            indices.extend(path.clone());
+            indices.extend(path);
             PointerSource::Scratch(indices)
         },
         &|mut indices| {
-            indices.extend(path.clone());
+            indices.extend(path);
             PointerSource::Shared(indices)
         },
         &|socket_index, mut sub_indices| {
-            sub_indices.extend(path.clone());
+            sub_indices.extend(path);
             PointerSource::Socket(socket_index, sub_indices)
         },
     )

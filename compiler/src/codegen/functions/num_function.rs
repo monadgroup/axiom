@@ -23,11 +23,11 @@ impl Function for ToRadFunction {
         let result_num = NumValue::new(result);
         let original_vec = num_arg.get_vec(func.ctx.b);
         let original_form = num_arg.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &original_form);
+        result_num.set_form(func.ctx.b, original_form);
 
         let mult_const = util::get_vec_spread(func.ctx.context, consts::PI / 180.);
         let new_vec = func.ctx.b.build_float_mul(original_vec, mult_const, "mult");
-        result_num.set_vec(func.ctx.b, &new_vec);
+        result_num.set_vec(func.ctx.b, new_vec);
     }
 }
 
@@ -47,11 +47,11 @@ impl Function for ToDegFunction {
         let result_num = NumValue::new(result);
         let original_vec = num_arg.get_vec(func.ctx.b);
         let original_form = num_arg.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &original_form);
+        result_num.set_form(func.ctx.b, original_form);
 
         let mult_const = util::get_vec_spread(func.ctx.context, 180. / consts::PI);
         let new_vec = func.ctx.b.build_float_mul(original_vec, mult_const, "mult");
-        result_num.set_vec(func.ctx.b, &new_vec);
+        result_num.set_vec(func.ctx.b, new_vec);
     }
 }
 
@@ -76,7 +76,7 @@ impl Function for ClampFunction {
 
         let result_num = NumValue::new(result);
         let result_form = x_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &result_form);
+        result_num.set_form(func.ctx.b, result_form);
 
         let result_vec = x_num.get_vec(func.ctx.b);
         let result_vec = func
@@ -93,7 +93,7 @@ impl Function for ClampFunction {
             .left()
             .unwrap()
             .into_vector_value();
-        result_num.set_vec(func.ctx.b, &result_vec);
+        result_num.set_vec(func.ctx.b, result_vec);
     }
 }
 
@@ -119,7 +119,7 @@ impl Function for PanFunction {
 
         let result_num = NumValue::new(result);
         let result_form = x_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &result_form);
+        result_num.set_form(func.ctx.b, result_form);
 
         let x_vec = x_num.get_vec(func.ctx.b);
         let clamped_pan = pan_num.get_vec(func.ctx.b);
@@ -227,7 +227,7 @@ impl Function for PanFunction {
             .unwrap()
             .into_vector_value();
         let result_vec = func.ctx.b.build_float_mul(x_vec, multiplier_vec, "");
-        result_num.set_vec(func.ctx.b, &result_vec);
+        result_num.set_vec(func.ctx.b, result_vec);
     }
 }
 
@@ -247,7 +247,7 @@ impl Function for CombineFunction {
         let right_num = NumValue::new(args[1]);
         let result_num = NumValue::new(result);
         let result_form = left_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &result_form);
+        result_num.set_form(func.ctx.b, result_form);
 
         let left_vec = left_num.get_vec(func.ctx.b);
         let right_vec = right_num.get_vec(func.ctx.b);
@@ -259,7 +259,7 @@ impl Function for CombineFunction {
             .ctx
             .b
             .build_shuffle_vector(&left_vec, &right_vec, &shuffle_vec, "");
-        result_num.set_vec(func.ctx.b, &shuffled_vec);
+        result_num.set_vec(func.ctx.b, shuffled_vec);
     }
 }
 
@@ -280,7 +280,7 @@ impl Function for MixFunction {
         let mix_num = NumValue::new(args[2]);
         let result_num = NumValue::new(result);
         let result_form = a_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &result_form);
+        result_num.set_form(func.ctx.b, result_form);
 
         let a_vec = a_num.get_vec(func.ctx.b);
         let b_vec = b_num.get_vec(func.ctx.b);
@@ -293,7 +293,7 @@ impl Function for MixFunction {
             a_vec,
             "",
         );
-        result_num.set_vec(func.ctx.b, &result_vec);
+        result_num.set_vec(func.ctx.b, result_vec);
     }
 }
 
@@ -319,7 +319,7 @@ impl Function for SequenceFunction {
         let first_num =
             NumValue::new(varargs.at(func.ctx.context.i32_type().const_int(0, false), func.ctx.b));
         let first_form = first_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &first_form);
+        result_num.set_form(func.ctx.b, first_form);
 
         // ensure the index is within the range (i.e number of varargs)
         let vararg_count = varargs.len(func.ctx.b);
@@ -397,7 +397,7 @@ impl Function for SequenceFunction {
             .ctx
             .b
             .build_shuffle_vector(&left_vec, &right_vec, &shuffle_vec, "");
-        result_num.set_vec(func.ctx.b, &result_vec);
+        result_num.set_vec(func.ctx.b, result_vec);
     }
 }
 
@@ -423,7 +423,7 @@ impl Function for MixdownFunction {
             in_array.get_item_ptr(func.ctx.b, func.ctx.context.i32_type().const_int(0, false)),
         );
         let first_num_form = first_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &first_num_form);
+        result_num.set_form(func.ctx.b, first_num_form);
 
         let loop_check_block = func
             .ctx
@@ -467,7 +467,7 @@ impl Function for MixdownFunction {
             func.ctx
                 .context
                 .i32_type()
-                .const_int(ARRAY_CAPACITY as u64, false),
+                .const_int(u64::from(ARRAY_CAPACITY), false),
             "indexcond",
         );
         func.ctx
@@ -510,6 +510,6 @@ impl Function for MixdownFunction {
             .b
             .build_load(&result_vec, "resultvec")
             .into_vector_value();
-        result_num.set_vec(func.ctx.b, &result_vec);
+        result_num.set_vec(func.ctx.b, result_vec);
     }
 }
