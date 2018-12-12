@@ -288,7 +288,11 @@ void MainWindow::dropEvent(QDropEvent *event) {
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     // cleanup old project state
     if (_project) {
-        _openPanels[_project->rootSurface()]->toggleView(false);
+        auto rootPanel = _openPanels[_project->rootSurface()].get();
+
+        rootPanel->toggleView(false);
+        rootPanel->toggleViewAction()->deleteLater();
+
         removeSurface(_project->rootSurface());
     }
     _project = std::move(project);
