@@ -1,4 +1,4 @@
-use codegen::TargetProperties;
+use crate::codegen::TargetProperties;
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;

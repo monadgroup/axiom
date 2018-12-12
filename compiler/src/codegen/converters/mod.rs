@@ -9,9 +9,9 @@ mod q_converter;
 mod samples_converter;
 mod seconds_converter;
 
-use ast::FormType;
-use codegen::values::NumValue;
-use codegen::{build_context_function, util, BuilderContext, TargetProperties};
+use crate::ast::FormType;
+use crate::codegen::values::NumValue;
+use crate::codegen::{build_context_function, util, BuilderContext, TargetProperties};
 use inkwell::basic_block::BasicBlock;
 use inkwell::builder::Builder;
 use inkwell::context::Context;

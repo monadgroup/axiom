@@ -1,4 +1,4 @@
-use ast::ControlField;
+use crate::ast::ControlField;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]

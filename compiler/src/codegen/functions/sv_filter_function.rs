@@ -1,11 +1,11 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::values::{NumValue, TupleValue};
-use codegen::{globals, math, util};
+use crate::codegen::values::{NumValue, TupleValue};
+use crate::codegen::{globals, math, util};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
-use mir::block;
 use std::f64::consts;
 
 pub struct SvFilterFunction {}
@@ -63,14 +63,16 @@ impl Function for SvFilterFunction {
                                 .build_load(
                                     &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                                     "samplerate",
-                                ).into_vector_value(),
+                                )
+                                .into_vector_value(),
                             "",
                         ),
                         "fparam",
                     )],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value(),
             util::get_vec_spread(func.ctx.context, 2.),
@@ -109,7 +111,8 @@ impl Function for SvFilterFunction {
                         ],
                         "damppow",
                         true,
-                    ).left()
+                    )
+                    .left()
                     .unwrap()
                     .into_vector_value(),
                 "inversedamppow",
@@ -141,7 +144,8 @@ impl Function for SvFilterFunction {
                 ],
                 "maxdamp",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value();
         let damp = func

@@ -1,8 +1,10 @@
 use super::ControlContext;
 use super::{default_copy_getter, default_copy_setter, Control, ControlFieldGenerator};
-use ast::{ControlField, ControlType, FormType, GraphField};
-use codegen::values::NumValue;
-use codegen::{build_context_function, globals, math, util, BuilderContext, TargetProperties};
+use crate::ast::{ControlField, ControlType, FormType, GraphField};
+use crate::codegen::values::NumValue;
+use crate::codegen::{
+    build_context_function, globals, math, util, BuilderContext, TargetProperties,
+};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
@@ -78,7 +80,8 @@ impl GraphControl {
                     ],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             let second_pow = ctx
@@ -91,7 +94,8 @@ impl GraphControl {
                     ],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
 
@@ -119,7 +123,8 @@ impl GraphControl {
                     ],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             let second_pow = ctx
@@ -137,7 +142,8 @@ impl GraphControl {
                     ],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             ctx.b.build_return(Some(
@@ -203,7 +209,8 @@ impl Control for GraphControl {
             .build_load(
                 &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 1, "") },
                 "currentstate",
-            ).into_int_value();
+            )
+            .into_int_value();
         let is_paused_ptr = unsafe {
             control
                 .ctx
@@ -216,7 +223,8 @@ impl Control for GraphControl {
             .build_load(
                 &unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 0, "") },
                 "curvecount",
-            ).into_int_value();
+            )
+            .into_int_value();
 
         let start_vals_array_ptr =
             unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 1, "") };
@@ -236,10 +244,12 @@ impl Control for GraphControl {
                     .build_load(
                         &globals::get_sample_rate(control.ctx.module).as_pointer_value(),
                         "samplerate",
-                    ).into_vector_value(),
+                    )
+                    .into_vector_value(),
                 &control.ctx.context.i64_type().const_int(0, false),
                 "",
-            ).into_float_value();
+            )
+            .into_float_value();
         let samplerate_beats = control.ctx.b.build_float_mul(
             samplerate,
             control.ctx.context.f64_type().const_float(60.),
@@ -255,10 +265,12 @@ impl Control for GraphControl {
                     .build_load(
                         &globals::get_bpm(control.ctx.module).as_pointer_value(),
                         "bpm",
-                    ).into_vector_value(),
+                    )
+                    .into_vector_value(),
                 &control.ctx.context.i64_type().const_int(0, false),
                 "",
-            ).into_float_value();
+            )
+            .into_float_value();
 
         // build a loop to look through all the curves and find the one we're currently in
         let curve_loop_index_ptr = control
@@ -363,7 +375,8 @@ impl Control for GraphControl {
                     )
                 },
                 "curveend.beats",
-            ).into_float_value();
+            )
+            .into_float_value();
 
         // convert the beats into samples
         let curve_end_samples = control.ctx.b.build_float_to_unsigned_int(
@@ -403,7 +416,8 @@ impl Control for GraphControl {
                     )
                 },
                 "curvestate",
-            ).into_int_value();
+            )
+            .into_int_value();
         let last_curve_end_samples = control
             .ctx
             .b
@@ -470,7 +484,8 @@ impl Control for GraphControl {
                     )
                 },
                 "curvemin",
-            ).into_float_value();
+            )
+            .into_float_value();
         let curve_has_duration = control.ctx.b.build_int_compare(
             IntPredicate::NE,
             curve_duration_int,
@@ -517,7 +532,8 @@ impl Control for GraphControl {
                     )
                 },
                 "tension",
-            ).into_float_value();
+            )
+            .into_float_value();
         let curve_function_y = control
             .ctx
             .b
@@ -526,7 +542,8 @@ impl Control for GraphControl {
                 &[&curve_function_x, &current_tension],
                 "curve.y",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_float_value();
         let curve_max_value = control
@@ -544,7 +561,8 @@ impl Control for GraphControl {
                     )
                 },
                 "curvemax",
-            ).into_float_value();
+            )
+            .into_float_value();
 
         // mix between the min and max values to get the output value
         let output_float = control.ctx.b.build_float_add(
@@ -664,7 +682,8 @@ fn state_field_getter(control: &mut ControlContext, out_val: PointerValue) {
         .build_load(
             &unsafe { control.ctx.b.build_struct_gep(&control.data_ptr, 1, "") },
             "",
-        ).into_int_value();
+        )
+        .into_int_value();
     let state_float =
         control
             .ctx
@@ -699,7 +718,8 @@ fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
             &in_vec,
             &control.ctx.context.i32_type().const_int(0, false),
             "",
-        ).into_float_value();
+        )
+        .into_float_value();
     let clamped_left = control
         .ctx
         .b
@@ -722,13 +742,15 @@ fn state_field_setter(control: &mut ControlContext, in_val: PointerValue) {
                         ],
                         "",
                         true,
-                    ).left()
+                    )
+                    .left()
                     .unwrap()
                     .into_float_value(),
             ],
             "",
             true,
-        ).left()
+        )
+        .left()
         .unwrap()
         .into_float_value();
 
@@ -757,7 +779,8 @@ fn paused_field_getter(control: &mut ControlContext, out_val: PointerValue) {
                     .build_struct_gep(&control.data_ptr, 2, "paused.int.ptr")
             },
             "paused.int",
-        ).into_int_value();
+        )
+        .into_int_value();
     let is_paused_float = control.ctx.b.build_unsigned_int_to_float(
         is_paused_int,
         control.ctx.context.f64_type(),
@@ -793,7 +816,8 @@ fn time_field_getter(control: &mut ControlContext, out_val: PointerValue) {
                     .build_struct_gep(&control.data_ptr, 0, "time.int.ptr")
             },
             "time.int",
-        ).into_int_value();
+        )
+        .into_int_value();
     let current_time_float = control.ctx.b.build_unsigned_int_to_float(
         current_time_int,
         control.ctx.context.f64_type(),
@@ -823,7 +847,8 @@ fn time_field_setter(control: &mut ControlContext, in_val: PointerValue) {
             &in_vec,
             &control.ctx.context.i64_type().const_int(0, false),
             "time.float",
-        ).into_float_value();
+        )
+        .into_float_value();
     let clamped_time = control
         .ctx
         .b
@@ -835,7 +860,8 @@ fn time_field_setter(control: &mut ControlContext, in_val: PointerValue) {
             ],
             "",
             true,
-        ).left()
+        )
+        .left()
         .unwrap()
         .into_float_value();
 

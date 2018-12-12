@@ -1,4 +1,4 @@
-use mir::VarType;
+use crate::mir::VarType;
 use std::fmt;
 
 #[derive(Clone, Copy, Debug)]
@@ -36,7 +36,7 @@ macro_rules! define_functions {
             }
 
             pub fn data(&self) -> FunctionData {
-                use mir::VarType::*;
+                use crate::mir::VarType::*;
                 match self {
                     $( Function::$enum_name => $data, )*
                 }

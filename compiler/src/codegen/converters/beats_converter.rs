@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
-use ast::FormType;
-use codegen::{globals, util};
+use crate::ast::FormType;
+use crate::codegen::{globals, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -56,7 +56,8 @@ fn beats_from_samples(
                 .build_load(
                     &globals::get_sample_rate(module).as_pointer_value(),
                     "samplerate",
-                ).into_vector_value(),
+                )
+                .into_vector_value(),
             util::get_vec_spread(context, 60.),
             "",
         ),

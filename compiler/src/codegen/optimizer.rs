@@ -1,4 +1,4 @@
-use codegen::TargetProperties;
+use crate::codegen::TargetProperties;
 use inkwell::module::Module;
 use inkwell::passes::{PassManager, PassManagerBuilder};
 use inkwell::values::FunctionValue;

@@ -1,5 +1,5 @@
 use super::{default_copy_getter, default_copy_setter, Control, ControlFieldGenerator};
-use ast::{AudioField, ControlField, ControlType};
+use crate::ast::{AudioField, ControlField, ControlType};
 
 pub struct AudioControl;
 impl Control for AudioControl {

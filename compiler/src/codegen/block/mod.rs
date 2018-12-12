@@ -12,15 +12,15 @@ mod gen_store_control;
 mod gen_unary_op;
 
 use self::block_context::BlockContext;
-use codegen::{
+use crate::codegen::{
     build_context_function, controls, functions, util, BuilderContext, LifecycleFunc, ObjectCache,
 };
+use crate::mir::block::Statement;
+use crate::mir::{Block, BlockRef};
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::AddressSpace;
-use mir::block::Statement;
-use mir::{Block, BlockRef};
 
 use self::gen_call_func::gen_call_func_statement;
 use self::gen_combine::gen_combine_statement;

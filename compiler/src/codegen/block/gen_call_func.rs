@@ -1,7 +1,7 @@
 use super::BlockContext;
-use codegen::functions;
+use crate::codegen::functions;
+use crate::mir::block::Function;
 use inkwell::values::PointerValue;
-use mir::block::Function;
 
 pub fn gen_call_func_statement(
     index: usize,

@@ -1,4 +1,4 @@
-use codegen::intrinsics;
+use crate::codegen::intrinsics;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -123,11 +123,13 @@ pub fn splat_vector(builder: &Builder, val: FloatValue, name: &str) -> VectorVal
                     &val,
                     &context.i32_type().const_int(0, false),
                     name,
-                ).into_vector_value(),
+                )
+                .into_vector_value(),
             &val,
             &context.i32_type().const_int(1, false),
             name,
-        ).into_vector_value()
+        )
+        .into_vector_value()
 }
 
 pub fn copy_ptr(builder: &mut Builder, module: &Module, src: PointerValue, dest: PointerValue) {

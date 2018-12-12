@@ -1,14 +1,14 @@
 use super::dependency_graph::DependencyGraph;
 use super::jit::{Jit, JitKey};
 use super::Transaction;
-use codegen::{
+use crate::codegen::{
     block, controls, converters, data_analyzer, editor, functions, globals, intrinsics, math, root,
     surface, values, ObjectCache, Optimizer, TargetProperties,
 };
+use crate::mir::{Block, BlockRef, IdAllocator, InternalNodeRef, Root, Surface, SurfaceRef};
+use crate::pass;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use mir::{Block, BlockRef, IdAllocator, InternalNodeRef, Root, Surface, SurfaceRef};
-use pass;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::iter;
@@ -262,10 +262,12 @@ impl Runtime {
                 let new_surfaces = pass::group_extracted(&mut surface, self);
                 pass::remove_dead_groups(&mut surface);
                 new_surfaces.into_iter().chain(iter::once(surface))
-            }).map(|mut surface| {
+            })
+            .map(|mut surface| {
                 pass::order_nodes(&mut surface);
                 surface
-            }).collect()
+            })
+            .collect()
     }
 
     fn patch_in_blocks(&mut self, blocks: Vec<Block>) {

@@ -1,11 +1,11 @@
-use codegen::TargetProperties;
-use codegen::{controls, functions, values, ObjectCache};
+use crate::codegen::TargetProperties;
+use crate::codegen::{controls, functions, values, ObjectCache};
+use crate::mir::block::{Function, Statement};
+use crate::mir::{Block, Node, NodeData, Surface, ValueGroup, ValueGroupSource};
 use inkwell::context::Context;
 use inkwell::types::{BasicType, BasicTypeEnum, StructType};
 use inkwell::values::{BasicValue, StructValue};
 use inkwell::AddressSpace;
-use mir::block::{Function, Statement};
-use mir::{Block, Node, NodeData, Surface, ValueGroup, ValueGroupSource};
 use std::collections::HashMap;
 use std::{fmt, iter};
 
@@ -167,9 +167,11 @@ pub fn build_node_layout(
                                 source_sockets,
                                 dest_sockets,
                             )
-                        }).collect();
+                        })
+                        .collect();
                     PointerSource::Aggregate(PointerSourceAggregateType::Struct, sub_sources)
-                }).collect();
+                })
+                .collect();
 
             // The extract group also needs access to the source and destination arrays.
             // Note: we put the underlying surface's pointers first, as this enables value
@@ -215,7 +217,8 @@ pub fn build_node_layout(
                     let socket_group = node.sockets[*socket].group_id;
                     values::remap_type(context, &parent_groups[socket_group].value_type)
                         .ptr_type(AddressSpace::Generic)
-                }).collect();
+                })
+                .collect();
             let source_type_refs: Vec<_> = source_socket_types
                 .iter()
                 .map(|ptr_type| ptr_type as &BasicType)
@@ -227,7 +230,8 @@ pub fn build_node_layout(
                     let socket_group = node.sockets[*socket].group_id;
                     values::remap_type(context, &parent_groups[socket_group].value_type)
                         .ptr_type(AddressSpace::Generic)
-                }).collect();
+                })
+                .collect();
             let dest_type_refs: Vec<_> = dest_socket_types
                 .iter()
                 .map(|ptr_type| ptr_type as &BasicType)
@@ -368,7 +372,8 @@ pub fn build_block_layout(
                             &ui_type.ptr_type(AddressSpace::Generic),
                         ],
                         false,
-                    ).into(),
+                    )
+                    .into(),
             );
         } else {
             pointer_sources.push(PointerSource::Aggregate(
@@ -389,7 +394,8 @@ pub fn build_block_layout(
                             &shared_type.ptr_type(AddressSpace::Generic),
                         ],
                         false,
-                    ).into(),
+                    )
+                    .into(),
             );
         }
     }
@@ -459,7 +465,8 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
                     PointerSource::Initialized(vec![initialized_index])
                 }
             }
-        }).collect();
+        })
+        .collect();
 
     let node_scratch_offset = scratch_types.len();
     let node_initializer_offset = initialized_values.len();
@@ -571,7 +578,8 @@ fn map_pointer_sources<'a>(
                 &shared_modifier,
                 &socket_modifier,
             )
-        }).collect()
+        })
+        .collect()
 }
 
 fn append_path_to_pointer_source(source: PointerSource, path: &[usize]) -> PointerSource {

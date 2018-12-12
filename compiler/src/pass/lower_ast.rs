@@ -1,9 +1,9 @@
-use ast;
-use mir;
+use crate::ast;
+use crate::mir;
+use crate::util::constant_propagate;
+use crate::{CompileError, CompileResult};
 use std::collections::HashMap;
 use std::f64::consts;
-use util::constant_propagate;
-use {CompileError, CompileResult};
 
 // lowers an AST into a Block MIR object
 pub fn lower_ast(id: mir::BlockId, block: &ast::Block) -> CompileResult<mir::Block> {
@@ -224,7 +224,8 @@ impl<'a> AstLower<'a> {
                     extract_index.and_then(|index| {
                         self.lower_cast(pos, index, expr.target.form_type, expr.is_convert)
                     })
-                }).collect();
+                })
+                .collect();
 
             match converted_indices {
                 Ok(indices) => Ok(self.add_combine_op(indices)),
@@ -326,7 +327,8 @@ impl<'a> AstLower<'a> {
                     let left_index = if index >= left_items.len() { 0 } else { index };
                     let right_index = if index >= right_items.len() { 0 } else { index };
                     self.add_num_math_op(pos, op, left_items[left_index], right_items[right_index])
-                }).collect()
+                })
+                .collect()
         }
     }
 

@@ -4,9 +4,9 @@ mod token_stream;
 pub use self::token::{Token, TokenType};
 pub use self::token_stream::{get_token_stream, TokenStream};
 
-use ast::*;
+use crate::ast::*;
+use crate::{CompileError, CompileResult};
 use regex::Regex;
-use {CompileError, CompileResult};
 
 const PRECEDENCE_CASTING: i32 = 1;
 const PRECEDENCE_UNARY: i32 = 2;

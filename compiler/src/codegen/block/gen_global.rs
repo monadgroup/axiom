@@ -1,9 +1,9 @@
 use super::BlockContext;
-use ast::FormType;
-use codegen::globals;
-use codegen::values::NumValue;
+use crate::ast::FormType;
+use crate::codegen::globals;
+use crate::codegen::values::NumValue;
+use crate::mir::block::Global;
 use inkwell::values::PointerValue;
-use mir::block::Global;
 
 pub fn gen_global_statement(global: &Global, node: &mut BlockContext) -> PointerValue {
     let num_val = NumValue::new_undef(node.ctx.context, node.ctx.allocb);

@@ -1,5 +1,5 @@
 use super::{default_copy_getter, default_copy_setter, Control, ControlFieldGenerator};
-use ast::{ControlField, ControlType, ScopeField};
+use crate::ast::{ControlField, ControlType, ScopeField};
 
 pub struct ScopeControl;
 impl Control for ScopeControl {

@@ -1,12 +1,12 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
-use codegen::values::NumValue;
-use codegen::{globals, math, util, BuilderContext};
+use crate::ast::FormType;
+use crate::codegen::values::NumValue;
+use crate::codegen::{globals, math, util, BuilderContext};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::{FloatPredicate, IntPredicate};
-use mir::block;
 
 pub struct NextFunction {}
 impl Function for NextFunction {
@@ -91,14 +91,16 @@ impl Function for AmplitudeFunction {
                                 .build_load(
                                     &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                                     "samplerate",
-                                ).into_vector_value(),
+                                )
+                                .into_vector_value(),
                             "",
                         ),
                         "",
                     )],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value(),
             "",

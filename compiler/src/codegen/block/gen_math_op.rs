@@ -1,7 +1,7 @@
 use super::BlockContext;
-use ast::OperatorType;
-use codegen::math;
-use codegen::values::NumValue;
+use crate::ast::OperatorType;
+use crate::codegen::math;
+use crate::codegen::values::NumValue;
 use inkwell::types::IntType;
 use inkwell::values::{PointerValue, VectorValue};
 use inkwell::FloatPredicate;

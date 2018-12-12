@@ -1,4 +1,4 @@
-use mir;
+use crate::mir;
 
 pub fn remove_dead_code(block: &mut mir::Block) {
     DeadCodeRemover::new(block).remove_dead_code()

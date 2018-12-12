@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
-use ast::FormType;
-use codegen::{math, util};
+use crate::ast::FormType;
+use crate::codegen::{math, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -45,7 +45,8 @@ fn db_from_control(
                 &[&builder.build_float_mul(val, util::get_vec_spread(context, 2.), "")],
                 "",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value(),
         util::get_vec_spread(context, 20.),

@@ -1,5 +1,5 @@
 use super::BlockContext;
-use codegen::values::TupleValue;
+use crate::codegen::values::TupleValue;
 use inkwell::values::PointerValue;
 
 pub fn gen_combine_statement(indexes: &[usize], node: &mut BlockContext) -> PointerValue {

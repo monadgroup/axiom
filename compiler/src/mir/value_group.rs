@@ -1,4 +1,4 @@
-use mir::{ConstantValue, VarType};
+use crate::mir::{ConstantValue, VarType};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ValueGroupSource {

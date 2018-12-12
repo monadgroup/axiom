@@ -8,7 +8,7 @@ pub use self::dependency_graph::DependencyGraph;
 pub use self::jit::Jit;
 pub use self::runtime::Runtime;
 
-use mir::{Block, BlockRef, Root, Surface, SurfaceRef};
+use crate::mir::{Block, BlockRef, Root, Surface, SurfaceRef};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 

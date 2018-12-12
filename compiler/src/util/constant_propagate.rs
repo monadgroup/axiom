@@ -1,9 +1,9 @@
-use ast::{FormType, OperatorType, SourceRange, UnaryOperation};
+use crate::ast::{FormType, OperatorType, SourceRange, UnaryOperation};
+use crate::mir::block::Function;
+use crate::mir::{ConstantNum, ConstantTuple, ConstantValue, VarType};
+use crate::{CompileError, CompileResult};
 use divrem::RemEuclid;
-use mir::block::Function;
-use mir::{ConstantNum, ConstantTuple, ConstantValue, VarType};
 use std::f64::consts;
-use {CompileError, CompileResult};
 
 pub fn const_cast(constant: &ConstantNum, target_form: FormType) -> ConstantNum {
     constant.with_form(target_form)

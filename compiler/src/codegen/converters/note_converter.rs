@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
-use ast::FormType;
-use codegen::{math, util};
+use crate::ast::FormType;
+use crate::codegen::{math, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -38,7 +38,8 @@ fn note_from_frequency(
                     &[&builder.build_float_div(val, util::get_vec_spread(context, 440.), "")],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value(),
             "",

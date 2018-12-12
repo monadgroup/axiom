@@ -1,4 +1,4 @@
-use ast::ControlType;
+use crate::ast::ControlType;
 
 #[derive(Debug, Clone)]
 pub struct Control {

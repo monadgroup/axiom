@@ -1,4 +1,4 @@
-use mir::{BlockRef, NodeData, Surface, SurfaceRef};
+use crate::mir::{BlockRef, NodeData, Surface, SurfaceRef};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::iter::FromIterator;
 use std::mem;

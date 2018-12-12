@@ -1,6 +1,6 @@
 use super::BlockContext;
-use ast::ControlField;
-use codegen::controls;
+use crate::ast::ControlField;
+use crate::codegen::controls;
 use inkwell::values::PointerValue;
 
 pub fn gen_load_control_statement(

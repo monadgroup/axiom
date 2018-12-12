@@ -1,10 +1,10 @@
-use ast::{
+use crate::ast::{
     AudioExtractField, AudioField, ControlField, ControlType, GraphField, MidiExtractField,
     MidiField, RollField, ScopeField,
 };
-use mir::block::{Function, Statement};
-use mir::Block;
-use mir::ConstantValue;
+use crate::mir::block::{Function, Statement};
+use crate::mir::Block;
+use crate::mir::ConstantValue;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]

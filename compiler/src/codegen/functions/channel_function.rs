@@ -1,9 +1,9 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::math;
-use codegen::values::{MidiValue, NumValue};
+use crate::codegen::math;
+use crate::codegen::values::{MidiValue, NumValue};
+use crate::mir::block;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
-use mir::block;
 
 pub struct ChannelFunction {}
 impl Function for ChannelFunction {
@@ -50,14 +50,16 @@ impl Function for ChannelFunction {
                             ],
                             "",
                             true,
-                        ).left()
+                        )
+                        .left()
                         .unwrap()
                         .into_float_value(),
                     &func.ctx.context.f64_type().const_float(16.),
                 ],
                 "",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_float_value();
         let channel_int =

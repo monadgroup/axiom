@@ -1,6 +1,6 @@
-use ast::{ControlType, SourceRange, UNDEF_SOURCE_RANGE};
-use mir::{block::FunctionArgRange, VarType};
-use parser::{Token, TokenType};
+use crate::ast::{ControlType, SourceRange, UNDEF_SOURCE_RANGE};
+use crate::mir::{block::FunctionArgRange, VarType};
+use crate::parser::{Token, TokenType};
 use std::fmt;
 
 #[derive(Debug, Clone)]

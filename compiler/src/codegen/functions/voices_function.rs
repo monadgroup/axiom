@@ -1,11 +1,11 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::util;
-use codegen::values::{ArrayValue, MidiValue, NumValue, ARRAY_CAPACITY};
+use crate::codegen::util;
+use crate::codegen::values::{ArrayValue, MidiValue, NumValue, ARRAY_CAPACITY};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::{FloatPredicate, IntPredicate};
-use mir::block;
 
 pub struct VoicesFunction {}
 impl Function for VoicesFunction {
@@ -168,7 +168,8 @@ impl Function for VoicesFunction {
                         &init_last_active_vec,
                         &func.ctx.context.i32_type().const_int(0, false),
                         "initactiveval",
-                    ).into_float_value(),
+                    )
+                    .into_float_value(),
                 func.ctx.context.f64_type().const_float(0.),
                 "activecond",
             );

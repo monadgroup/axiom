@@ -1,12 +1,12 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
-use codegen::util;
-use codegen::values::{MidiValue, NumValue, TupleValue};
+use crate::ast::FormType;
+use crate::codegen::util;
+use crate::codegen::values::{MidiValue, NumValue, TupleValue};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
-use mir::block;
 
 pub struct NoteFunction {}
 impl Function for NoteFunction {

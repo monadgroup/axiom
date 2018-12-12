@@ -1,12 +1,12 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
-use codegen::values::NumValue;
-use codegen::{globals, math, util, BuilderContext};
+use crate::ast::FormType;
+use crate::codegen::values::NumValue;
+use crate::codegen::{globals, math, util, BuilderContext};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::{PointerValue, VectorValue};
 use inkwell::FloatPredicate;
-use mir::block;
 use std::f64::consts;
 
 fn gen_periodic_real_args(
@@ -59,7 +59,8 @@ fn gen_periodic_call(
         .build_load(
             &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
             "samplerate",
-        ).into_vector_value();
+        )
+        .into_vector_value();
     let phase_offset = func
         .ctx
         .b
@@ -87,7 +88,8 @@ fn gen_periodic_call(
                 .build_float_add(phase_offset_vec, phase, "inputphase")],
             "inputphasemod",
             true,
-        ).left()
+        )
+        .left()
         .unwrap()
         .into_vector_value();
 
@@ -162,7 +164,8 @@ fn sqr_next_value(
             util::get_vec_spread(func.ctx.context, 1.),
             util::get_vec_spread(func.ctx.context, -1.),
             "result",
-        ).into_vector_value()
+        )
+        .into_vector_value()
 }
 define_periodic_func!(SqrOscFunction: block::Function::SqrOsc, true => sqr_next_value);
 
@@ -207,7 +210,8 @@ fn tri_next_value(
                 )],
                 "normalized",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value(),
         "result",

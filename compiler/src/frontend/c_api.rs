@@ -1,13 +1,13 @@
 use super::{value_reader, Runtime, Transaction};
-use ast;
-use codegen;
+use crate::ast;
+use crate::codegen;
+use crate::mir;
+use crate::parser;
+use crate::pass;
+use crate::CompileError;
 use inkwell::{orc, targets};
-use mir;
-use parser;
-use pass;
 use std;
 use std::os::raw::c_void;
-use CompileError;
 
 #[no_mangle]
 pub extern "C" fn maxim_initialize() {
@@ -36,7 +36,7 @@ pub unsafe extern "C" fn maxim_destroy_runtime(runtime: *mut Runtime) {
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
-    use mir::IdAllocator;
+    use crate::mir::IdAllocator;
     (*runtime).alloc_id()
 }
 
@@ -183,7 +183,8 @@ pub unsafe extern "C" fn maxim_vartype_tuple(
         .map(|index| {
             let boxed = Box::from_raw(*subtypes.offset(index as isize));
             *boxed
-        }).collect();
+        })
+        .collect();
     Box::into_raw(Box::new(mir::VarType::Tuple(subtypes_vec)))
 }
 
@@ -232,7 +233,8 @@ pub unsafe extern "C" fn maxim_constant_tuple(
         .map(|index| {
             let boxed = Box::from_raw(*items.offset(index as isize));
             *boxed
-        }).collect();
+        })
+        .collect();
     Box::into_raw(Box::new(mir::ConstantValue::Tuple(mir::ConstantTuple {
         items: items_vec,
     })))

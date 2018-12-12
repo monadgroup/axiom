@@ -1,9 +1,9 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
-use codegen::math;
-use codegen::values::NumValue;
+use crate::ast::FormType;
+use crate::codegen::math;
+use crate::codegen::values::NumValue;
+use crate::mir::block;
 use inkwell::values::{BasicValue, FunctionValue, PointerValue};
-use mir::block;
 
 fn gen_intrinsic_call(
     func: &mut FunctionContext,

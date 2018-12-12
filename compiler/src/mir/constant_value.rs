@@ -1,4 +1,4 @@
-use ast::FormType;
+use crate::ast::FormType;
 use ordered_float::OrderedFloat;
 use std::hash;
 

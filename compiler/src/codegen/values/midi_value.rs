@@ -1,5 +1,5 @@
 use super::MidiEventValue;
-use codegen::{build_context_function, util, BuilderContext, TargetProperties};
+use crate::codegen::{build_context_function, util, BuilderContext, TargetProperties};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};

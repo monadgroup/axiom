@@ -1,4 +1,4 @@
-use codegen::{build_context_function, globals, util, BuilderContext, TargetProperties};
+use crate::codegen::{build_context_function, globals, util, BuilderContext, TargetProperties};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::{BasicType, VectorType};
@@ -109,7 +109,8 @@ fn build_rand_v2f64(module: &Module, target: &TargetProperties) {
                     ],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             ctx.b.build_store(&seed_ptr, &new_seed);
@@ -122,7 +123,8 @@ fn build_rand_v2f64(module: &Module, target: &TargetProperties) {
                             &new_seed,
                             &ctx.context.i32_type().vec_type(4),
                             "",
-                        ).into_vector_value(),
+                        )
+                        .into_vector_value(),
                     &ctx.context.i32_type().vec_type(4).get_undef(),
                     &VectorType::const_vector(&[
                         &ctx.context.i32_type().const_int(2, false),
@@ -169,7 +171,8 @@ fn build_sin_v2f64(module: &Module, target: &TargetProperties) {
                 &[&x_vec, &util::get_vec_spread(ctx.context, consts::PI * 2.)],
                 "x.ranged",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value();
 
@@ -189,7 +192,8 @@ fn build_sin_v2f64(module: &Module, target: &TargetProperties) {
                 ),
                 ranged_x,
                 "x.wrapped",
-            ).into_vector_value();
+            )
+            .into_vector_value();
 
         let y_val = ctx.b.build_float_add(
             ctx.b.build_float_mul(
@@ -419,7 +423,8 @@ fn build_floor_v2f64(module: &Module, target: &TargetProperties) {
                     ],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             ctx.b.build_return(Some(&res));
@@ -455,7 +460,8 @@ fn build_ceil_v2f64(module: &Module, target: &TargetProperties) {
                     ],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             ctx.b.build_return(Some(&res));
@@ -491,7 +497,8 @@ fn build_round_v2f64(module: &Module, target: &TargetProperties) {
                     ],
                     "",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             ctx.b.build_return(Some(&res));
@@ -550,7 +557,8 @@ fn build_mod_v2f64(module: &Module, target: &TargetProperties) {
                         &[&ctx.b.build_float_div(x_vec, m_vec, "")],
                         "",
                         true,
-                    ).left()
+                    )
+                    .left()
                     .unwrap()
                     .into_vector_value(),
                 m_vec,
@@ -636,7 +644,8 @@ fn build_pow_v2f64(module: &Module, target: &TargetProperties) {
                 util::get_vec_spread(ctx.context, 1.),
                 x_vec,
                 "normx",
-            ).into_vector_value();
+            )
+            .into_vector_value();
         let r = ctx
             .b
             .build_call(
@@ -652,7 +661,8 @@ fn build_pow_v2f64(module: &Module, target: &TargetProperties) {
                 )],
                 "r",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value();
 
@@ -670,7 +680,8 @@ fn build_pow_v2f64(module: &Module, target: &TargetProperties) {
                 &[&abs_y, &util::get_vec_spread(ctx.context, 2.)],
                 "mody",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value();
         let sign = ctx.b.build_float_add(
@@ -697,7 +708,8 @@ fn build_pow_v2f64(module: &Module, target: &TargetProperties) {
                 util::get_vec_spread(ctx.context, 0.),
                 norm_r,
                 "res",
-            ).into_vector_value();
+            )
+            .into_vector_value();
         ctx.b.build_return(Some(&res));
     })
 }
@@ -832,7 +844,8 @@ fn build_exp2_v2f64(module: &Module, target: &TargetProperties) {
                         &k,
                         &ctx.context.f64_type().vec_type(2),
                         "k.float",
-                    ).into_vector_value(),
+                    )
+                    .into_vector_value(),
                 "",
             );
 
@@ -939,7 +952,8 @@ fn build_log2_v2f64(module: &Module, target: &TargetProperties) {
                     &x_vec,
                     &ctx.context.i64_type().vec_type(2),
                     "x.int",
-                ).into_vector_value();
+                )
+                .into_vector_value();
 
             let min_exp = 1023;
             let exp_o = min_exp << 52;
@@ -964,7 +978,8 @@ fn build_log2_v2f64(module: &Module, target: &TargetProperties) {
                         ),
                         &ctx.context.i32_type().vec_type(4),
                         "",
-                    ).into_vector_value(),
+                    )
+                    .into_vector_value(),
                 &ctx.context.i32_type().vec_type(4).get_undef(),
                 &VectorType::const_vector(&[
                     &ctx.context.i32_type().const_int(0, false),
@@ -986,7 +1001,8 @@ fn build_log2_v2f64(module: &Module, target: &TargetProperties) {
                     &p_int,
                     &ctx.context.f64_type().vec_type(2),
                     "p.float",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let y = ctx.b.build_float_div(
                 ctx.b
                     .build_float_sub(p_float, util::get_vec_spread(ctx.context, 1.), ""),
@@ -1093,7 +1109,8 @@ fn build_atan2k_v2f64(module: &Module, target: &TargetProperties) {
                     util::get_vec_spread(ctx.context, -2.),
                     util::get_vec_spread(ctx.context, 0.),
                     "q",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let x_vec = ctx
                 .b
                 .build_call(&abs_intrinsic, &[&x_vec], "x.abs", true)
@@ -1120,7 +1137,8 @@ fn build_atan2k_v2f64(module: &Module, target: &TargetProperties) {
                         util::get_vec_spread(ctx.context, 1.),
                         util::get_vec_spread(ctx.context, 0.),
                         "",
-                    ).into_vector_value(),
+                    )
+                    .into_vector_value(),
                 "q",
             );
 
@@ -1204,7 +1222,8 @@ fn build_asin_v2f64(module: &Module, target: &TargetProperties) {
                     )],
                     "x.atan",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             let atan_val = ctx
@@ -1228,7 +1247,8 @@ fn build_asin_v2f64(module: &Module, target: &TargetProperties) {
                     util::get_vec_spread(ctx.context, -1.),
                     util::get_vec_spread(ctx.context, 1.),
                     "atan.mul",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let res = ctx.b.build_float_mul(atan_val, atan_mul, "");
             ctx.b.build_return(Some(&res));
         },
@@ -1277,7 +1297,8 @@ fn build_acos_v2f64(module: &Module, target: &TargetProperties) {
                     )],
                     "x.atan",
                     true,
-                ).left()
+                )
+                .left()
                 .unwrap()
                 .into_vector_value();
             let atan_val = ctx
@@ -1301,7 +1322,8 @@ fn build_acos_v2f64(module: &Module, target: &TargetProperties) {
                     util::get_vec_spread(ctx.context, -1.),
                     util::get_vec_spread(ctx.context, 1.),
                     "atan.mul",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let res = ctx.b.build_float_mul(atan_val, atan_mul, "");
             let res = ctx.b.build_float_add(
                 res,
@@ -1311,7 +1333,8 @@ fn build_acos_v2f64(module: &Module, target: &TargetProperties) {
                         util::get_vec_spread(ctx.context, consts::PI),
                         util::get_vec_spread(ctx.context, 0.),
                         "",
-                    ).into_vector_value(),
+                    )
+                    .into_vector_value(),
                 "",
             );
             ctx.b.build_return(Some(&res));
@@ -1361,7 +1384,8 @@ fn build_atan_v2f64(module: &Module, target: &TargetProperties) {
                         .build_float_div(util::get_vec_spread(ctx.context, 1.), s, ""),
                     s,
                     "",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let t = ctx.b.build_float_mul(s, s, "");
 
             let mad = |r: VectorValue, exp: f64| {
@@ -1398,7 +1422,8 @@ fn build_atan_v2f64(module: &Module, target: &TargetProperties) {
                     ),
                     t,
                     "",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let res = ctx
                 .b
                 .build_call(&copysign_intrinsic, &[&t, &x_vec], "", true)
@@ -1462,7 +1487,8 @@ fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
                     util::get_vec_spread(ctx.context, -1.),
                     util::get_vec_spread(ctx.context, 1.),
                     "r.mult",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let r = ctx.b.build_float_mul(r, r_mult, "r");
 
             // note: we ignore the case where X or Y are infinite
@@ -1486,7 +1512,8 @@ fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
                     util::get_vec_spread(ctx.context, consts::FRAC_PI_2),
                     r,
                     "r",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let r = ctx
                 .b
                 .build_select(
@@ -1497,10 +1524,12 @@ fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
                             util::get_vec_spread(ctx.context, consts::PI),
                             util::get_vec_spread(ctx.context, 0.),
                             "",
-                        ).into_vector_value(),
+                        )
+                        .into_vector_value(),
                     r,
                     "",
-                ).into_vector_value();
+                )
+                .into_vector_value();
 
             // multiply r by -1 if y < 0
             let y_is_negative = ctx.b.build_float_compare(
@@ -1516,7 +1545,8 @@ fn build_atan2_v2f64(module: &Module, target: &TargetProperties) {
                     util::get_vec_spread(ctx.context, -1.),
                     util::get_vec_spread(ctx.context, 1.),
                     "r.mult",
-                ).into_vector_value();
+                )
+                .into_vector_value();
             let r = ctx.b.build_float_mul(r, r_mult, "");
 
             ctx.b.build_return(Some(&r));
@@ -1558,7 +1588,8 @@ fn build_sinh_v2f64(module: &Module, target: &TargetProperties) {
                             &[&ctx.b.build_float_neg(&x_vec, "")],
                             "",
                             true,
-                        ).left()
+                        )
+                        .left()
                         .unwrap()
                         .into_vector_value(),
                     "",
@@ -1605,7 +1636,8 @@ fn build_cosh_v2f64(module: &Module, target: &TargetProperties) {
                             &[&ctx.b.build_float_neg(&x_vec, "")],
                             "",
                             true,
-                        ).left()
+                        )
+                        .left()
                         .unwrap()
                         .into_vector_value(),
                     "",

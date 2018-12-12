@@ -1,8 +1,8 @@
-use codegen::util;
+use crate::codegen::util;
+use crate::mir::block::FUNCTION_TABLE;
 use inkwell::module::Module;
 use inkwell::types::{ArrayType, VectorType};
 use inkwell::values::GlobalValue;
-use mir::block::FUNCTION_TABLE;
 
 pub const SAMPLERATE_GLOBAL_NAME: &str = "maxim.samplerate";
 pub const BPM_GLOBAL_NAME: &str = "maxim.bpm";

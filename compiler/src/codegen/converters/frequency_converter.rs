@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
-use ast::FormType;
-use codegen::{globals, math, util};
+use crate::ast::FormType;
+use crate::codegen::{globals, math, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -50,13 +50,15 @@ fn frequency_from_control(
                             &[&val, &util::get_vec_spread(context, 8.)],
                             "",
                             true,
-                        ).left()
+                        )
+                        .left()
                         .unwrap()
                         .into_vector_value(),
                 ],
                 "",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value(),
         util::get_vec_spread(context, 1.),
@@ -84,7 +86,8 @@ fn frequency_from_note(
                 )],
                 "",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value(),
         "",
@@ -102,7 +105,8 @@ fn frequency_from_samples(
             .build_load(
                 &globals::get_sample_rate(module).as_pointer_value(),
                 "samplerate",
-            ).into_vector_value(),
+            )
+            .into_vector_value(),
         val,
         "",
     )

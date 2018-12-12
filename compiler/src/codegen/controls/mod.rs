@@ -16,10 +16,11 @@ pub use self::roll_control::RollControl;
 pub use self::scope_control::ScopeControl;
 
 use self::control_context::{ControlContext, ControlUiContext};
-use ast::{ControlField, ControlType};
-use codegen::{
+use crate::ast::{ControlField, ControlType};
+use crate::codegen::{
     build_context_function, util, values, BuilderContext, LifecycleFunc, TargetProperties,
 };
+use crate::mir::VarType;
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -27,7 +28,6 @@ use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
 use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::AddressSpace;
-use mir::VarType;
 
 pub type ControlFieldGeneratorCb = Fn(&mut ControlContext, PointerValue);
 
@@ -266,7 +266,8 @@ pub fn build_field_get(
                 &[&group_ptr, &data_ptr, &shared_ptr],
                 "field.get",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap();
         builder.build_store(&out_val, &get_val);
     } else {

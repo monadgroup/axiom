@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
-use ast::FormType;
-use codegen::{math, util};
+use crate::ast::FormType;
+use crate::codegen::{math, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -23,7 +23,8 @@ fn amplitude_from_db(
             &[&builder.build_float_div(val, util::get_vec_spread(context, 20.), "")],
             "",
             true,
-        ).left()
+        )
+        .left()
         .unwrap()
         .into_vector_value()
 }

@@ -1,10 +1,10 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::values::{ArrayValue, NumValue, ARRAY_CAPACITY};
-use codegen::{intrinsics, math, util};
+use crate::codegen::values::{ArrayValue, NumValue, ARRAY_CAPACITY};
+use crate::codegen::{intrinsics, math, util};
+use crate::mir::block;
 use inkwell::types::VectorType;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
-use mir::block;
 use std::f64::consts;
 
 pub struct ToRadFunction {}
@@ -131,7 +131,8 @@ impl Function for PanFunction {
                 &[&clamped_pan, &util::get_vec_spread(func.ctx.context, 1.)],
                 "clamped",
                 false,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value();
         let clamped_pan = func
@@ -142,7 +143,8 @@ impl Function for PanFunction {
                 &[&clamped_pan, &util::get_vec_spread(func.ctx.context, -1.)],
                 "clamped",
                 false,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value();
 
@@ -195,7 +197,8 @@ impl Function for PanFunction {
                         ),
                         &left_index,
                         "",
-                    ).into_vector_value(),
+                    )
+                    .into_vector_value(),
                 &func.ctx.b.build_float_add(
                     func.ctx.context.f64_type().const_float(1.),
                     right_pan,
@@ -203,7 +206,8 @@ impl Function for PanFunction {
                 ),
                 &right_index,
                 "",
-            ).into_vector_value();
+            )
+            .into_vector_value();
         let base_vec = func.ctx.b.build_float_mul(base_mul, base_sin, "");
 
         let multiplier_vec = func
@@ -218,7 +222,8 @@ impl Function for PanFunction {
                 )],
                 "",
                 false,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value();
         let result_vec = func.ctx.b.build_float_mul(x_vec, multiplier_vec, "");
@@ -330,7 +335,8 @@ impl Function for SequenceFunction {
                 &vararg_count,
                 &func.ctx.context.i32_type().const_int(0, false),
                 "",
-            ).into_vector_value();
+            )
+            .into_vector_value();
         let vararg_count_vec = func
             .ctx
             .b
@@ -339,7 +345,8 @@ impl Function for SequenceFunction {
                 &vararg_count,
                 &func.ctx.context.i32_type().const_int(1, false),
                 "",
-            ).into_vector_value();
+            )
+            .into_vector_value();
 
         let index_vec = index_num.get_vec(func.ctx.b);
         let index_int_vec = func.ctx.b.build_float_to_signed_int(
@@ -355,7 +362,8 @@ impl Function for SequenceFunction {
                 &[&index_int_vec, &vararg_count_vec],
                 "",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_vector_value();
 
@@ -366,7 +374,8 @@ impl Function for SequenceFunction {
                 &safe_index,
                 &func.ctx.context.i32_type().const_int(0, false),
                 "",
-            ).into_int_value();
+            )
+            .into_int_value();
         let right_index = func
             .ctx
             .b
@@ -374,7 +383,8 @@ impl Function for SequenceFunction {
                 &safe_index,
                 &func.ctx.context.i32_type().const_int(1, false),
                 "",
-            ).into_int_value();
+            )
+            .into_int_value();
 
         let left_vec = NumValue::new(varargs.at(left_index, func.ctx.b)).get_vec(func.ctx.b);
         let right_vec = NumValue::new(varargs.at(right_index, func.ctx.b)).get_vec(func.ctx.b);

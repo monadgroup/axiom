@@ -1,4 +1,4 @@
-use codegen::{build_context_function, util, BuilderContext, TargetProperties};
+use crate::codegen::{build_context_function, util, BuilderContext, TargetProperties};
 use inkwell::module::{Linkage, Module};
 use inkwell::targets::TargetData;
 use inkwell::types::{BasicType, VectorType};
@@ -153,11 +153,13 @@ fn build_eucrem_v2i32(module: &Module, target: &TargetProperties) {
                             &left_rem_val,
                             &left_index,
                             "",
-                        ).into_vector_value(),
+                        )
+                        .into_vector_value(),
                     &right_rem_val,
                     &right_index,
                     "",
-                ).into_vector_value();
+                )
+                .into_vector_value();
 
             let const_zero = VectorType::const_vector(&[
                 &ctx.context.i32_type().const_int(0, false),
@@ -223,7 +225,8 @@ fn build_next_power_i32(module: &Module, target: &TargetProperties) {
                             ],
                             "",
                             false,
-                        ).left()
+                        )
+                        .left()
                         .unwrap()
                         .into_int_value(),
                     "",

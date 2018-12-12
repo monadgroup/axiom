@@ -1,10 +1,10 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
-use codegen::values::{ArrayValue, NumValue, ARRAY_CAPACITY};
-use codegen::{math, util};
+use crate::ast::FormType;
+use crate::codegen::values::{ArrayValue, NumValue, ARRAY_CAPACITY};
+use crate::codegen::{math, util};
+use crate::mir::block;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
-use mir::block;
 
 pub struct IndexedFunction;
 impl Function for IndexedFunction {
@@ -32,7 +32,8 @@ impl Function for IndexedFunction {
                 &input_vec,
                 &func.ctx.context.i64_type().const_int(0, false),
                 "input.left",
-            ).into_float_value();
+            )
+            .into_float_value();
         let input_count_clamped = func
             .ctx
             .b
@@ -50,7 +51,8 @@ impl Function for IndexedFunction {
                             ],
                             "",
                             true,
-                        ).left()
+                        )
+                        .left()
                         .unwrap()
                         .into_float_value(),
                     &func
@@ -61,7 +63,8 @@ impl Function for IndexedFunction {
                 ],
                 "",
                 true,
-            ).left()
+            )
+            .left()
             .unwrap()
             .into_float_value();
 

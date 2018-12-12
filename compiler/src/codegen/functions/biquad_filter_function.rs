@@ -1,13 +1,15 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::values::NumValue;
-use codegen::{build_context_function, globals, math, util, BuilderContext, TargetProperties};
+use crate::codegen::values::NumValue;
+use crate::codegen::{
+    build_context_function, globals, math, util, BuilderContext, TargetProperties,
+};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::{BasicType, StructType};
 use inkwell::values::{FunctionValue, PointerValue, VectorValue};
 use inkwell::AddressSpace;
 use inkwell::FloatPredicate;
-use mir::block;
 use std::f64::consts;
 
 fn get_internal_biquad_func(module: &Module) -> FunctionValue {
@@ -274,7 +276,8 @@ fn gen_biquad_call(
             &[&q_vec, &util::get_vec_spread(func.ctx.context, 0.5)],
             "",
             true,
-        ).left()
+        )
+        .left()
         .unwrap()
         .into_vector_value();
 
@@ -287,7 +290,8 @@ fn gen_biquad_call(
             &[&freq_vec, &util::get_vec_spread(func.ctx.context, 0.01)],
             "",
             true,
-        ).left()
+        )
+        .left()
         .unwrap()
         .into_vector_value();
 
@@ -298,7 +302,8 @@ fn gen_biquad_call(
         .build_load(
             &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
             "samplerate",
-        ).into_vector_value();
+        )
+        .into_vector_value();
     let w0 = func.ctx.b.build_float_mul(
         util::get_vec_spread(func.ctx.context, 2. * consts::PI),
         func.ctx.b.build_float_div(f0, fs, ""),
@@ -393,7 +398,8 @@ fn gen_biquad_call(
             ],
             "resultvec",
             true,
-        ).left()
+        )
+        .left()
         .unwrap()
         .into_vector_value();
     result_num.set_vec(func.ctx.b, &result_vec);
@@ -675,7 +681,8 @@ fn peak_filter_generate_coefficients(
             &[&gain_vec, &util::get_vec_spread(func.ctx.context, 0.001)],
             "",
             true,
-        ).left()
+        )
+        .left()
         .unwrap()
         .into_vector_value();
 

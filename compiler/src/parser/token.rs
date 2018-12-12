@@ -1,4 +1,4 @@
-use ast::SourceRange;
+use crate::ast::SourceRange;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TokenType {

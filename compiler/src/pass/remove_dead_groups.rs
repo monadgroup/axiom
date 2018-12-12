@@ -1,4 +1,4 @@
-use mir;
+use crate::mir;
 use std::collections::HashMap;
 
 /// Remove value groups that don't have any sockets attached to them.

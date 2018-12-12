@@ -1,6 +1,6 @@
-use mir::pool_id::{PoolId, PoolRef};
-use mir::SourceMap;
-use mir::{Node, ValueGroup};
+use crate::mir::pool_id::{PoolId, PoolRef};
+use crate::mir::SourceMap;
+use crate::mir::{Node, ValueGroup};
 
 pub type SurfaceRef = PoolRef;
 pub type SurfaceId = PoolId<Surface>;

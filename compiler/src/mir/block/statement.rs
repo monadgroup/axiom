@@ -1,6 +1,6 @@
-use ast::{ControlField, FormType, OperatorType, UnaryOperation};
-use mir::block::Function;
-use mir::{ConstantNum, ConstantTuple, ConstantValue};
+use crate::ast::{ControlField, FormType, OperatorType, UnaryOperation};
+use crate::mir::block::Function;
+use crate::mir::{ConstantNum, ConstantTuple, ConstantValue};
 
 #[derive(Debug, Clone)]
 pub enum Global {

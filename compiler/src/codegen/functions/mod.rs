@@ -12,7 +12,8 @@ mod vector_intrinsic_function;
 mod vector_shuffle_function;
 mod voices_function;
 
-use codegen::{build_context_function, util, values, BuilderContext, TargetProperties};
+use crate::codegen::{build_context_function, util, values, BuilderContext, TargetProperties};
+use crate::mir::{block, VarType};
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -23,7 +24,6 @@ use inkwell::values::{
     StructValue,
 };
 use inkwell::AddressSpace;
-use mir::{block, VarType};
 use std::fmt;
 
 use self::function_context::FunctionContext;
@@ -197,11 +197,9 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
     let func_name = format!("maxim.function.{}.update", function);
     let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
-        let mut arg_types: Vec<BasicTypeEnum> = vec![
-            get_data_type(&context, function)
-                .ptr_type(AddressSpace::Generic)
-                .into(),
-        ];
+        let mut arg_types: Vec<BasicTypeEnum> = vec![get_data_type(&context, function)
+            .ptr_type(AddressSpace::Generic)
+            .into()];
 
         let mir_return_type = VarType::of_function(&function);
         let pass_return_by_val = values::pass_type_by_val(&mir_return_type);
@@ -310,7 +308,8 @@ fn build_update_func(
                 ctx.func.count_params() as usize
                     - param_offset_count
                     - if func_vararg.is_some() { 1 } else { 0 },
-            ).zip(func_arg_types)
+            )
+            .zip(func_arg_types)
             .enumerate()
             .map(|(index, (val, param_type))| {
                 if values::pass_type_by_val(&param_type.value_type) {
@@ -324,7 +323,8 @@ fn build_update_func(
                 } else {
                     val.into_pointer_value()
                 }
-            }).collect();
+            })
+            .collect();
 
         let vararg = if let Some(vararg_type) = func_vararg {
             Some(VarArgs::new(

@@ -1,5 +1,5 @@
-use codegen::data_analyzer::BlockLayout;
-use codegen::BuilderContext;
+use crate::codegen::data_analyzer::BlockLayout;
+use crate::codegen::BuilderContext;
 use inkwell::values::PointerValue;
 
 pub struct BlockContext<'a> {
@@ -56,7 +56,8 @@ impl<'a> BlockContext<'a> {
                             .build_struct_gep(&base_ptr, 0, "ctx.control.value.ptr")
                     },
                     "ctx.control.value",
-                ).into_pointer_value(),
+                )
+                .into_pointer_value(),
             data: self
                 .ctx
                 .b
@@ -67,7 +68,8 @@ impl<'a> BlockContext<'a> {
                             .build_struct_gep(&base_ptr, 1, "ctx.control.data.ptr")
                     },
                     "ctx.control.data",
-                ).into_pointer_value(),
+                )
+                .into_pointer_value(),
             shared: self
                 .ctx
                 .b
@@ -78,7 +80,8 @@ impl<'a> BlockContext<'a> {
                             .build_struct_gep(&base_ptr, 2, "ctx.control.shared.ptr")
                     },
                     "ctx.control.shared",
-                ).into_pointer_value(),
+                )
+                .into_pointer_value(),
             ui: if include_ui {
                 Some(
                     self.ctx
@@ -90,7 +93,8 @@ impl<'a> BlockContext<'a> {
                                     .build_struct_gep(&base_ptr, 3, "ctx.control.ui.ptr")
                             },
                             "ctx.control.ui",
-                        ).into_pointer_value(),
+                        )
+                        .into_pointer_value(),
                 )
             } else {
                 None
@@ -110,6 +114,7 @@ impl<'a> BlockContext<'a> {
                     )
                 },
                 "ctx.function",
-            ).into_pointer_value()
+            )
+            .into_pointer_value()
     }
 }

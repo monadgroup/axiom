@@ -1,8 +1,8 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::values::NumValue;
+use crate::codegen::values::NumValue;
+use crate::mir::block;
 use inkwell::types::VectorType;
 use inkwell::values::PointerValue;
-use mir::block;
 
 fn gen_shuffle_call(
     func: &mut FunctionContext,
