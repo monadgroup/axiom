@@ -49,8 +49,9 @@ namespace MaximFrontend {
 
     MaximRuntime *maxim_create_runtime(bool includeUi, bool minSize);
     void maxim_destroy_runtime(MaximRuntime *);
-
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
+    void maxim_export_transaction(bool minSize, MaximTransaction *transaction);
+
     void maxim_run_update(MaximRuntimeRef *runtime);
     void maxim_set_bpm(MaximRuntimeRef *runtime, double bpm);
     double maxim_get_bpm(MaximRuntimeRef *runtime);
@@ -72,6 +73,7 @@ namespace MaximFrontend {
     void maxim_destroy_string(const char *);
 
     MaximTransaction *maxim_create_transaction();
+    MaximTransaction *maxim_clone_transaction(MaximTransactionRef *);
     void maxim_destroy_transaction(MaximTransaction *);
     void maxim_print_transaction_to_stdout(MaximTransactionRef *);
 

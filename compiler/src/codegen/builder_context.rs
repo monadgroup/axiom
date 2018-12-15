@@ -62,8 +62,8 @@ pub fn build_context_function(
     function.add_attribute(context.get_enum_attr(AttrKind::NoUnwind, 0));
 
     if target.min_size {
-        function.add_attribute(context.get_enum_attr(AttrKind::MinSize, 0));
-        function.add_attribute(context.get_enum_attr(AttrKind::OptimizeForSize, 0));
+        //function.add_attribute(context.get_enum_attr(AttrKind::MinSize, 0));
+        //function.add_attribute(context.get_enum_attr(AttrKind::OptimizeForSize, 0));
     }
 
     let alloca_block = context.append_basic_block(&function, "alloca");

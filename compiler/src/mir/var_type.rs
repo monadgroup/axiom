@@ -7,7 +7,7 @@ use crate::mir::Block;
 use crate::mir::ConstantValue;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub enum VarType {
     Num,
     Midi,

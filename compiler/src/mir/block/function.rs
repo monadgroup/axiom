@@ -22,7 +22,7 @@ macro_rules! func {
 
 macro_rules! define_functions {
     ($($enum_name:ident = $str_name:tt $data:expr ),*) => (
-        #[derive(Debug, Clone, Copy)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         pub enum Function {
             $( $enum_name, )*
         }

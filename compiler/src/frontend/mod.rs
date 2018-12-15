@@ -1,6 +1,8 @@
 pub mod c_api;
 mod dependency_graph;
+mod exporter;
 mod jit;
+mod mir_optimizer;
 mod runtime;
 pub mod value_reader;
 

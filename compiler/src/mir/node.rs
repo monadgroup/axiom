@@ -1,6 +1,6 @@
 use crate::mir::{BlockRef, SurfaceRef, ValueSocket};
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum NodeData {
     Dummy,
     Custom(BlockRef),
@@ -12,7 +12,7 @@ pub enum NodeData {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Node {
     pub sockets: Vec<ValueSocket>,
     pub data: NodeData,

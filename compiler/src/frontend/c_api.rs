@@ -1,10 +1,5 @@
-use super::{value_reader, Runtime, Transaction};
-use crate::ast;
-use crate::codegen;
-use crate::mir;
-use crate::parser;
-use crate::pass;
-use crate::CompileError;
+use super::{exporter, value_reader, Runtime, Transaction};
+use crate::{ast, codegen, mir, parser, pass, CompileError};
 use inkwell::{orc, targets};
 use std;
 use std::os::raw::c_void;
@@ -38,6 +33,13 @@ pub unsafe extern "C" fn maxim_destroy_runtime(runtime: *mut Runtime) {
 pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
     use crate::mir::IdAllocator;
     (*runtime).alloc_id()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_export_transaction(min_size: bool, transaction: *mut Transaction) {
+    let target = codegen::TargetProperties::new(false, min_size, targets::TargetMachine::select());
+    let owned_transaction = Box::from_raw(transaction);
+    exporter::build_module_from_transaction(&target, *owned_transaction);
 }
 
 #[no_mangle]
@@ -151,6 +153,11 @@ pub unsafe extern "C" fn maxim_get_control_ptrs(
 #[no_mangle]
 pub extern "C" fn maxim_create_transaction() -> *mut Transaction {
     Box::into_raw(Box::new(Transaction::new(None, Vec::new(), Vec::new())))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_clone_transaction(val: *const Transaction) -> *mut Transaction {
+    Box::into_raw(Box::new((*val).clone()))
 }
 
 #[no_mangle]

@@ -295,7 +295,7 @@ pub fn tan_v2f64(module: &Module) -> FunctionValue {
     })
 }
 
-pub fn build_tan_v2f64(module: &Module, target: &TargetProperties) {
+fn build_tan_v2f64(module: &Module, target: &TargetProperties) {
     build_context_function(module, tan_v2f64(module), target, &|ctx: BuilderContext| {
         let sin_intrinsic = sin_v2f64(module);
         let cos_intrinsic = cos_v2f64(module);

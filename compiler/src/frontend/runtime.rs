@@ -1,17 +1,19 @@
 use super::dependency_graph::DependencyGraph;
 use super::jit::{Jit, JitKey};
+use super::mir_optimizer;
 use super::Transaction;
 use crate::codegen::{
-    block, controls, converters, data_analyzer, editor, functions, globals, intrinsics, math, root,
-    surface, values, ObjectCache, Optimizer, TargetProperties,
+    block, data_analyzer, editor, globals, root, runtime_lib, surface, ObjectCache, Optimizer,
+    TargetProperties,
 };
-use crate::mir::{Block, BlockRef, IdAllocator, InternalNodeRef, Root, Surface, SurfaceRef};
-use crate::pass;
+use crate::mir::{
+    Block, BlockRef, IdAllocator, IncrementalIdAllocator, InternalNodeRef, Root, Surface,
+    SurfaceRef,
+};
 use inkwell::context::Context;
 use inkwell::module::Module;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::iter;
 use std::iter::FromIterator;
 use std::mem;
 use std::os::raw::c_void;
@@ -117,10 +119,10 @@ impl RuntimePointers {
 }
 
 pub struct Runtime {
-    next_id: u64,
+    id_allocator: IncrementalIdAllocator,
     context: Context,
     target: TargetProperties,
-    pub optimizer: Optimizer,
+    optimizer: Optimizer,
     root: (Root, RuntimeModule),
     surface_mirs: HashMap<SurfaceRef, Surface>,
     surface_layouts: HashMap<SurfaceRef, data_analyzer::SurfaceLayout>,
@@ -140,7 +142,7 @@ impl Runtime {
     pub fn new(target: TargetProperties) -> Self {
         let optimizer = Optimizer::new(&target);
         let context = Context::create();
-        let root_module = Runtime::create_module(&context, &target, "root");
+        let root_module = target.create_module(&context, "root");
         let jit = Jit::new();
 
         // deploy the library to the JIT
@@ -150,7 +152,7 @@ impl Runtime {
         let library_pointers = LibraryPointers::new(&jit);
 
         Runtime {
-            next_id: 1,
+            id_allocator: IncrementalIdAllocator::new(1),
             context,
             target,
             optimizer,
@@ -170,22 +172,9 @@ impl Runtime {
         }
     }
 
-    fn create_module(context: &Context, target: &TargetProperties, name: &str) -> Module {
-        let module = context.create_module(name);
-        module.set_target(&target.machine.get_triple().to_string_lossy());
-        module.set_data_layout(&target.machine.get_data().get_data_layout());
-        module
-    }
-
     fn codegen_lib(context: &Context, target: &TargetProperties) -> Module {
-        let module = Runtime::create_module(context, target, "lib");
-        controls::build_funcs(&module, target);
-        converters::build_funcs(&module, &target);
-        functions::build_funcs(&module, &target);
-        intrinsics::build_intrinsics(&module, &target);
-        math::build_math_functions(&module, &target);
-        globals::build_globals(&module);
-        values::MidiValue::initialize(&module, &target);
+        let module = target.create_module(context, "lib");
+        runtime_lib::codegen_lib(&module, target);
         editor::build_convert_num_func(&module, &target, CONVERT_NUM_FUNC_NAME);
         module
     }
@@ -250,24 +239,11 @@ impl Runtime {
     }
 
     fn optimize_blocks<'b>(&self, blocks: impl IntoIterator<Item = &'b mut Block>) {
-        for block in blocks.into_iter() {
-            pass::remove_dead_code(block);
-        }
+        mir_optimizer::prepare_blocks(blocks);
     }
 
     fn optimize_surfaces(&mut self, surfaces: impl IntoIterator<Item = Surface>) -> Vec<Surface> {
-        surfaces
-            .into_iter()
-            .flat_map(|mut surface| {
-                let new_surfaces = pass::group_extracted(&mut surface, self);
-                pass::remove_dead_groups(&mut surface);
-                new_surfaces.into_iter().chain(iter::once(surface))
-            })
-            .map(|mut surface| {
-                pass::order_nodes(&mut surface);
-                surface
-            })
-            .collect()
+        mir_optimizer::prepare_surfaces(surfaces, self).collect()
     }
 
     fn patch_in_blocks(&mut self, blocks: Vec<Block>) {
@@ -351,9 +327,8 @@ impl Runtime {
             };
 
             let module = RuntimeModule::new(
-                Runtime::create_module(
+                self.target.create_module(
                     &self.context,
-                    &self.target,
                     &format!("block.{}.{}", block.id.id, block.id.debug_name),
                 ),
                 module_id,
@@ -376,9 +351,8 @@ impl Runtime {
                 };
 
             let module = RuntimeModule::new(
-                Runtime::create_module(
+                self.target.create_module(
                     &self.context,
-                    &self.target,
                     &format!("surface.{}.{}", surface.id.id, surface.id.debug_name),
                 ),
                 module_id,
@@ -390,7 +364,7 @@ impl Runtime {
     }
 
     fn codegen_root(&self, root: &Root) -> Module {
-        let module = Runtime::create_module(&self.context, &self.target, "root");
+        let module = self.target.create_module(&self.context, "root");
         let initialized_global =
             root::build_initialized_global(&module, self, 0, INITIALIZED_GLOBAL_NAME);
         let scratch_global = root::build_scratch_global(&module, self, 0, SCRATCH_GLOBAL_NAME);
@@ -477,6 +451,8 @@ impl Runtime {
             "Deploy took {}s",
             precise_duration_seconds(&deploy_start.elapsed())
         );
+
+        self.print_mir();
 
         // reset the BPM and sample rate
         Runtime::set_vector(self.library_pointers.bpm_ptr, self.bpm);
@@ -594,7 +570,7 @@ impl Runtime {
         println!(">> Begin MIR");
         println!("Blocks >>");
         for block in self.block_mirs.values() {
-            println!("{:#?}", block);
+            println!("{}", block);
         }
         println!("Surfaces >>");
         for surface in self.surface_mirs.values() {
@@ -643,9 +619,7 @@ impl ObjectCache for Runtime {
 
 impl IdAllocator for Runtime {
     fn alloc_id(&mut self) -> u64 {
-        let take_id = self.next_id;
-        self.next_id += 1;
-        take_id
+        self.id_allocator.alloc_id()
     }
 }
 

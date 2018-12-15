@@ -1,14 +1,15 @@
 use crate::ast::{ControlField, FormType, OperatorType, UnaryOperation};
 use crate::mir::block::Function;
 use crate::mir::{ConstantNum, ConstantTuple, ConstantValue};
+use std::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Global {
     SampleRate,
     BPM,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Statement {
     Constant(ConstantValue),
     Global(Global),
@@ -76,6 +77,63 @@ impl Statement {
             | Statement::LoadControl { .. }
             | Statement::CallFunc { .. } => false,
             Statement::StoreControl { .. } => true,
+        }
+    }
+}
+
+impl fmt::Display for Statement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Statement::Constant(value) => value.fmt(f),
+            Statement::Global(global) => write!(f, "Globals::{:?}", global),
+            Statement::NumConvert { target_form, input } => {
+                write!(f, "convert %{} to {:?}", input, target_form)
+            }
+            Statement::NumCast { target_form, input } => {
+                write!(f, "cast %{} to {:?}", input, target_form)
+            }
+            Statement::NumUnaryOp { op, input } => write!(f, "{:?} %{}", op, input),
+            Statement::NumMathOp { op, lhs, rhs } => write!(f, "{:?} %{}, %{}", op, lhs, rhs),
+            Statement::Extract { tuple, index } => write!(f, "extract {} from %{}", index, tuple),
+            Statement::Combine { indexes } => {
+                write!(f, "combine ")?;
+                for (i, index) in indexes.iter().enumerate() {
+                    write!(f, "%{}", index)?;
+                    if i != indexes.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                Ok(())
+            }
+            Statement::CallFunc {
+                function,
+                args,
+                varargs,
+            } => {
+                write!(f, "call {:?} (", function)?;
+                for (i, index) in args.iter().enumerate() {
+                    write!(f, "%{}", index)?;
+                    if i != args.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                if !varargs.is_empty() {
+                    write!(f, " ... ")?;
+                    for (i, index) in varargs.iter().enumerate() {
+                        write!(f, "%{}", index)?;
+                        if i != varargs.len() - 1 {
+                            write!(f, ", ")?;
+                        }
+                    }
+                }
+                write!(f, ")")
+            }
+            Statement::StoreControl {
+                control,
+                field,
+                value,
+            } => write!(f, "store %{} into ${} {}", value, control, field),
+            Statement::LoadControl { control, field } => write!(f, "load ${} {}", control, field),
         }
     }
 }
