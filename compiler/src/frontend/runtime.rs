@@ -452,8 +452,6 @@ impl Runtime {
             precise_duration_seconds(&deploy_start.elapsed())
         );
 
-        self.print_mir();
-
         // reset the BPM and sample rate
         Runtime::set_vector(self.library_pointers.bpm_ptr, self.bpm);
         Runtime::set_vector(self.library_pointers.samplerate_ptr, self.sample_rate);

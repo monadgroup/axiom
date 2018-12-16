@@ -46,6 +46,18 @@ impl ObjectCache for ExportObjectCache<'_, '_, '_> {
     }
 }
 
+fn print_surfaces(surfaces: &HashMap<mir::SurfaceRef, mir::Surface>) {
+    for surface in surfaces.values() {
+        println!("{:#?}", surface);
+    }
+}
+
+fn print_blocks(blocks: &HashMap<mir::BlockRef, mir::Block>) {
+    for block in blocks.values() {
+        println!("{}", block);
+    }
+}
+
 pub fn build_module_from_transaction(target: &TargetProperties, transaction: Transaction) {
     let optimizer = Optimizer::new(target);
     let context = Context::create();
@@ -68,9 +80,34 @@ pub fn build_module_from_transaction(target: &TargetProperties, transaction: Tra
     );
     let mut prepared_blocks = prepare_blocks(transaction.blocks);
 
+    pass::sort_group_sockets(&mut prepared_surfaces);
+
+    println!(
+        ">> Before block dedup, there are {} blocks",
+        prepared_blocks.len()
+    );
     pass::deduplicate_blocks(&mut prepared_blocks, prepared_surfaces.values_mut());
+    println!(
+        ">> After block dedup, there are {} blocks",
+        prepared_blocks.len()
+    );
+    println!(
+        ">> Before surface dedup, there are {} surfaces",
+        prepared_surfaces.len()
+    );
     pass::deduplicate_surfaces(&mut prepared_surfaces);
+    println!(
+        ">> After surface dedup, there are {} surfaces",
+        prepared_surfaces.len()
+    );
     pass::flatten_groups(&mut prepared_surfaces);
+    println!(
+        ">> After flatten groups, there are {} surfaces",
+        prepared_surfaces.len()
+    );
+
+    print_blocks(&prepared_blocks);
+    print_surfaces(&prepared_surfaces);
 
     let block_layouts = build_block_layouts(&context, target, prepared_blocks.values());
     let mut surface_layouts = HashMap::new();
@@ -152,7 +189,7 @@ pub fn build_module_from_transaction(target: &TargetProperties, transaction: Tra
         .unwrap();
 }
 
-/// Runs necessary preparation passes on the surfaces, including dead group
+/// Runs necessary preparation passes on the surfaces
 fn prepare_surfaces(
     surfaces: impl IntoIterator<Item = mir::Surface>,
     allocator: &mut mir::IdAllocator,

@@ -26,22 +26,13 @@ pub fn sort_value_groups(surface: &mut mir::Surface) {
 
     assert_eq!(permutation_indices.len(), surface.groups.len());
 
-    // Apply the sort to the surfaces groups, while building a reverse permutation array for fixing
-    // node socket indices.
-    let mut reverse_permutation = vec![0; permutation_indices.len()];
+    // Apply the sort to the surfaces groups
     let mut source_groups: Vec<_> = surface.groups.drain(..).map(Some).collect();
     surface
         .groups
-        .extend(
-            permutation_indices
-                .into_iter()
-                .enumerate()
-                .map(|(dest_index, source_index)| {
-                    reverse_permutation[source_index] = dest_index;
-
-                    let mut val = None;
-                    mem::swap(&mut val, &mut source_groups[source_index]);
-                    val.unwrap()
-                }),
-        );
+        .extend(permutation_indices.into_iter().map(|source_index| {
+            let mut val = None;
+            mem::swap(&mut val, &mut source_groups[source_index]);
+            val.unwrap()
+        }));
 }
