@@ -48,7 +48,7 @@ impl ObjectCache for ExportObjectCache<'_, '_, '_> {
 
 fn print_surfaces(surfaces: &HashMap<mir::SurfaceRef, mir::Surface>) {
     for surface in surfaces.values() {
-        println!("{:#?}", surface);
+        println!("{}", surface);
     }
 }
 

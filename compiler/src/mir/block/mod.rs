@@ -31,14 +31,14 @@ impl Block {
 
 impl fmt::Display for Block {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "block @{:?} {{\n", self.id)?;
-        write!(f, "  controls:\n")?;
+        writeln!(f, "block @{:?} {{", self.id)?;
+        writeln!(f, "  controls:")?;
         for (i, control) in self.controls.iter().enumerate() {
-            write!(f, "    ${} = {}\n", i, control)?;
+            writeln!(f, "    ${} = {}", i, control)?;
         }
-        write!(f, "  statements:\n")?;
+        writeln!(f, "  statements:")?;
         for (i, statement) in self.statements.iter().enumerate() {
-            write!(f, "    %{} = {}\n", i, statement)?;
+            writeln!(f, "    %{} = {}", i, statement)?;
         }
         write!(f, "}}")
     }

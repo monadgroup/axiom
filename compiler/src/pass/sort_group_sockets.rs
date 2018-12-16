@@ -77,6 +77,21 @@ fn visit_surface(
         }
         node.sockets
             .extend(dest_sockets.into_iter().map(|socket| socket.unwrap()));
+
+        // Fix up source/destination sockets in extract groups
+        if let mir::NodeData::ExtractGroup {
+            source_sockets,
+            dest_sockets,
+            ..
+        } = &mut node.data
+        {
+            for source_socket in source_sockets {
+                *source_socket = socket_permutation[*source_socket];
+            }
+            for dest_socket in dest_sockets {
+                *dest_socket = socket_permutation[*dest_socket];
+            }
+        }
     }
 
     all_surfaces.insert(surface_id, surface);
