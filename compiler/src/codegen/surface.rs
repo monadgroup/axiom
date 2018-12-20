@@ -2,6 +2,7 @@ use crate::codegen::{
     block, build_context_function, util, values, BuilderContext, LifecycleFunc, ObjectCache,
 };
 use crate::mir::{Node, NodeData, Surface, SurfaceRef};
+use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
@@ -14,7 +15,7 @@ fn get_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.surface.{}.{}", surface, lifecycle);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         let layout = cache.surface_layout(surface).unwrap();
         (
@@ -24,7 +25,9 @@ fn get_lifecycle_func(
                 false,
             ),
         )
-    })
+    });
+    func.add_param_attribute(0, module.get_context().get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 fn build_node_call(

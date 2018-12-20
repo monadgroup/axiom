@@ -129,7 +129,7 @@ fn get_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.control.{}.{}", control_type, lifecycle);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -142,7 +142,12 @@ fn get_lifecycle_func(
                 false,
             ),
         )
-    })
+    });
+    let context = module.get_context();
+    func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 fn get_ui_lifecycle_func(
@@ -151,7 +156,7 @@ fn get_ui_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.control.{}.ui_{}", control_type, lifecycle);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -165,7 +170,13 @@ fn get_ui_lifecycle_func(
                 false,
             ),
         )
-    })
+    });
+    let context = module.get_context();
+    func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 fn get_field_getter_func(module: &Module, field: ControlField) -> (FunctionValue, bool) {
@@ -204,11 +215,17 @@ fn get_field_getter_func(module: &Module, field: ControlField) -> (FunctionValue
         },
     );
 
-    if !pass_by_val {
-        func.add_param_attribute(
-            0,
-            module.get_context().get_enum_attr(AttrKind::StructRet, 1),
-        );
+    let context = module.get_context();
+
+    if pass_by_val {
+        func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
+    } else {
+        func.add_param_attribute(0, context.get_enum_attr(AttrKind::StructRet, 1));
+        func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
     }
     (func, pass_by_val)
 }
@@ -251,6 +268,14 @@ fn get_field_setter_func(module: &Module, field: ControlField) -> (FunctionValue
             (Linkage::ExternalLinkage, func_type)
         },
     );
+
+    let context = module.get_context();
+    func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
+    if !pass_by_val {
+        func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
+    }
 
     (func, pass_by_val)
 }

@@ -185,7 +185,7 @@ fn get_lifecycle_func(
     lifecycle: FunctionLifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.function.{}.{}", function, lifecycle);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -194,7 +194,9 @@ fn get_lifecycle_func(
                 false,
             ),
         )
-    })
+    });
+    func.add_param_attribute(0, module.get_context().get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 fn get_update_func(module: &Module, function: block::Function) -> FunctionValue {
@@ -256,11 +258,10 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
             },
         )
     });
+    let context = module.get_context();
+    func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
     if !values::pass_type_by_val(&VarType::of_function(function)) {
-        func.add_param_attribute(
-            1,
-            module.get_context().get_enum_attr(AttrKind::StructRet, 1),
-        );
+        func.add_param_attribute(1, context.get_enum_attr(AttrKind::StructRet, 1));
     }
     func
 }

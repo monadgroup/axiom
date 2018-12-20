@@ -4,6 +4,7 @@ use crate::codegen::{
     build_context_function, globals, intrinsics, math, util, BuilderContext, TargetProperties,
 };
 use crate::mir::block;
+use inkwell::attribute::AttrKind;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
@@ -13,26 +14,32 @@ use inkwell::{AddressSpace, IntPredicate};
 pub struct DelayFunction {}
 impl DelayFunction {
     fn get_channel_update_func(module: &Module) -> FunctionValue {
-        util::get_or_create_func(module, "maxim.util.delay.channelUpdate", true, &|| {
-            let context = &module.get_context();
-            (
-                Linkage::PrivateLinkage,
-                context.f64_type().fn_type(
-                    &[
-                        &context.i32_type().ptr_type(AddressSpace::Generic), // current position pointer
-                        &context.i32_type().ptr_type(AddressSpace::Generic), // current size pointer
-                        &context.i32_type(),                                 // delay sample count
-                        &context.i32_type(),                                 // reserve sample count
-                        &context
-                            .f64_type()
-                            .ptr_type(AddressSpace::Generic)
-                            .ptr_type(AddressSpace::Generic), // samples pointer pointer
-                        &context.f64_type(),                                 // input value
-                    ],
-                    false,
-                ),
-            )
-        })
+        let func =
+            util::get_or_create_func(module, "maxim.util.delay.channelUpdate", true, &|| {
+                let context = &module.get_context();
+                (
+                    Linkage::PrivateLinkage,
+                    context.f64_type().fn_type(
+                        &[
+                            &context.i32_type().ptr_type(AddressSpace::Generic), // current position pointer
+                            &context.i32_type().ptr_type(AddressSpace::Generic), // current size pointer
+                            &context.i32_type(), // delay sample count
+                            &context.i32_type(), // reserve sample count
+                            &context
+                                .f64_type()
+                                .ptr_type(AddressSpace::Generic)
+                                .ptr_type(AddressSpace::Generic), // samples pointer pointer
+                            &context.f64_type(), // input value
+                        ],
+                        false,
+                    ),
+                )
+            });
+        let context = module.get_context();
+        func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(4, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func
     }
 
     /// Builds a function that is equivalent to the following C++:

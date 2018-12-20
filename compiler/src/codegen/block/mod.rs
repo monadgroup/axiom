@@ -17,6 +17,7 @@ use crate::codegen::{
 };
 use crate::mir::block::Statement;
 use crate::mir::{Block, BlockRef};
+use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
@@ -71,7 +72,7 @@ fn get_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.block.{}.{}", block, lifecycle);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         let layout = cache.block_layout(block).unwrap();
 
@@ -82,7 +83,9 @@ fn get_lifecycle_func(
                 false,
             ),
         )
-    })
+    });
+    func.add_param_attribute(0, module.get_context().get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 // Construct and destruct lifecycle functions call the respective lifecycle functions on

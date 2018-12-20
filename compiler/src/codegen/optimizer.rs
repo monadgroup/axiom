@@ -14,8 +14,8 @@ impl Optimizer {
         let builder = PassManagerBuilder::create();
 
         if target.min_size {
-            builder.set_optimization_level(OptimizationLevel::Default);
-            builder.set_size_level(2);
+            builder.set_optimization_level(OptimizationLevel::Aggressive);
+            builder.set_size_level(1);
 
             // threshold for -Os, see http://llvm.org/doxygen/InlineCost_8h_source.html
             builder.set_inliner_with_threshold(50);
