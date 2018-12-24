@@ -22,6 +22,7 @@
 #include "../modulebrowser/ModuleBrowserPanel.h"
 #include "../surface/NodeSurfacePanel.h"
 #include "AboutWindow.h"
+#include "ExportWindow.h"
 #include "editor/AxiomApplication.h"
 #include "editor/backend/AudioBackend.h"
 #include "editor/model/Library.h"
@@ -98,7 +99,6 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     fileOpenAction.setShortcut(QKeySequence::Open);
     fileSaveAction.setShortcut(QKeySequence::Save);
     fileSaveAsAction.setShortcut(QKeySequence::SaveAs);
-    fileExportAction.setEnabled(false);
     fileQuitAction.setShortcut(QKeySequence::Quit);
 
     editUndoAction.setShortcut(QKeySequence::Undo);
@@ -526,6 +526,8 @@ void MainWindow::openProject() {
 }
 
 void MainWindow::exportProject() {
+    ExportWindow().exec();
+
     /*project()->rootSurface()->saveValue();
     MaximRuntime::Exporter exporter(runtime->ctx(), &runtime->libModule());
     exporter.addRuntime(runtime, "definition");
