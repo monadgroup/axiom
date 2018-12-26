@@ -12,69 +12,40 @@
 #include <QtWidgets/QListWidget>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QTableWidget>
 #include <QtWidgets/QVBoxLayout>
 
+#include "../export/CodeConfigWidget.h"
+#include "../export/MetaOutputConfigWidget.h"
+#include "../export/ObjectOutputConfigWidget.h"
+#include "../export/TargetConfigWidget.h"
+#include "editor/model/Project.h"
 #include "editor/util.h"
 
 using namespace AxiomGui;
 
-ExportWindow::ExportWindow()
+ExportWindow::ExportWindow(const AxiomModel::Project &project)
     : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("Export Project"));
-    // setStyleSheet(AxiomUtil::loadStylesheet(":/styles/ExportWindow.qss"));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/UnstyledWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));
 
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     auto mainLayout = new QFormLayout();
 
-    auto instrumentTargetSection = new QGroupBox("Target");
-    auto instrumentTargetLayout = new QFormLayout();
-    instrumentTargetSection->setLayout(instrumentTargetLayout);
-    mainLayout->addRow(instrumentTargetSection);
+    auto targetSection = new QGroupBox("Target");
+    auto targetLayout = new QGridLayout();
+    targetLayout->addWidget(new TargetConfigWidget(), 0, 0);
+    targetSection->setLayout(targetLayout);
+    mainLayout->addRow(targetSection);
 
-    auto machineSelect = new QComboBox();
-    machineSelect->addItem("Windows (GNU)");
-    machineSelect->addItem("Windows (MSVC)");
-    machineSelect->addItem("Apple");
-    machineSelect->addItem("Linux");
-
-    auto instructionSetSelect = new QComboBox();
-    instructionSetSelect->addItem("i686");
-    instructionSetSelect->addItem("x86_64");
-
-    auto machineLayout = new QHBoxLayout();
-    machineLayout->addWidget(machineSelect);
-    machineLayout->addWidget(instructionSetSelect);
-    instrumentTargetLayout->addRow("Machine:", machineLayout);
-
-    auto featureSupportLayout = new QHBoxLayout();
-    featureSupportLayout->addWidget(new QCheckBox("SSE4.2"));
-    featureSupportLayout->addWidget(new QCheckBox("AVX"));
-    featureSupportLayout->addWidget(new QCheckBox("AVX2"));
-    instrumentTargetLayout->addRow("Features:", featureSupportLayout);
-
-    instrumentTargetLayout->addRow(new QPushButton("Reset to Current"));
-
-    auto instrumentCodeSection = new QGroupBox("Code");
-    auto instrumentCodeLayout = new QFormLayout();
-    instrumentCodeSection->setLayout(instrumentCodeLayout);
-    mainLayout->addRow(instrumentCodeSection);
-
-    auto optimizationLayoutSelect = new QComboBox();
-    optimizationLayoutSelect->addItem("None (O0)");
-    optimizationLayoutSelect->addItem("Low (O1)");
-    optimizationLayoutSelect->addItem("Medium (O2)");
-    optimizationLayoutSelect->addItem("High (O3)");
-    optimizationLayoutSelect->addItem("Min Size (Os)");
-    optimizationLayoutSelect->addItem("Aggressive Size (Oz)");
-    instrumentCodeLayout->addRow("Optimization level:", optimizationLayoutSelect);
-
-    auto codeContentLayout = new QHBoxLayout();
-    codeContentLayout->addWidget(new QRadioButton("Instrument and library"));
-    codeContentLayout->addWidget(new QRadioButton("Just instrument"));
-    codeContentLayout->addWidget(new QRadioButton("Just library"));
-    instrumentCodeLayout->addRow(codeContentLayout);
+    auto codeSection = new QGroupBox("Code");
+    auto codeLayout = new QGridLayout();
+    codeLayout->addWidget(new CodeConfigWidget(), 0, 0);
+    codeSection->setLayout(codeLayout);
+    mainLayout->addRow(codeSection);
 
     auto instrumentOutputSection = new QGroupBox("Output");
     auto instrumentOutputLayout = new QHBoxLayout();
@@ -84,39 +55,31 @@ ExportWindow::ExportWindow()
     auto outputObjectSection = new QGroupBox("Object file");
     outputObjectSection->setCheckable(true);
     outputObjectSection->setChecked(true);
-    auto outputObjectLayout = new QFormLayout();
+    auto outputObjectLayout = new QGridLayout();
+    outputObjectLayout->addWidget(new ObjectOutputConfigWidget(), 0, 0);
     outputObjectSection->setLayout(outputObjectLayout);
     instrumentOutputLayout->addWidget(outputObjectSection);
-
-    auto outputObjectFormatSelect = new QComboBox();
-    outputObjectFormatSelect->addItem("Object file (for static linking)");
-    outputObjectFormatSelect->addItem("LLVM bitcode file (for LTO)");
-    outputObjectFormatSelect->addItem("LLVM IR");
-    outputObjectFormatSelect->addItem("Assembly listing");
-    outputObjectLayout->addRow("Format:", outputObjectFormatSelect);
-
-    auto outputObjectLocationSelect = new QHBoxLayout();
-    outputObjectLocationSelect->addWidget(new QLineEdit());
-    outputObjectLocationSelect->addWidget(new QPushButton("..."));
-    outputObjectLayout->addRow("Location:", outputObjectLocationSelect);
 
     auto outputMetaSection = new QGroupBox("Meta file");
     outputMetaSection->setCheckable(true);
     outputMetaSection->setChecked(true);
-    auto outputMetaLayout = new QFormLayout();
+    auto outputMetaLayout = new QGridLayout();
+    auto audioConfiguration = project.getAudioConfiguration();
+    std::sort(audioConfiguration.portals.begin(), audioConfiguration.portals.end());
+    outputMetaLayout->addWidget(new MetaOutputConfigWidget(project, audioConfiguration), 0, 0);
     outputMetaSection->setLayout(outputMetaLayout);
     instrumentOutputLayout->addWidget(outputMetaSection);
 
-    auto outputMetaFormatSelect = new QComboBox();
-    outputMetaFormatSelect->addItem("Header file");
-    outputMetaFormatSelect->addItem("Rust module");
-    outputMetaFormatSelect->addItem("JSON file");
-    outputMetaLayout->addRow("Format:", outputMetaFormatSelect);
+    auto actionButtonsLayout = new QHBoxLayout();
+    actionButtonsLayout->addStretch(1);
+    auto cancelButton = new QPushButton("Cancel");
+    actionButtonsLayout->addWidget(cancelButton);
+    auto exportButton = new QPushButton("Export");
+    actionButtonsLayout->addWidget(exportButton);
+    exportButton->setDefault(true);
 
-    auto headerNameList = new QListWidget();
-    auto listItem = new QListWidgetItem();
-
-    mainLayout->addRow(new QPushButton("Export"));
-
+    mainLayout->addRow(actionButtonsLayout);
     setLayout(mainLayout);
+
+    connect(cancelButton, &QPushButton::clicked, this, &ExportWindow::close);
 }

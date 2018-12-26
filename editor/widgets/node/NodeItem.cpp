@@ -258,7 +258,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         AxiomCommon::filter(AxiomModel::findChildren(node->root()->nodes().sequence(), node->parentUuid()),
                             [](Node *const &node) { return node->isCopyable(); });
 
-    QMenu menu;
+    QMenu menu(canvas->panel);
 
     auto renameAction = menu.addAction(tr("&Rename..."));
     renameAction->setVisible(node->parentSurface->selectedItems().sequence().size() == 1);

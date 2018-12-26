@@ -44,6 +44,8 @@ namespace MaximFrontend {
         void *ui;
     };
 
+    enum class FeatureLevel : uint8_t { SSE41, SSE42, AVX, AVX2 };
+
     extern "C" {
     void maxim_initialize();
 
@@ -128,5 +130,7 @@ namespace MaximFrontend {
 
     size_t maxim_get_function_table_size();
     const char *maxim_get_function_table_entry(size_t index);
+
+    FeatureLevel maxim_get_feature_level();
     }
 }

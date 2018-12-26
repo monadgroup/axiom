@@ -91,7 +91,7 @@ void ModulePreviewButton::mouseDoubleClickEvent(QMouseEvent *event) {
 void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
     event->accept();
 
-    QMenu menu;
+    QMenu menu(this);
     auto editAction = menu.addAction("&Edit");
     auto propertiesAction = menu.addAction("&Properties...");
     menu.addSeparator();
@@ -136,9 +136,9 @@ void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
 
         QFile file(selectedFile);
         if (!file.open(QIODevice::WriteOnly)) {
-            QMessageBox(QMessageBox::Critical, "Failed to export module", "The file you selected couldn't be opened.",
-                        QMessageBox::Ok)
-                .exec();
+            QMessageBox msgBox(QMessageBox::Critical, "Failed to export module",
+                               "The file you selected couldn't be opened.", QMessageBox::Ok);
+            AxiomUtil::showMessageBox(msgBox);
             return;
         }
 
@@ -153,7 +153,7 @@ void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
         confirmBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
         confirmBox.setDefaultButton(QMessageBox::Yes);
 
-        if (confirmBox.exec() == QMessageBox::Yes) {
+        if (AxiomUtil::showMessageBox(confirmBox) == QMessageBox::Yes) {
             _entry->remove();
         }
     }
@@ -180,7 +180,7 @@ void ModulePreviewButton::updateImage() {
     view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view.setFixedSize(100, 100);
-    view.setStyleSheet("* { border: none; }");
+    view.setStyleSheet("* { border: none; background-color: #111; }");
 
     // figure out the bounding box size of the scene
     QRectF boundingRect;

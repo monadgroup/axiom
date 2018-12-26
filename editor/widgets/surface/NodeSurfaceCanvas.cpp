@@ -288,7 +288,7 @@ void NodeSurfaceCanvas::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) 
     if (event->isAccepted()) return;
 
     auto scenePos = event->scenePos();
-    AddNodeMenu menu(surface, "");
+    AddNodeMenu menu(surface, "", panel);
 
     connect(&menu, &AddNodeMenu::newNodeAdded, [this, scenePos]() {
         auto editor = new FloatingValueEditor("New Node", scenePos);

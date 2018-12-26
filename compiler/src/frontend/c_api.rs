@@ -1,5 +1,5 @@
 use super::{exporter, value_reader, Runtime, Transaction};
-use crate::{ast, codegen, mir, parser, pass, CompileError};
+use crate::{ast, codegen, mir, parser, pass, util, CompileError};
 use inkwell::{orc, targets};
 use std;
 use std::os::raw::c_void;
@@ -489,4 +489,9 @@ pub unsafe extern "C" fn maxim_get_function_table_entry(index: usize) -> *mut st
     std::ffi::CString::new(mir::FUNCTION_TABLE[index])
         .unwrap()
         .into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_feature_level() -> u8 {
+    *util::feature_level::FEATURE_LEVEL as u8
 }

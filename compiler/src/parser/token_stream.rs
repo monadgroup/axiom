@@ -1,5 +1,6 @@
 use crate::ast::{SourcePos, SourceRange};
 use crate::parser::{Token, TokenType};
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::iter::Peekable;
 

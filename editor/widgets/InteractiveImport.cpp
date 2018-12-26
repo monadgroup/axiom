@@ -42,7 +42,7 @@ void AxiomGui::doInteractiveLibraryImport(AxiomModel::Library *targetLibrary, Ax
         auto importedBtn = msgBox.addButton("Imported", QMessageBox::ActionRole);
         auto bothBtn = msgBox.addButton("Both", QMessageBox::ActionRole);
         msgBox.setDefaultButton(importedBtn);
-        msgBox.exec();
+        AxiomUtil::showMessageBox(msgBox);
 
         if (msgBox.clickedButton() == cancelBtn)
             return AxiomModel::Library::ConflictResolution::CANCEL;

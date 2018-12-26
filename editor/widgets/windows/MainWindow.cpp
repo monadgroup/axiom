@@ -43,6 +43,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
       editRedoAction("&Redo"), editCutAction("C&ut"), editCopyAction("&Copy"), editPasteAction("&Paste"),
       editDeleteAction("&Delete"), editSelectAllAction("&Select All"), editPreferencesAction("Pr&eferences..."),
       helpAboutAction("&About"), _backend(backend), _runtime(true, false), libraryLock(globalLibraryLockPath()) {
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
@@ -463,9 +464,9 @@ void MainWindow::triggerLibraryReloadDebounce() {
 void MainWindow::saveProjectTo(const QString &path) {
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox(QMessageBox::Critical, "Failed to save project", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok)
-            .exec();
+        QMessageBox msgBox(QMessageBox::Critical, "Failed to save project", "The file you selected couldn't be opened.",
+                           QMessageBox::Ok);
+        AxiomUtil::showMessageBox(msgBox);
         return;
     }
 
@@ -480,9 +481,9 @@ void MainWindow::saveProjectTo(const QString &path) {
 void MainWindow::openProjectFrom(const QString &path) {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox(QMessageBox::Critical, "Failed to open project", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok)
-            .exec();
+        QMessageBox msgBox(QMessageBox::Critical, "Failed to open project", "The file you selected couldn't be opened.",
+                           QMessageBox::Ok);
+        AxiomUtil::showMessageBox(msgBox);
         return;
     }
 
@@ -496,20 +497,20 @@ void MainWindow::openProjectFrom(const QString &path) {
 
     if (!newProject) {
         if (readVersion) {
-            QMessageBox(QMessageBox::Critical, "Failed to load project",
-                        "The file you selected was created with an incompatible version of Axiom.\n\n"
-                        "Expected version: between " +
-                            QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
-                            QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
-                            ", actual version: " + QString::number(readVersion) + ".",
-                        QMessageBox::Ok)
-                .exec();
+            QMessageBox msgBox(QMessageBox::Critical, "Failed to load project",
+                               "The file you selected was created with an incompatible version of Axiom.\n\n"
+                               "Expected version: between " +
+                                   QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
+                                   QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
+                                   ", actual version: " + QString::number(readVersion) + ".",
+                               QMessageBox::Ok);
+            AxiomUtil::showMessageBox(msgBox);
         } else {
-            QMessageBox(QMessageBox::Critical, "Failed to load project",
-                        "The file you selected is an invalid project file (bad magic header).\n"
-                        "Maybe it's corrupt?",
-                        QMessageBox::Ok)
-                .exec();
+            QMessageBox msgBox(QMessageBox::Critical, "Failed to load project",
+                               "The file you selected is an invalid project file (bad magic header).\n"
+                               "Maybe it's corrupt?",
+                               QMessageBox::Ok);
+            AxiomUtil::showMessageBox(msgBox);
         }
     } else {
         setProject(std::move(newProject));
@@ -526,7 +527,7 @@ void MainWindow::openProject() {
 }
 
 void MainWindow::exportProject() {
-    ExportWindow().exec();
+    ExportWindow(*project()).exec();
 
     /*project()->rootSurface()->saveValue();
     MaximRuntime::Exporter exporter(runtime->ctx(), &runtime->libModule());
@@ -551,9 +552,9 @@ void MainWindow::exportLibrary() {
 
     QFile file(selectedFile);
     if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox(QMessageBox::Critical, "Failed to export library", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok)
-            .exec();
+        QMessageBox msgBox(QMessageBox::Critical, "Failed to export library",
+                           "The file you selected couldn't be opened.", QMessageBox::Ok);
+        AxiomUtil::showMessageBox(msgBox);
         return;
     }
 
@@ -566,9 +567,9 @@ void MainWindow::exportLibrary() {
 void MainWindow::importLibraryFrom(const QString &path) {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox(QMessageBox::Critical, "Failed to import library", "The file you selected couldn't be opened.",
-                    QMessageBox::Ok)
-            .exec();
+        QMessageBox msgBox(QMessageBox::Critical, "Failed to import library",
+                           "The file you selected couldn't be opened.", QMessageBox::Ok);
+        AxiomUtil::showMessageBox(msgBox);
         return;
     }
 
@@ -577,20 +578,20 @@ void MainWindow::importLibraryFrom(const QString &path) {
     if (!AxiomModel::ProjectSerializer::readHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic,
                                                    &readVersion)) {
         if (readVersion) {
-            QMessageBox(QMessageBox::Critical, "Failed to load library",
-                        "The file you selected was created with an incompatible version of Axiom.\n\n"
-                        "Expected version: between " +
-                            QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
-                            QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
-                            ", actual version: " + QString::number(readVersion) + ".",
-                        QMessageBox::Ok)
-                .exec();
+            QMessageBox msgBox(QMessageBox::Critical, "Failed to load library",
+                               "The file you selected was created with an incompatible version of Axiom.\n\n"
+                               "Expected version: between " +
+                                   QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
+                                   QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
+                                   ", actual version: " + QString::number(readVersion) + ".",
+                               QMessageBox::Ok);
+            AxiomUtil::showMessageBox(msgBox);
         } else {
-            QMessageBox(QMessageBox::Critical, "Failed to load library",
-                        "The file you selected is an invalid library file (bad magic header).\n"
-                        "Maybe it's corrupt?",
-                        QMessageBox::Ok)
-                .exec();
+            QMessageBox msgBox(QMessageBox::Critical, "Failed to load library",
+                               "The file you selected is an invalid library file (bad magic header).\n"
+                               "Maybe it's corrupt?",
+                               QMessageBox::Ok);
+            AxiomUtil::showMessageBox(msgBox);
         }
         return;
     }
@@ -611,7 +612,7 @@ bool MainWindow::checkCloseProject() {
     msgBox.addButton(QMessageBox::Discard);
     auto cancelBtn = msgBox.addButton(QMessageBox::Cancel);
     msgBox.setDefaultButton(saveBtn);
-    msgBox.exec();
+    AxiomUtil::showMessageBox(msgBox);
 
     if (msgBox.clickedButton() == saveBtn) {
         saveProject();

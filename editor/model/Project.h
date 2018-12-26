@@ -5,6 +5,8 @@
 #include <optional>
 
 #include "common/Event.h"
+#include "editor/backend/AudioConfiguration.h"
+#include "objects/PortalControl.h"
 
 namespace AxiomBackend {
     class DefaultConfiguration;
@@ -42,6 +44,16 @@ namespace AxiomModel {
         void attachBackend(AxiomBackend::AudioBackend *backend) { _backend = backend; }
 
         AxiomBackend::AudioBackend *backend() const { return _backend; }
+
+        static AxiomBackend::PortalType backendTypeFromControlType(PortalControl::PortalType);
+
+        static AxiomBackend::PortalValue backendValueFromWireType(ConnectionWire::WireType);
+
+        static PortalControl::PortalType controlTypeFromBackendType(AxiomBackend::PortalType);
+
+        static ConnectionWire::WireType wireTypeFromBackendValue(AxiomBackend::PortalValue);
+
+        AxiomBackend::AudioConfiguration getAudioConfiguration() const;
 
     private:
         std::unique_ptr<ModelRoot> _mainRoot;

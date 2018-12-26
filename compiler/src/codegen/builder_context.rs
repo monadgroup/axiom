@@ -1,9 +1,11 @@
 use crate::codegen::TargetProperties;
+use crate::util::feature_level::{FeatureLevel, FEATURE_LEVEL};
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::values::FunctionValue;
+use lazy_static::lazy_static;
 
 pub struct BuilderContext<'a> {
     pub context: &'a Context,
@@ -17,15 +19,17 @@ pub struct BuilderContext<'a> {
 fn get_target_feature_string() -> String {
     // we need SSE4.1 at a minimum, so dynamically enable SSE4.2, AVX, and AVX2 if we can
     let mut base_features = "+x87,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4.1".to_string();
-    if is_x86_feature_detected!("sse4.2") {
+
+    if *FEATURE_LEVEL >= FeatureLevel::SSE42 {
         base_features.push_str(",+sse4.2");
     }
-    if is_x86_feature_detected!("avx") {
+    if *FEATURE_LEVEL >= FeatureLevel::AVX {
         base_features.push_str(",+avx");
     }
-    if is_x86_feature_detected!("avx2") {
+    if *FEATURE_LEVEL >= FeatureLevel::AVX2 {
         base_features.push_str(",+avx2");
     }
+
     base_features
 }
 

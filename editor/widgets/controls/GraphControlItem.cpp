@@ -12,6 +12,8 @@
 
 #include "../CommonColors.h"
 #include "../FloatingValueEditor.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "../surface/NodeSurfacePanel.h"
 #include "editor/compiler/interface/Runtime.h"
 #include "editor/model/ModelRoot.h"
 #include "editor/model/actions/AddGraphPointAction.h"
@@ -20,6 +22,7 @@
 #include "editor/model/actions/SetGraphTagAction.h"
 #include "editor/model/actions/SetGraphTensionAction.h"
 #include "editor/model/objects/GraphControl.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
@@ -349,7 +352,7 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
     bool validClipboardNumber;
     auto clipboardNumber = clipboard->text().toFloat(&validClipboardNumber);
 
-    QMenu menu;
+    QMenu menu(item->canvas->panel);
 
     auto setValueAction = menu.addAction("&Set Value...");
     auto copyValueAction = menu.addAction("&Copy Value");
@@ -438,8 +441,7 @@ void GraphControlPointKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *eve
     }
 }
 
-GraphControlTensionKnob::GraphControlTensionKnob(AxiomModel::GraphControl *control, uint8_t index)
-    : control(control), index(index) {
+GraphControlTensionKnob::GraphControlTensionKnob(GraphControlItem *item, uint8_t index) : item(item), index(index) {
     setAcceptHoverEvents(true);
     setCursor(QCursor(Qt::SizeVerCursor));
 }
@@ -466,7 +468,7 @@ void GraphControlTensionKnob::paint(QPainter *painter, const QStyleOptionGraphic
 void GraphControlTensionKnob::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = true;
     QApplication::setOverrideCursor(Qt::BlankCursor);
-    dragStartTension = control->getCurveState()->curveTension[index];
+    dragStartTension = item->control->getCurveState()->curveTension[index];
     dragStartMouseY = event->scenePos().y();
     update();
 }
@@ -476,17 +478,17 @@ void GraphControlTensionKnob::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     auto deltaY = event->scenePos().y() - dragStartMouseY;
     auto newTension = std::clamp(dragStartTension + deltaY / movementRange, -1., 1.);
-    control->getCurveState()->curveTension[index] = (float) newTension;
+    item->control->getCurveState()->curveTension[index] = (float) newTension;
 }
 
 void GraphControlTensionKnob::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     isDragging = false;
 
-    auto controlState = control->getCurveState();
+    auto controlState = item->control->getCurveState();
     auto dragEndTension = controlState->curveTension[index];
     if (dragEndTension != dragStartTension) {
-        control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
-            control->uuid(), index, (float) dragStartTension, dragEndTension, control->root()));
+        item->control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
+            item->control->uuid(), index, (float) dragStartTension, dragEndTension, item->control->root()));
     }
 
     auto view = scene()->views().first();
@@ -515,7 +517,7 @@ void GraphControlTensionKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *e
     bool validClipboardNumber;
     auto clipboardNumber = clipboard->text().toFloat(&validClipboardNumber);
 
-    QMenu menu;
+    QMenu menu(item->canvas->panel);
     auto setTensionAction = menu.addAction("&Set Tension...");
     auto copyTensionAction = menu.addAction("&Copy Tension");
     auto pasteTensionAction = menu.addAction("&Paste Tension");
@@ -526,30 +528,29 @@ void GraphControlTensionKnob::contextMenuEvent(QGraphicsSceneContextMenuEvent *e
 
     if (selectedAction == setTensionAction) {
         auto editor = new FloatingValueEditor(
-            QString::number(roundf(control->getCurveState()->curveTension[index] * 100)), event->scenePos());
+            QString::number(roundf(item->control->getCurveState()->curveTension[index] * 100)), event->scenePos());
         scene()->addItem(editor);
         connect(editor, &FloatingValueEditor::valueSubmitted, this, [this](QString newValue) {
             bool couldConvert;
             auto convertedVal = newValue.toFloat(&couldConvert);
 
             if (!couldConvert) return;
-            auto oldTension = control->getCurveState()->curveTension[index];
+            auto oldTension = item->control->getCurveState()->curveTension[index];
             auto newTension = std::clamp(convertedVal / 100, -1.f, 1.f);
-            ;
             if (oldTension != newTension) {
-                control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
-                    control->uuid(), index, oldTension, newTension, control->root()));
+                item->control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
+                    item->control->uuid(), index, oldTension, newTension, item->control->root()));
             }
         });
     } else if (selectedAction == copyTensionAction) {
-        clipboard->setText(QString::number(roundf(control->getCurveState()->curveTension[index] * 100)));
+        clipboard->setText(QString::number(roundf(item->control->getCurveState()->curveTension[index] * 100)));
     } else if (validClipboardNumber && selectedAction == pasteTensionAction) {
-        auto oldTension = control->getCurveState()->curveTension[index];
+        auto oldTension = item->control->getCurveState()->curveTension[index];
         auto newTension = std::clamp(clipboardNumber / 100, -1.f, 1.f);
         ;
         if (oldTension != newTension) {
-            control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
-                control->uuid(), index, oldTension, newTension, control->root()));
+            item->control->root()->history().append(AxiomModel::SetGraphTensionAction::create(
+                item->control->uuid(), index, oldTension, newTension, item->control->root()));
         }
     }
 }
@@ -581,7 +582,7 @@ void GraphControlArea::updateCurves() {
         curve->setZValue(0);
     }
     while (_tensionKnobs.size() < state->curveCount) {
-        _tensionKnobs.push_back(std::make_unique<GraphControlTensionKnob>(item->control, _tensionKnobs.size()));
+        _tensionKnobs.push_back(std::make_unique<GraphControlTensionKnob>(item, _tensionKnobs.size()));
         auto &tensionKnob = _tensionKnobs[_tensionKnobs.size() - 1];
         tensionKnob->setParentItem(this);
         tensionKnob->setZValue(1);
@@ -706,6 +707,7 @@ void GraphControlArea::wheelEvent(QGraphicsSceneWheelEvent *event) {
 ScrollBarGraphicsItem::ScrollBarGraphicsItem(Qt::Orientation orientation) : scrollBar(new QScrollBar(orientation)) {
     setAcceptHoverEvents(true);
 
+    scrollBar->setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
     setWidget(scrollBar);
 
     connect(scrollBar, &QScrollBar::valueChanged, this, &ScrollBarGraphicsItem::triggerUpdate);
@@ -859,7 +861,7 @@ void GraphControlItem::paintControl(QPainter *painter) {
 void GraphControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 
-    QMenu menu;
+    QMenu menu(canvas->panel);
     buildMenuStart(menu);
     menu.addSeparator();
     buildMenuEnd(menu);

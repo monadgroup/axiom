@@ -1,10 +1,8 @@
 extern crate divrem;
 extern crate inkwell;
+extern crate lazy_static;
 extern crate ordered_float;
 extern crate regex;
-
-#[macro_use]
-extern crate lazy_static;
 
 mod compile_error;
 

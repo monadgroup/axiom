@@ -306,7 +306,7 @@ void NumControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
     auto clipboard = QGuiApplication::clipboard();
 
-    QMenu menu;
+    QMenu menu(canvas->panel);
     buildMenuStart(menu);
 
     auto modeMenu = menu.addMenu("&Display as...");

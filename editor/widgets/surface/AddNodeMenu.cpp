@@ -8,7 +8,8 @@
 
 using namespace AxiomGui;
 
-AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search) : surface(surface) {
+AddNodeMenu::AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search, QWidget *parent)
+    : QMenu(parent), surface(surface) {
     setStyleSheet("QMenu { menu-scrollable: 1; }");
 
     /*contextSearch = new QLineEdit(this);

@@ -2,6 +2,8 @@
 
 #include <QtWidgets/QGraphicsScene>
 
+#include "editor/util.h"
+
 using namespace AxiomGui;
 
 FloatingValueEditor::FloatingValueEditor(QString initialValue, QPointF scenePos, int selectStart, int selectEnd) {
@@ -9,6 +11,7 @@ FloatingValueEditor::FloatingValueEditor(QString initialValue, QPointF scenePos,
 
     editor = new QLineEdit(initialValue);
     editor->installEventFilter(this);
+    editor->setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
     setWidget(editor);
 
     connect(editor, &QLineEdit::editingFinished, this, &FloatingValueEditor::editingFinished);

@@ -2,6 +2,7 @@
 
 #include <QtCore/QFile>
 #include <QtCore/QStringBuilder>
+#include <QtWidgets/QMessageBox>
 #include <array>
 #include <cmath>
 #include <sstream>
@@ -228,4 +229,9 @@ std::optional<uint8_t> AxiomUtil::noteKeyToMidi(int keyCode) {
     default:
         return std::nullopt;
     }
+}
+
+int AxiomUtil::showMessageBox(QMessageBox &msgBox) {
+    msgBox.setStyleSheet(loadStylesheet(":/styles/MainStyles.qss"));
+    return msgBox.exec();
 }

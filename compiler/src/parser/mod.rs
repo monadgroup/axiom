@@ -6,6 +6,7 @@ pub use self::token_stream::{get_token_stream, TokenStream};
 
 use crate::ast::*;
 use crate::{CompileError, CompileResult};
+use lazy_static::lazy_static;
 use regex::Regex;
 
 const PRECEDENCE_CASTING: i32 = 1;
