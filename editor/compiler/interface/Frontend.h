@@ -27,6 +27,14 @@ namespace MaximFrontend {
 
     using MaximValueGroupSource = void;
 
+    using MaximAudioConfig = void;
+    using MaximTargetConfig = void;
+    using MaximCodeConfig = void;
+    using MaximObjectOutputConfig = void;
+    using MaximMetaOutputConfig = void;
+    using MaximExportConfig = void;
+    using MaximExportConfigRef = MaximExportConfig;
+
     struct SourcePos {
         ptrdiff_t line;
         ptrdiff_t column;
@@ -45,6 +53,19 @@ namespace MaximFrontend {
     };
 
     enum class FeatureLevel : uint8_t { SSE41, SSE42, AVX, AVX2 };
+
+    enum class TargetPlatform : uint8_t { WINDOWS_MSVC, WINDOWS_GNU, MAC, LINUX };
+
+    enum class TargetInstructionSet : uint8_t { I686, X64 };
+
+    enum class OptimizationLevel : uint8_t {
+        NONE,
+        LOW,
+        MEDIUM,
+        HIGH,
+        MIN_SIZE,
+        AGGRESSIVE_SIZE,
+    };
 
     extern "C" {
     void maxim_initialize();
@@ -127,6 +148,26 @@ namespace MaximFrontend {
     bool maxim_control_get_read(MaximBlockControlRef *control);
 
     void maxim_commit(MaximRuntimeRef *runtime, MaximTransaction *transaction);
+
+    MaximAudioConfig *maxim_create_audio_config(double sampleRate, double bpm);
+    void maxim_destroy_audio_config(MaximAudioConfig *);
+    MaximTargetConfig *maxim_create_target_config(TargetPlatform platform, TargetInstructionSet instructionSet,
+                                                  FeatureLevel featureLevel);
+    void maxim_destroy_target_config(MaximTargetConfig *);
+    MaximCodeConfig *maxim_create_code_config(OptimizationLevel optimizationLevel, const char *instrumentPrefix,
+                                              bool includeInstrument, bool includeLibrary);
+    void maxim_destroy_code_config(MaximCodeConfig *);
+    MaximObjectOutputConfig *maxim_create_object_output_config(const char *location);
+    void maxim_destroy_object_output_config(MaximObjectOutputConfig *);
+    MaximMetaOutputConfig *maxim_create_meta_output_config(const char *location, const char *const *portalNames,
+                                                           size_t portalNameCount);
+    void maxim_destroy_meta_output_config(MaximMetaOutputConfig *);
+    MaximExportConfig *maxim_create_export_config(MaximAudioConfig *audio, MaximTargetConfig *target,
+                                                  MaximCodeConfig *code, MaximObjectOutputConfig *objectOrNull,
+                                                  MaximMetaOutputConfig *metaOrNull);
+    void maxim_destroy_export_config(MaximExportConfig *);
+
+    void maxim_export(MaximExportConfigRef *config);
 
     size_t maxim_get_function_table_size();
     const char *maxim_get_function_table_entry(size_t index);

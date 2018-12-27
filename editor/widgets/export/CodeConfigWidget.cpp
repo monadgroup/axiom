@@ -3,7 +3,10 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QRadioButton>
+
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
@@ -22,6 +25,11 @@ CodeConfigWidget::CodeConfigWidget() {
     optimizationSelect->setCurrentIndex(4);
     layout->addRow("Optimization level:", optimizationSelect);
 
+    instrumentPrefixEdit = new QLineEdit(oldSafePrefix);
+    layout->addRow("Instrument prefix:", instrumentPrefixEdit);
+    connect(instrumentPrefixEdit, &QLineEdit::editingFinished, this, &CodeConfigWidget::ensureInstrumentPrefixSafe);
+    connect(instrumentPrefixEdit, &QLineEdit::textChanged, this, &CodeConfigWidget::processPrefixChange);
+
     instrumentAndLibraryContent = new QRadioButton("Instrument and library");
     instrumentContent = new QRadioButton("Just instrument");
     libraryContent = new QRadioButton("Just library");
@@ -34,4 +42,20 @@ CodeConfigWidget::CodeConfigWidget() {
     layout->addRow(codeContentLayout);
 
     instrumentAndLibraryContent->setChecked(true);
+}
+
+void CodeConfigWidget::processPrefixChange(const QString &newPrefix) {
+    auto newSafePrefix = AxiomUtil::getSafeDefinition(newPrefix);
+    if (newSafePrefix != oldSafePrefix) {
+        emit instrumentPrefixChanged(oldSafePrefix, newSafePrefix);
+        oldSafePrefix = newSafePrefix;
+    }
+}
+
+void CodeConfigWidget::ensureInstrumentPrefixSafe() {
+    auto currentText = instrumentPrefixEdit->text();
+    auto safeName = AxiomUtil::getSafeDefinition(currentText);
+    if (safeName != currentText) {
+        instrumentPrefixEdit->setText(safeName);
+    }
 }

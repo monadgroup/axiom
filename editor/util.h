@@ -56,4 +56,8 @@ namespace AxiomUtil {
     }
 
     int showMessageBox(QMessageBox &msgBox);
+
+    QString getSafeDefinition(QString definition);
+
+    QString ensureDefinitionIsUnique(QString definition, const QSet<QString> &usedDefinitions);
 }

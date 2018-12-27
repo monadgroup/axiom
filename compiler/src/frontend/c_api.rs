@@ -1,4 +1,5 @@
 use super::{exporter, value_reader, Runtime, Transaction};
+use crate::frontend::exporter::export_config;
 use crate::{ast, codegen, mir, parser, pass, util, CompileError};
 use inkwell::{orc, targets};
 use std;
@@ -477,6 +478,150 @@ pub unsafe extern "C" fn maxim_control_get_written(control: *const mir::block::C
 #[no_mangle]
 pub unsafe extern "C" fn maxim_control_get_read(control: *const mir::block::Control) -> bool {
     (*control).value_read
+}
+
+#[no_mangle]
+pub extern "C" fn maxim_create_audio_config(
+    sample_rate: f64,
+    bpm: f64,
+) -> *mut export_config::AudioConfig {
+    Box::into_raw(Box::new(export_config::AudioConfig { sample_rate, bpm }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_audio_config(config: *mut export_config::AudioConfig) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub extern "C" fn maxim_create_target_config(
+    platform: export_config::TargetPlatform,
+    instruction_set: export_config::TargetInstructionSet,
+    feature_level: util::feature_level::FeatureLevel,
+) -> *mut export_config::TargetConfig {
+    Box::into_raw(Box::new(export_config::TargetConfig {
+        platform,
+        instruction_set,
+        feature_level,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_target_config(config: *mut export_config::TargetConfig) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_create_code_config(
+    optimization_level: export_config::OptimizationLevel,
+    c_instrument_prefix: *const std::os::raw::c_char,
+    include_instrument: bool,
+    include_library: bool,
+) -> *mut export_config::CodeConfig {
+    let instrument_prefix = std::ffi::CStr::from_ptr(c_instrument_prefix)
+        .to_str()
+        .unwrap()
+        .to_string();
+    Box::into_raw(Box::new(export_config::CodeConfig {
+        optimization_level,
+        instrument_prefix,
+        include_instrument,
+        include_library,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_code_config(config: *mut export_config::CodeConfig) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_create_object_output_config(
+    c_location: *const std::os::raw::c_char,
+) -> *mut export_config::ObjectOutputConfig {
+    let location =
+        std::path::Path::new(std::ffi::CStr::from_ptr(c_location).to_str().unwrap()).to_path_buf();
+    Box::into_raw(Box::new(export_config::ObjectOutputConfig { location }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_object_output_config(
+    config: *mut export_config::ObjectOutputConfig,
+) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_create_meta_output_config(
+    c_location: *const std::os::raw::c_char,
+    portal_names: *const *const std::os::raw::c_char,
+    portal_name_count: usize,
+) -> *mut export_config::MetaOutputConfig {
+    let location =
+        std::path::Path::new(std::ffi::CStr::from_ptr(c_location).to_str().unwrap()).to_path_buf();
+    let portal_names = (0..portal_name_count)
+        .map(|portal_index| {
+            let portal_name_ptr = *portal_names.add(portal_index);
+            std::ffi::CStr::from_ptr(portal_name_ptr)
+                .to_str()
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+
+    Box::into_raw(Box::new(export_config::MetaOutputConfig {
+        location,
+        portal_names,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_meta_output_config(
+    config: *mut export_config::MetaOutputConfig,
+) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_create_export_config(
+    audio: *mut export_config::AudioConfig,
+    target: *mut export_config::TargetConfig,
+    code: *mut export_config::CodeConfig,
+    object_or_null: *mut export_config::ObjectOutputConfig,
+    meta_or_null: *mut export_config::MetaOutputConfig,
+) -> *mut export_config::ExportConfig {
+    let audio = *Box::from_raw(audio);
+    let target = *Box::from_raw(target);
+    let code = *Box::from_raw(code);
+    let object = if object_or_null == std::ptr::null_mut() {
+        None
+    } else {
+        Some(*Box::from_raw(object_or_null))
+    };
+    let meta = if meta_or_null == std::ptr::null_mut() {
+        None
+    } else {
+        Some(*Box::from_raw(meta_or_null))
+    };
+
+    Box::into_raw(Box::new(export_config::ExportConfig {
+        audio,
+        target,
+        code,
+        object,
+        meta,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_export_config(config: *mut export_config::ExportConfig) {
+    Box::from_raw(config);
+    // box will be dropped here
 }
 
 #[no_mangle]

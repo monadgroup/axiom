@@ -23,6 +23,10 @@ namespace AxiomGui {
         explicit PortalDefinitionEditorWidget(const AxiomModel::Project &project,
                                               const AxiomBackend::AudioConfiguration &configuration);
 
+    public slots:
+
+        void setInstrumentPrefix(const QString &oldSafePrefix, const QString &newSafePrefix);
+
     private slots:
 
         void ensureLineSafe(size_t index);

@@ -1,4 +1,5 @@
 set(SOURCE_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/AudioConfigWidget.h" "${CMAKE_CURRENT_SOURCE_DIR}/AudioConfigWidget.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/CodeConfigWidget.h" "${CMAKE_CURRENT_SOURCE_DIR}/CodeConfigWidget.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/FileBrowserWidget.h" "${CMAKE_CURRENT_SOURCE_DIR}/FileBrowserWidget.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/MetaOutputConfigWidget.h" "${CMAKE_CURRENT_SOURCE_DIR}/MetaOutputConfigWidget.cpp"

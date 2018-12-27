@@ -12,6 +12,7 @@ namespace AxiomBackend {
 
 namespace AxiomGui {
 
+    class PortalDefinitionEditorWidget;
     class FileBrowserWidget;
 
     class MetaOutputConfigWidget : public QWidget {
@@ -21,7 +22,12 @@ namespace AxiomGui {
         explicit MetaOutputConfigWidget(const AxiomModel::Project &project,
                                         const AxiomBackend::AudioConfiguration &configuration);
 
+    public slots:
+
+        void setInstrumentPrefix(const QString &oldSafePrefix, const QString &newSafePrefix);
+
     private:
+        PortalDefinitionEditorWidget *portalEditor;
         FileBrowserWidget *outputBrowser;
     };
 }

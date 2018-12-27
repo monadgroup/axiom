@@ -13,9 +13,14 @@ MetaOutputConfigWidget::MetaOutputConfigWidget(const AxiomModel::Project &projec
     layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
 
-    layout->addRow(new PortalDefinitionEditorWidget(project, configuration));
+    portalEditor = new PortalDefinitionEditorWidget(project, configuration);
+    layout->addRow(portalEditor);
 
     outputBrowser =
         new FileBrowserWidget("Meta Output Location", "Header File (*.h);;Rust Module (*.rs);;JSON File (*.json)");
     layout->addRow("Location:", outputBrowser);
+}
+
+void MetaOutputConfigWidget::setInstrumentPrefix(const QString &oldSafePrefix, const QString &newSafePrefix) {
+    portalEditor->setInstrumentPrefix(oldSafePrefix, newSafePrefix);
 }

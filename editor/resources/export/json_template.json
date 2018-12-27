@@ -1,0 +1,10 @@
+{
+  "samplerate": {{SAMPLERATE}},
+  "bpm": {{BPM}},
+  "prefix": "{{FUNC_PREFIX}}",
+  "portals": {
+    {%LOOP PORTAL_COUNT%}
+    "{{PORTAL_NAME_{%INDEX%}}}": {%INDEX%}
+    {%END%}
+  }
+}
