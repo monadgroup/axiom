@@ -1,4 +1,5 @@
 use crate::mir::pool_id::{PoolId, PoolRef};
+use crate::mir::VarType;
 use std::fmt;
 
 mod control;
@@ -38,7 +39,7 @@ impl fmt::Display for Block {
         }
         writeln!(f, "  statements:")?;
         for (i, statement) in self.statements.iter().enumerate() {
-            writeln!(f, "    %{} = {}", i, statement)?;
+            writeln!(f, "    %{} {} = {}", i, VarType::of_statement(self, i), statement)?;
         }
         write!(f, "}}")
     }

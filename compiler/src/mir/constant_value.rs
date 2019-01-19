@@ -87,21 +87,21 @@ impl PartialOrd for ConstantNum {
 
 impl fmt::Display for ConstantNum {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "num([{}] {}, {})", self.form, self.left, self.right)
+        write!(f, "num [{}] {}, {}", self.form, self.left, self.right)
     }
 }
 
 impl fmt::Display for ConstantTuple {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "tuple(")?;
+        write!(f, "tuple ")?;
         for (i, item) in self.items.iter().enumerate() {
-            item.fmt(f)?;
+            write!(f, "({})", item)?;
 
             if i != self.items.len() - 1 {
                 write!(f, ", ")?;
             }
         }
-        write!(f, ")")
+        Ok(())
     }
 }
 

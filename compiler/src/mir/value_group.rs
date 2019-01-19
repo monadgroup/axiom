@@ -22,7 +22,6 @@ impl ValueGroup {
 
 impl fmt::Display for ValueGroup {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} ", self.value_type)?;
         match &self.source {
             ValueGroupSource::None => write!(f, "none"),
             ValueGroupSource::Socket(socket) => write!(f, "${}", socket),

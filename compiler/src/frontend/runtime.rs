@@ -424,6 +424,14 @@ impl Runtime {
             return;
         }
 
+        println!("Begin transaction...");
+        for (_, block) in &transaction.blocks {
+            println!("{}", block);
+        }
+        for (_, surface) in &transaction.surfaces {
+            println!("{}", surface);
+        }
+
         // run destructors on old data before beginning
         if let Some(ref pointers) = self.runtime_pointers {
             unsafe {
@@ -572,7 +580,7 @@ impl Runtime {
         }
         println!("Surfaces >>");
         for surface in self.surface_mirs.values() {
-            println!("{:#?}", surface);
+            println!("{}", surface);
         }
         println!("Root: {:#?}", self.root.0);
         println!("<< End MIR");

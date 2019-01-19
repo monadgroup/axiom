@@ -30,7 +30,7 @@ impl fmt::Display for Surface {
         writeln!(f, "surface @{:?} {{", self.id)?;
         writeln!(f, "  groups:")?;
         for (i, group) in self.groups.iter().enumerate() {
-            writeln!(f, "    %{} = {}", i, group)?;
+            writeln!(f, "    %{} {} = {}", i, group.value_type, group)?;
         }
         writeln!(f, "  nodes:")?;
         for node in self.nodes.iter() {

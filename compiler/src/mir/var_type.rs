@@ -13,6 +13,7 @@ pub enum VarType {
     Midi,
     Tuple(Vec<VarType>),
     Array(Box<VarType>),
+    Void,
 }
 
 impl VarType {
@@ -55,7 +56,7 @@ impl VarType {
                     .collect(),
             ),
             Statement::CallFunc { function, .. } => VarType::of_function(*function),
-            Statement::StoreControl { field, .. } => VarType::of_control_field(*field),
+            Statement::StoreControl { field, .. } => VarType::Void,
             Statement::LoadControl { field, .. } => VarType::of_control_field(*field),
         }
     }
@@ -108,16 +109,17 @@ impl fmt::Display for VarType {
             VarType::Num => write!(f, "num"),
             VarType::Midi => write!(f, "midi"),
             VarType::Tuple(ref items) => {
-                write!(f, "tuple(")?;
+                write!(f, "(")?;
                 for (index, subtype) in items.iter().enumerate() {
-                    write!(f, "{:?}", subtype)?;
+                    write!(f, "{}", subtype)?;
                     if index < items.len() - 1 {
                         write!(f, ", ")?;
                     }
                 }
                 write!(f, ")")
             }
-            VarType::Array(ref subtype) => write!(f, "array [{:?}]", subtype),
+            VarType::Array(ref subtype) => write!(f, "{}[]", subtype),
+            VarType::Void => write!(f, "void"),
         }
     }
 }
