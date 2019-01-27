@@ -21,7 +21,7 @@ There are currently pre-packaged versions available for Windows and macOS (alpha
 
 Axiom currently supports the following audio backends:
 
- - Standalone editor - doesn't require a DAW or host, allowing experimentation with the editor. MIDI can be inputted from a MIDI device, or by pressing keys on a regular computer keyboard.
+ - Standalone editor - doesn't require a DAW or host, allowing experimentation with the editor. MIDI can be input from a MIDI device, or by pressing keys on a regular computer keyboard.
  - VST2 - runs in a VST host as an instrument or effect, with support for side-chaining and multiple inputs/outputs.
  - _Other backends such as VST3 are planned_
 
