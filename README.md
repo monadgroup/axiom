@@ -21,13 +21,13 @@ There are currently pre-packaged versions available for Windows and macOS (alpha
 
 Axiom currently supports the following audio backends:
 
- - Standalone with PortAudio - doesn't require a DAW or host, allowing experimentation with the editor. MIDI input can be entered with a regular computer keyboard (no actual MIDI support yet).
+ - Standalone editor - doesn't require a DAW or host, allowing experimentation with the editor. MIDI can be inputted from a MIDI device, or by pressing keys on a regular computer keyboard.
  - VST2 - runs in a VST host as an instrument or effect, with support for side-chaining and multiple inputs/outputs.
  - _Other backends such as VST3 are planned_
 
 ## Building
 
-Axiom is built with CMake. The build process depends on Cargo, Qt 5.10 or 5.11, LLVM 6, and the VST 2 SDK (for the VST2 backend), so make sure those are installed and setup correctly.
+Axiom is built with CMake. The build process depends on Cargo, Qt 5.10+, LLVM 6, and the VST 2 SDK (for the VST2 backend), so make sure those are installed and setup correctly.
 
 Once Cargo, Qt, LLVM, and the VST SDK are installed, go to the directory where you'd like to build Axiom to. Then run the following command:
 
@@ -45,7 +45,7 @@ CMake will setup files necessary for building. If this fails, make sure you've g
 
 ### VST2 Instrument & VST2 Effect
 
-* To build the VST2 instrument backend, use the following command. You will need to specify a path to the VST2 SDK. 
+* To build the VST2 instrument backend, use the following command. Make sure you provided a path to the VST SDK in the command above.
 ```
 cmake --build ./ --target axiom_vst2_instrument
 ```
@@ -57,7 +57,8 @@ cmake --build ./ --target axiom_vst2_effect
 
 ### Standalone
 
-* To build the standalone version as an executable, use the following command. In order to enable audio output in this version, the PortAudio library must be installed. You can still use the standalone editor without it, the graph just won't be simulated.
+* To build the standalone version as an executable, use the following command. The standalone optionally depends on PortAudio and PortMidi: without PortAudio nodes will not be simulated and audio will not be output, without PortMidi MIDI devices cannot be used for input.
+
 
 ```
 cmake --build ./ --target axiom_standalone
@@ -70,8 +71,7 @@ Axiom is comprised of several components:
  - The VST Editor, written with Qt and the VST SDK. This is the only part the user directly interacts with, and must be
    OS-independent. 
  - The Maxim language compiler and runtime, written in Rust with LLVM and statically linked into the editor.
- - The replayer, written in size-optimised C++. Due to it's reliance on Maxim snippets, this must be compiled with
-   Clang. The replayer provides a function to fill a buffer, use with the API of your choice.
+ - The replayer, _coming soon_.
 
 ## License
 

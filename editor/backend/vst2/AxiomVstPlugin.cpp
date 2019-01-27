@@ -1,6 +1,6 @@
 #include "AxiomVstPlugin.h"
 
-#include "../vst2-common/EventConverter.h"
+#include "editor/backend/EventConverter.h"
 
 using namespace AxiomBackend;
 
@@ -112,8 +112,8 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
         auto event = events->events[i];
         if (event->type != kVstMidiType) continue;
 
-        auto midiEvent = (VstMidiEvent *) event;
-        if (auto remappedEvent = convertFromVst(midiEvent)) {
+        auto midiEvent = *reinterpret_cast<int32_t *>(((VstMidiEvent *) event)->midiData);
+        if (auto remappedEvent = convertFromMidi(midiEvent)) {
             backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, *remappedEvent);
         }
     }

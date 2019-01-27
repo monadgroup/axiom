@@ -1,6 +1,5 @@
 set(VST2_BACKEND_SOURCES ${VST2_SHARED_SOURCES}
                          "../vst2-common/AxiomVst.def"
-                         "../vst2-common/EventConverter.h" "../vst2-common/EventConverter.cpp"
                          AxiomVstPlugin.h AxiomVstPlugin.cpp
                          AxiomVstEditor.h AxiomVstEditor.cpp)
 

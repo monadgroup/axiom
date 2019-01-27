@@ -36,6 +36,7 @@ add_library(axiom_editor
         AxiomApplication.h AxiomApplication.cpp
         AxiomEditor.h AxiomEditor.cpp
         backend/AudioBackend.h backend/AudioBackend.cpp
+        backend/EventConverter.h backend/EventConverter.cpp
         backend/PersistentParameters.h)
 target_link_libraries(axiom_editor axiom_backend axiom_widgets axiom_model axiom_common maxim_compiler Qt5::Widgets)
 

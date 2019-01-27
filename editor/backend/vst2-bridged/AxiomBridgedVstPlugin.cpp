@@ -5,7 +5,7 @@
 #include "IdBuffer.h"
 #include "editor/util.h"
 #include "../AudioBackend.h"
-#include "../vst2-common/EventConverter.h"
+#include "editor/backend/EventConverter.h"
 
 class AxiomBridgedEditor : public AEffEditor {
 public:
@@ -144,8 +144,8 @@ VstInt32 AxiomBridgedVstPlugin::processEvents(VstEvents *events) {
         auto event = events->events[i];
         if (event->type != kVstMidiType) continue;
 
-        auto midiEvent = (VstMidiEvent *) event;
-        if (auto remappedEvent = AxiomBackend::convertFromVst(midiEvent)) {
+        auto midiEvent = *reinterpret_cast<int32_t *>(((VstMidiEvent *) event)->midiData);
+        if (auto remappedEvent = AxiomBackend::convertFromMidi(midiEvent)) {
             AxiomBackend::VstAudioMessage msg(AxiomBackend::VstAudioMessageType::PUSH_MIDI_EVENT);
             msg.data.pushMidiEvent.deltaSamples = event->deltaFrames;
             msg.data.pushMidiEvent.event = (uint8_t) remappedEvent->event;

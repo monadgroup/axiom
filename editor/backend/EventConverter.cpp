@@ -2,10 +2,11 @@
 
 using namespace AxiomBackend;
 
-std::optional<MidiEvent> AxiomBackend::convertFromVst(VstMidiEvent *event) {
-    auto midiStatus = event->midiData[0];
-    auto midiData1 = event->midiData[1];
-    auto midiData2 = event->midiData[2];
+std::optional<MidiEvent> AxiomBackend::convertFromMidi(int32_t event) {
+    auto midiData = reinterpret_cast<char *>(&event);
+    auto midiStatus = midiData[0];
+    auto midiData1 = midiData[1];
+    auto midiData2 = midiData[2];
 
     auto eventType = (uint8_t) (midiStatus & 0xF0);
     auto eventChannel = (uint8_t) (midiStatus & 0x0F);

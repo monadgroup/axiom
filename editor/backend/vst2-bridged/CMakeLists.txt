@@ -22,7 +22,6 @@ set(VST2_BRIDGED_SHARED_SOURCES
 set(VST2_BRIDGED_PLUGIN_SOURCES ${VST2_SOURCES}
                                 ${VST2_BRIDGED_SHARED_SOURCES}
                                 "../vst2-common/AxiomVst.def"
-                                "../vst2-common/EventConverter.h" "../vst2-common/EventConverter.cpp"
                                 AxiomBridgedVstPlugin.h AxiomBridgedVstPlugin.cpp)
 
 include_directories(${VST2_SDK_ROOT})

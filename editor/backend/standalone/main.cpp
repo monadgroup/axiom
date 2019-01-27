@@ -2,13 +2,20 @@
 
 #include "../../AxiomApplication.h"
 #include "../../AxiomEditor.h"
+#include "editor/backend/EventConverter.h"
 #include "../AudioBackend.h"
 
 #ifdef PORTAUDIO
 #include <portaudio.h>
 #endif
 
+#ifdef PORTMIDI
+#include <portmidi.h>
+#endif
+
 using namespace AxiomBackend;
+
+static constexpr int MIDI_BUFFER_SIZE = 32;
 
 class StandaloneAudioBackend : public AudioBackend {
 public:
@@ -54,8 +61,42 @@ public:
         queueMidiEvent(0, (size_t) midiInputPortal, event);
     }
 
+#ifdef PORTMIDI
+    PmStream *midiStream = nullptr;
+
+    static PmError checkError(PmError error) {
+        if (error < 0) {
+            std::cerr << "PortMidi error: " << Pm_GetErrorText(error) << std::endl;
+            abort();
+        }
+        return error;
+    }
+
+    void processMidiEvents() {
+        if (midiStream == nullptr) {
+            return;
+        }
+
+        int numRead;
+        do {
+            PmEvent eventBuffer[MIDI_BUFFER_SIZE];
+            numRead = Pm_Read(midiStream, eventBuffer, MIDI_BUFFER_SIZE);
+            checkError(numRead);
+
+            // Don't bother processing if there's nowhere to put the events
+            if (midiInputPortal == -1) continue;
+
+            for (auto eventIndex = 0; eventIndex < numRead; eventIndex++) {
+                if (auto convertedEvent = convertFromMidi(eventBuffer[eventIndex].message)) {
+                    queueMidiEvent(0, (size_t) midiInputPortal, *convertedEvent);
+                }
+            }
+        } while (numRead >= MIDI_BUFFER_SIZE);
+    }
+#endif
+
 #ifdef PORTAUDIO
-    PaStream *stream = nullptr;
+    PaStream *audioStream = nullptr;
 
     static void checkError(PaError error) {
         if (error != paNoError) {
@@ -67,6 +108,10 @@ public:
     static int paCallback(const void *, void *outputBuffer, unsigned long framesPerBuffer,
                           const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags, void *userData) {
         auto backend = (StandaloneAudioBackend *) userData;
+#ifdef PORTMIDI
+        backend->processMidiEvents();
+#endif
+
         uint64_t processPos = 0;
 
         auto outputNums = (float *) outputBuffer;
@@ -96,28 +141,52 @@ public:
 
         return 0;
     }
+#endif
 
     void startupAudio() {
+#ifdef PORTAUDIO
         checkError(Pa_Initialize());
 
         // todo: allow inputs and outputs to be customized (does PortAudio allow changing inputs and outputs
         // mid-stream?)
-        checkError(Pa_OpenDefaultStream(&stream,
+        checkError(Pa_OpenDefaultStream(&audioStream,
                                         0, // no inputs
                                         2, // stereo output
                                         paFloat32, 44100, paFramesPerBufferUnspecified, paCallback, this));
-        checkError(Pa_StartStream(stream));
+        checkError(Pa_StartStream(audioStream));
+#endif
+
+#ifdef PORTMIDI
+        checkError(Pm_Initialize());
+
+        auto defaultInput = Pm_GetDefaultInputDeviceID();
+        if (defaultInput != pmNoDevice) {
+            checkError(Pm_OpenInput(&midiStream,
+                                    defaultInput,
+                                    nullptr,
+                                    MIDI_BUFFER_SIZE,
+                                    nullptr,
+                                    nullptr));
+        } else {
+            std::cerr << "Not using MIDI input as no devices could be detected." << std::endl;
+        }
+#endif
     }
 
     void shutdownAudio() {
-        checkError(Pa_StopStream(stream));
-        checkError(Pa_CloseStream(stream));
+#ifdef PORTAUDIO
+        checkError(Pa_StopStream(audioStream));
+        checkError(Pa_CloseStream(audioStream));
         checkError(Pa_Terminate());
-    }
-#else
-    void startupAudio() {}
-    void shutdownAudio() {}
 #endif
+
+#ifdef PORTMIDI
+        if (midiStream != nullptr) {
+            checkError(Pm_Close(midiStream));
+        }
+        checkError(Pm_Terminate());
+#endif
+    }
 };
 
 int main(int argc, char *argv[]) {
