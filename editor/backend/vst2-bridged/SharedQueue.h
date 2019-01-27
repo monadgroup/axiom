@@ -5,13 +5,13 @@
 #include <array>
 #include <string>
 #include <cassert>
+#include <QtCore/QtGlobal>
 
-/*#ifdef Q_OS_WIN
+#ifdef Q_OS_WIN
 #include "WinQueueSync.h"
 #elif defined(Q_OS_UNIX)
 #include "UnixQueueSync.h"
-#endif*/
-#include "WinQueueSync.h"
+#endif
 
 namespace AxiomBackend {
     class Phantom {
