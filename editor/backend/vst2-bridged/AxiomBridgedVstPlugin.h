@@ -12,6 +12,7 @@ public:
     QString channelMemKey;
     QSharedMemory channelMem;
     AxiomBackend::VstChannel &channel;
+    AxiomBackend::VstChannel::SeparateData sep;
     QProcess appProcess;
     AxiomBackend::Dispatcher<AxiomBackend::VstChannel::GuiAppToVstQueue> guiDispatcher;
     AxiomBackend::Dispatcher<AxiomBackend::VstChannel::AudioAppToVstQueue> audioDispatcher;

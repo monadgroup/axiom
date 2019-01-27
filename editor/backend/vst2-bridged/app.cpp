@@ -17,15 +17,17 @@ using namespace AxiomBackend;
 class BridgedAdapter : public VstAdapter {
 public:
     VstChannel &channel;
+    VstChannel::SeparateData sep;
     Dispatcher<VstChannel::GuiVstToAppQueue> guiDispatcher;
     Dispatcher<VstChannel::AudioVstToAppQueue> audioDispatcher;
     std::thread audioThread;
-    QTimer guiThreadIdle;
+    std::thread guiDispatcherThread;
     QSharedMemory ioBuffer;
     VstAudioBackend *backend = nullptr;
 
-    explicit BridgedAdapter(VstChannel &channel)
+    BridgedAdapter(VstChannel &channel, const std::string &id)
         : channel(channel),
+          sep(id),
           guiDispatcher(channel.guiVstToApp, [this](const VstGuiMessage &message) {
               return dispatchGuiMessage(message);
           }),
@@ -37,14 +39,15 @@ public:
         this->backend = backend;
 
         audioThread = std::thread([this]() {
-            audioDispatcher.run();
+            std::cout << "Running audio dispatcher" << std::endl;
+            audioDispatcher.run(sep.audioVstToAppData);
+            std::cout << "Audio dispatcher has exited" << std::endl;
         });
-
-        QTimer::connect(&guiThreadIdle, &QTimer::timeout, [this]() {
-            // todo: exit when EXIT is returned here
-            guiDispatcher.idle();
+        guiDispatcherThread = std::thread([this]() {
+            std::cout << "Running GUI dispatcher" << std::endl;
+            guiDispatcher.run(sep.guiVstToAppData);
+            std::cout << "GUI dispatcher has exited" << std::endl;
         });
-        guiThreadIdle.start(0);
     }
 
     void adapterUpdateIo() override {
@@ -63,10 +66,11 @@ public:
             msg.data.updateIo.newMemoryId = generateNewBufferId();
             ioBuffer.detach();
             ioBuffer.setKey(getBufferStringKey(msg.data.updateIo.newMemoryId));
-            ioBuffer.create(allBuffersSize);
+            auto createSuccess = ioBuffer.create(allBuffersSize);
+            assert(createSuccess);
         }
 
-        channel.guiAppToVst.pushWhenAvailable(msg);
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
     void adapterSetParameter(size_t parameter, AxiomBackend::NumValue value) override {
@@ -74,7 +78,7 @@ public:
         msg.data.setParameter = {
             (int) parameter, (float) value.left
         };
-        channel.guiAppToVst.pushWhenAvailable(msg);
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
 private:
@@ -100,7 +104,7 @@ private:
             }
         }
 
-        channel.guiAppToVst.pushWhenAvailable(msg);
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
     void handleGetParameterLabel(VstGuiGetParameterLabelMessage message) {
@@ -115,7 +119,7 @@ private:
             }
         }
 
-        channel.guiAppToVst.pushWhenAvailable(msg);
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
     void handleGetParameterDisplay(VstGuiGetParameterDisplayMessage message) {
@@ -130,7 +134,7 @@ private:
             }
         }
 
-        channel.guiAppToVst.pushWhenAvailable(msg);
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
     void handleGetParameterName(VstGuiGetParameterNameMessage message) {
@@ -144,13 +148,13 @@ private:
             }
         }
 
-        channel.guiAppToVst.pushWhenAvailable(msg);
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
     void handleGetCanAutomateParameter(VstGuiGetCanAutomateParameterMessage message) {
         AppGuiMessage msg(AppGuiMessageType::CAN_AUTOMATE_PARAMETER);
         msg.data.canAutomateParameter.canAutomate = (size_t) message.index < backend->automationInputs.size();
-        channel.guiAppToVst.pushWhenAvailable(msg);
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
     void handleBeginSerialize(VstGuiBeginSerializeMessage message) {
@@ -165,38 +169,41 @@ private:
         // todo
     }
 
-    DispatcherHandlerResult dispatchGuiMessage(const VstGuiMessage &message) {
-        switch (message.type) {
-            case VstGuiMessageType::SET_PARAMETER:
-                handleSetParameter(message.data.setParameter);
-                break;
-            case VstGuiMessageType::GET_PARAMETER:
-                handleGetParameter(message.data.getParameter);
-                break;
-            case VstGuiMessageType::GET_PARAMETER_LABEL:
-                handleGetParameterLabel(message.data.getParameterLabel);
-                break;
-            case VstGuiMessageType::GET_PARAMETER_DISPLAY:
-                handleGetParameterDisplay(message.data.getParameterDisplay);
-                break;
-            case VstGuiMessageType::GET_PARAMETER_NAME:
-                handleGetParameterName(message.data.getParameterName);
-                break;
-            case VstGuiMessageType::GET_CAN_AUTOMATE_PARAMETER:
-                handleGetCanAutomateParameter(message.data.getCanAutomateParameter);
-                break;
-            case VstGuiMessageType::BEGIN_SERIALIZE:
-                handleBeginSerialize(message.data.beginSerialize);
-                break;
-            case VstGuiMessageType::END_SERIALIZE:
-                handleEndSerialize(message.data.endSerialize);
-                break;
-            case VstGuiMessageType::BEGIN_DESERIALIZE:
-                handleBeginDeserialize(message.data.beginDeserialize);
-                break;
-            default:
+    DispatcherHandlerResult dispatchGuiMessage(VstGuiMessage message) {
+        // Queue the message to be processed on the GUI thread
+        QMetaObject::invokeMethod(qApp, [this, message]() {
+            switch (message.type) {
+                case VstGuiMessageType::SET_PARAMETER:
+                    handleSetParameter(message.data.setParameter);
+                    break;
+                case VstGuiMessageType::GET_PARAMETER:
+                    handleGetParameter(message.data.getParameter);
+                    break;
+                case VstGuiMessageType::GET_PARAMETER_LABEL:
+                    handleGetParameterLabel(message.data.getParameterLabel);
+                    break;
+                case VstGuiMessageType::GET_PARAMETER_DISPLAY:
+                    handleGetParameterDisplay(message.data.getParameterDisplay);
+                    break;
+                case VstGuiMessageType::GET_PARAMETER_NAME:
+                    handleGetParameterName(message.data.getParameterName);
+                    break;
+                case VstGuiMessageType::GET_CAN_AUTOMATE_PARAMETER:
+                    handleGetCanAutomateParameter(message.data.getCanAutomateParameter);
+                    break;
+                case VstGuiMessageType::BEGIN_SERIALIZE:
+                    handleBeginSerialize(message.data.beginSerialize);
+                    break;
+                case VstGuiMessageType::END_SERIALIZE:
+                    handleEndSerialize(message.data.endSerialize);
+                    break;
+                case VstGuiMessageType::BEGIN_DESERIALIZE:
+                    handleBeginDeserialize(message.data.beginDeserialize);
+                    break;
+                default:
                 unreachable;
-        }
+            }
+        });
 
         return DispatcherHandlerResult::CONTINUE;
     }
@@ -255,7 +262,7 @@ private:
 
         AppAudioMessage msg(AppAudioMessageType::GENERATE_DONE);
         // todo: push or pushWhenAvailable here?
-        channel.audioAppToVst.push(msg);
+        channel.audioAppToVst.push(msg, sep.audioAppToVstData);
     }
 
     void handlePushMidiEvent(VstAudioPushMidiEventMessage message) {
@@ -319,7 +326,7 @@ int main(int argc, char *argv[]) {
     auto &channel = *reinterpret_cast<VstChannel *>(channelBuffer.data());
 
     std::cout << "Starting backend" << std::endl;
-    BridgedAdapter adapter(channel);
+    BridgedAdapter adapter(channel, argv[1]);
     VstAudioBackend backend(adapter, strcmp(argv[2], "instrument") == 0);
     adapter.start(&backend);
 

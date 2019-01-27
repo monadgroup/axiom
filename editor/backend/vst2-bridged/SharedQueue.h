@@ -2,10 +2,16 @@
 
 #include <optional>
 #include <atomic>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
+#include <array>
+#include <string>
 #include <cassert>
+
+/*#ifdef Q_OS_WIN
+#include "WinQueueSync.h"
+#elif defined(Q_OS_UNIX)
+#include "UnixQueueSync.h"
+#endif*/
+#include "WinQueueSync.h"
 
 namespace AxiomBackend {
     class Phantom {
@@ -24,6 +30,8 @@ namespace AxiomBackend {
     public:
         union {
             Item maybeItem;
+
+            // todo: is this needed?
             Phantom phantom;
         };
 
@@ -99,6 +107,16 @@ namespace AxiomBackend {
     public:
         using value_type = Item;
 
+        class SeparateData {
+        public:
+            QueueSync::SeparateData consumeData;
+            QueueSync::SeparateData produceData;
+
+            explicit SeparateData(const std::string &id)
+                : consumeData(id + ".consume"),
+                  produceData(id + ".produce") {}
+        };
+
         size_t size() const {
             auto currentReadIndex = container.readIndex.load();
             auto currentWriteIndex = container.writeIndex.load();
@@ -123,13 +141,14 @@ namespace AxiomBackend {
         }
 
         // Tries to push the item to the queue, returning the item if no space is available.
-        std::optional<Item> tryPush(Item value) {
-            produceMutex.lock();
+        std::optional<Item> tryPush(Item value, SeparateData &sep) {
+            produceSync.lock(sep.produceData);
 
             auto currentWriteIndex = container.writeIndex.load();
             auto nextWriteIndex = countToIndex(currentWriteIndex + 1);
             if (nextWriteIndex == container.readIndex.load()) {
                 // The queue is full
+                produceSync.unlock(sep.produceData);
                 return value;
             }
 
@@ -137,38 +156,41 @@ namespace AxiomBackend {
 
             container.writeIndex.store(nextWriteIndex);
 
-            produceMutex.unlock();
-            maybeCanConsume.notify_one();
+            produceSync.unlock(sep.produceData);
+            produceSync.wakeOne(sep.produceData);
             return std::nullopt;
         }
 
         // Tries to push the item to the queue, aborting if no space is available.
-        void push(Item value) {
-            if (tryPush(std::move(value))) {
+        void push(Item value, SeparateData &sep) {
+            if (tryPush(std::move(value), sep)) {
                 assert(false && "Cannot push item, queue is full");
                 abort();
             }
         }
 
         // Pushes an item to the queue, blocking the current thread if no space is available
-        void pushWhenAvailable(Item value) {
-            std::unique_lock<std::mutex> lock(consumeMutex);
+        void pushWhenAvailable(Item value, SeparateData &sep) {
+            consumeSync.lock(sep.consumeData);
 
-            while (auto returnedItem = tryPush(std::move(value))) {
+            while (auto returnedItem = tryPush(std::move(value), sep)) {
                 value = std::move(*returnedItem);
 
                 // Suspend until space is available to push into
-                maybeCanProduce.wait(lock);
+                consumeSync.wait(sep.consumeData);
             }
+
+            consumeSync.unlock(sep.consumeData);
         }
 
         // Tries to pop an item off the queue, returning it if available.
-        std::optional<Item> tryPop() {
-            consumeMutex.lock();
+        std::optional<Item> tryPop(SeparateData &sep) {
+            consumeSync.lock(sep.consumeData);
 
             auto currentReadIndex = container.readIndex.load();
             if (currentReadIndex == container.writeIndex.load()) {
                 // The queue is empty
+                consumeSync.unlock(sep.consumeData);
                 return std::nullopt;
             }
 
@@ -177,38 +199,36 @@ namespace AxiomBackend {
             itm.~Item();
             container.readIndex.store(countToIndex(currentReadIndex + 1));
 
-            consumeMutex.unlock();
-            maybeCanProduce.notify_one();
+            consumeSync.unlock(sep.consumeData);
+            consumeSync.wakeOne(sep.consumeData);
 
             return readValue;
         }
 
-        Item pop() {
-            if (auto val = tryPop()) {
+        Item pop(SeparateData &sep) {
+            if (auto val = tryPop(sep)) {
                 return *val;
             }
             assert(false && "Cannot pop item, queue is empty");
             abort();
         }
 
-        Item popWhenAvailable() {
-            std::unique_lock<std::mutex> lock(produceMutex);
+        Item popWhenAvailable(SeparateData &sep) {
+            produceSync.lock(sep.produceData);
 
             while (true) {
-                if (auto poppedItem = tryPop()) {
-                    produceMutex.unlock();
+                if (auto poppedItem = tryPop(sep)) {
+                    produceSync.unlock(sep.produceData);
                     return *poppedItem;
                 }
 
-                maybeCanConsume.wait(lock);
+                produceSync.wait(sep.produceData);
             }
         }
 
     private:
-        std::mutex consumeMutex;
-        std::mutex produceMutex;
-        std::condition_variable maybeCanConsume;
-        std::condition_variable maybeCanProduce;
+        QueueSync consumeSync;
+        QueueSync produceSync;
         QueueBuffer<Item, Capacity> container;
 
         size_t countToIndex(size_t count) {

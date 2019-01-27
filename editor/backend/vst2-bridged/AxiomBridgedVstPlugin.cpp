@@ -5,6 +5,7 @@
 #include "IdBuffer.h"
 #include "editor/util.h"
 #include "../AudioBackend.h"
+#include "../vst2-common/EventConverter.h"
 
 class AxiomBridgedEditor : public AEffEditor {
 public:
@@ -12,7 +13,7 @@ public:
         : AEffEditor(plugin), plugin(plugin) {}
 
     void idle() override {
-        plugin->guiDispatcher.idle();
+        plugin->guiDispatcher.idle(plugin->sep.guiAppToVstData);
     }
 
 private:
@@ -30,8 +31,8 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 AxiomBackend::VstChannel &createChannel(QSharedMemory &mem) {
     auto createSuccess = mem.create(sizeof(AxiomBackend::VstChannel));
     assert(createSuccess);
-    auto someVal = ::new (mem.data()) AxiomBackend::VstChannel;
-    return *someVal;
+    auto vstChannel = ::new (mem.data()) AxiomBackend::VstChannel;
+    return *vstChannel;
 }
 
 AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
@@ -39,6 +40,7 @@ AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
       channelMemKey(AxiomBackend::getBufferStringKey(AxiomBackend::generateNewBufferId())),
       channelMem(channelMemKey),
       channel(createChannel(channelMem)),
+      sep(channelMemKey.toStdString()),
       guiDispatcher(channel.guiAppToVst, [this](const AxiomBackend::AppGuiMessage &message) {
           return dispatchGuiMessage(message);
       }),
@@ -67,10 +69,12 @@ AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
     appProcessParams.push_back("effect");
 #endif
     appProcess.start(appProcessPath, appProcessParams);
+    auto startSuccess = appProcess.waitForStarted();
+    assert(startSuccess);
 
     // Wait for the first IO update
     while (true) {
-        auto nextGuiMessage = guiDispatcher.waitForNext();
+        auto nextGuiMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
         if (nextGuiMessage.type == AxiomBackend::AppGuiMessageType::UPDATE_IO) {
             break;
         }
@@ -85,7 +89,7 @@ void AxiomBridgedVstPlugin::processReplacing(float **inputs, float **outputs, Vs
             currentBpm = newBpm;
             AxiomBackend::VstAudioMessage msg(AxiomBackend::VstAudioMessageType::SET_BPM);
             msg.data.setBpm.bpm = newBpm;
-            channel.audioVstToApp.push(msg);
+            channel.audioVstToApp.push(msg, sep.audioVstToAppData);
         }
     }
 
@@ -105,10 +109,10 @@ void AxiomBridgedVstPlugin::processReplacing(float **inputs, float **outputs, Vs
         // Tell the app to generate
         AxiomBackend::VstAudioMessage msg(AxiomBackend::VstAudioMessageType::GENERATE);
         msg.data.generate.sampleCount = (uint8_t) processCount;
-        channel.audioVstToApp.push(msg);
+        channel.audioVstToApp.push(msg, sep.audioVstToAppData);
 
         // Wait for the app to say it's finished
-        while (audioDispatcher.waitForNext().type != AxiomBackend::AppAudioMessageType::GENERATE_DONE) {}
+        while (audioDispatcher.waitForNext(sep.audioAppToVstData).type != AxiomBackend::AppAudioMessageType::GENERATE_DONE) {}
 
         // Copy the outputs back to the parameters
         for (size_t outputIndex = 0; outputIndex < expectedOutputCount; outputIndex++) {
@@ -127,30 +131,45 @@ void AxiomBridgedVstPlugin::processReplacing(float **inputs, float **outputs, Vs
 }
 
 VstInt32 AxiomBridgedVstPlugin::processEvents(VstEvents *events) {
-    // todo
+    for (auto i = 0; i < events->numEvents; i++) {
+        auto event = events->events[i];
+        if (event->type != kVstMidiType) continue;
+
+        auto midiEvent = (VstMidiEvent *) event;
+        if (auto remappedEvent = AxiomBackend::convertFromVst(midiEvent)) {
+            AxiomBackend::VstAudioMessage msg(AxiomBackend::VstAudioMessageType::PUSH_MIDI_EVENT);
+            msg.data.pushMidiEvent.deltaSamples = event->deltaFrames;
+            msg.data.pushMidiEvent.event = (uint8_t) remappedEvent->event;
+            msg.data.pushMidiEvent.channel = remappedEvent->channel;
+            msg.data.pushMidiEvent.note = remappedEvent->note;
+            msg.data.pushMidiEvent.param = remappedEvent->param;
+            channel.audioVstToApp.push(msg, sep.audioVstToAppData);
+        }
+    }
+
     return 0;
 }
 
 void AxiomBridgedVstPlugin::setSampleRate(float sampleRate) {
     AxiomBackend::VstAudioMessage msg(AxiomBackend::VstAudioMessageType::SET_SAMPLE_RATE);
     msg.data.setSampleRate.sampleRate = sampleRate;
-    channel.audioVstToApp.push(msg);
+    channel.audioVstToApp.push(msg, sep.audioVstToAppData);
 }
 
 void AxiomBridgedVstPlugin::setParameter(VstInt32 index, float value) {
     AxiomBackend::VstGuiMessage msg(AxiomBackend::VstGuiMessageType::SET_PARAMETER);
     msg.data.setParameter.index = index;
     msg.data.setParameter.value = value;
-    channel.guiVstToApp.pushWhenAvailable(msg);
+    channel.guiVstToApp.pushWhenAvailable(msg, sep.guiVstToAppData);
 }
 
 float AxiomBridgedVstPlugin::getParameter(VstInt32 index) {
     AxiomBackend::VstGuiMessage msg(AxiomBackend::VstGuiMessageType::GET_PARAMETER);
     msg.data.getParameter.index = index;
-    channel.guiVstToApp.pushWhenAvailable(msg);
+    channel.guiVstToApp.pushWhenAvailable(msg, sep.guiVstToAppData);
 
     while (true) {
-        auto nextMessage = guiDispatcher.waitForNext();
+        auto nextMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
         if (nextMessage.type == AxiomBackend::AppGuiMessageType::PARAMETER_VALUE) {
             return nextMessage.data.parameterValue.value;
         }
@@ -160,10 +179,10 @@ float AxiomBridgedVstPlugin::getParameter(VstInt32 index) {
 void AxiomBridgedVstPlugin::getParameterLabel(VstInt32 index, char *label) {
     AxiomBackend::VstGuiMessage msg(AxiomBackend::VstGuiMessageType::GET_PARAMETER_LABEL);
     msg.data.getParameterLabel.index = index;
-    channel.guiVstToApp.pushWhenAvailable(msg);
+    channel.guiVstToApp.pushWhenAvailable(msg, sep.guiVstToAppData);
 
     while (true) {
-        auto nextMessage = guiDispatcher.waitForNext();
+        auto nextMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
         if (nextMessage.type == AxiomBackend::AppGuiMessageType::PARAMETER_LABEL) {
             vst_strncpy(label, nextMessage.data.parameterLabel.name, 8);
             return;
@@ -174,10 +193,10 @@ void AxiomBridgedVstPlugin::getParameterLabel(VstInt32 index, char *label) {
 void AxiomBridgedVstPlugin::getParameterDisplay(VstInt32 index, char *text) {
     AxiomBackend::VstGuiMessage msg(AxiomBackend::VstGuiMessageType::GET_PARAMETER_DISPLAY);
     msg.data.getParameterDisplay.index = index;
-    channel.guiVstToApp.pushWhenAvailable(msg);
+    channel.guiVstToApp.pushWhenAvailable(msg, sep.guiVstToAppData);
 
     while (true) {
-        auto nextMessage = guiDispatcher.waitForNext();
+        auto nextMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
         if (nextMessage.type == AxiomBackend::AppGuiMessageType::PARAMETER_DISPLAY) {
             vst_strncpy(text, nextMessage.data.parameterDisplay.name, 8);
             return;
@@ -188,10 +207,10 @@ void AxiomBridgedVstPlugin::getParameterDisplay(VstInt32 index, char *text) {
 void AxiomBridgedVstPlugin::getParameterName(VstInt32 index, char *text) {
     AxiomBackend::VstGuiMessage msg(AxiomBackend::VstGuiMessageType::GET_PARAMETER_NAME);
     msg.data.getParameterName.index = index;
-    channel.guiVstToApp.pushWhenAvailable(msg);
+    channel.guiVstToApp.pushWhenAvailable(msg, sep.guiVstToAppData);
 
     while (true) {
-        auto nextMessage = guiDispatcher.waitForNext();
+        auto nextMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
         if (nextMessage.type == AxiomBackend::AppGuiMessageType::PARAMETER_NAME) {
             vst_strncpy(text, nextMessage.data.parameterName.name, 8);
             return;
@@ -243,10 +262,10 @@ VstInt32 AxiomBridgedVstPlugin::getNumMidiInputChannels() {
 bool AxiomBridgedVstPlugin::canParameterBeAutomated(VstInt32 index) {
     AxiomBackend::VstGuiMessage msg(AxiomBackend::VstGuiMessageType::GET_CAN_AUTOMATE_PARAMETER);
     msg.data.getCanAutomateParameter.index = index;
-    channel.guiVstToApp.pushWhenAvailable(msg);
+    channel.guiVstToApp.pushWhenAvailable(msg, sep.guiVstToAppData);
 
     while (true) {
-        auto nextMessage = guiDispatcher.waitForNext();
+        auto nextMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
         if (nextMessage.type == AxiomBackend::AppGuiMessageType::CAN_AUTOMATE_PARAMETER) {
             return nextMessage.data.canAutomateParameter.canAutomate;
         }
@@ -271,10 +290,14 @@ void AxiomBridgedVstPlugin::handleUpdateIo(AxiomBackend::AppGuiUpdateIoMessage m
     inputCount = message.inputCount;
     outputCount = message.outputCount;
 
-    ioBuffer.detach();
-    ioBuffer.setKey(AxiomBackend::getBufferStringKey(message.newMemoryId));
-    auto attachSuccess = ioBuffer.attach();
-    assert(attachSuccess);
+    if (message.newMemoryId) {
+        ioBuffer.detach();
+        ioBuffer.setKey(AxiomBackend::getBufferStringKey(message.newMemoryId));
+        auto attachSuccess = ioBuffer.attach();
+        assert(attachSuccess);
+    } else {
+        assert(ioBuffer.data());
+    }
 
     setNumInputs(message.inputCount);
     setNumOutputs(message.outputCount);

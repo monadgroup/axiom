@@ -8,7 +8,6 @@ else ()
 endif ()
 
 set(VST2_SHARED_SOURCES ${VST2_SOURCES}
-                        "${CMAKE_CURRENT_SOURCE_DIR}/AxiomVst.def"
                         "${CMAKE_CURRENT_SOURCE_DIR}/VstAdapter.h"
                         "${CMAKE_CURRENT_SOURCE_DIR}/VstAudioBackend.h" "${CMAKE_CURRENT_SOURCE_DIR}/VstAudioBackend.cpp"
     PARENT_SCOPE)

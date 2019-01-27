@@ -16,20 +16,21 @@ namespace AxiomBackend {
     class Dispatcher {
     public:
         using value_type = typename Queue::value_type;
+        using SeparateData = typename Queue::SeparateData;
 
         template<class Cb>
         Dispatcher(Queue &messageQueue, Cb handler) : messageQueue(messageQueue), handler(std::move(handler)) {}
 
-        void run() {
+        void run(SeparateData &sep) {
             DispatcherHandlerResult lastResult;
             do {
-                auto nextMessage = messageQueue.popWhenAvailable();
+                auto nextMessage = messageQueue.popWhenAvailable(sep);
                 lastResult = processMessage(nextMessage);
             } while (lastResult != DispatcherHandlerResult::EXIT);
         }
 
-        DispatcherHandlerResult idle() {
-            while (auto nextMessage = messageQueue.tryPop()) {
+        DispatcherHandlerResult idle(SeparateData &sep) {
+            while (auto nextMessage = messageQueue.tryPop(sep)) {
                 auto processResult = processMessage(*nextMessage);
 
                 if (processResult == DispatcherHandlerResult::EXIT) {
@@ -40,8 +41,8 @@ namespace AxiomBackend {
             return DispatcherHandlerResult::CONTINUE;
         }
 
-        value_type waitForNext() {
-            auto message = messageQueue.popWhenAvailable();
+        value_type waitForNext(SeparateData &sep) {
+            auto message = messageQueue.popWhenAvailable(sep);
             auto processResult = processMessage(message);
             if (processResult == DispatcherHandlerResult::EXIT) {
                 hasExited = true;

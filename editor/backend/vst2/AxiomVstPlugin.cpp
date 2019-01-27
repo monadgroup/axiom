@@ -1,5 +1,7 @@
 #include "AxiomVstPlugin.h"
 
+#include "../vst2-common/EventConverter.h"
+
 using namespace AxiomBackend;
 
 AxiomCommon::LazyInitializer<AxiomApplication> application;
@@ -111,56 +113,8 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
         if (event->type != kVstMidiType) continue;
 
         auto midiEvent = (VstMidiEvent *) event;
-        auto midiStatus = midiEvent->midiData[0];
-        auto midiData1 = midiEvent->midiData[1];
-        auto midiData2 = midiEvent->midiData[2];
-
-        auto eventType = (uint8_t)(midiStatus & 0xF0);
-        auto eventChannel = (uint8_t)(midiStatus & 0x0F);
-
-        MidiEvent remappedEvent;
-        remappedEvent.channel = eventChannel;
-
-        switch (eventType) {
-        case 0x80: // note off
-            remappedEvent.event = MidiEventType::NOTE_OFF;
-            remappedEvent.note = (uint8_t) midiData1;
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        case 0x90: // note on
-            remappedEvent.event = MidiEventType::NOTE_ON;
-            remappedEvent.note = (uint8_t) midiData1;
-            remappedEvent.param = (uint8_t)(midiData2 * 2); // MIDI velocity is 0-127, we need 0-255
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        case 0xA0: // polyphonic aftertouch
-            remappedEvent.event = MidiEventType::POLYPHONIC_AFTERTOUCH;
-            remappedEvent.note = (uint8_t) midiData1;
-            remappedEvent.param = (uint8_t)(midiData2 * 2); // MIDI aftertouch pressure is 0-127, we need 0-255
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        case 0xB0: // control mode change
-            // all notes off
-            if (midiData1 == 0x7B) {
-                backend.clearNotes(0);
-            }
-            break;
-        case 0xD0: // channel aftertouch
-            remappedEvent.event = MidiEventType::CHANNEL_AFTERTOUCH;
-            remappedEvent.param = (uint8_t)(midiData1 * 2); // MIDI aftertouch pressure is 0-127, we need 0-255
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        case 0xE0: // pitch wheel
-        {
-            remappedEvent.event = MidiEventType::PITCH_WHEEL;
-
-            // Pitch is 0-0x3FFF stored across the two bytes, we need 0-255
-            auto pitch = ((uint16_t) midiData2 << 7) | (uint16_t) midiData1;
-            remappedEvent.param = (uint8_t)(pitch / 16383.f * 255.f);
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        }
-        default:;
+        if (auto remappedEvent = convertFromVst(midiEvent)) {
+            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, *remappedEvent);
         }
     }
     return 0;
