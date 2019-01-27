@@ -6,26 +6,12 @@
 #include <mutex>
 #include <optional>
 
-#include "../model/Value.h"
 #include "AudioConfiguration.h"
+#include "BackendDefines.h"
 
 class AxiomEditor;
 
 namespace AxiomBackend {
-    using NumValue = AxiomModel::NumValue;
-    using NumForm = AxiomModel::FormType;
-    using MidiValue = AxiomModel::MidiValue;
-    using MidiEvent = AxiomModel::MidiEventValue;
-    using MidiEventType = AxiomModel::MidiEventType;
-
-    extern const char *PRODUCT_VERSION;
-    extern const char *COMPANY_NAME;
-    extern const char *FILE_DESCRIPTION;
-    extern const char *INTERNAL_NAME;
-    extern const char *LEGAL_COPYRIGHT;
-    extern const char *LEGAL_TRADEMARKS;
-    extern const char *PRODUCT_NAME;
-
     class AudioBackend;
 
     // An RAII handler for generating samples into a buffer.

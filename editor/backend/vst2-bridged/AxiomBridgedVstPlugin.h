@@ -1,22 +1,22 @@
 #pragma once
 
-#include <QtCore/QByteArray>
+#include <QtCore/QSharedMemory>
+#include <QtCore/QProcess>
 #include <public.sdk/source/vst2.x/audioeffectx.h>
 
-#include "AxiomVstEditor.h"
-#include "../vst2-common/VstAudioBackend.h"
-#include "../vst2-common/VstAdapter.h"
-#include "common/LazyInitializer.h"
+#include "VstChannel.h"
+#include "Dispatcher.h"
 
-class AxiomVstPlugin : public AudioEffectX, public AxiomBackend::VstAdapter {
+class AxiomBridgedVstPlugin : public AudioEffectX {
 public:
-    explicit AxiomVstPlugin(audioMasterCallback audioMaster);
+    QString channelMemKey;
+    QSharedMemory channelMem;
+    AxiomBackend::VstChannel &channel;
+    QProcess appProcess;
+    AxiomBackend::Dispatcher<AxiomBackend::VstChannel::GuiAppToVstQueue> guiDispatcher;
+    AxiomBackend::Dispatcher<AxiomBackend::VstChannel::AudioAppToVstQueue> audioDispatcher;
 
-    ~AxiomVstPlugin() override;
-
-    void suspend() override;
-
-    void resume() override;
+    explicit AxiomBridgedVstPlugin(audioMasterCallback audioMaster);
 
     void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) override;
 
@@ -54,16 +54,23 @@ public:
 
     bool canParameterBeAutomated(VstInt32 index) override;
 
-    void adapterSetParameter(size_t parameter, AxiomBackend::NumValue value) override;
-
-    void adapterUpdateIo() override;
-
 private:
-    AxiomCommon::LazyInitializer<AxiomApplication>::Ref appRef;
-    AxiomBackend::VstAudioBackend backend;
-    AxiomVstEditor editor;
-    QByteArray saveBuffer;
+    QSharedMemory ioBuffer;
 
+    float currentBpm = 0;
+    size_t inputCount = 0;
+    size_t outputCount = 0;
     size_t expectedInputCount = 0;
     size_t expectedOutputCount = 0;
+
+    float *getInputBufferPtr(size_t inputIndex);
+    float *getOutputBufferPtr(size_t outputIndex);
+
+    void handleSetParameter(AxiomBackend::AppGuiSetParameterMessage message);
+
+    void handleUpdateIo(AxiomBackend::AppGuiUpdateIoMessage message);
+
+    AxiomBackend::DispatcherHandlerResult dispatchGuiMessage(AxiomBackend::AppGuiMessage message);
+
+    AxiomBackend::DispatcherHandlerResult dispatchAudioMessage(AxiomBackend::AppAudioMessage message);
 };

@@ -12,8 +12,16 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 }
 }
 
+bool isCompilingSynth() {
+#ifdef AXIOM_VST2_IS_SYNTH
+    return true;
+#else
+    return false;
+#endif
+}
+
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 255), appRef(application.get()), backend(this), editor(&*appRef, &backend) {
+    : AudioEffectX(audioMaster, 1, 255), appRef(application.get()), backend(*this, isCompilingSynth()), editor(&*appRef, &backend) {
 #ifdef AXIOM_VST2_IS_SYNTH
     isSynth();
     setUniqueID(0x41584F53);
@@ -262,13 +270,13 @@ bool AxiomVstPlugin::canParameterBeAutomated(VstInt32 index) {
     return (size_t) index < backend.automationInputs.size();
 }
 
-void AxiomVstPlugin::backendSetParameter(size_t parameter, AxiomBackend::NumValue value) {
+void AxiomVstPlugin::adapterSetParameter(size_t parameter, AxiomBackend::NumValue value) {
     beginEdit(parameter);
     setParameterAutomated(parameter, value.left);
     endEdit(parameter);
 }
 
-void AxiomVstPlugin::backendUpdateIo() {
+void AxiomVstPlugin::adapterUpdateIo() {
     setNumInputs(2 * backend.audioInputs.size());
     setNumOutputs(2 * backend.audioOutputs.size());
     ioChanged();

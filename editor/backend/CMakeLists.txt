@@ -1,4 +1,4 @@
-function (add_backend_resources target bundle_type)
+function (add_backend_resources target bundle_type mini_mode)
     # generate PkgInfo file based on the bundle type
     set(PKGINFO_PATH "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo")
     file(WRITE ${PKGINFO_PATH} "${bundle_type}????")
@@ -7,7 +7,11 @@ function (add_backend_resources target bundle_type)
     set_source_files_properties(${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     set_source_files_properties(${PKGINFO_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION .)
 
-    target_link_libraries(${target} ${AXIOM_LINK_FLAGS} axiom_editor)
+    if (mini_mode)
+        target_link_libraries(${target} ${AXIOM_LINK_FLAGS} axiom_backend Qt5::Core)
+    else ()
+        target_link_libraries(${target} ${AXIOM_LINK_FLAGS} axiom_editor)
+    endif ()
 endfunction ()
 
 function (strip_target target)
@@ -29,8 +33,8 @@ function (pack_target target)
     endif ()
 endfunction ()
 
-function (add_backend target bundle_type output_name extension component)
-    add_backend_resources(${target} ${bundle_type})
+function (add_backend target bundle_type output_name extension component mini_mode)
+    add_backend_resources(${target} ${bundle_type} ${mini_mode})
 
     set_target_properties(${target} PROPERTIES
             PREFIX ""
@@ -79,4 +83,6 @@ function (add_backend target bundle_type output_name extension component)
 endfunction ()
 
 add_subdirectory(standalone)
+add_subdirectory(vst2-common)
 add_subdirectory(vst2)
+add_subdirectory(vst2-bridged)

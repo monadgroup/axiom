@@ -22,4 +22,4 @@ include_directories(${PORTAUDIO_INCLUDE_DIRS})
 add_executable(axiom_standalone ${AXIOM_STANDALONE_PROPERTIES} main.cpp)
 target_link_libraries(axiom_standalone ${PORTAUDIO_LIBRARIES})
 
-add_backend(axiom_standalone "APPL" "Axiom Standalone" "" standalone)
+add_backend(axiom_standalone "APPL" "Axiom Standalone" "" standalone FALSE)
