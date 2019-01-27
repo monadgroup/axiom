@@ -20,6 +20,9 @@ namespace AxiomCommon {
         WatchSequence<MapSequence<typename InternalSequence::Sequence, MapFunctor>, typename InternalSequence::Events>;
 
     template<class Output, class InternalSequence>
+    using DynamicCastWatchSequence = WatchSequence<DynamicCastSequence<Output, typename InternalSequence::Sequence>, typename InternalSequence::Events>;
+
+    template<class Output, class InternalSequence>
     using CastWatchSequence =
         WatchSequence<CastSequence<Output, typename InternalSequence::Sequence>, typename InternalSequence::Events>;
 
@@ -40,7 +43,7 @@ namespace AxiomCommon {
     }
 
     template<class Output, class Sequence>
-    CastWatchSequence<Output, Sequence> dynamicCastWatch(Sequence sequence) {
+    DynamicCastWatchSequence<Output, Sequence> dynamicCastWatch(Sequence sequence) {
         return WatchSequence(dynamicCast<Output>(std::move(sequence.sequence())), std::move(sequence.events()));
     }
 
