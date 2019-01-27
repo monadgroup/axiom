@@ -68,6 +68,7 @@ AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
 #else
     appProcessParams.push_back("effect");
 #endif
+    appProcess.setProcessChannelMode(QProcess::ForwardedChannels);
     appProcess.start(appProcessPath, appProcessParams);
     auto startSuccess = appProcess.waitForStarted();
     assert(startSuccess);
@@ -79,6 +80,14 @@ AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
             break;
         }
     }
+}
+
+void AxiomBridgedVstPlugin::suspend() {
+    serializeBuffer.detach();
+}
+
+void AxiomBridgedVstPlugin::resume() {
+    serializeBuffer.detach();
 }
 
 void AxiomBridgedVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) {
@@ -218,13 +227,60 @@ void AxiomBridgedVstPlugin::getParameterName(VstInt32 index, char *text) {
     }
 }
 
-VstInt32 AxiomBridgedVstPlugin::getChunk(void **data, bool isPreset) {
-    // todo
-    return 0;
+VstInt32 AxiomBridgedVstPlugin::getChunk(void **data, bool) {
+    // Tell the app to serialize the project and store it in a shared memory buffer
+    AxiomBackend::VstGuiMessage startMsg(AxiomBackend::VstGuiMessageType::BEGIN_SERIALIZE);
+    channel.guiVstToApp.pushWhenAvailable(startMsg, sep.guiVstToAppData);
+
+    uint32_t memoryId;
+    uint64_t bufferSize;
+
+    // Wait for a response providing the data
+    while (true) {
+        auto nextMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
+        if (nextMessage.type == AxiomBackend::AppGuiMessageType::FINISHED_SERIALIZE) {
+            memoryId = nextMessage.data.finishedSerialize.memoryId;
+            bufferSize = nextMessage.data.finishedSerialize.bufferSize;
+            break;
+        }
+    }
+
+    // The VST specification requires that the returned buffer is valid until the next suspend/resume call,
+    // so we keep a handle to the shared memory and clear it above.
+    serializeBuffer.detach();
+    serializeBuffer.setKey(AxiomBackend::getBufferStringKey(memoryId));
+    auto attachSuccess = serializeBuffer.attach();
+    assert(attachSuccess);
+
+    // Signal to the app that we have a handle to the buffer, so it can finish
+    AxiomBackend::VstGuiMessage endMsg(AxiomBackend::VstGuiMessageType::END_SERIALIZE);
+    channel.guiVstToApp.pushWhenAvailable(endMsg, sep.guiVstToAppData);
+
+    *data = serializeBuffer.data();
+    return (int) bufferSize;
 }
 
-VstInt32 AxiomBridgedVstPlugin::setChunk(void *data, VstInt32 byteSize, bool isPreset) {
-    // todo
+VstInt32 AxiomBridgedVstPlugin::setChunk(void *data, VstInt32 byteSize, bool) {
+    auto saveBufferId = AxiomBackend::generateNewBufferId();
+    QSharedMemory saveBuffer(AxiomBackend::getBufferStringKey(saveBufferId));
+    auto createSuccess = saveBuffer.create(byteSize);
+    assert(createSuccess);
+
+    // Copy data into the buffer then inform the app it's ready
+    memcpy(saveBuffer.data(), data, (size_t) byteSize);
+    AxiomBackend::VstGuiMessage msg(AxiomBackend::VstGuiMessageType::BEGIN_DESERIALIZE);
+    msg.data.beginDeserialize.memoryId = saveBufferId;
+    msg.data.beginDeserialize.bufferSize = (uint64_t) byteSize;
+    channel.guiVstToApp.pushWhenAvailable(msg, sep.guiVstToAppData);
+
+    // Wait for the app to confirm before cleaning up
+    while (true) {
+        auto nextMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
+        if (nextMessage.type == AxiomBackend::AppGuiMessageType::FINISHED_DESERIALIZE) {
+            break;
+        }
+    }
+
     return 0;
 }
 

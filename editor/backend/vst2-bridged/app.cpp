@@ -158,15 +158,52 @@ private:
     }
 
     void handleBeginSerialize(VstGuiBeginSerializeMessage message) {
-        // todo
-    }
+        auto serializedBuffer = backend->serialize([this](QDataStream &stream) {
+            backend->audioInputs.serialize(stream);
+            backend->audioOutputs.serialize(stream);
+            backend->automationInputs.serialize(stream);
+        });
 
-    void handleEndSerialize(VstGuiEndSerializeMessage message) {
-        // todo
+        // Create a shared memory buffer to copy the data across
+        auto saveMemoryId = generateNewBufferId();
+        QSharedMemory saveMemory(getBufferStringKey(saveMemoryId));
+        auto createSuccess = saveMemory.create(serializedBuffer.size());
+        assert(createSuccess);
+
+        // Copy the data into it
+        memcpy(saveMemory.data(), serializedBuffer.data(), (size_t) serializedBuffer.size());
+
+        // Inform the VST that the data is available
+        AppGuiMessage msg(AppGuiMessageType::FINISHED_SERIALIZE);
+        msg.data.finishedSerialize.memoryId = saveMemoryId;
+        msg.data.finishedSerialize.bufferSize = (uint64_t) serializedBuffer.size();
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
+
+        // Wait for the app to respond so we know we can free the buffer
+        while (true) {
+            auto nextMsg = guiDispatcher.waitForNext(sep.guiVstToAppData);
+            if (nextMsg.type == VstGuiMessageType::END_SERIALIZE) {
+                break;
+            }
+        }
     }
 
     void handleBeginDeserialize(VstGuiBeginDeserializeMessage message) {
-        // todo
+        // Load the shared memory that the data is in
+        QSharedMemory loadMemory(getBufferStringKey(message.memoryId));
+        auto attachSuccess = loadMemory.attach();
+        assert(attachSuccess);
+
+        auto byteArray = QByteArray::fromRawData((char *) loadMemory.data(), message.bufferSize);
+        backend->deserialize(&byteArray, [this](QDataStream &stream, uint32_t version) {
+            backend->audioInputs = NumParameters::deserialize(stream, version);
+            backend->audioOutputs = NumParameters::deserialize(stream, version);
+            backend->automationInputs = NumParameters::deserialize(stream, version);
+        });
+
+        // Inform the VST that we've finished loading
+        AppGuiMessage msg(AppGuiMessageType::FINISHED_DESERIALIZE);
+        channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
     DispatcherHandlerResult dispatchGuiMessage(VstGuiMessage message) {
@@ -194,14 +231,14 @@ private:
                 case VstGuiMessageType::BEGIN_SERIALIZE:
                     handleBeginSerialize(message.data.beginSerialize);
                     break;
-                case VstGuiMessageType::END_SERIALIZE:
-                    handleEndSerialize(message.data.endSerialize);
-                    break;
                 case VstGuiMessageType::BEGIN_DESERIALIZE:
                     handleBeginDeserialize(message.data.beginDeserialize);
                     break;
+                // Used as a response, no handling necessary
+                case VstGuiMessageType::END_SERIALIZE:
+                    break;
                 default:
-                unreachable;
+                    unreachable;
             }
         });
 

@@ -19,6 +19,10 @@ public:
 
     explicit AxiomBridgedVstPlugin(audioMasterCallback audioMaster);
 
+    void suspend() override;
+
+    void resume() override;
+
     void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) override;
 
     VstInt32 processEvents(VstEvents *events) override;
@@ -57,6 +61,7 @@ public:
 
 private:
     QSharedMemory ioBuffer;
+    QSharedMemory serializeBuffer;
 
     float currentBpm = 0;
     size_t inputCount = 0;
