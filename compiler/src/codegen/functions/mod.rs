@@ -1,3 +1,4 @@
+mod adsr_function;
 mod biquad_filter_function;
 mod channel_function;
 mod defer_function;
@@ -28,6 +29,7 @@ use std::fmt;
 
 use self::function_context::FunctionContext;
 
+pub use self::adsr_function::*;
 pub use self::biquad_filter_function::*;
 pub use self::channel_function::*;
 pub use self::defer_function::*;
@@ -173,7 +175,8 @@ map_functions! {
     Note => NoteFunction,
     Voices => VoicesFunction,
     Channel => ChannelFunction,
-    Indexed => IndexedFunction
+    Indexed => IndexedFunction,
+    Adsr => AdsrFunction
 }
 
 fn get_lifecycle_func(
