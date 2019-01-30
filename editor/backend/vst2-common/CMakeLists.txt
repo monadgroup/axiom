@@ -3,8 +3,8 @@ if (NOT DEFINED VST2_SDK_ROOT)
 else ()
     set(VST2_SOURCES
             "${VST2_SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp"
-            "${VST2_SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp"
-        PARENT_SCOPE)
+            "${VST2_SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp")
+    set(VST2_SOURCES ${VST2_SOURCES} PARENT_SCOPE)
 endif ()
 
 set(VST2_SHARED_SOURCES ${VST2_SOURCES}
