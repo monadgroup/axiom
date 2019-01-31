@@ -139,6 +139,7 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
 }
 
 void NodeSurfaceView::dragMoveEvent(QDragMoveEvent *event) {
+    event->acceptProposedAction();
     auto mouseDelta = mapToScene(event->pos()) - startMousePos;
     surface->grid().dragTo(QPoint(mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width(),
                                   mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height()));
@@ -151,6 +152,7 @@ void NodeSurfaceView::dragLeaveEvent(QDragLeaveEvent *event) {
 }
 
 void NodeSurfaceView::dropEvent(QDropEvent *event) {
+    event->acceptProposedAction();
     surface->grid().finishDragging();
 
     auto selectedNodes = AxiomCommon::staticCast<Node *>(surface->grid().selectedItems().sequence());
