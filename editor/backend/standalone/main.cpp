@@ -64,7 +64,7 @@ public:
 #ifdef PORTMIDI
     PmStream *midiStream = nullptr;
 
-    static PmError checkError(PmError error) {
+    static PmError checkPmError(PmError error) {
         if (error < 0) {
             std::cerr << "PortMidi error: " << Pm_GetErrorText(error) << std::endl;
             abort();
@@ -81,7 +81,7 @@ public:
         do {
             PmEvent eventBuffer[MIDI_BUFFER_SIZE];
             numRead = Pm_Read(midiStream, eventBuffer, MIDI_BUFFER_SIZE);
-            checkError(numRead);
+            checkPmError((PmError) numRead);
 
             // Don't bother processing if there's nowhere to put the events
             if (midiInputPortal == -1) continue;
@@ -98,7 +98,7 @@ public:
 #ifdef PORTAUDIO
     PaStream *audioStream = nullptr;
 
-    static void checkError(PaError error) {
+    static void checkPaError(PaError error) {
         if (error != paNoError) {
             std::cerr << "PortAudio error: " << Pa_GetErrorText(error) << std::endl;
             abort();
@@ -145,23 +145,23 @@ public:
 
     void startupAudio() {
 #ifdef PORTAUDIO
-        checkError(Pa_Initialize());
+        checkPaError(Pa_Initialize());
 
         // todo: allow inputs and outputs to be customized (does PortAudio allow changing inputs and outputs
         // mid-stream?)
-        checkError(Pa_OpenDefaultStream(&audioStream,
+        checkPaError(Pa_OpenDefaultStream(&audioStream,
                                         0, // no inputs
                                         2, // stereo output
                                         paFloat32, 44100, paFramesPerBufferUnspecified, paCallback, this));
-        checkError(Pa_StartStream(audioStream));
+        checkPaError(Pa_StartStream(audioStream));
 #endif
 
 #ifdef PORTMIDI
-        checkError(Pm_Initialize());
+        checkPmError(Pm_Initialize());
 
         auto defaultInput = Pm_GetDefaultInputDeviceID();
         if (defaultInput != pmNoDevice) {
-            checkError(Pm_OpenInput(&midiStream,
+            checkPmError(Pm_OpenInput(&midiStream,
                                     defaultInput,
                                     nullptr,
                                     MIDI_BUFFER_SIZE,
@@ -175,16 +175,16 @@ public:
 
     void shutdownAudio() {
 #ifdef PORTAUDIO
-        checkError(Pa_StopStream(audioStream));
-        checkError(Pa_CloseStream(audioStream));
-        checkError(Pa_Terminate());
+        checkPaError(Pa_StopStream(audioStream));
+        checkPaError(Pa_CloseStream(audioStream));
+        checkPaError(Pa_Terminate());
 #endif
 
 #ifdef PORTMIDI
         if (midiStream != nullptr) {
-            checkError(Pm_Close(midiStream));
+            checkPmError(Pm_Close(midiStream));
         }
-        checkError(Pm_Terminate());
+        checkPmError(Pm_Terminate());
 #endif
     }
 };
