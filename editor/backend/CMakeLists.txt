@@ -85,4 +85,7 @@ endfunction ()
 add_subdirectory(standalone)
 add_subdirectory(vst2-common)
 add_subdirectory(vst2)
-add_subdirectory(vst2-bridged)
+
+if (AXIOM_VST2_BRIDGED_BETA)
+    add_subdirectory(vst2-bridged)
+endif ()
