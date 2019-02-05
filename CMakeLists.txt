@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.4.3)
 project(axiom)
 
-set(AXIOM_VERSION 0.4.2)
-set(AXIOM_VERSION_LIST 0,4,2)
+set(AXIOM_VERSION 0.4.3)
+set(AXIOM_VERSION_LIST 0,4,3)
 add_definitions(-DAXIOM_VERSION="${AXIOM_VERSION}\\0")
 
 set(CMAKE_CXX_STANDARD 17)
