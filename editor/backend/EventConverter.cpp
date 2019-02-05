@@ -3,7 +3,7 @@
 using namespace AxiomBackend;
 
 std::optional<MidiEvent> AxiomBackend::convertFromMidi(int32_t event) {
-    auto midiData = reinterpret_cast<char *>(&event);
+    auto midiData = reinterpret_cast<uint8_t *>(&event);
     auto midiStatus = midiData[0];
     auto midiData1 = midiData[1];
     auto midiData2 = midiData[2];
@@ -46,4 +46,44 @@ std::optional<MidiEvent> AxiomBackend::convertFromMidi(int32_t event) {
     default:
         return std::nullopt;
     }
+}
+
+int32_t AxiomBackend::convertToMidi(const AxiomBackend::MidiEvent &event) {
+    int32_t midiEvent = 0;
+    auto midiData = reinterpret_cast<uint8_t *>(&midiEvent);
+
+    switch (event.event) {
+        case MidiEventType::NOTE_ON:
+            midiData[0] = 0x90;
+            midiData[1] = event.note;
+            midiData[2] = (uint8_t) (event.param / 2); // remap velocity from 0-255 to 0-127
+            break;
+        case MidiEventType::NOTE_OFF:
+            midiData[0] = 0x80;
+            midiData[1] = event.note;
+            break;
+        case MidiEventType::POLYPHONIC_AFTERTOUCH:
+            midiData[0] = 0xA0;
+            midiData[1] = event.note;
+            midiData[2] = (uint8_t) (event.param / 2);
+            break;
+        case MidiEventType::CHANNEL_AFTERTOUCH:
+            midiData[0] = 0xD0;
+            midiData[1] = (uint8_t) (event.param / 2);
+            break;
+        case MidiEventType::PITCH_WHEEL:
+        {
+            midiData[0] = 0xE0;
+
+            auto pitch = (uint16_t) (event.param / 255.f * 16383.f);
+
+            // low 7 bits go in midiData[1], high 7 bits in midiData[2]
+            midiData[1] = (uint8_t) (pitch & 0b1111111);
+            midiData[2] = (uint8_t) ((pitch >> 7) & 0b1111111);
+        }
+    }
+
+    // stuff the channel in the first half of midiData[0]
+    midiData[0] |= event.channel & 0x0F;
+    return midiEvent;
 }
