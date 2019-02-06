@@ -16,7 +16,7 @@ pub mod parser;
 pub mod pass;
 pub mod util;
 
-pub use compile_error::{CompileError, CompileResult};
+pub use crate::compile_error::{CompileError, CompileResult};
 
 // C api
-pub use frontend::c_api::*;
+pub use crate::frontend::c_api::*;

@@ -1,13 +1,13 @@
 use super::{value_reader, Runtime, Transaction};
-use ast;
-use codegen;
+use crate::ast;
+use crate::codegen;
+use crate::mir;
+use crate::parser;
+use crate::pass;
+use crate::CompileError;
 use inkwell::{orc, targets};
-use mir;
-use parser;
-use pass;
 use std;
 use std::os::raw::c_void;
-use CompileError;
 
 #[no_mangle]
 pub extern "C" fn maxim_initialize() {
@@ -36,7 +36,7 @@ pub unsafe extern "C" fn maxim_destroy_runtime(runtime: *mut Runtime) {
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
-    use mir::IdAllocator;
+    use crate::mir::IdAllocator;
     (*runtime).alloc_id()
 }
 
@@ -46,23 +46,28 @@ pub unsafe extern "C" fn maxim_run_update(runtime: *const Runtime) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_set_bpm(runtime: *mut Runtime, bpm: f32) {
+pub unsafe extern "C" fn maxim_set_bpm(runtime: *mut Runtime, bpm: f64) {
     (*runtime).set_bpm(bpm);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_get_bpm(runtime: *const Runtime) -> f32 {
+pub unsafe extern "C" fn maxim_get_bpm(runtime: *const Runtime) -> f64 {
     (*runtime).get_bpm()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_set_sample_rate(runtime: *mut Runtime, sample_rate: f32) {
+pub unsafe extern "C" fn maxim_set_sample_rate(runtime: *mut Runtime, sample_rate: f64) {
     (*runtime).set_sample_rate(sample_rate);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_get_sample_rate(runtime: *const Runtime) -> f32 {
+pub unsafe extern "C" fn maxim_get_sample_rate(runtime: *const Runtime) -> f64 {
     (*runtime).get_sample_rate()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_profile_times_ptr(runtime: *const Runtime) -> *mut u64 {
+    (*runtime).get_profile_times_ptr()
 }
 
 #[no_mangle]
@@ -176,9 +181,10 @@ pub unsafe extern "C" fn maxim_vartype_tuple(
 ) -> *mut mir::VarType {
     let subtypes_vec: Vec<_> = (0..subtype_count)
         .map(|index| {
-            let boxed = Box::from_raw(*subtypes.offset(index as isize));
+            let boxed = Box::from_raw(*subtypes.add(index));
             *boxed
-        }).collect();
+        })
+        .collect();
     Box::into_raw(Box::new(mir::VarType::Tuple(subtypes_vec)))
 }
 
@@ -190,7 +196,7 @@ pub unsafe extern "C" fn maxim_vartype_array(subtype: *mut mir::VarType) -> *mut
 #[no_mangle]
 pub unsafe extern "C" fn maxim_vartype_of_control(control_type: u8) -> *mut mir::VarType {
     Box::into_raw(Box::new(mir::VarType::of_control_value(
-        &std::mem::transmute(control_type),
+        std::mem::transmute(control_type),
     )))
 }
 
@@ -207,8 +213,8 @@ pub unsafe extern "C" fn maxim_destroy_vartype(val: *mut mir::VarType) {
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_constant_num(
-    left: f32,
-    right: f32,
+    left: f64,
+    right: f64,
     form: u8,
 ) -> *mut mir::ConstantValue {
     Box::into_raw(Box::new(mir::ConstantValue::new_num(
@@ -225,9 +231,10 @@ pub unsafe extern "C" fn maxim_constant_tuple(
 ) -> *mut mir::ConstantValue {
     let items_vec: Vec<_> = (0..item_count)
         .map(|index| {
-            let boxed = Box::from_raw(*items.offset(index as isize));
+            let boxed = Box::from_raw(*items.add(index));
             *boxed
-        }).collect();
+        })
+        .collect();
     Box::into_raw(Box::new(mir::ConstantValue::Tuple(mir::ConstantTuple {
         items: items_vec,
     })))

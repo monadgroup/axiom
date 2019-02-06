@@ -1,4 +1,4 @@
-use ast::Expression;
+use crate::ast::Expression;
 
 #[derive(Debug)]
 pub struct Block {

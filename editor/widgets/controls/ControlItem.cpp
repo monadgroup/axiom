@@ -32,16 +32,16 @@ using namespace AxiomModel;
 ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(control), canvas(canvas) {
     setAcceptHoverEvents(true);
 
-    control->nameChanged.connect(this, &ControlItem::triggerUpdate);
-    control->posChanged.connect(this, &ControlItem::setPos);
-    control->beforeSizeChanged.connect(this, &ControlItem::triggerGeometryChange);
-    control->sizeChanged.connect(this, &ControlItem::setSize);
-    control->selectedChanged.connect(this, &ControlItem::updateSelected);
-    control->isActiveChanged.connect(this, &ControlItem::triggerUpdate);
-    control->showNameChanged.connect(this, &ControlItem::triggerUpdate);
-    control->exposerUuidChanged.connect(this, &ControlItem::triggerUpdate);
-    control->isEnabledChanged.connect(this, &ControlItem::triggerUpdate);
-    control->removed.connect(this, &ControlItem::remove);
+    control->nameChanged.connectTo(this, &ControlItem::triggerUpdate);
+    control->posChanged.connectTo(this, &ControlItem::setPos);
+    control->beforeSizeChanged.connectTo(this, &ControlItem::triggerGeometryChange);
+    control->sizeChanged.connectTo(this, &ControlItem::setSize);
+    control->selectedChanged.connectTo(this, &ControlItem::updateSelected);
+    control->isActiveChanged.connectTo(this, &ControlItem::triggerUpdate);
+    control->showNameChanged.connectTo(this, &ControlItem::triggerUpdate);
+    control->exposerUuidChanged.connectTo(this, &ControlItem::triggerUpdate);
+    control->isEnabledChanged.connectTo(this, &ControlItem::triggerUpdate);
+    control->removed.connectTo(this, &ControlItem::remove);
 
     // create resize items
     if (control->isResizable()) {
@@ -65,8 +65,8 @@ ControlItem::ControlItem(Control *control, NodeSurfaceCanvas *canvas) : control(
             connect(resizer, &ItemResizer::changed, this, &ControlItem::resizerChanged);
             connect(resizer, &ItemResizer::endDrag, this, &ControlItem::resizerEndDrag);
 
-            control->selected.connect(this, [resizer](bool) { resizer->setVisible(true); });
-            control->deselected.connect(this, [resizer]() { resizer->setVisible(false); });
+            control->selected.connectTo(this, [resizer](bool) { resizer->setVisible(true); });
+            control->deselected.connectTo(this, [resizer]() { resizer->setVisible(false); });
 
             resizer->setParentItem(this);
         }

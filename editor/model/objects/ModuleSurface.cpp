@@ -18,5 +18,5 @@ QString ModuleSurface::debugName() {
 void ModuleSurface::setEntry(AxiomModel::LibraryEntry *entry) {
     assert(!_entry);
     _entry = entry;
-    _entry->nameChanged.forward(&nameChanged);
+    _entry->nameChanged.connectTo(&nameChanged);
 }

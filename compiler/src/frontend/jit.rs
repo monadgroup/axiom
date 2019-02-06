@@ -29,3 +29,9 @@ impl Jit {
         self.orc.get_symbol_address(symbol)
     }
 }
+
+impl Default for Jit {
+    fn default() -> Self {
+        Self::new()
+    }
+}

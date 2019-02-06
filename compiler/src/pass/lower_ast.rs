@@ -1,9 +1,9 @@
-use ast;
-use mir;
+use crate::ast;
+use crate::mir;
+use crate::util::constant_propagate;
+use crate::{CompileError, CompileResult};
 use std::collections::HashMap;
-use std::f32::consts;
-use util::constant_propagate;
-use {CompileError, CompileResult};
+use std::f64::consts;
 
 // lowers an AST into a Block MIR object
 pub fn lower_ast(id: mir::BlockId, block: &ast::Block) -> CompileResult<mir::Block> {
@@ -224,7 +224,8 @@ impl<'a> AstLower<'a> {
                     extract_index.and_then(|index| {
                         self.lower_cast(pos, index, expr.target.form_type, expr.is_convert)
                     })
-                }).collect();
+                })
+                .collect();
 
             match converted_indices {
                 Ok(indices) => Ok(self.add_combine_op(indices)),
@@ -326,15 +327,16 @@ impl<'a> AstLower<'a> {
                     let left_index = if index >= left_items.len() { 0 } else { index };
                     let right_index = if index >= right_items.len() { 0 } else { index };
                     self.add_num_math_op(pos, op, left_items[left_index], right_items[right_index])
-                }).collect()
+                })
+                .collect()
         }
     }
 
     fn lower_note_expr(&mut self, expr: &'a ast::NoteExpression) -> LowerResult {
         Ok(
             self.add_statement(mir::block::Statement::new_const_num(mir::ConstantNum::new(
-                expr.note as f32,
-                expr.note as f32,
+                f64::from(expr.note),
+                f64::from(expr.note),
                 ast::FormType::Note,
             ))),
         )
@@ -656,11 +658,10 @@ impl<'a> AstLower<'a> {
                 .collect();
 
             if let Some(const_varargs) = const_varargs {
-                match constant_propagate::const_call(&function, &const_args, &const_varargs, pos) {
-                    Some(result) => {
-                        return Ok(self.add_statement(mir::block::Statement::Constant(result?)))
-                    }
-                    None => (),
+                if let Some(result) =
+                    constant_propagate::const_call(function, &const_args, &const_varargs, pos)
+                {
+                    return Ok(self.add_statement(mir::block::Statement::Constant(result?)));
                 }
             }
         }
@@ -680,7 +681,7 @@ impl<'a> AstLower<'a> {
         value: usize,
     ) -> LowerResult {
         if let Some(err) =
-            self.check_statement_type(pos, mir::VarType::of_control_field(&field), value)
+            self.check_statement_type(pos, mir::VarType::of_control_field(field), value)
         {
             return Err(err);
         }

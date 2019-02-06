@@ -1,12 +1,12 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
-use codegen::values::NumValue;
-use codegen::{globals, intrinsics, util, BuilderContext};
+use crate::ast::FormType;
+use crate::codegen::values::NumValue;
+use crate::codegen::{globals, math, util, BuilderContext};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::{FloatPredicate, IntPredicate};
-use mir::block;
 
 pub struct NextFunction {}
 impl Function for NextFunction {
@@ -40,7 +40,7 @@ impl Function for AmplitudeFunction {
     }
 
     fn data_type(context: &Context) -> StructType {
-        context.struct_type(&[&context.f32_type().vec_type(2)], false)
+        context.struct_type(&[&context.f64_type().vec_type(2)], false)
     }
 
     fn gen_call(
@@ -49,8 +49,8 @@ impl Function for AmplitudeFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let abs_intrinsic = intrinsics::fabs_v2f32(func.ctx.module);
-        let exp_intrinsic = intrinsics::exp_v2f32(func.ctx.module);
+        let abs_intrinsic = math::abs_v2f64(func.ctx.module);
+        let exp_intrinsic = math::exp_v2f64(func.ctx.module);
 
         let current_estimate_ptr = unsafe {
             func.ctx
@@ -65,7 +65,7 @@ impl Function for AmplitudeFunction {
         let abs_input = func
             .ctx
             .b
-            .build_call(&abs_intrinsic, &[&param_vec], "inputabs", false)
+            .build_call(&abs_intrinsic, &[&param_vec], "inputabs", true)
             .left()
             .unwrap()
             .into_vector_value();
@@ -91,14 +91,16 @@ impl Function for AmplitudeFunction {
                                 .build_load(
                                     &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                                     "samplerate",
-                                ).into_vector_value(),
+                                )
+                                .into_vector_value(),
                             "",
                         ),
                         "",
                     )],
                     "",
-                    false,
-                ).left()
+                    true,
+                )
+                .left()
                 .unwrap()
                 .into_vector_value(),
             "",
@@ -114,11 +116,10 @@ impl Function for AmplitudeFunction {
         );
         func.ctx.b.build_store(&current_estimate_ptr, &new_estimate);
 
-        result_num.set_vec(func.ctx.b, &new_estimate);
+        result_num.set_vec(func.ctx.b, new_estimate);
         result_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Amplitude as u64, false),
@@ -135,7 +136,7 @@ impl Function for HoldFunction {
     fn data_type(context: &Context) -> StructType {
         context.struct_type(
             &[
-                &context.f32_type().vec_type(2),  // stored value
+                &context.f64_type().vec_type(2),  // stored value
                 &context.bool_type().vec_type(2), // last gate value
             ],
             false,
@@ -145,7 +146,7 @@ impl Function for HoldFunction {
     fn gen_real_args(ctx: &mut BuilderContext, mut args: Vec<PointerValue>) -> Vec<PointerValue> {
         if args.len() < 3 {
             let mut else_constant = NumValue::new_undef(ctx.context, ctx.allocb);
-            else_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0., 0., 0));
+            else_constant.store(ctx.b, NumValue::get_const(ctx.context, 0., 0., 0));
             args.push(else_constant.val);
         }
         args
@@ -206,8 +207,8 @@ impl Function for HoldFunction {
             .into_vector_value();
 
         let x_form = x_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &x_form);
-        result_num.set_vec(func.ctx.b, &result_vec);
+        result_num.set_form(func.ctx.b, x_form);
+        result_num.set_vec(func.ctx.b, result_vec);
     }
 }
 
@@ -218,13 +219,13 @@ impl Function for AccumFunction {
     }
 
     fn data_type(context: &Context) -> StructType {
-        context.struct_type(&[&context.f32_type().vec_type(2)], false)
+        context.struct_type(&[&context.f64_type().vec_type(2)], false)
     }
 
     fn gen_real_args(ctx: &mut BuilderContext, mut args: Vec<PointerValue>) -> Vec<PointerValue> {
         if args.len() < 3 {
             let mut base_constant = NumValue::new_undef(ctx.context, ctx.allocb);
-            base_constant.store(ctx.b, &NumValue::get_const(ctx.context, 0., 0., 0));
+            base_constant.store(ctx.b, NumValue::get_const(ctx.context, 0., 0., 0));
             args.push(base_constant.val);
         }
         args
@@ -268,7 +269,7 @@ impl Function for AccumFunction {
         func.ctx.b.build_store(&accum_ptr, &new_accum);
 
         let x_form = x_num.get_form(func.ctx.b);
-        result_num.set_form(func.ctx.b, &x_form);
-        result_num.set_vec(func.ctx.b, &new_accum);
+        result_num.set_form(func.ctx.b, x_form);
+        result_num.set_vec(func.ctx.b, new_accum);
     }
 }

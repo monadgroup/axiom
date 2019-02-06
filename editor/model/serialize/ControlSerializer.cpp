@@ -18,6 +18,19 @@
 
 using namespace AxiomModel;
 
+double deserializeDouble(QDataStream &stream, uint32_t version) {
+    // Some stored values were changed from floats to doubles in 0.5.0 (schema version 6).
+    if (version < 6) {
+        float valFloat;
+        stream >> valFloat;
+        return valFloat;
+    } else {
+        double valDouble;
+        stream >> valDouble;
+        return valDouble;
+    }
+}
+
 void ControlSerializer::serialize(AxiomModel::Control *control, QDataStream &stream) {
     stream << (uint8_t) control->controlType();
     stream << control->pos();
@@ -171,16 +184,17 @@ std::unique_ptr<NumControl> ControlSerializer::deserializeNum(QDataStream &strea
 
     // Control min/max/step was added in 0.4.0 (schema version 5). Previously controls would always be between 0 and 1,
     // step would always be disabled (0).
-    float minValue, maxValue;
+    double minValue, maxValue;
     uint32_t step;
-    if (version >= 5) {
-        stream >> minValue;
-        stream >> maxValue;
-        stream >> step;
-    } else {
+    if (version < 5) {
         minValue = 0;
         maxValue = 1;
         step = 0;
+    } else {
+        // Min/max were changed to be doubles in 0.5.0 (schema version 6). Previously they were floats.
+        minValue = deserializeDouble(stream, version);
+        maxValue = deserializeDouble(stream, version);
+        stream >> step;
     }
 
     auto value = ValueSerializer::deserializeNum(stream, version);
@@ -244,11 +258,11 @@ std::unique_ptr<GraphControl> ControlSerializer::deserializeGraph(QDataStream &s
     if (hasSavedState) {
         savedState = std::make_unique<GraphControlCurveState>();
         stream >> savedState->curveCount;
-        stream >> savedState->curveStartVals[0];
+        savedState->curveStartVals[0] = deserializeDouble(stream, version);
         for (uint8_t i = 0; i < savedState->curveCount; i++) {
-            stream >> savedState->curveStartVals[i + 1];
-            stream >> savedState->curveEndPositions[i];
-            stream >> savedState->curveTension[i];
+            savedState->curveStartVals[i + 1] = deserializeDouble(stream, version);
+            savedState->curveEndPositions[i] = deserializeDouble(stream, version);
+            savedState->curveTension[i] = deserializeDouble(stream, version);
             stream >> savedState->curveStates[i];
         }
     }

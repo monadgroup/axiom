@@ -34,11 +34,16 @@ bool AxiomUtil::strToFloat(const QString &str, float &result) {
 static std::array<QString, 12> noteNames{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 QString AxiomUtil::getNoteName(float noteVal) {
-    auto intNote = static_cast<size_t>(noteVal);
+    auto intNote = static_cast<int>(noteVal);
+    auto noteString = QString::number(intNote);
+
+    if (intNote < 0) {
+        return noteString;
+    }
+
     auto noteNameIndex = intNote % noteNames.size();
     auto octave = intNote / noteNames.size();
-
-    return QString::number(intNote) % " " % noteNames[noteNameIndex] % QString::number(octave);
+    return noteString % " " % noteNames[noteNameIndex] % QString::number(octave);
 }
 
 QString AxiomUtil::formatFloatForm(float val, AxiomModel::FormType form) {

@@ -1,12 +1,12 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::values::{NumValue, TupleValue};
-use codegen::{globals, intrinsics, util};
+use crate::codegen::values::{NumValue, TupleValue};
+use crate::codegen::{globals, math, util};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
-use mir::block;
-use std::f32::consts;
+use std::f64::consts;
 
 pub struct SvFilterFunction {}
 impl Function for SvFilterFunction {
@@ -15,7 +15,7 @@ impl Function for SvFilterFunction {
     }
 
     fn data_type(context: &Context) -> StructType {
-        let float_vec = context.f32_type().vec_type(2);
+        let float_vec = context.f64_type().vec_type(2);
         context.struct_type(
             &[
                 &float_vec, // notch
@@ -33,9 +33,9 @@ impl Function for SvFilterFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let sin_intrinsic = intrinsics::sin_v2f32(func.ctx.module);
-        let min_intrinsic = intrinsics::minnum_v2f32(func.ctx.module);
-        let pow_intrinsic = intrinsics::pow_v2f32(func.ctx.module);
+        let sin_intrinsic = math::sin_v2f64(func.ctx.module);
+        let min_intrinsic = math::min_v2f64(func.ctx.module);
+        let pow_intrinsic = math::pow_v2f64(func.ctx.module);
 
         let notch_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "notch.ptr") };
         let low_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 1, "low.ptr") };
@@ -63,14 +63,16 @@ impl Function for SvFilterFunction {
                                 .build_load(
                                     &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
                                     "samplerate",
-                                ).into_vector_value(),
+                                )
+                                .into_vector_value(),
                             "",
                         ),
                         "fparam",
                     )],
                     "",
-                    false,
-                ).left()
+                    true,
+                )
+                .left()
                 .unwrap()
                 .into_vector_value(),
             util::get_vec_spread(func.ctx.context, 2.),
@@ -108,8 +110,9 @@ impl Function for SvFilterFunction {
                             &util::get_vec_spread(func.ctx.context, 0.25),
                         ],
                         "damppow",
-                        false,
-                    ).left()
+                        true,
+                    )
+                    .left()
                     .unwrap()
                     .into_vector_value(),
                 "inversedamppow",
@@ -140,8 +143,9 @@ impl Function for SvFilterFunction {
                     ),
                 ],
                 "maxdamp",
-                false,
-            ).left()
+                true,
+            )
+            .left()
             .unwrap()
             .into_vector_value();
         let damp = func
@@ -240,7 +244,7 @@ impl Function for SvFilterFunction {
             ),
         );
 
-        let next_index = func.ctx.b.build_int_add(
+        let next_index = func.ctx.b.build_int_nuw_add(
             current_index,
             func.ctx.context.i8_type().const_int(1, false),
             "nextindex",
@@ -254,18 +258,18 @@ impl Function for SvFilterFunction {
 
         let high_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 0));
         let high_result_vec = func.ctx.b.build_load(&high_ptr, "high").into_vector_value();
-        high_result_num.set_vec(func.ctx.b, &high_result_vec);
-        high_result_num.set_form(func.ctx.b, &input_form);
+        high_result_num.set_vec(func.ctx.b, high_result_vec);
+        high_result_num.set_form(func.ctx.b, input_form);
 
         let low_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 1));
         let low_result_vec = func.ctx.b.build_load(&low_ptr, "low").into_vector_value();
-        low_result_num.set_vec(func.ctx.b, &low_result_vec);
-        low_result_num.set_form(func.ctx.b, &input_form);
+        low_result_num.set_vec(func.ctx.b, low_result_vec);
+        low_result_num.set_form(func.ctx.b, input_form);
 
         let band_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 2));
         let band_result_vec = func.ctx.b.build_load(&band_ptr, "band").into_vector_value();
-        band_result_num.set_vec(func.ctx.b, &band_result_vec);
-        band_result_num.set_form(func.ctx.b, &input_form);
+        band_result_num.set_vec(func.ctx.b, band_result_vec);
+        band_result_num.set_form(func.ctx.b, input_form);
 
         let notch_result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 3));
         let notch_result_vec = func
@@ -273,7 +277,7 @@ impl Function for SvFilterFunction {
             .b
             .build_load(&notch_ptr, "notch")
             .into_vector_value();
-        notch_result_num.set_vec(func.ctx.b, &notch_result_vec);
-        notch_result_num.set_form(func.ctx.b, &input_form);
+        notch_result_num.set_vec(func.ctx.b, notch_result_vec);
+        notch_result_num.set_form(func.ctx.b, input_form);
     }
 }

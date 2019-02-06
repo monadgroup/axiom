@@ -49,19 +49,19 @@ const qreal CORNER_RESIZE_ZVALUE = 3;
 
 NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime)
     : canvas(canvas), runtime(runtime), node(node) {
-    node->nameChanged.connect(this, &NodeItem::triggerUpdate);
-    node->extractedChanged.connect(this, &NodeItem::triggerUpdate);
-    node->posChanged.connect(this, &NodeItem::setPos);
-    node->beforeSizeChanged.connect(this, &NodeItem::triggerGeometryChange);
-    node->sizeChanged.connect(this, &NodeItem::setSize);
-    node->selectedChanged.connect(this, &NodeItem::setIsSelected);
-    node->deselected.connect(this, &NodeItem::triggerUpdate);
-    node->inErrorStateChanged.connect(this, &NodeItem::triggerUpdate);
-    node->removed.connect(this, &NodeItem::remove);
+    node->nameChanged.connectTo(this, &NodeItem::triggerUpdate);
+    node->extractedChanged.connectTo(this, &NodeItem::triggerUpdate);
+    node->posChanged.connectTo(this, &NodeItem::setPos);
+    node->beforeSizeChanged.connectTo(this, &NodeItem::triggerGeometryChange);
+    node->sizeChanged.connectTo(this, &NodeItem::setSize);
+    node->selectedChanged.connectTo(this, &NodeItem::setIsSelected);
+    node->deselected.connectTo(this, &NodeItem::triggerUpdate);
+    node->inErrorStateChanged.connectTo(this, &NodeItem::triggerUpdate);
+    node->removed.connectTo(this, &NodeItem::remove);
 
     node->controls().then([this](ControlSurface *surface) {
-        surface->controlsOnTopRowChanged.connect(this, &NodeItem::triggerUpdate);
-        surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
+        surface->controlsOnTopRowChanged.connectTo(this, &NodeItem::triggerUpdate);
+        surface->grid().hasSelectionChanged.connectTo(this, &NodeItem::triggerUpdate);
     });
 
     // create resize items
@@ -86,7 +86,7 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime
 
             node->controls().then([this, resizer](ControlSurface *surface) {
                 resizer->setVisible(!surface->grid().hasSelection());
-                surface->grid().hasSelectionChanged.connect(
+                surface->grid().hasSelectionChanged.connectTo(
                     this, [resizer](bool hasSelection) { resizer->setVisible(!hasSelection); });
             });
 
@@ -111,8 +111,8 @@ NodeItem::NodeItem(Node *node, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime
             addControl(control);
         }
 
-        surface->controls().events().itemAdded().connect(this, &NodeItem::addControl);
-        surface->grid().hasSelectionChanged.connect(this, &NodeItem::triggerUpdate);
+        surface->controls().events().itemAdded().connectTo(this, &NodeItem::addControl);
+        surface->grid().hasSelectionChanged.connectTo(this, &NodeItem::triggerUpdate);
     });
 }
 

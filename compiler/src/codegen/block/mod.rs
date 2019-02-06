@@ -12,15 +12,15 @@ mod gen_store_control;
 mod gen_unary_op;
 
 use self::block_context::BlockContext;
-use codegen::{
+use crate::codegen::{
     build_context_function, controls, functions, util, BuilderContext, LifecycleFunc, ObjectCache,
 };
+use crate::mir::block::Statement;
+use crate::mir::{Block, BlockRef};
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::AddressSpace;
-use mir::block::Statement;
-use mir::{Block, BlockRef};
 
 use self::gen_call_func::gen_call_func_statement;
 use self::gen_combine::gen_combine_statement;
@@ -39,27 +39,27 @@ fn gen_statement(index: usize, statement: &Statement, node: &mut BlockContext) -
         Statement::Constant(constant) => gen_constant_statement(constant, node),
         Statement::Global(global) => gen_global_statement(global, node),
         Statement::NumConvert { target_form, input } => {
-            gen_num_convert_statement(target_form, *input, node)
+            gen_num_convert_statement(*target_form, *input, node)
         }
         Statement::NumCast { target_form, input } => {
-            gen_num_cast_statement(target_form, *input, node)
+            gen_num_cast_statement(*target_form, *input, node)
         }
-        Statement::NumUnaryOp { op, input } => gen_unary_op_statement(op, *input, node),
-        Statement::NumMathOp { op, lhs, rhs } => gen_math_op_statement(op, *lhs, *rhs, node),
+        Statement::NumUnaryOp { op, input } => gen_unary_op_statement(*op, *input, node),
+        Statement::NumMathOp { op, lhs, rhs } => gen_math_op_statement(*op, *lhs, *rhs, node),
         Statement::Extract { tuple, index } => gen_extract_statement(*tuple, *index, node),
         Statement::Combine { indexes } => gen_combine_statement(indexes, node),
         Statement::CallFunc {
             function,
             args,
             varargs,
-        } => gen_call_func_statement(index, function, args, varargs, node),
+        } => gen_call_func_statement(index, *function, args, varargs, node),
         Statement::StoreControl {
             control,
             field,
             value,
-        } => gen_store_control_statement(*control, field, *value, node),
+        } => gen_store_control_statement(*control, *field, *value, node),
         Statement::LoadControl { control, field } => {
-            gen_load_control_statement(*control, field, node)
+            gen_load_control_statement(*control, *field, node)
         }
     }
 }
@@ -117,28 +117,25 @@ pub fn build_construct_func(module: &Module, cache: &ObjectCache, block: &Block)
         LifecycleFunc::Construct,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
-                let ptrs = block_ctx.get_control_ptrs(control_index, cache.target().include_ui);
+                let ptrs = block_ctx.get_control_ptrs(control_index);
                 controls::build_lifecycle_call(
                     module,
                     &mut block_ctx.ctx.b,
                     control.control_type,
                     LifecycleFunc::Construct,
-                    ptrs.value,
-                    ptrs.data,
-                    ptrs.shared,
+                    ptrs,
                 );
 
-                if let Some(ui_ptr) = ptrs.ui {
+                if cache.target().include_ui {
+                    let ui_ptr = block_ctx.get_ui_ptr(control_index);
                     controls::build_ui_lifecycle_call(
                         module,
                         &mut block_ctx.ctx.b,
                         control.control_type,
                         LifecycleFunc::Construct,
-                        ptrs.value,
-                        ptrs.data,
-                        ptrs.shared,
+                        ptrs,
                         ui_ptr,
-                    );
+                    )
                 }
             }
 
@@ -165,28 +162,25 @@ pub fn build_update_func(module: &Module, cache: &ObjectCache, block: &Block) {
         LifecycleFunc::Update,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
-                let ptrs = block_ctx.get_control_ptrs(control_index, cache.target().include_ui);
+                let ptrs = block_ctx.get_control_ptrs(control_index);
                 controls::build_lifecycle_call(
                     module,
                     &mut block_ctx.ctx.b,
                     control.control_type,
                     LifecycleFunc::Update,
-                    ptrs.value,
-                    ptrs.data,
-                    ptrs.shared,
+                    ptrs,
                 );
 
-                if let Some(ui_ptr) = ptrs.ui {
+                if cache.target().include_ui {
+                    let ui_ptr = block_ctx.get_ui_ptr(control_index);
                     controls::build_ui_lifecycle_call(
                         module,
                         &mut block_ctx.ctx.b,
                         control.control_type,
                         LifecycleFunc::Update,
-                        ptrs.value,
-                        ptrs.data,
-                        ptrs.shared,
+                        ptrs,
                         ui_ptr,
-                    );
+                    )
                 }
             }
 
@@ -206,17 +200,16 @@ pub fn build_destruct_func(module: &Module, cache: &ObjectCache, block: &Block) 
         LifecycleFunc::Destruct,
         &|block_ctx: &mut BlockContext| {
             for (control_index, control) in block.controls.iter().enumerate() {
-                let ptrs = block_ctx.get_control_ptrs(control_index, cache.target().include_ui);
+                let ptrs = block_ctx.get_control_ptrs(control_index);
 
-                if let Some(ui_ptr) = ptrs.ui {
+                if cache.target().include_ui {
+                    let ui_ptr = block_ctx.get_ui_ptr(control_index);
                     controls::build_ui_lifecycle_call(
                         module,
                         &mut block_ctx.ctx.b,
                         control.control_type,
                         LifecycleFunc::Destruct,
-                        ptrs.value,
-                        ptrs.data,
-                        ptrs.shared,
+                        ptrs,
                         ui_ptr,
                     );
                 }
@@ -226,9 +219,7 @@ pub fn build_destruct_func(module: &Module, cache: &ObjectCache, block: &Block) 
                     &mut block_ctx.ctx.b,
                     control.control_type,
                     LifecycleFunc::Destruct,
-                    ptrs.value,
-                    ptrs.data,
-                    ptrs.shared,
+                    ptrs,
                 );
             }
 
@@ -262,5 +253,5 @@ pub fn build_lifecycle_call(
     pointers_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, cache, block, lifecycle);
-    builder.build_call(&func, &[&pointers_ptr], "", false);
+    builder.build_call(&func, &[&pointers_ptr], "", true);
 }

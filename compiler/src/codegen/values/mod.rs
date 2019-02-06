@@ -10,10 +10,10 @@ pub use self::midi_value::MidiValue;
 pub use self::num_value::NumValue;
 pub use self::tuple_value::TupleValue;
 
+use crate::mir::{ConstantValue, VarType};
 use inkwell::context::Context;
 use inkwell::types::{BasicType, StructType};
 use inkwell::values::{BasicValue, BasicValueEnum};
-use mir::{ConstantValue, VarType};
 
 pub fn remap_type(context: &Context, mir_type: &VarType) -> StructType {
     match mir_type {
@@ -28,6 +28,13 @@ pub fn remap_type(context: &Context, mir_type: &VarType) -> StructType {
         VarType::Array(inner_type) => {
             ArrayValue::get_type(context, remap_type(context, &inner_type))
         }
+    }
+}
+
+pub fn pass_type_by_val(mir_type: &VarType) -> bool {
+    match mir_type {
+        VarType::Num => true,
+        _ => false,
     }
 }
 

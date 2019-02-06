@@ -8,8 +8,8 @@ using namespace AxiomModel;
 ConnectionWire::ConnectionWire(AxiomModel::GridSurface *grid, WireGrid *wireGrid, WireType wireType,
                                const QPointF &startPos, const QPointF &endPos)
     : _grid(grid), _wireGrid(wireGrid), _wireType(wireType), _startPos(startPos), _endPos(endPos) {
-    _grid->gridChanged.connect(this, &ConnectionWire::updateRoute);
-    _wireGrid->gridChanged.connect(this, &ConnectionWire::updateLineIndices);
+    _grid->gridChanged.connectTo(this, &ConnectionWire::updateRoute);
+    _wireGrid->gridChanged.connectTo(this, &ConnectionWire::updateLineIndices);
     updateRoute();
 }
 

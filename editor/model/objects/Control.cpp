@@ -38,18 +38,18 @@ Control::Control(AxiomModel::Control::ControlType controlType, AxiomModel::Conne
               if (connection->controlBUuid() == uuid) return connection->controlAUuid();
               return std::optional<QUuid>();
           }))) {
-    posChanged.connect(this, &Control::updateSinkPos);
-    sizeChanged.connect(this, &Control::updateSinkPos);
-    removed.connect(this, &Control::updateExposerRemoved);
-    _surface->node()->posChanged.connect(this, &Control::updateSinkPos);
-    _surface->node()->activeChanged.forward(&isEnabledChanged);
+    posChanged.connectTo(this, &Control::updateSinkPos);
+    sizeChanged.connectTo(this, &Control::updateSinkPos);
+    removed.connectTo(this, &Control::updateExposerRemoved);
+    _surface->node()->posChanged.connectTo(this, &Control::updateSinkPos);
+    _surface->node()->activeChanged.connectTo(&isEnabledChanged);
 
     if (!_exposingUuid.isNull()) {
         findLater(root->controls(), _exposingUuid)->then([this, uuid](Control *exposing) {
             exposing->setExposerUuid(uuid);
 
-            exposing->nameChanged.connect(this, [this, exposing](const QString &) { updateExposingName(exposing); });
-            exposing->surface()->node()->nameChanged.connect(
+            exposing->nameChanged.connectTo(this, [this, exposing](const QString &) { updateExposingName(exposing); });
+            exposing->surface()->node()->nameChanged.connectTo(
                 this, [this, exposing](const QString &) { updateExposingName(exposing); });
             updateExposingName(exposing);
         });
@@ -196,7 +196,7 @@ AxiomCommon::BoxedSequence<ModelObject *> Control::links() {
         AxiomCommon::filter(root()->controls().sequence(), [expId](Control *obj) { return obj->uuid() == expId; });
     auto connections = _connections.sequence();
 
-    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
+    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2> {
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(exposerControl)),
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(connections))}));
 }

@@ -1,4 +1,4 @@
-use mir::pool_id::{PoolId, PoolRef};
+use crate::mir::pool_id::{PoolId, PoolRef};
 
 mod control;
 mod function;

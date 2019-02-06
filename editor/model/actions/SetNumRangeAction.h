@@ -8,11 +8,11 @@ namespace AxiomModel {
 
     class SetNumRangeAction : public Action {
     public:
-        SetNumRangeAction(const QUuid &uuid, float beforeMin, float beforeMax, uint32_t beforeStep, float afterMin,
-                          float afterMax, uint32_t afterStep, ModelRoot *root);
+        SetNumRangeAction(const QUuid &uuid, double beforeMin, double beforeMax, uint32_t beforeStep, double afterMin,
+                          double afterMax, uint32_t afterStep, ModelRoot *root);
 
-        static std::unique_ptr<SetNumRangeAction> create(const QUuid &uuid, float beforeMin, float beforeMax,
-                                                         uint32_t beforeStep, float afterMin, float afterMax,
+        static std::unique_ptr<SetNumRangeAction> create(const QUuid &uuid, double beforeMin, double beforeMax,
+                                                         uint32_t beforeStep, double afterMin, double afterMax,
                                                          uint32_t afterStep, ModelRoot *root);
 
         void forward(bool first) override;
@@ -21,25 +21,25 @@ namespace AxiomModel {
 
         const QUuid &uuid() const { return _uuid; }
 
-        float beforeMin() const { return _beforeMin; }
+        double beforeMin() const { return _beforeMin; }
 
-        float beforeMax() const { return _beforeMax; }
+        double beforeMax() const { return _beforeMax; }
 
         uint32_t beforeStep() const { return _beforeStep; }
 
-        float afterMin() const { return _afterMin; }
+        double afterMin() const { return _afterMin; }
 
-        float afterMax() const { return _afterMax; }
+        double afterMax() const { return _afterMax; }
 
         uint32_t afterStep() const { return _afterStep; }
 
     private:
         QUuid _uuid;
-        float _beforeMin;
-        float _beforeMax;
+        double _beforeMin;
+        double _beforeMax;
         uint32_t _beforeStep;
-        float _afterMin;
-        float _afterMax;
+        double _afterMin;
+        double _afterMax;
         uint32_t _afterStep;
     };
 }

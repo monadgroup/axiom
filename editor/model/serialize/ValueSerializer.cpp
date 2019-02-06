@@ -16,8 +16,21 @@ NumValue ValueSerializer::deserializeNum(QDataStream &stream, uint32_t version) 
     }
 
     NumValue val;
-    stream >> val.left;
-    stream >> val.right;
+
+    // versions < 6 stored left/right as floats instead of doubles
+    if (version < 6) {
+        float leftFloat;
+        stream >> leftFloat;
+        float rightFloat;
+        stream >> rightFloat;
+
+        val.left = leftFloat;
+        val.right = rightFloat;
+    } else {
+        stream >> val.left;
+        stream >> val.right;
+    }
+
     uint8_t intForm;
     stream >> intForm;
     val.form = (FormType) intForm;

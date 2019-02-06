@@ -1,11 +1,11 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::util;
-use codegen::values::{ArrayValue, MidiValue, NumValue, ARRAY_CAPACITY};
+use crate::codegen::util;
+use crate::codegen::values::{ArrayValue, MidiValue, NumValue, ARRAY_CAPACITY};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::{FloatPredicate, IntPredicate};
-use mir::block;
 
 pub struct VoicesFunction {}
 impl Function for VoicesFunction {
@@ -16,7 +16,7 @@ impl Function for VoicesFunction {
     fn data_type(context: &Context) -> StructType {
         context.struct_type(
             &[
-                &context.i8_type().array_type(ARRAY_CAPACITY as u32), // assigned notes
+                &context.i8_type().array_type(u32::from(ARRAY_CAPACITY)), // assigned notes
             ],
             false,
         )
@@ -37,7 +37,7 @@ impl Function for VoicesFunction {
         let input_midi = MidiValue::new(args[0]);
         let last_active_array = ArrayValue::new(args[1]);
         let result_array = ArrayValue::new(result);
-        result_array.set_bitmap(func.ctx.b, &func.ctx.context.i32_type().const_int(0, false));
+        result_array.set_bitmap(func.ctx.b, func.ctx.context.i32_type().const_int(0, false));
 
         let init_index_ptr = func
             .ctx
@@ -134,7 +134,7 @@ impl Function for VoicesFunction {
                 func.ctx
                     .context
                     .i8_type()
-                    .const_int(ARRAY_CAPACITY as u64, false),
+                    .const_int(u64::from(ARRAY_CAPACITY), false),
                 "",
             );
             func.ctx.b.build_conditional_branch(
@@ -157,7 +157,7 @@ impl Function for VoicesFunction {
                 NumValue::new(last_active_array.get_item_ptr(func.ctx.b, current_init_index));
             let init_midi =
                 MidiValue::new(result_array.get_item_ptr(func.ctx.b, current_init_index));
-            init_midi.set_count(func.ctx.b, &func.ctx.context.i8_type().const_int(0, false));
+            init_midi.set_count(func.ctx.b, func.ctx.context.i8_type().const_int(0, false));
 
             let init_last_active_vec = init_last_active.get_vec(func.ctx.b);
             let active_cond = func.ctx.b.build_float_compare(
@@ -168,8 +168,9 @@ impl Function for VoicesFunction {
                         &init_last_active_vec,
                         &func.ctx.context.i32_type().const_int(0, false),
                         "initactiveval",
-                    ).into_float_value(),
-                func.ctx.context.f32_type().const_float(0.),
+                    )
+                    .into_float_value(),
+                func.ctx.context.f64_type().const_float(0.),
                 "activecond",
             );
             func.ctx.b.build_conditional_branch(
@@ -183,7 +184,7 @@ impl Function for VoicesFunction {
             // set the bitmap in the result bitmap if the voice is active
             let current_result_bitmap = result_array.get_bitmap(func.ctx.b);
             let new_bitmap = util::set_bit(func.ctx.b, current_result_bitmap, current_init_index);
-            result_array.set_bitmap(func.ctx.b, &new_bitmap);
+            result_array.set_bitmap(func.ctx.b, new_bitmap);
             func.ctx
                 .b
                 .build_unconditional_branch(&init_loop_check_block);
@@ -209,7 +210,7 @@ impl Function for VoicesFunction {
             );
 
             func.ctx.b.position_at_end(&event_loop_run_block);
-            let incremented_event_index = func.ctx.b.build_int_add(
+            let incremented_event_index = func.ctx.b.build_int_nuw_add(
                 current_event_index,
                 func.ctx.context.i8_type().const_int(1, false),
                 "nexteventindex",
@@ -246,7 +247,7 @@ impl Function for VoicesFunction {
                     func.ctx
                         .context
                         .i8_type()
-                        .const_int(ARRAY_CAPACITY as u64, false),
+                        .const_int(u64::from(ARRAY_CAPACITY), false),
                     "activecond",
                 );
                 func.ctx.b.build_conditional_branch(
@@ -256,7 +257,7 @@ impl Function for VoicesFunction {
                 );
 
                 func.ctx.b.position_at_end(&note_on_loop_run_block);
-                let incremented_active_index = func.ctx.b.build_int_add(
+                let incremented_active_index = func.ctx.b.build_int_nuw_add(
                     current_active_index,
                     func.ctx.context.i8_type().const_int(1, false),
                     "nextactiveindex",
@@ -293,7 +294,7 @@ impl Function for VoicesFunction {
                     .build_store(&assign_note_ptr, &current_event_note);
                 let new_bitmap =
                     util::set_bit(func.ctx.b, current_result_bitmap, current_active_index);
-                result_array.set_bitmap(func.ctx.b, &new_bitmap);
+                result_array.set_bitmap(func.ctx.b, new_bitmap);
 
                 let output_midi =
                     MidiValue::new(result_array.get_item_ptr(func.ctx.b, current_active_index));
@@ -313,7 +314,7 @@ impl Function for VoicesFunction {
                     func.ctx
                         .context
                         .i8_type()
-                        .const_int(ARRAY_CAPACITY as u64, false),
+                        .const_int(u64::from(ARRAY_CAPACITY), false),
                     "notecond",
                 );
                 func.ctx.b.build_conditional_branch(
@@ -323,7 +324,7 @@ impl Function for VoicesFunction {
                 );
 
                 func.ctx.b.position_at_end(&note_else_loop_run_block);
-                let incremented_note_index = func.ctx.b.build_int_add(
+                let incremented_note_index = func.ctx.b.build_int_nuw_add(
                     current_note_index,
                     func.ctx.context.i8_type().const_int(1, false),
                     "noteindex",

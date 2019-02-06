@@ -18,12 +18,12 @@ NodeSurface::NodeSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF pan
       _connections(cacheSequence(findChildrenWatch(root->connections(), uuid))),
       _grid(AxiomCommon::boxWatchSequence(AxiomCommon::staticCastWatch<GridItem *>(_nodes.asRef())), true), _pan(pan),
       _zoom(zoom) {
-    _nodes.events().itemAdded().connect(this, &NodeSurface::nodeAdded);
+    _nodes.events().itemAdded().connectTo(this, &NodeSurface::nodeAdded);
 
-    _nodes.events().itemAdded().connect(this, &NodeSurface::setDirty);
-    _nodes.events().itemRemoved().connect(this, &NodeSurface::setDirty);
-    _connections.events().itemAdded().connect(this, &NodeSurface::setDirty);
-    _connections.events().itemRemoved().connect(this, &NodeSurface::setDirty);
+    _nodes.events().itemAdded().connectTo(this, &NodeSurface::setDirty);
+    _nodes.events().itemRemoved().connectTo(this, &NodeSurface::setDirty);
+    _connections.events().itemAdded().connectTo(this, &NodeSurface::setDirty);
+    _connections.events().itemRemoved().connectTo(this, &NodeSurface::setDirty);
 }
 
 void NodeSurface::setPan(QPointF pan) {
@@ -62,7 +62,7 @@ std::vector<ModelObject *> NodeSurface::getCopyItems() {
         return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
     });
 
-    return AxiomCommon::collect(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
+    return AxiomCommon::collect(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2> {
         AxiomCommon::boxSequence(copyChildren),
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(copyConnections))}));
 }
@@ -121,11 +121,11 @@ void NodeSurface::remove() {
 
 void NodeSurface::nodeAdded(AxiomModel::Node *node) {
     node->controls().then([this](ControlSurface *surface) {
-        surface->controls().events().itemAdded().connect(this, &NodeSurface::setDirty);
-        surface->controls().events().itemRemoved().connect(this, &NodeSurface::setDirty);
+        surface->controls().events().itemAdded().connectTo(this, &NodeSurface::setDirty);
+        surface->controls().events().itemRemoved().connectTo(this, &NodeSurface::setDirty);
 
-        surface->controls().events().itemAdded().connect(
-            [this](Control *control) { control->exposerUuidChanged.connect(this, &NodeSurface::setDirty); });
+        surface->controls().events().itemAdded().connectTo(
+            [this](Control *control) { control->exposerUuidChanged.connectTo(this, &NodeSurface::setDirty); });
     });
 
     if (_runtime) {

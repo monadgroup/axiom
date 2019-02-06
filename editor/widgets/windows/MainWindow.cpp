@@ -3,9 +3,11 @@
 #include <QIODevice>
 #include <QStandardPaths>
 #include <QtCore/QDateTime>
+#include <QtCore/QMimeData>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QStringBuilder>
 #include <QtCore/QTimer>
+#include <QtGui/QDragEnterEvent>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMenuBar>
@@ -15,7 +17,6 @@
 #include <chrono>
 #include <iostream>
 
-#include "../GlobalActions.h"
 #include "../InteractiveImport.h"
 #include "../history/HistoryPanel.h"
 #include "../modulebrowser/ModuleBrowserPanel.h"
@@ -35,10 +36,16 @@
 using namespace AxiomGui;
 
 MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
-    : _backend(backend), _runtime(true, true), libraryLock(globalLibraryLockPath()) {
+    : fileNewAction("&New"), fileImportLibraryAction("&Import Library..."),
+      fileExportLibraryAction("E&xport Library..."), fileOpenAction("&Open..."), fileSaveAction("&Save"),
+      fileSaveAsAction("S&ave As..."), fileExportAction("&Export..."), fileQuitAction("&Quit"), editUndoAction("&Undo"),
+      editRedoAction("&Redo"), editCutAction("C&ut"), editCopyAction("&Copy"), editPasteAction("&Paste"),
+      editDeleteAction("&Delete"), editSelectAllAction("&Select All"), editPreferencesAction("Pr&eferences..."),
+      helpAboutAction("&About"), _backend(backend), _runtime(true, false), libraryLock(globalLibraryLockPath()) {
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
     setWindowIcon(QIcon(":/application.ico"));
+    setAcceptDrops(true);
 
     resize(1440, 810);
 
@@ -67,7 +74,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
     std::cout << "Loading module library took " << duration.count() / 1000000000. << "s" << std::endl;
 
-    _library->changed.connect(this, &MainWindow::triggerLibraryChanged);
+    _library->changed.connectTo(this, &MainWindow::triggerLibraryChanged);
 
     saveDebounceTimer.setSingleShot(true);
     saveDebounceTimer.setInterval(500);
@@ -83,58 +90,82 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     _modulePanel = std::make_unique<ModuleBrowserPanel>(this, _library.get(), this);
     dockManager->addDockWidget(ads::BottomDockWidgetArea, _modulePanel.get());
 
+    _historyPanel = std::make_unique<HistoryPanel>(this);
+    dockManager->addDockWidget(ads::RightDockWidgetArea, _historyPanel.get());
+    _historyPanel->toggleView(false);
+
+    // setup actions
+    fileOpenAction.setShortcut(QKeySequence::Open);
+    fileSaveAction.setShortcut(QKeySequence::Save);
+    fileSaveAsAction.setShortcut(QKeySequence::SaveAs);
+    fileExportAction.setEnabled(false);
+    fileQuitAction.setShortcut(QKeySequence::Quit);
+
+    editUndoAction.setShortcut(QKeySequence::Undo);
+    editRedoAction.setShortcut(QKeySequence::Redo);
+    editCutAction.setShortcut(QKeySequence::Cut);
+    editCopyAction.setShortcut(QKeySequence::Copy);
+    editPasteAction.setShortcut(QKeySequence::Paste);
+    editDeleteAction.setShortcut(QKeySequence::Delete);
+    editSelectAllAction.setShortcut(QKeySequence::SelectAll);
+    editPreferencesAction.setShortcut(QKeySequence::Preferences);
+    editPreferencesAction.setEnabled(false);
+
+    helpAboutAction.setShortcut(QKeySequence::HelpContents);
+
     // build menus
     auto fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(GlobalActions::fileNew);
+    fileMenu->addAction(&fileNewAction);
     fileMenu->addSeparator();
 
-    fileMenu->addAction(GlobalActions::fileImportLibrary);
-    fileMenu->addAction(GlobalActions::fileExportLibrary);
+    fileMenu->addAction(&fileImportLibraryAction);
+    fileMenu->addAction(&fileExportLibraryAction);
     fileMenu->addSeparator();
 
-    fileMenu->addAction(GlobalActions::fileOpen);
-    fileMenu->addAction(GlobalActions::fileSave);
-    fileMenu->addAction(GlobalActions::fileSaveAs);
+    fileMenu->addAction(&fileOpenAction);
+    fileMenu->addAction(&fileSaveAction);
+    fileMenu->addAction(&fileSaveAsAction);
     fileMenu->addSeparator();
 
-    fileMenu->addAction(GlobalActions::fileExport);
+    fileMenu->addAction(&fileExportAction);
     fileMenu->addSeparator();
 
-    fileMenu->addAction(GlobalActions::fileQuit);
+    fileMenu->addAction(&fileQuitAction);
 
     auto editMenu = menuBar()->addMenu(tr("&Edit"));
-    editMenu->addAction(GlobalActions::editUndo);
-    editMenu->addAction(GlobalActions::editRedo);
+    editMenu->addAction(&editUndoAction);
+    editMenu->addAction(&editRedoAction);
     editMenu->addSeparator();
 
-    editMenu->addAction(GlobalActions::editCut);
-    editMenu->addAction(GlobalActions::editCopy);
-    editMenu->addAction(GlobalActions::editPaste);
-    editMenu->addAction(GlobalActions::editDelete);
+    editMenu->addAction(&editCutAction);
+    editMenu->addAction(&editCopyAction);
+    editMenu->addAction(&editPasteAction);
+    editMenu->addAction(&editDeleteAction);
     editMenu->addSeparator();
 
-    editMenu->addAction(GlobalActions::editSelectAll);
+    editMenu->addAction(&editSelectAllAction);
     editMenu->addSeparator();
 
-    editMenu->addAction(GlobalActions::editPreferences);
+    editMenu->addAction(&editPreferencesAction);
 
     _viewMenu = menuBar()->addMenu(tr("&View"));
     _viewMenu->addAction(_modulePanel->toggleViewAction());
+    _viewMenu->addAction(_historyPanel->toggleViewAction());
 
     auto helpMenu = menuBar()->addMenu(tr("&Help"));
-    helpMenu->addAction(GlobalActions::helpAbout);
+    helpMenu->addAction(&helpAboutAction);
 
     // connect menu things
-    connect(GlobalActions::fileNew, &QAction::triggered, this, &MainWindow::newProject);
-    connect(GlobalActions::fileOpen, &QAction::triggered, this, &MainWindow::openProject);
-    connect(GlobalActions::fileSave, &QAction::triggered, this, &MainWindow::saveProject);
-    connect(GlobalActions::fileSaveAs, &QAction::triggered, this, &MainWindow::saveAsProject);
-    connect(GlobalActions::fileExport, &QAction::triggered, this, &MainWindow::exportProject);
-    connect(GlobalActions::fileQuit, &QAction::triggered, QApplication::quit);
-    connect(GlobalActions::fileImportLibrary, &QAction::triggered, this, &MainWindow::importLibrary);
-    connect(GlobalActions::fileExportLibrary, &QAction::triggered, this, &MainWindow::exportLibrary);
+    connect(&fileNewAction, &QAction::triggered, this, &MainWindow::newProject);
+    connect(&fileOpenAction, &QAction::triggered, this, &MainWindow::openProject);
+    connect(&fileSaveAction, &QAction::triggered, this, &MainWindow::saveProject);
+    connect(&fileSaveAsAction, &QAction::triggered, this, &MainWindow::saveAsProject);
+    connect(&fileExportAction, &QAction::triggered, this, &MainWindow::exportProject);
+    connect(&fileQuitAction, &QAction::triggered, QApplication::quit);
+    connect(&fileImportLibraryAction, &QAction::triggered, this, &MainWindow::importLibrary);
+    connect(&fileExportLibraryAction, &QAction::triggered, this, &MainWindow::exportLibrary);
 
-    connect(GlobalActions::helpAbout, &QAction::triggered, this, &MainWindow::showAbout);
+    connect(&helpAboutAction, &QAction::triggered, this, &MainWindow::showAbout);
 }
 
 MainWindow::~MainWindow() {
@@ -231,21 +262,42 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 }
 
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
+    if (!event->mimeData()->hasUrls()) return;
+
+    auto urlList = event->mimeData()->urls();
+    if (urlList.empty()) return;
+
+    // Cheap way to make sure it's a project file: just check the extension
+    // (maybe we should be checking magic number as well?)
+    QFileInfo fileInfo(urlList[0].toLocalFile());
+    if (fileInfo.suffix() != "axp") return;
+
+    event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *event) {
+    auto mimeData = event->mimeData();
+    assert(mimeData->hasUrls());
+
+    auto urlList = mimeData->urls();
+    if (urlList.empty() || !checkCloseProject()) return;
+    openProjectFrom(urlList[0].toLocalFile());
+}
+
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     // cleanup old project state
     if (_project) {
-        _openPanels[_project->rootSurface()]->toggleView(false);
+        auto rootPanel = _openPanels[_project->rootSurface()].get();
+
+        rootPanel->toggleView(false);
+        rootPanel->toggleViewAction()->deleteLater();
+
         removeSurface(_project->rootSurface());
     }
     _project = std::move(project);
 
     _openPanels.clear();
-    if (_historyPanel) {
-        _historyPanel->close();
-    }
-    if (_modulePanel) {
-        _modulePanel->close();
-    }
 
     // attach the backend and our runtime
     _project->attachBackend(_backend);
@@ -257,19 +309,14 @@ void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
     assert(defaultSurface->value());
     auto surfacePanel = showSurface(nullptr, *defaultSurface->value(), false, true);
 
-    _modulePanel->show();
-
-    _historyPanel = std::make_unique<HistoryPanel>(&_project->mainRoot().history(), this);
-    dockManager->addDockWidget(ads::RightDockWidgetArea, _historyPanel.get());
-    _historyPanel->toggleView(false);
+    _historyPanel->setSource(&_project->mainRoot().history());
 
     _viewMenu->addAction(surfacePanel->toggleViewAction());
-    _viewMenu->addAction(_historyPanel->toggleViewAction());
 
     updateWindowTitle(_project->linkedFile(), _project->isDirty());
-    _project->linkedFileChanged.connect(
+    _project->linkedFileChanged.connectTo(
         [this](const QString &newName) { updateWindowTitle(newName, _project->isDirty()); });
-    _project->isDirtyChanged.connect([this](bool isDirty) { updateWindowTitle(_project->linkedFile(), isDirty); });
+    _project->isDirtyChanged.connectTo([this](bool isDirty) { updateWindowTitle(_project->linkedFile(), isDirty); });
 }
 
 QString MainWindow::globalLibraryLockPath() {

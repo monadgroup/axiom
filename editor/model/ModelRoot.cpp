@@ -22,7 +22,7 @@ ModelRoot::ModelRoot()
       _controlSurfaces(AxiomCommon::dynamicCastWatch<ControlSurface *>(_pool.sequence())),
       _controls(AxiomCommon::dynamicCastWatch<Control *>(_pool.sequence())),
       _connections(AxiomCommon::dynamicCastWatch<Connection *>(_pool.sequence())) {
-    _history.stackChanged.connect(this, &ModelRoot::compileDirtyItems);
+    _history.stackChanged.connectTo(this, &ModelRoot::compileDirtyItems);
 }
 
 RootSurface *ModelRoot::rootSurface() {
@@ -55,7 +55,7 @@ std::lock_guard<std::mutex> ModelRoot::lockRuntime() {
 
 void ModelRoot::setHistory(AxiomModel::HistoryList history) {
     _history = std::move(history);
-    _history.stackChanged.connect(this, &ModelRoot::compileDirtyItems);
+    _history.stackChanged.connectTo(this, &ModelRoot::compileDirtyItems);
 }
 
 void ModelRoot::applyDirtyItemsTo(MaximCompiler::Transaction *transaction) {

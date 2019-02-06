@@ -39,11 +39,11 @@ static std::vector<std::pair<QString, NumControl::DisplayMode>> modes = {
 
 NumControlItem::NumControlItem(NumControl *control, NodeSurfaceCanvas *canvas, MaximCompiler::Runtime *runtime)
     : ControlItem(control, canvas), control(control), runtime(runtime), _plugImage(":/icons/num-plug.png") {
-    control->valueChanged.connect(this, &NumControlItem::controlValueChanged);
-    control->displayModeChanged.connect(this, &NumControlItem::triggerUpdate);
-    control->rangeChanged.connect(this, &NumControlItem::triggerUpdate);
-    control->connections().events().itemAdded().connect(this, &NumControlItem::triggerUpdate);
-    control->connections().events().itemRemoved().connect(this, &NumControlItem::triggerUpdate);
+    control->valueChanged.connectTo(this, &NumControlItem::controlValueChanged);
+    control->displayModeChanged.connectTo(this, &NumControlItem::triggerUpdate);
+    control->rangeChanged.connectTo(this, &NumControlItem::triggerUpdate);
+    control->connections().events().itemAdded().connectTo(this, &NumControlItem::triggerUpdate);
+    control->connections().events().itemRemoved().connectTo(this, &NumControlItem::triggerUpdate);
 
     connect(&showValueTimer, &QTimer::timeout, this, &NumControlItem::showValueExpired);
 }
@@ -111,7 +111,7 @@ void NumControlItem::paintControl(QPainter *painter) {
                              (normalizedVal.right - control->minValue()) / (control->maxValue() - control->minValue()));
 
     auto clampedVal =
-        normalizedVal.withLR(std::clamp(unclampedVal.left, 0.f, 1.f), std::clamp(unclampedVal.right, 0.f, 1.f));
+        normalizedVal.withLR(std::clamp(unclampedVal.left, 0., 1.), std::clamp(unclampedVal.right, 0., 1.));
 
     auto controlEnabled = control->isEnabled();
     auto normalColor = controlEnabled ? CommonColors::numNormal : CommonColors::disabledNormal;

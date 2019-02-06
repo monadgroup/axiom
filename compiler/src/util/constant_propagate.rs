@@ -1,9 +1,9 @@
-use ast::{FormType, OperatorType, SourceRange, UnaryOperation};
+use crate::ast::{FormType, OperatorType, SourceRange, UnaryOperation};
+use crate::mir::block::Function;
+use crate::mir::{ConstantNum, ConstantTuple, ConstantValue, VarType};
+use crate::{CompileError, CompileResult};
 use divrem::RemEuclid;
-use mir::block::Function;
-use mir::{ConstantNum, ConstantTuple, ConstantValue, VarType};
-use std::f32::consts;
-use {CompileError, CompileResult};
+use std::f64::consts;
 
 pub fn const_cast(constant: &ConstantNum, target_form: FormType) -> ConstantNum {
     constant.with_form(target_form)
@@ -16,15 +16,15 @@ pub fn const_unary_op(constant: &ConstantNum, op: UnaryOperation) -> ConstantNum
             ConstantNum::new(-constant.left, -constant.right, constant.form)
         }
         UnaryOperation::Not => ConstantNum::new(
-            f32::from((constant.left == 0.) as i8),
-            f32::from((constant.right == 0.) as i8),
+            f64::from((constant.left == 0.) as i8),
+            f64::from((constant.right == 0.) as i8),
             constant.form,
         ),
     }
 }
 
 #[allow(unknown_lints)]
-#[allow(float_cmp)]
+#[allow(clippy::float_cmp)]
 pub fn const_math_op(a: &ConstantNum, b: &ConstantNum, op: OperatorType) -> ConstantNum {
     match op {
         OperatorType::Identity => b.clone(),
@@ -35,58 +35,58 @@ pub fn const_math_op(a: &ConstantNum, b: &ConstantNum, op: OperatorType) -> Cons
         OperatorType::Modulo => ConstantNum::new(a.left % b.left, a.right % b.right, a.form),
         OperatorType::Power => ConstantNum::new(a.left.powf(b.left), a.right.powf(b.right), a.form),
         OperatorType::BitwiseAnd => ConstantNum::new(
-            (a.left as i32 & b.left as i32) as f32,
-            (a.right as i32 & b.right as i32) as f32,
+            f64::from(a.left as i32 & b.left as i32),
+            f64::from(a.right as i32 & b.right as i32),
             a.form,
         ),
         OperatorType::BitwiseOr => ConstantNum::new(
-            (a.left as i32 | b.left as i32) as f32,
-            (a.right as i32 | b.right as i32) as f32,
+            f64::from(a.left as i32 | b.left as i32),
+            f64::from(a.right as i32 | b.right as i32),
             a.form,
         ),
         OperatorType::BitwiseXor => ConstantNum::new(
-            (a.left as i32 ^ b.left as i32) as f32,
-            (a.right as i32 ^ b.right as i32) as f32,
+            f64::from(a.left as i32 ^ b.left as i32),
+            f64::from(a.right as i32 ^ b.right as i32),
             a.form,
         ),
         OperatorType::LogicalAnd => ConstantNum::new(
-            f32::from((a.left != 0. && b.left != 0.) as i8),
-            f32::from((a.right != 0. && b.right != 0.) as i8),
+            f64::from((a.left != 0. && b.left != 0.) as i8),
+            f64::from((a.right != 0. && b.right != 0.) as i8),
             a.form,
         ),
         OperatorType::LogicalOr => ConstantNum::new(
-            f32::from((a.left != 0. || b.left != 0.) as i8),
-            f32::from((a.right != 0. || b.right != 0.) as i8),
+            f64::from((a.left != 0. || b.left != 0.) as i8),
+            f64::from((a.right != 0. || b.right != 0.) as i8),
             a.form,
         ),
         OperatorType::LogicalEqual => ConstantNum::new(
-            f32::from((a.left == b.left) as i8),
-            f32::from((a.right == b.right) as i8),
+            f64::from((a.left == b.left) as i8),
+            f64::from((a.right == b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalNotEqual => ConstantNum::new(
-            f32::from((a.left != b.left) as i8),
-            f32::from((a.right != b.right) as i8),
+            f64::from((a.left != b.left) as i8),
+            f64::from((a.right != b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalGt => ConstantNum::new(
-            f32::from((a.left > b.left) as i8),
-            f32::from((a.right > b.right) as i8),
+            f64::from((a.left > b.left) as i8),
+            f64::from((a.right > b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalLt => ConstantNum::new(
-            f32::from((a.left < b.left) as i8),
-            f32::from((a.right < b.right) as i8),
+            f64::from((a.left < b.left) as i8),
+            f64::from((a.right < b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalGte => ConstantNum::new(
-            f32::from((a.left >= b.left) as i8),
-            f32::from((a.right >= b.right) as i8),
+            f64::from((a.left >= b.left) as i8),
+            f64::from((a.right >= b.right) as i8),
             a.form,
         ),
         OperatorType::LogicalLte => ConstantNum::new(
-            f32::from((a.left <= b.left) as i8),
-            f32::from((a.right <= b.right) as i8),
+            f64::from((a.left <= b.left) as i8),
+            f64::from((a.right <= b.right) as i8),
             a.form,
         ),
     }
@@ -133,7 +133,7 @@ fn consts_to_nums<'a>(
 fn const_num_intrinsic(
     arg: &ConstantValue,
     range: &SourceRange,
-    f: &Fn(f32) -> f32,
+    f: &Fn(f64) -> f64,
 ) -> CompileResult<ConstantValue> {
     const_to_num(arg, range)
         .and_then(|num| Ok(ConstantValue::new_num(f(num.left), f(num.right), num.form)))
@@ -143,7 +143,7 @@ fn two_const_num_intrinsic(
     a: &ConstantValue,
     b: &ConstantValue,
     range: &SourceRange,
-    f: &Fn(f32, f32) -> f32,
+    f: &Fn(f64, f64) -> f64,
 ) -> CompileResult<ConstantValue> {
     const_to_num(a, range).and_then(|a_num| {
         const_to_num(b, range).and_then(|b_num| {
@@ -157,7 +157,7 @@ fn two_const_num_intrinsic(
 }
 
 pub fn const_call(
-    function: &Function,
+    function: Function,
     args: &[ConstantValue],
     varargs: &[ConstantValue],
     range: &SourceRange,

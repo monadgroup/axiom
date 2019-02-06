@@ -1,4 +1,4 @@
-use mir;
+use crate::mir;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::mem;
 

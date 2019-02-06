@@ -2,12 +2,12 @@
 
 #include "../CachedSequence.h"
 #include "../ModelObject.h"
+#include "../ModelRoot.h"
 #include "../PoolOperators.h"
 #include "../WireGrid.h"
 #include "../grid/GridSurface.h"
 #include "common/Event.h"
 #include "common/WatchSequence.h"
-#include <editor/model/ModelRoot.h>
 
 namespace MaximCompiler {
     class Runtime;

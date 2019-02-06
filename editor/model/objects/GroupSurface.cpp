@@ -11,7 +11,7 @@ GroupSurface::GroupSurface(const QUuid &uuid, const QUuid &parentUuid, QPointF p
                            AxiomModel::ModelRoot *root)
     : NodeSurface(uuid, parentUuid, pan, zoom, root),
       _node(find(AxiomCommon::dynamicCast<GroupNode *>(root->nodes().sequence()), parentUuid)) {
-    _node->nameChanged.forward(&nameChanged);
+    _node->nameChanged.connectTo(&nameChanged);
 }
 
 std::unique_ptr<GroupSurface> GroupSurface::create(const QUuid &uuid, const QUuid &parentUuid, QPointF pan, float zoom,

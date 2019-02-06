@@ -1,4 +1,4 @@
-use mir;
+use crate::mir;
 
 // removes dead sockets from all nodes in the provided surfaces
 // sockets are 'dead' if they're in a value group that has no other sockets connected

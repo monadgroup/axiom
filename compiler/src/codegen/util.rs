@@ -1,4 +1,4 @@
-use codegen::intrinsics;
+use crate::codegen::intrinsics;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -76,7 +76,7 @@ pub fn get_constant_array(t: &BasicTypeEnum, items: &[BasicValueEnum]) -> ArrayV
 pub fn get_or_create_func(
     module: &Module,
     name: &str,
-    _is_internal: bool,
+    is_internal: bool,
     cb: &Fn() -> (Linkage, FunctionType),
 ) -> FunctionValue {
     if let Some(func) = module.get_function(name) {
@@ -85,10 +85,10 @@ pub fn get_or_create_func(
         let (linkage, func_type) = cb();
         let func = module.add_function(name, &func_type, Some(&linkage));
 
-        /*if is_internal {
+        if is_internal {
             // fastcc is 8 according to http://llvm.org/doxygen/namespacellvm_1_1CallingConv.html
             func.set_call_conventions(8);
-        }*/
+        }
 
         func
     }
@@ -102,14 +102,14 @@ pub fn get_or_create_global(module: &Module, name: &str, val_type: &BasicType) -
     }
 }
 
-pub fn get_const_vec(context: &Context, left: f32, right: f32) -> VectorValue {
+pub fn get_const_vec(context: &Context, left: f64, right: f64) -> VectorValue {
     VectorType::const_vector(&[
-        &context.f32_type().const_float(left as f64),
-        &context.f32_type().const_float(right as f64),
+        &context.f64_type().const_float(left),
+        &context.f64_type().const_float(right),
     ])
 }
 
-pub fn get_vec_spread(context: &Context, val: f32) -> VectorValue {
+pub fn get_vec_spread(context: &Context, val: f64) -> VectorValue {
     get_const_vec(context, val, val)
 }
 
@@ -119,15 +119,17 @@ pub fn splat_vector(builder: &Builder, val: FloatValue, name: &str) -> VectorVal
         .build_insert_element(
             &builder
                 .build_insert_element(
-                    &context.f32_type().vec_type(2).get_undef(),
+                    &context.f64_type().vec_type(2).get_undef(),
                     &val,
                     &context.i32_type().const_int(0, false),
                     name,
-                ).into_vector_value(),
+                )
+                .into_vector_value(),
             &val,
             &context.i32_type().const_int(1, false),
             name,
-        ).into_vector_value()
+        )
+        .into_vector_value()
 }
 
 pub fn copy_ptr(builder: &mut Builder, module: &Module, src: PointerValue, dest: PointerValue) {

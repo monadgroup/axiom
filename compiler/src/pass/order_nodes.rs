@@ -1,4 +1,4 @@
-use mir;
+use crate::mir;
 use std::collections::VecDeque;
 
 type NodeRef = usize;

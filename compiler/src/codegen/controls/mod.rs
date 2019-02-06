@@ -16,10 +16,11 @@ pub use self::roll_control::RollControl;
 pub use self::scope_control::ScopeControl;
 
 use self::control_context::{ControlContext, ControlUiContext};
-use ast::{ControlField, ControlType};
-use codegen::{
+use crate::ast::{ControlField, ControlType};
+use crate::codegen::{
     build_context_function, util, values, BuilderContext, LifecycleFunc, TargetProperties,
 };
+use crate::mir::VarType;
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -27,7 +28,6 @@ use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
 use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::AddressSpace;
-use mir::VarType;
 
 pub type ControlFieldGeneratorCb = Fn(&mut ControlContext, PointerValue);
 
@@ -38,6 +38,13 @@ pub trait ControlFieldGenerator {
         get_cb: &ControlFieldGeneratorCb,
         set_cb: &ControlFieldGeneratorCb,
     );
+}
+
+#[derive(Clone, Copy)]
+pub struct ControlPointers {
+    pub group: PointerValue,
+    pub data: PointerValue,
+    pub shared: PointerValue,
 }
 
 struct PrivateGenerator<'a> {
@@ -52,15 +59,20 @@ impl<'a> ControlFieldGenerator for PrivateGenerator<'a> {
         get_cb: &ControlFieldGeneratorCb,
         set_cb: &ControlFieldGeneratorCb,
     ) {
-        build_field_func(
+        let (getter_func, getter_pass_by_val) = get_field_getter_func(self.module, field);
+        let (setter_func, setter_pass_by_val) = get_field_setter_func(self.module, field);
+
+        build_field_getter_func(
             self.module,
-            get_field_getter_func(self.module, field),
+            getter_func,
+            getter_pass_by_val,
             self.target,
             get_cb,
         );
-        build_field_func(
+        build_field_setter_func(
             self.module,
-            get_field_setter_func(self.module, field),
+            setter_func,
+            setter_pass_by_val,
             self.target,
             set_cb,
         );
@@ -68,11 +80,11 @@ impl<'a> ControlFieldGenerator for PrivateGenerator<'a> {
 }
 
 pub fn get_group_type(context: &Context, control_type: ControlType) -> StructType {
-    values::remap_type(context, &VarType::of_control_value(&control_type))
+    values::remap_type(context, &VarType::of_control_value(control_type))
 }
 
 pub fn get_field_type(context: &Context, field: ControlField) -> StructType {
-    values::remap_type(context, &VarType::of_control_field(&field))
+    values::remap_type(context, &VarType::of_control_field(field))
 }
 
 macro_rules! map_controls {
@@ -156,88 +168,143 @@ fn get_ui_lifecycle_func(
     })
 }
 
-fn get_field_getter_setter_func(
-    module: &Module,
-    field: ControlField,
-    func_name: &str,
-    is_get: bool,
-) -> FunctionValue {
-    let func = util::get_or_create_func(module, &func_name, true, &|| {
-        let control_type = ControlType::from(field);
-        let context = module.get_context();
-        (
-            Linkage::ExternalLinkage,
-            context.void_type().fn_type(
-                &[
-                    &get_field_type(&context, field).ptr_type(AddressSpace::Generic),
-                    &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
-                    &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
-                    &get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
-                ],
-                false,
-            ),
-        )
-    });
-    if is_get {
+fn get_field_getter_func(module: &Module, field: ControlField) -> (FunctionValue, bool) {
+    let var_type = VarType::of_control_field(field);
+    let pass_by_val = values::pass_type_by_val(&var_type);
+
+    let func = util::get_or_create_func(
+        module,
+        &format!("maxim.control.{}.getter", field),
+        true,
+        &|| {
+            let control_type = ControlType::from(field);
+
+            let context = module.get_context();
+            let value_type = values::remap_type(&context, &var_type);
+            let group_type = get_group_type(&context, control_type).ptr_type(AddressSpace::Generic);
+            let data_type = get_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
+            let shared_data_type =
+                get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
+
+            let func_type = if pass_by_val {
+                value_type.fn_type(&[&group_type, &data_type, &shared_data_type], false)
+            } else {
+                context.void_type().fn_type(
+                    &[
+                        &value_type.ptr_type(AddressSpace::Generic),
+                        &group_type,
+                        &data_type,
+                        &shared_data_type,
+                    ],
+                    false,
+                )
+            };
+
+            (Linkage::ExternalLinkage, func_type)
+        },
+    );
+
+    if !pass_by_val {
         func.add_param_attribute(
             0,
             module.get_context().get_enum_attr(AttrKind::StructRet, 1),
         );
     }
-    func
+    (func, pass_by_val)
 }
 
-pub fn get_field_getter_func(module: &Module, field: ControlField) -> FunctionValue {
-    get_field_getter_setter_func(
-        module,
-        field,
-        &format!("maxim.control.{}.getter", field),
-        true,
-    )
-}
+fn get_field_setter_func(module: &Module, field: ControlField) -> (FunctionValue, bool) {
+    let var_type = VarType::of_control_field(field);
+    let pass_by_val = values::pass_type_by_val(&var_type);
 
-pub fn get_field_setter_func(module: &Module, field: ControlField) -> FunctionValue {
-    get_field_getter_setter_func(
+    let func = util::get_or_create_func(
         module,
-        field,
         &format!("maxim.control.{}.setter", field),
-        false,
-    )
+        true,
+        &|| {
+            let control_type = ControlType::from(field);
+
+            let context = module.get_context();
+            let value_type = values::remap_type(&context, &var_type);
+            let group_type = get_group_type(&context, control_type).ptr_type(AddressSpace::Generic);
+            let data_type = get_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
+            let shared_data_type =
+                get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
+
+            let func_type = if pass_by_val {
+                context.void_type().fn_type(
+                    &[&group_type, &data_type, &shared_data_type, &value_type],
+                    false,
+                )
+            } else {
+                context.void_type().fn_type(
+                    &[
+                        &group_type,
+                        &data_type,
+                        &shared_data_type,
+                        &value_type.ptr_type(AddressSpace::Generic),
+                    ],
+                    false,
+                )
+            };
+
+            (Linkage::ExternalLinkage, func_type)
+        },
+    );
+
+    (func, pass_by_val)
 }
 
 pub fn build_field_get(
     module: &Module,
     builder: &mut Builder,
     field: ControlField,
-    group_ptr: PointerValue,
-    data_ptr: PointerValue,
-    shared_ptr: PointerValue,
+    ptrs: ControlPointers,
     out_val: PointerValue,
 ) {
-    let func = get_field_getter_func(module, field);
-    builder.build_call(
-        &func,
-        &[&out_val, &group_ptr, &data_ptr, &shared_ptr],
-        "field.get",
-        false,
-    );
+    let (func, pass_by_val) = get_field_getter_func(module, field);
+
+    if pass_by_val {
+        let get_val = builder
+            .build_call(
+                &func,
+                &[&ptrs.group, &ptrs.data, &ptrs.shared],
+                "field.get",
+                true,
+            )
+            .left()
+            .unwrap();
+        builder.build_store(&out_val, &get_val);
+    } else {
+        builder.build_call(
+            &func,
+            &[&out_val, &ptrs.group, &ptrs.data, &ptrs.shared],
+            "",
+            true,
+        );
+    }
 }
 
 pub fn build_field_set(
     module: &Module,
     builder: &mut Builder,
     field: ControlField,
-    group_ptr: PointerValue,
-    data_ptr: PointerValue,
-    shared_ptr: PointerValue,
+    ptrs: ControlPointers,
     in_val: PointerValue,
 ) {
-    let func = get_field_setter_func(module, field);
+    let (func, pass_by_val) = get_field_setter_func(module, field);
+
+    let in_norm_val = if pass_by_val {
+        builder.build_load(&in_val, "in")
+    } else {
+        in_val.into()
+    };
+
     builder.build_call(
         &func,
-        &[&in_val, &group_ptr, &data_ptr, &shared_ptr],
+        &[&ptrs.group, &ptrs.data, &ptrs.shared, &in_norm_val],
         "",
-        false,
+        true,
     );
 }
 
@@ -246,12 +313,10 @@ pub fn build_lifecycle_call(
     builder: &mut Builder,
     control_type: ControlType,
     lifecycle: LifecycleFunc,
-    group_ptr: PointerValue,
-    data_ptr: PointerValue,
-    shared_ptr: PointerValue,
+    ptrs: ControlPointers,
 ) {
     let func = get_lifecycle_func(module, control_type, lifecycle);
-    builder.build_call(&func, &[&group_ptr, &data_ptr, &shared_ptr], "", false);
+    builder.build_call(&func, &[&ptrs.group, &ptrs.data, &ptrs.shared], "", true);
 }
 
 pub fn build_ui_lifecycle_call(
@@ -259,17 +324,15 @@ pub fn build_ui_lifecycle_call(
     builder: &mut Builder,
     control_type: ControlType,
     lifecycle: LifecycleFunc,
-    group_ptr: PointerValue,
-    data_ptr: PointerValue,
-    shared_ptr: PointerValue,
+    ptrs: ControlPointers,
     ui_ptr: PointerValue,
 ) {
     let func = get_ui_lifecycle_func(module, control_type, lifecycle);
     builder.build_call(
         &func,
-        &[&group_ptr, &data_ptr, &shared_ptr, &ui_ptr],
+        &[&ptrs.group, &ptrs.data, &ptrs.shared, &ui_ptr],
         "",
-        false,
+        true,
     );
 }
 
@@ -323,17 +386,63 @@ fn build_ui_lifecycle_func(
     });
 }
 
-fn build_field_func(
+fn build_field_getter_func(
     module: &Module,
     func: FunctionValue,
+    pass_by_val: bool,
     target: &TargetProperties,
     builder: &ControlFieldGeneratorCb,
 ) {
     build_context_function(module, func, target, &|ctx: BuilderContext| {
-        let field_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let val_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
-        let data_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
-        let shared_ptr = ctx.func.get_nth_param(3).unwrap().into_pointer_value();
+        let mut param_iter = ctx.func.params();
+
+        let field_ptr = if pass_by_val {
+            ctx.allocb
+                .build_alloca(&ctx.func.get_return_type(), "ret.ptr")
+        } else {
+            param_iter.next().unwrap().into_pointer_value()
+        };
+        let val_ptr = param_iter.next().unwrap().into_pointer_value();
+        let data_ptr = param_iter.next().unwrap().into_pointer_value();
+        let shared_ptr = param_iter.next().unwrap().into_pointer_value();
+        let mut control_context = ControlContext {
+            ctx,
+            val_ptr,
+            data_ptr,
+            shared_ptr,
+        };
+        builder(&mut control_context, field_ptr);
+
+        if pass_by_val {
+            let loaded_val = control_context.ctx.b.build_load(&field_ptr, "ret");
+            control_context.ctx.b.build_return(Some(&loaded_val));
+        } else {
+            control_context.ctx.b.build_return(None);
+        }
+    })
+}
+
+fn build_field_setter_func(
+    module: &Module,
+    func: FunctionValue,
+    pass_by_val: bool,
+    target: &TargetProperties,
+    builder: &ControlFieldGeneratorCb,
+) {
+    build_context_function(module, func, target, &|ctx: BuilderContext| {
+        let val_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
+        let data_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let shared_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
+
+        let field_val = ctx.func.get_nth_param(3).unwrap();
+        let field_ptr = if pass_by_val {
+            let ptr = ctx.allocb.build_alloca(&field_val.get_type(), "val.ptr");
+            ctx.b.build_store(&ptr, &field_val);
+            ptr
+        } else {
+            field_val.into_pointer_value()
+        };
+
         let mut control_context = ControlContext {
             ctx,
             val_ptr,
@@ -343,7 +452,7 @@ fn build_field_func(
         builder(&mut control_context, field_ptr);
 
         control_context.ctx.b.build_return(None);
-    });
+    })
 }
 
 pub trait Control {

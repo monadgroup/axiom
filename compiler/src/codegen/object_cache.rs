@@ -1,6 +1,6 @@
-use codegen::{data_analyzer, TargetProperties};
+use crate::codegen::{data_analyzer, TargetProperties};
+use crate::mir::{Block, BlockRef, Surface, SurfaceRef};
 use inkwell::context::Context;
-use mir::{Block, BlockRef, Surface, SurfaceRef};
 
 pub trait ObjectCache {
     fn context(&self) -> &Context;

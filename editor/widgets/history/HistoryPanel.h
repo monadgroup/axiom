@@ -1,32 +1,28 @@
 #pragma once
 
-#include <QtWidgets/QListWidget>
+#include <optional>
 
-#include "common/TrackedObject.h"
+#include "HistoryContext.h"
 #include "vendor/dock/DockWidget.h"
 
-namespace AxiomModel {
-    class Action;
+class QListWidget;
 
+namespace AxiomModel {
     class HistoryList;
 }
 
 namespace AxiomGui {
 
-    class HistoryPanel : public ads::CDockWidget, public AxiomCommon::TrackedObject {
+    class HistoryPanel : public ads::CDockWidget {
         Q_OBJECT
 
     public:
-        explicit HistoryPanel(AxiomModel::HistoryList *list, QWidget *parent = nullptr);
+        explicit HistoryPanel(QWidget *parent = nullptr);
 
-    private slots:
-
-        void updateStack();
+        void setSource(AxiomModel::HistoryList *list);
 
     private:
-        AxiomModel::HistoryList *list;
         QListWidget *listWidget;
-
-        void appendItem(size_t i, AxiomModel::Action *action, QString prepend);
+        std::optional<HistoryContext> currentContext;
     };
 }

@@ -1,4 +1,4 @@
-use ast::ControlField;
+use crate::ast::ControlField;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -11,12 +11,6 @@ pub enum ControlType {
     Scope,
     AudioExtract,
     MidiExtract,
-}
-
-impl ControlType {
-    pub fn is_extract(&self) -> bool {
-        *self == ControlType::AudioExtract || *self == ControlType::MidiExtract
-    }
 }
 
 impl From<ControlField> for ControlType {

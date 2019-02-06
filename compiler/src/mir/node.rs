@@ -1,4 +1,4 @@
-use mir::{BlockRef, SurfaceRef, ValueSocket};
+use crate::mir::{BlockRef, SurfaceRef, ValueSocket};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum NodeData {

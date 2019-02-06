@@ -1,11 +1,11 @@
 use super::BlockContext;
-use ast::FormType;
-use codegen::converters;
-use codegen::values::NumValue;
+use crate::ast::FormType;
+use crate::codegen::converters;
+use crate::codegen::values::NumValue;
 use inkwell::values::PointerValue;
 
 pub fn gen_num_convert_statement(
-    target_form: &FormType,
+    target_form: FormType,
     input: usize,
     node: &mut BlockContext,
 ) -> PointerValue {
@@ -15,6 +15,7 @@ pub fn gen_num_convert_statement(
         node.ctx.b,
         node.ctx.module,
         &base_num,
-        *target_form,
-    ).val
+        target_form,
+    )
+    .val
 }

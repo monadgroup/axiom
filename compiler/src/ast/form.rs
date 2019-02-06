@@ -1,4 +1,4 @@
-use ast::SourceRange;
+use crate::ast::SourceRange;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]

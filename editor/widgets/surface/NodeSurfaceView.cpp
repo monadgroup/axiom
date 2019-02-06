@@ -8,8 +8,9 @@
 #include <QtWidgets/QGraphicsSceneWheelEvent>
 #include <QtWidgets/QOpenGLWidget>
 
-#include "../GlobalActions.h"
+#include "../windows/MainWindow.h"
 #include "NodeSurfaceCanvas.h"
+#include "NodeSurfacePanel.h"
 #include "editor/model/ModelRoot.h"
 #include "editor/model/PoolOperators.h"
 #include "editor/model/Project.h"
@@ -24,13 +25,13 @@ using namespace AxiomGui;
 using namespace AxiomModel;
 
 NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
-    : QGraphicsView(new NodeSurfaceCanvas(panel, surface)), surface(surface) {
+    : QGraphicsView(new NodeSurfaceCanvas(panel, surface)), window(panel->window), surface(surface) {
     scene()->setParent(this);
     // setViewport(new QOpenGLWidget());
     setAcceptDrops(true);
 
-    surface->panChanged.connect(this, &NodeSurfaceView::pan);
-    surface->zoomChanged.connect(this, &NodeSurfaceView::zoom);
+    surface->panChanged.connectTo(this, &NodeSurfaceView::pan);
+    surface->zoomChanged.connectTo(this, &NodeSurfaceView::zoom);
 
     // set properties
     setDragMode(QGraphicsView::NoDrag);
@@ -44,16 +45,16 @@ NodeSurfaceView::NodeSurfaceView(NodeSurfacePanel *panel, NodeSurface *surface)
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // connect to global actions
-    connect(GlobalActions::editUndo, &QAction::triggered, this, &NodeSurfaceView::doUndo);
-    connect(GlobalActions::editRedo, &QAction::triggered, this, &NodeSurfaceView::doRedo);
-    connect(GlobalActions::editDelete, &QAction::triggered, this, &NodeSurfaceView::deleteSelected);
-    connect(GlobalActions::editSelectAll, &QAction::triggered, this, &NodeSurfaceView::selectAll);
-    connect(GlobalActions::editCut, &QAction::triggered, this, &NodeSurfaceView::cutSelected);
-    connect(GlobalActions::editCopy, &QAction::triggered, this, &NodeSurfaceView::copySelected);
-    connect(GlobalActions::editPaste, &QAction::triggered, this, &NodeSurfaceView::pasteBuffer);
+    connect(&window->editUndoAction, &QAction::triggered, this, &NodeSurfaceView::doUndo);
+    connect(&window->editRedoAction, &QAction::triggered, this, &NodeSurfaceView::doRedo);
+    connect(&window->editDeleteAction, &QAction::triggered, this, &NodeSurfaceView::deleteSelected);
+    connect(&window->editSelectAllAction, &QAction::triggered, this, &NodeSurfaceView::selectAll);
+    connect(&window->editCutAction, &QAction::triggered, this, &NodeSurfaceView::cutSelected);
+    connect(&window->editCopyAction, &QAction::triggered, this, &NodeSurfaceView::copySelected);
+    connect(&window->editPasteAction, &QAction::triggered, this, &NodeSurfaceView::pasteBuffer);
 
     // connect to update history
-    surface->root()->history().stackChanged.connect(this, &NodeSurfaceView::updateHistoryState);
+    surface->root()->history().stackChanged.connectTo(this, &NodeSurfaceView::updateHistoryState);
 }
 
 void NodeSurfaceView::mousePressEvent(QMouseEvent *event) {
@@ -138,6 +139,7 @@ void NodeSurfaceView::dragEnterEvent(QDragEnterEvent *event) {
 }
 
 void NodeSurfaceView::dragMoveEvent(QDragMoveEvent *event) {
+    event->acceptProposedAction();
     auto mouseDelta = mapToScene(event->pos()) - startMousePos;
     surface->grid().dragTo(QPoint(mouseDelta.x() / NodeSurfaceCanvas::nodeGridSize.width(),
                                   mouseDelta.y() / NodeSurfaceCanvas::nodeGridSize.height()));
@@ -150,6 +152,7 @@ void NodeSurfaceView::dragLeaveEvent(QDragLeaveEvent *event) {
 }
 
 void NodeSurfaceView::dropEvent(QDropEvent *event) {
+    event->acceptProposedAction();
     surface->grid().finishDragging();
 
     auto selectedNodes = AxiomCommon::staticCast<Node *>(surface->grid().selectedItems().sequence());
@@ -259,10 +262,8 @@ float NodeSurfaceView::zoomToScale(float zoom) {
 
 void NodeSurfaceView::updateHistoryState() {
     if (!hasFocus()) return;
-    GlobalActions::editUndo->setText("&Undo " +
-                                     AxiomModel::Action::typeToString(surface->root()->history().undoType()));
-    GlobalActions::editRedo->setText("&Redo " +
-                                     AxiomModel::Action::typeToString(surface->root()->history().redoType()));
-    GlobalActions::editUndo->setEnabled(surface->root()->history().canUndo());
-    GlobalActions::editRedo->setEnabled(surface->root()->history().canRedo());
+    window->editUndoAction.setText("&Undo " + AxiomModel::Action::typeToString(surface->root()->history().undoType()));
+    window->editRedoAction.setText("&Redo " + AxiomModel::Action::typeToString(surface->root()->history().redoType()));
+    window->editUndoAction.setEnabled(surface->root()->history().canUndo());
+    window->editRedoAction.setEnabled(surface->root()->history().canRedo());
 }

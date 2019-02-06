@@ -34,7 +34,7 @@ void ProjectSerializer::serialize(AxiomModel::Project *project, QDataStream &str
 std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uint32_t *versionOut,
                                                         std::function<void(Library *)> importLibrary,
                                                         std::function<QString(QDataStream &, uint32_t)> getLinkedFile) {
-    uint32_t version;
+    uint32_t version = 0;
     if (!readHeader(stream, projectSchemaMagic, &version)) {
         if (versionOut) *versionOut = version;
         return nullptr;

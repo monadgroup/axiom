@@ -47,7 +47,7 @@ static QString getNewPortalLabel(PortalControl *control, AxiomBackend::AudioBack
 
 PortalControlItem::PortalControlItem(AxiomModel::PortalControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control), _image(getImagePath(control)) {
-    control->labelWillChange.connect(this, &PortalControlItem::triggerUpdate);
+    control->labelWillChange.connectTo(this, &PortalControlItem::triggerUpdate);
 }
 
 void PortalControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {

@@ -69,9 +69,9 @@ namespace AxiomBackend {
             stream << (uint32_t) _parameters.size();
             for (const auto &param : _parameters) {
                 if (param) {
-                    stream << (int64_t) param->id;
+                    stream << (qint64) param->id;
                 } else {
-                    stream << (int64_t) -1;
+                    stream << (qint64) -1;
                 }
             }
         }
@@ -82,12 +82,12 @@ namespace AxiomBackend {
                 return PersistentParameters();
             }
 
-            uint32_t parameterCount;
+            quint32 parameterCount;
             stream >> parameterCount;
 
             PersistentParameters parameters;
             for (uint32_t paramIndex = 0; paramIndex < parameterCount; paramIndex++) {
-                int64_t paramId;
+                qint64 paramId;
                 stream >> paramId;
 
                 if (paramId == -1) {

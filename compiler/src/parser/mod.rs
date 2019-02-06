@@ -4,9 +4,9 @@ mod token_stream;
 pub use self::token::{Token, TokenType};
 pub use self::token_stream::{get_token_stream, TokenStream};
 
-use ast::*;
+use crate::ast::*;
+use crate::{CompileError, CompileResult};
 use regex::Regex;
-use {CompileError, CompileResult};
 
 const PRECEDENCE_CASTING: i32 = 1;
 const PRECEDENCE_UNARY: i32 = 2;
@@ -273,7 +273,7 @@ impl Parser {
 
     fn parse_number_token_expr(stream: &mut TokenStream) -> ExprResult {
         let num_token = Parser::expect_token(TokenType::Number, stream.next())?;
-        let base_num_val = num_token.content.parse::<f32>().unwrap();
+        let base_num_val = num_token.content.parse::<f64>().unwrap();
 
         // Attempt to find a postfix after the number to set a magnitude or form.
         // Postfixes are always in the following format: 0.5[magnitude][form], where both

@@ -1,10 +1,10 @@
-use ast::{
+use crate::ast::{
     AudioExtractField, AudioField, ControlField, ControlType, GraphField, MidiExtractField,
     MidiField, RollField, ScopeField,
 };
-use mir::block::{Function, Statement};
-use mir::Block;
-use mir::ConstantValue;
+use crate::mir::block::{Function, Statement};
+use crate::mir::Block;
+use crate::mir::ConstantValue;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -54,17 +54,17 @@ impl VarType {
                     .map(|index| VarType::of_statement(block, *index))
                     .collect(),
             ),
-            Statement::CallFunc { ref function, .. } => VarType::of_function(function),
-            Statement::StoreControl { ref field, .. } => VarType::of_control_field(field),
-            Statement::LoadControl { ref field, .. } => VarType::of_control_field(field),
+            Statement::CallFunc { function, .. } => VarType::of_function(*function),
+            Statement::StoreControl { field, .. } => VarType::of_control_field(*field),
+            Statement::LoadControl { field, .. } => VarType::of_control_field(*field),
         }
     }
 
-    pub fn of_function(function: &Function) -> VarType {
-        function.return_type().clone()
+    pub fn of_function(function: Function) -> VarType {
+        function.return_type()
     }
 
-    pub fn of_control_value(control: &ControlType) -> VarType {
+    pub fn of_control_value(control: ControlType) -> VarType {
         match control {
             ControlType::Audio => VarType::Num,
             ControlType::Graph => VarType::Num,
@@ -76,7 +76,7 @@ impl VarType {
         }
     }
 
-    pub fn of_control_field(field: &ControlField) -> VarType {
+    pub fn of_control_field(field: ControlField) -> VarType {
         match field {
             ControlField::Audio(AudioField::Value) => VarType::Num,
             ControlField::Graph(GraphField::Value) => VarType::Num,

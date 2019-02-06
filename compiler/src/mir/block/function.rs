@@ -1,4 +1,4 @@
-use mir::VarType;
+use crate::mir::VarType;
 use std::fmt;
 
 #[derive(Clone, Copy, Debug)]
@@ -35,8 +35,8 @@ macro_rules! define_functions {
                 }
             }
 
-            pub fn data(&self) -> FunctionData {
-                use mir::VarType::*;
+            pub fn data(self) -> FunctionData {
+                use crate::mir::VarType::*;
                 match self {
                     $( Function::$enum_name => $data, )*
                 }
@@ -51,30 +51,40 @@ macro_rules! define_functions {
             }
         }
 
-        pub const FUNCTION_TABLE: [&str; 51] = [$($str_name, )*];
+        pub const FUNCTION_TABLE: [&str; 60] = [$($str_name, )*];
     );
 }
 
 define_functions! {
-    Cos = "cos" func![(Num) -> Num],
     Sin = "sin" func![(Num) -> Num],
+    Cos = "cos" func![(Num) -> Num],
+    Tan = "tan" func![(Num) -> Num],
+    Min = "min" func![(Num, Num) -> Num],
+    Max = "max" func![(Num, Num) -> Num],
+    Sqrt = "sqrt" func![(Num) -> Num],
+    Floor = "floor" func![(Num) -> Num],
+    Ceil = "ceil" func![(Num) -> Num],
+    Round = "round" func![(Num) -> Num],
+    Abs = "abs" func![(Num) -> Num],
+    CopySign = "copysign" func![(Num, Num) -> Num],
+    Fract = "fract" func![(Num) -> Num],
+    Exp = "exp" func![(Num) -> Num],
+    Exp2 = "exp2" func![(Num) -> Num],
+    Exp10 = "exp10" func![(Num) -> Num],
     Log = "log" func![(Num) -> Num],
     Log2 = "log2" func![(Num) -> Num],
     Log10 = "log10" func![(Num) -> Num],
-    Sqrt = "sqrt" func![(Num) -> Num],
-    Ceil = "ceil" func![(Num) -> Num],
-    Floor = "floor" func![(Num) -> Num],
-    Abs = "abs" func![(Num) -> Num],
-    Tan = "tan" func![(Num) -> Num],
-    Acos = "acos" func![(Num) -> Num],
     Asin = "asin" func![(Num) -> Num],
+    Acos = "acos" func![(Num) -> Num],
     Atan = "atan" func![(Num) -> Num],
     Atan2 = "atan2" func![(Num, Num) -> Num],
+    Sinh = "sinh" func![(Num) -> Num],
+    Cosh = "cosh" func![(Num) -> Num],
+    Tanh = "tanh" func![(Num) -> Num],
     Hypot = "hypot" func![(Num, Num) -> Num],
     ToRad = "toRad" func![(Num) -> Num],
     ToDeg = "toDeg" func![(Num) -> Num],
     Clamp = "clamp" func![(Num, Num, Num) -> Num],
-    CopySign = "copysign" func![(Num, Num) -> Num],
     Pan = "pan" func![(Num, Num) -> Num],
     Left = "left" func![(Num) -> Num],
     Right = "right" func![(Num) -> Num],
@@ -82,8 +92,6 @@ define_functions! {
     Combine = "combine" func![(Num, Num) -> Num],
     Mix = "mix" func![(Num, Num, Num) -> Num],
     Sequence = "sequence" func![(Num => Num) -> Num],
-    Min = "min" func![(Num, Num) -> Num],
-    Max = "max" func![(Num, Num) -> Num],
     Next = "next" func![(Num) -> Num],
     Delay = "delay" func![(Num, Num, ?Num) -> Num],
     Amplitude = "amplitude" func![(Num) -> Num],
@@ -106,7 +114,8 @@ define_functions! {
     Note = "note" func![(Midi) -> Tuple(vec![Num, Num, Num, Num])],
     Voices = "voices" func![(Midi, VarType::new_array(Num)) -> VarType::new_array(Midi)],
     Channel = "channel" func![(Midi, Num) -> Midi],
-    Indexed = "indexed" func![(Num) -> VarType::new_array(Num)]
+    Indexed = "indexed" func![(Num) -> VarType::new_array(Num)],
+    Adsr = "adsr" func![(Num, Num, Num, Num, Num) -> Num]
 }
 
 #[derive(Debug, Clone)]
@@ -134,26 +143,26 @@ impl fmt::Display for FunctionArgRange {
 }
 
 impl Function {
-    pub fn return_type(&self) -> VarType {
+    pub fn return_type(self) -> VarType {
         self.data().return_type
     }
 
-    pub fn arg_types(&self) -> Vec<ParamType> {
+    pub fn arg_types(self) -> Vec<ParamType> {
         self.data().arg_types
     }
 
-    pub fn var_arg(&self) -> Option<VarType> {
+    pub fn var_arg(self) -> Option<VarType> {
         self.data().var_arg
     }
 
-    pub fn required_args(&self) -> Vec<ParamType> {
+    pub fn required_args(self) -> Vec<ParamType> {
         self.arg_types()
             .into_iter()
             .filter(|param| !param.optional)
             .collect()
     }
 
-    pub fn arg_range(&self) -> FunctionArgRange {
+    pub fn arg_range(self) -> FunctionArgRange {
         let required_count = self
             .arg_types()
             .into_iter()

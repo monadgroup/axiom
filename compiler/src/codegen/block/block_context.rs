@@ -1,5 +1,6 @@
-use codegen::data_analyzer::BlockLayout;
-use codegen::BuilderContext;
+use crate::codegen::controls::ControlPointers;
+use crate::codegen::data_analyzer::BlockLayout;
+use crate::codegen::BuilderContext;
 use inkwell::values::PointerValue;
 
 pub struct BlockContext<'a> {
@@ -7,13 +8,6 @@ pub struct BlockContext<'a> {
     pub layout: &'a BlockLayout,
     statement_ptrs: Vec<PointerValue>,
     pointers_ptr: PointerValue,
-}
-
-pub struct ControlPointers {
-    pub value: PointerValue,
-    pub data: PointerValue,
-    pub shared: PointerValue,
-    pub ui: Option<PointerValue>,
 }
 
 impl<'a> BlockContext<'a> {
@@ -38,7 +32,7 @@ impl<'a> BlockContext<'a> {
         self.statement_ptrs[index]
     }
 
-    pub fn get_control_ptrs(&self, index: usize, include_ui: bool) -> ControlPointers {
+    pub fn get_control_ptrs(&self, index: usize) -> ControlPointers {
         let layout_index = self.layout.control_index(index);
         let base_ptr = unsafe {
             self.ctx
@@ -46,7 +40,7 @@ impl<'a> BlockContext<'a> {
                 .build_struct_gep(&self.pointers_ptr, layout_index as u32, "ctx.control")
         };
         ControlPointers {
-            value: self
+            group: self
                 .ctx
                 .b
                 .build_load(
@@ -56,7 +50,8 @@ impl<'a> BlockContext<'a> {
                             .build_struct_gep(&base_ptr, 0, "ctx.control.value.ptr")
                     },
                     "ctx.control.value",
-                ).into_pointer_value(),
+                )
+                .into_pointer_value(),
             data: self
                 .ctx
                 .b
@@ -67,7 +62,8 @@ impl<'a> BlockContext<'a> {
                             .build_struct_gep(&base_ptr, 1, "ctx.control.data.ptr")
                     },
                     "ctx.control.data",
-                ).into_pointer_value(),
+                )
+                .into_pointer_value(),
             shared: self
                 .ctx
                 .b
@@ -78,24 +74,30 @@ impl<'a> BlockContext<'a> {
                             .build_struct_gep(&base_ptr, 2, "ctx.control.shared.ptr")
                     },
                     "ctx.control.shared",
-                ).into_pointer_value(),
-            ui: if include_ui {
-                Some(
+                )
+                .into_pointer_value(),
+        }
+    }
+
+    pub fn get_ui_ptr(&self, index: usize) -> PointerValue {
+        let layout_index = self.layout.control_index(index);
+        let base_ptr = unsafe {
+            self.ctx
+                .b
+                .build_struct_gep(&self.pointers_ptr, layout_index as u32, "ctx.control")
+        };
+
+        self.ctx
+            .b
+            .build_load(
+                &unsafe {
                     self.ctx
                         .b
-                        .build_load(
-                            &unsafe {
-                                self.ctx
-                                    .b
-                                    .build_struct_gep(&base_ptr, 3, "ctx.control.ui.ptr")
-                            },
-                            "ctx.control.ui",
-                        ).into_pointer_value(),
-                )
-            } else {
-                None
-            },
-        }
+                        .build_struct_gep(&base_ptr, 3, "ctx.control.ui.ptr")
+                },
+                "ctx.control.ui",
+            )
+            .into_pointer_value()
     }
 
     pub fn get_function_ptr(&self, layout_index: usize) -> PointerValue {
@@ -110,6 +112,7 @@ impl<'a> BlockContext<'a> {
                     )
                 },
                 "ctx.function",
-            ).into_pointer_value()
+            )
+            .into_pointer_value()
     }
 }

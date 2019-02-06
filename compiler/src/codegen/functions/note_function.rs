@@ -1,12 +1,12 @@
 use super::{Function, FunctionContext, VarArgs};
-use ast::FormType;
-use codegen::util;
-use codegen::values::{MidiValue, NumValue, TupleValue};
+use crate::ast::FormType;
+use crate::codegen::util;
+use crate::codegen::values::{MidiValue, NumValue, TupleValue};
+use crate::mir::block;
 use inkwell::context::Context;
 use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
-use mir::block;
 
 pub struct NoteFunction {}
 impl Function for NoteFunction {
@@ -17,10 +17,10 @@ impl Function for NoteFunction {
     fn data_type(context: &Context) -> StructType {
         context.struct_type(
             &[
-                &context.f32_type(), // last note
-                &context.f32_type(), // last pitch
-                &context.f32_type(), // last velocity
-                &context.f32_type(), // last aftertouch
+                &context.f64_type(), // last note
+                &context.f64_type(), // last pitch
+                &context.f64_type(), // last velocity
+                &context.f64_type(), // last aftertouch
                 &context.i8_type(),  // active count
             ],
             false,
@@ -98,7 +98,7 @@ impl Function for NoteFunction {
             .build_conditional_branch(&branch_cond, &loop_run_block, &loop_end_block);
 
         func.ctx.b.position_at_end(&loop_run_block);
-        let incr_index = func.ctx.b.build_int_add(
+        let incr_index = func.ctx.b.build_int_nuw_add(
             current_index,
             func.ctx.context.i8_type().const_int(1, false),
             "index.increment",
@@ -121,24 +121,24 @@ impl Function for NoteFunction {
         func.ctx.b.position_at_end(&note_on_block);
         let float_note = func.ctx.b.build_unsigned_int_to_float(
             event_note,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "note.float",
         );
         func.ctx.b.build_store(&last_note_ptr, &float_note);
         let float_velocity = func.ctx.b.build_unsigned_int_to_float(
             event_param,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "note.velocity",
         );
         let normalized_velocity = func.ctx.b.build_float_div(
             float_velocity,
-            func.ctx.context.f32_type().const_float(255.),
+            func.ctx.context.f64_type().const_float(255.),
             "velocity.normalized",
         );
         func.ctx
             .b
             .build_store(&last_velocity_ptr, &normalized_velocity);
-        let incremented_active = func.ctx.b.build_int_add(
+        let incremented_active = func.ctx.b.build_int_nuw_add(
             func.ctx
                 .b
                 .build_load(&active_count_ptr, "activecount")
@@ -181,7 +181,7 @@ impl Function for NoteFunction {
         );
 
         func.ctx.b.position_at_end(&active_count_natural_block);
-        let decremented_active = func.ctx.b.build_int_sub(
+        let decremented_active = func.ctx.b.build_int_nuw_sub(
             func.ctx
                 .b
                 .build_load(&active_count_ptr, "activecount")
@@ -203,7 +203,7 @@ impl Function for NoteFunction {
         func.ctx.b.position_at_end(&pitch_wheel_block);
         let pitch_float = func.ctx.b.build_unsigned_int_to_float(
             event_param,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "pitch",
         );
         // remap the pitch from {0,255} to {-6,6}
@@ -211,13 +211,13 @@ impl Function for NoteFunction {
             func.ctx.b.build_float_sub(
                 func.ctx.b.build_float_div(
                     pitch_float,
-                    func.ctx.context.f32_type().const_float(127.5),
+                    func.ctx.context.f64_type().const_float(127.5),
                     "",
                 ),
-                func.ctx.context.f32_type().const_float(1.),
+                func.ctx.context.f64_type().const_float(1.),
                 "",
             ),
-            func.ctx.context.f32_type().const_float(6.),
+            func.ctx.context.f64_type().const_float(6.),
             "pitch.normalized",
         );
         func.ctx.b.build_store(&last_pitch_ptr, &normalized_pitch);
@@ -232,12 +232,12 @@ impl Function for NoteFunction {
         func.ctx.b.position_at_end(&aftertouch_block);
         let aftertouch_float = func.ctx.b.build_unsigned_int_to_float(
             event_param,
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "aftertouch",
         );
         let normalized_aftertouch = func.ctx.b.build_float_div(
             aftertouch_float,
-            func.ctx.context.f32_type().const_float(255.),
+            func.ctx.context.f64_type().const_float(255.),
             "aftertouch.normalized",
         );
         func.ctx
@@ -286,7 +286,7 @@ impl Function for NoteFunction {
                 func.ctx.context.i8_type().const_int(0, false),
                 "active",
             ),
-            func.ctx.context.f32_type(),
+            func.ctx.context.f64_type(),
             "activefloat",
         );
         let note_num = func.ctx.b.build_float_add(
@@ -313,11 +313,10 @@ impl Function for NoteFunction {
 
         let result_gate_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 0));
         let active_vector = util::splat_vector(func.ctx.b, is_active, "active.vector");
-        result_gate_num.set_vec(func.ctx.b, &active_vector);
+        result_gate_num.set_vec(func.ctx.b, active_vector);
         result_gate_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::None as u64, false),
@@ -325,11 +324,10 @@ impl Function for NoteFunction {
 
         let result_note_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 1));
         let note_vector = util::splat_vector(func.ctx.b, note_num, "note.vector");
-        result_note_num.set_vec(func.ctx.b, &note_vector);
+        result_note_num.set_vec(func.ctx.b, note_vector);
         result_note_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Note as u64, false),
@@ -337,11 +335,10 @@ impl Function for NoteFunction {
 
         let result_velocity_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 2));
         let velocity_vector = util::splat_vector(func.ctx.b, velocity_num, "velocity.vector");
-        result_velocity_num.set_vec(func.ctx.b, &velocity_vector);
+        result_velocity_num.set_vec(func.ctx.b, velocity_vector);
         result_velocity_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::Amplitude as u64, false),
@@ -349,11 +346,10 @@ impl Function for NoteFunction {
 
         let result_aftertouch_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 3));
         let aftertouch_vector = util::splat_vector(func.ctx.b, aftertouch_num, "aftertouch.vector");
-        result_aftertouch_num.set_vec(func.ctx.b, &aftertouch_vector);
+        result_aftertouch_num.set_vec(func.ctx.b, aftertouch_vector);
         result_aftertouch_num.set_form(
             func.ctx.b,
-            &func
-                .ctx
+            func.ctx
                 .context
                 .i8_type()
                 .const_int(FormType::None as u64, false),

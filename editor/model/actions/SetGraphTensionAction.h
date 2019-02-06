@@ -8,11 +8,11 @@ namespace AxiomModel {
 
     class SetGraphTensionAction : public Action {
     public:
-        SetGraphTensionAction(const QUuid &controlUuid, uint8_t index, float oldTension, float newTension,
+        SetGraphTensionAction(const QUuid &controlUuid, uint8_t index, double oldTension, double newTension,
                               ModelRoot *root);
 
-        static std::unique_ptr<SetGraphTensionAction> create(const QUuid &controlUuid, uint8_t index, float oldTension,
-                                                             float newTension, ModelRoot *root);
+        static std::unique_ptr<SetGraphTensionAction> create(const QUuid &controlUuid, uint8_t index, double oldTension,
+                                                             double newTension, ModelRoot *root);
 
         void forward(bool first) override;
 
@@ -29,7 +29,7 @@ namespace AxiomModel {
     private:
         QUuid _controlUuid;
         uint8_t _index;
-        float _oldTension;
-        float _newTension;
+        double _oldTension;
+        double _newTension;
     };
 }

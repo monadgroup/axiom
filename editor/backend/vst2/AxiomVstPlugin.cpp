@@ -1,5 +1,7 @@
 #include "AxiomVstPlugin.h"
 
+#include "editor/backend/EventConverter.h"
+
 using namespace AxiomBackend;
 
 AxiomCommon::LazyInitializer<AxiomApplication> application;
@@ -12,13 +14,23 @@ AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
 }
 }
 
+bool isCompilingSynth() {
+#ifdef AXIOM_VST2_IS_SYNTH
+    return true;
+#else
+    return false;
+#endif
+}
+
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 255), appRef(application.get()), backend(this), editor(&*appRef, &backend) {
+    : AudioEffectX(audioMaster, 1, 255), appRef(application.get()), backend(*this, isCompilingSynth()), editor(&*appRef, &backend) {
 #ifdef AXIOM_VST2_IS_SYNTH
     isSynth();
+    setUniqueID(0x41584F53);
+#else
+    setUniqueID(0x41584F45);
 #endif
 
-    setUniqueID(0x41584F4D); // 'AXOM'
     programsAreChunks();
     canProcessReplacing();
 
@@ -47,9 +59,8 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
     auto sampleFrames64 = (uint64_t) sampleFrames;
     uint64_t processPos = 0;
     while (processPos < sampleFrames64) {
-        auto lock = backend.lockRuntime();
-        auto sampleAmount = backend.beginGenerate();
-        auto endProcessPos = processPos + sampleAmount;
+        auto context = backend.beginGenerate();
+        auto endProcessPos = processPos + context.maxGenerateCount();
         if (endProcessPos > sampleFrames64) endProcessPos = sampleFrames64;
 
         for (auto i = processPos; i < endProcessPos; i++) {
@@ -63,7 +74,7 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
                 }
             }
 
-            backend.generate();
+            context.generate();
 
             for (size_t outputIndex = 0; outputIndex < expectedOutputCount; outputIndex++) {
                 const auto &output = backend.audioOutputs[outputIndex];
@@ -72,8 +83,8 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
 
                 if (output) {
                     auto outputNum = **output->value;
-                    outputs[leftIndex][i] = outputNum.left;
-                    outputs[rightIndex][i] = outputNum.right;
+                    outputs[leftIndex][i] = (float) outputNum.left;
+                    outputs[rightIndex][i] = (float) outputNum.right;
                 } else {
                     outputs[leftIndex][i] = 0;
                     outputs[rightIndex][i] = 0;
@@ -101,57 +112,9 @@ VstInt32 AxiomVstPlugin::processEvents(VstEvents *events) {
         auto event = events->events[i];
         if (event->type != kVstMidiType) continue;
 
-        auto midiEvent = (VstMidiEvent *) event;
-        auto midiStatus = midiEvent->midiData[0];
-        auto midiData1 = midiEvent->midiData[1];
-        auto midiData2 = midiEvent->midiData[2];
-
-        auto eventType = (uint8_t)(midiStatus & 0xF0);
-        auto eventChannel = (uint8_t)(midiStatus & 0x0F);
-
-        MidiEvent remappedEvent;
-        remappedEvent.channel = eventChannel;
-
-        switch (eventType) {
-        case 0x80: // note off
-            remappedEvent.event = MidiEventType::NOTE_OFF;
-            remappedEvent.note = (uint8_t) midiData1;
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        case 0x90: // note on
-            remappedEvent.event = MidiEventType::NOTE_ON;
-            remappedEvent.note = (uint8_t) midiData1;
-            remappedEvent.param = (uint8_t)(midiData2 * 2); // MIDI velocity is 0-127, we need 0-255
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        case 0xA0: // polyphonic aftertouch
-            remappedEvent.event = MidiEventType::POLYPHONIC_AFTERTOUCH;
-            remappedEvent.note = (uint8_t) midiData1;
-            remappedEvent.param = (uint8_t)(midiData2 * 2); // MIDI aftertouch pressure is 0-127, we need 0-255
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        case 0xB0: // control mode change
-            // all notes off
-            if (midiData1 == 0x7B) {
-                backend.clearNotes(0);
-            }
-            break;
-        case 0xD0: // channel aftertouch
-            remappedEvent.event = MidiEventType::CHANNEL_AFTERTOUCH;
-            remappedEvent.param = (uint8_t)(midiData1 * 2); // MIDI aftertouch pressure is 0-127, we need 0-255
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        case 0xE0: // pitch wheel
-        {
-            remappedEvent.event = MidiEventType::PITCH_WHEEL;
-
-            // Pitch is 0-0x3FFF stored across the two bytes, we need 0-255
-            auto pitch = ((uint16_t) midiData2 << 7) | (uint16_t) midiData1;
-            remappedEvent.param = (uint8_t)(pitch / 16383.f * 255.f);
-            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, remappedEvent);
-            break;
-        }
-        default:;
+        auto midiEvent = *reinterpret_cast<int32_t *>(((VstMidiEvent *) event)->midiData);
+        if (auto remappedEvent = convertFromMidi(midiEvent)) {
+            backend.queueMidiEvent((size_t) event->deltaFrames, (size_t) backend.midiInputPortal, *remappedEvent);
         }
     }
     return 0;
@@ -261,13 +224,13 @@ bool AxiomVstPlugin::canParameterBeAutomated(VstInt32 index) {
     return (size_t) index < backend.automationInputs.size();
 }
 
-void AxiomVstPlugin::backendSetParameter(size_t parameter, AxiomBackend::NumValue value) {
+void AxiomVstPlugin::adapterSetParameter(size_t parameter, AxiomBackend::NumValue value) {
     beginEdit(parameter);
     setParameterAutomated(parameter, value.left);
     endEdit(parameter);
 }
 
-void AxiomVstPlugin::backendUpdateIo() {
+void AxiomVstPlugin::adapterUpdateIo() {
     setNumInputs(2 * backend.audioInputs.size());
     setNumOutputs(2 * backend.audioOutputs.size());
     ioChanged();

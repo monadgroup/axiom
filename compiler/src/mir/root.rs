@@ -1,4 +1,4 @@
-use mir::VarType;
+use crate::mir::VarType;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Root {

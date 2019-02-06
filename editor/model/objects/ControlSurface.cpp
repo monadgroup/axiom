@@ -12,12 +12,12 @@ ControlSurface::ControlSurface(const QUuid &uuid, const QUuid &parentUuid, Axiom
       _controls(cacheSequence(findChildrenWatch(root->controls(), uuid))),
       _grid(AxiomCommon::boxWatchSequence(AxiomCommon::staticCastWatch<GridItem *>(_controls.asRef())), false,
             QPoint(0, 0)) {
-    _node->sizeChanged.connect(this, &ControlSurface::setSize);
-    _node->deselected.connect(&_grid, &GridSurface::deselectAll);
-    _grid.hasSelectionChanged.connect(this, [this](bool hasSelection) {
+    _node->sizeChanged.connectTo(this, &ControlSurface::setSize);
+    _node->deselected.connectTo(&_grid, &GridSurface::deselectAll);
+    _grid.hasSelectionChanged.connectTo(this, [this](bool hasSelection) {
         if (hasSelection) _node->select(true);
     });
-    _grid.gridChanged.connect(this, &ControlSurface::updateControlsOnTopRow);
+    _grid.gridChanged.connectTo(this, &ControlSurface::updateControlsOnTopRow);
     setSize(_node->size());
 
     _grid.tryFlush();

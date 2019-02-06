@@ -35,7 +35,7 @@ namespace AxiomModel {
     class ModelRoot : public AxiomCommon::TrackedObject {
     public:
         template<class CollectionType>
-        using ModelRootCollection = AxiomCommon::CastWatchSequence<CollectionType, Pool::Sequence>;
+        using ModelRootCollection = AxiomCommon::DynamicCastWatchSequence<CollectionType, Pool::Sequence>;
 
         using NodeSurfaceCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<NodeSurface *>>;
         using NodeCollection = AxiomCommon::RefWatchSequence<ModelRootCollection<Node *>>;

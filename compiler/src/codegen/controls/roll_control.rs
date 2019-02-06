@@ -1,6 +1,6 @@
 use super::ControlContext;
 use super::{default_copy_getter, default_copy_setter, Control, ControlFieldGenerator};
-use ast::{ControlField, ControlType, RollField};
+use crate::ast::{ControlField, ControlType, RollField};
 use inkwell::values::PointerValue;
 
 pub struct RollControl;

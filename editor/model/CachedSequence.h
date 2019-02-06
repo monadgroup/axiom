@@ -68,8 +68,8 @@ namespace AxiomModel {
             }
 
             // hook up events to add/remove items in our array
-            data->events.itemAdded().connect(data.get(), &CachedSequenceData::itemAdded);
-            data->events.itemRemoved().connect(data.get(), &CachedSequenceData::itemRemoved);
+            data->events.itemAdded().connectTo(data.get(), &CachedSequenceData::itemAdded);
+            data->events.itemRemoved().connectTo(data.get(), &CachedSequenceData::itemRemoved);
         }
 
         Sequence sequence() { return AxiomCommon::refSequence(&data->sequence); }

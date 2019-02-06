@@ -80,9 +80,9 @@ QPainterPath tagPolygon = generateTagPolygon();
 GraphControlTicks::GraphControlTicks(GraphControlItem *item) : item(item) {
     setAcceptHoverEvents(true);
     setFlag(QGraphicsItem::ItemClipsToShape, true);
-    item->control->zoomChanged.connect(this, &GraphControlTicks::triggerUpdate);
-    item->control->scrollChanged.connect(this, &GraphControlTicks::triggerUpdate);
-    item->control->beforeSizeChanged.connect(this, &GraphControlTicks::triggerGeometryChange);
+    item->control->zoomChanged.connectTo(this, &GraphControlTicks::triggerUpdate);
+    item->control->scrollChanged.connectTo(this, &GraphControlTicks::triggerUpdate);
+    item->control->beforeSizeChanged.connectTo(this, &GraphControlTicks::triggerGeometryChange);
 }
 
 void GraphControlTicks::triggerUpdate() {
@@ -160,7 +160,7 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
 
 GraphControlZoom::GraphControlZoom(AxiomModel::GraphControl *control) : control(control) {
     setAcceptHoverEvents(true);
-    control->zoomChanged.connect(this, &GraphControlZoom::triggerUpdate);
+    control->zoomChanged.connectTo(this, &GraphControlZoom::triggerUpdate);
 }
 
 void GraphControlZoom::triggerUpdate() {
@@ -750,11 +750,11 @@ GraphControlItem::GraphControlItem(AxiomModel::GraphControl *control, AxiomGui::
     _scrollBar.setParentItem(this);
     connect(_scrollBar.scrollBar, &QScrollBar::valueChanged, this, &GraphControlItem::scrollBarChanged);
 
-    control->zoomChanged.connect(this, &GraphControlItem::stateChange);
-    control->scrollChanged.connect(this, &GraphControlItem::stateChange);
-    control->stateChanged.connect(this, &GraphControlItem::stateChange);
-    control->timeChanged.connect(this, &GraphControlItem::triggerUpdate);
-    control->sizeChanged.connect(this, &GraphControlItem::positionChildren);
+    control->zoomChanged.connectTo(this, &GraphControlItem::stateChange);
+    control->scrollChanged.connectTo(this, &GraphControlItem::stateChange);
+    control->stateChanged.connectTo(this, &GraphControlItem::stateChange);
+    control->timeChanged.connectTo(this, &GraphControlItem::triggerUpdate);
+    control->sizeChanged.connectTo(this, &GraphControlItem::positionChildren);
     positionChildren();
 }
 
@@ -832,7 +832,7 @@ void GraphControlItem::paintControl(QPainter *painter) {
         if (state->curveStates[i] == 0) continue;
 
         auto tagPosition = 0.f;
-        if (state->curveCount > 0) {
+        if (i > 0) {
             tagPosition = state->curveEndPositions[i - 1];
         }
 

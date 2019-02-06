@@ -1,9 +1,9 @@
 use super::{Function, FunctionContext, VarArgs};
-use codegen::intrinsics;
-use codegen::values::{MidiValue, NumValue};
+use crate::codegen::math;
+use crate::codegen::values::{MidiValue, NumValue};
+use crate::mir::block;
 use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
-use mir::block;
 
 pub struct ChannelFunction {}
 impl Function for ChannelFunction {
@@ -17,14 +17,14 @@ impl Function for ChannelFunction {
         _varargs: Option<VarArgs>,
         result: PointerValue,
     ) {
-        let min_intrinsic = intrinsics::minnum_f32(func.ctx.module);
-        let max_intrinsic = intrinsics::maxnum_f32(func.ctx.module);
+        let min_intrinsic = math::min_f64(func.ctx.module);
+        let max_intrinsic = math::max_f64(func.ctx.module);
 
         let input_midi = MidiValue::new(args[0]);
         let channel_num = NumValue::new(args[1]);
         let result_midi = MidiValue::new(result);
 
-        result_midi.set_count(func.ctx.b, &func.ctx.context.i8_type().const_int(0, false));
+        result_midi.set_count(func.ctx.b, func.ctx.context.i8_type().const_int(0, false));
 
         let channel_vec = channel_num.get_vec(func.ctx.b);
 
@@ -46,18 +46,20 @@ impl Function for ChannelFunction {
                                     &func.ctx.context.i32_type().const_int(0, false),
                                     "",
                                 ),
-                                &func.ctx.context.f32_type().const_float(0.),
+                                &func.ctx.context.f64_type().const_float(0.),
                             ],
                             "",
-                            false,
-                        ).left()
+                            true,
+                        )
+                        .left()
                         .unwrap()
                         .into_float_value(),
-                    &func.ctx.context.f32_type().const_float(16.),
+                    &func.ctx.context.f64_type().const_float(16.),
                 ],
                 "",
-                false,
-            ).left()
+                true,
+            )
+            .left()
             .unwrap()
             .into_float_value();
         let channel_int =
@@ -107,7 +109,7 @@ impl Function for ChannelFunction {
             .build_conditional_branch(&index_cond, &loop_run_block, &loop_end_block);
 
         func.ctx.b.position_at_end(&loop_run_block);
-        let next_index = func.ctx.b.build_int_add(
+        let next_index = func.ctx.b.build_int_nuw_add(
             current_index,
             func.ctx.context.i8_type().const_int(1, false),
             "nextindex",

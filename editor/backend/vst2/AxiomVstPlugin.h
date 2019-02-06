@@ -4,10 +4,11 @@
 #include <public.sdk/source/vst2.x/audioeffectx.h>
 
 #include "AxiomVstEditor.h"
-#include "VstAudioBackend.h"
+#include "../vst2-common/VstAudioBackend.h"
+#include "../vst2-common/VstAdapter.h"
 #include "common/LazyInitializer.h"
 
-class AxiomVstPlugin : public AudioEffectX {
+class AxiomVstPlugin : public AudioEffectX, public AxiomBackend::VstAdapter {
 public:
     explicit AxiomVstPlugin(audioMasterCallback audioMaster);
 
@@ -53,13 +54,13 @@ public:
 
     bool canParameterBeAutomated(VstInt32 index) override;
 
-    void backendSetParameter(size_t parameter, AxiomBackend::NumValue value);
+    void adapterSetParameter(size_t parameter, AxiomBackend::NumValue value) override;
 
-    void backendUpdateIo();
+    void adapterUpdateIo() override;
 
 private:
     AxiomCommon::LazyInitializer<AxiomApplication>::Ref appRef;
-    VstAudioBackend backend;
+    AxiomBackend::VstAudioBackend backend;
     AxiomVstEditor editor;
     QByteArray saveBuffer;
 

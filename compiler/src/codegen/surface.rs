@@ -1,11 +1,11 @@
-use codegen::{
+use crate::codegen::{
     block, build_context_function, util, values, BuilderContext, LifecycleFunc, ObjectCache,
 };
+use crate::mir::{Node, NodeData, Surface, SurfaceRef};
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
 use inkwell::{AddressSpace, IntPredicate};
-use mir::{Node, NodeData, Surface, SurfaceRef};
 
 fn get_lifecycle_func(
     module: &Module,
@@ -77,7 +77,8 @@ fn build_node_call(
                         .build_load(
                             &unsafe { ctx.b.build_struct_gep(&source_socket_pointers, 0, "") },
                             "",
-                        ).into_pointer_value(),
+                        )
+                        .into_pointer_value(),
                 );
                 let first_bitmap = first_array.get_bitmap(ctx.b);
 
@@ -94,7 +95,8 @@ fn build_node_call(
                                         )
                                     },
                                     "",
-                                ).into_pointer_value(),
+                                )
+                                .into_pointer_value(),
                         );
                         let nth_bitmap = nth_array.get_bitmap(ctx.b);
                         ctx.b.build_and(acc, nth_bitmap, "")
@@ -132,7 +134,7 @@ fn build_node_call(
             let iter_limit = ctx
                 .context
                 .i8_type()
-                .const_int(values::ARRAY_CAPACITY as u64, false);
+                .const_int(u64::from(values::ARRAY_CAPACITY), false);
             let can_continue_loop = ctx.b.build_int_compare(
                 IntPredicate::ULT,
                 current_index,
@@ -145,7 +147,7 @@ fn build_node_call(
             ctx.b.position_at_end(&check_active_block);
 
             // increment the stored value
-            let next_index = ctx.b.build_int_add(
+            let next_index = ctx.b.build_int_nuw_add(
                 current_index,
                 ctx.context.i8_type().const_int(1, false),
                 "nextindex",
@@ -205,9 +207,10 @@ fn build_node_call(
                                     )
                                 },
                                 "",
-                            ).into_pointer_value(),
+                            )
+                            .into_pointer_value(),
                     );
-                    dest_array.set_bitmap(ctx.b, &active_bitmap);
+                    dest_array.set_bitmap(ctx.b, active_bitmap);
                 }
             }
         }
@@ -254,5 +257,5 @@ pub fn build_lifecycle_call(
     pointer_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, cache, surface, lifecycle);
-    builder.build_call(&func, &[&pointer_ptr], "", false);
+    builder.build_call(&func, &[&pointer_ptr], "", true);
 }

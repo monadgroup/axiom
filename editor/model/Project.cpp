@@ -102,8 +102,8 @@ void Project::setIsDirty(bool isDirty) {
 }
 
 void Project::addRootListeners() {
-    _mainRoot->modified.connect(this, &Project::rootModified);
-    _mainRoot->configurationChanged.connect(this, &Project::rootConfigurationChanged);
+    _mainRoot->modified.connectTo(this, &Project::rootModified);
+    _mainRoot->configurationChanged.connectTo(this, &Project::rootConfigurationChanged);
 }
 
 void Project::rootModified() {

@@ -24,7 +24,7 @@ CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
     : Node(NodeType::CUSTOM_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
       _code(std::move(code)), _isPanelOpen(panelOpen), _panelHeight(panelHeight) {
     controls().then([this](ControlSurface *controls) {
-        controls->controls().events().itemAdded().connect(this, &CustomNode::surfaceControlAdded);
+        controls->controls().events().itemAdded().connectTo(this, &CustomNode::surfaceControlAdded);
     });
 }
 
@@ -156,7 +156,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
 
         // no candidate found, queue a new one
         if (!foundControl) {
-            newControls.push_back(NewControl{compiledModelType, std::move(compiledName), compileMeta});
+            newControls.push_back(NewControl {compiledModelType, std::move(compiledName), compileMeta});
         }
     }
 

@@ -132,10 +132,10 @@ void Library::addEntry(std::unique_ptr<AxiomModel::LibraryEntry> entry) {
     for (const auto &tag : entryPtr->tags()) {
         addTag(tag);
     }
-    entryPtr->tagAdded.connect(this, &Library::addTag);
-    entryPtr->tagRemoved.connect(this, &Library::removeTag);
-    entryPtr->changed.forward(&changed);
-    entryPtr->cleanup.connect(this, [this, entryPtr]() { removeEntry(entryPtr); });
+    entryPtr->tagAdded.connectTo(this, &Library::addTag);
+    entryPtr->tagRemoved.connectTo(this, &Library::removeTag);
+    entryPtr->changed.connectTo(&changed);
+    entryPtr->cleanup.connectTo(this, [this, entryPtr]() { removeEntry(entryPtr); });
 
     changed();
 }

@@ -1,23 +1,25 @@
 use super::BlockContext;
-use ast::OperatorType;
-use codegen::intrinsics;
-use codegen::values::NumValue;
+use crate::ast::OperatorType;
+use crate::codegen::math;
+use crate::codegen::values::NumValue;
 use inkwell::types::IntType;
 use inkwell::values::{PointerValue, VectorValue};
 use inkwell::FloatPredicate;
 
 pub fn gen_math_op_statement(
-    op: &OperatorType,
+    op: OperatorType,
     lhs: usize,
     rhs: usize,
     node: &mut BlockContext,
 ) -> PointerValue {
-    let pow_intrinsic = intrinsics::pow_v2f32(node.ctx.module);
+    let pow_intrinsic = math::pow_v2f64(node.ctx.module);
+    let mod_intrinsic = math::mod_v2f64(node.ctx.module);
+
     let left_num = NumValue::new(node.get_statement(lhs));
     let right_num = NumValue::new(node.get_statement(rhs));
     let result_num = NumValue::new_undef(node.ctx.context, node.ctx.allocb);
     let left_form = left_num.get_form(node.ctx.b);
-    result_num.set_form(node.ctx.b, &left_form);
+    result_num.set_form(node.ctx.b, left_form);
 
     let left_vec = left_num.get_vec(node.ctx.b);
     let right_vec = right_num.get_vec(node.ctx.b);
@@ -42,11 +44,14 @@ pub fn gen_math_op_statement(
         OperatorType::Modulo => node
             .ctx
             .b
-            .build_float_rem(left_vec, right_vec, "num.mod.vec"),
+            .build_call(&mod_intrinsic, &[&left_vec, &right_vec], "", true)
+            .left()
+            .unwrap()
+            .into_vector_value(),
         OperatorType::Power => node
             .ctx
             .b
-            .build_call(&pow_intrinsic, &[&left_vec, &right_vec], "", false)
+            .build_call(&pow_intrinsic, &[&left_vec, &right_vec], "", true)
             .left()
             .unwrap()
             .into_vector_value(),
@@ -133,7 +138,7 @@ pub fn gen_math_op_statement(
                 .build_float_compare(FloatPredicate::OLE, left_vec, right_vec, "num.vec.lte"),
         ),
     };
-    result_num.set_vec(node.ctx.b, &result_vec);
+    result_num.set_vec(node.ctx.b, result_vec);
 
     result_num.val
 }
@@ -153,13 +158,13 @@ fn apply_int_op(
     if signed_result {
         node.ctx.b.build_signed_int_to_float(
             result_int,
-            node.ctx.context.f32_type().vec_type(2),
+            node.ctx.context.f64_type().vec_type(2),
             "num.vec.float",
         )
     } else {
         node.ctx.b.build_unsigned_int_to_float(
             result_int,
-            node.ctx.context.f32_type().vec_type(2),
+            node.ctx.context.f64_type().vec_type(2),
             "num.vec.float",
         )
     }
@@ -174,7 +179,7 @@ fn float_vec_to_int(node: &BlockContext, vec: VectorValue, num_type: IntType) ->
 fn unsigned_int_to_float_vec(node: &BlockContext, int: VectorValue) -> VectorValue {
     node.ctx.b.build_unsigned_int_to_float(
         int,
-        node.ctx.context.f32_type().vec_type(2),
+        node.ctx.context.f64_type().vec_type(2),
         "num.vec.float",
     )
 }

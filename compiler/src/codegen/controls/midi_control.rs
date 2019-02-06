@@ -1,5 +1,5 @@
 use super::{default_copy_getter, default_copy_setter, Control, ControlFieldGenerator};
-use ast::{ControlField, ControlType, MidiField};
+use crate::ast::{ControlField, ControlType, MidiField};
 
 pub struct MidiControl;
 impl Control for MidiControl {

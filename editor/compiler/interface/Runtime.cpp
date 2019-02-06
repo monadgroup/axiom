@@ -15,20 +15,24 @@ void Runtime::runUpdate() {
     MaximFrontend::maxim_run_update(get());
 }
 
-void Runtime::setBpm(float bpm) {
+void Runtime::setBpm(double bpm) {
     MaximFrontend::maxim_set_bpm(get(), bpm);
 }
 
-float Runtime::getBpm() {
+double Runtime::getBpm() {
     return MaximFrontend::maxim_get_bpm(get());
 }
 
-void Runtime::setSampleRate(float sampleRate) {
+void Runtime::setSampleRate(double sampleRate) {
     MaximFrontend::maxim_set_sample_rate(get(), sampleRate);
 }
 
-float Runtime::getSampleRate() {
+double Runtime::getSampleRate() {
     return MaximFrontend::maxim_get_sample_rate(get());
+}
+
+uint64_t *Runtime::getProfileTimesPtr() {
+    return MaximFrontend::maxim_get_profile_times_ptr(get());
 }
 
 void Runtime::commit(MaximCompiler::Transaction transaction) {
@@ -39,7 +43,7 @@ bool Runtime::isNodeExtracted(uint64_t surface, size_t node) {
     return MaximFrontend::maxim_is_node_extracted(get(), surface, node);
 }
 
-AxiomModel::NumValue Runtime::convertNum(AxiomModel::FormType targetForm, const AxiomModel::NumValue &value) {
+AxiomModel::NumValue Runtime::convertNum(AxiomModel::FormType targetForm, AxiomModel::NumValue value) {
     AxiomModel::NumValue result;
     MaximFrontend::maxim_convert_num(get(), &result, (uint8_t) targetForm, &value);
     return result;

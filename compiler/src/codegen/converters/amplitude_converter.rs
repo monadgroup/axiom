@@ -1,6 +1,6 @@
 use super::ConvertGenerator;
-use ast::FormType;
-use codegen::{intrinsics, util};
+use crate::ast::FormType;
+use crate::codegen::{math, util};
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
@@ -16,17 +16,15 @@ fn amplitude_from_db(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    let pow_intrinsic = intrinsics::pow_v2f32(module);
+    let exp10_intrinsic = math::exp10_v2f64(module);
     builder
         .build_call(
-            &pow_intrinsic,
-            &[
-                &util::get_vec_spread(context, 10.),
-                &builder.build_float_div(val, util::get_vec_spread(context, 20.), ""),
-            ],
+            &exp10_intrinsic,
+            &[&builder.build_float_div(val, util::get_vec_spread(context, 20.), "")],
             "",
-            false,
-        ).left()
+            true,
+        )
+        .left()
         .unwrap()
         .into_vector_value()
 }

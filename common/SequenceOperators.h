@@ -270,8 +270,11 @@ namespace AxiomCommon {
     using IntoIterSequence = Sequence<IntoIterGenerator<Collection>>;
 
     template<class Output, class InternalSequence>
+    using DynamicCastSequence = FilterMapSequence<InternalSequence, std::optional<Output> (*)(typename InternalSequence::Item)>;
+
+    template<class Output, class InternalSequence>
     using CastSequence =
-        FilterMapSequence<InternalSequence, std::optional<Output> (*)(typename InternalSequence::Item)>;
+        MapSequence<InternalSequence, Output (*)(typename InternalSequence::Item)>;
 
     // functions to map other sequences
     template<class Sequence, class FilterMapFunctor>
@@ -294,18 +297,18 @@ namespace AxiomCommon {
     }
 
     template<class Output, class Sequence>
-    CastSequence<Output, Sequence> dynamicCast(Sequence sequence) {
+    DynamicCastSequence<Output, Sequence> dynamicCast(Sequence sequence) {
         return filterMap(std::move(sequence), &AxiomCommon::wrapDynamicCast<Output, typename Sequence::value_type>);
     }
 
     template<class Output, class Sequence>
     CastSequence<Output, Sequence> staticCast(Sequence sequence) {
-        return filterMap(std::move(sequence), &AxiomCommon::wrapStaticCast<Output, typename Sequence::value_type>);
+        return map(std::move(sequence), &AxiomCommon::wrapStaticCast<Output, typename Sequence::value_type>);
     }
 
     template<class Output, class Sequence>
     CastSequence<Output, Sequence> reinterpretCast(Sequence sequence) {
-        return filterMap(std::move(sequence), &AxiomCommon::wrapReinterpretCast<Output, typename Sequence::value_type>);
+        return map(std::move(sequence), &AxiomCommon::wrapReinterpretCast<Output, typename Sequence::value_type>);
     }
 
     // functions to modify other iterators

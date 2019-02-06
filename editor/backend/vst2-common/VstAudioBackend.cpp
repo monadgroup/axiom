@@ -1,13 +1,11 @@
 #include "VstAudioBackend.h"
 
-#include <unordered_map>
-#include <unordered_set>
-
-#include "AxiomVstPlugin.h"
+#include "VstAdapter.h"
 
 using namespace AxiomBackend;
 
-VstAudioBackend::VstAudioBackend(AxiomVstPlugin *plugin) : plugin(plugin) {}
+VstAudioBackend::VstAudioBackend(AxiomBackend::VstAdapter &adapter, bool isSynth)
+    : adapter(adapter), isSynth(isSynth) {}
 
 void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfiguration &configuration) {
     std::vector<AxiomBackend::NumParameter> newAudioInputs;
@@ -19,22 +17,22 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
     for (size_t i = 0; i < configuration.portals.size(); i++) {
         const auto &portal = configuration.portals[i];
         switch (portal.type) {
-        case PortalType::INPUT:
-            if (portal.value == PortalValue::AUDIO) {
-                newAudioInputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
-            } else if (portal.value == PortalValue::MIDI && midiInputPortal == -1) {
-                midiInputPortal = i;
-            }
-            break;
-        case PortalType::OUTPUT:
-            if (portal.value == PortalValue::AUDIO) {
-                newAudioOutputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
-            }
-            break;
-        case PortalType::AUTOMATION:
-            if (portal.value == PortalValue::AUDIO) {
-                newAutomationInputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
-            }
+            case PortalType::INPUT:
+                if (portal.value == PortalValue::AUDIO) {
+                    newAudioInputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
+                } else if (portal.value == PortalValue::MIDI && midiInputPortal == -1) {
+                    midiInputPortal = i;
+                }
+                break;
+            case PortalType::OUTPUT:
+                if (portal.value == PortalValue::AUDIO) {
+                    newAudioOutputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
+                }
+                break;
+            case PortalType::AUTOMATION:
+                if (portal.value == PortalValue::AUDIO) {
+                    newAutomationInputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
+                }
         }
     }
 
@@ -42,7 +40,7 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
     audioOutputs.setParameters(std::move(newAudioOutputs));
     automationInputs.setParameters(std::move(newAutomationInputs));
 
-    plugin->backendUpdateIo();
+    adapter.adapterUpdateIo();
 }
 
 std::string VstAudioBackend::getPortalLabel(size_t portalIndex) const {
@@ -64,7 +62,6 @@ std::string VstAudioBackend::getPortalLabel(size_t portalIndex) const {
 
 void VstAudioBackend::previewEvent(AxiomBackend::MidiEvent event) {
     if (midiInputPortal == -1) return;
-    auto lock = lockRuntime();
     queueMidiEvent(0, (size_t) midiInputPortal, event);
 }
 
@@ -72,15 +69,15 @@ void VstAudioBackend::automationValueChanged(size_t portalId, AxiomBackend::NumV
     auto mapIndex = automationInputs.portalParameterMap().find(portalId);
     if (mapIndex == automationInputs.portalParameterMap().end()) return;
 
-    plugin->backendSetParameter(mapIndex->second, value);
+    adapter.adapterSetParameter(mapIndex->second, value);
 }
 
-DefaultConfiguration VstAudioBackend::createDefaultConfiguration() {
-#ifdef AXIOM_VST2_IS_SYNTH
-    return DefaultConfiguration({DefaultPortal(PortalType::INPUT, PortalValue::MIDI, "Keyboard"),
-                                 DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
-#else
-    return DefaultConfiguration({DefaultPortal(PortalType::INPUT, PortalValue::AUDIO, "Input"),
-                                 DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Output")});
-#endif
+AxiomBackend::DefaultConfiguration VstAudioBackend::createDefaultConfiguration() {
+    if (isSynth) {
+        return DefaultConfiguration({DefaultPortal(PortalType::INPUT, PortalValue::MIDI, "Keyboard"),
+                                     DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Speakers")});
+    } else {
+        return DefaultConfiguration({DefaultPortal(PortalType::INPUT, PortalValue::AUDIO, "Input"),
+                                     DefaultPortal(PortalType::OUTPUT, PortalValue::AUDIO, "Output")});
+    }
 }

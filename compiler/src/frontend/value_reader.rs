@@ -1,7 +1,7 @@
-use codegen::data_analyzer::SurfaceLayout;
-use codegen::ObjectCache;
-use codegen::TargetProperties;
-use mir::{BlockRef, InternalNodeRef, NodeData, SurfaceRef};
+use crate::codegen::data_analyzer::SurfaceLayout;
+use crate::codegen::ObjectCache;
+use crate::codegen::TargetProperties;
+use crate::mir::{BlockRef, InternalNodeRef, NodeData, SurfaceRef};
 use std::os::raw::c_void;
 use std::ptr::{null, null_mut};
 

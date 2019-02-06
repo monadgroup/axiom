@@ -1,12 +1,14 @@
-use codegen::data_analyzer::{PointerSource, PointerSourceAggregateType};
-use codegen::values::remap_type;
-use codegen::{build_context_function, surface, util, BuilderContext, LifecycleFunc, ObjectCache};
+use crate::codegen::data_analyzer::{PointerSource, PointerSourceAggregateType};
+use crate::codegen::values::remap_type;
+use crate::codegen::{
+    build_context_function, surface, util, BuilderContext, LifecycleFunc, ObjectCache,
+};
+use crate::mir::{Root, SurfaceRef};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::BasicType;
 use inkwell::values::{BasicValue, BasicValueEnum, GlobalValue, IntValue, PointerValue};
 use inkwell::AddressSpace;
-use mir::{Root, SurfaceRef};
 use std::iter;
 
 fn get_gep_indices(context: &Context, path: impl IntoIterator<Item = u64>) -> Vec<IntValue> {
@@ -132,8 +134,10 @@ pub fn build_sockets_global(
                 .const_in_bounds_gep(&[
                     context.i64_type().const_int(0, false),
                     context.i32_type().const_int(index as u64, false),
-                ]).const_cast(&void_ptr_ty)
-        }).collect();
+                ])
+                .const_cast(&void_ptr_ty)
+        })
+        .collect();
     let pointers_arr = void_ptr_ty.const_array(&array_itms);
     let pointers_global =
         util::get_or_create_global(module, pointers_name, &pointers_arr.get_type());
@@ -182,7 +186,7 @@ pub fn build_lifecycle_func(
     lifecycle: LifecycleFunc,
     pointers: PointerValue,
 ) {
-    let func = util::get_or_create_func(module, name, true, &|| {
+    let func = util::get_or_create_func(module, name, false, &|| {
         (
             Linkage::ExternalLinkage,
             module.get_context().void_type().fn_type(&[], false),

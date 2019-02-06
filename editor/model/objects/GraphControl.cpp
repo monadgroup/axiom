@@ -27,12 +27,12 @@ void GraphControl::doRuntimeUpdate() {
     auto currentState = getCurveState();
     size_t newStateHash = 17;
     newStateHash = newStateHash * 31 + std::hash<uint8_t>()(currentState->curveCount);
-    newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveStartVals[0]);
+    newStateHash = newStateHash * 31 + std::hash<double>()(currentState->curveStartVals[0]);
     newStateHash = newStateHash * 31 + std::hash<uint8_t>()(currentState->curveStates[0]);
     for (uint8_t curveIndex = 0; curveIndex < currentState->curveCount; curveIndex++) {
-        newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveStartVals[curveIndex + 1]);
-        newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveEndPositions[curveIndex]);
-        newStateHash = newStateHash * 31 + std::hash<float>()(currentState->curveTension[curveIndex]);
+        newStateHash = newStateHash * 31 + std::hash<double>()(currentState->curveStartVals[curveIndex + 1]);
+        newStateHash = newStateHash * 31 + std::hash<double>()(currentState->curveEndPositions[curveIndex]);
+        newStateHash = newStateHash * 31 + std::hash<double>()(currentState->curveTension[curveIndex]);
         newStateHash = newStateHash * 31 + std::hash<uint8_t>()(currentState->curveStates[curveIndex + 1]);
     }
 
@@ -82,7 +82,7 @@ void GraphControl::setScroll(float scroll) {
     }
 }
 
-std::optional<uint8_t> GraphControl::determineInsertIndex(float time) {
+std::optional<uint8_t> GraphControl::determineInsertIndex(double time) {
     auto controlState = getCurveState();
 
     // can't place the point if there are too many curves already
@@ -102,7 +102,7 @@ std::optional<uint8_t> GraphControl::determineInsertIndex(float time) {
     }
 }
 
-void GraphControl::insertPoint(uint8_t index, float time, float val, float tension, uint8_t curveState) {
+void GraphControl::insertPoint(uint8_t index, double time, double val, double tension, uint8_t curveState) {
     auto controlState = getCurveState();
 
     // move old values after the place point
@@ -125,7 +125,7 @@ void GraphControl::insertPoint(uint8_t index, float time, float val, float tensi
     controlState->curveCount++;
 }
 
-void GraphControl::movePoint(uint8_t index, float time, float value) {
+void GraphControl::movePoint(uint8_t index, double time, double value) {
     auto controlState = getCurveState();
     controlState->curveStartVals[index] = value;
     if (index > 0) {
@@ -137,7 +137,7 @@ void GraphControl::setPointTag(uint8_t index, uint8_t tag) {
     getCurveState()->curveStates[index] = tag;
 }
 
-void GraphControl::setCurveTension(uint8_t index, float tension) {
+void GraphControl::setCurveTension(uint8_t index, double tension) {
     getCurveState()->curveTension[index] = tension;
 }
 

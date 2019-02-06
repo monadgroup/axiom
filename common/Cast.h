@@ -13,18 +13,12 @@ namespace AxiomCommon {
     }
 
     template<class Output, class Input>
-    std::optional<Output> wrapStaticCast(Input input) {
-        if (auto cast = static_cast<Output>(input)) {
-            return cast;
-        }
-        return std::nullopt;
+    Output wrapStaticCast(Input input) {
+        return static_cast<Output>(input);
     }
 
     template<class Output, class Input>
-    std::optional<Output> wrapReinterpretCast(Input input) {
-        if (auto cast = reinterpret_cast<Output>(input)) {
-            return cast;
-        }
-        return std::nullopt;
+    Output wrapReinterpretCast(Input input) {
+        return reinterpret_cast<Output>(input);
     }
 }

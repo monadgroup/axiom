@@ -1,11 +1,11 @@
-use codegen::TargetProperties;
-use codegen::{controls, functions, values, ObjectCache};
+use crate::codegen::TargetProperties;
+use crate::codegen::{controls, functions, values, ObjectCache};
+use crate::mir::block::{Function, Statement};
+use crate::mir::{Block, Node, NodeData, Surface, ValueGroup, ValueGroupSource};
 use inkwell::context::Context;
 use inkwell::types::{BasicType, BasicTypeEnum, StructType};
 use inkwell::values::{BasicValue, StructValue};
 use inkwell::AddressSpace;
-use mir::block::{Function, Statement};
-use mir::{Block, Node, NodeData, Surface, ValueGroup, ValueGroupSource};
 use std::collections::HashMap;
 use std::{fmt, iter};
 
@@ -122,10 +122,7 @@ pub fn build_node_layout(
             );
 
             let new_pointer_sources = map_pointer_sources(
-                surface_layout
-                    .pointer_sources
-                    .iter()
-                    .map(|source| source.clone()),
+                surface_layout.pointer_sources.iter().cloned(),
                 PointerSource::Initialized,
                 |mut indices| {
                     indices.insert(0, 0);
@@ -167,9 +164,11 @@ pub fn build_node_layout(
                                 source_sockets,
                                 dest_sockets,
                             )
-                        }).collect();
+                        })
+                        .collect();
                     PointerSource::Aggregate(PointerSourceAggregateType::Struct, sub_sources)
-                }).collect();
+                })
+                .collect();
 
             // The extract group also needs access to the source and destination arrays.
             // Note: we put the underlying surface's pointers first, as this enables value
@@ -215,7 +214,8 @@ pub fn build_node_layout(
                     let socket_group = node.sockets[*socket].group_id;
                     values::remap_type(context, &parent_groups[socket_group].value_type)
                         .ptr_type(AddressSpace::Generic)
-                }).collect();
+                })
+                .collect();
             let source_type_refs: Vec<_> = source_socket_types
                 .iter()
                 .map(|ptr_type| ptr_type as &BasicType)
@@ -227,7 +227,8 @@ pub fn build_node_layout(
                     let socket_group = node.sockets[*socket].group_id;
                     values::remap_type(context, &parent_groups[socket_group].value_type)
                         .ptr_type(AddressSpace::Generic)
-                }).collect();
+                })
+                .collect();
             let dest_type_refs: Vec<_> = dest_socket_types
                 .iter()
                 .map(|ptr_type| ptr_type as &BasicType)
@@ -237,7 +238,7 @@ pub fn build_node_layout(
                 &[
                     &surface_layout
                         .scratch_struct
-                        .array_type(values::ARRAY_CAPACITY as u32),
+                        .array_type(u32::from(values::ARRAY_CAPACITY)),
                     &context.i32_type(),
                 ],
                 false,
@@ -247,7 +248,7 @@ pub fn build_node_layout(
                 &[
                     &surface_layout
                         .pointer_struct
-                        .array_type(values::ARRAY_CAPACITY as u32)
+                        .array_type(u32::from(values::ARRAY_CAPACITY))
                         as &BasicType,
                     &context.struct_type(&source_type_refs, false) as &BasicType,
                     &context.struct_type(&dest_type_refs, false) as &BasicType,
@@ -368,7 +369,8 @@ pub fn build_block_layout(
                             &ui_type.ptr_type(AddressSpace::Generic),
                         ],
                         false,
-                    ).into(),
+                    )
+                    .into(),
             );
         } else {
             pointer_sources.push(PointerSource::Aggregate(
@@ -389,7 +391,8 @@ pub fn build_block_layout(
                             &shared_type.ptr_type(AddressSpace::Generic),
                         ],
                         false,
-                    ).into(),
+                    )
+                    .into(),
             );
         }
     }
@@ -459,7 +462,8 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
                     PointerSource::Initialized(vec![initialized_index])
                 }
             }
-        }).collect();
+        })
+        .collect();
 
     let node_scratch_offset = scratch_types.len();
     let node_initializer_offset = initialized_values.len();
@@ -482,7 +486,7 @@ pub fn build_surface_layout(cache: &ObjectCache, surface: &Surface) -> SurfaceLa
         let new_pointer_source = PointerSource::Aggregate(
             PointerSourceAggregateType::Struct,
             map_pointer_sources(
-                layout.pointer_sources.iter().map(|source| source.clone()),
+                layout.pointer_sources.iter().cloned(),
                 |mut indices| {
                     indices.insert(0, initialized_index);
                     PointerSource::Initialized(indices)
@@ -554,7 +558,7 @@ fn modify_pointer_source(
     }
 }
 
-fn map_pointer_sources<'a>(
+fn map_pointer_sources(
     sources: impl IntoIterator<Item = PointerSource>,
     initialized_modifier: impl Fn(Vec<usize>) -> PointerSource,
     scratch_modifier: impl Fn(Vec<usize>) -> PointerSource,
@@ -571,26 +575,27 @@ fn map_pointer_sources<'a>(
                 &shared_modifier,
                 &socket_modifier,
             )
-        }).collect()
+        })
+        .collect()
 }
 
 fn append_path_to_pointer_source(source: PointerSource, path: &[usize]) -> PointerSource {
     modify_pointer_source(
         source,
         &|mut indices| {
-            indices.extend(path.clone());
+            indices.extend(path);
             PointerSource::Initialized(indices)
         },
         &|mut indices| {
-            indices.extend(path.clone());
+            indices.extend(path);
             PointerSource::Scratch(indices)
         },
         &|mut indices| {
-            indices.extend(path.clone());
+            indices.extend(path);
             PointerSource::Shared(indices)
         },
         &|socket_index, mut sub_indices| {
-            sub_indices.extend(path.clone());
+            sub_indices.extend(path);
             PointerSource::Socket(socket_index, sub_indices)
         },
     )

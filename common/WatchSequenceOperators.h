@@ -20,6 +20,9 @@ namespace AxiomCommon {
         WatchSequence<MapSequence<typename InternalSequence::Sequence, MapFunctor>, typename InternalSequence::Events>;
 
     template<class Output, class InternalSequence>
+    using DynamicCastWatchSequence = WatchSequence<DynamicCastSequence<Output, typename InternalSequence::Sequence>, typename InternalSequence::Events>;
+
+    template<class Output, class InternalSequence>
     using CastWatchSequence =
         WatchSequence<CastSequence<Output, typename InternalSequence::Sequence>, typename InternalSequence::Events>;
 
@@ -40,7 +43,7 @@ namespace AxiomCommon {
     }
 
     template<class Output, class Sequence>
-    CastWatchSequence<Output, Sequence> dynamicCastWatch(Sequence sequence) {
+    DynamicCastWatchSequence<Output, Sequence> dynamicCastWatch(Sequence sequence) {
         return WatchSequence(dynamicCast<Output>(std::move(sequence.sequence())), std::move(sequence.events()));
     }
 
@@ -67,22 +70,9 @@ namespace AxiomCommon {
             return result;
         }
 
-        struct HandlerSharedData {
-            Sequence input;
-            typename Sequence::Events::ItemEvent::EventId eventId;
-
-            explicit HandlerSharedData(Sequence input) : input(std::move(input)) {}
-        };
-
-        // put the input sequence on the heap so we can keep it around until the event has fired
-        auto sharedData = std::make_shared<HandlerSharedData>(std::move(input));
-        sharedData->eventId =
-            sharedData->input.events().itemAdded().connect([result, sharedData](ValueType item) mutable {
-                result->resolve(std::move(item));
-
-                // remove this event handler, which will in turn clear the shared data
-                sharedData->input.events().itemAdded().disconnect(sharedData->eventId);
-            });
+        auto heapSequence = std::make_shared<Sequence>(std::move(input));
+        heapSequence->events().itemAdded().once(Sequence::Events::ItemEvent::to(
+            [heapSequence, result](ValueType item) { result->resolve(std::move(item)); }));
 
         return result;
     }

@@ -1,8 +1,8 @@
 #include "WireItem.h"
 
 #include <QtWidgets/QGraphicsScene>
-#include <editor/widgets/CommonColors.h>
 
+#include "../CommonColors.h"
 #include "../surface/NodeSurfaceCanvas.h"
 #include "editor/model/ConnectionWire.h"
 #include "editor/model/WireGrid.h"
@@ -13,10 +13,10 @@ using namespace AxiomModel;
 const float WIRE_SEPARATION = 6;
 
 WireItem::WireItem(QObject *parent, AxiomModel::ConnectionWire *wire) : QObject(parent), wire(wire) {
-    wire->routeChanged.connect(this, &WireItem::updateRoute);
-    wire->activeChanged.connect(this, &WireItem::setIsActive);
-    wire->enabledChanged.connect(this, &WireItem::triggerUpdate);
-    wire->removed.connect(this, &WireItem::remove);
+    wire->routeChanged.connectTo(this, &WireItem::updateRoute);
+    wire->activeChanged.connectTo(this, &WireItem::setIsActive);
+    wire->enabledChanged.connectTo(this, &WireItem::triggerUpdate);
+    wire->removed.connectTo(this, &WireItem::remove);
 
     setBrush(Qt::NoBrush);
 
