@@ -98,12 +98,11 @@ void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *su
     Node::updateRuntimePointers(runtime, surfacePtr);
 
     auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
-    auto blockPtr = runtime->getBlockPtr(nodePtr);
     auto runtimeId = getRuntimeId();
 
-    controls().then([blockPtr, runtime, runtimeId](ControlSurface *controlSurface) {
+    controls().then([nodePtr, runtime, runtimeId](ControlSurface *controlSurface) {
         for (const auto &control : controlSurface->controls().sequence()) {
-            control->setRuntimePointers(runtime->getControlPtrs(runtimeId, blockPtr, control->compileMeta()->index));
+            control->setRuntimePointers(runtime->getControlPtrs(runtimeId, nodePtr, control->compileMeta()->index));
         }
     });
 }

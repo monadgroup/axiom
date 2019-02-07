@@ -79,7 +79,10 @@ fn get_lifecycle_func(
         (
             Linkage::ExternalLinkage,
             context.void_type().fn_type(
-                &[&layout.pointer_struct.ptr_type(AddressSpace::Generic)],
+                &[
+                    &layout.pointer_struct.ptr_type(AddressSpace::Generic),
+                    &layout.constant_struct.ptr_type(AddressSpace::Generic),
+                ],
                 false,
             ),
         )
@@ -106,7 +109,8 @@ fn build_lifecycle_func(
     build_context_function(module, func, cache.target(), &|ctx: BuilderContext| {
         let layout = cache.block_layout(block).unwrap();
         let pointers_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let mut ctx = BlockContext::new(ctx, layout, pointers_ptr);
+        let const_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let mut ctx = BlockContext::new(ctx, layout, pointers_ptr, const_ptr);
         cb(&mut ctx);
         ctx.ctx.b.build_return(None);
     });
@@ -254,7 +258,8 @@ pub fn build_lifecycle_call(
     block: BlockRef,
     lifecycle: LifecycleFunc,
     pointers_ptr: PointerValue,
+    const_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, cache, block, lifecycle);
-    builder.build_call(&func, &[&pointers_ptr], "", true);
+    builder.build_call(&func, &[&pointers_ptr, &const_ptr], "", true);
 }

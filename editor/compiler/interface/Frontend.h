@@ -16,6 +16,8 @@ namespace MaximFrontend {
     using MaximVarTypeRef = MaximVarType;
     using MaximConstantValue = void;
     using MaximConstantValueRef = MaximConstantValue;
+    using MaximControlInitializer = void;
+    using MaximControlInitializerRef = MaximControlInitializer;
 
     using MaximRootRef = void;
     using MaximSurfaceRef = void;
@@ -47,6 +49,7 @@ namespace MaximFrontend {
 
     struct ControlPointers {
         void *value;
+        void *initialized;
         void *data;
         void *shared;
         void *ui;
@@ -96,8 +99,7 @@ namespace MaximFrontend {
     uint32_t *maxim_get_extracted_bitmask_ptr(MaximRuntimeRef *runtime, uint64_t surface, void *surface_ptr,
                                               size_t node);
     void *maxim_get_surface_ptr(void *node_ptr);
-    void *maxim_get_block_ptr(void *block_ptr);
-    ControlPointers maxim_get_control_ptrs(MaximRuntimeRef *runtime, uint64_t block, void *block_ptr, size_t control);
+    ControlPointers maxim_get_control_ptrs(MaximRuntimeRef *runtime, uint64_t block, void *node_ptr, size_t control);
 
     void maxim_destroy_string(const char *);
 
@@ -131,7 +133,16 @@ namespace MaximFrontend {
     void maxim_destroy_valuegroupsource(MaximValueGroupSource *);
     void maxim_build_value_group(MaximSurfaceRef *surface, MaximVarType *vartype, MaximValueGroupSource *source);
 
-    MaximNodeRef *maxim_build_custom_node(MaximSurfaceRef *surface, uint64_t block_id);
+    MaximControlInitializer *maxim_control_initializer_none();
+    MaximControlInitializer *maxim_control_initializer_graph(uint8_t curveCount, size_t startValuesCount,
+                                                             const double *startValues, size_t endPositionsCount,
+                                                             const double *endPositions, size_t tensionsCount,
+                                                             const double *tensions, size_t statesCount,
+                                                             const uint8_t *states);
+    void maxim_destroy_control_initializer(MaximControlInitializer *initializer);
+
+    MaximNodeRef *maxim_build_custom_node(MaximSurfaceRef *surface, uint64_t block_id, size_t controlInitializersCount,
+                                          MaximControlInitializer *const *controlInitializers);
     MaximNodeRef *maxim_build_group_node(MaximSurfaceRef *surface, uint64_t surface_id);
     void maxim_build_value_socket(MaximNodeRef *node, size_t group_id, bool value_written, bool value_read,
                                   bool is_extractor);

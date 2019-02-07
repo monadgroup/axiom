@@ -20,13 +20,13 @@ use crate::ast::{ControlField, ControlType};
 use crate::codegen::{
     build_context_function, util, values, BuilderContext, LifecycleFunc, TargetProperties,
 };
-use crate::mir::VarType;
+use crate::mir::{ControlInitializer, VarType};
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
-use inkwell::values::{FunctionValue, PointerValue};
+use inkwell::values::{FunctionValue, PointerValue, StructValue};
 use inkwell::AddressSpace;
 
 pub type ControlFieldGeneratorCb = Fn(&mut ControlContext, PointerValue);
@@ -43,6 +43,7 @@ pub trait ControlFieldGenerator {
 #[derive(Clone, Copy)]
 pub struct ControlPointers {
     pub group: PointerValue,
+    pub const_dat: PointerValue,
     pub data: PointerValue,
     pub shared: PointerValue,
 }
@@ -89,6 +90,18 @@ pub fn get_field_type(context: &Context, field: ControlField) -> StructType {
 
 macro_rules! map_controls {
     ($($enum_name:ident => $class_name:ident),*) => (
+        pub fn get_constant_type(context: &Context, control_type: ControlType) -> StructType {
+            match control_type {
+                $( ControlType::$enum_name => $class_name::constant_type(context), )*
+            }
+        }
+
+        pub fn get_constant_value(context: &Context, control_type: ControlType, initializer: &ControlInitializer) -> StructValue {
+            match control_type {
+                $( ControlType::$enum_name => $class_name::constant_value(context, initializer), )*
+            }
+        }
+
         pub fn get_data_type(context: &Context, control_type: ControlType) -> StructType {
             match control_type {
                 $( ControlType::$enum_name => $class_name::data_type(context), )*
@@ -136,6 +149,7 @@ fn get_lifecycle_func(
             context.void_type().fn_type(
                 &[
                     &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_constant_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                 ],
@@ -147,6 +161,7 @@ fn get_lifecycle_func(
     func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
     func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
     func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
     func
 }
 
@@ -163,6 +178,7 @@ fn get_ui_lifecycle_func(
             context.void_type().fn_type(
                 &[
                     &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_constant_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_ui_type(&context, control_type).ptr_type(AddressSpace::Generic),
@@ -176,6 +192,7 @@ fn get_ui_lifecycle_func(
     func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
     func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
     func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(4, context.get_enum_attr(AttrKind::NoAlias, 1));
     func
 }
 
@@ -193,17 +210,23 @@ fn get_field_getter_func(module: &Module, field: ControlField) -> (FunctionValue
             let context = module.get_context();
             let value_type = values::remap_type(&context, &var_type);
             let group_type = get_group_type(&context, control_type).ptr_type(AddressSpace::Generic);
+            let const_type =
+                get_constant_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let data_type = get_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let shared_data_type =
                 get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
 
             let func_type = if pass_by_val {
-                value_type.fn_type(&[&group_type, &data_type, &shared_data_type], false)
+                value_type.fn_type(
+                    &[&group_type, &const_type, &data_type, &shared_data_type],
+                    false,
+                )
             } else {
                 context.void_type().fn_type(
                     &[
                         &value_type.ptr_type(AddressSpace::Generic),
                         &group_type,
+                        &const_type,
                         &data_type,
                         &shared_data_type,
                     ],
@@ -221,11 +244,13 @@ fn get_field_getter_func(module: &Module, field: ControlField) -> (FunctionValue
         func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
         func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
         func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
     } else {
         func.add_param_attribute(0, context.get_enum_attr(AttrKind::StructRet, 1));
         func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
         func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
         func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(4, context.get_enum_attr(AttrKind::NoAlias, 1));
     }
     (func, pass_by_val)
 }
@@ -244,19 +269,28 @@ fn get_field_setter_func(module: &Module, field: ControlField) -> (FunctionValue
             let context = module.get_context();
             let value_type = values::remap_type(&context, &var_type);
             let group_type = get_group_type(&context, control_type).ptr_type(AddressSpace::Generic);
+            let const_type =
+                get_constant_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let data_type = get_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let shared_data_type =
                 get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
 
             let func_type = if pass_by_val {
                 context.void_type().fn_type(
-                    &[&group_type, &data_type, &shared_data_type, &value_type],
+                    &[
+                        &group_type,
+                        &const_type,
+                        &data_type,
+                        &shared_data_type,
+                        &value_type,
+                    ],
                     false,
                 )
             } else {
                 context.void_type().fn_type(
                     &[
                         &group_type,
+                        &const_type,
                         &data_type,
                         &shared_data_type,
                         &value_type.ptr_type(AddressSpace::Generic),
@@ -273,8 +307,9 @@ fn get_field_setter_func(module: &Module, field: ControlField) -> (FunctionValue
     func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
     func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
     func.add_param_attribute(2, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
     if !pass_by_val {
-        func.add_param_attribute(3, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(4, context.get_enum_attr(AttrKind::NoAlias, 1));
     }
 
     (func, pass_by_val)
@@ -293,7 +328,7 @@ pub fn build_field_get(
         let get_val = builder
             .build_call(
                 &func,
-                &[&ptrs.group, &ptrs.data, &ptrs.shared],
+                &[&ptrs.group, &ptrs.const_dat, &ptrs.data, &ptrs.shared],
                 "field.get",
                 true,
             )
@@ -303,7 +338,13 @@ pub fn build_field_get(
     } else {
         builder.build_call(
             &func,
-            &[&out_val, &ptrs.group, &ptrs.data, &ptrs.shared],
+            &[
+                &out_val,
+                &ptrs.group,
+                &ptrs.const_dat,
+                &ptrs.data,
+                &ptrs.shared,
+            ],
             "",
             true,
         );
@@ -327,7 +368,13 @@ pub fn build_field_set(
 
     builder.build_call(
         &func,
-        &[&ptrs.group, &ptrs.data, &ptrs.shared, &in_norm_val],
+        &[
+            &ptrs.group,
+            &ptrs.const_dat,
+            &ptrs.data,
+            &ptrs.shared,
+            &in_norm_val,
+        ],
         "",
         true,
     );
@@ -341,7 +388,12 @@ pub fn build_lifecycle_call(
     ptrs: ControlPointers,
 ) {
     let func = get_lifecycle_func(module, control_type, lifecycle);
-    builder.build_call(&func, &[&ptrs.group, &ptrs.data, &ptrs.shared], "", true);
+    builder.build_call(
+        &func,
+        &[&ptrs.group, &ptrs.const_dat, &ptrs.data, &ptrs.shared],
+        "",
+        true,
+    );
 }
 
 pub fn build_ui_lifecycle_call(
@@ -355,7 +407,13 @@ pub fn build_ui_lifecycle_call(
     let func = get_ui_lifecycle_func(module, control_type, lifecycle);
     builder.build_call(
         &func,
-        &[&ptrs.group, &ptrs.data, &ptrs.shared, &ui_ptr],
+        &[
+            &ptrs.group,
+            &ptrs.const_dat,
+            &ptrs.data,
+            &ptrs.shared,
+            &ui_ptr,
+        ],
         "",
         true,
     );
@@ -371,11 +429,13 @@ fn build_lifecycle_func(
     let func = get_lifecycle_func(module, control, lifecycle);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
         let val_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let data_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
-        let shared_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
+        let const_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let data_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
+        let shared_ptr = ctx.func.get_nth_param(3).unwrap().into_pointer_value();
         let mut control_context = ControlContext {
             ctx,
             val_ptr,
+            const_ptr,
             data_ptr,
             shared_ptr,
         };
@@ -395,12 +455,14 @@ fn build_ui_lifecycle_func(
     let func = get_ui_lifecycle_func(module, control, lifecycle);
     build_context_function(module, func, target, &|ctx: BuilderContext| {
         let val_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let data_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
-        let shared_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
-        let ui_ptr = ctx.func.get_nth_param(3).unwrap().into_pointer_value();
+        let const_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let data_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
+        let shared_ptr = ctx.func.get_nth_param(3).unwrap().into_pointer_value();
+        let ui_ptr = ctx.func.get_nth_param(4).unwrap().into_pointer_value();
         let mut control_context = ControlUiContext {
             ctx,
             val_ptr,
+            const_ptr,
             data_ptr,
             shared_ptr,
             ui_ptr,
@@ -428,11 +490,13 @@ fn build_field_getter_func(
             param_iter.next().unwrap().into_pointer_value()
         };
         let val_ptr = param_iter.next().unwrap().into_pointer_value();
+        let const_ptr = param_iter.next().unwrap().into_pointer_value();
         let data_ptr = param_iter.next().unwrap().into_pointer_value();
         let shared_ptr = param_iter.next().unwrap().into_pointer_value();
         let mut control_context = ControlContext {
             ctx,
             val_ptr,
+            const_ptr,
             data_ptr,
             shared_ptr,
         };
@@ -456,10 +520,11 @@ fn build_field_setter_func(
 ) {
     build_context_function(module, func, target, &|ctx: BuilderContext| {
         let val_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let data_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
-        let shared_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
+        let const_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let data_ptr = ctx.func.get_nth_param(2).unwrap().into_pointer_value();
+        let shared_ptr = ctx.func.get_nth_param(3).unwrap().into_pointer_value();
 
-        let field_val = ctx.func.get_nth_param(3).unwrap();
+        let field_val = ctx.func.get_nth_param(4).unwrap();
         let field_ptr = if pass_by_val {
             let ptr = ctx.allocb.build_alloca(&field_val.get_type(), "val.ptr");
             ctx.b.build_store(&ptr, &field_val);
@@ -471,6 +536,7 @@ fn build_field_setter_func(
         let mut control_context = ControlContext {
             ctx,
             val_ptr,
+            const_ptr,
             data_ptr,
             shared_ptr,
         };
@@ -482,6 +548,14 @@ fn build_field_setter_func(
 
 pub trait Control {
     fn control_type() -> ControlType;
+
+    fn constant_type(context: &Context) -> StructType {
+        context.struct_type(&[], false)
+    }
+
+    fn constant_value(context: &Context, _initializer: &ControlInitializer) -> StructValue {
+        context.const_struct(&[], false)
+    }
 
     fn data_type(context: &Context) -> StructType {
         context.struct_type(&[], false)

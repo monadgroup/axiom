@@ -79,7 +79,7 @@ impl DependencyGraph {
         for node in &surface.nodes {
             match node.data {
                 NodeData::Dummy => {}
-                NodeData::Custom(block) => depends_on_blocks.push(block),
+                NodeData::Custom { block, .. } => depends_on_blocks.push(block),
                 NodeData::Group(surface) => depends_on_surfaces.push(surface),
                 NodeData::ExtractGroup { surface, .. } => depends_on_surfaces.push(surface),
             }

@@ -242,14 +242,22 @@ void SurfaceMirBuilder::build(MaximCompiler::Transaction *transaction, AxiomMode
                 continue;
             }
 
-            customNode->setCompileMeta(AxiomModel::NodeCompileMeta(nodeIndex));
-            auto mirNode = mir.addCustomNode(customNode->getRuntimeId());
-
             // we need a sorted list of controls
             auto sortedControls = AxiomCommon::collect((*customNode->controls().value())->controls().sequence());
             std::sort(sortedControls.begin(), sortedControls.end(), [](AxiomModel::Control *a, AxiomModel::Control *b) {
                 return a->compileMeta()->index < b->compileMeta()->index;
             });
+
+            // build the control initializers we need
+            std::vector<MaximCompiler::ControlInitializer> controlInitializers;
+            controlInitializers.reserve(sortedControls.size());
+            for (const auto &control : sortedControls) {
+                controlInitializers.push_back(control->getInitializer());
+            }
+
+            customNode->setCompileMeta(AxiomModel::NodeCompileMeta(nodeIndex));
+            auto mirNode =
+                mir.addCustomNode(customNode->getRuntimeId(), controlInitializers.size(), &controlInitializers[0]);
 
             for (const auto &control : sortedControls) {
                 auto controlGroup = controlGroups.find(control->uuid());

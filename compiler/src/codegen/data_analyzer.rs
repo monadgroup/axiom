@@ -53,6 +53,7 @@ pub struct BlockLayout {
     pub shared_struct: StructType,
     pub pointer_struct: StructType,
     pub pointer_sources: Vec<PointerSource>,
+    pub constant_struct: StructType,
     pub functions: Vec<Function>,
     control_count: usize,
     func_indexes: HashMap<usize, usize>,
@@ -95,18 +96,49 @@ pub fn build_node_layout(
             pointer_struct: context.struct_type(&[], false),
             pointer_sources: Vec::new(),
         },
-        NodeData::Custom(block_id) => {
-            let block_layout = cache.block_layout(block_id).unwrap();
+        NodeData::Custom {
+            block,
+            ref control_initializers,
+        } => {
+            let block_layout = cache.block_layout(block).unwrap();
 
-            // a block never has an initialized struct
-            let initialized_const = context.const_struct(&[], false);
+            // build an initialized struct from the control initializers
+            let block_mir = cache.block_mir(block).unwrap();
+            let initializer_consts: Vec<_> = control_initializers
+                .iter()
+                .zip(block_mir.controls.iter())
+                .map(|(initializer, control)| {
+                    controls::get_constant_value(cache.context(), control.control_type, initializer)
+                })
+                .collect();
+            let initializer_refs: Vec<_> = initializer_consts
+                .iter()
+                .map(|val| val as &BasicValue)
+                .collect();
+            let initialized_const = context.const_struct(&initializer_refs, false);
+
+            // push the initialized struct into the pointer list
+            let pointer_struct = context.struct_type(
+                &[
+                    &block_layout.constant_struct.ptr_type(AddressSpace::Generic),
+                    &block_layout.pointer_struct,
+                ],
+                false,
+            );
+            let pointer_sources = vec![
+                PointerSource::Initialized(Vec::new()),
+                PointerSource::Aggregate(
+                    PointerSourceAggregateType::Struct,
+                    block_layout.pointer_sources.clone(),
+                ),
+            ];
 
             NodeLayout {
                 initialized_const,
                 scratch_struct: block_layout.scratch_struct.into(),
                 shared_struct: block_layout.shared_struct.into(),
-                pointer_struct: block_layout.pointer_struct,
-                pointer_sources: block_layout.pointer_sources.clone(),
+                pointer_struct,
+                pointer_sources,
             }
         }
         NodeData::Group(surface_id) => {
@@ -333,6 +365,7 @@ pub fn build_block_layout(
     let mut shared_types = Vec::new();
     let mut pointer_types: Vec<BasicTypeEnum> = Vec::new();
     let mut pointer_sources = Vec::new();
+    let mut constant_types = Vec::new();
     let mut functions = Vec::new();
     let mut func_indexes = HashMap::new();
 
@@ -344,6 +377,8 @@ pub fn build_block_layout(
         let shared_index = shared_types.len();
         let shared_type = controls::get_shared_data_type(context, control.control_type);
         shared_types.push(shared_type);
+
+        constant_types.push(controls::get_constant_type(context, control.control_type));
 
         if target.include_ui {
             let ui_type = controls::get_ui_type(context, control.control_type);
@@ -412,12 +447,14 @@ pub fn build_block_layout(
     let scratch_type_refs: Vec<_> = scratch_types.iter().map(|x| x as &BasicType).collect();
     let shared_type_refs: Vec<_> = shared_types.iter().map(|x| x as &BasicType).collect();
     let pointer_type_refs: Vec<_> = pointer_types.iter().map(|x| x as &BasicType).collect();
+    let constant_type_refs: Vec<_> = constant_types.iter().map(|x| x as &BasicType).collect();
 
     BlockLayout {
         scratch_struct: context.struct_type(&scratch_type_refs, false),
         shared_struct: context.struct_type(&shared_type_refs, false),
         pointer_struct: context.struct_type(&pointer_type_refs, false),
         pointer_sources,
+        constant_struct: context.struct_type(&constant_type_refs, false),
         functions,
         control_count: block.controls.len(),
         func_indexes,

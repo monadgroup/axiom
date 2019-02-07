@@ -39,14 +39,18 @@ fn build_node_call(
 ) {
     match &node.data {
         NodeData::Dummy => {}
-        NodeData::Custom(block_id) => {
+        NodeData::Custom { block, .. } => {
+            let const_ptr = ctx
+                .b
+                .build_load(
+                    &unsafe { ctx.b.build_struct_gep(&pointers_ptr, 0, "const.ptr.ptr") },
+                    "const.ptr",
+                )
+                .into_pointer_value();
+            let node_ptrs = unsafe { ctx.b.build_struct_gep(&pointers_ptr, 1, "node.ptrs") };
+
             block::build_lifecycle_call(
-                ctx.module,
-                cache,
-                ctx.b,
-                *block_id,
-                lifecycle,
-                pointers_ptr,
+                ctx.module, cache, ctx.b, *block, lifecycle, node_ptrs, const_ptr,
             );
         }
         NodeData::Group(surface_id) => {

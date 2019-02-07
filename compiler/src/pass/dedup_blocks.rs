@@ -79,9 +79,9 @@ fn fix_block_references<'surface>(
 ) {
     for surface in surfaces {
         for node in &mut surface.nodes {
-            if let mir::NodeData::Custom(block_ref) = &mut node.data {
-                if let Some(equivalent_id) = equivalence_map.get(block_ref) {
-                    *block_ref = *equivalent_id;
+            if let mir::NodeData::Custom { block, .. } = &mut node.data {
+                if let Some(equivalent_id) = equivalence_map.get(block) {
+                    *block = *equivalent_id;
                 }
             }
         }

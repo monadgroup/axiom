@@ -40,8 +40,6 @@ namespace MaximCompiler {
 
         void *getSurfacePtr(void *nodePtr);
 
-        void *getBlockPtr(void *nodePtr);
-
-        MaximFrontend::ControlPointers getControlPtrs(uint64_t block, void *blockPtr, size_t control);
+        MaximFrontend::ControlPointers getControlPtrs(uint64_t block, void *nodePtr, size_t control);
     };
 }

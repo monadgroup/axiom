@@ -5,11 +5,13 @@ use crate::codegen::values::NumValue;
 use crate::codegen::{
     build_context_function, globals, math, util, BuilderContext, TargetProperties,
 };
+use crate::mir::ControlInitializer;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::StructType;
-use inkwell::values::{FunctionValue, PointerValue};
+use inkwell::values::{FunctionValue, PointerValue, StructValue};
 use inkwell::{FloatPredicate, IntPredicate};
+use std::iter;
 
 pub struct GraphControl;
 impl GraphControl {
@@ -164,18 +166,7 @@ impl Control for GraphControl {
         ControlType::Graph
     }
 
-    fn data_type(context: &Context) -> StructType {
-        context.struct_type(
-            &[
-                &context.i32_type(),  // current time
-                &context.i8_type(),   // current state
-                &context.bool_type(), // paused?
-            ],
-            false,
-        )
-    }
-
-    fn shared_data_type(context: &Context) -> StructType {
+    fn constant_type(context: &Context) -> StructType {
         context.struct_type(
             &[
                 &context.i8_type(),                 // curve count
@@ -183,6 +174,66 @@ impl Control for GraphControl {
                 &context.f64_type().array_type(16), // end positions
                 &context.f64_type().array_type(16), // tension
                 &context.i8_type().array_type(17),  // states
+            ],
+            false,
+        )
+    }
+
+    fn constant_value(context: &Context, initializer: &ControlInitializer) -> StructValue {
+        let graph_ini = initializer.as_graph_control().unwrap();
+
+        let start_value_consts: Vec<_> = graph_ini
+            .start_values
+            .iter()
+            .map(|&val| context.f64_type().const_float(val))
+            .chain(iter::repeat(context.f64_type().get_undef()))
+            .take(17)
+            .collect();
+
+        let end_pos_consts: Vec<_> = graph_ini
+            .end_positions
+            .iter()
+            .map(|&val| context.f64_type().const_float(val))
+            .chain(iter::repeat(context.f64_type().get_undef()))
+            .take(16)
+            .collect();
+
+        let tension_consts: Vec<_> = graph_ini
+            .tension
+            .iter()
+            .map(|&val| context.f64_type().const_float(val))
+            .chain(iter::repeat(context.f64_type().get_undef()))
+            .take(16)
+            .collect();
+
+        let state_consts: Vec<_> = graph_ini
+            .states
+            .iter()
+            .map(|&val| context.i8_type().const_int(val as u64, false))
+            .chain(iter::repeat(context.i8_type().get_undef()))
+            .take(17)
+            .collect();
+
+        context.const_struct(
+            &[
+                &context
+                    .i8_type()
+                    .const_int(graph_ini.curve_count as u64, false),
+                &context.f64_type().const_array(&start_value_consts),
+                &context.f64_type().const_array(&end_pos_consts),
+                &context.f64_type().const_array(&tension_consts),
+                &context.i8_type().const_array(&state_consts),
+            ],
+            false,
+        )
+    }
+
+    fn data_type(context: &Context) -> StructType {
+        context.struct_type(
+            &[
+                &context.i32_type(),  // current time
+                &context.i8_type(),   // current state
+                &context.bool_type(), // paused?
             ],
             false,
         )
@@ -221,18 +272,18 @@ impl Control for GraphControl {
             .ctx
             .b
             .build_load(
-                &unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 0, "") },
+                &unsafe { control.ctx.b.build_struct_gep(&control.const_ptr, 0, "") },
                 "curvecount",
             )
             .into_int_value();
 
         let start_vals_array_ptr =
-            unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 1, "") };
+            unsafe { control.ctx.b.build_struct_gep(&control.const_ptr, 1, "") };
         let end_positions_array_ptr =
-            unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 2, "") };
+            unsafe { control.ctx.b.build_struct_gep(&control.const_ptr, 2, "") };
         let tension_array_ptr =
-            unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 3, "") };
-        let state_array_ptr = unsafe { control.ctx.b.build_struct_gep(&control.shared_ptr, 4, "") };
+            unsafe { control.ctx.b.build_struct_gep(&control.const_ptr, 3, "") };
+        let state_array_ptr = unsafe { control.ctx.b.build_struct_gep(&control.const_ptr, 4, "") };
 
         let samplerate = control
             .ctx

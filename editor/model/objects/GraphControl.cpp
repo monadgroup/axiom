@@ -62,7 +62,7 @@ GraphControlTimeState *GraphControl::getTimeState() const {
 
 GraphControlCurveState *GraphControl::getCurveState() const {
     if (runtimePointers()) {
-        return (GraphControlCurveState *) runtimePointers()->shared;
+        return (GraphControlCurveState *) runtimePointers()->initialized;
     } else {
         return _savedState.get();
     }
@@ -174,4 +174,13 @@ void GraphControl::restoreState() {
         memcpy(controlState, _savedState.get(), sizeof(*controlState));
         _savedState.reset();
     }
+}
+
+MaximCompiler::ControlInitializer GraphControl::getInitializer() {
+    auto controlState = getCurveState();
+
+    return MaximCompiler::ControlInitializer::graph(
+        controlState->curveCount, controlState->curveCount + 1, controlState->curveStartVals, controlState->curveCount,
+        controlState->curveEndPositions, controlState->curveCount, controlState->curveTension,
+        controlState->curveCount + 1, controlState->curveStates);
 }

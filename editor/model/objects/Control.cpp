@@ -196,9 +196,13 @@ AxiomCommon::BoxedSequence<ModelObject *> Control::links() {
         AxiomCommon::filter(root()->controls().sequence(), [expId](Control *obj) { return obj->uuid() == expId; });
     auto connections = _connections.sequence();
 
-    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2> {
+    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(exposerControl)),
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(connections))}));
+}
+
+MaximCompiler::ControlInitializer Control::getInitializer() {
+    return MaximCompiler::ControlInitializer::none();
 }
 
 const std::optional<ControlCompileMeta> &Control::compileMeta() const {

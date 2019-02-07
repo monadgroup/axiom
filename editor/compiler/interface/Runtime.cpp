@@ -69,10 +69,6 @@ void *Runtime::getSurfacePtr(void *nodePtr) {
     return MaximFrontend::maxim_get_surface_ptr(nodePtr);
 }
 
-void *Runtime::getBlockPtr(void *nodePtr) {
-    return MaximFrontend::maxim_get_block_ptr(nodePtr);
-}
-
-MaximFrontend::ControlPointers Runtime::getControlPtrs(uint64_t block, void *blockPtr, size_t control) {
-    return MaximFrontend::maxim_get_control_ptrs(get(), block, blockPtr, control);
+MaximFrontend::ControlPointers Runtime::getControlPtrs(uint64_t block, void *nodePtr, size_t control) {
+    return MaximFrontend::maxim_get_control_ptrs(get(), block, nodePtr, control);
 }

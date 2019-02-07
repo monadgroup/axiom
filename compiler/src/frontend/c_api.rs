@@ -3,8 +3,8 @@ use crate::frontend::exporter::export_config;
 use crate::util::feature_level::{get_target_feature_string, FEATURE_LEVEL};
 use crate::{ast, codegen, mir, parser, pass, util, CompileError};
 use inkwell::{orc, targets};
-use std;
 use std::os::raw::c_void;
+use std::slice;
 
 #[no_mangle]
 pub extern "C" fn maxim_initialize() {
@@ -160,18 +160,13 @@ pub extern "C" fn maxim_get_surface_ptr(node_ptr: *mut c_void) -> *mut c_void {
 }
 
 #[no_mangle]
-pub extern "C" fn maxim_get_block_ptr(node_ptr: *mut c_void) -> *mut c_void {
-    value_reader::get_block_ptr(node_ptr)
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn maxim_get_control_ptrs(
     runtime: *const Runtime,
     block: u64,
-    block_ptr: *mut c_void,
+    node_ptr: *mut c_void,
     control: usize,
 ) -> value_reader::ControlPointers {
-    value_reader::get_control_ptrs(&*runtime, block, block_ptr, control)
+    value_reader::get_control_ptrs(&*runtime, block, node_ptr, control)
 }
 
 #[no_mangle]
@@ -365,11 +360,65 @@ pub unsafe extern "C" fn maxim_build_value_group(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_control_initializer_none() -> *mut mir::ControlInitializer {
+    Box::into_raw(Box::new(mir::ControlInitializer::None))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_control_initializer_graph(
+    curve_count: u8,
+    start_values_count: usize,
+    start_values: *const f64,
+    end_positions_count: usize,
+    end_positions: *const f64,
+    tensions_count: usize,
+    tensions: *const f64,
+    states_count: usize,
+    states: *const u8,
+) -> *mut mir::ControlInitializer {
+    let start_values_vec = slice::from_raw_parts(start_values, start_values_count).to_vec();
+    let end_positions_vec = slice::from_raw_parts(end_positions, end_positions_count).to_vec();
+    let tension_vec = slice::from_raw_parts(tensions, tensions_count).to_vec();
+    let states_vec = slice::from_raw_parts(states, states_count).to_vec();
+
+    let control_initializer = mir::ControlInitializer::Graph(mir::GraphControlInitializer {
+        curve_count,
+        start_values: start_values_vec,
+        end_positions: end_positions_vec,
+        tension: tension_vec,
+        states: states_vec,
+    });
+    Box::into_raw(Box::new(control_initializer))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_control_initializer(
+    initializer: *mut mir::ControlInitializer,
+) {
+    Box::from_raw(initializer);
+    // box will be dropped here
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_build_custom_node(
     surface: *mut mir::Surface,
     block_id: u64,
+    control_initializers_count: usize,
+    control_initializers: *const *mut mir::ControlInitializer,
 ) -> *mut mir::Node {
-    let new_node = mir::Node::new(Vec::new(), mir::NodeData::Custom(block_id));
+    let initializers: Vec<_> =
+        slice::from_raw_parts(control_initializers, control_initializers_count)
+            .iter()
+            .map(|&initializer_ptr| *Box::from_raw(initializer_ptr))
+            .collect();
+
+    let new_node = mir::Node::new(
+        Vec::new(),
+        mir::NodeData::Custom {
+            block: block_id,
+            control_initializers: initializers,
+        },
+    );
     (*surface).nodes.push(new_node);
     &mut (*surface).nodes[(*surface).nodes.len() - 1]
 }

@@ -1,10 +1,13 @@
-use crate::mir::{BlockRef, SurfaceRef, ValueSocket};
+use crate::mir::{BlockRef, ControlInitializer, SurfaceRef, ValueSocket};
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, PartialEq, Clone, Hash)]
 pub enum NodeData {
     Dummy,
-    Custom(BlockRef),
+    Custom {
+        block: BlockRef,
+        control_initializers: Vec<ControlInitializer>,
+    },
     Group(SurfaceRef),
     ExtractGroup {
         surface: SurfaceRef,
@@ -13,7 +16,7 @@ pub enum NodeData {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, PartialEq, Clone, Hash)]
 pub struct Node {
     pub sockets: Vec<ValueSocket>,
     pub data: NodeData,
@@ -32,7 +35,7 @@ impl fmt::Display for Node {
                 write!(f, "dummy")?;
                 None
             }
-            NodeData::Custom(block) => {
+            NodeData::Custom { block, .. } => {
                 write!(f, "block @{}", block)?;
                 None
             }

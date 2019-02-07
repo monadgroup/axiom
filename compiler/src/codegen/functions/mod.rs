@@ -460,6 +460,10 @@ pub fn build_call(
 pub trait Function {
     fn function_type() -> block::Function;
 
+    fn constant_value(context: &Context) -> StructValue {
+        context.const_struct(&[], false)
+    }
+
     fn data_type(context: &Context) -> StructType {
         context.struct_type(&[], false)
     }

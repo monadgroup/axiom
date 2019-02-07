@@ -68,6 +68,8 @@ namespace AxiomModel {
 
         void restoreState() override;
 
+        MaximCompiler::ControlInitializer getInitializer() override;
+
     private:
         float _zoom = 0;
         float _scroll = 0;
