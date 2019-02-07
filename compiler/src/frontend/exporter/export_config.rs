@@ -1,3 +1,4 @@
+use crate::codegen::OptimizationLevel;
 use crate::util::feature_level::FeatureLevel;
 use std::path::PathBuf;
 
@@ -28,17 +29,6 @@ pub struct TargetConfig {
     pub platform: TargetPlatform,
     pub instruction_set: TargetInstructionSet,
     pub feature_level: FeatureLevel,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub enum OptimizationLevel {
-    None,
-    Low,
-    Medium,
-    High,
-    MinSize,
-    AggressiveSize,
 }
 
 #[derive(Debug, Clone)]

@@ -174,6 +174,7 @@ impl Runtime {
 
     fn codegen_lib(context: &Context, target: &TargetProperties) -> Module {
         let module = target.create_module(context, "lib");
+        globals::build_globals(&module);
         runtime_lib::codegen_lib(&module, target);
         editor::build_convert_num_func(&module, &target, CONVERT_NUM_FUNC_NAME);
         module

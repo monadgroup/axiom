@@ -22,7 +22,7 @@ pub use self::builder_context::{build_context_function, BuilderContext};
 pub use self::module_iterator::{ModuleFunctionIterator, ModuleGlobalIterator};
 pub use self::object_cache::ObjectCache;
 pub use self::optimizer::Optimizer;
-pub use self::target_properties::TargetProperties;
+pub use self::target_properties::{OptimizationLevel, TargetProperties};
 
 use std::fmt;
 

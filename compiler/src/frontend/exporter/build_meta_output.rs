@@ -19,12 +19,12 @@ pub struct ModuleMetadata {
 
 fn determine_c_file_name(output_path: &path::Path) -> Option<String> {
     let file_name = output_path.file_name()?.to_str()?;
-    let safe_file_name = NON_SAFE_CHARACTERS_REGEX.replace(file_name, '_');
+    let safe_file_name = NON_SAFE_CHARACTERS_REGEX.replace(file_name, "_");
     Some(safe_file_name.to_uppercase())
 }
 
 pub fn build_meta_output(
-    f: &mut fmt::Write,
+    f: &mut dyn fmt::Write,
     code_config: &CodeConfig,
     meta_config: &MetaOutputConfig,
     module_data: &ModuleMetadata,
@@ -37,7 +37,7 @@ pub fn build_meta_output(
         MetaFormat::RustModule => include_str!("rust_module_template.rs.tasty"),
         MetaFormat::Json => include_str!("json_template.json.tasty"),
     };
-    let mut context = HashMap::new();
+    let mut context: HashMap<_, &str> = HashMap::new();
     context.insert(Cow::Borrowed("C_FILE_NAME"), &c_file_name);
     context.insert(Cow::Borrowed("FUNC_PREFIX"), &code_config.instrument_prefix);
     context.insert(Cow::Borrowed("DEF_PREFIX"), &def_prefix);
@@ -63,8 +63,7 @@ pub fn build_meta_output(
     );
 
     match process_template(f, template_str, &context) {
-        Ok(()) => Ok(()),
-        Error::Writer(err) => Err(err),
-        other => other.unwrap(),
+        Err(Error::Writer(err)) => Err(err),
+        other => Ok(other.unwrap()),
     }
 }

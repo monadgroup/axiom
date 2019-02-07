@@ -56,7 +56,7 @@ impl VarType {
                     .collect(),
             ),
             Statement::CallFunc { function, .. } => VarType::of_function(*function),
-            Statement::StoreControl { field, .. } => VarType::Void,
+            Statement::StoreControl { .. } => VarType::Void,
             Statement::LoadControl { field, .. } => VarType::of_control_field(*field),
         }
     }

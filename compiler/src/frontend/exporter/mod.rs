@@ -2,280 +2,170 @@ mod build_instrument_module;
 mod build_meta_output;
 pub mod export_config;
 
-use super::mir_optimizer;
+use self::build_instrument_module::build_instrument_module;
+use self::build_meta_output::{build_meta_output, ModuleMetadata};
+use self::export_config::{
+    AudioConfig, CodeConfig, ExportConfig, MetaOutputConfig, ObjectFormat, ObjectOutputConfig,
+    TargetConfig, TargetInstructionSet, TargetPlatform,
+};
 use super::Transaction;
 use crate::codegen::{
-    block, data_analyzer, root, runtime_lib, surface, ModuleFunctionIterator, ModuleGlobalIterator,
-    ObjectCache, Optimizer, TargetProperties,
+    globals, runtime_lib, util, ModuleFunctionIterator, ModuleGlobalIterator, Optimizer,
+    TargetProperties,
 };
-use crate::{mir, pass};
+use crate::util::feature_level::get_target_feature_string;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
-use std::collections::{HashMap, HashSet};
-use std::iter::FromIterator;
-use std::path::Path;
+use inkwell::targets::{CodeModel, FileType, RelocMode, Target};
+use inkwell::types::VectorType;
+use std::fs;
 
-struct ExportObjectCache<'context, 'target, 'mir> {
-    context: &'context Context,
-    target: &'target TargetProperties,
-    surface_mir: &'mir HashMap<mir::SurfaceRef, mir::Surface>,
-    block_mir: &'mir HashMap<mir::BlockRef, mir::Block>,
-    surface_layout: &'mir HashMap<mir::SurfaceRef, data_analyzer::SurfaceLayout>,
-    block_layout: &'mir HashMap<mir::BlockRef, data_analyzer::BlockLayout>,
+fn export_meta(config: &MetaOutputConfig, code_conf: &CodeConfig, module_meta: &ModuleMetadata) {
+    let mut meta_output = String::new();
+    build_meta_output(&mut meta_output, code_conf, config, module_meta).unwrap();
+
+    fs::write(&config.location, &meta_output).unwrap(); // todo: don't unwrap
 }
 
-impl ObjectCache for ExportObjectCache<'_, '_, '_> {
-    fn context(&self) -> &Context {
-        self.context
-    }
-
-    fn target(&self) -> &TargetProperties {
-        self.target
-    }
-
-    fn surface_mir(&self, id: mir::SurfaceRef) -> Option<&mir::Surface> {
-        self.surface_mir.get(&id)
-    }
-
-    fn surface_layout(&self, id: mir::SurfaceRef) -> Option<&data_analyzer::SurfaceLayout> {
-        self.surface_layout.get(&id)
-    }
-
-    fn block_mir(&self, id: mir::BlockRef) -> Option<&mir::Block> {
-        self.block_mir.get(&id)
-    }
-
-    fn block_layout(&self, id: mir::BlockRef) -> Option<&data_analyzer::BlockLayout> {
-        self.block_layout.get(&id)
+fn get_target_cpu(instruction_set: TargetInstructionSet) -> &'static str {
+    match instruction_set {
+        TargetInstructionSet::I686 => "i686",
+        TargetInstructionSet::X64 => "x86_64",
     }
 }
 
-fn print_surfaces(surfaces: &HashMap<mir::SurfaceRef, mir::Surface>) {
-    for surface in surfaces.values() {
-        println!("{}", surface);
+fn get_target_triple(target_conf: &TargetConfig) -> String {
+    let cpu_specifier = get_target_cpu(target_conf.instruction_set);
+    let platform_specifier = match target_conf.platform {
+        TargetPlatform::WindowsMsvc => "pc-windows-msvc19.15.26730",
+        TargetPlatform::WindowsGnu => "w64-windows-gnu",
+        TargetPlatform::Mac => "apple-darwin-macho",
+        TargetPlatform::Linux => "unknown-linux-gnu",
+    };
+
+    cpu_specifier.to_string() + "-" + platform_specifier
+}
+
+fn export_object(
+    config: &ObjectOutputConfig,
+    audio_conf: &AudioConfig,
+    target_conf: &TargetConfig,
+    code_conf: &CodeConfig,
+    module_meta: &ModuleMetadata,
+    transaction: Transaction,
+) {
+    let target_triple = get_target_triple(target_conf);
+    let target_cpu = get_target_cpu(target_conf.instruction_set);
+    let target_features = get_target_feature_string(target_conf.feature_level);
+
+    let target = Target::from_triple(&target_triple).unwrap();
+
+    let machine = target
+        .create_target_machine(
+            &target_triple,
+            target_cpu,
+            &target_features,
+            code_conf.optimization_level.into_specification().llvm_level,
+            RelocMode::Default,
+            CodeModel::Default,
+        )
+        .unwrap();
+    let target_properties = TargetProperties::new(false, code_conf.optimization_level, machine);
+
+    let context = Context::create();
+    let output_module = target_properties.create_module(
+        &context,
+        config.location.file_name().unwrap().to_str().unwrap(),
+    );
+
+    if code_conf.include_library {
+        // build constant globals
+        let sample_rate_global = globals::get_sample_rate(&output_module);
+        sample_rate_global.set_constant(true);
+        sample_rate_global.set_initializer(&util::get_vec_spread(&context, audio_conf.sample_rate));
+
+        let bpm_global = globals::get_bpm(&output_module);
+        bpm_global.set_constant(true);
+        bpm_global.set_initializer(&util::get_vec_spread(&context, audio_conf.bpm));
+        globals::get_rand_seed(&output_module).set_initializer(&VectorType::const_vector(&[
+            &context.i64_type().const_int(1, false),
+            &context.i64_type().const_int(31337, false),
+        ]));
+
+        // build the library
+        runtime_lib::codegen_lib(&output_module, &target_properties);
+    }
+    if code_conf.include_instrument {
+        build_instrument_module(&context, &target_properties, transaction, module_meta);
+    }
+
+    // optimize the module
+    hide_internal_symbols(&output_module);
+    let optimizer = Optimizer::new(&target_properties);
+    optimizer.optimize_module(&output_module);
+
+    // write the output to the specified file
+    match config.format {
+        ObjectFormat::Object => {
+            target_properties
+                .machine
+                .write_to_file(&output_module, FileType::Object, &config.location)
+                .unwrap();
+        }
+        ObjectFormat::Bitcode => {
+            if !output_module.write_bitcode_to_path(&config.location) {
+                panic!();
+            }
+        }
+        ObjectFormat::IR => {
+            output_module.print_to_file(&config.location).unwrap();
+        }
+        ObjectFormat::AssemblyListing => {
+            target_properties
+                .machine
+                .write_to_file(&output_module, FileType::Assembly, &config.location)
+                .unwrap();
+        }
     }
 }
 
-fn print_blocks(blocks: &HashMap<mir::BlockRef, mir::Block>) {
-    for block in blocks.values() {
-        println!("{}", block);
-    }
-}
-
-fn privatize_internal_globals(module: &Module) {
-    for func in ModuleFunctionIterator::new(module) {
+fn hide_internal_symbols(module: &Module) {
+    let func_iterator = ModuleFunctionIterator::new(module);
+    for func in func_iterator {
         if func.get_name().to_str().unwrap().starts_with("maxim.") {
             func.set_linkage(Linkage::PrivateLinkage);
         }
     }
-    for global in ModuleGlobalIterator::new(module) {
+
+    let global_iterator = ModuleGlobalIterator::new(module);
+    for global in global_iterator {
         if global.get_name().to_str().unwrap().starts_with("maxim.") {
-            global.set_linkage(Linkage::PrivateLinkage)
+            global.set_linkage(Linkage::PrivateLinkage);
         }
     }
 }
 
-pub fn export_transaction(config: export_config::ExportConfig, transaction: Transaction) {}
-
-fn build_module_from_transaction(
-    context: &Context,
-    target: &TargetProperties,
-    transaction: Transaction,
-) -> Module {
-    let mut id_allocator = mir::IncrementalIdAllocator::new(0);
-
-    // Reserve all of the currently-used IDs in the allocator, so we don't get duplicates when
-    // generating new IDs in passes.
-    for &used_id in transaction
-        .surfaces
-        .keys()
-        .into_iter()
-        .chain(transaction.blocks.keys().into_iter())
-    {
-        id_allocator.reserve(used_id);
-    }
-
-    let mut prepared_surfaces = prepare_surfaces(
-        transaction.surfaces.into_iter().map(|(_, surface)| surface),
-        &mut id_allocator,
-    );
-    let mut prepared_blocks = prepare_blocks(transaction.blocks);
-
-    pass::sort_group_sockets(&mut prepared_surfaces);
-    pass::deduplicate_blocks(&mut prepared_blocks, prepared_surfaces.values_mut());
-    pass::deduplicate_surfaces(&mut prepared_surfaces);
-    pass::flatten_groups(&mut prepared_surfaces);
-
-    print_blocks(&prepared_blocks);
-    print_surfaces(&prepared_surfaces);
-
-    let block_layouts = build_block_layouts(&context, target, prepared_blocks.values());
-    let mut surface_layouts = HashMap::new();
-    build_surface_layouts(
-        &context,
-        target,
-        &prepared_surfaces,
-        &prepared_blocks,
-        &mut surface_layouts,
-        &block_layouts,
-    );
-
-    let cache = ExportObjectCache {
-        context: &context,
-        target,
-        surface_mir: &prepared_surfaces,
-        block_mir: &prepared_blocks,
-        surface_layout: &surface_layouts,
-        block_layout: &block_layouts,
+pub fn export(config: &ExportConfig, transaction: Transaction) {
+    // Generate the module metadata
+    let module_meta = ModuleMetadata {
+        init_func_name: config.code.instrument_prefix.clone() + "init",
+        cleanup_func_name: config.code.instrument_prefix.clone() + "cleanup",
+        generate_func_name: config.code.instrument_prefix.clone() + "generate",
+        portal_func_name: config.code.instrument_prefix.clone() + "portal",
     };
 
-    let export_module = target.create_module(&context, "export");
-
-    for block in prepared_blocks.values() {
-        block::build_funcs(&export_module, &cache, block);
+    // Export the requested data
+    if let Some(meta_config) = &config.meta {
+        export_meta(meta_config, &config.code, &module_meta);
     }
-    for surface in prepared_surfaces.values() {
-        surface::build_funcs(&export_module, &cache, surface);
-    }
-
-    // build the root
-    if let Some(root) = transaction.root {
-        let initialized_global =
-            root::build_initialized_global(&export_module, &cache, 0, "maxim.export.initialized");
-        let scratch_global =
-            root::build_scratch_global(&export_module, &cache, 0, "maxim.export.scratch");
-        let sockets_global = root::build_sockets_global(
-            &export_module,
-            &root,
-            "maxim.export.sockets",
-            "maxim.export.portals",
-        );
-        let pointers_global = root::build_pointers_global(
-            &export_module,
-            &cache,
-            0,
-            "maxim.export.pointers",
-            initialized_global.as_pointer_value(),
-            scratch_global.as_pointer_value(),
-            sockets_global.sockets.as_pointer_value(),
-        );
-        root::build_funcs(
-            &export_module,
-            &cache,
-            0,
-            "maxim_construct",
-            "maxim_update",
-            "maxim_destruct",
-            pointers_global.as_pointer_value(),
+    if let Some(object_config) = &config.object {
+        export_object(
+            object_config,
+            &config.audio,
+            &config.target,
+            &config.code,
+            &module_meta,
+            transaction,
         );
     }
-
-    privatize_internal_globals(&export_module);
-
-    export_module
-}
-
-/// Runs necessary preparation passes on the surfaces
-fn prepare_surfaces(
-    surfaces: impl IntoIterator<Item = mir::Surface>,
-    allocator: &mut mir::IdAllocator,
-) -> HashMap<mir::SurfaceRef, mir::Surface> {
-    HashMap::from_iter(
-        mir_optimizer::prepare_surfaces(surfaces, allocator)
-            .map(|mut surface| {
-                pass::sort_value_groups(&mut surface);
-                surface
-            })
-            .map(|surface| (surface.id.id, surface)),
-    )
-}
-
-fn prepare_blocks(
-    mut blocks: HashMap<mir::BlockRef, mir::Block>,
-) -> HashMap<mir::BlockRef, mir::Block> {
-    mir_optimizer::prepare_blocks(blocks.values_mut());
-    blocks
-}
-
-fn build_block_layouts<'block>(
-    context: &Context,
-    target: &TargetProperties,
-    blocks: impl IntoIterator<Item = &'block mir::Block>,
-) -> HashMap<mir::BlockRef, data_analyzer::BlockLayout> {
-    HashMap::from_iter(blocks.into_iter().map(|block| {
-        (
-            block.id.id,
-            data_analyzer::build_block_layout(context, block, target),
-        )
-    }))
-}
-
-fn build_surface_layouts(
-    context: &Context,
-    target: &TargetProperties,
-    surface_mirs: &HashMap<mir::SurfaceRef, mir::Surface>,
-    block_mirs: &HashMap<mir::BlockRef, mir::Block>,
-    surface_layouts: &mut HashMap<mir::SurfaceRef, data_analyzer::SurfaceLayout>,
-    block_layouts: &HashMap<mir::BlockRef, data_analyzer::BlockLayout>,
-) {
-    let mut visited_surfaces = HashSet::new();
-    visit_surface(
-        0,
-        &mut visited_surfaces,
-        context,
-        target,
-        surface_mirs,
-        block_mirs,
-        surface_layouts,
-        block_layouts,
-    );
-}
-
-fn visit_surface(
-    surface_id: mir::SurfaceRef,
-    visited_surfaces: &mut HashSet<mir::SurfaceRef>,
-    context: &Context,
-    target: &TargetProperties,
-    surface_mirs: &HashMap<mir::SurfaceRef, mir::Surface>,
-    block_mirs: &HashMap<mir::BlockRef, mir::Block>,
-    surface_layouts: &mut HashMap<mir::SurfaceRef, data_analyzer::SurfaceLayout>,
-    block_layouts: &HashMap<mir::BlockRef, data_analyzer::BlockLayout>,
-) {
-    if !visited_surfaces.insert(surface_id) {
-        return;
-    }
-
-    let surface = &surface_mirs[&surface_id];
-    for node in &surface.nodes {
-        let subsurface_id = match node.data {
-            mir::NodeData::Group(surface_id) => surface_id,
-            mir::NodeData::ExtractGroup { surface, .. } => surface,
-            _ => continue,
-        };
-
-        visit_surface(
-            subsurface_id,
-            visited_surfaces,
-            context,
-            target,
-            surface_mirs,
-            block_mirs,
-            surface_layouts,
-            block_layouts,
-        );
-    }
-
-    // all dependencies have their layouts built now, so we can build ours
-    let new_layout = data_analyzer::build_surface_layout(
-        &ExportObjectCache {
-            context,
-            target,
-            surface_mir: surface_mirs,
-            block_mir: block_mirs,
-            surface_layout: surface_layouts,
-            block_layout: block_layouts,
-        },
-        surface,
-    );
-    surface_layouts.insert(surface_id, new_layout);
 }

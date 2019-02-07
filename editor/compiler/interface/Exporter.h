@@ -43,6 +43,6 @@ namespace MaximCompiler {
 
     class Exporter {
     public:
-        static void exportTransaction(bool minSize, Transaction transaction);
+        static void exportTransaction(const ExportConfig &config, Transaction transaction);
     };
 }

@@ -26,3 +26,20 @@ fn get_feature_level() -> FeatureLevel {
 lazy_static! {
     pub static ref FEATURE_LEVEL: FeatureLevel = get_feature_level();
 }
+
+pub fn get_target_feature_string(feature_level: FeatureLevel) -> String {
+    // we need SSE4.1 at a minimum, so dynamically enable SSE4.2, AVX, and AVX2 if we can
+    let mut base_features = "+x87,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4.1".to_string();
+
+    if feature_level >= FeatureLevel::SSE42 {
+        base_features.push_str(",+sse4.2");
+    }
+    if feature_level >= FeatureLevel::AVX {
+        base_features.push_str(",+avx");
+    }
+    if feature_level >= FeatureLevel::AVX2 {
+        base_features.push_str(",+avx2");
+    }
+
+    base_features
+}

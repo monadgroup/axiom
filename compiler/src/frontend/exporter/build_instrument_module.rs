@@ -1,8 +1,9 @@
+use super::build_meta_output::ModuleMetadata;
 use crate::codegen::{block, data_analyzer, root, surface, ObjectCache, TargetProperties};
 use crate::frontend::{mir_optimizer, Transaction};
 use crate::{mir, pass};
 use inkwell::context::Context;
-use inkwell::module::{Linkage, Module};
+use inkwell::module::Module;
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
 
@@ -45,7 +46,7 @@ pub fn build_instrument_module(
     context: &Context,
     target: &TargetProperties,
     transaction: Transaction,
-    export_prefix: &str,
+    module_meta: &ModuleMetadata,
 ) -> Module {
     let mut id_allocator = mir::IncrementalIdAllocator::new(0);
 
@@ -100,14 +101,50 @@ pub fn build_instrument_module(
         surface::build_funcs(&export_module, &cache, surface);
     }
 
+    build_root(
+        &export_module,
+        module_meta,
+        &cache,
+        &transaction.root.unwrap(),
+    );
+
     export_module
 }
 
-fn build_root(context: &Context, module: &Module, prefix: &str) {
-    //let construct_name = format!("{}init");
-    //let destruct_name = format!("{}cleanup");
-    //let update_name = format!("{}update");
-    //let get_portal_name = format!("{}get_portal");
+fn build_root(
+    module: &Module,
+    module_meta: &ModuleMetadata,
+    cache: &dyn ObjectCache,
+    root: &mir::Root,
+) {
+    let initialized_global =
+        root::build_initialized_global(&module, cache, 0, "maxim.data.initialized");
+    initialized_global.set_constant(true);
+    let scratch_global = root::build_scratch_global(&module, cache, 0, "maxim.data.scratch");
+    let sockets_global = root::build_sockets_global(
+        &module,
+        root,
+        "maxim.data.portals",
+        "maxim.data.portals.ptr",
+    );
+    let pointers_global = root::build_pointers_global(
+        &module,
+        cache,
+        0,
+        "maxim.data.pointers",
+        initialized_global.as_pointer_value(),
+        scratch_global.as_pointer_value(),
+        sockets_global.sockets.as_pointer_value(),
+    );
+    root::build_funcs(
+        &module,
+        cache,
+        0,
+        &module_meta.init_func_name,
+        &module_meta.generate_func_name,
+        &module_meta.cleanup_func_name,
+        pointers_global.as_pointer_value(),
+    );
 }
 
 fn prepare_surfaces(

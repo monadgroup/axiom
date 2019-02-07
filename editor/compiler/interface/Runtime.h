@@ -8,7 +8,7 @@ namespace MaximCompiler {
 
     class Runtime : public OwnedObject {
     public:
-        Runtime(bool includeUi, bool minSize);
+        Runtime(bool includeUi);
 
         uint64_t nextId();
 

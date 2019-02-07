@@ -1,4 +1,4 @@
-use super::{controls, converters, functions, globals, intrinsics, math, values, TargetProperties};
+use super::{controls, converters, functions, intrinsics, math, values, TargetProperties};
 use inkwell::module::Module;
 
 pub fn codegen_lib(module: &Module, target: &TargetProperties) {
@@ -7,6 +7,5 @@ pub fn codegen_lib(module: &Module, target: &TargetProperties) {
     functions::build_funcs(module, target);
     intrinsics::build_intrinsics(module, target);
     math::build_math_functions(module, target);
-    globals::build_globals(module);
     values::MidiValue::initialize(module, target);
 }

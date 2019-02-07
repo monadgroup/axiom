@@ -1,7 +1,6 @@
 use crate::codegen::{ModuleFunctionIterator, TargetProperties};
 use inkwell::module::Module;
 use inkwell::passes::{PassManager, PassManagerBuilder};
-use inkwell::OptimizationLevel;
 
 #[derive(Debug)]
 pub struct Optimizer {
@@ -12,20 +11,10 @@ pub struct Optimizer {
 impl Optimizer {
     pub fn new(target: &TargetProperties) -> Self {
         let builder = PassManagerBuilder::create();
-
-        if target.min_size {
-            builder.set_optimization_level(OptimizationLevel::Aggressive);
-            builder.set_size_level(1);
-
-            // threshold for -Os, see http://llvm.org/doxygen/InlineCost_8h_source.html
-            builder.set_inliner_with_threshold(50);
-        } else {
-            builder.set_optimization_level(OptimizationLevel::Default);
-            builder.set_size_level(0);
-
-            // threshold for -Os, see http://llvm.org/doxygen/InlineCost_8h_source.html
-            builder.set_inliner_with_threshold(50);
-        }
+        let opt_specification = target.optimization_level.into_specification();
+        builder.set_optimization_level(opt_specification.llvm_level);
+        builder.set_size_level(opt_specification.size_level);
+        builder.set_inliner_with_threshold(opt_specification.inliner_threshold);
 
         let module_pass = PassManager::create_for_module();
         builder.populate_module_pass_manager(&module_pass);

@@ -1,5 +1,6 @@
 use super::{exporter, value_reader, Runtime, Transaction};
 use crate::frontend::exporter::export_config;
+use crate::util::feature_level::{get_target_feature_string, FEATURE_LEVEL};
 use crate::{ast, codegen, mir, parser, pass, util, CompileError};
 use inkwell::{orc, targets};
 use std;
@@ -18,9 +19,29 @@ pub unsafe extern "C" fn maxim_destroy_string(string: *mut std::os::raw::c_char)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_create_runtime(include_ui: bool, min_size: bool) -> *mut Runtime {
+pub unsafe extern "C" fn maxim_create_runtime(include_ui: bool) -> *mut Runtime {
+    // Create a fake target machine to get the current triple and CPU, then create one with our
+    // desired feature set.
+    // Todo: there's probably a better way to do this?
+    let temp_machine = targets::TargetMachine::select();
+    let current_triple = temp_machine.get_triple().to_str().unwrap();
+    let current_cpu = temp_machine.get_cpu().to_str().unwrap();
+    let target = targets::Target::from_triple(current_triple).unwrap();
+    let machine = target
+        .create_target_machine(
+            current_triple,
+            current_cpu,
+            &get_target_feature_string(*FEATURE_LEVEL),
+            codegen::OptimizationLevel::Editor
+                .into_specification()
+                .llvm_level,
+            targets::RelocMode::Default,
+            targets::CodeModel::Default,
+        )
+        .unwrap();
+
     let target =
-        codegen::TargetProperties::new(include_ui, min_size, targets::TargetMachine::select());
+        codegen::TargetProperties::new(include_ui, codegen::OptimizationLevel::Editor, machine);
     Box::into_raw(Box::new(Runtime::new(target)))
 }
 
@@ -37,10 +58,12 @@ pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_export_transaction(min_size: bool, transaction: *mut Transaction) {
-    /*let target = codegen::TargetProperties::new(false, min_size, targets::TargetMachine::select());
+pub unsafe extern "C" fn maxim_export_transaction(
+    config: *const export_config::ExportConfig,
+    transaction: *mut Transaction,
+) {
     let owned_transaction = Box::from_raw(transaction);
-    exporter::build_module_from_transaction(&target, *owned_transaction);*/
+    exporter::export(&*config, *owned_transaction);
 }
 
 #[no_mangle]
@@ -515,7 +538,7 @@ pub unsafe extern "C" fn maxim_destroy_target_config(config: *mut export_config:
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_create_code_config(
-    optimization_level: export_config::OptimizationLevel,
+    optimization_level: codegen::OptimizationLevel,
     c_instrument_prefix: *const std::os::raw::c_char,
     include_instrument: bool,
     include_library: bool,

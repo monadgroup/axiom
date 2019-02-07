@@ -3,15 +3,18 @@
 #include <llvm-c/TargetMachine.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LegacyPassManager.h>
 
 #include "OrcJit.h"
 
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(std::shared_ptr<llvm::Module>, LLVMSharedModuleRef)
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TargetMachine, LLVMTargetMachineRef)
+namespace llvm {
+    DEFINE_SIMPLE_CONVERSION_FUNCTIONS(std::shared_ptr<llvm::Module>, LLVMSharedModuleRef)
+    DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TargetMachine, LLVMTargetMachineRef)
+}
 
 extern "C" {
 LLVMTargetMachineRef LLVMAxiomSelectTarget() {
-    return wrap(llvm::EngineBuilder().selectTarget());
+    return llvm::wrap(llvm::EngineBuilder().selectTarget());
 }
 
 // Builder utilities
@@ -37,7 +40,7 @@ void LLVMAxiomSetAllFastMathFlags(LLVMBuilderRef builder) {
 
 // JIT functions
 OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
-    auto jit = new OrcJit(*unwrap(targetMachine));
+    auto jit = new OrcJit(*llvm::unwrap(targetMachine));
 
     // libc memory functions
     jit->addBuiltin("memcpy", (uint64_t) & ::memcpy);
@@ -53,7 +56,7 @@ void LLVMAxiomOrcAddBuiltin(OrcJit *jit, const char *name, LLVMOrcTargetAddress 
 }
 
 LLVMOrcModuleHandle LLVMAxiomOrcAddModule(OrcJit *jit, LLVMSharedModuleRef module) {
-    return jit->addModule(std::move(*unwrap(module)));
+    return jit->addModule(std::move(*llvm::unwrap(module)));
 }
 
 void LLVMAxiomOrcRemoveModule(OrcJit *jit, LLVMOrcModuleHandle handle) {

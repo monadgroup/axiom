@@ -28,7 +28,7 @@ pub fn remap_type(context: &Context, mir_type: &VarType) -> StructType {
         VarType::Array(inner_type) => {
             ArrayValue::get_type(context, remap_type(context, &inner_type))
         }
-        VarType::Void => panic!("Void type cannot be remapped")
+        VarType::Void => panic!("Void type cannot be remapped"),
     }
 }
 

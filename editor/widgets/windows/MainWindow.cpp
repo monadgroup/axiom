@@ -42,7 +42,7 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
       fileSaveAsAction("S&ave As..."), fileExportAction("&Export..."), fileQuitAction("&Quit"), editUndoAction("&Undo"),
       editRedoAction("&Redo"), editCutAction("C&ut"), editCopyAction("&Copy"), editPasteAction("&Paste"),
       editDeleteAction("&Delete"), editSelectAllAction("&Select All"), editPreferencesAction("Pr&eferences..."),
-      helpAboutAction("&About"), _backend(backend), _runtime(true, false), libraryLock(globalLibraryLockPath()) {
+      helpAboutAction("&About"), _backend(backend), _runtime(true), libraryLock(globalLibraryLockPath()) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));

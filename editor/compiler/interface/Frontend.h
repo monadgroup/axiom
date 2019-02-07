@@ -59,6 +59,8 @@ namespace MaximFrontend {
     enum class TargetInstructionSet : uint8_t { I686, X64 };
 
     enum class OptimizationLevel : uint8_t {
+        EDITOR,
+
         NONE,
         LOW,
         MEDIUM,
@@ -74,10 +76,10 @@ namespace MaximFrontend {
     extern "C" {
     void maxim_initialize();
 
-    MaximRuntime *maxim_create_runtime(bool includeUi, bool minSize);
+    MaximRuntime *maxim_create_runtime(bool includeUi);
     void maxim_destroy_runtime(MaximRuntime *);
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
-    void maxim_export_transaction(bool minSize, MaximTransaction *transaction);
+    void maxim_export_transaction(MaximExportConfigRef *config, MaximTransaction *transaction);
 
     void maxim_run_update(MaximRuntimeRef *runtime);
     void maxim_set_bpm(MaximRuntimeRef *runtime, double bpm);

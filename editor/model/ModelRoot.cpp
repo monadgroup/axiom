@@ -39,7 +39,7 @@ void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
 
     MaximCompiler::Transaction buildTransaction;
     rootSurface()->attachRuntime(_runtime, &buildTransaction);
-    MaximCompiler::Exporter::exportTransaction(true, buildTransaction.clone());
+    // MaximCompiler::Exporter::exportTransaction(true, buildTransaction.clone());
 
     applyTransaction(std::move(buildTransaction));
 
