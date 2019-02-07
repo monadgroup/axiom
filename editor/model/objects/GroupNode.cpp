@@ -24,9 +24,7 @@ QString GroupNode::debugName() {
 }
 
 void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime) {
-    if (auto surface = nodes().value()) {
-        (*surface)->attachRuntime(runtime);
-    }
+    nodes().then([runtime](NodeSurface *const &surface) { surface->attachRuntime(runtime); });
 }
 
 void GroupNode::buildAll(MaximCompiler::Transaction *transaction) {
