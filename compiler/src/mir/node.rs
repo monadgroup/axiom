@@ -35,8 +35,17 @@ impl fmt::Display for Node {
                 write!(f, "dummy")?;
                 None
             }
-            NodeData::Custom { block, .. } => {
-                write!(f, "block @{}", block)?;
+            NodeData::Custom {
+                block,
+                control_initializers,
+            } => {
+                write!(f, "block @{} -> ", block)?;
+                for (i, initializer) in control_initializers.iter().enumerate() {
+                    write!(f, "{}", initializer)?;
+                    if i != control_initializers.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
                 None
             }
             NodeData::Group(surface) => {

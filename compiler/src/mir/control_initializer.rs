@@ -1,5 +1,5 @@
 use ordered_float::OrderedFloat;
-use std::hash;
+use std::{fmt, hash};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct GraphControlInitializer {
@@ -44,6 +44,45 @@ impl ControlInitializer {
         match self {
             ControlInitializer::Graph(val) => Some(val),
             _ => None,
+        }
+    }
+}
+
+impl fmt::Display for ControlInitializer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ControlInitializer::None => write!(f, "none"),
+            ControlInitializer::Graph(initializer) => {
+                write!(f, "graph ({}) {{ vals = [", initializer.curve_count)?;
+                for (i, &v) in initializer.start_values.iter().enumerate() {
+                    write!(f, "{}", v)?;
+                    if i != initializer.start_values.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "], pos = [")?;
+                for (i, &v) in initializer.end_positions.iter().enumerate() {
+                    write!(f, "{}", v)?;
+                    if i != initializer.end_positions.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "], tension = [")?;
+                for (i, &v) in initializer.tension.iter().enumerate() {
+                    write!(f, "{}", v)?;
+                    if i != initializer.tension.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "], states = [")?;
+                for (i, &v) in initializer.states.iter().enumerate() {
+                    write!(f, "{}", v)?;
+                    if i != initializer.states.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "] }}")
+            }
         }
     }
 }

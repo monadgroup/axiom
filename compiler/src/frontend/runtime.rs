@@ -471,8 +471,6 @@ impl Runtime {
                 (pointers.construct)();
             }
         }
-
-        self.print_modules();
     }
 
     /// Remove any objects that aren't referenced by others (and aren't the root).
