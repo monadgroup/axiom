@@ -49,13 +49,32 @@ pub struct CodeConfig {
     pub include_library: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ObjectFormat {
+    Object,
+    Bitcode,
+    IR,
+    AssemblyListing,
+}
+
 #[derive(Debug, Clone)]
 pub struct ObjectOutputConfig {
+    pub format: ObjectFormat,
     pub location: PathBuf,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum MetaFormat {
+    CHeader,
+    RustModule,
+    Json,
 }
 
 #[derive(Debug, Clone)]
 pub struct MetaOutputConfig {
+    pub format: MetaFormat,
     pub location: PathBuf,
     pub portal_names: Vec<String>,
 }

@@ -67,6 +67,10 @@ namespace MaximFrontend {
         AGGRESSIVE_SIZE,
     };
 
+    enum class ObjectFormat : uint8_t { OBJECT, BITCODE, IR, ASSEMBLY_LISTING };
+
+    enum class MetaFormat : uint8_t { C_HEADER, RUST_MODULE, JSON };
+
     extern "C" {
     void maxim_initialize();
 
@@ -157,10 +161,10 @@ namespace MaximFrontend {
     MaximCodeConfig *maxim_create_code_config(OptimizationLevel optimizationLevel, const char *instrumentPrefix,
                                               bool includeInstrument, bool includeLibrary);
     void maxim_destroy_code_config(MaximCodeConfig *);
-    MaximObjectOutputConfig *maxim_create_object_output_config(const char *location);
+    MaximObjectOutputConfig *maxim_create_object_output_config(ObjectFormat format, const char *location);
     void maxim_destroy_object_output_config(MaximObjectOutputConfig *);
-    MaximMetaOutputConfig *maxim_create_meta_output_config(const char *location, const char *const *portalNames,
-                                                           size_t portalNameCount);
+    MaximMetaOutputConfig *maxim_create_meta_output_config(MetaFormat format, const char *location,
+                                                           const char *const *portalNames, size_t portalNameCount);
     void maxim_destroy_meta_output_config(MaximMetaOutputConfig *);
     MaximExportConfig *maxim_create_export_config(MaximAudioConfig *audio, MaximTargetConfig *target,
                                                   MaximCodeConfig *code, MaximObjectOutputConfig *objectOrNull,

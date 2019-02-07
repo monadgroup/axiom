@@ -38,9 +38,9 @@ pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_export_transaction(min_size: bool, transaction: *mut Transaction) {
-    let target = codegen::TargetProperties::new(false, min_size, targets::TargetMachine::select());
+    /*let target = codegen::TargetProperties::new(false, min_size, targets::TargetMachine::select());
     let owned_transaction = Box::from_raw(transaction);
-    exporter::build_module_from_transaction(&target, *owned_transaction);
+    exporter::build_module_from_transaction(&target, *owned_transaction);*/
 }
 
 #[no_mangle]
@@ -540,11 +540,15 @@ pub unsafe extern "C" fn maxim_destroy_code_config(config: *mut export_config::C
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_create_object_output_config(
+    format: export_config::ObjectFormat,
     c_location: *const std::os::raw::c_char,
 ) -> *mut export_config::ObjectOutputConfig {
     let location =
         std::path::Path::new(std::ffi::CStr::from_ptr(c_location).to_str().unwrap()).to_path_buf();
-    Box::into_raw(Box::new(export_config::ObjectOutputConfig { location }))
+    Box::into_raw(Box::new(export_config::ObjectOutputConfig {
+        format,
+        location,
+    }))
 }
 
 #[no_mangle]
@@ -557,6 +561,7 @@ pub unsafe extern "C" fn maxim_destroy_object_output_config(
 
 #[no_mangle]
 pub unsafe extern "C" fn maxim_create_meta_output_config(
+    format: export_config::MetaFormat,
     c_location: *const std::os::raw::c_char,
     portal_names: *const *const std::os::raw::c_char,
     portal_name_count: usize,
@@ -574,6 +579,7 @@ pub unsafe extern "C" fn maxim_create_meta_output_config(
         .collect();
 
     Box::into_raw(Box::new(export_config::MetaOutputConfig {
+        format,
         location,
         portal_names,
     }))

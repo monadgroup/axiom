@@ -26,12 +26,13 @@ namespace MaximCompiler {
 
     class ObjectOutputConfig : public OwnedObject {
     public:
-        explicit ObjectOutputConfig(const QString &location);
+        explicit ObjectOutputConfig(MaximFrontend::ObjectFormat format, const QString &location);
     };
 
     class MetaOutputConfig : public OwnedObject {
     public:
-        MetaOutputConfig(const QString &location, QString *portalNames, size_t portalNameCount);
+        MetaOutputConfig(MaximFrontend::MetaFormat format, const QString &location, QString *portalNames,
+                         size_t portalNameCount);
     };
 
     class ExportConfig : public OwnedObject {

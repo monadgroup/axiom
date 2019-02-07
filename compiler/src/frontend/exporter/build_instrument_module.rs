@@ -1,19 +1,10 @@
-mod build_instrument_module;
-mod build_meta_output;
-pub mod export_config;
-
-use super::mir_optimizer;
-use super::Transaction;
-use crate::codegen::{
-    block, data_analyzer, root, runtime_lib, surface, ModuleFunctionIterator, ModuleGlobalIterator,
-    ObjectCache, Optimizer, TargetProperties,
-};
+use crate::codegen::{block, data_analyzer, root, surface, ObjectCache, TargetProperties};
+use crate::frontend::{mir_optimizer, Transaction};
 use crate::{mir, pass};
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
-use std::path::Path;
 
 struct ExportObjectCache<'context, 'target, 'mir> {
     context: &'context Context,
@@ -50,37 +41,11 @@ impl ObjectCache for ExportObjectCache<'_, '_, '_> {
     }
 }
 
-fn print_surfaces(surfaces: &HashMap<mir::SurfaceRef, mir::Surface>) {
-    for surface in surfaces.values() {
-        println!("{}", surface);
-    }
-}
-
-fn print_blocks(blocks: &HashMap<mir::BlockRef, mir::Block>) {
-    for block in blocks.values() {
-        println!("{}", block);
-    }
-}
-
-fn privatize_internal_globals(module: &Module) {
-    for func in ModuleFunctionIterator::new(module) {
-        if func.get_name().to_str().unwrap().starts_with("maxim.") {
-            func.set_linkage(Linkage::PrivateLinkage);
-        }
-    }
-    for global in ModuleGlobalIterator::new(module) {
-        if global.get_name().to_str().unwrap().starts_with("maxim.") {
-            global.set_linkage(Linkage::PrivateLinkage)
-        }
-    }
-}
-
-pub fn export_transaction(config: export_config::ExportConfig, transaction: Transaction) {}
-
-fn build_module_from_transaction(
+pub fn build_instrument_module(
     context: &Context,
     target: &TargetProperties,
     transaction: Transaction,
+    export_prefix: &str,
 ) -> Module {
     let mut id_allocator = mir::IncrementalIdAllocator::new(0);
 
@@ -105,9 +70,6 @@ fn build_module_from_transaction(
     pass::deduplicate_blocks(&mut prepared_blocks, prepared_surfaces.values_mut());
     pass::deduplicate_surfaces(&mut prepared_surfaces);
     pass::flatten_groups(&mut prepared_surfaces);
-
-    print_blocks(&prepared_blocks);
-    print_surfaces(&prepared_surfaces);
 
     let block_layouts = build_block_layouts(&context, target, prepared_blocks.values());
     let mut surface_layouts = HashMap::new();
@@ -138,44 +100,16 @@ fn build_module_from_transaction(
         surface::build_funcs(&export_module, &cache, surface);
     }
 
-    // build the root
-    if let Some(root) = transaction.root {
-        let initialized_global =
-            root::build_initialized_global(&export_module, &cache, 0, "maxim.export.initialized");
-        let scratch_global =
-            root::build_scratch_global(&export_module, &cache, 0, "maxim.export.scratch");
-        let sockets_global = root::build_sockets_global(
-            &export_module,
-            &root,
-            "maxim.export.sockets",
-            "maxim.export.portals",
-        );
-        let pointers_global = root::build_pointers_global(
-            &export_module,
-            &cache,
-            0,
-            "maxim.export.pointers",
-            initialized_global.as_pointer_value(),
-            scratch_global.as_pointer_value(),
-            sockets_global.sockets.as_pointer_value(),
-        );
-        root::build_funcs(
-            &export_module,
-            &cache,
-            0,
-            "maxim_construct",
-            "maxim_update",
-            "maxim_destruct",
-            pointers_global.as_pointer_value(),
-        );
-    }
-
-    privatize_internal_globals(&export_module);
-
     export_module
 }
 
-/// Runs necessary preparation passes on the surfaces
+fn build_root(context: &Context, module: &Module, prefix: &str) {
+    //let construct_name = format!("{}init");
+    //let destruct_name = format!("{}cleanup");
+    //let update_name = format!("{}update");
+    //let get_portal_name = format!("{}get_portal");
+}
+
 fn prepare_surfaces(
     surfaces: impl IntoIterator<Item = mir::Surface>,
     allocator: &mut mir::IdAllocator,

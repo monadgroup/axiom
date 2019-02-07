@@ -1,0 +1,16 @@
+use core::ffi::c_void;
+
+pub const {{DEF_PREFIX}}SAMPLERATE: f64 = {{SAMPLERATE}};
+pub const {{DEF_PREFIX}}BPM: f64 = {{BPM}};
+
+{%LOOP {{PORTAL_COUNT}}%}
+pub const {{PORTAL_NAME_{{LOOP_INDEX}}}}: usize = {{LOOP_INDEX}};
+{%END%}
+
+extern "cdecl" {
+fn {{INIT_FUNC_NAME}}();
+fn {{CLEANUP_FUNC_NAME}}();
+fn {{GENERATE_FUNC_NAME}}();
+
+fn {{PORTAL_FUNC_NAME}}(id: u32): *mut c_void;
+}

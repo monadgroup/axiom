@@ -3,8 +3,8 @@
   "bpm": {{BPM}},
   "prefix": "{{FUNC_PREFIX}}",
   "portals": {
-    {%LOOP PORTAL_COUNT%}
-    "{{PORTAL_NAME_{%INDEX%}}}": {%INDEX%}
+    {%LOOP {{PORTAL_COUNT}}%}
+    "{{PORTAL_NAME_{{LOOP_INDEX}}}}": {{LOOP_INDEX}}
     {%END%}
   }
 }

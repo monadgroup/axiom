@@ -19,11 +19,12 @@ CodeConfig::CodeConfig(MaximFrontend::OptimizationLevel optimizationLevel, const
                                                           includeInstrument, includeLibrary),
                   &MaximFrontend::maxim_destroy_code_config) {}
 
-ObjectOutputConfig::ObjectOutputConfig(const QString &location)
-    : OwnedObject(MaximFrontend::maxim_create_object_output_config(location.toUtf8().constData()),
+ObjectOutputConfig::ObjectOutputConfig(MaximFrontend::ObjectFormat format, const QString &location)
+    : OwnedObject(MaximFrontend::maxim_create_object_output_config(format, location.toUtf8().constData()),
                   &MaximFrontend::maxim_destroy_object_output_config) {}
 
-static void *createMetaOutputConfig(const QString &location, QString *portalNames, size_t portalNameCount) {
+static void *createMetaOutputConfig(MaximFrontend::MetaFormat format, const QString &location, QString *portalNames,
+                                    size_t portalNameCount) {
     std::vector<QByteArray> portalNameArrays;
     std::vector<const char *> portalNamePtrs;
     portalNameArrays.reserve(portalNameCount);
@@ -34,12 +35,13 @@ static void *createMetaOutputConfig(const QString &location, QString *portalName
         portalNameArrays.push_back(std::move(byteArray));
     }
 
-    return MaximFrontend::maxim_create_meta_output_config(location.toUtf8().constData(), &portalNamePtrs[0],
+    return MaximFrontend::maxim_create_meta_output_config(format, location.toUtf8().constData(), &portalNamePtrs[0],
                                                           portalNameCount);
 }
 
-MetaOutputConfig::MetaOutputConfig(const QString &location, QString *portalNames, size_t portalNameCount)
-    : OwnedObject(createMetaOutputConfig(location, portalNames, portalNameCount),
+MetaOutputConfig::MetaOutputConfig(MaximFrontend::MetaFormat format, const QString &location, QString *portalNames,
+                                   size_t portalNameCount)
+    : OwnedObject(createMetaOutputConfig(format, location, portalNames, portalNameCount),
                   &MaximFrontend::maxim_destroy_meta_output_config) {}
 
 template<class T>
