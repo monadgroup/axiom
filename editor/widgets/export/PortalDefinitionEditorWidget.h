@@ -23,6 +23,8 @@ namespace AxiomGui {
         explicit PortalDefinitionEditorWidget(const AxiomModel::Project &project,
                                               const AxiomBackend::AudioConfiguration &configuration);
 
+        std::vector<QString> getNames() const;
+
     public slots:
 
         void setInstrumentPrefix(const QString &oldSafePrefix, const QString &newSafePrefix);

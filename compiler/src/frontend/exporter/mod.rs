@@ -20,9 +20,14 @@ use inkwell::targets::{CodeModel, FileType, RelocMode, Target};
 use inkwell::types::VectorType;
 use std::fs;
 
-fn export_meta(config: &MetaOutputConfig, code_conf: &CodeConfig, module_meta: &ModuleMetadata) {
+fn export_meta(
+    config: &MetaOutputConfig,
+    audio_conf: &AudioConfig,
+    code_conf: &CodeConfig,
+    module_meta: &ModuleMetadata,
+) {
     let mut meta_output = String::new();
-    build_meta_output(&mut meta_output, code_conf, config, module_meta).unwrap();
+    build_meta_output(&mut meta_output, audio_conf, code_conf, config, module_meta).unwrap();
 
     fs::write(&config.location, &meta_output).unwrap(); // todo: don't unwrap
 }
@@ -30,14 +35,17 @@ fn export_meta(config: &MetaOutputConfig, code_conf: &CodeConfig, module_meta: &
 fn get_target_cpu(instruction_set: TargetInstructionSet) -> &'static str {
     match instruction_set {
         TargetInstructionSet::I686 => "i686",
-        TargetInstructionSet::X64 => "x86_64",
+        TargetInstructionSet::X64 => "x86-64",
     }
 }
 
 fn get_target_triple(target_conf: &TargetConfig) -> String {
-    let cpu_specifier = get_target_cpu(target_conf.instruction_set);
+    let cpu_specifier = match target_conf.instruction_set {
+        TargetInstructionSet::I686 => "i686",
+        TargetInstructionSet::X64 => "x86_64",
+    };
     let platform_specifier = match target_conf.platform {
-        TargetPlatform::WindowsMsvc => "pc-windows-msvc19.15.26730",
+        TargetPlatform::WindowsMsvc => "pc-windows-msvc",
         TargetPlatform::WindowsGnu => "w64-windows-gnu",
         TargetPlatform::Mac => "apple-darwin-macho",
         TargetPlatform::Linux => "unknown-linux-gnu",
@@ -96,21 +104,30 @@ fn export_object(
         runtime_lib::codegen_lib(&output_module, &target_properties);
     }
     if code_conf.include_instrument {
-        build_instrument_module(&context, &target_properties, transaction, module_meta);
+        build_instrument_module(
+            &context,
+            &output_module,
+            &target_properties,
+            transaction,
+            module_meta,
+        );
+
+        hide_internal_symbols(&output_module);
     }
 
     // optimize the module
-    hide_internal_symbols(&output_module);
     let optimizer = Optimizer::new(&target_properties);
     optimizer.optimize_module(&output_module);
 
     // write the output to the specified file
     match config.format {
         ObjectFormat::Object => {
-            target_properties
+            let mem_buf = target_properties
                 .machine
-                .write_to_file(&output_module, FileType::Object, &config.location)
+                .write_to_memory_buffer(&output_module, FileType::Object)
                 .unwrap();
+
+            fs::write(&config.location, mem_buf.as_slice()).unwrap();
         }
         ObjectFormat::Bitcode => {
             if !output_module.write_bitcode_to_path(&config.location) {
@@ -118,13 +135,19 @@ fn export_object(
             }
         }
         ObjectFormat::IR => {
-            output_module.print_to_file(&config.location).unwrap();
+            fs::write(
+                &config.location,
+                output_module.print_to_string().to_str().unwrap(),
+            )
+            .unwrap();
         }
         ObjectFormat::AssemblyListing => {
-            target_properties
+            let mem_buf = target_properties
                 .machine
-                .write_to_file(&output_module, FileType::Assembly, &config.location)
+                .write_to_memory_buffer(&output_module, FileType::Assembly)
                 .unwrap();
+
+            fs::write(&config.location, mem_buf.as_slice()).unwrap();
         }
     }
 }
@@ -132,14 +155,14 @@ fn export_object(
 fn hide_internal_symbols(module: &Module) {
     let func_iterator = ModuleFunctionIterator::new(module);
     for func in func_iterator {
-        if func.get_name().to_str().unwrap().starts_with("maxim.") {
+        if func.get_name().to_str().unwrap().starts_with("maxim.") && !func.is_declaration() {
             func.set_linkage(Linkage::PrivateLinkage);
         }
     }
 
     let global_iterator = ModuleGlobalIterator::new(module);
     for global in global_iterator {
-        if global.get_name().to_str().unwrap().starts_with("maxim.") {
+        if global.get_name().to_str().unwrap().starts_with("maxim.") && !global.is_declaration() {
             global.set_linkage(Linkage::PrivateLinkage);
         }
     }
@@ -156,7 +179,7 @@ pub fn export(config: &ExportConfig, transaction: Transaction) {
 
     // Export the requested data
     if let Some(meta_config) = &config.meta {
-        export_meta(meta_config, &config.code, &module_meta);
+        export_meta(meta_config, &config.audio, &config.code, &module_meta);
     }
     if let Some(object_config) = &config.object {
         export_object(

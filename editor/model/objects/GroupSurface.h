@@ -43,7 +43,7 @@ namespace AxiomModel {
 
         uint64_t getRuntimeId() override { return runtimeId; }
 
-        void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
+        void attachRuntime(MaximCompiler::Runtime *runtime) override;
 
         const std::optional<GroupSurfaceCompileMeta> &compileMeta() const { return _compileMeta; }
 

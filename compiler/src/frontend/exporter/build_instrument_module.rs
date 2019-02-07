@@ -44,10 +44,11 @@ impl ObjectCache for ExportObjectCache<'_, '_, '_> {
 
 pub fn build_instrument_module(
     context: &Context,
+    export_module: &Module,
     target: &TargetProperties,
     transaction: Transaction,
     module_meta: &ModuleMetadata,
-) -> Module {
+) {
     let mut id_allocator = mir::IncrementalIdAllocator::new(0);
 
     // Reserve all of the currently-used IDs in the allocator, so we don't get duplicates when
@@ -92,8 +93,6 @@ pub fn build_instrument_module(
         block_layout: &block_layouts,
     };
 
-    let export_module = target.create_module(&context, "export");
-
     for block in prepared_blocks.values() {
         block::build_funcs(&export_module, &cache, block);
     }
@@ -107,8 +106,6 @@ pub fn build_instrument_module(
         &cache,
         &transaction.root.unwrap(),
     );
-
-    export_module
 }
 
 fn build_root(
@@ -144,6 +141,12 @@ fn build_root(
         &module_meta.generate_func_name,
         &module_meta.cleanup_func_name,
         pointers_global.as_pointer_value(),
+    );
+    root::build_socket_accessor_func(
+        &module,
+        cache,
+        &module_meta.portal_func_name,
+        sockets_global.socket_ptrs.as_pointer_value(),
     );
 }
 

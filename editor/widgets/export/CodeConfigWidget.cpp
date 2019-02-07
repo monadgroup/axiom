@@ -44,6 +44,37 @@ CodeConfigWidget::CodeConfigWidget() {
     instrumentAndLibraryContent->setChecked(true);
 }
 
+MaximCompiler::CodeConfig CodeConfigWidget::buildConfig() {
+    MaximFrontend::OptimizationLevel optLevel;
+    switch (optimizationSelect->currentIndex()) {
+    case 0:
+        optLevel = MaximFrontend::OptimizationLevel::NONE;
+        break;
+    case 1:
+        optLevel = MaximFrontend::OptimizationLevel::LOW;
+        break;
+    case 2:
+        optLevel = MaximFrontend::OptimizationLevel::MEDIUM;
+        break;
+    case 3:
+        optLevel = MaximFrontend::OptimizationLevel::HIGH;
+        break;
+    case 4:
+        optLevel = MaximFrontend::OptimizationLevel::MIN_SIZE;
+        break;
+    case 5:
+        optLevel = MaximFrontend::OptimizationLevel::AGGRESSIVE_SIZE;
+        break;
+    default:
+        unreachable
+    }
+
+    auto includeInstrument = instrumentAndLibraryContent->isChecked() || instrumentContent->isChecked();
+    auto includeLibrary = instrumentAndLibraryContent->isChecked() || libraryContent->isChecked();
+
+    return MaximCompiler::CodeConfig(optLevel, oldSafePrefix, includeInstrument, includeLibrary);
+}
+
 void CodeConfigWidget::processPrefixChange(const QString &newPrefix) {
     auto newSafePrefix = AxiomUtil::getSafeDefinition(newPrefix);
     if (newSafePrefix != oldSafePrefix) {

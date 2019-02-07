@@ -2,6 +2,8 @@
 
 #include <QtWidgets/QWidget>
 
+#include "editor/compiler/interface/Exporter.h"
+
 class QComboBox;
 class QSlider;
 
@@ -12,6 +14,8 @@ namespace AxiomGui {
 
     public:
         TargetConfigWidget();
+
+        MaximCompiler::TargetConfig buildConfig();
 
     private slots:
         void setToCurrentMachine();

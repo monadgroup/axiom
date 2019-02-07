@@ -86,6 +86,17 @@ PortalDefinitionEditorWidget::PortalDefinitionEditorWidget(const AxiomModel::Pro
     }
 }
 
+std::vector<QString> PortalDefinitionEditorWidget::getNames() const {
+    std::vector<QString> names;
+    names.reserve(lineEdits.size());
+
+    for (const auto &lineEdit : lineEdits) {
+        names.push_back(lineEdit.lastSafeName);
+    }
+
+    return names;
+}
+
 void PortalDefinitionEditorWidget::setInstrumentPrefix(const QString &oldSafePrefix, const QString &newSafePrefix) {
     auto newUpperPrefix = newSafePrefix.toUpper();
 

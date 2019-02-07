@@ -28,3 +28,10 @@ AudioConfigWidget::AudioConfigWidget(const AxiomModel::Project &project) {
     bpmNum->setValue(project.mainRoot().runtime()->getBpm());
     layout->addRow("BPM:", bpmNum);
 }
+
+MaximCompiler::AudioConfig AudioConfigWidget::buildConfig() {
+    auto sampleRate = sampleRateNum->value();
+    auto bpm = bpmNum->value();
+
+    return MaximCompiler::AudioConfig(sampleRate, bpm);
+}

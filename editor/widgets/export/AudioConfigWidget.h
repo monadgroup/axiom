@@ -2,6 +2,8 @@
 
 #include <QtWidgets/QWidget>
 
+#include "editor/compiler/interface/Exporter.h"
+
 class QDoubleSpinBox;
 
 namespace AxiomModel {
@@ -15,6 +17,8 @@ namespace AxiomGui {
 
     public:
         AudioConfigWidget(const AxiomModel::Project &project);
+
+        MaximCompiler::AudioConfig buildConfig();
 
     private:
         QDoubleSpinBox *sampleRateNum;

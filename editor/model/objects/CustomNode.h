@@ -58,7 +58,7 @@ namespace AxiomModel {
 
         uint64_t getRuntimeId() { return runtimeId; }
 
-        void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
+        void attachRuntime(MaximCompiler::Runtime *runtime) override;
 
         void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) override;
 
@@ -67,6 +67,8 @@ namespace AxiomModel {
         const std::optional<CustomNodeError> &compileError() const;
 
         void build(MaximCompiler::Transaction *transaction) override;
+
+        void buildAll(MaximCompiler::Transaction *transaction) override;
 
     private:
         QString _code;

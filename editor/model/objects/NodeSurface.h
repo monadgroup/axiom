@@ -65,11 +65,13 @@ namespace AxiomModel {
 
         void forceCompile();
 
-        virtual void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction);
+        virtual void attachRuntime(MaximCompiler::Runtime *runtime);
 
         void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr);
 
         void build(MaximCompiler::Transaction *transaction) override;
+
+        void buildAll(MaximCompiler::Transaction *transaction);
 
         void doRuntimeUpdate() override;
 

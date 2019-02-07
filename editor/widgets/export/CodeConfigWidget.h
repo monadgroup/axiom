@@ -2,6 +2,8 @@
 
 #include <QtWidgets/QWidget>
 
+#include "editor/compiler/interface/Exporter.h"
+
 class QComboBox;
 class QRadioButton;
 class QLineEdit;
@@ -13,6 +15,8 @@ namespace AxiomGui {
 
     public:
         CodeConfigWidget();
+
+        MaximCompiler::CodeConfig buildConfig();
 
     signals:
 

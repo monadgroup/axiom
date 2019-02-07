@@ -1,4 +1,4 @@
-use super::export_config::{CodeConfig, MetaFormat, MetaOutputConfig};
+use super::export_config::{AudioConfig, CodeConfig, MetaFormat, MetaOutputConfig};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::Cow;
@@ -25,6 +25,7 @@ fn determine_c_file_name(output_path: &path::Path) -> Option<String> {
 
 pub fn build_meta_output(
     f: &mut dyn fmt::Write,
+    audio_config: &AudioConfig,
     code_config: &CodeConfig,
     meta_config: &MetaOutputConfig,
     module_data: &ModuleMetadata,
@@ -32,12 +33,16 @@ pub fn build_meta_output(
     let c_file_name = determine_c_file_name(&meta_config.location).unwrap();
     let def_prefix = code_config.instrument_prefix.to_uppercase();
     let portal_count = meta_config.portal_names.len().to_string();
+    let samplerate_str = audio_config.sample_rate.to_string();
+    let bpm_str = audio_config.bpm.to_string();
     let template_str = match meta_config.format {
         MetaFormat::CHeader => include_str!("header_template.h.tasty"),
         MetaFormat::RustModule => include_str!("rust_module_template.rs.tasty"),
         MetaFormat::Json => include_str!("json_template.json.tasty"),
     };
     let mut context: HashMap<_, &str> = HashMap::new();
+    context.insert(Cow::Borrowed("SAMPLERATE"), &samplerate_str);
+    context.insert(Cow::Borrowed("BPM"), &bpm_str);
     context.insert(Cow::Borrowed("C_FILE_NAME"), &c_file_name);
     context.insert(Cow::Borrowed("FUNC_PREFIX"), &code_config.instrument_prefix);
     context.insert(Cow::Borrowed("DEF_PREFIX"), &def_prefix);

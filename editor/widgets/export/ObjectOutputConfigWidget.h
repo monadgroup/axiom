@@ -2,6 +2,8 @@
 
 #include <QtWidgets/QWidget>
 
+#include "editor/compiler/interface/Exporter.h"
+
 namespace AxiomGui {
 
     class FileBrowserWidget;
@@ -11,6 +13,10 @@ namespace AxiomGui {
 
     public:
         ObjectOutputConfigWidget();
+
+        bool isConfigValid();
+
+        MaximCompiler::ObjectOutputConfig buildConfig();
 
     private:
         FileBrowserWidget *outputBrowser;

@@ -232,3 +232,35 @@ pub fn build_funcs(
         pointers,
     );
 }
+
+pub fn build_socket_accessor_func(
+    module: &Module,
+    cache: &ObjectCache,
+    func_name: &str,
+    socket_ptrs: PointerValue,
+) {
+    let func = util::get_or_create_func(module, func_name, false, &|| {
+        (
+            Linkage::ExternalLinkage,
+            module
+                .get_context()
+                .i8_type()
+                .ptr_type(AddressSpace::Generic)
+                .fn_type(&[&module.get_context().i32_type()], false),
+        )
+    });
+    build_context_function(module, func, cache.target(), &|ctx: BuilderContext| {
+        let socket_ptr_ptr = unsafe {
+            ctx.b.build_gep(
+                &socket_ptrs,
+                &[
+                    ctx.context.i32_type().const_int(0, false),
+                    ctx.func.get_nth_param(0).unwrap().into_int_value(),
+                ],
+                "",
+            )
+        };
+        let socket_ptr = ctx.b.build_load(&socket_ptr_ptr, "").into_pointer_value();
+        ctx.b.build_return(Some(&socket_ptr));
+    });
+}

@@ -21,6 +21,24 @@ MetaOutputConfigWidget::MetaOutputConfigWidget(const AxiomModel::Project &projec
     layout->addRow("Location:", outputBrowser);
 }
 
+bool MetaOutputConfigWidget::isConfigValid() {
+    return !outputBrowser->location().isEmpty();
+}
+
+MaximCompiler::MetaOutputConfig MetaOutputConfigWidget::buildConfig() {
+    auto location = outputBrowser->location();
+    MaximFrontend::MetaFormat format = MaximFrontend::MetaFormat::C_HEADER;
+    if (location.endsWith(".rs")) {
+        format = MaximFrontend::MetaFormat::RUST_MODULE;
+    } else if (location.endsWith(".json")) {
+        format = MaximFrontend::MetaFormat::JSON;
+    }
+
+    auto portalNames = portalEditor->getNames();
+
+    return MaximCompiler::MetaOutputConfig(format, location, &portalNames[0], portalNames.size());
+}
+
 void MetaOutputConfigWidget::setInstrumentPrefix(const QString &oldSafePrefix, const QString &newSafePrefix) {
     portalEditor->setInstrumentPrefix(oldSafePrefix, newSafePrefix);
 }

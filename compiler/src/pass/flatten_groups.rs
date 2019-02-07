@@ -4,9 +4,6 @@ use std::collections::{HashMap, HashSet};
 // flatten groups that are only used once
 pub fn flatten_groups(surfaces: &mut HashMap<mir::SurfaceRef, mir::Surface>) {
     let flatten_candidates = find_flatten_candidates(surfaces.values());
-
-    println!("Flatten candidates: {:?}", flatten_candidates);
-
     let mut visited_surfaces = HashSet::new();
 
     let replaced_root = visit_surface(0, &mut visited_surfaces, &flatten_candidates, surfaces);

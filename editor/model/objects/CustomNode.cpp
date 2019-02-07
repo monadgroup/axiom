@@ -82,18 +82,13 @@ void CustomNode::setPanelHeight(float panelHeight) {
     }
 }
 
-void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
+void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime) {
     if (runtime) {
         runtimeId = runtime->nextId();
         buildCode();
         promoteStaging();
     } else {
         runtimeId = 0;
-    }
-
-    if (transaction && _compiledBlock) {
-        build(transaction);
-        updateControls(nullptr);
     }
 }
 
@@ -120,6 +115,13 @@ const std::optional<CustomNodeError> &CustomNode::compileError() const {
 void CustomNode::build(MaximCompiler::Transaction *transaction) {
     if (!_compiledBlock) return;
     transaction->buildBlock(_compiledBlock->clone());
+}
+
+void CustomNode::buildAll(MaximCompiler::Transaction *transaction) {
+    if (_compiledBlock) {
+        build(transaction);
+        updateControls(nullptr);
+    }
 }
 
 struct NewControl {
@@ -156,7 +158,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
 
         // no candidate found, queue a new one
         if (!foundControl) {
-            newControls.push_back(NewControl {compiledModelType, std::move(compiledName), compileMeta});
+            newControls.push_back(NewControl{compiledModelType, std::move(compiledName), compileMeta});
         }
     }
 

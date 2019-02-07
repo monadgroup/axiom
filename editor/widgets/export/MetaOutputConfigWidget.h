@@ -2,6 +2,8 @@
 
 #include <QtWidgets/QWidget>
 
+#include "editor/compiler/interface/Exporter.h"
+
 namespace AxiomModel {
     class Project;
 }
@@ -19,8 +21,12 @@ namespace AxiomGui {
         Q_OBJECT
 
     public:
-        explicit MetaOutputConfigWidget(const AxiomModel::Project &project,
-                                        const AxiomBackend::AudioConfiguration &configuration);
+        MetaOutputConfigWidget(const AxiomModel::Project &project,
+                               const AxiomBackend::AudioConfiguration &configuration);
+
+        bool isConfigValid();
+
+        MaximCompiler::MetaOutputConfig buildConfig();
 
     public slots:
 

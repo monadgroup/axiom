@@ -9,7 +9,7 @@
 #include <QtWidgets/QSlider>
 #include <QtWidgets/QVBoxLayout>
 
-#include "editor/compiler/interface/Frontend.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 
@@ -26,7 +26,7 @@ TargetConfigWidget::TargetConfigWidget() {
 
     instructionSetSelect = new QComboBox();
     instructionSetSelect->addItem("i686 (32-bit)");
-    instructionSetSelect->addItem("x86_64 (64-bit)");
+    instructionSetSelect->addItem("x86-64 (64-bit)");
 
     auto machineLayout = new QHBoxLayout();
     machineLayout->addWidget(machineSelect);
@@ -50,28 +50,7 @@ TargetConfigWidget::TargetConfigWidget() {
     auto avx2Label = new QLabel("AVX2");
     avx2Label->setAlignment(Qt::AlignRight);
     labelsLayout->addWidget(avx2Label, 1);
-
-    /*auto rightLayout = new QHBoxLayout();
-    rightLayout->addWidget(new QLabel("AVX"), 2);
-    auto avx2Label = new QLabel("AVX2");
-    avx2Label->setAlignment(Qt::AlignRight);
-    rightLayout->addWidget(avx2Label, 1);
-    labelsLayout->addLayout(rightLayout);*/
     sliderLayout->addLayout(labelsLayout);
-
-    /*auto sliderLayout = new QGridLayout();
-    sliderLayout->addWidget(featureSlider, 0, 0);
-    sliderLayout->addWidget(new QLabel("SSE4.1"), 1, 0);
-    sliderLayout->addWidget(new QLabel("SSE4.2"), 1, 1);
-    auto rightLayout = new QHBoxLayout();
-    rightLayout->setContentsMargins(0, 0, 0, 0);
-    rightLayout->addWidget(new QLabel("AVX"));
-    rightLayout->addWidget(new QLabel("AVX2"), Qt::AlignRight);
-    sliderLayout->addLayout(rightLayout, 1, 2);*/
-    /*sliderLayout->addWidget(new QLabel("AVX"), 1, 2);
-    auto avx2Label = new QLabel("AVX2");
-    avx2Label->setAlignment(Qt::AlignRight);
-    sliderLayout->addWidget(avx2Label, 1, 2);*/
     layout->addRow("Features:", sliderLayout);
 
     auto resetButton = new QPushButton("Reset to Current");
@@ -82,6 +61,58 @@ TargetConfigWidget::TargetConfigWidget() {
     connect(resetButton, &QPushButton::clicked, this, &TargetConfigWidget::setToCurrentMachine);
 
     setToCurrentMachine();
+}
+
+MaximCompiler::TargetConfig TargetConfigWidget::buildConfig() {
+    MaximFrontend::TargetPlatform platform;
+    switch (machineSelect->currentIndex()) {
+    case 0:
+        platform = MaximFrontend::TargetPlatform::WINDOWS_MSVC;
+        break;
+    case 1:
+        platform = MaximFrontend::TargetPlatform::WINDOWS_GNU;
+        break;
+    case 2:
+        platform = MaximFrontend::TargetPlatform::MAC;
+        break;
+    case 3:
+        platform = MaximFrontend::TargetPlatform::LINUX;
+        break;
+    default:
+        unreachable
+    }
+
+    MaximFrontend::TargetInstructionSet instructionSet;
+    switch (instructionSetSelect->currentIndex()) {
+    case 0:
+        instructionSet = MaximFrontend::TargetInstructionSet::I686;
+        break;
+    case 1:
+        instructionSet = MaximFrontend::TargetInstructionSet::X64;
+        break;
+    default:
+        unreachable
+    }
+
+    MaximFrontend::FeatureLevel featureLevel;
+    switch (featureSlider->value()) {
+    case 0:
+        featureLevel = MaximFrontend::FeatureLevel::SSE41;
+        break;
+    case 1:
+        featureLevel = MaximFrontend::FeatureLevel::SSE42;
+        break;
+    case 2:
+        featureLevel = MaximFrontend::FeatureLevel::AVX;
+        break;
+    case 3:
+        featureLevel = MaximFrontend::FeatureLevel::AVX2;
+        break;
+    default:
+        unreachable;
+    }
+
+    return MaximCompiler::TargetConfig(platform, instructionSet, featureLevel);
 }
 
 void TargetConfigWidget::setToCurrentMachine() {
