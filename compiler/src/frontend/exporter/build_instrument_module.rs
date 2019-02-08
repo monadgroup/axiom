@@ -65,6 +65,7 @@ pub fn build_instrument_module(
     let mut prepared_surfaces = prepare_surfaces(
         transaction.surfaces.into_iter().map(|(_, surface)| surface),
         &mut id_allocator,
+        target,
     );
     let mut prepared_blocks = prepare_blocks(transaction.blocks);
 
@@ -94,10 +95,16 @@ pub fn build_instrument_module(
     };
 
     for block in prepared_blocks.values() {
-        block::build_funcs(&export_module, &cache, block);
+        // If the block doesn't have a layout, it isn't reachable from the root so no need to build
+        // it here.
+        if block_layouts.get(&block.id.id).is_some() {
+            block::build_funcs(&export_module, &cache, block);
+        }
     }
     for surface in prepared_surfaces.values() {
-        surface::build_funcs(&export_module, &cache, surface);
+        if surface_layouts.get(&surface.id.id).is_some() {
+            surface::build_funcs(&export_module, &cache, surface);
+        }
     }
 
     build_root(
@@ -153,9 +160,10 @@ fn build_root(
 fn prepare_surfaces(
     surfaces: impl IntoIterator<Item = mir::Surface>,
     allocator: &mut mir::IdAllocator,
+    target: &TargetProperties,
 ) -> HashMap<mir::SurfaceRef, mir::Surface> {
     HashMap::from_iter(
-        mir_optimizer::prepare_surfaces(surfaces, allocator)
+        mir_optimizer::prepare_surfaces(surfaces, allocator, target)
             .map(|mut surface| {
                 pass::sort_value_groups(&mut surface);
                 surface

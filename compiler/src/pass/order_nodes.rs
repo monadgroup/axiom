@@ -1,10 +1,11 @@
+use crate::codegen::TargetProperties;
 use crate::mir;
 use std::collections::VecDeque;
 
 type NodeRef = usize;
 type ValueSocketRef = (NodeRef, usize);
 
-pub fn order_nodes(surface: &mut mir::Surface) {
+pub fn order_nodes(surface: &mut mir::Surface, target: &TargetProperties) {
     let outputs = get_output_nodes(&surface);
     let associated_sockets = get_associated_sockets(&surface);
     let ordered_nodes = get_ordered_nodes(
@@ -12,6 +13,7 @@ pub fn order_nodes(surface: &mut mir::Surface) {
         &outputs,
         &associated_sockets,
         &mut surface.source_map,
+        target,
     );
     surface.nodes = ordered_nodes;
 }
@@ -21,6 +23,7 @@ fn get_ordered_nodes(
     outputs: &[NodeRef],
     value_groups: &[Vec<ValueSocketRef>],
     source_map: &mut mir::SourceMap,
+    target: &TargetProperties,
 ) -> Vec<mir::Node> {
     let mut inverse_order = Vec::new();
     let mut is_node_visited = vec![false; nodes.len()];
@@ -53,9 +56,8 @@ fn get_ordered_nodes(
     // For UX, add nodes that don't affect the output (i.e aren't connected in the flow) so the user
     // can still play with them. We can't really determine the order of these, since there's no
     // output.
-    // Todo: only put these in when in the editor
-    // Todo: figure out some way to order these
-    if inverse_order.len() < nodes.len() {
+    // We don't need these when there's no UI displayed, since they don't actually affect anything.
+    if target.include_ui && inverse_order.len() < nodes.len() {
         for (node_index, &was_visited) in is_node_visited.iter().enumerate() {
             if !was_visited {
                 source_map_moves.push((node_index, nodes.len() - inverse_order.len() - 1));

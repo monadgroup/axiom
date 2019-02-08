@@ -1,3 +1,4 @@
+use crate::codegen::TargetProperties;
 use crate::{mir, pass};
 use std::iter;
 
@@ -8,16 +9,17 @@ use std::iter;
 pub fn prepare_surfaces<'iter>(
     surfaces: impl IntoIterator<Item = mir::Surface> + 'iter,
     id_allocator: &'iter mut mir::IdAllocator,
+    target: &'iter TargetProperties,
 ) -> impl Iterator<Item = mir::Surface> + 'iter {
     surfaces
         .into_iter()
         .flat_map(move |mut surface| {
             let new_surfaces = pass::group_extracted(&mut surface, id_allocator);
-            pass::remove_dead_groups(&mut surface);
             new_surfaces.into_iter().chain(iter::once(surface))
         })
-        .map(|mut surface| {
-            pass::order_nodes(&mut surface);
+        .map(move |mut surface| {
+            pass::order_nodes(&mut surface, target);
+            pass::remove_dead_groups(&mut surface);
             surface
         })
 }

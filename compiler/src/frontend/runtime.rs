@@ -244,7 +244,7 @@ impl Runtime {
     }
 
     fn optimize_surfaces(&mut self, surfaces: impl IntoIterator<Item = Surface>) -> Vec<Surface> {
-        mir_optimizer::prepare_surfaces(surfaces, self).collect()
+        mir_optimizer::prepare_surfaces(surfaces, &mut self.id_allocator, &self.target).collect()
     }
 
     fn patch_in_blocks(&mut self, blocks: Vec<Block>) {
@@ -423,14 +423,6 @@ impl Runtime {
             && transaction.root.is_none()
         {
             return;
-        }
-
-        println!("Begin transaction...");
-        for (_, block) in &transaction.blocks {
-            println!("{}", block);
-        }
-        for (_, surface) in &transaction.surfaces {
-            println!("{}", surface);
         }
 
         // run destructors on old data before beginning
