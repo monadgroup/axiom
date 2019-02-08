@@ -1,4 +1,4 @@
-use crate::codegen::TargetProperties;
+use crate::codegen::{OptimizationLevel, TargetProperties};
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -12,25 +12,6 @@ pub struct BuilderContext<'a> {
     pub allocb: &'a mut Builder,
     pub b: &'a mut Builder,
     pub target: &'a TargetProperties,
-}
-
-fn get_target_feature_string() -> String {
-    // we need SSE4.1 at a minimum, so dynamically enable SSE4.2, AVX, and AVX2 if we can
-    let mut base_features = "+x87,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4.1".to_string();
-    if is_x86_feature_detected!("sse4.2") {
-        base_features.push_str(",+sse4.2");
-    }
-    if is_x86_feature_detected!("avx") {
-        base_features.push_str(",+avx");
-    }
-    if is_x86_feature_detected!("avx2") {
-        base_features.push_str(",+avx2");
-    }
-    base_features
-}
-
-lazy_static! {
-    static ref TARGET_FEATURE_STR: String = get_target_feature_string();
 }
 
 pub fn build_context_function(
@@ -54,16 +35,21 @@ pub fn build_context_function(
     function.add_attribute(context.get_string_attr("no-trapping-math", "true"));
     function.add_attribute(context.get_string_attr("denorms-are-zero", "true"));
     function.add_attribute(context.get_string_attr("denormal-fp-math", "positive-zero"));
-    function.add_attribute(context.get_string_attr("target-features", &TARGET_FEATURE_STR));
+    function.add_attribute(context.get_string_attr(
+        "target-features",
+        target.machine.get_feature_string().to_str().unwrap(),
+    ));
     function.add_attribute(context.get_string_attr("unsafe-fp-math", "true"));
     function.add_attribute(context.get_string_attr("use-soft-float", "false"));
 
     function.add_attribute(context.get_enum_attr(AttrKind::NoRecurse, 0));
     function.add_attribute(context.get_enum_attr(AttrKind::NoUnwind, 0));
 
-    if target.min_size {
-        function.add_attribute(context.get_enum_attr(AttrKind::MinSize, 0));
+    if target.optimization_level == OptimizationLevel::MinSize {
         function.add_attribute(context.get_enum_attr(AttrKind::OptimizeForSize, 0));
+    }
+    if target.optimization_level == OptimizationLevel::AggressiveSize {
+        function.add_attribute(context.get_enum_attr(AttrKind::MinSize, 0));
     }
 
     let alloca_block = context.append_basic_block(&function, "alloca");

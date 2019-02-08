@@ -27,11 +27,11 @@ QString GroupSurface::debugName() {
     return "GroupSurface";
 }
 
-void GroupSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
+void GroupSurface::attachRuntime(MaximCompiler::Runtime *runtime) {
     if (runtime) {
         runtimeId = runtime->nextId();
     } else {
         runtimeId = 0;
     }
-    NodeSurface::attachRuntime(runtime, transaction);
+    NodeSurface::attachRuntime(runtime);
 }

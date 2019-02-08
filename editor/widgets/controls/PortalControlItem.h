@@ -1,10 +1,7 @@
 #pragma once
 
 #include "ControlItem.h"
-
-namespace AxiomModel {
-    class PortalControl;
-}
+#include "editor/model/objects/PortalControl.h"
 
 namespace AxiomGui {
 
@@ -13,6 +10,9 @@ namespace AxiomGui {
         AxiomModel::PortalControl *control;
 
         PortalControlItem(AxiomModel::PortalControl *control, NodeSurfaceCanvas *canvas);
+
+        static QString iconNameFromType(AxiomModel::PortalControl::PortalType type,
+                                        AxiomModel::ConnectionWire::WireType wireType);
 
         void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 

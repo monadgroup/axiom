@@ -1,5 +1,6 @@
 pub mod block;
 mod constant_value;
+mod control_initializer;
 mod node;
 mod pool_id;
 mod root;
@@ -11,8 +12,9 @@ mod var_type;
 
 pub use self::block::{Block, BlockId, BlockRef, FUNCTION_TABLE};
 pub use self::constant_value::{ConstantNum, ConstantTuple, ConstantValue};
+pub use self::control_initializer::{ControlInitializer, GraphControlInitializer};
 pub use self::node::{Node, NodeData};
-pub use self::pool_id::IdAllocator;
+pub use self::pool_id::{IdAllocator, IncrementalIdAllocator};
 pub use self::root::Root;
 pub use self::source_map::{InternalNodeRef, SourceMap};
 pub use self::surface::{Surface, SurfaceId, SurfaceRef};

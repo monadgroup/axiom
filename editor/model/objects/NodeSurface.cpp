@@ -62,7 +62,7 @@ std::vector<ModelObject *> NodeSurface::getCopyItems() {
         return controlUuids.contains(connection->controlAUuid()) && controlUuids.contains(connection->controlBUuid());
     });
 
-    return AxiomCommon::collect(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2> {
+    return AxiomCommon::collect(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
         AxiomCommon::boxSequence(copyChildren),
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(copyConnections))}));
 }
@@ -71,14 +71,10 @@ void NodeSurface::forceCompile() {
     setDirty();
 }
 
-void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
+void NodeSurface::attachRuntime(MaximCompiler::Runtime *runtime) {
     _runtime = runtime;
     for (const auto &node : nodes().sequence()) {
-        node->attachRuntime(runtime, transaction);
-    }
-
-    if (transaction) {
-        build(transaction);
+        node->attachRuntime(runtime);
     }
 }
 
@@ -90,6 +86,14 @@ void NodeSurface::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *s
 
 void NodeSurface::build(MaximCompiler::Transaction *transaction) {
     MaximCompiler::SurfaceMirBuilder::build(transaction, this);
+}
+
+void NodeSurface::buildAll(MaximCompiler::Transaction *transaction) {
+    for (const auto &node : nodes().sequence()) {
+        node->buildAll(transaction);
+    }
+
+    build(transaction);
 }
 
 void NodeSurface::doRuntimeUpdate() {
@@ -129,6 +133,6 @@ void NodeSurface::nodeAdded(AxiomModel::Node *node) {
     });
 
     if (_runtime) {
-        node->attachRuntime(_runtime, nullptr);
+        node->attachRuntime(_runtime);
     }
 }

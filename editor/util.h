@@ -15,6 +15,8 @@
         abort(); \
     }
 
+class QMessageBox;
+
 namespace AxiomUtil {
 
     QString loadStylesheet(const char *path);
@@ -52,4 +54,10 @@ namespace AxiomUtil {
     typename std::remove_reference<T>::type clone(T value) {
         return value;
     }
+
+    int showMessageBox(QMessageBox &msgBox);
+
+    QString getSafeDefinition(QString definition);
+
+    QString ensureDefinitionIsUnique(QString definition, const QSet<QString> &usedDefinitions);
 }

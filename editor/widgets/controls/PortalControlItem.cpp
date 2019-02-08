@@ -1,5 +1,6 @@
 #include "PortalControlItem.h"
 
+#include <QtCore/QStringBuilder>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 
 #include "../../util.h"
@@ -7,35 +8,10 @@
 #include "../surface/NodeSurfacePanel.h"
 #include "../windows/MainWindow.h"
 #include "editor/model/objects/ControlSurface.h"
-#include "editor/model/objects/PortalControl.h"
 #include "editor/model/objects/RootSurface.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
-
-static QString iconNameFromType(PortalControl::PortalType type, ConnectionWire::WireType wireType) {
-    switch (type) {
-    case PortalControl::PortalType::INPUT:
-        switch (wireType) {
-        case ConnectionWire::WireType::NUM:
-            return "input-num-portal.png";
-        case ConnectionWire::WireType::MIDI:
-            return "input-midi-portal.png";
-        }
-        break;
-    case PortalControl::PortalType::OUTPUT:
-        switch (wireType) {
-        case ConnectionWire::WireType::NUM:
-            return "output-num-portal.png";
-        case ConnectionWire::WireType::MIDI:
-            return "output-midi-portal.png";
-        }
-        break;
-    case PortalControl::PortalType::AUTOMATION:
-        return "automation-portal.png";
-    }
-    unreachable;
-}
 
 static QString getNewPortalLabel(PortalControl *control, AxiomBackend::AudioBackend *backend) {
     auto rootSurface = dynamic_cast<RootSurface *>(control->surface()->node()->surface());
@@ -48,6 +24,31 @@ static QString getNewPortalLabel(PortalControl *control, AxiomBackend::AudioBack
 PortalControlItem::PortalControlItem(AxiomModel::PortalControl *control, NodeSurfaceCanvas *canvas)
     : ControlItem(control, canvas), control(control), _image(getImagePath(control)) {
     control->labelWillChange.connectTo(this, &PortalControlItem::triggerUpdate);
+}
+
+QString PortalControlItem::iconNameFromType(AxiomModel::PortalControl::PortalType type,
+                                            AxiomModel::ConnectionWire::WireType wireType) {
+    switch (type) {
+    case PortalControl::PortalType::INPUT:
+        switch (wireType) {
+        case ConnectionWire::WireType::NUM:
+            return "input-num-portal";
+        case ConnectionWire::WireType::MIDI:
+            return "input-midi-portal";
+        }
+        break;
+    case PortalControl::PortalType::OUTPUT:
+        switch (wireType) {
+        case ConnectionWire::WireType::NUM:
+            return "output-num-portal";
+        case ConnectionWire::WireType::MIDI:
+            return "output-midi-portal";
+        }
+        break;
+    case PortalControl::PortalType::AUTOMATION:
+        return "automation-portal";
+    }
+    unreachable;
 }
 
 void PortalControlItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
@@ -77,5 +78,5 @@ QPainterPath PortalControlItem::controlPath() const {
 }
 
 QString PortalControlItem::getImagePath(AxiomModel::PortalControl *control) {
-    return ":/icons/" + iconNameFromType(control->portalType(), control->wireType());
+    return ":/icons/" % iconNameFromType(control->portalType(), control->wireType()) % ".png";
 }

@@ -21,6 +21,8 @@ namespace AxiomModel {
 
         bool isDeletable() const override { return true; }
 
-        void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override {}
+        void attachRuntime(MaximCompiler::Runtime *runtime) override {}
+
+        void buildAll(MaximCompiler::Transaction *transaction) override {}
     };
 }

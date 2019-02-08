@@ -115,3 +115,66 @@ void Project::rootModified() {
 void Project::rootConfigurationChanged() {
     backend()->internalUpdateConfiguration();
 }
+
+AxiomBackend::PortalType Project::backendTypeFromControlType(AxiomModel::PortalControl::PortalType type) {
+    switch (type) {
+    case PortalControl::PortalType::INPUT:
+        return AxiomBackend::PortalType::INPUT;
+    case PortalControl::PortalType::OUTPUT:
+        return AxiomBackend::PortalType::OUTPUT;
+    case PortalControl::PortalType::AUTOMATION:
+        return AxiomBackend::PortalType::AUTOMATION;
+    }
+
+    unreachable;
+}
+
+AxiomBackend::PortalValue Project::backendValueFromWireType(AxiomModel::ConnectionWire::WireType type) {
+    switch (type) {
+    case ConnectionWire::WireType::NUM:
+        return AxiomBackend::PortalValue::AUDIO;
+    case ConnectionWire::WireType::MIDI:
+        return AxiomBackend::PortalValue::MIDI;
+    }
+
+    unreachable;
+}
+
+PortalControl::PortalType Project::controlTypeFromBackendType(AxiomBackend::PortalType type) {
+    switch (type) {
+    case AxiomBackend::PortalType::INPUT:
+        return PortalControl::PortalType::INPUT;
+    case AxiomBackend::PortalType::OUTPUT:
+        return PortalControl::PortalType::OUTPUT;
+    case AxiomBackend::PortalType::AUTOMATION:
+        return PortalControl::PortalType::AUTOMATION;
+    }
+
+    unreachable;
+}
+
+ConnectionWire::WireType Project::wireTypeFromBackendValue(AxiomBackend::PortalValue type) {
+    switch (type) {
+    case AxiomBackend::PortalValue::AUDIO:
+        return ConnectionWire::WireType::NUM;
+    case AxiomBackend::PortalValue::MIDI:
+        return ConnectionWire::WireType::MIDI;
+    }
+
+    unreachable;
+}
+
+AxiomBackend::AudioConfiguration Project::getAudioConfiguration() const {
+    std::vector<AxiomBackend::ConfigurationPortal> newPortals;
+    assert(rootSurface()->compileMeta());
+    auto &compileMeta = *rootSurface()->compileMeta();
+
+    for (const auto &surfacePortal : compileMeta.portals) {
+        auto newType = backendTypeFromControlType(surfacePortal.portalType);
+        auto newValue = backendValueFromWireType(surfacePortal.valueType);
+
+        newPortals.emplace_back(surfacePortal.socketIndex, surfacePortal.id, newType, newValue,
+                                surfacePortal.name.toStdString());
+    }
+    return AxiomBackend::AudioConfiguration(std::move(newPortals));
+}

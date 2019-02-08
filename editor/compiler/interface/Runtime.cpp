@@ -4,8 +4,8 @@
 
 using namespace MaximCompiler;
 
-Runtime::Runtime(bool includeUi, bool minSize)
-    : OwnedObject(MaximFrontend::maxim_create_runtime(includeUi, minSize), &MaximFrontend::maxim_destroy_runtime) {}
+Runtime::Runtime(bool includeUi)
+    : OwnedObject(MaximFrontend::maxim_create_runtime(includeUi), &MaximFrontend::maxim_destroy_runtime) {}
 
 uint64_t Runtime::nextId() {
     return MaximFrontend::maxim_allocate_id(get());
@@ -69,10 +69,6 @@ void *Runtime::getSurfacePtr(void *nodePtr) {
     return MaximFrontend::maxim_get_surface_ptr(nodePtr);
 }
 
-void *Runtime::getBlockPtr(void *nodePtr) {
-    return MaximFrontend::maxim_get_block_ptr(nodePtr);
-}
-
-MaximFrontend::ControlPointers Runtime::getControlPtrs(uint64_t block, void *blockPtr, size_t control) {
-    return MaximFrontend::maxim_get_control_ptrs(get(), block, blockPtr, control);
+MaximFrontend::ControlPointers Runtime::getControlPtrs(uint64_t block, void *nodePtr, size_t control) {
+    return MaximFrontend::maxim_get_control_ptrs(get(), block, nodePtr, control);
 }

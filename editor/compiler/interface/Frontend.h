@@ -16,6 +16,8 @@ namespace MaximFrontend {
     using MaximVarTypeRef = MaximVarType;
     using MaximConstantValue = void;
     using MaximConstantValueRef = MaximConstantValue;
+    using MaximControlInitializer = void;
+    using MaximControlInitializerRef = MaximControlInitializer;
 
     using MaximRootRef = void;
     using MaximSurfaceRef = void;
@@ -26,6 +28,14 @@ namespace MaximFrontend {
     using MaximBlockControlRef = void;
 
     using MaximValueGroupSource = void;
+
+    using MaximAudioConfig = void;
+    using MaximTargetConfig = void;
+    using MaximCodeConfig = void;
+    using MaximObjectOutputConfig = void;
+    using MaximMetaOutputConfig = void;
+    using MaximExportConfig = void;
+    using MaximExportConfigRef = MaximExportConfig;
 
     struct SourcePos {
         ptrdiff_t line;
@@ -39,18 +49,41 @@ namespace MaximFrontend {
 
     struct ControlPointers {
         void *value;
+        void *initialized;
         void *data;
         void *shared;
         void *ui;
     };
 
+    enum class FeatureLevel : uint8_t { SSE41, SSE42, AVX, AVX2 };
+
+    enum class TargetPlatform : uint8_t { WINDOWS_MSVC, WINDOWS_GNU, MAC, LINUX };
+
+    enum class TargetInstructionSet : uint8_t { I686, X64 };
+
+    enum class OptimizationLevel : uint8_t {
+        EDITOR,
+
+        NONE,
+        LOW,
+        MEDIUM,
+        HIGH,
+        MIN_SIZE,
+        AGGRESSIVE_SIZE,
+    };
+
+    enum class ObjectFormat : uint8_t { OBJECT, BITCODE, IR, ASSEMBLY_LISTING };
+
+    enum class MetaFormat : uint8_t { C_HEADER, RUST_MODULE, JSON };
+
     extern "C" {
     void maxim_initialize();
 
-    MaximRuntime *maxim_create_runtime(bool includeUi, bool minSize);
+    MaximRuntime *maxim_create_runtime(bool includeUi);
     void maxim_destroy_runtime(MaximRuntime *);
-
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
+    bool maxim_export_transaction(MaximExportConfigRef *config, MaximTransaction *transaction);
+
     void maxim_run_update(MaximRuntimeRef *runtime);
     void maxim_set_bpm(MaximRuntimeRef *runtime, double bpm);
     double maxim_get_bpm(MaximRuntimeRef *runtime);
@@ -66,12 +99,12 @@ namespace MaximFrontend {
     uint32_t *maxim_get_extracted_bitmask_ptr(MaximRuntimeRef *runtime, uint64_t surface, void *surface_ptr,
                                               size_t node);
     void *maxim_get_surface_ptr(void *node_ptr);
-    void *maxim_get_block_ptr(void *block_ptr);
-    ControlPointers maxim_get_control_ptrs(MaximRuntimeRef *runtime, uint64_t block, void *block_ptr, size_t control);
+    ControlPointers maxim_get_control_ptrs(MaximRuntimeRef *runtime, uint64_t block, void *node_ptr, size_t control);
 
     void maxim_destroy_string(const char *);
 
     MaximTransaction *maxim_create_transaction();
+    MaximTransaction *maxim_clone_transaction(MaximTransactionRef *);
     void maxim_destroy_transaction(MaximTransaction *);
     void maxim_print_transaction_to_stdout(MaximTransactionRef *);
 
@@ -100,7 +133,16 @@ namespace MaximFrontend {
     void maxim_destroy_valuegroupsource(MaximValueGroupSource *);
     void maxim_build_value_group(MaximSurfaceRef *surface, MaximVarType *vartype, MaximValueGroupSource *source);
 
-    MaximNodeRef *maxim_build_custom_node(MaximSurfaceRef *surface, uint64_t block_id);
+    MaximControlInitializer *maxim_control_initializer_none();
+    MaximControlInitializer *maxim_control_initializer_graph(uint8_t curveCount, size_t startValuesCount,
+                                                             const double *startValues, size_t endPositionsCount,
+                                                             const double *endPositions, size_t tensionsCount,
+                                                             const double *tensions, size_t statesCount,
+                                                             const uint8_t *states);
+    void maxim_destroy_control_initializer(MaximControlInitializer *initializer);
+
+    MaximNodeRef *maxim_build_custom_node(MaximSurfaceRef *surface, uint64_t block_id, size_t controlInitializersCount,
+                                          MaximControlInitializer *const *controlInitializers);
     MaximNodeRef *maxim_build_group_node(MaximSurfaceRef *surface, uint64_t surface_id);
     void maxim_build_value_socket(MaximNodeRef *node, size_t group_id, bool value_written, bool value_read,
                                   bool is_extractor);
@@ -124,7 +166,29 @@ namespace MaximFrontend {
 
     void maxim_commit(MaximRuntimeRef *runtime, MaximTransaction *transaction);
 
+    MaximAudioConfig *maxim_create_audio_config(double sampleRate, double bpm);
+    void maxim_destroy_audio_config(MaximAudioConfig *);
+    MaximTargetConfig *maxim_create_target_config(TargetPlatform platform, TargetInstructionSet instructionSet,
+                                                  FeatureLevel featureLevel);
+    void maxim_destroy_target_config(MaximTargetConfig *);
+    MaximCodeConfig *maxim_create_code_config(OptimizationLevel optimizationLevel, const char *instrumentPrefix,
+                                              bool includeInstrument, bool includeLibrary);
+    void maxim_destroy_code_config(MaximCodeConfig *);
+    MaximObjectOutputConfig *maxim_create_object_output_config(ObjectFormat format, const char *location);
+    void maxim_destroy_object_output_config(MaximObjectOutputConfig *);
+    MaximMetaOutputConfig *maxim_create_meta_output_config(MetaFormat format, const char *location,
+                                                           const char *const *portalNames, size_t portalNameCount);
+    void maxim_destroy_meta_output_config(MaximMetaOutputConfig *);
+    MaximExportConfig *maxim_create_export_config(MaximAudioConfig *audio, MaximTargetConfig *target,
+                                                  MaximCodeConfig *code, MaximObjectOutputConfig *objectOrNull,
+                                                  MaximMetaOutputConfig *metaOrNull);
+    void maxim_destroy_export_config(MaximExportConfig *);
+
+    void maxim_export(MaximExportConfigRef *config);
+
     size_t maxim_get_function_table_size();
     const char *maxim_get_function_table_entry(size_t index);
+
+    FeatureLevel maxim_get_feature_level();
     }
 }

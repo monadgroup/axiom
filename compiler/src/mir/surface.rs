@@ -1,6 +1,7 @@
 use crate::mir::pool_id::{PoolId, PoolRef};
 use crate::mir::SourceMap;
 use crate::mir::{Node, ValueGroup};
+use std::fmt;
 
 pub type SurfaceRef = PoolRef;
 pub type SurfaceId = PoolId<Surface>;
@@ -21,5 +22,20 @@ impl Surface {
             nodes,
             source_map: SourceMap::new(),
         }
+    }
+}
+
+impl fmt::Display for Surface {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "surface @{:?} {{", self.id)?;
+        writeln!(f, "  groups:")?;
+        for (i, group) in self.groups.iter().enumerate() {
+            writeln!(f, "    %{} {} = {}", i, group.value_type, group)?;
+        }
+        writeln!(f, "  nodes:")?;
+        for node in self.nodes.iter() {
+            writeln!(f, "    {}", node)?;
+        }
+        write!(f, "}}")
     }
 }

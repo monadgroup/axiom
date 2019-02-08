@@ -18,7 +18,7 @@ namespace AxiomGui {
         Q_OBJECT
 
     public:
-        AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search);
+        AddNodeMenu(AxiomModel::NodeSurface *surface, const QString &search, QWidget *parent = nullptr);
 
     public slots:
 

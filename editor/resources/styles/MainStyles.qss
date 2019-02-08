@@ -27,10 +27,6 @@ QTextEdit:focus, QPlainTextEdit:focus {
 }
 
 /* scroll bar styling */
-QScrollBar {
-
-}
-
 QScrollBar:horizontal {
     height: 10px;
 }

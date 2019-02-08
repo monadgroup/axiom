@@ -79,7 +79,7 @@ impl DependencyGraph {
         for node in &surface.nodes {
             match node.data {
                 NodeData::Dummy => {}
-                NodeData::Custom(block) => depends_on_blocks.push(block),
+                NodeData::Custom { block, .. } => depends_on_blocks.push(block),
                 NodeData::Group(surface) => depends_on_surfaces.push(surface),
                 NodeData::ExtractGroup { surface, .. } => depends_on_surfaces.push(surface),
             }
@@ -121,6 +121,13 @@ impl DependencyGraph {
         self.blocks.get(&block)
     }
 
+    // Fixme: this isn't a topological sort, and might return an incorrect result if multiple
+    // surfaces reference a surface. For now this isn't a problem since we never have MIR that looks
+    // like that, but it's probably a good idea to fix.
+    // This uses Kahn's algorithm, but goes backwards (from the root surface down, instead of from
+    // the bottom surfaces up, which is what we actually want). With the information we have,
+    // it's probably easier to do a depth-first search to determine the order instead, although this
+    // has the risk of overflowing the stack.
     pub fn get_sorted_surfaces(&self, surfaces: &HashSet<SurfaceRef>) -> Vec<SurfaceRef> {
         let mut sorted_surfaces = Vec::new();
         let mut surface_queue = VecDeque::new();

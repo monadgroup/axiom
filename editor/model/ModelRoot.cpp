@@ -8,6 +8,7 @@
 #include "ModelObject.h"
 #include "PoolOperators.h"
 #include "Project.h"
+#include "editor/compiler/interface/Exporter.h"
 #include "editor/compiler/interface/Runtime.h"
 #include "objects/Connection.h"
 #include "objects/ControlSurface.h"
@@ -37,7 +38,9 @@ void ModelRoot::attachRuntime(MaximCompiler::Runtime *runtime) {
     _runtime = runtime;
 
     MaximCompiler::Transaction buildTransaction;
-    rootSurface()->attachRuntime(_runtime, &buildTransaction);
+    rootSurface()->attachRuntime(_runtime);
+    rootSurface()->buildAll(&buildTransaction);
+
     applyTransaction(std::move(buildTransaction));
 
     // clear the dirty state of everything, since we've just compiled them

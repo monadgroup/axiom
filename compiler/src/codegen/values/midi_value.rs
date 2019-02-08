@@ -1,5 +1,6 @@
 use super::MidiEventValue;
 use crate::codegen::{build_context_function, util, BuilderContext, TargetProperties};
+use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
@@ -80,7 +81,7 @@ impl MidiValue {
     }
 
     fn get_push_event_func(module: &Module) -> FunctionValue {
-        util::get_or_create_func(module, "maxim.midi.pushEvent", true, &|| {
+        let func = util::get_or_create_func(module, "maxim.midi.pushEvent", true, &|| {
             let context = module.get_context();
             (
                 Linkage::ExternalLinkage,
@@ -92,7 +93,11 @@ impl MidiValue {
                     false,
                 ),
             )
-        })
+        });
+        let context = module.get_context();
+        func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func.add_param_attribute(1, context.get_enum_attr(AttrKind::NoAlias, 1));
+        func
     }
 
     pub fn initialize(module: &Module, target: &TargetProperties) {

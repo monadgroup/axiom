@@ -12,14 +12,20 @@
         <file>styles/AboutWindow.qss</file>
         <file>styles/NodePanel.qss</file>
         <file>styles/SaveModuleWindow.qss</file>
+        <file>styles/UnstyledWindow.qss</file>
 
         <file>icons/num-plug.png</file>
         <file>icons/midi-plug.png</file>
         <file>icons/input-midi-portal.png</file>
+        <file>icons/input-midi-portal-small.png</file>
         <file>icons/input-num-portal.png</file>
+        <file>icons/input-num-portal-small.png</file>
         <file>icons/output-midi-portal.png</file>
+        <file>icons/output-midi-portal-small.png</file>
         <file>icons/output-num-portal.png</file>
+        <file>icons/output-num-portal-small.png</file>
         <file>icons/automation-portal.png</file>
+        <file>icons/automation-portal-small.png</file>
         <file>icons/dock-close.png</file>
         <file>icons/dock-menu.png</file>
 

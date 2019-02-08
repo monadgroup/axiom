@@ -23,8 +23,14 @@ QString GroupNode::debugName() {
     return "GroupNode '" + name() + "'";
 }
 
-void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
-    nodes().then([runtime, transaction](NodeSurface *const &surface) { surface->attachRuntime(runtime, transaction); });
+void GroupNode::attachRuntime(MaximCompiler::Runtime *runtime) {
+    nodes().then([runtime](NodeSurface *const &surface) { surface->attachRuntime(runtime); });
+}
+
+void GroupNode::buildAll(MaximCompiler::Transaction *transaction) {
+    if (auto surface = nodes().value()) {
+        (*surface)->buildAll(transaction);
+    }
 }
 
 void GroupNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) {

@@ -1,7 +1,7 @@
 use super::ControlType;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum AudioField {
     Value,
 }
@@ -14,7 +14,7 @@ impl fmt::Display for AudioField {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum GraphField {
     Value,
     State,
@@ -33,7 +33,7 @@ impl fmt::Display for GraphField {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum MidiField {
     Value,
 }
@@ -46,7 +46,7 @@ impl fmt::Display for MidiField {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum RollField {
     Value,
     Speed,
@@ -61,7 +61,7 @@ impl fmt::Display for RollField {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum ScopeField {
     Value,
 }
@@ -74,7 +74,7 @@ impl fmt::Display for ScopeField {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum AudioExtractField {
     Value,
 }
@@ -87,7 +87,7 @@ impl fmt::Display for AudioExtractField {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum MidiExtractField {
     Value,
 }
@@ -100,7 +100,7 @@ impl fmt::Display for MidiExtractField {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum ControlField {
     Audio(AudioField),
     Graph(GraphField),

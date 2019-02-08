@@ -7,6 +7,8 @@ using namespace MaximCompiler;
 Transaction::Transaction()
     : OwnedObject(MaximFrontend::maxim_create_transaction(), &MaximFrontend::maxim_destroy_transaction) {}
 
+Transaction::Transaction(void *transaction) : OwnedObject(transaction, &MaximFrontend::maxim_destroy_transaction) {}
+
 RootRef Transaction::buildRoot() {
     return RootRef(MaximFrontend::maxim_build_root(get()));
 }
@@ -21,4 +23,8 @@ void Transaction::buildBlock(MaximCompiler::Block block) {
 
 void Transaction::printToStdout() const {
     MaximFrontend::maxim_print_transaction_to_stdout(get());
+}
+
+Transaction Transaction::clone() const {
+    return Transaction(MaximFrontend::maxim_clone_transaction(get()));
 }

@@ -79,7 +79,8 @@ impl VarArgs {
         let arr_ptr = builder
             .build_extract_value(self.param, 1, "vararg.arr")
             .into_pointer_value();
-        let item_ptr_ptr = unsafe { builder.build_gep(&arr_ptr, &[index], "vararg.item.ptr") };
+        let item_ptr_ptr =
+            unsafe { builder.build_in_bounds_gep(&arr_ptr, &[index], "vararg.item.ptr") };
         if self.is_by_value {
             item_ptr_ptr
         } else {
@@ -185,7 +186,7 @@ fn get_lifecycle_func(
     lifecycle: FunctionLifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.function.{}.{}", function, lifecycle);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         (
             Linkage::ExternalLinkage,
@@ -194,7 +195,9 @@ fn get_lifecycle_func(
                 false,
             ),
         )
-    })
+    });
+    func.add_param_attribute(0, module.get_context().get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 fn get_update_func(module: &Module, function: block::Function) -> FunctionValue {
@@ -256,11 +259,10 @@ fn get_update_func(module: &Module, function: block::Function) -> FunctionValue 
             },
         )
     });
+    let context = module.get_context();
+    func.add_param_attribute(0, context.get_enum_attr(AttrKind::NoAlias, 1));
     if !values::pass_type_by_val(&VarType::of_function(function)) {
-        func.add_param_attribute(
-            1,
-            module.get_context().get_enum_attr(AttrKind::StructRet, 1),
-        );
+        func.add_param_attribute(1, context.get_enum_attr(AttrKind::StructRet, 1));
     }
     func
 }
@@ -458,6 +460,10 @@ pub fn build_call(
 
 pub trait Function {
     fn function_type() -> block::Function;
+
+    fn constant_value(context: &Context) -> StructValue {
+        context.const_struct(&[], false)
+    }
 
     fn data_type(context: &Context) -> StructType {
         context.struct_type(&[], false)

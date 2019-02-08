@@ -234,9 +234,9 @@ void ControlSerializer::serializeGraph(GraphControl *control, QDataStream &strea
     auto savedState = control->getCurveState();
     stream << (bool) savedState;
     if (savedState) {
-        stream << savedState->curveCount;
+        stream << *savedState->curveCount;
         stream << savedState->curveStartVals[0];
-        for (uint8_t i = 0; i < savedState->curveCount; i++) {
+        for (uint8_t i = 0; i < *savedState->curveCount; i++) {
             stream << savedState->curveStartVals[i + 1];
             stream << savedState->curveEndPositions[i];
             stream << savedState->curveTension[i];
@@ -251,12 +251,12 @@ std::unique_ptr<GraphControl> ControlSerializer::deserializeGraph(QDataStream &s
                                                                   bool showName, QUuid exposerUuid, QUuid exposingUuid,
                                                                   AxiomModel::ReferenceMapper *ref,
                                                                   AxiomModel::ModelRoot *root) {
-    std::unique_ptr<GraphControlCurveState> savedState;
+    std::unique_ptr<GraphControlCurveStorage> savedState;
     bool hasSavedState;
     stream >> hasSavedState;
 
     if (hasSavedState) {
-        savedState = std::make_unique<GraphControlCurveState>();
+        savedState = std::make_unique<GraphControlCurveStorage>();
         stream >> savedState->curveCount;
         savedState->curveStartVals[0] = deserializeDouble(stream, version);
         for (uint8_t i = 0; i < savedState->curveCount; i++) {

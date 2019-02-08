@@ -4,6 +4,7 @@ use crate::codegen::{
     build_context_function, globals, math, util, BuilderContext, TargetProperties,
 };
 use crate::mir::block;
+use inkwell::attribute::AttrKind;
 use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::types::{BasicType, StructType};
@@ -13,7 +14,7 @@ use inkwell::FloatPredicate;
 use std::f64::consts;
 
 fn get_internal_biquad_func(module: &Module) -> FunctionValue {
-    util::get_or_create_func(module, "maxim.util.biquad.biquadFilter", true, &|| {
+    let func = util::get_or_create_func(module, "maxim.util.biquad.biquadFilter", true, &|| {
         let context = &module.get_context();
         let float_vec = context.f64_type().vec_type(2);
         let func = float_vec.fn_type(
@@ -33,7 +34,13 @@ fn get_internal_biquad_func(module: &Module) -> FunctionValue {
         );
 
         (Linkage::PrivateLinkage, func)
-    })
+    });
+    let context = module.get_context();
+    func.add_param_attribute(6, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(7, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(8, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func.add_param_attribute(9, context.get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 pub fn build_internal_biquad_func(module: &Module, target: &TargetProperties) {

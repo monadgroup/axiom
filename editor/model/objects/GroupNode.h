@@ -23,7 +23,9 @@ namespace AxiomModel {
 
         const AxiomCommon::Promise<GroupSurface *> &nodes() const { return *_nodes; }
 
-        void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) override;
+        void attachRuntime(MaximCompiler::Runtime *runtime) override;
+
+        void buildAll(MaximCompiler::Transaction *transaction) override;
 
         void updateRuntimePointers(MaximCompiler::Runtime *runtime, void *surfacePtr) override;
 

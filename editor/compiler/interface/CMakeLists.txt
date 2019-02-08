@@ -1,8 +1,10 @@
 set(SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/Block.h" "${CMAKE_CURRENT_SOURCE_DIR}/Block.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ConstantValue.h" "${CMAKE_CURRENT_SOURCE_DIR}/ConstantValue.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ControlInitializer.h" "${CMAKE_CURRENT_SOURCE_DIR}/ControlInitializer.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/ControlRef.h" "${CMAKE_CURRENT_SOURCE_DIR}/ControlRef.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Error.h" "${CMAKE_CURRENT_SOURCE_DIR}/Error.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Exporter.h" "${CMAKE_CURRENT_SOURCE_DIR}/Exporter.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Frontend.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/FunctionTable.h" "${CMAKE_CURRENT_SOURCE_DIR}/FunctionTable.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/NodeRef.h" "${CMAKE_CURRENT_SOURCE_DIR}/NodeRef.cpp"

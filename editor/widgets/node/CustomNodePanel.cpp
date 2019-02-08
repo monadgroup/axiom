@@ -9,6 +9,7 @@
 #include "editor/model/Project.h"
 #include "editor/model/grid/GridSurface.h"
 #include "editor/model/objects/CustomNode.h"
+#include "editor/util.h"
 
 using namespace AxiomGui;
 using namespace AxiomModel;
@@ -34,6 +35,7 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     resizer->setZValue(0);
 
     textEditor = new QPlainTextEdit();
+    textEditor->setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
     textProxy = new QGraphicsProxyWidget();
     textProxy->setWidget(textEditor);
     textProxy->setParentItem(this);

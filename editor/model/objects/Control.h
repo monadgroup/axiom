@@ -10,6 +10,7 @@
 #include "common/Event.h"
 #include "common/Promise.h"
 #include "common/WatchSequence.h"
+#include "editor/compiler/interface/ControlInitializer.h"
 #include "editor/compiler/interface/Frontend.h"
 
 namespace MaximCompiler {
@@ -110,6 +111,8 @@ namespace AxiomModel {
         QPointF worldPos() const;
 
         AxiomCommon::BoxedSequence<ModelObject *> links() override;
+
+        virtual MaximCompiler::ControlInitializer getInitializer();
 
         const std::optional<ControlCompileMeta> &compileMeta() const;
 

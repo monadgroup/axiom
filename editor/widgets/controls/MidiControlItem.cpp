@@ -3,6 +3,8 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtWidgets/QMenu>
 
+#include "../surface/NodeSurfaceCanvas.h"
+#include "../surface/NodeSurfacePanel.h"
 #include "editor/model/Project.h"
 #include "editor/model/objects/MidiControl.h"
 
@@ -34,7 +36,7 @@ QPainterPath MidiControlItem::controlPath() const {
 void MidiControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 
-    QMenu menu;
+    QMenu menu(canvas->panel);
     buildMenuStart(menu);
 
     // todo: display mode

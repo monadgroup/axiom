@@ -1,13 +1,10 @@
-use super::{value_reader, Runtime, Transaction};
-use crate::ast;
-use crate::codegen;
-use crate::mir;
-use crate::parser;
-use crate::pass;
-use crate::CompileError;
+use super::{exporter, value_reader, Runtime, Transaction};
+use crate::frontend::exporter::export_config;
+use crate::util::feature_level::{get_target_feature_string, FEATURE_LEVEL};
+use crate::{ast, codegen, mir, parser, pass, util, CompileError};
 use inkwell::{orc, targets};
-use std;
 use std::os::raw::c_void;
+use std::slice;
 
 #[no_mangle]
 pub extern "C" fn maxim_initialize() {
@@ -22,9 +19,29 @@ pub unsafe extern "C" fn maxim_destroy_string(string: *mut std::os::raw::c_char)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn maxim_create_runtime(include_ui: bool, min_size: bool) -> *mut Runtime {
+pub unsafe extern "C" fn maxim_create_runtime(include_ui: bool) -> *mut Runtime {
+    // Create a fake target machine to get the current triple and CPU, then create one with our
+    // desired feature set.
+    // Todo: there's probably a better way to do this?
+    let temp_machine = targets::TargetMachine::select();
+    let current_triple = temp_machine.get_triple().to_str().unwrap();
+    let current_cpu = temp_machine.get_cpu().to_str().unwrap();
+    let target = targets::Target::from_triple(current_triple).unwrap();
+    let machine = target
+        .create_target_machine(
+            current_triple,
+            current_cpu,
+            &get_target_feature_string(*FEATURE_LEVEL),
+            codegen::OptimizationLevel::Editor
+                .into_specification()
+                .llvm_level,
+            targets::RelocMode::Default,
+            targets::CodeModel::Default,
+        )
+        .unwrap();
+
     let target =
-        codegen::TargetProperties::new(include_ui, min_size, targets::TargetMachine::select());
+        codegen::TargetProperties::new(include_ui, codegen::OptimizationLevel::Editor, machine);
     Box::into_raw(Box::new(Runtime::new(target)))
 }
 
@@ -38,6 +55,15 @@ pub unsafe extern "C" fn maxim_destroy_runtime(runtime: *mut Runtime) {
 pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
     use crate::mir::IdAllocator;
     (*runtime).alloc_id()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_export_transaction(
+    config: *const export_config::ExportConfig,
+    transaction: *mut Transaction,
+) -> bool {
+    let owned_transaction = Box::from_raw(transaction);
+    exporter::export(&*config, *owned_transaction).is_ok()
 }
 
 #[no_mangle]
@@ -134,23 +160,23 @@ pub extern "C" fn maxim_get_surface_ptr(node_ptr: *mut c_void) -> *mut c_void {
 }
 
 #[no_mangle]
-pub extern "C" fn maxim_get_block_ptr(node_ptr: *mut c_void) -> *mut c_void {
-    value_reader::get_block_ptr(node_ptr)
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn maxim_get_control_ptrs(
     runtime: *const Runtime,
     block: u64,
-    block_ptr: *mut c_void,
+    node_ptr: *mut c_void,
     control: usize,
 ) -> value_reader::ControlPointers {
-    value_reader::get_control_ptrs(&*runtime, block, block_ptr, control)
+    value_reader::get_control_ptrs(&*runtime, block, node_ptr, control)
 }
 
 #[no_mangle]
 pub extern "C" fn maxim_create_transaction() -> *mut Transaction {
     Box::into_raw(Box::new(Transaction::new(None, Vec::new(), Vec::new())))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_clone_transaction(val: *const Transaction) -> *mut Transaction {
+    Box::into_raw(Box::new((*val).clone()))
 }
 
 #[no_mangle]
@@ -334,11 +360,65 @@ pub unsafe extern "C" fn maxim_build_value_group(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn maxim_control_initializer_none() -> *mut mir::ControlInitializer {
+    Box::into_raw(Box::new(mir::ControlInitializer::None))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_control_initializer_graph(
+    curve_count: u8,
+    start_values_count: usize,
+    start_values: *const f64,
+    end_positions_count: usize,
+    end_positions: *const f64,
+    tensions_count: usize,
+    tensions: *const f64,
+    states_count: usize,
+    states: *const u8,
+) -> *mut mir::ControlInitializer {
+    let start_values_vec = slice::from_raw_parts(start_values, start_values_count).to_vec();
+    let end_positions_vec = slice::from_raw_parts(end_positions, end_positions_count).to_vec();
+    let tension_vec = slice::from_raw_parts(tensions, tensions_count).to_vec();
+    let states_vec = slice::from_raw_parts(states, states_count).to_vec();
+
+    let control_initializer = mir::ControlInitializer::Graph(mir::GraphControlInitializer {
+        curve_count,
+        start_values: start_values_vec,
+        end_positions: end_positions_vec,
+        tension: tension_vec,
+        states: states_vec,
+    });
+    Box::into_raw(Box::new(control_initializer))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_control_initializer(
+    initializer: *mut mir::ControlInitializer,
+) {
+    Box::from_raw(initializer);
+    // box will be dropped here
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_build_custom_node(
     surface: *mut mir::Surface,
     block_id: u64,
+    control_initializers_count: usize,
+    control_initializers: *const *mut mir::ControlInitializer,
 ) -> *mut mir::Node {
-    let new_node = mir::Node::new(Vec::new(), mir::NodeData::Custom(block_id));
+    let initializers: Vec<_> =
+        slice::from_raw_parts(control_initializers, control_initializers_count)
+            .iter()
+            .map(|&initializer_ptr| *Box::from_raw(initializer_ptr))
+            .collect();
+
+    let new_node = mir::Node::new(
+        Vec::new(),
+        mir::NodeData::Custom {
+            block: block_id,
+            control_initializers: initializers,
+        },
+    );
     (*surface).nodes.push(new_node);
     &mut (*surface).nodes[(*surface).nodes.len() - 1]
 }
@@ -473,6 +553,156 @@ pub unsafe extern "C" fn maxim_control_get_read(control: *const mir::block::Cont
 }
 
 #[no_mangle]
+pub extern "C" fn maxim_create_audio_config(
+    sample_rate: f64,
+    bpm: f64,
+) -> *mut export_config::AudioConfig {
+    Box::into_raw(Box::new(export_config::AudioConfig { sample_rate, bpm }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_audio_config(config: *mut export_config::AudioConfig) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub extern "C" fn maxim_create_target_config(
+    platform: export_config::TargetPlatform,
+    instruction_set: export_config::TargetInstructionSet,
+    feature_level: util::feature_level::FeatureLevel,
+) -> *mut export_config::TargetConfig {
+    Box::into_raw(Box::new(export_config::TargetConfig {
+        platform,
+        instruction_set,
+        feature_level,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_target_config(config: *mut export_config::TargetConfig) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_create_code_config(
+    optimization_level: codegen::OptimizationLevel,
+    c_instrument_prefix: *const std::os::raw::c_char,
+    include_instrument: bool,
+    include_library: bool,
+) -> *mut export_config::CodeConfig {
+    let instrument_prefix = std::ffi::CStr::from_ptr(c_instrument_prefix)
+        .to_str()
+        .unwrap()
+        .to_string();
+    Box::into_raw(Box::new(export_config::CodeConfig {
+        optimization_level,
+        instrument_prefix,
+        include_instrument,
+        include_library,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_code_config(config: *mut export_config::CodeConfig) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_create_object_output_config(
+    format: export_config::ObjectFormat,
+    c_location: *const std::os::raw::c_char,
+) -> *mut export_config::ObjectOutputConfig {
+    let location =
+        std::path::Path::new(std::ffi::CStr::from_ptr(c_location).to_str().unwrap()).to_path_buf();
+    Box::into_raw(Box::new(export_config::ObjectOutputConfig {
+        format,
+        location,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_object_output_config(
+    config: *mut export_config::ObjectOutputConfig,
+) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_create_meta_output_config(
+    format: export_config::MetaFormat,
+    c_location: *const std::os::raw::c_char,
+    portal_names: *const *const std::os::raw::c_char,
+    portal_name_count: usize,
+) -> *mut export_config::MetaOutputConfig {
+    let location =
+        std::path::Path::new(std::ffi::CStr::from_ptr(c_location).to_str().unwrap()).to_path_buf();
+    let portal_names = (0..portal_name_count)
+        .map(|portal_index| {
+            let portal_name_ptr = *portal_names.add(portal_index);
+            std::ffi::CStr::from_ptr(portal_name_ptr)
+                .to_str()
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+
+    Box::into_raw(Box::new(export_config::MetaOutputConfig {
+        format,
+        location,
+        portal_names,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_meta_output_config(
+    config: *mut export_config::MetaOutputConfig,
+) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_create_export_config(
+    audio: *mut export_config::AudioConfig,
+    target: *mut export_config::TargetConfig,
+    code: *mut export_config::CodeConfig,
+    object_or_null: *mut export_config::ObjectOutputConfig,
+    meta_or_null: *mut export_config::MetaOutputConfig,
+) -> *mut export_config::ExportConfig {
+    let audio = *Box::from_raw(audio);
+    let target = *Box::from_raw(target);
+    let code = *Box::from_raw(code);
+    let object = if object_or_null == std::ptr::null_mut() {
+        None
+    } else {
+        Some(*Box::from_raw(object_or_null))
+    };
+    let meta = if meta_or_null == std::ptr::null_mut() {
+        None
+    } else {
+        Some(*Box::from_raw(meta_or_null))
+    };
+
+    Box::into_raw(Box::new(export_config::ExportConfig {
+        audio,
+        target,
+        code,
+        object,
+        meta,
+    }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_destroy_export_config(config: *mut export_config::ExportConfig) {
+    Box::from_raw(config);
+    // box will be dropped here
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn maxim_get_function_table_size() -> usize {
     mir::FUNCTION_TABLE.len()
 }
@@ -482,4 +712,9 @@ pub unsafe extern "C" fn maxim_get_function_table_entry(index: usize) -> *mut st
     std::ffi::CString::new(mir::FUNCTION_TABLE[index])
         .unwrap()
         .into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn maxim_get_feature_level() -> u8 {
+    *util::feature_level::FEATURE_LEVEL as u8
 }

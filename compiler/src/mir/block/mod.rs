@@ -1,4 +1,6 @@
 use crate::mir::pool_id::{PoolId, PoolRef};
+use crate::mir::VarType;
+use std::fmt;
 
 mod control;
 mod function;
@@ -25,5 +27,26 @@ impl Block {
             controls,
             statements,
         }
+    }
+}
+
+impl fmt::Display for Block {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "block @{:?} {{", self.id)?;
+        writeln!(f, "  controls:")?;
+        for (i, control) in self.controls.iter().enumerate() {
+            writeln!(f, "    ${} = {}", i, control)?;
+        }
+        writeln!(f, "  statements:")?;
+        for (i, statement) in self.statements.iter().enumerate() {
+            writeln!(
+                f,
+                "    %{} {} = {}",
+                i,
+                VarType::of_statement(self, i),
+                statement
+            )?;
+        }
+        write!(f, "}}")
     }
 }

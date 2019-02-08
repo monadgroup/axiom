@@ -73,7 +73,9 @@ namespace AxiomModel {
 
         void doSizeAction();
 
-        virtual void attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) = 0;
+        virtual void attachRuntime(MaximCompiler::Runtime *runtime) = 0;
+
+        virtual void buildAll(MaximCompiler::Transaction *transaction) = 0;
 
         const std::optional<NodeCompileMeta> &compileMeta() const { return _compileMeta; }
 

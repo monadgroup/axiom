@@ -2,6 +2,7 @@ use crate::codegen::{
     block, build_context_function, util, values, BuilderContext, LifecycleFunc, ObjectCache,
 };
 use crate::mir::{Node, NodeData, Surface, SurfaceRef};
+use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
@@ -14,7 +15,7 @@ fn get_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.surface.{}.{}", surface, lifecycle);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         let layout = cache.surface_layout(surface).unwrap();
         (
@@ -24,7 +25,9 @@ fn get_lifecycle_func(
                 false,
             ),
         )
-    })
+    });
+    func.add_param_attribute(0, module.get_context().get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 fn build_node_call(
@@ -36,14 +39,12 @@ fn build_node_call(
 ) {
     match &node.data {
         NodeData::Dummy => {}
-        NodeData::Custom(block_id) => {
+        NodeData::Custom { block, .. } => {
+            let const_ptr = unsafe { ctx.b.build_struct_gep(&pointers_ptr, 0, "const.ptr") };
+            let node_ptrs = unsafe { ctx.b.build_struct_gep(&pointers_ptr, 1, "node.ptrs") };
+
             block::build_lifecycle_call(
-                ctx.module,
-                cache,
-                ctx.b,
-                *block_id,
-                lifecycle,
-                pointers_ptr,
+                ctx.module, cache, ctx.b, *block, lifecycle, node_ptrs, const_ptr,
             );
         }
         NodeData::Group(surface_id) => {

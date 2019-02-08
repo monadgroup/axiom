@@ -1,8 +1,9 @@
 #pragma once
 
-#include "VarType.h"
-#include "ValueGroupSource.h"
+#include "ControlInitializer.h"
 #include "NodeRef.h"
+#include "ValueGroupSource.h"
+#include "VarType.h"
 
 namespace MaximCompiler {
 
@@ -14,12 +15,11 @@ namespace MaximCompiler {
 
         void addValueGroup(VarType vartype, ValueGroupSource source);
 
-        NodeRef addCustomNode(uint64_t blockId);
+        NodeRef addCustomNode(uint64_t blockId, size_t controlInitializerCount, ControlInitializer *initializers);
 
         NodeRef addGroupNode(uint64_t surfaceId);
 
     private:
         void *handle;
     };
-
 }

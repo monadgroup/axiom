@@ -100,20 +100,20 @@ void AudioBackend::deserialize(QByteArray *data,
 
     if (!newProject) {
         if (readVersion) {
-            QMessageBox(QMessageBox::Critical, "Failed to load project",
-                        "This project was created with an incompatible version of Axiom.\n\n"
-                        "Expected version: between " +
-                            QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
-                            QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
-                            ", actual version: " + QString::number(readVersion) + ".",
-                        QMessageBox::Ok)
-                .exec();
+            QMessageBox msgBox(QMessageBox::Critical, "Failed to load project",
+                               "This project was created with an incompatible version of Axiom.\n\n"
+                               "Expected version: between " +
+                                   QString::number(AxiomModel::ProjectSerializer::minSchemaVersion) + " and " +
+                                   QString::number(AxiomModel::ProjectSerializer::schemaVersion) +
+                                   ", actual version: " + QString::number(readVersion) + ".",
+                               QMessageBox::Ok);
+            AxiomUtil::showMessageBox(msgBox);
         } else {
-            QMessageBox(QMessageBox::Critical, "Failed to load project",
-                        "This project is an invalid project file (bad magic header).\n"
-                        "Maybe it's corrupt?",
-                        QMessageBox::Ok)
-                .exec();
+            QMessageBox msgBox(QMessageBox::Critical, "Failed to load project",
+                               "This project is an invalid project file (bad magic header).\n"
+                               "Maybe it's corrupt?",
+                               QMessageBox::Ok);
+            AxiomUtil::showMessageBox(msgBox);
         }
     } else {
         if (deserializeCustomCallback) {
@@ -177,37 +177,7 @@ bool AudioBackend::canFiddleAutomation() const {
 }
 
 void AudioBackend::internalUpdateConfiguration() {
-    std::vector<ConfigurationPortal> newPortals;
-    assert(_editor->window()->project()->rootSurface()->compileMeta());
-    auto &compileMeta = *_editor->window()->project()->rootSurface()->compileMeta();
-
-    for (const auto &surfacePortal : compileMeta.portals) {
-        PortalType newType;
-        switch (surfacePortal.portalType) {
-        case AxiomModel::PortalControl::PortalType::INPUT:
-            newType = PortalType::INPUT;
-            break;
-        case AxiomModel::PortalControl::PortalType::OUTPUT:
-            newType = PortalType::OUTPUT;
-            break;
-        case AxiomModel::PortalControl::PortalType::AUTOMATION:
-            newType = PortalType::AUTOMATION;
-            break;
-        }
-
-        PortalValue newValue;
-        switch (surfacePortal.valueType) {
-        case AxiomModel::ConnectionWire::WireType::NUM:
-            newValue = PortalValue::AUDIO;
-            break;
-        case AxiomModel::ConnectionWire::WireType::MIDI:
-            newValue = PortalValue::MIDI;
-            break;
-        }
-
-        newPortals.emplace_back(surfacePortal.socketIndex, surfacePortal.id, newType, newValue,
-                                surfacePortal.name.toStdString());
-    }
+    auto newPortals = std::move(_editor->window()->project()->getAudioConfiguration().portals);
     std::sort(newPortals.begin(), newPortals.end());
 
     // update the value pointers

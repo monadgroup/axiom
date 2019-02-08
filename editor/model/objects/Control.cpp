@@ -89,7 +89,7 @@ std::unique_ptr<Control> Control::createDefault(AxiomModel::Control::ControlType
                                       ConnectionWire::WireType::MIDI, 0, root);
     case Control::ControlType::GRAPH:
         return GraphControl::create(uuid, parentUuid, pos, size, false, name, true, QUuid(), exposingUuid,
-                                    std::make_unique<GraphControlCurveState>(), root);
+                                    std::make_unique<GraphControlCurveStorage>(), root);
     default:
         unreachable;
     }
@@ -196,9 +196,13 @@ AxiomCommon::BoxedSequence<ModelObject *> Control::links() {
         AxiomCommon::filter(root()->controls().sequence(), [expId](Control *obj) { return obj->uuid() == expId; });
     auto connections = _connections.sequence();
 
-    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2> {
+    return AxiomCommon::boxSequence(AxiomCommon::flatten(std::array<AxiomCommon::BoxedSequence<ModelObject *>, 2>{
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(exposerControl)),
         AxiomCommon::boxSequence(AxiomCommon::staticCast<ModelObject *>(connections))}));
+}
+
+MaximCompiler::ControlInitializer Control::getInitializer() {
+    return MaximCompiler::ControlInitializer::none();
 }
 
 const std::optional<ControlCompileMeta> &Control::compileMeta() const {

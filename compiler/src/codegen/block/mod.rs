@@ -17,6 +17,7 @@ use crate::codegen::{
 };
 use crate::mir::block::Statement;
 use crate::mir::{Block, BlockRef};
+use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::module::{Linkage, Module};
 use inkwell::values::{FunctionValue, PointerValue};
@@ -71,18 +72,23 @@ fn get_lifecycle_func(
     lifecycle: LifecycleFunc,
 ) -> FunctionValue {
     let func_name = format!("maxim.block.{}.{}", block, lifecycle);
-    util::get_or_create_func(module, &func_name, true, &|| {
+    let func = util::get_or_create_func(module, &func_name, true, &|| {
         let context = module.get_context();
         let layout = cache.block_layout(block).unwrap();
 
         (
             Linkage::ExternalLinkage,
             context.void_type().fn_type(
-                &[&layout.pointer_struct.ptr_type(AddressSpace::Generic)],
+                &[
+                    &layout.pointer_struct.ptr_type(AddressSpace::Generic),
+                    &layout.constant_struct.ptr_type(AddressSpace::Generic),
+                ],
                 false,
             ),
         )
-    })
+    });
+    func.add_param_attribute(0, module.get_context().get_enum_attr(AttrKind::NoAlias, 1));
+    func
 }
 
 // Construct and destruct lifecycle functions call the respective lifecycle functions on
@@ -103,7 +109,8 @@ fn build_lifecycle_func(
     build_context_function(module, func, cache.target(), &|ctx: BuilderContext| {
         let layout = cache.block_layout(block).unwrap();
         let pointers_ptr = ctx.func.get_nth_param(0).unwrap().into_pointer_value();
-        let mut ctx = BlockContext::new(ctx, layout, pointers_ptr);
+        let const_ptr = ctx.func.get_nth_param(1).unwrap().into_pointer_value();
+        let mut ctx = BlockContext::new(ctx, layout, pointers_ptr, const_ptr);
         cb(&mut ctx);
         ctx.ctx.b.build_return(None);
     });
@@ -251,7 +258,8 @@ pub fn build_lifecycle_call(
     block: BlockRef,
     lifecycle: LifecycleFunc,
     pointers_ptr: PointerValue,
+    const_ptr: PointerValue,
 ) {
     let func = get_lifecycle_func(module, cache, block, lifecycle);
-    builder.build_call(&func, &[&pointers_ptr], "", true);
+    builder.build_call(&func, &[&pointers_ptr, &const_ptr], "", true);
 }

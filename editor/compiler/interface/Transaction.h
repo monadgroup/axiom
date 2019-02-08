@@ -20,5 +20,10 @@ namespace MaximCompiler {
         void buildBlock(Block block);
 
         void printToStdout() const;
+
+        Transaction clone() const;
+
+    private:
+        explicit Transaction(void *);
     };
 }

@@ -82,18 +82,13 @@ void CustomNode::setPanelHeight(float panelHeight) {
     }
 }
 
-void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime, MaximCompiler::Transaction *transaction) {
+void CustomNode::attachRuntime(MaximCompiler::Runtime *runtime) {
     if (runtime) {
         runtimeId = runtime->nextId();
         buildCode();
         promoteStaging();
     } else {
         runtimeId = 0;
-    }
-
-    if (transaction && _compiledBlock) {
-        build(transaction);
-        updateControls(nullptr);
     }
 }
 
@@ -103,12 +98,11 @@ void CustomNode::updateRuntimePointers(MaximCompiler::Runtime *runtime, void *su
     Node::updateRuntimePointers(runtime, surfacePtr);
 
     auto nodePtr = runtime->getNodePtr(surface()->getRuntimeId(), surfacePtr, compileMeta()->mirIndex);
-    auto blockPtr = runtime->getBlockPtr(nodePtr);
     auto runtimeId = getRuntimeId();
 
-    controls().then([blockPtr, runtime, runtimeId](ControlSurface *controlSurface) {
+    controls().then([nodePtr, runtime, runtimeId](ControlSurface *controlSurface) {
         for (const auto &control : controlSurface->controls().sequence()) {
-            control->setRuntimePointers(runtime->getControlPtrs(runtimeId, blockPtr, control->compileMeta()->index));
+            control->setRuntimePointers(runtime->getControlPtrs(runtimeId, nodePtr, control->compileMeta()->index));
         }
     });
 }
@@ -120,6 +114,13 @@ const std::optional<CustomNodeError> &CustomNode::compileError() const {
 void CustomNode::build(MaximCompiler::Transaction *transaction) {
     if (!_compiledBlock) return;
     transaction->buildBlock(_compiledBlock->clone());
+}
+
+void CustomNode::buildAll(MaximCompiler::Transaction *transaction) {
+    if (_compiledBlock) {
+        build(transaction);
+        updateControls(nullptr);
+    }
 }
 
 struct NewControl {
@@ -156,7 +157,7 @@ void CustomNode::updateControls(SetCodeAction *action) {
 
         // no candidate found, queue a new one
         if (!foundControl) {
-            newControls.push_back(NewControl {compiledModelType, std::move(compiledName), compileMeta});
+            newControls.push_back(NewControl{compiledModelType, std::move(compiledName), compileMeta});
         }
     }
 

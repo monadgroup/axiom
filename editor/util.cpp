@@ -1,7 +1,10 @@
 #include "util.h"
 
 #include <QtCore/QFile>
+#include <QtCore/QRegularExpression>
+#include <QtCore/QSet>
 #include <QtCore/QStringBuilder>
+#include <QtWidgets/QMessageBox>
 #include <array>
 #include <cmath>
 #include <sstream>
@@ -227,5 +230,43 @@ std::optional<uint8_t> AxiomUtil::noteKeyToMidi(int keyCode) {
         return 62;
     default:
         return std::nullopt;
+    }
+}
+
+int AxiomUtil::showMessageBox(QMessageBox &msgBox) {
+    msgBox.setStyleSheet(loadStylesheet(":/styles/MainStyles.qss"));
+    return msgBox.exec();
+}
+
+static QRegularExpression nonSafeCharacters(R"(_?[^0-9A-Za-z_]+_?)");
+
+QString AxiomUtil::getSafeDefinition(QString definition) {
+    definition.replace(nonSafeCharacters, "_");
+    return definition;
+}
+
+static QRegularExpression endNumber(R"(\d+$)");
+
+QString AxiomUtil::ensureDefinitionIsUnique(QString definition, const QSet<QString> &usedDefinitions) {
+    if (usedDefinitions.find(definition) == usedDefinitions.end()) {
+        return definition;
+    }
+
+    auto suffix = 2;
+
+    // if it already ends in a number, use that for the start suffix
+    auto endNumberMatch = endNumber.match(definition);
+    if (endNumberMatch.hasMatch()) {
+        suffix = endNumberMatch.captured(0).toInt() + 1;
+        definition = definition.left(endNumberMatch.capturedStart(0));
+    } else {
+        definition += "_";
+    }
+
+    while (true) {
+        auto combinedDef = definition + QString::number(suffix);
+        if (usedDefinitions.find(combinedDef) == usedDefinitions.end()) {
+            return combinedDef;
+        }
     }
 }

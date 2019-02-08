@@ -29,7 +29,6 @@ AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     MaximFrontend::maxim_initialize();
 
     Q_INIT_RESOURCE(res);
-    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
 
     auto dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     std::cout << "Using data path " << dataPath.toStdString() << std::endl;

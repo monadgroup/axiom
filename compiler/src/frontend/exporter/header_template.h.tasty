@@ -1,0 +1,23 @@
+#ifndef {{C_FILE_NAME}}
+#define {{C_FILE_NAME}}
+
+#define {{DEF_PREFIX}}SAMPLERATE {{SAMPLERATE}}
+#define {{DEF_PREFIX}}BPM {{BPM}}
+
+{%LOOP {{PORTAL_COUNT}}%}
+#define {{PORTAL_NAME_{{LOOP_INDEX}}}} {{LOOP_INDEX}}
+{%END%}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void __cdecl {{INIT_FUNC_NAME}}();
+void __cdecl {{CLEANUP_FUNC_NAME}}();
+void __cdecl {{GENERATE_FUNC_NAME}}();
+
+void *__cdecl {{PORTAL_FUNC_NAME}}(uint32_t id);
+#ifdef __cplusplus
+}
+#endif
+
+#endif

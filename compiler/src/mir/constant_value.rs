@@ -1,6 +1,7 @@
 use crate::ast::FormType;
 use ordered_float::OrderedFloat;
-use std::hash;
+use std::cmp::Ordering;
+use std::{fmt, hash};
 
 #[derive(Debug, Clone)]
 pub struct ConstantNum {
@@ -9,12 +10,12 @@ pub struct ConstantNum {
     pub form: FormType,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct ConstantTuple {
     pub items: Vec<ConstantValue>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ConstantValue {
     Num(ConstantNum),
     Tuple(ConstantTuple),
@@ -68,6 +69,42 @@ impl PartialEq for ConstantNum {
 
 impl Eq for ConstantNum {}
 
+impl Ord for ConstantNum {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (OrderedFloat(self.left), OrderedFloat(self.right), self.form).cmp(&(
+            OrderedFloat(other.left),
+            OrderedFloat(other.right),
+            other.form,
+        ))
+    }
+}
+
+impl PartialOrd for ConstantNum {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl fmt::Display for ConstantNum {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "num [{}] {}, {}", self.form, self.left, self.right)
+    }
+}
+
+impl fmt::Display for ConstantTuple {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "tuple ")?;
+        for (i, item) in self.items.iter().enumerate() {
+            write!(f, "({})", item)?;
+
+            if i != self.items.len() - 1 {
+                write!(f, ", ")?;
+            }
+        }
+        Ok(())
+    }
+}
+
 impl ConstantValue {
     pub fn new_num(left: f64, right: f64, form: FormType) -> ConstantValue {
         ConstantValue::Num(ConstantNum::new(left, right, form))
@@ -86,6 +123,15 @@ impl ConstantValue {
             Some(tuple)
         } else {
             None
+        }
+    }
+}
+
+impl fmt::Display for ConstantValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ConstantValue::Num(num) => num.fmt(f),
+            ConstantValue::Tuple(tuple) => tuple.fmt(f),
         }
     }
 }

@@ -8,6 +8,7 @@ pub struct BlockContext<'a> {
     pub layout: &'a BlockLayout,
     statement_ptrs: Vec<PointerValue>,
     pointers_ptr: PointerValue,
+    constant_ptr: PointerValue,
 }
 
 impl<'a> BlockContext<'a> {
@@ -15,12 +16,14 @@ impl<'a> BlockContext<'a> {
         ctx: BuilderContext<'a>,
         layout: &'a BlockLayout,
         pointers_ptr: PointerValue,
+        constant_ptr: PointerValue,
     ) -> Self {
         BlockContext {
             ctx,
             layout,
             statement_ptrs: Vec::new(),
             pointers_ptr,
+            constant_ptr,
         }
     }
 
@@ -52,6 +55,13 @@ impl<'a> BlockContext<'a> {
                     "ctx.control.value",
                 )
                 .into_pointer_value(),
+            const_dat: unsafe {
+                self.ctx.b.build_struct_gep(
+                    &self.constant_ptr,
+                    layout_index as u32,
+                    "ctx.control.const.ptr",
+                )
+            },
             data: self
                 .ctx
                 .b

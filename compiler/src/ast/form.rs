@@ -1,7 +1,7 @@
 use crate::ast::SourceRange;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash)]
 #[repr(u8)]
 pub enum FormType {
     None,

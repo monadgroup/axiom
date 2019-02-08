@@ -4,6 +4,8 @@
 #include <QtWidgets/QMenu>
 
 #include "../../util.h"
+#include "../surface/NodeSurfaceCanvas.h"
+#include "../surface/NodeSurfacePanel.h"
 #include "editor/model/Project.h"
 
 using namespace AxiomGui;
@@ -44,7 +46,7 @@ QPainterPath ExtractControlItem::controlPath() const {
 void ExtractControlItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     event->accept();
 
-    QMenu menu;
+    QMenu menu(canvas->panel);
     buildMenuStart(menu);
     menu.addSeparator();
     buildMenuEnd(menu);

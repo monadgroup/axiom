@@ -1,6 +1,7 @@
 #include "ModulePropertiesWindow.h"
 
 #include <QtCore/QRegularExpression>
+#include <QtCore/QStringBuilder>
 #include <QtGui/QIcon>
 #include <QtWidgets/QCompleter>
 #include <QtWidgets/QDialogButtonBox>
@@ -18,7 +19,8 @@ using namespace AxiomGui;
 ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library)
     : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("Add Module"));
-    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/SaveModuleWindow.qss"));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss") % "\n" %
+                  AxiomUtil::loadStylesheet(":/styles/SaveModuleWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));
 
     setFixedSize(400, 400);

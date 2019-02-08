@@ -7,8 +7,10 @@ use std::ptr::{null, null_mut};
 
 pub type SurfacePtr = *mut c_void;
 pub type NodePtr = *mut c_void;
+pub type InitializedPtr = *mut c_void;
 pub type BlockPtr = *mut c_void;
 pub type ControlValuePtr = *mut c_void;
+pub type ControlInitializedPtr = *mut c_void;
 pub type ControlDataPtr = *mut c_void;
 pub type ControlSharedPtr = *mut c_void;
 pub type ControlUiPtr = *mut c_void;
@@ -16,6 +18,7 @@ pub type ControlUiPtr = *mut c_void;
 #[repr(C)]
 pub struct ControlPointers {
     pub value: ControlValuePtr,
+    pub initialized: ControlInitializedPtr,
     pub data: ControlDataPtr,
     pub shared: ControlSharedPtr,
     pub ui: ControlUiPtr,
@@ -96,25 +99,44 @@ pub fn get_surface_ptr(ptr: NodePtr) -> SurfacePtr {
     ptr
 }
 
-pub fn get_block_ptr(ptr: NodePtr) -> BlockPtr {
-    ptr
-}
-
 pub fn get_control_ptrs(
     cache: &ObjectCache,
     block: BlockRef,
-    ptr: BlockPtr,
+    ptr: NodePtr,
     control: usize,
 ) -> ControlPointers {
     let block_layout = cache.block_layout(block).unwrap();
-    let ptr_offset = block_layout.control_index(control);
-    let byte_offset = cache
+    let control_offset = block_layout.control_index(control);
+
+    // format of the data in the node pointer:
+    //   {
+    //     initializedData: [
+    //        ...,   // one for each control
+    //        ...,
+    //        ...,
+    //     ],
+    //     controlData: [
+    //        ...,  // one for each control, size may change
+    //        ...,
+    //        ...,
+    //     ]
+    //   }
+    let machine_data = cache.target().machine.get_data();
+    let initialized_offset = machine_data
+        .offset_of_element(&block_layout.constant_struct, control_offset as u32)
+        .unwrap();
+    let control_initialized_ptr = unsafe { ptr.add(initialized_offset as usize) };
+
+    let control_data_offset = machine_data.get_store_size(&block_layout.constant_struct);
+    let node_controls_ptr = unsafe { ptr.add(control_data_offset as usize) };
+    let controls_data_offset = cache
         .target()
         .machine
         .get_data()
-        .offset_of_element(&block_layout.pointer_struct, ptr_offset as u32)
+        .offset_of_element(&block_layout.pointer_struct, control_offset as u32)
         .unwrap();
-    let base_ptr = unsafe { ptr.offset(byte_offset as isize) } as *mut *mut c_void;
+    let base_ptr =
+        unsafe { node_controls_ptr.offset(controls_data_offset as isize) } as *mut *mut c_void;
     ControlPointers {
         value: unsafe { *base_ptr },
         data: unsafe { *base_ptr.offset(1) },
@@ -124,5 +146,7 @@ pub fn get_control_ptrs(
         } else {
             null_mut()
         },
+
+        initialized: control_initialized_ptr,
     }
 }

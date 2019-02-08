@@ -11,12 +11,20 @@ namespace AxiomModel {
         uint8_t currentState;
     };
 
-    struct GraphControlCurveState {
+    struct GraphControlCurveStorage {
         uint8_t curveCount;
         double curveStartVals[GRAPH_CONTROL_CURVE_COUNT + 1];
         double curveEndPositions[GRAPH_CONTROL_CURVE_COUNT];
         double curveTension[GRAPH_CONTROL_CURVE_COUNT];
         uint8_t curveStates[GRAPH_CONTROL_CURVE_COUNT + 1];
+    };
+
+    struct GraphControlCurveState {
+        uint8_t *curveCount;
+        double *curveStartVals;
+        double *curveEndPositions;
+        double *curveTension;
+        uint8_t *curveStates;
     };
 
     class GraphControl : public Control {
@@ -28,12 +36,12 @@ namespace AxiomModel {
 
         GraphControl(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
                      bool showName, const QUuid &exposerUuid, const QUuid &exposingUuid,
-                     std::unique_ptr<GraphControlCurveState> savedState, ModelRoot *root);
+                     std::unique_ptr<GraphControlCurveStorage> savedState, ModelRoot *root);
 
         static std::unique_ptr<GraphControl> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                     bool selected, QString name, bool showName,
                                                     const QUuid &exposerUuid, const QUuid &exposingUuid,
-                                                    std::unique_ptr<GraphControlCurveState> savedState,
+                                                    std::unique_ptr<GraphControlCurveStorage> savedState,
                                                     ModelRoot *root);
 
         QString debugName() override;
@@ -42,7 +50,7 @@ namespace AxiomModel {
 
         GraphControlTimeState *getTimeState() const;
 
-        GraphControlCurveState *getCurveState() const;
+        GraphControlCurveState *getCurveState();
 
         float zoom() const { return _zoom; }
 
@@ -68,12 +76,17 @@ namespace AxiomModel {
 
         void restoreState() override;
 
+        MaximCompiler::ControlInitializer getInitializer() override;
+
     private:
         float _zoom = 0;
         float _scroll = 0;
         size_t _lastStateHash = 0;
         uint32_t _lastTime = 0;
 
-        std::unique_ptr<GraphControlCurveState> _savedState;
+        std::unique_ptr<GraphControlCurveStorage> _savedStorage;
+        GraphControlCurveState _currentState;
+
+        void setSavedStorage(std::unique_ptr<GraphControlCurveStorage> storage);
     };
 }

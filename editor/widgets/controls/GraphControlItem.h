@@ -102,11 +102,11 @@ namespace AxiomGui {
 
     class GraphControlTensionKnob : public QGraphicsObject {
     public:
-        AxiomModel::GraphControl *control;
+        GraphControlItem *item;
         uint8_t index;
         qreal movementRange;
 
-        GraphControlTensionKnob(AxiomModel::GraphControl *control, uint8_t index);
+        GraphControlTensionKnob(GraphControlItem *item, uint8_t index);
 
         QRectF boundingRect() const override;
 

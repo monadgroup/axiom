@@ -1,5 +1,6 @@
 #include "AboutWindow.h"
 
+#include <QtCore/QStringBuilder>
 #include <QtGui/QIcon>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
@@ -12,7 +13,8 @@ using namespace AxiomGui;
 AboutWindow::AboutWindow()
     : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
     setWindowTitle(tr("About " VER_PRODUCTNAME_STR));
-    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/AboutWindow.qss"));
+    setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss") % "\n" %
+                  AxiomUtil::loadStylesheet(":/styles/AboutWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));
 
     setFixedSize(400, 400);
