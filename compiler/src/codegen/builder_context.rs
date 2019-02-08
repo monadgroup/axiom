@@ -1,11 +1,9 @@
 use crate::codegen::{OptimizationLevel, TargetProperties};
-use crate::util::feature_level::{get_target_feature_string, FEATURE_LEVEL};
 use inkwell::attribute::AttrKind;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::values::FunctionValue;
-use lazy_static::lazy_static;
 
 pub struct BuilderContext<'a> {
     pub context: &'a Context,
@@ -14,10 +12,6 @@ pub struct BuilderContext<'a> {
     pub allocb: &'a mut Builder,
     pub b: &'a mut Builder,
     pub target: &'a TargetProperties,
-}
-
-lazy_static! {
-    pub static ref TARGET_FEATURE_STR: String = get_target_feature_string(*FEATURE_LEVEL);
 }
 
 pub fn build_context_function(
