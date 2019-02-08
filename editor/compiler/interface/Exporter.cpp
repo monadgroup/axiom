@@ -62,6 +62,6 @@ ExportConfig::ExportConfig(MaximCompiler::AudioConfig audio, MaximCompiler::Targ
                                                             releaseOrNull(std::move(metaOutput))),
                   &MaximFrontend::maxim_destroy_export_config) {}
 
-void Exporter::exportTransaction(const ExportConfig &config, MaximCompiler::Transaction transaction) {
-    MaximFrontend::maxim_export_transaction(config.get(), transaction.release());
+bool Exporter::exportTransaction(const ExportConfig &config, MaximCompiler::Transaction transaction) {
+    return MaximFrontend::maxim_export_transaction(config.get(), transaction.release());
 }

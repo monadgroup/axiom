@@ -18,18 +18,18 @@ use inkwell::context::Context;
 use inkwell::module::{Linkage, Module};
 use inkwell::targets::{CodeModel, FileType, RelocMode, Target};
 use inkwell::types::VectorType;
-use std::fs;
+use std::{fs, io};
 
 fn export_meta(
     config: &MetaOutputConfig,
     audio_conf: &AudioConfig,
     code_conf: &CodeConfig,
     module_meta: &ModuleMetadata,
-) {
+) -> io::Result<()> {
     let mut meta_output = String::new();
     build_meta_output(&mut meta_output, audio_conf, code_conf, config, module_meta).unwrap();
 
-    fs::write(&config.location, &meta_output).unwrap(); // todo: don't unwrap
+    fs::write(&config.location, &meta_output)
 }
 
 fn get_target_cpu(instruction_set: TargetInstructionSet) -> &'static str {
@@ -61,7 +61,7 @@ fn export_object(
     code_conf: &CodeConfig,
     module_meta: &ModuleMetadata,
     transaction: Transaction,
-) {
+) -> Result<(), ()> {
     let target_triple = get_target_triple(target_conf);
     let target_cpu = get_target_cpu(target_conf.instruction_set);
     let target_features = get_target_feature_string(target_conf.feature_level);
@@ -81,10 +81,11 @@ fn export_object(
     let target_properties = TargetProperties::new(false, code_conf.optimization_level, machine);
 
     let context = Context::create();
-    let output_module = target_properties.create_module(
-        &context,
-        config.location.file_name().unwrap().to_str().unwrap(),
-    );
+    let file_name = match config.location.file_name() {
+        Some(n) => n,
+        None => return Err(()),
+    };
+    let output_module = target_properties.create_module(&context, file_name.to_str().unwrap());
 
     if code_conf.include_library {
         // build constant globals
@@ -125,29 +126,29 @@ fn export_object(
             let mem_buf = target_properties
                 .machine
                 .write_to_memory_buffer(&output_module, FileType::Object)
-                .unwrap();
+                .map_err(|_| {})?;
 
-            fs::write(&config.location, mem_buf.as_slice()).unwrap();
+            fs::write(&config.location, mem_buf.as_slice()).map_err(|_| {})
         }
         ObjectFormat::Bitcode => {
-            if !output_module.write_bitcode_to_path(&config.location) {
-                panic!();
+            if output_module.write_bitcode_to_path(&config.location) {
+                Ok(())
+            } else {
+                Err(())
             }
         }
-        ObjectFormat::IR => {
-            fs::write(
-                &config.location,
-                output_module.print_to_string().to_str().unwrap(),
-            )
-            .unwrap();
-        }
+        ObjectFormat::IR => fs::write(
+            &config.location,
+            output_module.print_to_string().to_str().unwrap(),
+        )
+        .map_err(|_| {}),
         ObjectFormat::AssemblyListing => {
             let mem_buf = target_properties
                 .machine
                 .write_to_memory_buffer(&output_module, FileType::Assembly)
-                .unwrap();
+                .map_err(|_| {})?;
 
-            fs::write(&config.location, mem_buf.as_slice()).unwrap();
+            fs::write(&config.location, mem_buf.as_slice()).map_err(|_| {})
         }
     }
 }
@@ -168,7 +169,7 @@ fn hide_internal_symbols(module: &Module) {
     }
 }
 
-pub fn export(config: &ExportConfig, transaction: Transaction) {
+pub fn export(config: &ExportConfig, transaction: Transaction) -> Result<(), ()> {
     // Generate the module metadata
     let module_meta = ModuleMetadata {
         init_func_name: config.code.instrument_prefix.clone() + "init",
@@ -179,7 +180,7 @@ pub fn export(config: &ExportConfig, transaction: Transaction) {
 
     // Export the requested data
     if let Some(meta_config) = &config.meta {
-        export_meta(meta_config, &config.audio, &config.code, &module_meta);
+        export_meta(meta_config, &config.audio, &config.code, &module_meta).map_err(|_| {})?;
     }
     if let Some(object_config) = &config.object {
         export_object(
@@ -189,6 +190,8 @@ pub fn export(config: &ExportConfig, transaction: Transaction) {
             &config.code,
             &module_meta,
             transaction,
-        );
+        )?;
     }
+
+    Ok(())
 }

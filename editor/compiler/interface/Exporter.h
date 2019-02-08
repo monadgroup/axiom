@@ -45,6 +45,6 @@ namespace MaximCompiler {
 
     class Exporter {
     public:
-        static void exportTransaction(const ExportConfig &config, Transaction transaction);
+        static bool exportTransaction(const ExportConfig &config, Transaction transaction);
     };
 }

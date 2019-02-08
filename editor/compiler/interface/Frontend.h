@@ -82,7 +82,7 @@ namespace MaximFrontend {
     MaximRuntime *maxim_create_runtime(bool includeUi);
     void maxim_destroy_runtime(MaximRuntime *);
     uint64_t maxim_allocate_id(MaximRuntimeRef *runtime);
-    void maxim_export_transaction(MaximExportConfigRef *config, MaximTransaction *transaction);
+    bool maxim_export_transaction(MaximExportConfigRef *config, MaximTransaction *transaction);
 
     void maxim_run_update(MaximRuntimeRef *runtime);
     void maxim_set_bpm(MaximRuntimeRef *runtime, double bpm);

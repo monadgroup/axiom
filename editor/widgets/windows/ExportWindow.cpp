@@ -111,9 +111,13 @@ void ExportWindow::doExport() {
     project.rootSurface()->buildAll(&transaction);
 
     // run the exporter
-    MaximCompiler::Exporter::exportTransaction(config, std::move(transaction));
+    auto success = MaximCompiler::Exporter::exportTransaction(config, std::move(transaction));
+    if (success) {
+        QMessageBox::information(this, "Export Complete", "The export has been completed.");
+    } else {
+        QMessageBox::critical(this, "Export Failed", "The export failed unexpectedly.");
+    }
 
-    QMessageBox::information(this, "Export Complete", "The export has been completed.");
     setEnabled(true);
 }
 

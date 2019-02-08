@@ -61,9 +61,9 @@ pub unsafe extern "C" fn maxim_allocate_id(runtime: *mut Runtime) -> u64 {
 pub unsafe extern "C" fn maxim_export_transaction(
     config: *const export_config::ExportConfig,
     transaction: *mut Transaction,
-) {
+) -> bool {
     let owned_transaction = Box::from_raw(transaction);
-    exporter::export(&*config, *owned_transaction);
+    exporter::export(&*config, *owned_transaction).is_ok()
 }
 
 #[no_mangle]
