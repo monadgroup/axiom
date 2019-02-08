@@ -17,6 +17,7 @@ pub use self::scope_control::ScopeControl;
 
 use self::control_context::{ControlContext, ControlUiContext};
 use crate::ast::{ControlField, ControlType};
+use crate::codegen::data_analyzer::PointerSource;
 use crate::codegen::{
     build_context_function, util, values, BuilderContext, LifecycleFunc, TargetProperties,
 };
@@ -90,15 +91,15 @@ pub fn get_field_type(context: &Context, field: ControlField) -> StructType {
 
 macro_rules! map_controls {
     ($($enum_name:ident => $class_name:ident),*) => (
-        pub fn get_constant_type(context: &Context, control_type: ControlType) -> StructType {
+        pub fn get_constant_ptr_type(context: &Context, control_type: ControlType) -> StructType {
             match control_type {
-                $( ControlType::$enum_name => $class_name::constant_type(context), )*
+                $( ControlType::$enum_name => $class_name::constant_ptr_type(context), )*
             }
         }
 
-        pub fn get_constant_value(context: &Context, control_type: ControlType, initializer: &ControlInitializer) -> StructValue {
+        pub fn get_constant_value(context: &Context, control_type: ControlType, initializer: &ControlInitializer, target: &TargetProperties) -> (StructValue, Vec<PointerSource>) {
             match control_type {
-                $( ControlType::$enum_name => $class_name::constant_value(context, initializer), )*
+                $( ControlType::$enum_name => $class_name::constant_value(context, initializer, target), )*
             }
         }
 
@@ -149,7 +150,7 @@ fn get_lifecycle_func(
             context.void_type().fn_type(
                 &[
                     &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
-                    &get_constant_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_constant_ptr_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                 ],
@@ -178,7 +179,7 @@ fn get_ui_lifecycle_func(
             context.void_type().fn_type(
                 &[
                     &get_group_type(&context, control_type).ptr_type(AddressSpace::Generic),
-                    &get_constant_type(&context, control_type).ptr_type(AddressSpace::Generic),
+                    &get_constant_ptr_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic),
                     &get_ui_type(&context, control_type).ptr_type(AddressSpace::Generic),
@@ -211,7 +212,7 @@ fn get_field_getter_func(module: &Module, field: ControlField) -> (FunctionValue
             let value_type = values::remap_type(&context, &var_type);
             let group_type = get_group_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let const_type =
-                get_constant_type(&context, control_type).ptr_type(AddressSpace::Generic);
+                get_constant_ptr_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let data_type = get_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let shared_data_type =
                 get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
@@ -270,7 +271,7 @@ fn get_field_setter_func(module: &Module, field: ControlField) -> (FunctionValue
             let value_type = values::remap_type(&context, &var_type);
             let group_type = get_group_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let const_type =
-                get_constant_type(&context, control_type).ptr_type(AddressSpace::Generic);
+                get_constant_ptr_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let data_type = get_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
             let shared_data_type =
                 get_shared_data_type(&context, control_type).ptr_type(AddressSpace::Generic);
@@ -549,12 +550,16 @@ fn build_field_setter_func(
 pub trait Control {
     fn control_type() -> ControlType;
 
-    fn constant_type(context: &Context) -> StructType {
+    fn constant_ptr_type(context: &Context) -> StructType {
         context.struct_type(&[], false)
     }
 
-    fn constant_value(context: &Context, _initializer: &ControlInitializer) -> StructValue {
-        context.const_struct(&[], false)
+    fn constant_value(
+        context: &Context,
+        _initializer: &ControlInitializer,
+        _target: &TargetProperties,
+    ) -> (StructValue, Vec<PointerSource>) {
+        (context.const_struct(&[], false), Vec::new())
     }
 
     fn data_type(context: &Context) -> StructType {

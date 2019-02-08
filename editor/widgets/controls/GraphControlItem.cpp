@@ -135,7 +135,7 @@ void GraphControlTicks::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     // draw "tags" for each curve with a state
     auto controlState = item->control->getCurveState();
     auto timeState = item->control->getTimeState();
-    for (uint8_t i = 0; i < controlState->curveCount + 1; i++) {
+    for (uint8_t i = 0; i < *controlState->curveCount + 1; i++) {
         auto curveState = controlState->curveStates[i];
         if (curveState == 0) continue;
 
@@ -575,32 +575,32 @@ void GraphControlArea::updateCurves() {
     auto state = item->control->getCurveState();
 
     // create/remove QGraphicsPathItems so we have the correct amount
-    while (_curves.size() < state->curveCount) {
+    while (_curves.size() < *state->curveCount) {
         _curves.push_back(std::make_unique<QGraphicsPathItem>());
         auto &curve = _curves[_curves.size() - 1];
         curve->setParentItem(this);
         curve->setZValue(0);
     }
-    while (_tensionKnobs.size() < state->curveCount) {
+    while (_tensionKnobs.size() < *state->curveCount) {
         _tensionKnobs.push_back(std::make_unique<GraphControlTensionKnob>(item, _tensionKnobs.size()));
         auto &tensionKnob = _tensionKnobs[_tensionKnobs.size() - 1];
         tensionKnob->setParentItem(this);
         tensionKnob->setZValue(1);
     }
-    while (_pointKnobs.size() < state->curveCount + 1u) {
+    while (_pointKnobs.size() < *state->curveCount + 1u) {
         _pointKnobs.push_back(std::make_unique<GraphControlPointKnob>(item, _pointKnobs.size()));
         auto &pointKnob = _pointKnobs[_pointKnobs.size() - 1];
         pointKnob->setParentItem(this);
         pointKnob->setZValue(2);
     }
 
-    while (_curves.size() > state->curveCount) {
+    while (_curves.size() > *state->curveCount) {
         _curves.pop_back();
     }
-    while (_tensionKnobs.size() > state->curveCount) {
+    while (_tensionKnobs.size() > *state->curveCount) {
         _tensionKnobs.pop_back();
     }
-    while (_pointKnobs.size() > state->curveCount + 1u) {
+    while (_pointKnobs.size() > *state->curveCount + 1u) {
         _pointKnobs.pop_back();
     }
 
@@ -608,7 +608,7 @@ void GraphControlArea::updateCurves() {
     auto pixelsPerSecond = drawBounds.width() / widthSeconds;
     auto snapSeconds = getSnapSeconds(widthSeconds, drawBounds.width());
     auto scrollSeconds = item->control->scroll() * pixelsPerSecond;
-    for (uint8_t curveIndex = 0; curveIndex < state->curveCount; curveIndex++) {
+    for (uint8_t curveIndex = 0; curveIndex < *state->curveCount; curveIndex++) {
         auto startSeconds = 0.f;
         if (curveIndex > 0) {
             startSeconds = state->curveEndPositions[curveIndex - 1];
@@ -644,7 +644,7 @@ void GraphControlArea::updateCurves() {
         pointKnob->maxY = mapToScene(0, drawBounds.bottom()).y();
         pointKnob->minSeconds = startSeconds;
 
-        if (curveIndex < state->curveCount - 1) {
+        if (curveIndex < *state->curveCount - 1) {
             pointKnob->maxSeconds = state->curveEndPositions[curveIndex + 1];
         } else {
             pointKnob->maxSeconds = getWidthSeconds(MAX_ZOOM);
@@ -821,7 +821,7 @@ void GraphControlItem::paintControl(QPainter *painter) {
     auto state = control->getCurveState();
 
     // draw a line at the end of the last curve
-    auto endPos = state->curveEndPositions[state->curveCount - 1];
+    auto endPos = state->curveEndPositions[*state->curveCount - 1];
     auto endPixels =
         floor(clippedBodyRect.left() + remapSecondsToPixels(endPos, (float) pixelsPerSecond, control->scroll()));
     if (endPixels > clippedBodyRect.left() && endPixels < clippedBodyRect.right()) {
@@ -830,7 +830,7 @@ void GraphControlItem::paintControl(QPainter *painter) {
     }
 
     // draw lines for each tagged curve
-    for (uint8_t i = 0; i < state->curveCount + 1; i++) {
+    for (uint8_t i = 0; i < *state->curveCount + 1; i++) {
         if (state->curveStates[i] == 0) continue;
 
         auto tagPosition = 0.f;

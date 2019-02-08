@@ -104,29 +104,54 @@ pub fn build_node_layout(
 
             // build an initialized struct from the control initializers
             let block_mir = cache.block_mir(block).unwrap();
-            let initializer_consts: Vec<_> = control_initializers
-                .iter()
-                .zip(block_mir.controls.iter())
-                .map(|(initializer, control)| {
-                    controls::get_constant_value(cache.context(), control.control_type, initializer)
-                })
-                .collect();
+
+            // No way to collect into multiple vectors at once, so we do this the manual way
+            let mut initializer_consts = Vec::new();
+            initializer_consts.reserve(control_initializers.len());
+            let mut initializer_sources = Vec::new();
+            initializer_sources.reserve(control_initializers.len());
+
+            for (initializer, control) in control_initializers.iter().zip(block_mir.controls.iter())
+            {
+                let (initializer_const, ptr_sources) = controls::get_constant_value(
+                    context,
+                    control.control_type,
+                    initializer,
+                    cache.target(),
+                );
+
+                let initializer_index = initializer_consts.len();
+                initializer_consts.push(initializer_const);
+                initializer_sources.push(PointerSource::Aggregate(
+                    PointerSourceAggregateType::Struct,
+                    map_pointer_sources(
+                        ptr_sources,
+                        |mut indices| {
+                            indices.insert(0, initializer_index);
+                            PointerSource::Initialized(indices)
+                        },
+                        PointerSource::Scratch,
+                        PointerSource::Shared,
+                        PointerSource::Socket,
+                    ),
+                ));
+            }
+
             let initializer_refs: Vec<_> = initializer_consts
                 .iter()
                 .map(|val| val as &BasicValue)
                 .collect();
             let initialized_const = context.const_struct(&initializer_refs, false);
 
-            // push the initialized struct into the pointer list
+            let initializer_source =
+                PointerSource::Aggregate(PointerSourceAggregateType::Struct, initializer_sources);
+
             let pointer_struct = context.struct_type(
-                &[
-                    &block_layout.constant_struct.ptr_type(AddressSpace::Generic),
-                    &block_layout.pointer_struct,
-                ],
+                &[&block_layout.constant_struct, &block_layout.pointer_struct],
                 false,
             );
             let pointer_sources = vec![
-                PointerSource::Initialized(Vec::new()),
+                initializer_source,
                 PointerSource::Aggregate(
                     PointerSourceAggregateType::Struct,
                     block_layout.pointer_sources.clone(),
@@ -378,7 +403,10 @@ pub fn build_block_layout(
         let shared_type = controls::get_shared_data_type(context, control.control_type);
         shared_types.push(shared_type);
 
-        constant_types.push(controls::get_constant_type(context, control.control_type));
+        constant_types.push(controls::get_constant_ptr_type(
+            context,
+            control.control_type,
+        ));
 
         if target.include_ui {
             let ui_type = controls::get_ui_type(context, control.control_type);

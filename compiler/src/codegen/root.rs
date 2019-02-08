@@ -251,7 +251,7 @@ pub fn build_socket_accessor_func(
     });
     build_context_function(module, func, cache.target(), &|ctx: BuilderContext| {
         let socket_ptr_ptr = unsafe {
-            ctx.b.build_gep(
+            ctx.b.build_in_bounds_gep(
                 &socket_ptrs,
                 &[
                     ctx.context.i32_type().const_int(0, false),

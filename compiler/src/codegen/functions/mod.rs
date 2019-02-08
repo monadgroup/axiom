@@ -79,7 +79,8 @@ impl VarArgs {
         let arr_ptr = builder
             .build_extract_value(self.param, 1, "vararg.arr")
             .into_pointer_value();
-        let item_ptr_ptr = unsafe { builder.build_gep(&arr_ptr, &[index], "vararg.item.ptr") };
+        let item_ptr_ptr =
+            unsafe { builder.build_in_bounds_gep(&arr_ptr, &[index], "vararg.item.ptr") };
         if self.is_by_value {
             item_ptr_ptr
         } else {

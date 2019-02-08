@@ -108,18 +108,27 @@ pub fn get_control_ptrs(
     let block_layout = cache.block_layout(block).unwrap();
     let control_offset = block_layout.control_index(control);
 
-    // the control's initialized data is somewhere in the initialized area
-    let node_initialized_ptr = unsafe { *(ptr as *mut InitializedPtr) };
-    let initialized_offset = cache
-        .target()
-        .machine
-        .get_data()
+    // format of the data in the node pointer:
+    //   {
+    //     initializedData: [
+    //        ...,   // one for each control
+    //        ...,
+    //        ...,
+    //     ],
+    //     controlData: [
+    //        ...,  // one for each control, size may change
+    //        ...,
+    //        ...,
+    //     ]
+    //   }
+    let machine_data = cache.target().machine.get_data();
+    let initialized_offset = machine_data
         .offset_of_element(&block_layout.constant_struct, control_offset as u32)
         .unwrap();
-    let control_initialized_ptr =
-        unsafe { (node_initialized_ptr as *mut c_void).offset(initialized_offset as isize) };
+    let control_initialized_ptr = unsafe { ptr.add(initialized_offset as usize) };
 
-    let node_controls_ptr = unsafe { (ptr as *mut *mut c_void).offset(1) };
+    let control_data_offset = machine_data.get_store_size(&block_layout.constant_struct);
+    let node_controls_ptr = unsafe { ptr.add(control_data_offset as usize) };
     let controls_data_offset = cache
         .target()
         .machine
@@ -127,8 +136,7 @@ pub fn get_control_ptrs(
         .offset_of_element(&block_layout.pointer_struct, control_offset as u32)
         .unwrap();
     let base_ptr =
-        unsafe { (node_controls_ptr as *mut c_void).offset(controls_data_offset as isize) }
-            as *mut *mut c_void;
+        unsafe { node_controls_ptr.offset(controls_data_offset as isize) } as *mut *mut c_void;
     ControlPointers {
         value: unsafe { *base_ptr },
         data: unsafe { *base_ptr.offset(1) },
