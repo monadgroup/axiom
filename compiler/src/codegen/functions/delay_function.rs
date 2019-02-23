@@ -51,11 +51,11 @@ impl DelayFunction {
     ///         uint64_t loadedCurrentPos = *currentPos;
     ///         *currentPos = (loadedCurrentPos + 1) % *currentSize;
     ///
-    ///         if (delaySamples == 0) {
-    ///             resultVal = input;
-    ///         } else {
+    ///         if (delaySamples != 0) {
     ///             auto readPosition = (loadedCurrentPos + *currentSize - delaySamples) % *currentSize;
     ///             resultVal = (*buffer)[readPosition];
+    ///         } else {
+    ///             resultVal = input;
     ///         }
     ///
     ///         (*buffer)[loadedCurrentPos] = input;
@@ -66,8 +66,13 @@ impl DelayFunction {
     ///     auto bufferSize = calculateNextPowerOfTwo(reserveSamples);
     ///     if (bufferSize != *currentSize) {
     ///         *buffer = realloc(*buffer, bufferSize * sizeof(float));
-    ///         if (bufferSize == 0) *buffer = nullptr;
-    ///         else memset(*buffer + *currentSize, 0, (bufferSize - *currentSize) * sizeof(float));
+    ///         if (bufferSize == 0) {
+    ///             *buffer = nullptr;
+    ///         } else if (bufferSize > *currentSize) {
+    ///             memset(*buffer + *currentSize, 0, (bufferSize - *currentSize) * sizeof(float));
+    ///         } else {
+    ///             *currentPos = *currentPos % bufferSize;
+    ///         }
     ///         *currentSize = bufferSize;
     ///     }
     ///
@@ -111,6 +116,9 @@ impl DelayFunction {
             let size_increase_true_block = ctx
                 .context
                 .append_basic_block(&ctx.func, "sizeincrease.true");
+            let size_decrease_true_block = ctx
+                .context
+                .append_basic_block(&ctx.func, "sizedecrease.true");
             let size_increase_continue_block = ctx
                 .context
                 .append_basic_block(&ctx.func, "sizeincrease.continue");
@@ -156,7 +164,7 @@ impl DelayFunction {
 
             // *currentPos = (loadedCurrentPos + 1) % *currentSize;
             let new_pos = ctx.b.build_int_unsigned_rem(
-                ctx.b.build_int_nuw_add(
+                ctx.b.build_int_add(
                     current_pos,
                     ctx.context.i32_type().const_int(1, false),
                     "newpos.unbounded",
@@ -166,7 +174,7 @@ impl DelayFunction {
             );
             ctx.b.build_store(&current_pos_ptr, &new_pos);
 
-            // if (delaySamples == 0) {
+            // if (delaySamples != 0) {
             let has_samples = ctx.b.build_int_compare(
                 IntPredicate::NE,
                 delay_samples,
@@ -181,10 +189,10 @@ impl DelayFunction {
 
             ctx.b.position_at_end(&has_samples_true_block);
 
-            // auto readPosition = (loadedCurrentPos + *currentSize - delaySamples) % delaySamples;
+            // auto readPosition = (loadedCurrentPos + *currentSize - delaySamples) % *currentSize;
             let read_position = ctx.b.build_int_unsigned_rem(
-                ctx.b.build_int_nuw_sub(
-                    ctx.b.build_int_nuw_add(current_pos, current_size, ""),
+                ctx.b.build_int_sub(
+                    ctx.b.build_int_add(current_pos, current_size, ""),
                     delay_samples,
                     "",
                 ),
@@ -271,7 +279,7 @@ impl DelayFunction {
                 .f64_type()
                 .size_of()
                 .const_cast(&size_type, false);
-            let realloc_size = ctx.b.build_int_nuw_mul(
+            let realloc_size = ctx.b.build_int_mul(
                 ctx.b.build_int_cast(new_buffer_size, size_type, ""),
                 float_size,
                 "",
@@ -326,11 +334,11 @@ impl DelayFunction {
             ctx.b.build_conditional_branch(
                 &size_increase,
                 &size_increase_true_block,
-                &size_increase_continue_block,
+                &size_decrease_true_block,
             );
 
             ctx.b.position_at_end(&size_increase_true_block);
-            let current_size_bytes = ctx.b.build_int_nuw_mul(
+            let current_size_bytes = ctx.b.build_int_mul(
                 ctx.b.build_int_cast(current_size, size_type, ""),
                 float_size,
                 "currentsizebytes",
@@ -343,14 +351,28 @@ impl DelayFunction {
                             .build_in_bounds_gep(&realloc_ptr, &[current_size_bytes], "offsetptr")
                     },
                     &ctx.context.i8_type().const_int(0, false),
-                    &ctx.b
-                        .build_int_nuw_sub(realloc_size, current_size_bytes, ""),
+                    &ctx.b.build_int_sub(realloc_size, current_size_bytes, ""),
                     &ctx.context.i32_type().const_int(0, false),
                     &ctx.context.bool_type().const_int(0, false),
                 ],
                 "",
                 false,
             );
+            ctx.b
+                .build_unconditional_branch(&size_increase_continue_block);
+
+            // else {
+            ctx.b.position_at_end(&size_decrease_true_block);
+            // *currentPos = *currentPos % *currentSize;
+            ctx.b.build_store(
+                &current_pos_ptr,
+                &ctx.b.build_int_unsigned_rem(
+                    ctx.b.build_load(&current_pos_ptr, "").into_int_value(),
+                    new_buffer_size,
+                    "",
+                ),
+            );
+            // }
             ctx.b
                 .build_unconditional_branch(&size_increase_continue_block);
 
