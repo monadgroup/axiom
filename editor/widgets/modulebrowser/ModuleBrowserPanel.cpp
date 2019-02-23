@@ -1,5 +1,7 @@
 #include "ModuleBrowserPanel.h"
 
+#include <QtCore/QEvent>
+#include <QtCore/QTimer>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
@@ -10,6 +12,17 @@
 #include "editor/util.h"
 
 using namespace AxiomGui;
+
+SearchBoxFocusEventFilter::SearchBoxFocusEventFilter(QLineEdit *searchBox) : searchBox(searchBox) {
+    setParent(searchBox);
+}
+
+bool SearchBoxFocusEventFilter::eventFilter(QObject *object, QEvent *event) {
+    if (object == searchBox && event->type() == QEvent::FocusIn) {
+        QTimer::singleShot(0, searchBox, &QLineEdit::selectAll);
+    }
+    return false;
+}
 
 ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *library, QWidget *parent)
     : ads::CDockWidget("Modules", parent), library(library) {
@@ -39,6 +52,7 @@ ModuleBrowserPanel::ModuleBrowserPanel(MainWindow *window, AxiomModel::Library *
     searchBox->setObjectName("searchBox");
     searchBox->setPlaceholderText("Search modules...");
     searchBox->setText(library->activeSearch());
+    searchBox->installEventFilter(new SearchBoxFocusEventFilter(searchBox));
     filterBarLayout->addWidget(searchBox, 3);
 
     auto previewList = new ModulePreviewList(window, library, this);

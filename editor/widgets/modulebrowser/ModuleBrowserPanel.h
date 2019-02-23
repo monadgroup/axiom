@@ -38,4 +38,16 @@ namespace AxiomGui {
 
         void removeTag(const QString &tag);
     };
+
+    class SearchBoxFocusEventFilter : public QObject {
+        Q_OBJECT
+
+    public:
+        explicit SearchBoxFocusEventFilter(QLineEdit *searchBox);
+
+        bool eventFilter(QObject *object, QEvent *event) override;
+
+    private:
+        QLineEdit *searchBox;
+    };
 }
