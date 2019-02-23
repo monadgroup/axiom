@@ -8,10 +8,10 @@ use inkwell::types::StructType;
 use inkwell::values::PointerValue;
 use inkwell::{FloatPredicate, IntPredicate};
 
-pub struct NextFunction {}
-impl Function for NextFunction {
+pub struct LastFunction {}
+impl Function for LastFunction {
     fn function_type() -> block::Function {
-        block::Function::Next
+        block::Function::Last
     }
 
     fn data_type(context: &Context) -> StructType {

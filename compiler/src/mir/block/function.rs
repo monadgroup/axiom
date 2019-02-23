@@ -92,7 +92,7 @@ define_functions! {
     Combine = "combine" func![(Num, Num) -> Num],
     Mix = "mix" func![(Num, Num, Num) -> Num],
     Sequence = "sequence" func![(Num => Num) -> Num],
-    Next = "next" func![(Num) -> Num],
+    Last = "last" func![(Num) -> Num],
     Delay = "delay" func![(Num, Num, ?Num) -> Num],
     Amplitude = "amplitude" func![(Num) -> Num],
     Hold = "hold" func![(Num, Num, ?Num) -> Num],

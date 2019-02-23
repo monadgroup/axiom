@@ -154,7 +154,7 @@ map_functions! {
     Combine => CombineFunction,
     Mix => MixFunction,
     Sequence => SequenceFunction,
-    Next => NextFunction,
+    Last => LastFunction,
     Delay => DelayFunction,
     Amplitude => AmplitudeFunction,
     Hold => HoldFunction,
