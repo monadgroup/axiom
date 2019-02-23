@@ -115,7 +115,7 @@ define_functions! {
     Voices = "voices" func![(Midi, VarType::new_array(Num)) -> VarType::new_array(Midi)],
     Channel = "channel" func![(Midi, Num) -> Midi],
     Indexed = "indexed" func![(Num) -> VarType::new_array(Num)],
-    Adsr = "adsr" func![(Num, Num, Num, Num, Num) -> Num]
+    Adsr = "adsr" func![(Num, Num, Num, Num, Num) -> Tuple(vec![Num, Num])]
 }
 
 #[derive(Debug, Clone)]

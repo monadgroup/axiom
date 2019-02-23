@@ -1,6 +1,6 @@
 use super::{Function, FunctionContext, VarArgs};
 use crate::ast::FormType;
-use crate::codegen::values::NumValue;
+use crate::codegen::values::{NumValue, TupleValue};
 use crate::codegen::{
     build_context_function, globals, math, util, BuilderContext, TargetProperties,
 };
@@ -38,9 +38,10 @@ fn get_channel_update_data_type(context: &Context) -> StructType {
 fn get_channel_update_func(module: &Module) -> FunctionValue {
     util::get_or_create_func(module, "maxim.util.adsr.channelUpdate", true, &|| {
         let context = &module.get_context();
+        let result_type = context.struct_type(&[&context.bool_type(), &context.f64_type()], false);
         (
             Linkage::PrivateLinkage,
-            context.f64_type().fn_type(
+            result_type.fn_type(
                 &[
                     &get_channel_update_data_type(context).ptr_type(AddressSpace::Generic),
                     &context.bool_type(), // current trigger
@@ -443,8 +444,17 @@ fn build_channel_update_func(module: &Module, target: &TargetProperties) {
         ctx.b.build_unconditional_branch(&val_state_continue_block);
 
         ctx.b.position_at_end(&val_state_continue_block);
-        ctx.b
-            .build_return(Some(&ctx.b.build_load(&last_val_ptr, "")));
+
+        // Build the result struct
+        let is_active = ctx.b.build_int_compare(
+            IntPredicate::NE,
+            ctx.b.build_load(&state_ptr, "").into_int_value(),
+            state_not_active_const,
+            "",
+        );
+        let result_num = ctx.b.build_load(&last_val_ptr, "").into_float_value();
+
+        ctx.b.build_aggregate_return(&[&is_active, &result_num]);
     })
 }
 
@@ -477,7 +487,10 @@ impl Function for AdsrFunction {
         let decay_num = NumValue::new(args[2]);
         let sustain_num = NumValue::new(args[3]);
         let release_num = NumValue::new(args[4]);
-        let result_num = NumValue::new(result);
+
+        let result_tuple = TupleValue::new(result);
+        let result_active = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 0));
+        let result_num = NumValue::new(result_tuple.get_item_ptr(func.ctx.b, 1));
 
         let trig_vec = trig_num.get_vec(func.ctx.b);
         let attack_vec = attack_num.get_vec(func.ctx.b);
@@ -537,7 +550,7 @@ impl Function for AdsrFunction {
             )
             .left()
             .unwrap()
-            .into_float_value();
+            .into_struct_value();
 
         // calculate result for the right channel
         let right_index = func.ctx.context.i64_type().const_int(1, false);
@@ -584,7 +597,49 @@ impl Function for AdsrFunction {
             )
             .left()
             .unwrap()
-            .into_float_value();
+            .into_struct_value();
+
+        let active_vec = func
+            .ctx
+            .b
+            .build_insert_element(
+                &func
+                    .ctx
+                    .b
+                    .build_insert_element(
+                        &func.ctx.context.f64_type().vec_type(2).get_undef(),
+                        &func.ctx.b.build_unsigned_int_to_float(
+                            func.ctx
+                                .b
+                                .build_extract_value(left_result, 0, "left.active")
+                                .into_int_value(),
+                            func.ctx.context.f64_type(),
+                            "",
+                        ),
+                        &left_index,
+                        "",
+                    )
+                    .into_vector_value(),
+                &func.ctx.b.build_unsigned_int_to_float(
+                    func.ctx
+                        .b
+                        .build_extract_value(right_result, 0, "right.active")
+                        .into_int_value(),
+                    func.ctx.context.f64_type(),
+                    "",
+                ),
+                &right_index,
+                "",
+            )
+            .into_vector_value();
+        result_active.set_vec(func.ctx.b, active_vec);
+        result_active.set_form(
+            func.ctx.b,
+            func.ctx
+                .context
+                .i8_type()
+                .const_int(FormType::None as u64, false),
+        );
 
         // put the results in the return value
         let result_vec = func
@@ -596,12 +651,20 @@ impl Function for AdsrFunction {
                     .b
                     .build_insert_element(
                         &func.ctx.context.f64_type().vec_type(2).get_undef(),
-                        &left_result,
+                        &func
+                            .ctx
+                            .b
+                            .build_extract_value(left_result, 1, "left.value")
+                            .into_float_value(),
                         &left_index,
                         "",
                     )
                     .into_vector_value(),
-                &right_result,
+                &func
+                    .ctx
+                    .b
+                    .build_extract_value(right_result, 1, "right.value")
+                    .into_float_value(),
                 &right_index,
                 "",
             )
