@@ -17,19 +17,21 @@ cache:
 install:
   - mkdir build
   - cd build
+  - curl http://steinberg.net/sdk_downloads/vstsdk366_27_06_2016_build_61.zip > vstsdk.zip
+  - unzip vstsdk.zip VST_SDK/VST2_SDK/**/*
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   - source $HOME/.cargo/env
   - rustc --version && cargo --version
-  - brew install qt llvm@6 portaudio
+  - brew install qt llvm@6 portaudio portmidi
 
 # setup cmake for building
 before_script:
   - export LLVM_SYS_60_PREFIX=/usr/local/opt/llvm@6
-  - cmake ../ -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm@6" -DCMAKE_BUILD_TYPE=Release -DDEPLOY=ON
+  - cmake ../ -DVST2_SDK_ROOT="$TRAVIS_BUILD_DIR/build/VST_SDK/VST2_SDK" -DCMAKE_PREFIX_PATH="/usr/local/opt/qt;/usr/local/opt/llvm@6" -DCMAKE_BUILD_TYPE=Release -DDEPLOY=ON
 
 # build it!
 script:
-  - make axiom_standalone
+  - make axiom_standalone axiom_vst2_instrument axiom_vst2_effect
 
 # create installers with cpack
 before_deploy:
