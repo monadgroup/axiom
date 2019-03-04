@@ -18,7 +18,7 @@ install:
   - mkdir build
   - cd build
   - curl -L "http://steinberg.net/sdk_downloads/vstsdk366_27_06_2016_build_61.zip" > vstsdk.zip
-  - unzip vstsdk.zip "VST3 SDK/**/*" "VST3 SDK/**/*"
+  - unzip vstsdk.zip > /dev/null
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   - source $HOME/.cargo/env
   - rustc --version && cargo --version
