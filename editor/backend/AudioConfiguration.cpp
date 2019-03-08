@@ -7,7 +7,7 @@ ConfigurationPortal::ConfigurationPortal(size_t _key, uint64_t id, AxiomBackend:
     : _key(_key), id(id), type(type), value(value), name(std::move(name)) {}
 
 bool ConfigurationPortal::operator==(const AxiomBackend::ConfigurationPortal &other) const {
-    return type == other.type && value == other.value && name == other.name;
+    return id == other.id && type == other.type && value == other.value && name == other.name;
 }
 
 bool ConfigurationPortal::operator<(const AxiomBackend::ConfigurationPortal &other) const {

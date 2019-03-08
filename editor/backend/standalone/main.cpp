@@ -3,8 +3,8 @@
 
 #include "../../AxiomApplication.h"
 #include "../../AxiomEditor.h"
-#include "editor/backend/EventConverter.h"
 #include "../AudioBackend.h"
+#include "editor/backend/EventConverter.h"
 
 #ifdef PORTAUDIO
 #include <portaudio.h>
@@ -23,29 +23,24 @@ public:
     ssize_t midiInputPortal = -1;
     ssize_t audioOutputPortal = -1;
     ssize_t midiOutputPortal = -1;
-    NumValue **outputPortal = nullptr;
-    MidiValue **outputMidi = nullptr;
 
     void handleConfigurationChange(const AudioConfiguration &configuration) override {
         // we only care about the first MIDI input and first number output portal
         midiInputPortal = -1;
         audioOutputPortal = -1;
         midiOutputPortal = -1;
-        outputPortal = nullptr;
-        outputMidi = nullptr;
         for (size_t i = 0; i < configuration.portals.size(); i++) {
             const auto &portal = configuration.portals[i];
-            if (outputPortal == nullptr && portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
-                audioOutputPortal = i;
-                outputPortal = getAudioPortal(i);
+            if (audioOutputPortal == -1 && portal.type == PortalType::OUTPUT && portal.value == PortalValue::AUDIO) {
+                audioOutputPortal = (ssize_t) i;
             } else if (midiInputPortal == -1 && portal.type == PortalType::INPUT && portal.value == PortalValue::MIDI) {
                 midiInputPortal = (ssize_t) i;
-            } else if (outputMidi == nullptr && portal.type == PortalType::OUTPUT && portal.value == PortalValue::MIDI) {
+            } else if (midiOutputPortal == -1 && portal.type == PortalType::OUTPUT &&
+                       portal.value == PortalValue::MIDI) {
                 midiOutputPortal = (ssize_t) i;
-                outputMidi = getMidiPortal(i);
             }
 
-            if (outputPortal != nullptr && midiInputPortal != -1 && midiOutputPortal != -1) {
+            if (midiInputPortal != -1 && audioOutputPortal != -1 && midiOutputPortal != -1) {
                 break;
             }
         }
@@ -58,7 +53,8 @@ public:
     bool doesSaveInternally() const override { return false; }
 
     std::string getPortalLabel(size_t portalIndex) const override {
-        if ((ssize_t) portalIndex == midiInputPortal || (ssize_t) portalIndex == audioOutputPortal || (ssize_t) portalIndex == midiOutputPortal) {
+        if ((ssize_t) portalIndex == midiInputPortal || (ssize_t) portalIndex == audioOutputPortal ||
+            (ssize_t) portalIndex == midiOutputPortal) {
             return "1";
         }
         return "?";
@@ -103,12 +99,7 @@ public:
             auto deviceInfo = Pm_GetDeviceInfo(inputMidiDevice);
             std::cout << "Using MIDI input: " << inputMidiDevice << " " << deviceInfo->name << std::endl;
 
-            checkPmError(Pm_OpenInput(&midiInputStream,
-                                      inputMidiDevice,
-                                      nullptr,
-                                      MIDI_BUFFER_SIZE,
-                                      nullptr,
-                                      nullptr));
+            checkPmError(Pm_OpenInput(&midiInputStream, inputMidiDevice, nullptr, MIDI_BUFFER_SIZE, nullptr, nullptr));
         } else {
             std::cerr << "Not using MIDI input as no devices could be detected." << std::endl;
         }
@@ -125,14 +116,9 @@ public:
             auto deviceInfo = Pm_GetDeviceInfo(outputMidiDevice);
             std::cout << "Using MIDI output: " << outputMidiDevice << " " << deviceInfo->name << std::endl;
 
-            checkPmError(Pm_OpenOutput(&midiOutputStream,
-                                       outputMidiDevice,
-                                       nullptr,
-                                       MIDI_BUFFER_SIZE,
-                                       nullptr,
-                                       nullptr,
-                    // MIDI event latency: it's currently 0 since we don't know the audio latency, there might be
-                    // some way to fix this however?
+            checkPmError(Pm_OpenOutput(&midiOutputStream, outputMidiDevice, nullptr, MIDI_BUFFER_SIZE, nullptr, nullptr,
+                                       // MIDI event latency: it's currently 0 since we don't know the audio latency,
+                                       // there might be some way to fix this however?
                                        0));
         } else {
             std::cerr << "Not using MIDI output as no devices could be detected." << std::endl;
@@ -170,18 +156,14 @@ public:
     }
 
     void processOutgoingMidiEvents() {
-        if (midiOutputStream == nullptr || outputMidi == nullptr) {
+        if (midiOutputStream == nullptr || midiOutputPortal == -1) {
             return;
         }
 
         // Read all queued events, convert them to MIDI and stuff them in the buffer
-        auto midiQueue = *outputMidi;
+        auto midiQueue = getMidiPortal(midiOutputPortal);
         for (uint8_t i = 0; i < midiQueue->count; i++) {
-            checkPmError(Pm_WriteShort(
-                    midiOutputStream,
-                    0,
-                    convertToMidi(midiQueue->events[i])
-            ));
+            checkPmError(Pm_WriteShort(midiOutputStream, 0, convertToMidi(midiQueue->events[i])));
         }
         midiQueue->count = 0;
     }
@@ -217,8 +199,8 @@ public:
             for (auto i = processPos; i < endProcessPos; i++) {
                 context.generate();
 
-                if (backend->outputPortal) {
-                    auto outputNum = **backend->outputPortal;
+                if (backend->audioOutputPortal != -1) {
+                    auto outputNum = *backend->getAudioPortal(backend->audioOutputPortal);
                     *outputNums++ = (float) outputNum.left;
                     *outputNums++ = (float) outputNum.right;
                 }
@@ -246,9 +228,9 @@ public:
         // todo: allow inputs and outputs to be customized (does PortAudio allow changing inputs and outputs
         // mid-stream?)
         checkPaError(Pa_OpenDefaultStream(&audioStream,
-                                        0, // no inputs
-                                        2, // stereo output
-                                        paFloat32, 44100, paFramesPerBufferUnspecified, paCallback, this));
+                                          0, // no inputs
+                                          2, // stereo output
+                                          paFloat32, 44100, paFramesPerBufferUnspecified, paCallback, this));
         checkPaError(Pa_StartStream(audioStream));
 #endif
 
@@ -302,8 +284,9 @@ int main(int argc, char *argv[]) {
             } else {
                 try {
                     midiInputDevice = (int) std::stoul(std::string(argv[i]), nullptr, 10);
-                } catch (const std::invalid_argument &) {}
-                catch (const std::out_of_range &) {}
+                } catch (const std::invalid_argument &) {
+                } catch (const std::out_of_range &) {
+                }
             }
         } else if (strcmp(argv[i], "--output") == 0) {
             i++;
@@ -313,8 +296,9 @@ int main(int argc, char *argv[]) {
             } else {
                 try {
                     midiOutputDevice = (int) std::stoul(std::string(argv[i]), nullptr, 10);
-                } catch (const std::invalid_argument &) {}
-                catch (const std::out_of_range &) {}
+                } catch (const std::invalid_argument &) {
+                } catch (const std::out_of_range &) {
+                }
             }
         } else if (!hasOpenedProject) {
             editor.openProjectFile(argv[i]);

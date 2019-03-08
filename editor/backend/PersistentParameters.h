@@ -14,11 +14,10 @@ namespace AxiomBackend {
     struct PersistentParameter {
         uint64_t id;
         size_t portalIndex;
-        T **value;
         std::string name;
 
-        PersistentParameter(uint64_t id, size_t portalIndex, T **value, std::string name)
-            : id(id), portalIndex(portalIndex), value(value), name(std::move(name)) {}
+        PersistentParameter(uint64_t id, size_t portalIndex, std::string name)
+            : id(id), portalIndex(portalIndex), name(std::move(name)) {}
     };
 
     using NumParameter = PersistentParameter<AxiomBackend::NumValue>;
@@ -93,7 +92,7 @@ namespace AxiomBackend {
                 if (paramId == -1) {
                     parameters._parameters.push_back(std::nullopt);
                 } else {
-                    parameters._parameters.push_back(PersistentParameter<T>((uint64_t) paramId, 0, nullptr, ""));
+                    parameters._parameters.push_back(PersistentParameter<T>((uint64_t) paramId, 0, ""));
                 }
             }
             return parameters;

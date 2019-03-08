@@ -335,7 +335,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == fiddleAction && portalControl) {
         auto backend = mainWindow->project()->backend();
         auto remappedIndex = backend->internalRemapPortal(portalControl->portalId());
-        auto currentPortalValue = **backend->getAudioPortal(remappedIndex);
+        auto currentPortalValue = *backend->getAudioPortal(remappedIndex);
         backend->automationValueChanged(remappedIndex, currentPortalValue);
     }
 }

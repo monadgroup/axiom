@@ -36,14 +36,14 @@ void GenerateContext::generate() {
     backend->_editor->window()->runtime()->runUpdate();
 }
 
-NumValue **AudioBackend::getAudioPortal(size_t portalId) const {
+NumValue *AudioBackend::getAudioPortal(size_t portalId) const {
     if (portalId >= portalValues.size()) return nullptr;
-    return (NumValue **) &portalValues[portalId];
+    return (NumValue *) portalValues[portalId];
 }
 
-MidiValue **AudioBackend::getMidiPortal(size_t portalId) const {
+MidiValue *AudioBackend::getMidiPortal(size_t portalId) const {
     if (portalId >= portalValues.size()) return nullptr;
-    return (MidiValue **) &portalValues[portalId];
+    return (MidiValue *) portalValues[portalId];
 }
 
 const char *AudioBackend::formatNumForm(float testValue, AxiomBackend::NumForm form) {
@@ -116,6 +116,9 @@ void AudioBackend::deserialize(QByteArray *data,
             AxiomUtil::showMessageBox(msgBox);
         }
     } else {
+        // Force `handleConfigurationChange` to be called
+        hasCurrent = false;
+
         if (deserializeCustomCallback) {
             (*deserializeCustomCallback)(stream, readVersion);
         }
@@ -136,7 +139,7 @@ void AudioBackend::queueMidiEvent(uint64_t deltaFrames, size_t portalId, AxiomBa
 }
 
 void AudioBackend::clearMidi(size_t portalId) {
-    (*getMidiPortal(portalId))->count = 0;
+    getMidiPortal(portalId)->count = 0;
 }
 
 void AudioBackend::clearNotes(size_t portalId) {
@@ -153,7 +156,7 @@ GenerateContext AudioBackend::beginGenerate() {
         }
 
         if (event.deltaFrames == 0) {
-            (*getMidiPortal(event.portalId))->pushEvent(event.event);
+            getMidiPortal(event.portalId)->pushEvent(event.event);
 
             // note: deque doesn't invalidate iterators when removing items from start or end, so this is safe to do.
             queuedEvents.pop_front();
@@ -177,6 +180,7 @@ bool AudioBackend::canFiddleAutomation() const {
 }
 
 void AudioBackend::internalUpdateConfiguration() {
+    std::cout << "got internalUpdateConfiguration" << std::endl;
     auto newPortals = std::move(_editor->window()->project()->getAudioConfiguration().portals);
     std::sort(newPortals.begin(), newPortals.end());
 
@@ -189,6 +193,7 @@ void AudioBackend::internalUpdateConfiguration() {
 
     // no point continuing if the portals are the same
     if (hasCurrent && newPortals == currentPortals) {
+        std::cout << "skipping calling handleConfigurationChange" << std::endl;
         return;
     }
 

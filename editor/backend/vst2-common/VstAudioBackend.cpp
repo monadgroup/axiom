@@ -17,22 +17,22 @@ void VstAudioBackend::handleConfigurationChange(const AxiomBackend::AudioConfigu
     for (size_t i = 0; i < configuration.portals.size(); i++) {
         const auto &portal = configuration.portals[i];
         switch (portal.type) {
-            case PortalType::INPUT:
-                if (portal.value == PortalValue::AUDIO) {
-                    newAudioInputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
-                } else if (portal.value == PortalValue::MIDI && midiInputPortal == -1) {
-                    midiInputPortal = i;
-                }
-                break;
-            case PortalType::OUTPUT:
-                if (portal.value == PortalValue::AUDIO) {
-                    newAudioOutputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
-                }
-                break;
-            case PortalType::AUTOMATION:
-                if (portal.value == PortalValue::AUDIO) {
-                    newAutomationInputs.emplace_back(portal.id, i, getAudioPortal(i), portal.name);
-                }
+        case PortalType::INPUT:
+            if (portal.value == PortalValue::AUDIO) {
+                newAudioInputs.emplace_back(portal.id, i, portal.name);
+            } else if (portal.value == PortalValue::MIDI && midiInputPortal == -1) {
+                midiInputPortal = i;
+            }
+            break;
+        case PortalType::OUTPUT:
+            if (portal.value == PortalValue::AUDIO) {
+                newAudioOutputs.emplace_back(portal.id, i, portal.name);
+            }
+            break;
+        case PortalType::AUTOMATION:
+            if (portal.value == PortalValue::AUDIO) {
+                newAutomationInputs.emplace_back(portal.id, i, portal.name);
+            }
         }
     }
 

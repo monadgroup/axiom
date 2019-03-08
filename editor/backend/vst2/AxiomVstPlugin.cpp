@@ -1,5 +1,7 @@
 #include "AxiomVstPlugin.h"
 
+#include <iostream>
+
 #include "editor/backend/EventConverter.h"
 
 using namespace AxiomBackend;
@@ -23,7 +25,8 @@ bool isCompilingSynth() {
 }
 
 AxiomVstPlugin::AxiomVstPlugin(audioMasterCallback audioMaster)
-    : AudioEffectX(audioMaster, 1, 255), appRef(application.get()), backend(*this, isCompilingSynth()), editor(&*appRef, &backend) {
+    : AudioEffectX(audioMaster, 1, 255), appRef(application.get()), backend(*this, isCompilingSynth()),
+      editor(&*appRef, &backend) {
 #ifdef AXIOM_VST2_IS_SYNTH
     isSynth();
     setUniqueID(0x41584F53);
@@ -67,7 +70,7 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
             for (size_t inputIndex = 0; inputIndex < expectedInputCount; inputIndex++) {
                 const auto &input = backend.audioInputs[inputIndex];
                 if (input) {
-                    auto &inputNum = **input->value;
+                    auto &inputNum = *backend.getAudioPortal(input->portalIndex);
                     inputNum.left = inputs[inputIndex * 2][i];
                     inputNum.right = inputs[inputIndex * 2 + 1][i];
                     inputNum.form = AxiomBackend::NumForm::OSCILLATOR;
@@ -82,7 +85,7 @@ void AxiomVstPlugin::processReplacing(float **inputs, float **outputs, VstInt32 
                 auto rightIndex = leftIndex + 1;
 
                 if (output) {
-                    auto outputNum = **output->value;
+                    auto outputNum = *backend.getAudioPortal(output->portalIndex);
                     outputs[leftIndex][i] = (float) outputNum.left;
                     outputs[rightIndex][i] = (float) outputNum.right;
                 } else {
@@ -128,7 +131,7 @@ void AxiomVstPlugin::setParameter(VstInt32 index, float value) {
     if ((size_t) index >= backend.automationInputs.size()) return;
     auto &param = backend.automationInputs[index];
     if (param) {
-        auto val = *param->value;
+        auto val = backend.getAudioPortal(param->portalIndex);
         val->left = value;
         val->right = value;
         val->form = NumForm::CONTROL;
@@ -138,14 +141,14 @@ void AxiomVstPlugin::setParameter(VstInt32 index, float value) {
 float AxiomVstPlugin::getParameter(VstInt32 index) {
     if ((size_t) index >= backend.automationInputs.size()) return 0;
     auto &param = backend.automationInputs[index];
-    return param ? (*param->value)->left : 0;
+    return param ? backend.getAudioPortal(param->portalIndex)->left : 0;
 }
 
 void AxiomVstPlugin::getParameterLabel(VstInt32 index, char *label) {
     if ((size_t) index >= backend.automationInputs.size()) return;
     auto &param = backend.automationInputs[index];
     if (param) {
-        auto val = *param->value;
+        auto val = backend.getAudioPortal(param->portalIndex);
         vst_strncpy(label, backend.formatNumForm(val->left, val->form), kVstMaxParamStrLen);
     }
 }
@@ -154,7 +157,7 @@ void AxiomVstPlugin::getParameterDisplay(VstInt32 index, char *text) {
     if ((size_t) index >= backend.automationInputs.size()) return;
     auto &param = backend.automationInputs[index];
     if (param) {
-        auto val = *param->value;
+        auto val = backend.getAudioPortal(param->portalIndex);
         vst_strncpy(text, backend.formatNum(*val, false).c_str(), kVstMaxParamStrLen);
     }
 }
@@ -181,11 +184,13 @@ VstInt32 AxiomVstPlugin::getChunk(void **data, bool) {
 
 VstInt32 AxiomVstPlugin::setChunk(void *data, VstInt32 byteSize, bool) {
     auto byteArray = QByteArray::fromRawData((char *) data, byteSize);
+    std::cout << "Starting deserialize" << std::endl;
     backend.deserialize(&byteArray, [this](QDataStream &stream, uint32_t version) {
         backend.audioInputs = AxiomBackend::NumParameters::deserialize(stream, version);
         backend.audioOutputs = AxiomBackend::NumParameters::deserialize(stream, version);
         backend.automationInputs = AxiomBackend::NumParameters::deserialize(stream, version);
     });
+    std::cout << "Finished deserialize" << std::endl;
     return 0;
 }
 
@@ -231,6 +236,7 @@ void AxiomVstPlugin::adapterSetParameter(size_t parameter, AxiomBackend::NumValu
 }
 
 void AxiomVstPlugin::adapterUpdateIo() {
+    std::cout << "Got adapterUpdateIo" << std::endl;
     setNumInputs(2 * backend.audioInputs.size());
     setNumOutputs(2 * backend.audioOutputs.size());
     ioChanged();
@@ -238,4 +244,5 @@ void AxiomVstPlugin::adapterUpdateIo() {
 
     expectedInputCount = std::min(expectedInputCount, backend.audioInputs.size());
     expectedOutputCount = std::min(expectedOutputCount, backend.audioOutputs.size());
+    std::cout << "Finished adapterUpdateIo" << std::endl;
 }

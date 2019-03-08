@@ -50,10 +50,8 @@ namespace AxiomBackend {
 
     public:
         // Accessors for audio inputs and outputs
-        // Note: the pointer returned is always valid as long as the portal ID is, however the target pointer may change
-        // at any time from the UI thread.
-        NumValue **getAudioPortal(size_t portalId) const;
-        MidiValue **getMidiPortal(size_t portalId) const;
+        NumValue *getAudioPortal(size_t portalId) const;
+        MidiValue *getMidiPortal(size_t portalId) const;
 
         // Sets the BPM or sample rate on the runtime. Should be called from the audio thread.
         void setBpm(float bpm);

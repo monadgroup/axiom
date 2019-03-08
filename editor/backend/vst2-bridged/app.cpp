@@ -1,15 +1,15 @@
-#include <iostream>
-#include <thread>
 #include <QtCore/QSharedMemory>
 #include <QtCore/QTimer>
+#include <iostream>
+#include <thread>
 
-#include "VstChannel.h"
-#include "Dispatcher.h"
-#include "IdBuffer.h"
 #include "../../AxiomApplication.h"
 #include "../../AxiomEditor.h"
 #include "../vst2-common/VstAdapter.h"
 #include "../vst2-common/VstAudioBackend.h"
+#include "Dispatcher.h"
+#include "IdBuffer.h"
+#include "VstChannel.h"
 #include "editor/util.h"
 
 using namespace AxiomBackend;
@@ -26,14 +26,11 @@ public:
     VstAudioBackend *backend = nullptr;
 
     BridgedAdapter(VstChannel &channel, const std::string &id)
-        : channel(channel),
-          sep(id),
-          guiDispatcher(channel.guiVstToApp, [this](const VstGuiMessage &message) {
-              return dispatchGuiMessage(message);
-          }),
-          audioDispatcher(channel.audioVstToApp, [this](const VstAudioMessage &message) {
-              return dispatchAudioMessage(message);
-          }) {}
+        : channel(channel), sep(id),
+          guiDispatcher(channel.guiVstToApp,
+                        [this](const VstGuiMessage &message) { return dispatchGuiMessage(message); }),
+          audioDispatcher(channel.audioVstToApp,
+                          [this](const VstAudioMessage &message) { return dispatchAudioMessage(message); }) {}
 
     void start(VstAudioBackend *backend) {
         this->backend = backend;
@@ -52,14 +49,13 @@ public:
 
     void adapterUpdateIo() override {
         // determine the size for a buffer that contains the specified IO
-        auto allBuffersSize = IO_BUFFER_SIZE * (backend->audioInputs.size() + backend->audioOutputs.size()) * sizeof(float);
+        auto allBuffersSize =
+            IO_BUFFER_SIZE * (backend->audioInputs.size() + backend->audioOutputs.size()) * sizeof(float);
 
         AppGuiMessage msg(AppGuiMessageType::UPDATE_IO);
-        msg.data.updateIo = {
-            /* inputCount */ backend->audioInputs.size(),
-            /* outputCount */ backend->audioOutputs.size(),
-            /* newMemoryId */ 0
-        };
+        msg.data.updateIo = {/* inputCount */ backend->audioInputs.size(),
+                             /* outputCount */ backend->audioOutputs.size(),
+                             /* newMemoryId */ 0};
 
         if (allBuffersSize > (size_t) ioBuffer.size()) {
             // allocate a new buffer
@@ -75,9 +71,7 @@ public:
 
     void adapterSetParameter(size_t parameter, AxiomBackend::NumValue value) override {
         AppGuiMessage msg(AppGuiMessageType::SET_PARAMETER);
-        msg.data.setParameter = {
-            (int) parameter, (float) value.left
-        };
+        msg.data.setParameter = {(int) parameter, (float) value.left};
         channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
     }
 
@@ -86,7 +80,7 @@ private:
         if ((size_t) message.index >= backend->automationInputs.size()) return;
         auto &param = backend->automationInputs[message.index];
         if (param) {
-            auto val = *param->value;
+            auto val = backend->getAudioPortal(param->portalIndex);
             val->left = message.value;
             val->right = message.value;
             val->form = NumForm::CONTROL;
@@ -100,7 +94,7 @@ private:
         if ((size_t) message.index < backend->automationInputs.size()) {
             auto &param = backend->automationInputs[message.index];
             if (param) {
-                msg.data.parameterValue.value = (float) (*param->value)->left;
+                msg.data.parameterValue.value = (float) backend->getAudioPortal(param->portalIndex)->left;
             }
         }
 
@@ -114,7 +108,7 @@ private:
         if ((size_t) message.index < backend->automationInputs.size()) {
             auto &param = backend->automationInputs[message.index];
             if (param) {
-                auto val = *param->value;
+                auto val = backend->getAudioPortal(param->portalIndex);
                 strncpy(msg.data.parameterLabel.name, AudioBackend::formatNumForm(val->left, val->form), 8);
             }
         }
@@ -129,7 +123,7 @@ private:
         if ((size_t) message.index < backend->automationInputs.size()) {
             auto &param = backend->automationInputs[message.index];
             if (param) {
-                auto val = *param->value;
+                auto val = backend->getAudioPortal(param->portalIndex);
                 strncpy(msg.data.parameterDisplay.name, AudioBackend::formatNum(*val, false).c_str(), 8);
             }
         }
@@ -210,35 +204,35 @@ private:
         // Queue the message to be processed on the GUI thread
         QMetaObject::invokeMethod(qApp, [this, message]() {
             switch (message.type) {
-                case VstGuiMessageType::SET_PARAMETER:
-                    handleSetParameter(message.data.setParameter);
-                    break;
-                case VstGuiMessageType::GET_PARAMETER:
-                    handleGetParameter(message.data.getParameter);
-                    break;
-                case VstGuiMessageType::GET_PARAMETER_LABEL:
-                    handleGetParameterLabel(message.data.getParameterLabel);
-                    break;
-                case VstGuiMessageType::GET_PARAMETER_DISPLAY:
-                    handleGetParameterDisplay(message.data.getParameterDisplay);
-                    break;
-                case VstGuiMessageType::GET_PARAMETER_NAME:
-                    handleGetParameterName(message.data.getParameterName);
-                    break;
-                case VstGuiMessageType::GET_CAN_AUTOMATE_PARAMETER:
-                    handleGetCanAutomateParameter(message.data.getCanAutomateParameter);
-                    break;
-                case VstGuiMessageType::BEGIN_SERIALIZE:
-                    handleBeginSerialize(message.data.beginSerialize);
-                    break;
-                case VstGuiMessageType::BEGIN_DESERIALIZE:
-                    handleBeginDeserialize(message.data.beginDeserialize);
-                    break;
-                // Used as a response, no handling necessary
-                case VstGuiMessageType::END_SERIALIZE:
-                    break;
-                default:
-                    unreachable;
+            case VstGuiMessageType::SET_PARAMETER:
+                handleSetParameter(message.data.setParameter);
+                break;
+            case VstGuiMessageType::GET_PARAMETER:
+                handleGetParameter(message.data.getParameter);
+                break;
+            case VstGuiMessageType::GET_PARAMETER_LABEL:
+                handleGetParameterLabel(message.data.getParameterLabel);
+                break;
+            case VstGuiMessageType::GET_PARAMETER_DISPLAY:
+                handleGetParameterDisplay(message.data.getParameterDisplay);
+                break;
+            case VstGuiMessageType::GET_PARAMETER_NAME:
+                handleGetParameterName(message.data.getParameterName);
+                break;
+            case VstGuiMessageType::GET_CAN_AUTOMATE_PARAMETER:
+                handleGetCanAutomateParameter(message.data.getCanAutomateParameter);
+                break;
+            case VstGuiMessageType::BEGIN_SERIALIZE:
+                handleBeginSerialize(message.data.beginSerialize);
+                break;
+            case VstGuiMessageType::BEGIN_DESERIALIZE:
+                handleBeginDeserialize(message.data.beginDeserialize);
+                break;
+            // Used as a response, no handling necessary
+            case VstGuiMessageType::END_SERIALIZE:
+                break;
+            default:
+                unreachable;
             }
         });
 
@@ -250,7 +244,8 @@ private:
     }
 
     float *getOutputBufferPtr(size_t outputIndex) {
-        return reinterpret_cast<float *>(ioBuffer.data()) + IO_BUFFER_SIZE * (backend->audioInputs.size() + outputIndex);
+        return reinterpret_cast<float *>(ioBuffer.data()) +
+               IO_BUFFER_SIZE * (backend->audioInputs.size() + outputIndex);
     }
 
     void handleGenerate(VstAudioGenerateMessage message) {
@@ -266,7 +261,7 @@ private:
                     const auto &input = backend->audioInputs[inputIndex];
                     if (input) {
                         auto inputSource = getInputBufferPtr(inputIndex);
-                        auto &inputNum = **input->value;
+                        auto &inputNum = *backend->getAudioPortal(input->portalIndex);
                         inputNum.left = inputSource[i * 2];
                         inputNum.right = inputSource[i * 2 + 1];
                         inputNum.form = AxiomBackend::NumForm::OSCILLATOR;
@@ -280,7 +275,7 @@ private:
                     auto outputDest = getOutputBufferPtr(outputIndex);
 
                     if (output) {
-                        auto outputNum = **output->value;
+                        auto outputNum = *backend->getAudioPortal(output->portalIndex);
                         outputDest[i * 2] = (float) outputNum.left;
                         outputDest[i * 2 + 1] = (float) outputNum.right;
                     } else {
@@ -315,30 +310,26 @@ private:
         backend->queueMidiEvent((uint64_t) message.deltaSamples, (size_t) backend->midiInputPortal, event);
     }
 
-    void handleSetSampleRate(VstAudioSetSampleRateMessage message) {
-        backend->setSampleRate(message.sampleRate);
-    }
+    void handleSetSampleRate(VstAudioSetSampleRateMessage message) { backend->setSampleRate(message.sampleRate); }
 
-    void handleSetBpm(VstAudioSetBpmMessage message) {
-        backend->setBpm(message.bpm);
-    }
+    void handleSetBpm(VstAudioSetBpmMessage message) { backend->setBpm(message.bpm); }
 
     DispatcherHandlerResult dispatchAudioMessage(const VstAudioMessage &message) {
         switch (message.type) {
-            case VstAudioMessageType::GENERATE:
-                handleGenerate(message.data.generate);
-                break;
-            case VstAudioMessageType::PUSH_MIDI_EVENT:
-                handlePushMidiEvent(message.data.pushMidiEvent);
-                break;
-            case VstAudioMessageType::SET_SAMPLE_RATE:
-                handleSetSampleRate(message.data.setSampleRate);
-                break;
-            case VstAudioMessageType::SET_BPM:
-                handleSetBpm(message.data.setBpm);
-                break;
-            default:
-                unreachable;
+        case VstAudioMessageType::GENERATE:
+            handleGenerate(message.data.generate);
+            break;
+        case VstAudioMessageType::PUSH_MIDI_EVENT:
+            handlePushMidiEvent(message.data.pushMidiEvent);
+            break;
+        case VstAudioMessageType::SET_SAMPLE_RATE:
+            handleSetSampleRate(message.data.setSampleRate);
+            break;
+        case VstAudioMessageType::SET_BPM:
+            handleSetBpm(message.data.setBpm);
+            break;
+        default:
+            unreachable;
         }
 
         return DispatcherHandlerResult::CONTINUE;
