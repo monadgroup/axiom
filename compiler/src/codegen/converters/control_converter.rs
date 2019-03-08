@@ -103,24 +103,25 @@ fn control_from_q(
     builder: &mut Builder,
     val: VectorValue,
 ) -> VectorValue {
-    // ensure Q is above 0.5 to avoid dividing by zero
-    let max_intrinsic = math::max_v2f64(module);
-    let clamped_q = builder
+    let pow_intrinsic = math::pow_v2f64(module);
+
+    builder
         .build_call(
-            &max_intrinsic,
-            &[&val, &util::get_vec_spread(context, 0.5)],
+            &pow_intrinsic,
+            &[
+                &builder.build_float_div(
+                    builder.build_float_sub(val, util::get_vec_spread(context, 1. / 3.), ""),
+                    util::get_vec_spread(context, 12. - 1. / 3.),
+                    "",
+                ),
+                &util::get_vec_spread(context, 1. / 3.),
+            ],
             "",
             true,
         )
         .left()
         .unwrap()
-        .into_vector_value();
-
-    builder.build_float_div(
-        builder.build_float_sub(clamped_q, util::get_vec_spread(context, 0.5), ""),
-        builder.build_float_mul(clamped_q, util::get_vec_spread(context, 0.999), ""),
-        "",
-    )
+        .into_vector_value()
 }
 
 fn control_from_samples(

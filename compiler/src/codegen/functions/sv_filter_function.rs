@@ -8,6 +8,8 @@ use inkwell::values::PointerValue;
 use inkwell::IntPredicate;
 use std::f64::consts;
 
+const LOOP_COUNT: u64 = 2;
+
 pub struct SvFilterFunction {}
 impl Function for SvFilterFunction {
     fn function_type() -> block::Function {
@@ -18,9 +20,7 @@ impl Function for SvFilterFunction {
         let float_vec = context.f64_type().vec_type(2);
         context.struct_type(
             &[
-                &float_vec, // notch
                 &float_vec, // low
-                &float_vec, // high
                 &float_vec, // band
             ],
             false,
@@ -34,13 +34,9 @@ impl Function for SvFilterFunction {
         result: PointerValue,
     ) {
         let sin_intrinsic = math::sin_v2f64(func.ctx.module);
-        let min_intrinsic = math::min_v2f64(func.ctx.module);
-        let pow_intrinsic = math::pow_v2f64(func.ctx.module);
 
-        let notch_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "notch.ptr") };
-        let low_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 1, "low.ptr") };
-        let high_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 2, "high.ptr") };
-        let band_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 3, "band.ptr") };
+        let low_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 0, "low.ptr") };
+        let band_ptr = unsafe { func.ctx.b.build_struct_gep(&func.data_ptr, 1, "band.ptr") };
 
         let input_num = NumValue::new(args[0]);
         let freq_num = NumValue::new(args[1]);
@@ -49,25 +45,32 @@ impl Function for SvFilterFunction {
 
         let input_vec = input_num.get_vec(func.ctx.b);
         let freq_vec = freq_num.get_vec(func.ctx.b);
+        let q_vec = q_num.get_vec(func.ctx.b);
+
         let f_val = func.ctx.b.build_float_mul(
+            util::get_vec_spread(func.ctx.context, 1.),
             func.ctx
                 .b
                 .build_call(
                     &sin_intrinsic,
-                    &[&func.ctx.b.build_float_mul(
-                        freq_vec,
+                    &[&func.ctx.b.build_float_div(
                         func.ctx.b.build_float_div(
-                            util::get_vec_spread(func.ctx.context, consts::PI),
-                            func.ctx
-                                .b
-                                .build_load(
-                                    &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
-                                    "samplerate",
-                                )
-                                .into_vector_value(),
+                            func.ctx.b.build_float_mul(
+                                util::get_vec_spread(func.ctx.context, consts::PI),
+                                freq_vec,
+                                "",
+                            ),
+                            util::get_vec_spread(func.ctx.context, LOOP_COUNT as f64),
                             "",
                         ),
-                        "fparam",
+                        func.ctx
+                            .b
+                            .build_load(
+                                &globals::get_sample_rate(func.ctx.module).as_pointer_value(),
+                                "samplerate",
+                            )
+                            .into_vector_value(),
+                        "",
                     )],
                     "",
                     true,
@@ -75,87 +78,13 @@ impl Function for SvFilterFunction {
                 .left()
                 .unwrap()
                 .into_vector_value(),
-            util::get_vec_spread(func.ctx.context, 2.),
             "f",
         );
 
-        let q_vec = q_num.get_vec(func.ctx.b);
-        let q_v =
-            func.ctx
-                .b
-                .build_float_div(util::get_vec_spread(func.ctx.context, 1.), q_vec, "qv");
-
-        // calculate dampening factor
-        let damp_val = func.ctx.b.build_float_mul(
-            func.ctx.b.build_float_sub(
-                util::get_vec_spread(func.ctx.context, 1.),
-                func.ctx
-                    .b
-                    .build_call(
-                        &pow_intrinsic,
-                        &[
-                            &func.ctx.b.build_float_sub(
-                                util::get_vec_spread(func.ctx.context, 1.),
-                                func.ctx.b.build_float_div(
-                                    util::get_vec_spread(func.ctx.context, 1.),
-                                    func.ctx.b.build_float_mul(
-                                        q_v,
-                                        util::get_vec_spread(func.ctx.context, 2.),
-                                        "twoq",
-                                    ),
-                                    "twoqrecip",
-                                ),
-                                "damppowbase",
-                            ),
-                            &util::get_vec_spread(func.ctx.context, 0.25),
-                        ],
-                        "damppow",
-                        true,
-                    )
-                    .left()
-                    .unwrap()
-                    .into_vector_value(),
-                "inversedamppow",
-            ),
-            util::get_vec_spread(func.ctx.context, 2.),
-            "dampval",
-        );
-
-        let max_damp = func
+        let high_ptr = func
             .ctx
-            .b
-            .build_call(
-                &min_intrinsic,
-                &[
-                    &util::get_vec_spread(func.ctx.context, 2.),
-                    &func.ctx.b.build_float_sub(
-                        func.ctx.b.build_float_div(
-                            util::get_vec_spread(func.ctx.context, 2.),
-                            f_val,
-                            "maxdamp.left",
-                        ),
-                        func.ctx.b.build_float_mul(
-                            util::get_vec_spread(func.ctx.context, 0.5),
-                            f_val,
-                            "maxdamp.right",
-                        ),
-                        "maxdamp",
-                    ),
-                ],
-                "maxdamp",
-                true,
-            )
-            .left()
-            .unwrap()
-            .into_vector_value();
-        let damp = func
-            .ctx
-            .b
-            .build_call(&min_intrinsic, &[&damp_val, &max_damp], "damp", false)
-            .left()
-            .unwrap()
-            .into_vector_value();
-
+            .allocb
+            .build_alloca(&func.ctx.context.f64_type().vec_type(2), "high.ptr");
         let loop_index_ptr = func
             .ctx
             .allocb
@@ -188,7 +117,7 @@ impl Function for SvFilterFunction {
         let index_cond = func.ctx.b.build_int_compare(
             IntPredicate::ULT,
             current_index,
-            func.ctx.context.i8_type().const_int(2, false),
+            func.ctx.context.i8_type().const_int(LOOP_COUNT, false),
             "indexcond",
         );
         func.ctx
@@ -196,18 +125,6 @@ impl Function for SvFilterFunction {
             .build_conditional_branch(&index_cond, &loop_body_block, &loop_end_block);
 
         func.ctx.b.position_at_end(&loop_body_block);
-        func.ctx.b.build_store(
-            &notch_ptr,
-            &func.ctx.b.build_float_sub(
-                input_vec,
-                func.ctx.b.build_float_mul(
-                    damp,
-                    func.ctx.b.build_load(&band_ptr, "band").into_vector_value(),
-                    "",
-                ),
-                "newnotch",
-            ),
-        );
         func.ctx.b.build_store(
             &low_ptr,
             &func.ctx.b.build_float_add(
@@ -223,10 +140,15 @@ impl Function for SvFilterFunction {
         func.ctx.b.build_store(
             &high_ptr,
             &func.ctx.b.build_float_sub(
-                func.ctx
-                    .b
-                    .build_load(&notch_ptr, "notch")
-                    .into_vector_value(),
+                func.ctx.b.build_float_mul(
+                    q_vec,
+                    func.ctx.b.build_float_sub(
+                        input_vec,
+                        func.ctx.b.build_load(&band_ptr, "band").into_vector_value(),
+                        "",
+                    ),
+                    "",
+                ),
                 func.ctx.b.build_load(&low_ptr, "low").into_vector_value(),
                 "newhigh",
             ),
@@ -234,17 +156,17 @@ impl Function for SvFilterFunction {
         func.ctx.b.build_store(
             &band_ptr,
             &func.ctx.b.build_float_add(
+                func.ctx.b.build_load(&band_ptr, "band").into_vector_value(),
                 func.ctx.b.build_float_mul(
                     f_val,
                     func.ctx.b.build_load(&high_ptr, "high").into_vector_value(),
                     "",
                 ),
-                func.ctx.b.build_load(&band_ptr, "band").into_vector_value(),
                 "newband",
             ),
         );
 
-        let next_index = func.ctx.b.build_int_nuw_add(
+        let next_index = func.ctx.b.build_int_add(
             current_index,
             func.ctx.context.i8_type().const_int(1, false),
             "nextindex",
@@ -275,8 +197,7 @@ impl Function for SvFilterFunction {
         let notch_result_vec = func
             .ctx
             .b
-            .build_load(&notch_ptr, "notch")
-            .into_vector_value();
+            .build_float_add(low_result_vec, high_result_vec, "notch");
         notch_result_num.set_vec(func.ctx.b, notch_result_vec);
         notch_result_num.set_form(func.ctx.b, input_form);
     }
