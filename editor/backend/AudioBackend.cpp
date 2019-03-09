@@ -180,7 +180,6 @@ bool AudioBackend::canFiddleAutomation() const {
 }
 
 void AudioBackend::internalUpdateConfiguration() {
-    std::cout << "got internalUpdateConfiguration" << std::endl;
     auto newPortals = std::move(_editor->window()->project()->getAudioConfiguration().portals);
     std::sort(newPortals.begin(), newPortals.end());
 
@@ -193,7 +192,6 @@ void AudioBackend::internalUpdateConfiguration() {
 
     // no point continuing if the portals are the same
     if (hasCurrent && newPortals == currentPortals) {
-        std::cout << "skipping calling handleConfigurationChange" << std::endl;
         return;
     }
 
