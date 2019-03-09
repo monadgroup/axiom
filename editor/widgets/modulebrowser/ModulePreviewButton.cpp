@@ -167,9 +167,12 @@ void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
             return;
         }
 
-        QDataStream stream(&file);
+        QByteArray data;
+        QDataStream stream(&data, QIODevice::WriteOnly);
         AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
         AxiomModel::LibrarySerializer::serializeEntries(1, &_entry, &_entry + 1, stream);
+
+        file.write(data);
         file.close();
     } else if (selectedAction == deleteAction) {
         QMessageBox confirmBox(QMessageBox::Warning, "Confirm Delete",

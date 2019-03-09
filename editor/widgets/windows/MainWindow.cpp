@@ -407,9 +407,12 @@ void MainWindow::saveGlobalLibrary() {
         return;
     }
 
-    QDataStream stream(&file);
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
     AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
     AxiomModel::LibrarySerializer::serialize(_library.get(), stream, false);
+
+    file.write(data);
     file.close();
 }
 
@@ -466,8 +469,11 @@ void MainWindow::saveProjectTo(const QString &path) {
         return;
     }
 
-    QDataStream stream(&file);
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
     AxiomModel::ProjectSerializer::serialize(_project.get(), stream, [](QDataStream &) {});
+
+    file.write(data);
     file.close();
 
     _project->setIsDirty(false);
@@ -557,9 +563,12 @@ void MainWindow::exportLibrary() {
         return;
     }
 
-    QDataStream stream(&file);
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
     AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
     AxiomModel::LibrarySerializer::serialize(_library.get(), stream, includeBuiltin);
+
+    file.write(data);
     file.close();
 }
 
