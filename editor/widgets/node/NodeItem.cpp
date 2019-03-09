@@ -295,7 +295,7 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
             node->root()->history().append(RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
         });
     } else if (selectedAction == saveModuleAction) {
-        ModulePropertiesWindow saveWindow(mainWindow->library());
+        ModulePropertiesWindow saveWindow(mainWindow->library(), "Add Module");
 
         // if there's only one node selected, use the node name as the default module name
         if (node->surface()->grid().selectedItems().sequence().size() == 1) {

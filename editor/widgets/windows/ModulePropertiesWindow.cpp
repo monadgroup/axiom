@@ -16,9 +16,9 @@
 
 using namespace AxiomGui;
 
-ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library)
+ModulePropertiesWindow::ModulePropertiesWindow(AxiomModel::Library *library, const char *caption)
     : QDialog(nullptr, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint) {
-    setWindowTitle(tr("Add Module"));
+    setWindowTitle(caption);
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss") % "\n" %
                   AxiomUtil::loadStylesheet(":/styles/SaveModuleWindow.qss"));
     setWindowIcon(QIcon(":/application.ico"));

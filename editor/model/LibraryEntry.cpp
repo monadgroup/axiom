@@ -6,10 +6,11 @@
 using namespace AxiomModel;
 
 LibraryEntry::LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,
-                           const QDateTime &modificationDateTime, std::set<QString> tags,
+                           const QDateTime &modificationDateTime, bool isBuiltin, std::set<QString> tags,
                            std::unique_ptr<AxiomModel::ModelRoot> root)
     : _name(std::move(name)), _baseUuid(baseUuid), _modificationUuid(modificationUuid),
-      _modificationDateTime(modificationDateTime), _tags(std::move(tags)), _root(std::move(root)) {
+      _modificationDateTime(modificationDateTime), _isBuiltin(isBuiltin), _tags(std::move(tags)),
+      _root(std::move(root)) {
     auto rootSurfaces = findChildren(_root->nodeSurfaces().sequence(), QUuid());
     assert(rootSurfaces.size() == 1);
     _rootSurface = dynamic_cast<ModuleSurface *>(*AxiomCommon::takeAt(rootSurfaces, 0));
@@ -20,16 +21,17 @@ LibraryEntry::LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &mod
 }
 
 std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,
-                                                   const QDateTime &modificationDateTime, std::set<QString> tags,
+                                                   const QDateTime &modificationDateTime, bool isBuiltin,
+                                                   std::set<QString> tags,
                                                    std::unique_ptr<AxiomModel::ModelRoot> root) {
-    return std::make_unique<LibraryEntry>(std::move(name), baseUuid, modificationUuid, modificationDateTime,
+    return std::make_unique<LibraryEntry>(std::move(name), baseUuid, modificationUuid, modificationDateTime, isBuiltin,
                                           std::move(tags), std::move(root));
 }
 
 std::unique_ptr<LibraryEntry> LibraryEntry::create(QString name, std::set<QString> tags) {
     auto newRoot = std::make_unique<ModelRoot>();
     newRoot->pool().registerObj(std::make_unique<ModuleSurface>(QUuid::createUuid(), QPointF(0, 0), 0, newRoot.get()));
-    return create(std::move(name), QUuid::createUuid(), QUuid::createUuid(), QDateTime::currentDateTimeUtc(),
+    return create(std::move(name), QUuid::createUuid(), QUuid::createUuid(), QDateTime::currentDateTimeUtc(), false,
                   std::move(tags), std::move(newRoot));
 }
 
@@ -56,6 +58,19 @@ void LibraryEntry::removeTag(const QString &tag) {
     if (_tags.erase(tag)) {
         tagRemoved(tag);
         modified();
+    }
+}
+
+void LibraryEntry::setTags(const std::set<QString> &newTags) {
+    // remove old tags
+    std::set<QString> oldTags(tags());
+    for (const auto &oldTag : oldTags) {
+        if (newTags.find(oldTag) == newTags.end()) removeTag(oldTag);
+    }
+
+    // add new tags
+    for (const auto &newTag : newTags) {
+        addTag(newTag);
     }
 }
 

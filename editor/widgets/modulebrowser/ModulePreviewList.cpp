@@ -28,7 +28,11 @@ ModulePreviewList::ModulePreviewList(MainWindow *window, AxiomModel::Library *li
 
 void ModulePreviewList::addEntry(AxiomModel::LibraryEntry *entry) {
     auto widget = new ModulePreviewButton(window, library, entry, this);
-    widget->setObjectName("preview-button");
+    if (entry->isBuiltin()) {
+        widget->setObjectName("preview-button-builtin");
+    } else {
+        widget->setObjectName("preview-button");
+    }
     layout->addWidget(widget);
     entry->removed.connectTo(this, [this, widget]() {
         layout->removeWidget(widget);

@@ -48,7 +48,7 @@ std::unique_ptr<Project> ProjectSerializer::deserialize(QDataStream &stream, uin
     // Before schema version 5, the module library was included in the project file. To ensure modules aren't lost,
     // merge the library in.
     if (version < 5) {
-        auto library = LibrarySerializer::deserialize(stream, version);
+        auto library = LibrarySerializer::deserialize(stream, false, version);
         importLibrary(library.get());
     }
 

@@ -48,6 +48,8 @@ namespace AxiomModel {
 
         ModelRoot();
 
+        std::unique_ptr<ModelRoot> clone() const;
+
         RootSurface *rootSurface();
 
         Pool &pool() { return _pool; }

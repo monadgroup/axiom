@@ -6,12 +6,15 @@
 
 using namespace AxiomModel;
 
-void LibrarySerializer::serialize(AxiomModel::Library *library, QDataStream &stream) {
-    auto entries = library->entries();
+void LibrarySerializer::serialize(AxiomModel::Library *library, QDataStream &stream, bool includeBuiltin) {
+    auto entries = AxiomCommon::filter(
+        AxiomCommon::map(AxiomCommon::intoIter(library->entries()),
+                         [](AxiomModel::LibraryEntry **entry) { return *entry; }),
+        [includeBuiltin](AxiomModel::LibraryEntry *entry) { return includeBuiltin || !entry->isBuiltin(); });
     serializeEntries((uint32_t) entries.size(), entries.begin(), entries.end(), stream);
 }
 
-std::unique_ptr<Library> LibrarySerializer::deserialize(QDataStream &stream, uint32_t version) {
+std::unique_ptr<Library> LibrarySerializer::deserialize(QDataStream &stream, uint32_t version, bool isBuiltin) {
     // Schema version 5 (Axiom version 0.4.0) stored an active tag and active search, since libraries were tried to
     // projects.
     if (version < 5) {
@@ -25,7 +28,7 @@ std::unique_ptr<Library> LibrarySerializer::deserialize(QDataStream &stream, uin
     stream >> entryCount;
     entries.reserve(entryCount);
     for (uint32_t i = 0; i < entryCount; i++) {
-        entries.push_back(deserializeEntry(stream, version));
+        entries.push_back(deserializeEntry(stream, version, isBuiltin));
     }
 
     return std::make_unique<Library>("", "", std::move(entries));
@@ -43,7 +46,8 @@ void LibrarySerializer::serializeEntry(AxiomModel::LibraryEntry *entry, QDataStr
     ModelObjectSerializer::serializeRoot(entry->root(), false, stream);
 }
 
-std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &stream, uint32_t version) {
+std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &stream, uint32_t version,
+                                                                  bool isBuiltin) {
     QString name;
     stream >> name;
     QUuid baseUuid;
@@ -66,6 +70,6 @@ std::unique_ptr<LibraryEntry> LibrarySerializer::deserializeEntry(QDataStream &s
     auto deserializeHistory = version < 5;
 
     auto root = ModelObjectSerializer::deserializeRoot(stream, deserializeHistory, true, version);
-    return LibraryEntry::create(std::move(name), baseUuid, modificationUuid, modificationDateTime, std::move(tags),
-                                std::move(root));
+    return LibraryEntry::create(std::move(name), baseUuid, modificationUuid, modificationDateTime, isBuiltin,
+                                std::move(tags), std::move(root));
 }

@@ -2,15 +2,23 @@
     border: none;
 }
 
-#preview-button {
+#preview-button, #preview-button-builtin {
     margin: 5px 0 5px 10px;
 }
 
 #image {
-    border: 2px solid #222;
+    border: 2px solid #284658;
     border-radius: 5px;
 }
 
+#preview-button-builtin #image {
+    border-color: #222;
+}
+
 #image:hover {
+    border-color: #3076A0;
+}
+
+#preview-button-builtin #image:hover {
     border-color: #444;
 }

@@ -36,6 +36,9 @@ void Library::import(
     // if we hit a duplicate, we have two possible actions:
     //   - if the modification UUID is the same as the local one, they're the same and we can just keep what we've got
     //   - if not, there's a desync, and we need to ask the user which one they want to keep
+    //
+    // Note: if we need to resolve a conflict and the existing entry is a builtin one, we _must_ keep it. To simplify
+    // things in this case, we always keep both.
     std::vector<std::unique_ptr<LibraryEntry>> addEntries;
     std::vector<LibraryEntry *> removeEntries;
     std::vector<std::pair<LibraryEntry *, LibraryEntry *>> conflictRenameEntries;
@@ -48,24 +51,31 @@ void Library::import(
         } else {
             auto curEntry = currentEntry.value();
             if (entry->modificationUuid() != curEntry->modificationUuid()) {
-                // different modification IDs, one of them has to go
-                auto resolution = resolveConflict(curEntry, entry.get());
-
-                switch (resolution) {
-                case ConflictResolution::CANCEL:
-                    // cancel everything by just exiting - since merging is transactional, this works fine
-                    return;
-                case ConflictResolution::KEEP_OLD:
-                    // no action needed
-                    break;
-                case ConflictResolution::KEEP_NEW:
-                    removeEntries.push_back(curEntry);
-                    addEntries.push_back(std::move(entry));
-                    break;
-                case ConflictResolution::KEEP_BOTH:
+                if (curEntry->isBuiltin()) {
+                    // Different modification IDs but the existing one is builtin so we can't delete it - just keep
+                    // both.
                     conflictRenameEntries.emplace_back(curEntry, entry.get());
                     addEntries.push_back(std::move(entry));
-                    break;
+                } else {
+                    // Different modification IDs, one of them has to go
+                    auto resolution = resolveConflict(curEntry, entry.get());
+
+                    switch (resolution) {
+                    case ConflictResolution::CANCEL:
+                        // cancel everything by just exiting - since merging is transactional, this works fine
+                        return;
+                    case ConflictResolution::KEEP_OLD:
+                        // no action needed
+                        break;
+                    case ConflictResolution::KEEP_NEW:
+                        removeEntries.push_back(curEntry);
+                        addEntries.push_back(std::move(entry));
+                        break;
+                    case ConflictResolution::KEEP_BOTH:
+                        conflictRenameEntries.emplace_back(curEntry, entry.get());
+                        addEntries.push_back(std::move(entry));
+                        break;
+                    }
                 }
             }
         }
@@ -75,8 +85,7 @@ void Library::import(
     for (const auto &conflict : conflictRenameEntries) {
         auto originalEntry = conflict.first;
         auto newEntry = conflict.second;
-        originalEntry->setName(originalEntry->name() + " (original)");
-        newEntry->setName(newEntry->name() + " (imported)");
+        newEntry->setName(newEntry->name() + " (conflict)");
 
         // old entry becomes an entirely different entry, meaning if the library is imported in the future again,
         // the conflict won't show up

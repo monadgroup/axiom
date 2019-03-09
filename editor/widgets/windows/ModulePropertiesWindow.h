@@ -11,10 +11,10 @@ namespace AxiomModel {
 namespace AxiomGui {
 
     class ModulePropertiesWindow : public QDialog {
-    Q_OBJECT
+        Q_OBJECT
 
     public:
-        ModulePropertiesWindow(AxiomModel::Library *library);
+        ModulePropertiesWindow(AxiomModel::Library *library, const char *caption);
 
         QString enteredName() const;
 
@@ -27,9 +27,7 @@ namespace AxiomGui {
         void setEnteredTags(const QStringList &list);
 
     private:
-
         QLineEdit *nameInput;
         QLineEdit *tagsInput;
     };
-
 }

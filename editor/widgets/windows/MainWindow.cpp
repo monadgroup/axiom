@@ -56,22 +56,18 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     dockManager = new ads::CDockManager(this);
 
     auto startTime = std::chrono::high_resolution_clock::now();
+
+    auto library = loadDefaultLibrary();
     lockGlobalLibrary();
-    // load the library - if the file does not exist, use an empty project
-    auto library = loadGlobalLibrary();
-    if (!library) {
-        library = std::make_unique<AxiomModel::Library>();
+    auto globalLibrary = loadGlobalLibrary();
+    unlockGlobalLibrary();
+    if (globalLibrary) {
+        library->import(globalLibrary.get(), [](AxiomModel::LibraryEntry *, AxiomModel::LibraryEntry *) {
+            return AxiomModel::Library::ConflictResolution::KEEP_BOTH;
+        });
     }
 
-    // merge the internal library into the new library, using a strategy to always keep theirs in case of conflict
-    auto defaultLibrary = loadDefaultLibrary();
-    library->import(defaultLibrary.get(), [](AxiomModel::LibraryEntry *, AxiomModel::LibraryEntry *) {
-        return AxiomModel::Library::ConflictResolution::KEEP_OLD;
-    });
-
     _library = std::move(library);
-    saveGlobalLibrary();
-    unlockGlobalLibrary();
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
     std::cout << "Loading module library took " << duration.count() / 1000000000. << "s" << std::endl;
@@ -386,7 +382,7 @@ std::unique_ptr<AxiomModel::Library> MainWindow::loadGlobalLibrary() {
         return nullptr;
     }
 
-    auto library = AxiomModel::LibrarySerializer::deserialize(stream, readVersion);
+    auto library = AxiomModel::LibrarySerializer::deserialize(stream, readVersion, false);
     libraryFile.close();
     return library;
 }
@@ -400,7 +396,7 @@ std::unique_ptr<AxiomModel::Library> MainWindow::loadDefaultLibrary() {
     auto couldReadHeader = AxiomModel::ProjectSerializer::readHeader(
         stream, AxiomModel::ProjectSerializer::librarySchemaMagic, &readVersion);
     assert(couldReadHeader);
-    auto library = AxiomModel::LibrarySerializer::deserialize(stream, readVersion);
+    auto library = AxiomModel::LibrarySerializer::deserialize(stream, readVersion, true);
     defaultFile.close();
     return library;
 }
@@ -413,7 +409,7 @@ void MainWindow::saveGlobalLibrary() {
 
     QDataStream stream(&file);
     AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
-    AxiomModel::LibrarySerializer::serialize(_library.get(), stream);
+    AxiomModel::LibrarySerializer::serialize(_library.get(), stream, false);
     file.close();
 }
 
@@ -538,9 +534,20 @@ void MainWindow::importLibrary() {
 }
 
 void MainWindow::exportLibrary() {
-    auto selectedFile = QFileDialog::getSaveFileName(this, "Export Library", QString(),
-                                                     tr("Axiom Library Files (*.axl);;All Files (*.*)"));
-    if (selectedFile.isNull()) return;
+    auto builtinFilter = "Axiom Builtin Library Files (*.axl)";
+
+    QStringList schemes("file");
+    QFileDialog dialog(this, "Export Library", QString(),
+                       "Axiom Library Files (*.axl);;Axiom Builtin Library Files (*.axl);;All Files (*.*)");
+    dialog.setSupportedSchemes(schemes);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    auto selectedFile = dialog.selectedUrls().value(0).toLocalFile();
+    auto includeBuiltin = dialog.selectedNameFilter() == builtinFilter;
 
     QFile file(selectedFile);
     if (!file.open(QIODevice::WriteOnly)) {
@@ -552,7 +559,7 @@ void MainWindow::exportLibrary() {
 
     QDataStream stream(&file);
     AxiomModel::ProjectSerializer::writeHeader(stream, AxiomModel::ProjectSerializer::librarySchemaMagic);
-    AxiomModel::LibrarySerializer::serialize(_library.get(), stream);
+    AxiomModel::LibrarySerializer::serialize(_library.get(), stream, includeBuiltin);
     file.close();
 }
 
@@ -588,7 +595,7 @@ void MainWindow::importLibraryFrom(const QString &path) {
         return;
     }
 
-    auto mergeLibrary = AxiomModel::LibrarySerializer::deserialize(stream, readVersion);
+    auto mergeLibrary = AxiomModel::LibrarySerializer::deserialize(stream, readVersion, false);
     file.close();
     doInteractiveLibraryImport(_library.get(), mergeLibrary.get());
 }

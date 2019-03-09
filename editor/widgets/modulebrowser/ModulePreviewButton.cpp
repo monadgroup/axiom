@@ -95,15 +95,20 @@ void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
     auto editAction = menu.addAction("&Edit");
     auto propertiesAction = menu.addAction("&Properties...");
     menu.addSeparator();
+    auto duplicateAction = menu.addAction("D&uplicate...");
     auto exportAction = menu.addAction("E&xport...");
     menu.addSeparator();
     auto deleteAction = menu.addAction("&Delete");
+
+    editAction->setEnabled(!_entry->isBuiltin());
+    propertiesAction->setEnabled(!_entry->isBuiltin());
+    deleteAction->setEnabled(!_entry->isBuiltin());
 
     auto selectedAction = menu.exec(event->globalPos());
     if (selectedAction == editAction) {
         window->showSurface(nullptr, _entry->rootSurface(), false, false);
     } else if (selectedAction == propertiesAction) {
-        ModulePropertiesWindow propWindow(library);
+        ModulePropertiesWindow propWindow(library, "Module Properties");
         propWindow.setEnteredName(_entry->name());
 
         QStringList currentTags;
@@ -117,17 +122,37 @@ void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
 
             auto enteredTags = propWindow.enteredTags();
             std::set<QString> newTags(enteredTags.begin(), enteredTags.end());
+            _entry->setTags(newTags);
+        }
+    } else if (selectedAction == duplicateAction) {
+        ModulePropertiesWindow propWindow(library, "Duplicate Module");
+        propWindow.setEnteredName(_entry->name() + " (duplicated)");
 
-            // remove old tags
-            std::set<QString> oldTags(_entry->tags());
-            for (const auto &oldTag : oldTags) {
-                if (newTags.find(oldTag) == newTags.end()) _entry->removeTag(oldTag);
-            }
+        QStringList currentTags;
+        for (const auto &tag : _entry->tags()) {
+            currentTags.push_back(tag);
+        }
+        propWindow.setEnteredTags(currentTags);
 
-            // add new tags
-            for (const auto &newTag : newTags) {
-                _entry->addTag(newTag);
-            }
+        if (propWindow.exec() == QDialog::Accepted) {
+            // There's probably a better way to do this, but in order to clone we currently serialize then deserialize
+            // the library entry. ¯\_(ツ)_/¯
+            QByteArray data;
+            QDataStream serializeStream(&data, QIODevice::WriteOnly);
+            AxiomModel::LibrarySerializer::serializeEntry(_entry, serializeStream);
+            QDataStream deserializeStream(&data, QIODevice::ReadOnly);
+            auto newEntry = AxiomModel::LibrarySerializer::deserializeEntry(
+                deserializeStream, AxiomModel::ProjectSerializer::schemaVersion, false);
+
+            newEntry->setName(propWindow.enteredName());
+            auto enteredTags = propWindow.enteredTags();
+            std::set<QString> newTags(enteredTags.begin(), enteredTags.end());
+            newEntry->setTags(newTags);
+
+            // Give the new entry a unique ID
+            newEntry->setBaseUuid(QUuid());
+
+            library->addEntry(std::move(newEntry));
         }
     } else if (selectedAction == exportAction) {
         auto selectedFile = QFileDialog::getSaveFileName(this, "Export Module", QString(),
@@ -154,7 +179,7 @@ void ModulePreviewButton::contextMenuEvent(QContextMenuEvent *event) {
         confirmBox.setDefaultButton(QMessageBox::Yes);
 
         if (AxiomUtil::showMessageBox(confirmBox) == QMessageBox::Yes) {
-            _entry->remove();
+            QTimer::singleShot(0, [this]() { _entry->remove(); });
         }
     }
 }

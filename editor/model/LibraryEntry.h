@@ -23,11 +23,12 @@ namespace AxiomModel {
         AxiomCommon::Event<> cleanup;
 
         LibraryEntry(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,
-                     const QDateTime &modificationDateTime, std::set<QString> tags, std::unique_ptr<ModelRoot> root);
+                     const QDateTime &modificationDateTime, bool isBuiltin, std::set<QString> tags,
+                     std::unique_ptr<ModelRoot> root);
 
         static std::unique_ptr<LibraryEntry> create(QString name, const QUuid &baseUuid, const QUuid &modificationUuid,
-                                                    const QDateTime &modificationDateTime, std::set<QString> tags,
-                                                    std::unique_ptr<ModelRoot> root);
+                                                    const QDateTime &modificationDateTime, bool isBuiltin,
+                                                    std::set<QString> tags, std::unique_ptr<ModelRoot> root);
 
         static std::unique_ptr<LibraryEntry> create(QString name, std::set<QString> tags);
 
@@ -43,11 +44,15 @@ namespace AxiomModel {
 
         const QDateTime &modificationDateTime() const { return _modificationDateTime; }
 
+        bool isBuiltin() const { return _isBuiltin; }
+
         const std::set<QString> &tags() const { return _tags; }
 
         void addTag(const QString &tag);
 
         void removeTag(const QString &tag);
+
+        void setTags(const std::set<QString> &newTags);
 
         ModelRoot *root() const { return _root.get(); }
 
@@ -62,6 +67,7 @@ namespace AxiomModel {
         QUuid _baseUuid;
         QUuid _modificationUuid;
         QDateTime _modificationDateTime;
+        bool _isBuiltin;
         std::set<QString> _tags;
         std::unique_ptr<ModelRoot> _root;
         ModuleSurface *_rootSurface;
