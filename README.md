@@ -15,7 +15,7 @@ Features:
 
 There are currently pre-packaged versions available for Windows and macOS (alpha, let us know of any issues) on [the Releases page](https://github.com/monadgroup/axiom/releases). Stay tuned for Linux builds!
 
-**[Usage Guide](https://github.com/monadgroup/axiom/wiki/Usage-Guide) · [Example Projects](https://github.com/monadgroup/axiom/tree/master/examples) · [Downloads & Release Notes](https://github.com/monadgroup/axiom/releases)**
+**[Usage Guide](https://github.com/monadgroup/axiom/blob/master/docs/UsageGuide.md) · [Example Projects](https://github.com/monadgroup/axiom/tree/master/examples) · [Downloads & Release Notes](https://github.com/monadgroup/axiom/releases)**
 
 ## Backends
 
