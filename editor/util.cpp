@@ -107,7 +107,7 @@ QString AxiomUtil::formatChannelFull(float val, AxiomModel::FormType form) {
 }
 
 QString AxiomUtil::formatNumForm(AxiomModel::NumValue value, bool includeForm, int *outNumLength) {
-    if (fabsf(value.left - value.right) < 0.01f) {
+    if (fabs(value.left - value.right) < 0.01f) {
         auto formattedNum = formatFloatForm(value.left, value.form);
         if (outNumLength) *outNumLength = formattedNum.size();
         return includeForm ? static_cast<QString>(formattedNum % " " % getFormUnit(value.left, value.form))
