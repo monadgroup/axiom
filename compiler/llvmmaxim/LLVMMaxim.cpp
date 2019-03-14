@@ -48,6 +48,10 @@ OrcJit *LLVMAxiomOrcCreateInstance(LLVMTargetMachineRef targetMachine) {
     jit->addBuiltin("realloc", (uint64_t) & ::realloc);
     jit->addBuiltin("free", (uint64_t) & ::free);
 
+#ifdef APPLE
+    jit->addBuiltin("__bzero", (uint64_t) & ::bzero);
+#endif
+
     return jit;
 }
 
