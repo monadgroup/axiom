@@ -16,7 +16,7 @@ void TogglePainter::paint(QPainter *painter, const QRectF &boundingRect, float h
     auto baseColor = QColor(45, 45, 45);
     auto activeColor = QColor(60, 60, 60);
 
-    auto brightness = (fabsf(cv.left) + fabsf(cv.right)) / 2;
+    auto brightness = (fabs(cv.left) + fabs(cv.right)) / 2;
 
     // draw background
     /*if (!control->sink()->connections().empty()) {
