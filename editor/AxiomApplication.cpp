@@ -25,6 +25,7 @@ char **argv = new char *[1];
 AxiomApplication::AxiomApplication() : QApplication(argc, argv) {
     setApplicationName("Axiom");
     setApplicationVersion(AXIOM_VERSION);
+    setAttribute(Qt::AA_EnableHighDpiScaling);
 
     MaximFrontend::maxim_initialize();
 
