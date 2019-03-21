@@ -69,7 +69,7 @@ std::unique_ptr<Node> NodeSerializer::deserialize(QDataStream &stream, uint32_t 
 void NodeSerializer::serializeCustom(AxiomModel::CustomNode *node, QDataStream &stream) {
     stream << node->code();
     stream << node->isPanelOpen();
-    stream << node->panelHeight();
+    stream << node->panelSize();
 }
 
 std::unique_ptr<CustomNode> NodeSerializer::deserializeCustom(QDataStream &stream, uint32_t version, const QUuid &uuid,
@@ -81,11 +81,23 @@ std::unique_ptr<CustomNode> NodeSerializer::deserializeCustom(QDataStream &strea
     stream >> code;
     bool isPanelOpen;
     stream >> isPanelOpen;
-    float panelHeight;
-    stream >> panelHeight;
+
+    // Before schema version 7 (Axiom version 0.5.0) only the panel height could be changed, so the width was not
+    // stored. We use a width of 3, which is the default for new nodes.
+    // Additionally, in schema version 7, the units of the width and height changed to be in surface grid coords
+    // instead of pixel coords. Grids were 50px in size, so this is fixed by dividing by 50.
+    QSizeF panelSize;
+    if (version >= 7) {
+        stream >> panelSize;
+    } else {
+        float panelPixelHeight;
+        stream >> panelPixelHeight;
+
+        panelSize = QSizeF(3, panelPixelHeight / 50);
+    }
 
     return CustomNode::create(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, std::move(code),
-                              isPanelOpen, panelHeight, root);
+                              isPanelOpen, panelSize, root);
 }
 
 void NodeSerializer::serializeGroup(AxiomModel::GroupNode *node, QDataStream &stream) {

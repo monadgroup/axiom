@@ -19,10 +19,10 @@
 using namespace AxiomModel;
 
 CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                       const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight,
+                       const QUuid &controlsUuid, QString code, bool panelOpen, QSizeF panelSize,
                        AxiomModel::ModelRoot *root)
     : Node(NodeType::CUSTOM_NODE, uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, root),
-      _code(std::move(code)), _isPanelOpen(panelOpen), _panelHeight(panelHeight) {
+      _code(std::move(code)), _isPanelOpen(panelOpen), _panelSize(panelSize) {
     controls().then([this](ControlSurface *controls) {
         controls->controls().events().itemAdded().connectTo(this, &CustomNode::surfaceControlAdded);
     });
@@ -30,9 +30,9 @@ CustomNode::CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, Q
 
 std::unique_ptr<CustomNode> CustomNode::create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                bool selected, QString name, const QUuid &controlsUuid, QString code,
-                                               bool panelOpen, float panelHeight, AxiomModel::ModelRoot *root) {
+                                               bool panelOpen, QSizeF panelSize, AxiomModel::ModelRoot *root) {
     return std::make_unique<CustomNode>(uuid, parentUuid, pos, size, selected, std::move(name), controlsUuid, code,
-                                        panelOpen, panelHeight, root);
+                                        panelOpen, panelSize, root);
 }
 
 QString CustomNode::debugName() {
@@ -73,12 +73,13 @@ void CustomNode::setPanelOpen(bool panelOpen) {
     }
 }
 
-void CustomNode::setPanelHeight(float panelHeight) {
-    if (panelHeight < minPanelHeight) panelHeight = minPanelHeight;
-    if (_panelHeight != panelHeight) {
-        beforePanelHeightChanged(panelHeight);
-        _panelHeight = panelHeight;
-        panelHeightChanged(panelHeight);
+void CustomNode::setPanelSize(QSizeF panelSize) {
+    if (panelSize.width() < size().width()) panelSize.setWidth(size().width());
+    if (panelSize.height() < minPanelHeight) panelSize.setHeight(minPanelHeight);
+    if (_panelSize != panelSize) {
+        beforePanelSizeChanged(panelSize);
+        _panelSize = panelSize;
+        panelSizeChanged(panelSize);
     }
 }
 

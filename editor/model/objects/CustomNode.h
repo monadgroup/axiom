@@ -22,21 +22,21 @@ namespace AxiomModel {
 
     class CustomNode : public Node {
     public:
-        static constexpr float minPanelHeight = 40;
+        static constexpr float minPanelHeight = 0.8;
 
         AxiomCommon::Event<const QString &> codeChanged;
         AxiomCommon::Event<const CustomNodeError &> codeCompileError;
         AxiomCommon::Event<> codeCompileSuccess;
         AxiomCommon::Event<bool> panelOpenChanged;
-        AxiomCommon::Event<float> beforePanelHeightChanged;
-        AxiomCommon::Event<float> panelHeightChanged;
+        AxiomCommon::Event<QSizeF> beforePanelSizeChanged;
+        AxiomCommon::Event<QSizeF> panelSizeChanged;
 
         CustomNode(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size, bool selected, QString name,
-                   const QUuid &controlsUuid, QString code, bool panelOpen, float panelHeight, ModelRoot *root);
+                   const QUuid &controlsUuid, QString code, bool panelOpen, QSizeF panelSize, ModelRoot *root);
 
         static std::unique_ptr<CustomNode> create(const QUuid &uuid, const QUuid &parentUuid, QPoint pos, QSize size,
                                                   bool selected, QString name, const QUuid &controlsUuid, QString code,
-                                                  bool panelOpen, float panelHeight, ModelRoot *root);
+                                                  bool panelOpen, QSizeF panelSize, ModelRoot *root);
 
         const QString &code() const { return _code; }
 
@@ -52,9 +52,9 @@ namespace AxiomModel {
 
         void setPanelOpen(bool panelOpen);
 
-        float panelHeight() const { return _panelHeight; }
+        QSizeF panelSize() const { return _panelSize; }
 
-        void setPanelHeight(float panelHeight);
+        void setPanelSize(QSizeF panelSize);
 
         uint64_t getRuntimeId() { return runtimeId; }
 
@@ -73,7 +73,7 @@ namespace AxiomModel {
     private:
         QString _code;
         bool _isPanelOpen;
-        float _panelHeight;
+        QSizeF _panelSize;
         uint64_t runtimeId = 0;
 
         // "compiledBlock" is what's currently being used, "stagingBlock" is the one being typed in, and could be NULL

@@ -63,6 +63,8 @@ namespace AxiomGui {
 
         void compileSuccess();
 
+        QSizeF getRealPanelSize() const;
+
         static void moveCursor(QTextCursor &cursor, MaximFrontend::SourcePos pos, QTextCursor::MoveMode mode);
     };
 }

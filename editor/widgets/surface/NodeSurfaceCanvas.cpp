@@ -87,6 +87,10 @@ QSize NodeSurfaceCanvas::nodeRealSize(const QSize &s) {
     return {s.width() * NodeSurfaceCanvas::nodeGridSize.width(), s.height() * NodeSurfaceCanvas::nodeGridSize.height()};
 }
 
+QSizeF NodeSurfaceCanvas::nodeRealSize(const QSizeF &s) {
+    return {s.width() * NodeSurfaceCanvas::nodeGridSize.width(), s.height() * NodeSurfaceCanvas::nodeGridSize.height()};
+}
+
 QPoint NodeSurfaceCanvas::controlRealPos(const QPoint &p) {
     return {p.x() * NodeSurfaceCanvas::controlGridSize.width(), p.y() * NodeSurfaceCanvas::controlGridSize.height()};
 }

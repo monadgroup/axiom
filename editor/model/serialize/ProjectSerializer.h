@@ -17,8 +17,9 @@ namespace AxiomModel {
         //                = 3 in 0.3.0
         //                = 4 in 0.3.2
         //                = 5 in 0.4.0
-        //                = 6 in 0.5.0
-        static constexpr uint32_t schemaVersion = 6;
+        //                = 6 in 0.4.3
+        //                = 7 in 0.5.0
+        static constexpr uint32_t schemaVersion = 7;
         static constexpr uint32_t minSchemaVersion = 2;
         static constexpr uint64_t projectSchemaMagic = 0x4D4F4E4144415850; // "MONADAXP"
         static constexpr uint64_t librarySchemaMagic = 0x4D4F4E414441584C; // "MONADAXL"

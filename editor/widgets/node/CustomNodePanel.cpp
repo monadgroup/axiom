@@ -21,18 +21,21 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
     node->beforeSizeChanged.connectTo(this, &CustomNodePanel::triggerGeometryChange);
     node->sizeChanged.connectTo(this, &CustomNodePanel::updateSize);
     node->panelOpenChanged.connectTo(this, &CustomNodePanel::setOpen);
-    node->beforePanelHeightChanged.connectTo(this, &CustomNodePanel::triggerGeometryChange);
-    node->panelHeightChanged.connectTo(this, &CustomNodePanel::updateSize);
+    node->beforePanelSizeChanged.connectTo(this, &CustomNodePanel::triggerGeometryChange);
+    node->panelSizeChanged.connectTo(this, &CustomNodePanel::updateSize);
     node->codeChanged.connectTo(this, &CustomNodePanel::codeChanged);
     node->codeCompileError.connectTo(this, &CustomNodePanel::compileError);
     node->codeCompileSuccess.connectTo(this, &CustomNodePanel::compileSuccess);
     node->inErrorStateChanged.connectTo(this, &CustomNodePanel::triggerUpdate);
 
-    auto resizer = new ItemResizer(ItemResizer::BOTTOM, QSizeF(0, CustomNode::minPanelHeight));
-    connect(this, &CustomNodePanel::resizerSizeChanged, resizer, &ItemResizer::setSize);
-    connect(resizer, &ItemResizer::changed, this, &CustomNodePanel::resizerChanged);
-    resizer->setParentItem(this);
-    resizer->setZValue(0);
+    ItemResizer::Direction resizerDirections[] = {ItemResizer::BOTTOM, ItemResizer::BOTTOM_RIGHT, ItemResizer::RIGHT};
+    for (auto direction : resizerDirections) {
+        auto resizer = new ItemResizer(direction, QSizeF(0, CustomNode::minPanelHeight));
+        connect(this, &CustomNodePanel::resizerSizeChanged, resizer, &ItemResizer::setSize);
+        connect(resizer, &ItemResizer::changed, this, &CustomNodePanel::resizerChanged);
+        resizer->setParentItem(this);
+        resizer->setZValue(0);
+    }
 
     textEditor = new QPlainTextEdit();
     textEditor->setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
@@ -55,8 +58,10 @@ CustomNodePanel::CustomNodePanel(CustomNode *node) : node(node) {
 }
 
 QRectF CustomNodePanel::boundingRect() const {
-    QRectF rect = {QPointF(0, 0), NodeSurfaceCanvas::nodeRealSize(node->size()) + QSizeF(1, node->panelHeight())};
-    return rect.marginsAdded(QMarginsF(5, 5, 5, 5));
+    QRectF rect = {QPointF(0, 0),
+                   NodeSurfaceCanvas::nodeRealSize(getRealPanelSize() + QSizeF(0, node->size().height())) +
+                       QSizeF(1, 0)};
+    return rect.marginsAdded(QMarginsF(5, 5, 5, 10));
 }
 
 void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
@@ -69,14 +74,42 @@ void CustomNodePanel::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
     painter->setBrush(QBrush(CommonColors::customNodeNormal));
 
-    painter->drawRoundedRect(br, 5, 5);
+    auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size()) + QSizeF(11, 5);
+
+    br = br.normalized();
+    auto x = br.x();
+    auto y = br.y();
+    auto smallW = nodeSize.width();
+    auto smallH = nodeSize.height();
+    auto largeW = br.width();
+    auto largeH = br.height();
+
+    auto rx = 5.f;
+    auto ry = 5.f;
+
+    QPainterPath path;
+    path.arcMoveTo(x, y, rx, ry, 180);
+    path.arcTo(x, y, rx, ry, 180, -90);
+    path.arcTo(x + smallW - rx, y, rx, ry, 90, -90);
+    if (largeW - smallW < rx / 2) {
+        path.lineTo(x + smallW, y + smallH);
+        path.lineTo(x + largeW, y + smallH);
+    } else {
+        path.arcTo(x + smallW, y + smallH - ry, rx, ry, 180, 90);
+        path.arcTo(x + largeW - rx, y + smallH, rx, ry, 90, -90);
+    }
+    path.arcTo(x + largeW - rx, y + largeH - ry, rx, ry, 0, -90);
+    path.arcTo(x, y + largeH - ry, rx, ry, 270, -90);
+    path.closeSubpath();
+    painter->drawPath(path);
 }
 
 void CustomNodePanel::updateSize() {
     auto br = boundingRect();
     auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
 
-    textProxy->setGeometry(QRectF(QPointF(0, nodeSize.height() + 5), QSizeF(br.width() - 10, node->panelHeight() - 5)));
+    textProxy->setGeometry(
+        QRectF(QPointF(0, nodeSize.height() + 5), NodeSurfaceCanvas::nodeRealSize(getRealPanelSize()) + QSizeF(1, 0)));
 
     emit resizerSizeChanged(br.size() - QSizeF(5, 5));
 }
@@ -101,7 +134,8 @@ void CustomNodePanel::triggerGeometryChange() {
 
 void CustomNodePanel::resizerChanged(QPointF topLeft, QPointF bottomRight) {
     auto nodeSize = NodeSurfaceCanvas::nodeRealSize(node->size());
-    node->setPanelHeight((float) bottomRight.y() - nodeSize.height() - 5);
+    node->setPanelSize(QSizeF((bottomRight.x() - 6) / NodeSurfaceCanvas::nodeGridSize.width(),
+                              (bottomRight.y() - nodeSize.height() - 10) / NodeSurfaceCanvas::nodeGridSize.height()));
 }
 
 bool CustomNodePanel::eventFilter(QObject *object, QEvent *event) {
@@ -146,6 +180,10 @@ void CustomNodePanel::compileError(const AxiomModel::CustomNodeError &error) {
 
 void CustomNodePanel::compileSuccess() {
     textEditor->setExtraSelections({});
+}
+
+QSizeF CustomNodePanel::getRealPanelSize() const {
+    return QSizeF(qMax((float) node->size().width(), (float) node->panelSize().width()), node->panelSize().height());
 }
 
 void CustomNodePanel::moveCursor(QTextCursor &cursor, MaximFrontend::SourcePos pos, QTextCursor::MoveMode mode) {

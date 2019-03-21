@@ -27,7 +27,7 @@ std::unique_ptr<CreateCustomNodeAction> CreateCustomNodeAction::create(const QUu
 
 void CreateCustomNodeAction::forward(bool) {
     root()->pool().registerObj(CustomNode::create(_uuid, _parentUuid, _pos, QSize(3, 2), false, _name, _controlsUuid,
-                                                  "", false, CustomNode::minPanelHeight, root()));
+                                                  "", false, QSizeF(3, CustomNode::minPanelHeight), root()));
     root()->pool().registerObj(ControlSurface::create(_controlsUuid, _uuid, root()));
 }
 

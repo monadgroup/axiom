@@ -51,6 +51,8 @@ namespace AxiomGui {
 
         static QSize nodeRealSize(const QSize &s);
 
+        static QSizeF nodeRealSize(const QSizeF &s);
+
         static QPoint controlRealPos(const QPoint &p);
 
         static QPointF controlRealPos(const QPointF &p);
