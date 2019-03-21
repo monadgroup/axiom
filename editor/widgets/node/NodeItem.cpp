@@ -294,6 +294,8 @@ void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         connect(editor, &FloatingValueEditor::valueSubmitted, this, [this](QString name) {
             node->root()->history().append(RenameNodeAction::create(node->uuid(), node->name(), name, node->root()));
         });
+    } else if (selectedAction == groupAction) {
+        node->surface()->groupSelectedNodes();
     } else if (selectedAction == saveModuleAction) {
         ModulePropertiesWindow saveWindow(mainWindow->library(), "Add Module");
 

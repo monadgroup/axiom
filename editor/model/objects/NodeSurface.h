@@ -61,6 +61,8 @@ namespace AxiomModel {
 
         std::vector<ModelObject *> getCopyItems();
 
+        void groupSelectedNodes();
+
         virtual uint64_t getRuntimeId() = 0;
 
         void forceCompile();
