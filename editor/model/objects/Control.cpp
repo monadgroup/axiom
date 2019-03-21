@@ -116,12 +116,7 @@ ControlPrepare Control::buildControlPrepareAction(AxiomModel::Control::ControlTy
 
     auto controlSize = getDefaultSize(type);
 
-    // if the control has a header visible and there's enough room, place it below the header
-    auto placePos = QPoint(0, 0);
-    if (!controlSurface->controlsOnTopRow() && controlSurfaceSize.height() >= controlSize.height() + 1) {
-        placePos.setY(1);
-    }
-
+    QPoint placePos(0, 0);
     bool findSuccess;
     auto nearestPos = controlSurface->grid().grid().findNearestAvailable(placePos, controlSize, nullptr, &findSuccess);
 
