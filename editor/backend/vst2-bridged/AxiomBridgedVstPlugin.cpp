@@ -1,19 +1,28 @@
 #include "AxiomBridgedVstPlugin.h"
 
+#include <iostream>
 #include <public.sdk/source/vst2.x/aeffeditor.h>
 
-#include "IdBuffer.h"
-#include "editor/util.h"
 #include "../AudioBackend.h"
+#include "IdBuffer.h"
 #include "editor/backend/EventConverter.h"
+#include "editor/util.h"
 
 class AxiomBridgedEditor : public AEffEditor {
 public:
-    explicit AxiomBridgedEditor(AxiomBridgedVstPlugin *plugin)
-        : AEffEditor(plugin), plugin(plugin) {}
+    explicit AxiomBridgedEditor(AxiomBridgedVstPlugin *plugin) : AEffEditor(plugin), plugin(plugin) {}
 
-    void idle() override {
-        plugin->guiDispatcher.idle(plugin->sep.guiAppToVstData);
+    void idle() override { plugin->guiDispatcher.idle(plugin->sep.guiAppToVstData); }
+
+    bool open(void *) override {
+        plugin->channel.guiVstToApp.pushWhenAvailable(
+            AxiomBackend::VstGuiMessage(AxiomBackend::VstGuiMessageType::SHOW), plugin->sep.guiVstToAppData);
+        return true;
+    }
+
+    void close() override {
+        plugin->channel.guiVstToApp.pushWhenAvailable(
+            AxiomBackend::VstGuiMessage(AxiomBackend::VstGuiMessageType::HIDE), plugin->sep.guiVstToAppData);
     }
 
 private:
@@ -23,6 +32,7 @@ private:
 extern "C" {
 AEffect *VSTPluginMain(audioMasterCallback audioMaster) {
     if (!audioMaster(nullptr, audioMasterVersion, 0, 0, nullptr, 0)) return nullptr;
+    std::cout << "Hello world! Starting the plugin..." << std::endl;
     auto effect = new AxiomBridgedVstPlugin(audioMaster);
     return effect->getAeffect();
 }
@@ -37,16 +47,12 @@ AxiomBackend::VstChannel &createChannel(QSharedMemory &mem) {
 
 AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
     : AudioEffectX(audioMaster, 1, 255),
-      channelMemKey(AxiomBackend::getBufferStringKey(AxiomBackend::generateNewBufferId())),
-      channelMem(channelMemKey),
-      channel(createChannel(channelMem)),
-      sep(channelMemKey.toStdString()),
-      guiDispatcher(channel.guiAppToVst, [this](const AxiomBackend::AppGuiMessage &message) {
-          return dispatchGuiMessage(message);
-      }),
-      audioDispatcher(channel.audioAppToVst, [this](const AxiomBackend::AppAudioMessage &message) {
-          return dispatchAudioMessage(message);
-      }) {
+      channelMemKey(AxiomBackend::getBufferStringKey(AxiomBackend::generateNewBufferId())), channelMem(channelMemKey),
+      channel(createChannel(channelMem)), sep(channelMemKey.toStdString()),
+      guiDispatcher(channel.guiAppToVst,
+                    [this](const AxiomBackend::AppGuiMessage &message) { return dispatchGuiMessage(message); }),
+      audioDispatcher(channel.audioAppToVst,
+                      [this](const AxiomBackend::AppAudioMessage &message) { return dispatchAudioMessage(message); }) {
     // todo: differentiate these slightly from the regular VST
 #ifdef AXIOM_VST2_IS_SYNTH
     isSynth();
@@ -58,6 +64,7 @@ AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
     programsAreChunks();
     canProcessReplacing();
 
+    std::cout << "Creating editor instance" << std::endl;
     setEditor(new AxiomBridgedEditor(this));
 
     QString appProcessPath = "axiom_vst2_bridge.exe";
@@ -68,11 +75,19 @@ AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
 #else
     appProcessParams.push_back("effect");
 #endif
+
+    std::cout << "Starting process with command line:" << std::endl << "  " << appProcessPath.toStdString();
+    for (const auto &param : appProcessParams) {
+        std::cout << " " << param.toStdString();
+    }
+    std::cout << std::endl;
+
     appProcess.setProcessChannelMode(QProcess::ForwardedChannels);
     appProcess.start(appProcessPath, appProcessParams);
     auto startSuccess = appProcess.waitForStarted();
     assert(startSuccess);
 
+    std::cout << "Process has started, waiting for it to initialize..." << std::endl;
     // Wait for the first IO update
     while (true) {
         auto nextGuiMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
@@ -80,6 +95,15 @@ AxiomBridgedVstPlugin::AxiomBridgedVstPlugin(audioMasterCallback audioMaster)
             break;
         }
     }
+
+    std::cout << "Success!" << std::endl;
+}
+
+AxiomBridgedVstPlugin::~AxiomBridgedVstPlugin() {
+    channel.audioVstToApp.pushWhenAvailable(AxiomBackend::VstAudioMessage(AxiomBackend::VstAudioMessageType::EXIT),
+                                            sep.audioVstToAppData);
+    channel.guiVstToApp.pushWhenAvailable(AxiomBackend::VstGuiMessage(AxiomBackend::VstGuiMessageType::EXIT),
+                                          sep.guiVstToAppData);
 }
 
 void AxiomBridgedVstPlugin::suspend() {
@@ -121,7 +145,9 @@ void AxiomBridgedVstPlugin::processReplacing(float **inputs, float **outputs, Vs
         channel.audioVstToApp.push(msg, sep.audioVstToAppData);
 
         // Wait for the app to say it's finished
-        while (audioDispatcher.waitForNext(sep.audioAppToVstData).type != AxiomBackend::AppAudioMessageType::GENERATE_DONE) {}
+        while (audioDispatcher.waitForNext(sep.audioAppToVstData).type !=
+               AxiomBackend::AppAudioMessageType::GENERATE_DONE) {
+        }
 
         // Copy the outputs back to the parameters
         for (size_t outputIndex = 0; outputIndex < expectedOutputCount; outputIndex++) {
@@ -228,6 +254,8 @@ void AxiomBridgedVstPlugin::getParameterName(VstInt32 index, char *text) {
 }
 
 VstInt32 AxiomBridgedVstPlugin::getChunk(void **data, bool) {
+    std::cout << "Serializing project" << std::endl;
+
     // Tell the app to serialize the project and store it in a shared memory buffer
     AxiomBackend::VstGuiMessage startMsg(AxiomBackend::VstGuiMessageType::BEGIN_SERIALIZE);
     channel.guiVstToApp.pushWhenAvailable(startMsg, sep.guiVstToAppData);
@@ -236,6 +264,7 @@ VstInt32 AxiomBridgedVstPlugin::getChunk(void **data, bool) {
     uint64_t bufferSize;
 
     // Wait for a response providing the data
+    std::cout << "Waiting for response with the data..." << std::endl;
     while (true) {
         auto nextMessage = guiDispatcher.waitForNext(sep.guiAppToVstData);
         if (nextMessage.type == AxiomBackend::AppGuiMessageType::FINISHED_SERIALIZE) {
@@ -245,6 +274,9 @@ VstInt32 AxiomBridgedVstPlugin::getChunk(void **data, bool) {
         }
     }
 
+    std::cout << "Got serialized buffer: " << AxiomBackend::getBufferStringKey(memoryId).toStdString() << " with "
+              << bufferSize << " byte(s)" << std::endl;
+
     // The VST specification requires that the returned buffer is valid until the next suspend/resume call,
     // so we keep a handle to the shared memory and clear it above.
     serializeBuffer.detach();
@@ -253,14 +285,18 @@ VstInt32 AxiomBridgedVstPlugin::getChunk(void **data, bool) {
     assert(attachSuccess);
 
     // Signal to the app that we have a handle to the buffer, so it can finish
+    std::cout << "Informing the app that we're done" << std::endl;
     AxiomBackend::VstGuiMessage endMsg(AxiomBackend::VstGuiMessageType::END_SERIALIZE);
     channel.guiVstToApp.pushWhenAvailable(endMsg, sep.guiVstToAppData);
 
+    std::cout << "Finished!" << std::endl;
     *data = serializeBuffer.data();
     return (int) bufferSize;
 }
 
 VstInt32 AxiomBridgedVstPlugin::setChunk(void *data, VstInt32 byteSize, bool) {
+    std::cout << "Deserializing project" << std::endl;
+
     auto saveBufferId = AxiomBackend::generateNewBufferId();
     QSharedMemory saveBuffer(AxiomBackend::getBufferStringKey(saveBufferId));
     auto createSuccess = saveBuffer.create(byteSize);
@@ -328,11 +364,11 @@ bool AxiomBridgedVstPlugin::canParameterBeAutomated(VstInt32 index) {
     }
 }
 
-float* AxiomBridgedVstPlugin::getInputBufferPtr(size_t inputIndex) {
+float *AxiomBridgedVstPlugin::getInputBufferPtr(size_t inputIndex) {
     return reinterpret_cast<float *>(ioBuffer.data()) + inputIndex * AxiomBackend::IO_BUFFER_SIZE;
 }
 
-float* AxiomBridgedVstPlugin::getOutputBufferPtr(size_t outputIndex) {
+float *AxiomBridgedVstPlugin::getOutputBufferPtr(size_t outputIndex) {
     return reinterpret_cast<float *>(ioBuffer.data()) + AxiomBackend::IO_BUFFER_SIZE * (inputCount + outputIndex);
 }
 
@@ -366,35 +402,36 @@ void AxiomBridgedVstPlugin::handleUpdateIo(AxiomBackend::AppGuiUpdateIoMessage m
 
 AxiomBackend::DispatcherHandlerResult AxiomBridgedVstPlugin::dispatchGuiMessage(AxiomBackend::AppGuiMessage message) {
     switch (message.type) {
-        case AxiomBackend::AppGuiMessageType::SET_PARAMETER:
-            handleSetParameter(message.data.setParameter);
-            break;
-        case AxiomBackend::AppGuiMessageType::UPDATE_IO:
-            handleUpdateIo(message.data.updateIo);
-            break;
-        case AxiomBackend::AppGuiMessageType::PARAMETER_VALUE:
-        case AxiomBackend::AppGuiMessageType::PARAMETER_LABEL:
-        case AxiomBackend::AppGuiMessageType::PARAMETER_DISPLAY:
-        case AxiomBackend::AppGuiMessageType::PARAMETER_NAME:
-        case AxiomBackend::AppGuiMessageType::CAN_AUTOMATE_PARAMETER:
-        case AxiomBackend::AppGuiMessageType::FINISHED_SERIALIZE:
-        case AxiomBackend::AppGuiMessageType::FINISHED_DESERIALIZE:
-            // Used as a response, no need to handle here
-            break;
-        default:
-            unreachable;
+    case AxiomBackend::AppGuiMessageType::SET_PARAMETER:
+        handleSetParameter(message.data.setParameter);
+        break;
+    case AxiomBackend::AppGuiMessageType::UPDATE_IO:
+        handleUpdateIo(message.data.updateIo);
+        break;
+    case AxiomBackend::AppGuiMessageType::PARAMETER_VALUE:
+    case AxiomBackend::AppGuiMessageType::PARAMETER_LABEL:
+    case AxiomBackend::AppGuiMessageType::PARAMETER_DISPLAY:
+    case AxiomBackend::AppGuiMessageType::PARAMETER_NAME:
+    case AxiomBackend::AppGuiMessageType::CAN_AUTOMATE_PARAMETER:
+    case AxiomBackend::AppGuiMessageType::FINISHED_SERIALIZE:
+    case AxiomBackend::AppGuiMessageType::FINISHED_DESERIALIZE:
+        // Used as a response, no need to handle here
+        break;
+    default:
+        unreachable;
     }
 
     return AxiomBackend::DispatcherHandlerResult::CONTINUE;
 }
 
-AxiomBackend::DispatcherHandlerResult AxiomBridgedVstPlugin::dispatchAudioMessage(AxiomBackend::AppAudioMessage message) {
+AxiomBackend::DispatcherHandlerResult
+    AxiomBridgedVstPlugin::dispatchAudioMessage(AxiomBackend::AppAudioMessage message) {
     switch (message.type) {
-        case AxiomBackend::AppAudioMessageType::GENERATE_DONE:
-            // Used as a response, no need to handle here
-            break;
-        default:
-            unreachable;
+    case AxiomBackend::AppAudioMessageType::GENERATE_DONE:
+        // Used as a response, no need to handle here
+        break;
+    default:
+        unreachable;
     }
 
     return AxiomBackend::DispatcherHandlerResult::CONTINUE;

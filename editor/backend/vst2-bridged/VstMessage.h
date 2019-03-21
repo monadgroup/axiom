@@ -4,10 +4,12 @@ namespace AxiomBackend {
 
     // Messages sent from the VST to the app for processing on the audio thread
     enum class VstAudioMessageType {
-        GENERATE,        // Generate samples into the output buffer
+        GENERATE, // Generate samples into the output buffer
         PUSH_MIDI_EVENT, // Add an event to the queue
         SET_SAMPLE_RATE, // Set the sample rate
-        SET_BPM,         // Set the BPM
+        SET_BPM, // Set the BPM
+
+        EXIT, // Stop audio processing and exit (sent along with a VstGuiMessage EXIT)
     };
 
     struct VstAudioGenerateMessage {
@@ -30,11 +32,14 @@ namespace AxiomBackend {
         float bpm;
     };
 
+    struct VstAudioExit {};
+
     union VstAudioMessageData {
         VstAudioGenerateMessage generate;
         VstAudioPushMidiEventMessage pushMidiEvent;
         VstAudioSetSampleRateMessage setSampleRate;
         VstAudioSetBpmMessage setBpm;
+        VstAudioExit exit;
     };
 
     struct VstAudioMessage {
@@ -46,16 +51,24 @@ namespace AxiomBackend {
 
     // Messages sent from the VST to the app for processing on the GUI thread
     enum class VstGuiMessageType {
-        SET_PARAMETER,              // Set a parameter value
-        GET_PARAMETER,              // Get a parameter value
-        GET_PARAMETER_LABEL,        // Get the label of a parameter
-        GET_PARAMETER_DISPLAY,      // Get the display of a parameter
-        GET_PARAMETER_NAME,         // Get the name of a parameter
+        SHOW, // Show the editor window
+        HIDE, // Hide the editor window
+        SET_PARAMETER, // Set a parameter value
+        GET_PARAMETER, // Get a parameter value
+        GET_PARAMETER_LABEL, // Get the label of a parameter
+        GET_PARAMETER_DISPLAY, // Get the display of a parameter
+        GET_PARAMETER_NAME, // Get the name of a parameter
         GET_CAN_AUTOMATE_PARAMETER, // Get if a parameter can be automated
-        BEGIN_SERIALIZE,            // Start serializing the project
-        END_SERIALIZE,              // End serializing the project
-        BEGIN_DESERIALIZE,          // Start deserializing a project
+        BEGIN_SERIALIZE, // Start serializing the project
+        END_SERIALIZE, // End serializing the project
+        BEGIN_DESERIALIZE, // Start deserializing a project
+
+        EXIT, // Exit the application
     };
+
+    struct VstGuiShowMessage {};
+
+    struct VstGuiHideMessage {};
 
     struct VstGuiSetParameterMessage {
         int index;
@@ -91,7 +104,11 @@ namespace AxiomBackend {
         uint64_t bufferSize;
     };
 
+    struct VstGuiExit {};
+
     union VstGuiMessageData {
+        VstGuiShowMessage show;
+        VstGuiHideMessage hide;
         VstGuiSetParameterMessage setParameter;
         VstGuiGetParameterMessage getParameter;
         VstGuiGetParameterLabelMessage getParameterLabel;
@@ -101,6 +118,7 @@ namespace AxiomBackend {
         VstGuiBeginSerializeMessage beginSerialize;
         VstGuiEndSerializeMessage endSerialize;
         VstGuiBeginDeserializeMessage beginDeserialize;
+        VstGuiExit exit;
     };
 
     struct VstGuiMessage {

@@ -1,12 +1,13 @@
+#include <QtCore/QCoreApplication>
 #include <QtCore/QProcess>
 #include <QtCore/QSharedMemory>
-#include <QtCore/QCoreApplication>
-#include <thread>
+#include <QtCore/QTimer>
 #include <iostream>
+#include <thread>
 
+#include "Dispatcher.h"
 #include "IdBuffer.h"
 #include "VstChannel.h"
-#include "Dispatcher.h"
 
 using namespace AxiomBackend;
 
@@ -23,15 +24,17 @@ int main() {
 
     VstChannel::SeparateData sep(key.toStdString());
 
-    Dispatcher<VstChannel::GuiAppToVstQueue> guiDispatcher(channel->guiAppToVst, [channel, &sep](const AppGuiMessage &message) {
-        std::cout << "Received message from GUI dispatcher" << std::endl;
-        return DispatcherHandlerResult::CONTINUE;
-    });
+    Dispatcher<VstChannel::GuiAppToVstQueue> guiDispatcher(
+        channel->guiAppToVst, [channel, &sep](const AppGuiMessage &message) {
+            std::cout << "Received message from GUI dispatcher" << std::endl;
+            return DispatcherHandlerResult::CONTINUE;
+        });
 
-    Dispatcher<VstChannel::AudioAppToVstQueue> audioDispatcher(channel->audioAppToVst, [](const AppAudioMessage &message) {
-        std::cout << "Received message from audio dispatcher" << std::endl;
-        return DispatcherHandlerResult::CONTINUE;
-    });
+    Dispatcher<VstChannel::AudioAppToVstQueue> audioDispatcher(
+        channel->audioAppToVst, [](const AppAudioMessage &message) {
+            std::cout << "Received message from audio dispatcher" << std::endl;
+            return DispatcherHandlerResult::CONTINUE;
+        });
 
     QString appProcessPath = "axiom_vst2_bridge.exe";
     QStringList appProcessParams;
@@ -43,7 +46,7 @@ int main() {
     }
     std::cout << std::endl;
 
-    QProcess appProcess;
+    /*QProcess appProcess;
     appProcess.setProcessChannelMode(QProcess::ForwardedChannels);
     appProcess.start(appProcessPath, appProcessParams);
 
@@ -58,7 +61,7 @@ int main() {
     QObject::connect(&appProcess, &QProcess::errorOccurred,
                      [&appProcess](QProcess::ProcessError error) {
         std::cout << "Process errored: " << appProcess.errorString().toStdString() << std::endl;
-    });
+    });*/
 
     std::thread audioThread([&audioDispatcher, &sep]() {
         std::cout << "Running audio dispatcher" << std::endl;
@@ -70,6 +73,15 @@ int main() {
         std::cout << "Running GUI dispatcher" << std::endl;
         guiDispatcher.run(sep.guiAppToVstData);
         std::cout << "GUI dispatcher has exited" << std::endl;
+    });
+
+    // Immediately tell the program to show the window
+    channel->guiVstToApp.pushWhenAvailable(VstGuiMessage(VstGuiMessageType::SHOW), sep.guiVstToAppData);
+
+    QTimer::singleShot(30000, [channel, &sep]() {
+        std::cout << "Sending exit message" << std::endl;
+        channel->guiVstToApp.pushWhenAvailable(VstGuiMessage(VstGuiMessageType::EXIT), sep.guiVstToAppData);
+        channel->audioVstToApp.pushWhenAvailable(VstAudioMessage(VstAudioMessageType::EXIT), sep.audioVstToAppData);
     });
 
     return app.exec();

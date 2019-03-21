@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QtCore/QSharedMemory>
 #include <QtCore/QProcess>
+#include <QtCore/QSharedMemory>
 #include <public.sdk/source/vst2.x/audioeffectx.h>
 
-#include "VstChannel.h"
 #include "Dispatcher.h"
+#include "VstChannel.h"
 
 class AxiomBridgedVstPlugin : public AudioEffectX {
 public:
@@ -18,6 +18,8 @@ public:
     AxiomBackend::Dispatcher<AxiomBackend::VstChannel::AudioAppToVstQueue> audioDispatcher;
 
     explicit AxiomBridgedVstPlugin(audioMasterCallback audioMaster);
+
+    ~AxiomBridgedVstPlugin();
 
     void suspend() override;
 

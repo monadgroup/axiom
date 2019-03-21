@@ -24,6 +24,11 @@ public:
     std::thread guiDispatcherThread;
     QSharedMemory ioBuffer;
     VstAudioBackend *backend = nullptr;
+    AxiomEditor *editor = nullptr;
+    bool isEditorShowing = false;
+    bool isGuiDispatcherDone = false;
+
+    std::optional<QSharedMemory> saveMemory;
 
     BridgedAdapter(VstChannel &channel, const std::string &id)
         : channel(channel), sep(id),
@@ -44,7 +49,17 @@ public:
             std::cout << "Running GUI dispatcher" << std::endl;
             guiDispatcher.run(sep.guiVstToAppData);
             std::cout << "GUI dispatcher has exited" << std::endl;
+
+            isGuiDispatcherDone = true;
+            QApplication::exit(0);
         });
+    }
+
+    void setEditor(AxiomEditor *editor) {
+        this->editor = editor;
+        if (isEditorShowing) {
+            editor->show();
+        }
     }
 
     void adapterUpdateIo() override {
@@ -53,8 +68,8 @@ public:
             IO_BUFFER_SIZE * (backend->audioInputs.size() + backend->audioOutputs.size()) * sizeof(float);
 
         AppGuiMessage msg(AppGuiMessageType::UPDATE_IO);
-        msg.data.updateIo = {/* inputCount */ backend->audioInputs.size(),
-                             /* outputCount */ backend->audioOutputs.size(),
+        msg.data.updateIo = {/* inputCount */ (uint32_t) backend->audioInputs.size(),
+                             /* outputCount */ (uint32_t) backend->audioOutputs.size(),
                              /* newMemoryId */ 0};
 
         if (allBuffersSize > (size_t) ioBuffer.size()) {
@@ -76,6 +91,22 @@ public:
     }
 
 private:
+    void handleShow() {
+        isEditorShowing = true;
+
+        if (editor) {
+            editor->show();
+        }
+    }
+
+    void handleHide() {
+        isEditorShowing = false;
+
+        if (editor) {
+            editor->hide();
+        }
+    }
+
     void handleSetParameter(VstGuiSetParameterMessage message) {
         if ((size_t) message.index >= backend->automationInputs.size()) return;
         auto &param = backend->automationInputs[message.index];
@@ -160,29 +191,26 @@ private:
 
         // Create a shared memory buffer to copy the data across
         auto saveMemoryId = generateNewBufferId();
-        QSharedMemory saveMemory(getBufferStringKey(saveMemoryId));
-        auto createSuccess = saveMemory.create(serializedBuffer.size());
+        saveMemory.emplace(getBufferStringKey(saveMemoryId));
+        auto createSuccess = saveMemory->create(serializedBuffer.size());
         assert(createSuccess);
 
         // Copy the data into it
-        memcpy(saveMemory.data(), serializedBuffer.data(), (size_t) serializedBuffer.size());
+        memcpy(saveMemory->data(), serializedBuffer.data(), (size_t) serializedBuffer.size());
 
         // Inform the VST that the data is available
         AppGuiMessage msg(AppGuiMessageType::FINISHED_SERIALIZE);
         msg.data.finishedSerialize.memoryId = saveMemoryId;
         msg.data.finishedSerialize.bufferSize = (uint64_t) serializedBuffer.size();
         channel.guiAppToVst.pushWhenAvailable(msg, sep.guiAppToVstData);
-
-        // Wait for the app to respond so we know we can free the buffer
-        while (true) {
-            auto nextMsg = guiDispatcher.waitForNext(sep.guiVstToAppData);
-            if (nextMsg.type == VstGuiMessageType::END_SERIALIZE) {
-                break;
-            }
-        }
     }
 
+    void handleEndSerialize(VstGuiEndSerializeMessage message) { saveMemory.reset(); }
+
     void handleBeginDeserialize(VstGuiBeginDeserializeMessage message) {
+        std::cout << "Started deserializing from " << getBufferStringKey(message.memoryId).toStdString() << " with "
+                  << message.bufferSize << " byte(s)" << std::endl;
+
         // Load the shared memory that the data is in
         QSharedMemory loadMemory(getBufferStringKey(message.memoryId));
         auto attachSuccess = loadMemory.attach();
@@ -201,9 +229,19 @@ private:
     }
 
     DispatcherHandlerResult dispatchGuiMessage(VstGuiMessage message) {
+        if (message.type == VstGuiMessageType::EXIT) {
+            return DispatcherHandlerResult::EXIT;
+        }
+
         // Queue the message to be processed on the GUI thread
         QMetaObject::invokeMethod(qApp, [this, message]() {
             switch (message.type) {
+            case VstGuiMessageType::SHOW:
+                handleShow();
+                break;
+            case VstGuiMessageType::HIDE:
+                handleHide();
+                break;
             case VstGuiMessageType::SET_PARAMETER:
                 handleSetParameter(message.data.setParameter);
                 break;
@@ -225,13 +263,15 @@ private:
             case VstGuiMessageType::BEGIN_SERIALIZE:
                 handleBeginSerialize(message.data.beginSerialize);
                 break;
+            case VstGuiMessageType::END_SERIALIZE:
+                handleEndSerialize(message.data.endSerialize);
+                break;
             case VstGuiMessageType::BEGIN_DESERIALIZE:
                 handleBeginDeserialize(message.data.beginDeserialize);
                 break;
-            // Used as a response, no handling necessary
-            case VstGuiMessageType::END_SERIALIZE:
-                break;
-            default:
+
+            // Handled above outside invokeMethod
+            case VstGuiMessageType::EXIT:
                 unreachable;
             }
         });
@@ -328,8 +368,8 @@ private:
         case VstAudioMessageType::SET_BPM:
             handleSetBpm(message.data.setBpm);
             break;
-        default:
-            unreachable;
+        case VstAudioMessageType::EXIT:
+            return DispatcherHandlerResult::EXIT;
         }
 
         return DispatcherHandlerResult::CONTINUE;
@@ -361,5 +401,13 @@ int main(int argc, char *argv[]) {
     std::cout << "Starting editor" << std::endl;
     AxiomEditor editor(&application, &backend);
 
-    return editor.run();
+    adapter.setEditor(&editor);
+
+    while (!adapter.isGuiDispatcherDone) {
+        QApplication::exec();
+    }
+
+    adapter.audioThread.join();
+    adapter.guiDispatcherThread.join();
+    std::cout << "Exiting process" << std::endl;
 }
