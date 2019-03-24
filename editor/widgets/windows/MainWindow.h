@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "WindowResizer.h"
 #include "editor/backend/AudioBackend.h"
 #include "editor/compiler/interface/Runtime.h"
 #include "editor/model/Project.h"
@@ -78,6 +79,11 @@ namespace AxiomGui {
 
         void openProjectFrom(const QString &path);
 
+        void setResizerVisible(bool isVisible);
+
+    signals:
+        void resized(QSize newSize);
+
     public slots:
 
         NodeSurfacePanel *showSurface(NodeSurfacePanel *fromPanel, AxiomModel::NodeSurface *schematic, bool split,
@@ -97,6 +103,8 @@ namespace AxiomGui {
         void dragEnterEvent(QDragEnterEvent *event) override;
 
         void dropEvent(QDropEvent *event) override;
+
+        void resizeEvent(QResizeEvent *event) override;
 
     private slots:
 
@@ -132,6 +140,11 @@ namespace AxiomGui {
         QTimer loadDebounceTimer;
         QFileSystemWatcher globalLibraryWatcher;
 
+        QSize beforeResizeSize;
+        WindowResizer rightResizer;
+        WindowResizer bottomResizer;
+        WindowResizer bottomRightResizer;
+
         bool didJustSaveLibrary = false;
         bool isLoadingLibrary = false;
 
@@ -150,11 +163,21 @@ namespace AxiomGui {
 
         bool isInputFieldFocused() const;
 
+        void updateResizerGeometry();
+
     private slots:
         void triggerLibraryChangeDebounce();
 
         void triggerLibraryReload();
 
         void triggerLibraryReloadDebounce();
+
+        void startedResize();
+
+        void rightResized(QPoint resizeAmount);
+
+        void bottomResized(QPoint resizeAmount);
+
+        void bottomRightResized(QPoint resizeAmount);
     };
 }

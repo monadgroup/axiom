@@ -3,9 +3,9 @@
 #include <QtCore/QByteArray>
 #include <public.sdk/source/vst2.x/audioeffectx.h>
 
-#include "AxiomVstEditor.h"
-#include "../vst2-common/VstAudioBackend.h"
 #include "../vst2-common/VstAdapter.h"
+#include "../vst2-common/VstAudioBackend.h"
+#include "AxiomVstEditor.h"
 #include "common/LazyInitializer.h"
 
 class AxiomVstPlugin : public AudioEffectX, public AxiomBackend::VstAdapter {
@@ -58,9 +58,11 @@ public:
 
     void adapterUpdateIo() override;
 
+    AxiomBackend::VstAudioBackend &backend() { return _backend; }
+
 private:
     AxiomCommon::LazyInitializer<AxiomApplication>::Ref appRef;
-    AxiomBackend::VstAudioBackend backend;
+    AxiomBackend::VstAudioBackend _backend;
     AxiomVstEditor editor;
     QByteArray saveBuffer;
 

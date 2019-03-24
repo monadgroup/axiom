@@ -42,7 +42,8 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
       fileSaveAsAction("S&ave As..."), fileExportAction("&Export..."), fileQuitAction("&Quit"), editUndoAction("&Undo"),
       editRedoAction("&Redo"), editCutAction("C&ut"), editCopyAction("&Copy"), editPasteAction("&Paste"),
       editDeleteAction("&Delete"), editSelectAllAction("&Select All"), editPreferencesAction("Pr&eferences..."),
-      helpAboutAction("&About"), _backend(backend), _runtime(true), libraryLock(globalLibraryLockPath()) {
+      helpAboutAction("&About"), _backend(backend), _runtime(true), libraryLock(globalLibraryLockPath()),
+      rightResizer(this), bottomResizer(this), bottomRightResizer(this) {
     setStyleSheet(AxiomUtil::loadStylesheet(":/styles/MainStyles.qss"));
     setCentralWidget(nullptr);
     setWindowTitle(tr(VER_PRODUCTNAME_STR));
@@ -163,6 +164,26 @@ MainWindow::MainWindow(AxiomBackend::AudioBackend *backend)
     connect(&fileExportLibraryAction, &QAction::triggered, this, &MainWindow::exportLibrary);
 
     connect(&helpAboutAction, &QAction::triggered, this, &MainWindow::showAbout);
+
+    // Setup resizer widgets for some backends to use
+    rightResizer.setCursor(Qt::SizeHorCursor);
+    connect(&rightResizer, &WindowResizer::startResize, this, &MainWindow::startedResize);
+    connect(&rightResizer, &WindowResizer::resized, this, &MainWindow::rightResized);
+
+    bottomResizer.setCursor(Qt::SizeVerCursor);
+    connect(&bottomResizer, &WindowResizer::startResize, this, &MainWindow::startedResize);
+    connect(&bottomResizer, &WindowResizer::resized, this, &MainWindow::bottomResized);
+
+    bottomRightResizer.setCursor(Qt::SizeFDiagCursor);
+    connect(&bottomRightResizer, &WindowResizer::startResize, this, &MainWindow::startedResize);
+    connect(&bottomRightResizer, &WindowResizer::resized, this, &MainWindow::bottomRightResized);
+
+    rightResizer.raise();
+    bottomResizer.raise();
+    bottomRightResizer.raise();
+
+    updateResizerGeometry();
+    setResizerVisible(false);
 }
 
 MainWindow::~MainWindow() {
@@ -217,6 +238,12 @@ void MainWindow::newProject() {
 
 bool MainWindow::isInputFieldFocused() const {
     return dynamic_cast<QLineEdit *>(focusWidget()) || dynamic_cast<QTextEdit *>(focusWidget());
+}
+
+void MainWindow::updateResizerGeometry() {
+    rightResizer.setGeometry(width() - 5, 0, 5, height() - 10);
+    bottomResizer.setGeometry(0, height() - 5, width() - 10, 5);
+    bottomRightResizer.setGeometry(width() - 10, height() - 10, 10, 10);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
@@ -280,6 +307,10 @@ void MainWindow::dropEvent(QDropEvent *event) {
     auto urlList = mimeData->urls();
     if (urlList.empty() || !checkCloseProject()) return;
     openProjectFrom(urlList[0].toLocalFile());
+}
+
+void MainWindow::resizeEvent(QResizeEvent *) {
+    updateResizerGeometry();
 }
 
 void MainWindow::setProject(std::unique_ptr<AxiomModel::Project> project) {
@@ -519,6 +550,12 @@ void MainWindow::openProjectFrom(const QString &path) {
     }
 }
 
+void MainWindow::setResizerVisible(bool isVisible) {
+    rightResizer.setVisible(isVisible);
+    bottomResizer.setVisible(isVisible);
+    bottomRightResizer.setVisible(isVisible);
+}
+
 void MainWindow::openProject() {
     if (!checkCloseProject()) return;
 
@@ -642,4 +679,20 @@ void MainWindow::updateWindowTitle(const QString &linkedFile, bool isDirty) {
             setWindowTitle("Axiom - " % linkedFile);
         }
     }
+}
+
+void MainWindow::startedResize() {
+    beforeResizeSize = size();
+}
+
+void MainWindow::rightResized(QPoint resizeAmount) {
+    emit resized(QSize(beforeResizeSize.width() + resizeAmount.x(), beforeResizeSize.height()));
+}
+
+void MainWindow::bottomResized(QPoint resizeAmount) {
+    emit resized(QSize(beforeResizeSize.width(), beforeResizeSize.height() + resizeAmount.y()));
+}
+
+void MainWindow::bottomRightResized(QPoint resizeAmount) {
+    emit resized(QSize(beforeResizeSize.width() + resizeAmount.x(), beforeResizeSize.height() + resizeAmount.y()));
 }
