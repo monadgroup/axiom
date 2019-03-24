@@ -11,15 +11,22 @@ const int WINDOW_HEIGHT = 720;
 
 AxiomVstEditor::AxiomVstEditor(AxiomApplication *application, AxiomVstPlugin *plugin)
     : editorSize({0, 0, WINDOW_HEIGHT, WINDOW_WIDTH}), editor(application, &plugin->backend()), plugin(plugin) {
+#ifdef Q_OS_WIN
     editor.window()->setResizerVisible(true);
     editor.window()->resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     QObject::connect(editor.window(), &AxiomGui::MainWindow::resized, [this](QSize newSize) { resize(newSize); });
+#endif
 }
 
 bool AxiomVstEditor::getRect(ERect **rect) {
+#ifdef Q_OS_WIN
     *rect = &editorSize;
     return true;
+#else
+    *rect = nullptr;
+    return false;
+#endif
 }
 
 bool AxiomVstEditor::open(void *platformWindow) {
