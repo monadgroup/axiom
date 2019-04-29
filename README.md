@@ -27,7 +27,7 @@ Axiom currently supports the following audio backends:
 
 ## Building
 
-Axiom is built with CMake. The build process depends on Cargo, Qt 5.10+, LLVM 6, and the VST 2 SDK (for the VST2 backend), so make sure those are installed and setup correctly.
+Axiom is built with CMake. The build process depends on Cargo, Qt 5.10+, LLVM 6, and the VST 2 SDK (for the VST2 backend), so make sure those are installed and setup correctly. You can download the VST 2 SDK [from Steinberg's website](http://steinberg.net/sdk_downloads/vstsdk366_27_06_2016_build_61.zip), the other libraries can likely be found in your system's package manager, or from their respective websites.
 
 Once Cargo, Qt, LLVM, and the VST SDK are installed, go to the directory where you'd like to build Axiom to. Then run the following command:
 
