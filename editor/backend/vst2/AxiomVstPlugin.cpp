@@ -218,6 +218,7 @@ VstPlugCategory AxiomVstPlugin::getPlugCategory() {
 }
 
 VstInt32 AxiomVstPlugin::canDo(char *) {
+    // A canDo attitude
     return true;
 }
 
