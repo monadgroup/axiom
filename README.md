@@ -6,6 +6,8 @@
 
 Axiom is an extremely flexible node-based realtime audio synthesizer. It was originally designed for size-constrained environments such as PC intros in the demoscene, but is entirely open source and is becoming an excellent free tool for any musician.
 
+**Axiom's a bit afk at the moment, I've been preparing for a big redesign/rewrite but haven't had much time to put towards it or bugfixing recently. Contributions are still welcome as always :)**
+
 Features:
 
  - Musician-friendly (ie knobs and sliders) interface
